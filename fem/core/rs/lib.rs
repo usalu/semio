@@ -6,9 +6,9 @@
 
 pub mod analyses {
     //! 📈 Multi-case/combination linear-static analysis, self-weight load generation, modal analysis
-    //! (frequencies/shapes), and linear buckling — all sparse-backed (RCM-ordered, single LDLT
-    //! factorization shared across every load case / eigen-solve). Nodal-averaged stress recovery for
-    //! contour rendering lands in a follow-up workstream.
+    //! (frequencies/shapes), linear buckling, and nodal-averaged stress recovery for contour rendering
+    //! (`nodal_averaged_scalar`) — all sparse-backed (RCM-ordered, single LDLT factorization shared
+    //! across every load case / eigen-solve).
 
     use crate::sparse::{rcm_order, subspace_iteration, ldlt_factor, Coo, Csr, EigenPairs, LdltFactor};
     use crate::{
@@ -644,14 +644,17 @@ pub mod analyses {
                 }
             }
         }
-        // 🩹 `geometric_stiffness` deliberately leaves axial DOFs at zero (no axial/geometric coupling
-        // at this scope — see `elements2d::beam_local_geometric_stiffness`'s doc), so the assembled
-        // `−Kg` is exactly singular along every axial direction. `subspace_iteration`'s B-orthonormalization
-        // divides by `sqrt(x·Bx)`, which blows up (→ NaN) for any seed vector with a nonzero component in
-        // that exact null space. A tiny diagonal regularization (Tikhonov-style, scaled off the assembled
-        // `−Kg`'s own diagonal magnitude) makes `−Kg` strictly positive-definite everywhere without
-        // perturbing the physically meaningful lowest eigenvalues, which are orders of magnitude below the
-        // huge spurious eigenvalues this regularization assigns to the null-space directions.
+        // 🩹 Frame/truss `geometric_stiffness` (bar/beam bending block, truss `N/L·(I−ccᵀ)` transverse
+        // projector) still leaves SOME directions exactly unstressed (bending elements' own axial DOF,
+        // `PlateDkt`'s entire DOF set — see its struct doc — and any drilling/rotational DOF no element's
+        // Kg touches), so the assembled `−Kg` can still be singular or near-singular along those
+        // directions even now that continuum/solid/shell elements contribute a full Kg of their own.
+        // `subspace_iteration`'s B-orthonormalization divides by `sqrt(x·Bx)`, which blows up (→ NaN) for
+        // any seed vector with a nonzero component in an exact null space. A tiny diagonal regularization
+        // (Tikhonov-style, scaled off the assembled `−Kg`'s own diagonal magnitude) makes `−Kg` strictly
+        // positive-definite everywhere without perturbing the physically meaningful lowest eigenvalues,
+        // which are orders of magnitude below the huge spurious eigenvalues this regularization assigns
+        // to the null-space directions.
         let max_diag = diag_estimate.iter().cloned().fold(0.0_f64, f64::max);
         let eps = max_diag.max(1e-12) * 1e-6;
         for i in 0..n_free {
@@ -665,6 +668,84 @@ pub mod analyses {
         Ok(BucklingResult { factors: pairs.values, shapes })
     }
     // #endregion 🔖Buckling
+
+    // #region 🔖NodalAveraging
+    /// 🎨 A scalar quantity `nodal_averaged_scalar` can recover from an `ElementResult`, for contour
+    /// rendering.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum StressScalar {
+        VonMises,
+        Sxx,
+        Syy,
+        Sxy,
+        Szz,
+        Syz,
+        Sxz,
+        VonMisesTop,
+        VonMisesBottom,
+    }
+
+    /// 📊 An element's own Gauss-point-averaged value of `scalar`, or `None` if that element kind/scalar
+    /// combination isn't defined (e.g. `VonMisesTop` on a `Plane` result, or any scalar on a `Bar`/`Beam`
+    /// result — those carry no stress tensor to project).
+    fn element_scalar_average(result: &ElementResult, scalar: StressScalar) -> Option<f64> {
+        fn avg(values: impl Iterator<Item = f64>) -> f64 {
+            let mut sum = 0.0;
+            let mut count = 0usize;
+            for v in values {
+                sum += v;
+                count += 1;
+            }
+            sum / (count.max(1) as f64)
+        }
+        match result {
+            ElementResult::Plane { gauss } => match scalar {
+                StressScalar::VonMises => Some(avg(gauss.iter().map(|g| g.von_mises))),
+                StressScalar::Sxx => Some(avg(gauss.iter().map(|g| g.sxx))),
+                StressScalar::Syy => Some(avg(gauss.iter().map(|g| g.syy))),
+                StressScalar::Sxy => Some(avg(gauss.iter().map(|g| g.sxy))),
+                _ => None,
+            },
+            ElementResult::Solid { gauss } => match scalar {
+                StressScalar::VonMises => Some(avg(gauss.iter().map(|g| g.von_mises))),
+                StressScalar::Sxx => Some(avg(gauss.iter().map(|g| g.sxx))),
+                StressScalar::Syy => Some(avg(gauss.iter().map(|g| g.syy))),
+                StressScalar::Szz => Some(avg(gauss.iter().map(|g| g.szz))),
+                StressScalar::Sxy => Some(avg(gauss.iter().map(|g| g.sxy))),
+                StressScalar::Syz => Some(avg(gauss.iter().map(|g| g.syz))),
+                StressScalar::Sxz => Some(avg(gauss.iter().map(|g| g.sxz))),
+                _ => None,
+            },
+            ElementResult::Shell { gauss } => match scalar {
+                StressScalar::VonMisesTop => Some(avg(gauss.iter().map(|g| g.von_mises_top))),
+                StressScalar::VonMisesBottom => Some(avg(gauss.iter().map(|g| g.von_mises_bottom))),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// 🎨 Nodal-averaged contour values: each element's OWN Gauss-point average of `scalar` (constant
+    /// across Gauss points for a 1-point-integrated `Tri3Cst`, a genuine average for higher-order
+    /// elements — deliberately NOT a polynomial extrapolation-to-nodes, a simple scope choice) is
+    /// accumulated, UNWEIGHTED (by element count, not by tributary area/volume), into every node it
+    /// touches; the returned value per node is that accumulation's mean. A node touched only by elements
+    /// that report no value for `scalar` (e.g. a `Bar` in a mixed mesh) simply never appears in the map.
+    /// Element-to-model matching is by `element.id()` against `result.elements`' ids.
+    pub fn nodal_averaged_scalar(model: &AnalysisModel, result: &StaticResult, scalar: StressScalar) -> HashMap<String, f64> {
+        let mut sums: HashMap<String, (f64, usize)> = HashMap::new();
+        for (element_id, element_result) in &result.elements {
+            let Some(value) = element_scalar_average(element_result, scalar) else { continue };
+            let Some(element) = model.elements.iter().find(|e| e.id() == element_id) else { continue };
+            for node_id in element.node_ids() {
+                let entry = sums.entry(node_id).or_insert((0.0, 0));
+                entry.0 += value;
+                entry.1 += 1;
+            }
+        }
+        sums.into_iter().map(|(node_id, (sum, count))| (node_id, sum / count as f64)).collect()
+    }
+    // #endregion 🔖NodalAveraging
 
     // #region 🔖Tests
     #[cfg(test)]
@@ -845,6 +926,81 @@ pub mod analyses {
             let b = result.displacements.iter().find(|d| d.node_id == "b").unwrap();
             assert!((b.values[Dof::Tx.index()] - expected).abs() / expected < 1e-8);
         }
+
+        /// 🎨 Patch test for `nodal_averaged_scalar`: TWO `Tri3Cst` triangles splitting a square along its
+        /// diagonal, both under the SAME uniform uniaxial strain field (`u=a*x`, `v=-nu*a*y`) — every
+        /// node's averaged von Mises must equal the exact analytical `E*a` (a constant field averages to
+        /// itself regardless of how many elements touch a node).
+        #[test]
+        fn nodal_averaged_scalar_patch_test_is_exact_under_uniform_stress() {
+            use crate::elements2d::{PlaneKind, Tri3Cst};
+            let (e, nu, t) = (1000.0, 0.25, 1.0);
+            let coords = [[0.0, 0.0], [2.0, 0.0], [2.0, 2.0], [0.0, 2.0]];
+            let nodes: Vec<Node> = (0..4).map(|i| Node { id: format!("n{i}"), pos: [coords[i][0], coords[i][1], 0.0] }).collect();
+            let el1 = Tri3Cst { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
+            let el2 = Tri3Cst { id: "t2".into(), nodes: ["n0".into(), "n2".into(), "n3".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
+
+            let a = 0.01;
+            let u_of = |ids: [usize; 3]| VecD::from_vec(ids.iter().flat_map(|&i| [a * coords[i][0], -nu * a * coords[i][1]]).collect());
+            let ctx_of = |ids: [usize; 3]| ElementContext { positions: ids.iter().map(|&i| [coords[i][0], coords[i][1], 0.0]).collect() };
+
+            let r1 = el1.recover(&ctx_of([0, 1, 2]), &u_of([0, 1, 2]), None);
+            let r2 = el2.recover(&ctx_of([0, 2, 3]), &u_of([0, 2, 3]), None);
+
+            let model = AnalysisModel { nodes, elements: vec![Box::new(el1), Box::new(el2)], supports: vec![] };
+            let result = StaticResult { displacements: vec![], reactions: vec![], elements: vec![("t1".into(), r1), ("t2".into(), r2)], checks: SolutionChecks { residual_norm: 0.0, reaction_sum: [0.0; 6] } };
+
+            let averaged = nodal_averaged_scalar(&model, &result, StressScalar::VonMises);
+            let expected_vm = (e * a).abs();
+            for id in ["n0", "n1", "n2", "n3"] {
+                let v = *averaged.get(id).unwrap_or_else(|| panic!("node {id} missing from averaged map"));
+                assert!((v - expected_vm).abs() / expected_vm < 1e-8, "node {id}: {v} vs {expected_vm}");
+            }
+        }
+
+        /// 🎨 `nodal_averaged_scalar` on two elements sharing exactly one node but reporting DIFFERENT
+        /// constant von Mises values: the shared node's averaged value must land strictly between the
+        /// two elements' own values, while each element's exclusive nodes keep that element's exact value.
+        #[test]
+        fn nodal_averaged_scalar_shared_node_is_between_neighboring_element_values() {
+            use crate::elements2d::{PlaneKind, Tri3Cst};
+            let (e, nu, t) = (1000.0, 0.25, 1.0);
+            let el_a = Tri3Cst { id: "a".into(), nodes: ["shared".into(), "a1".into(), "a2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
+            let el_b = Tri3Cst { id: "b".into(), nodes: ["shared".into(), "b1".into(), "b2".into()], e, nu, thickness: t, kind: PlaneKind::Stress, density: 0.0 };
+
+            let ctx_a = ElementContext { positions: vec![[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 2.0, 0.0]] };
+            let ctx_b = ElementContext { positions: vec![[0.0, 0.0, 0.0], [-2.0, 0.0, 0.0], [0.0, -2.0, 0.0]] };
+            // `u = k*x` uniaxial fields with distinct magnitudes `k_a=0.02`, `k_b=0.05`, both zero at the
+            // shared origin node so they stay purely constant-strain (patch-test-exact) on each triangle.
+            let u_a = VecD::from_vec(vec![0.0, 0.0, 0.04, 0.0, 0.0, 0.0]);
+            let u_b = VecD::from_vec(vec![0.0, 0.0, -0.1, 0.0, 0.0, 0.0]);
+
+            let r_a = el_a.recover(&ctx_a, &u_a, None);
+            let r_b = el_b.recover(&ctx_b, &u_b, None);
+            let (va, vb) = match (&r_a, &r_b) {
+                (ElementResult::Plane { gauss: ga }, ElementResult::Plane { gauss: gb }) => (ga[0].von_mises, gb[0].von_mises),
+                _ => panic!("expected plane results"),
+            };
+            assert!(va < vb, "test setup should give distinct, ordered element values, got {va} vs {vb}");
+
+            let nodes = vec![
+                Node { id: "shared".into(), pos: [0.0, 0.0, 0.0] },
+                Node { id: "a1".into(), pos: [2.0, 0.0, 0.0] },
+                Node { id: "a2".into(), pos: [0.0, 2.0, 0.0] },
+                Node { id: "b1".into(), pos: [-2.0, 0.0, 0.0] },
+                Node { id: "b2".into(), pos: [0.0, -2.0, 0.0] },
+            ];
+            let model = AnalysisModel { nodes, elements: vec![Box::new(el_a), Box::new(el_b)], supports: vec![] };
+            let result = StaticResult { displacements: vec![], reactions: vec![], elements: vec![("a".into(), r_a), ("b".into(), r_b)], checks: SolutionChecks { residual_norm: 0.0, reaction_sum: [0.0; 6] } };
+
+            let averaged = nodal_averaged_scalar(&model, &result, StressScalar::VonMises);
+            let shared = *averaged.get("shared").unwrap();
+            assert!(shared > va && shared < vb, "shared node value {shared} should be strictly between {va} and {vb}");
+            assert!((*averaged.get("a1").unwrap() - va).abs() < 1e-9);
+            assert!((*averaged.get("a2").unwrap() - va).abs() < 1e-9);
+            assert!((*averaged.get("b1").unwrap() - vb).abs() < 1e-9);
+            assert!((*averaged.get("b2").unwrap() - vb).abs() < 1e-9);
+        }
     }
     // #endregion 🔖Tests
 }
@@ -929,6 +1085,39 @@ pub mod elements2d {
             out.set(1, 3, m);
             out.set(3, 1, m);
             Some(out)
+        }
+
+        /// 🌬️ Consistent end-load `wL/2` at each node from a global member UDL `(wx,wy)` — a 2-node
+        /// linear axial element has no bending stiffness to redistribute the load unevenly, so the
+        /// lumped-consistent split is exact.
+        fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
+            let (l, _, _) = segment_geometry(ctx);
+            let half = l / 2.0;
+            Some(VecD::from_vec(vec![udl.wx * half, udl.wy * half, udl.wx * half, udl.wy * half]))
+        }
+
+        /// 🌀 Truss geometric ("stability") stiffness under the member's own axial force `n` (tension-
+        /// positive, same convention as `recover`): `N/L·(I − ccᵀ)` on each 2x2 node block, `ccᵀ` the
+        /// outer product of the unit axial direction — the transverse-projector form (Przemieniecki,
+        /// "Theory of Matrix Structural Analysis") that only destabilizes displacement PERPENDICULAR to
+        /// the bar's own axis, vanishing identically for a rigid translation (which the projector kills).
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let (l, cx, cy) = segment_geometry(ctx);
+            let k = self.e * self.area / l;
+            let n = k * ((u_element.get(2) - u_element.get(0)) * cx + (u_element.get(3) - u_element.get(1)) * cy);
+            let coeff = n / l;
+            let proj = [[1.0 - cx * cx, -cx * cy], [-cx * cy, 1.0 - cy * cy]];
+            let mut kg = MatD::zeros(4, 4);
+            for row in 0..2 {
+                for col in 0..2 {
+                    let v = coeff * proj[row][col];
+                    kg.set(row, col, v);
+                    kg.set(row, col + 2, -v);
+                    kg.set(row + 2, col, -v);
+                    kg.set(row + 2, col + 2, v);
+                }
+            }
+            Some(kg)
         }
     }
     // #endregion 🔖Bar2
@@ -1195,6 +1384,54 @@ pub mod elements2d {
         ElementResult::Plane { gauss }
     }
 
+    /// 🏋️ Consistent plane-continuum mass `ρ·t·∫Nᵀ·N·dA`, evaluated at the SAME Gauss rule as
+    /// `plane_stiffness` — `shape_full` returns BOTH shape values (for `Nᵀ·N`) and parametric
+    /// derivatives (for `jacobian_2d`'s `det(J)`), unlike `plane_b_and_weights`'s gradient-only closure.
+    fn plane_mass(coords: &[[f64; 2]], rule: &[(f64, f64, f64)], shape_full: impl Fn(f64, f64) -> (Vec<f64>, Vec<[f64; 2]>), density: f64, thickness: f64, n_nodes: usize) -> MatD {
+        let mut m = MatD::zeros(n_nodes * 2, n_nodes * 2);
+        for (xi, eta, w) in rule.iter().copied() {
+            let (n_vals, d_n_param) = shape_full(xi, eta);
+            let (_, det_j, _) = jacobian_2d(coords, &d_n_param);
+            let scale = density * thickness * w * det_j;
+            for i in 0..n_nodes {
+                for j in 0..n_nodes {
+                    let v = n_vals[i] * n_vals[j] * scale;
+                    m.add_at(2 * i, 2 * j, v);
+                    m.add_at(2 * i + 1, 2 * j + 1, v);
+                }
+            }
+        }
+        m
+    }
+
+    /// 🌀 Plane-continuum initial-stress geometric stiffness `Kg = ∫Gᵀ(σ⊗I₂)G·t·dA` (Cook, Malkus,
+    /// Plesha & Witt, "Concepts and Applications of Finite Element Analysis") — recovers the Cauchy
+    /// stress `σ=Dε` from `u_local` at each Gauss point, then couples node `i`/`j`'s shape gradients
+    /// through `σ` identically in BOTH the `u` and `v` directions (no `u`-`v` cross-coupling, since `G`
+    /// is block-diagonal by direction).
+    fn plane_geometric_stiffness(coords: &[[f64; 2]], rule: &[(f64, f64, f64)], shape: impl Fn(f64, f64) -> Vec<[f64; 2]>, d: &MatD, thickness: f64, u_local: &VecD, n_nodes: usize) -> MatD {
+        let mut kg = MatD::zeros(n_nodes * 2, n_nodes * 2);
+        for (xi, eta, w) in rule.iter().copied() {
+            let d_n_param = shape(xi, eta);
+            let (_, det_j, d_n_xy) = jacobian_2d(coords, &d_n_param);
+            let b = b_matrix_plane(&d_n_xy);
+            let eps = b.mul_vec(u_local);
+            let sigma = d.mul_vec(&eps);
+            let (sxx, syy, sxy) = (sigma.get(0), sigma.get(1), sigma.get(2));
+            let scale = w * det_j * thickness;
+            for i in 0..n_nodes {
+                let (dix, diy) = (d_n_xy[i][0], d_n_xy[i][1]);
+                for j in 0..n_nodes {
+                    let (djx, djy) = (d_n_xy[j][0], d_n_xy[j][1]);
+                    let s = dix * sxx * djx + dix * sxy * djy + diy * sxy * djx + diy * syy * djy;
+                    kg.add_at(2 * i, 2 * j, s * scale);
+                    kg.add_at(2 * i + 1, 2 * j + 1, s * scale);
+                }
+            }
+        }
+        kg
+    }
+
     // #region 🔖Tri3Cst
     /// 🔺 3-node constant-strain triangle — DOFs `[Tx, Ty]` per node, 1-point Gauss-tri integration
     /// (exact for constant strain).
@@ -1205,6 +1442,7 @@ pub mod elements2d {
         pub nu: f64,
         pub thickness: f64,
         pub kind: PlaneKind,
+        pub density: f64,
     }
 
     impl Tri3Cst {
@@ -1214,6 +1452,11 @@ pub mod elements2d {
 
         fn shape(xi: f64, eta: f64) -> Vec<[f64; 2]> {
             shape_tri3(xi, eta).1.to_vec()
+        }
+
+        fn shape_full(xi: f64, eta: f64) -> (Vec<f64>, Vec<[f64; 2]>) {
+            let (n, dn) = shape_tri3(xi, eta);
+            (n.to_vec(), dn.to_vec())
         }
     }
 
@@ -1241,6 +1484,21 @@ pub mod elements2d {
             let d = self.kind.d_matrix(self.e, self.nu);
             plane_recover(&coords, &self.rule(), Self::shape, &d, u_local)
         }
+
+        /// 🏋️ Consistent CST mass `ρtA/12·[[2,1,1],[1,2,1],[1,1,2]]` (both directions) — Tri3's shape
+        /// functions ARE the area coordinates (`Ni=Li`), so `Ni·Nj` is a complete quadratic in area
+        /// coordinates, integrated EXACTLY by the degree-2-precision 3-point rule (own stiffness rule
+        /// `self.rule()` is only 1-point, adequate for the constant-strain stiffness but NOT exact here).
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            Some(plane_mass(&coords, &gauss_tri(3), Self::shape_full, self.density, self.thickness, 3))
+        }
+
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            let d = self.kind.d_matrix(self.e, self.nu);
+            Some(plane_geometric_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, u_element, 3))
+        }
     }
     // #endregion 🔖Tri3Cst
 
@@ -1254,6 +1512,7 @@ pub mod elements2d {
         pub nu: f64,
         pub thickness: f64,
         pub kind: PlaneKind,
+        pub density: f64,
     }
 
     impl Tri6Lst {
@@ -1261,8 +1520,20 @@ pub mod elements2d {
             gauss_tri(3)
         }
 
+        /// 🎯 A 7-point rule (degree-5 precision) for mass — Tri6's quadratic shape functions make
+        /// `Ni·Nj` a degree-4 polynomial, which the element's own 3-point (degree-2) stiffness rule
+        /// under-integrates.
+        fn mass_rule() -> Vec<(f64, f64, f64)> {
+            gauss_tri(7)
+        }
+
         fn shape(xi: f64, eta: f64) -> Vec<[f64; 2]> {
             shape_tri6(xi, eta).1.to_vec()
+        }
+
+        fn shape_full(xi: f64, eta: f64) -> (Vec<f64>, Vec<[f64; 2]>) {
+            let (n, dn) = shape_tri6(xi, eta);
+            (n.to_vec(), dn.to_vec())
         }
     }
 
@@ -1290,6 +1561,17 @@ pub mod elements2d {
             let d = self.kind.d_matrix(self.e, self.nu);
             plane_recover(&coords, &self.rule(), Self::shape, &d, u_local)
         }
+
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            Some(plane_mass(&coords, &Self::mass_rule(), Self::shape_full, self.density, self.thickness, 6))
+        }
+
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            let d = self.kind.d_matrix(self.e, self.nu);
+            Some(plane_geometric_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, u_element, 6))
+        }
     }
     // #endregion 🔖Tri6Lst
 
@@ -1302,6 +1584,7 @@ pub mod elements2d {
         pub nu: f64,
         pub thickness: f64,
         pub kind: PlaneKind,
+        pub density: f64,
     }
 
     impl Quad4 {
@@ -1311,6 +1594,11 @@ pub mod elements2d {
 
         fn shape(xi: f64, eta: f64) -> Vec<[f64; 2]> {
             shape_quad4(xi, eta).1.to_vec()
+        }
+
+        fn shape_full(xi: f64, eta: f64) -> (Vec<f64>, Vec<[f64; 2]>) {
+            let (n, dn) = shape_quad4(xi, eta);
+            (n.to_vec(), dn.to_vec())
         }
     }
 
@@ -1338,6 +1626,19 @@ pub mod elements2d {
             let d = self.kind.d_matrix(self.e, self.nu);
             plane_recover(&coords, &self.rule(), Self::shape, &d, u_local)
         }
+
+        /// 🏋️ Consistent bilinear mass — the same 2x2 rule as stiffness under-integrates the biquadratic
+        /// `Ni·Nj` product for a non-rectangular quad, so mass uses the fuller 3x3 rule instead.
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            Some(plane_mass(&coords, &gauss_quad(3), Self::shape_full, self.density, self.thickness, 4))
+        }
+
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            let d = self.kind.d_matrix(self.e, self.nu);
+            Some(plane_geometric_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, u_element, 4))
+        }
     }
     // #endregion 🔖Quad4
 
@@ -1351,6 +1652,7 @@ pub mod elements2d {
         pub nu: f64,
         pub thickness: f64,
         pub kind: PlaneKind,
+        pub density: f64,
     }
 
     impl Quad8 {
@@ -1360,6 +1662,11 @@ pub mod elements2d {
 
         fn shape(xi: f64, eta: f64) -> Vec<[f64; 2]> {
             shape_quad8(xi, eta).1.to_vec()
+        }
+
+        fn shape_full(xi: f64, eta: f64) -> (Vec<f64>, Vec<[f64; 2]>) {
+            let (n, dn) = shape_quad8(xi, eta);
+            (n.to_vec(), dn.to_vec())
         }
     }
 
@@ -1386,6 +1693,17 @@ pub mod elements2d {
             let coords = plane_coords(ctx);
             let d = self.kind.d_matrix(self.e, self.nu);
             plane_recover(&coords, &self.rule(), Self::shape, &d, u_local)
+        }
+
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            Some(plane_mass(&coords, &self.rule(), Self::shape_full, self.density, self.thickness, 8))
+        }
+
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let coords = plane_coords(ctx);
+            let d = self.kind.d_matrix(self.e, self.nu);
+            Some(plane_geometric_stiffness(&coords, &self.rule(), Self::shape, &d, self.thickness, u_element, 8))
         }
     }
     // #endregion 🔖Quad8
@@ -1538,12 +1856,18 @@ pub mod elements2d {
     /// positive rotation about the local x-axis tilts the plate normal the same way a positive `∂w/∂y`
     /// slope does). 3-point Gauss-tri integration of the (non-constant, unlike CST) curvature field. See
     /// Batoz, Bathe & Ho (1980) "A study of three-node triangular plate bending elements".
+    ///
+    /// 🌀 Reports NO `geometric_stiffness` (stays the trait default `None`) — a pure bending element
+    /// carries no membrane stress state to destabilize its own transverse deflection; plate/shell
+    /// buckling under in-plane compression needs the membrane-bending coupling `elements3d::ShellFacet3`
+    /// provides, not `PlateDkt` alone.
     pub struct PlateDkt {
         pub id: String,
         pub nodes: [String; 3],
         pub e: f64,
         pub nu: f64,
         pub thickness: f64,
+        pub density: f64,
     }
 
     impl PlateDkt {
@@ -1590,6 +1914,22 @@ pub mod elements2d {
                 })
                 .collect();
             ElementResult::Plate { gauss }
+        }
+
+        /// 🏋️ Lumped translational mass `ρtA/3` on each node's `Tz` only — zero rotary inertia. DKT has
+        /// no independent transverse-displacement interpolation to derive a consistent mass from (its
+        /// curvature field comes from `w`+rotations jointly), so lumping the plate's own weight evenly
+        /// across its 3 corners is the standard practical simplification (Cook, Malkus, Plesha & Witt).
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let coords = Self::coords(ctx);
+            let (_, det_j, _) = jacobian_2d(&coords, &shape_tri3(0.0, 0.0).1);
+            let area = 0.5 * det_j;
+            let share = self.density * self.thickness * area / 3.0;
+            let mut m = MatD::zeros(9, 9);
+            for i in 0..3 {
+                m.set(3 * i, 3 * i, share);
+            }
+            Some(m)
         }
     }
     // #endregion 🔖PlateDkt
@@ -1733,6 +2073,49 @@ pub mod elements2d {
                 }
             }
         }
+
+        /// 🌬️ `Bar2::equivalent_nodal_loads` splits a global UDL `wL/2` exactly evenly at both nodes.
+        #[test]
+        fn bar2_equivalent_nodal_loads_matches_wl_over_2() {
+            let (e, area, l) = (200e9, 0.001, 2.0);
+            let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 };
+            let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [l, 0.0, 0.0]] };
+            let udl = MemberUdl { wx: 100.0, wy: -50.0, wz: 0.0 };
+            let f = bar.equivalent_nodal_loads(&ctx, &udl).expect("bar2 reports equivalent nodal loads");
+            let half = l / 2.0;
+            assert!((f.get(0) - udl.wx * half).abs() < 1e-9);
+            assert!((f.get(1) - udl.wy * half).abs() < 1e-9);
+            assert!((f.get(2) - udl.wx * half).abs() < 1e-9);
+            assert!((f.get(3) - udl.wy * half).abs() < 1e-9);
+        }
+
+        /// 🌀 `Bar2::geometric_stiffness`: zero under rigid translation, symmetric, and destabilizes only
+        /// the direction PERPENDICULAR to the bar's own axis (an axially-aligned bar with axial force `n`
+        /// should have ZERO transverse stiffness contribution along its own axis).
+        #[test]
+        fn bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let (e, area, l) = (200e9, 0.001, 2.0);
+            let bar = Bar2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, density: 0.0 };
+            let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [l, 0.0, 0.0]] };
+            let u = VecD::from_vec(vec![0.0, 0.0, 0.001, 0.0]);
+            let kg = bar.geometric_stiffness(&ctx, &u).expect("bar2 reports geometric stiffness");
+            for r in 0..4 {
+                for c in 0..4 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let rigid = VecD::from_vec(vec![3.0, 4.0, 3.0, 4.0]);
+            let f = kg.mul_vec(&rigid);
+            for i in 0..4 {
+                assert!(f.get(i).abs() < 1e-6, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
+            // Axial member here runs along global X, so `Kg`'s axial (Tx) rows/columns must be zero.
+            for i in [0usize, 2] {
+                for j in 0..4 {
+                    assert!(kg.get(i, j).abs() < 1e-6, "Kg({i},{j}) should be zero along the bar's own axis");
+                }
+            }
+        }
     }
     // #endregion 🔖Tests
 
@@ -1802,7 +2185,7 @@ pub mod elements2d {
         #[test]
         fn tri3_cst_patch_test_reproduces_linear_field() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
-            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress };
+            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
             let ElementResult::Plane { gauss } = el.recover(&ctx, &u, None) else { panic!("expected plane result") };
@@ -1813,7 +2196,7 @@ pub mod elements2d {
         #[test]
         fn tri3_cst_rigid_translation_gives_zero_force() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
-            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress };
+            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
             assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(3, 1.5, -2.3));
@@ -1822,7 +2205,7 @@ pub mod elements2d {
         #[test]
         fn tri6_lst_patch_test_reproduces_linear_field() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
-            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress };
+            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
             let ElementResult::Plane { gauss } = el.recover(&ctx, &u, None) else { panic!("expected plane result") };
@@ -1833,7 +2216,7 @@ pub mod elements2d {
         #[test]
         fn tri6_lst_rigid_translation_gives_zero_force() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
-            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress };
+            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
             assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(6, 1.5, -2.3));
@@ -1842,7 +2225,7 @@ pub mod elements2d {
         #[test]
         fn quad4_patch_test_reproduces_linear_field() {
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
-            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain };
+            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
             let ElementResult::Plane { gauss } = el.recover(&ctx, &u, None) else { panic!("expected plane result") };
@@ -1853,7 +2236,7 @@ pub mod elements2d {
         #[test]
         fn quad4_rigid_translation_gives_zero_force() {
             let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
-            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain };
+            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
             assert_rigid_body_gives_zero_force(&ke, &rigid_translation_u_local(4, 1.5, -2.3));
@@ -1869,6 +2252,7 @@ pub mod elements2d {
                 nu: NU,
                 thickness: 1.0,
                 kind: PlaneKind::Stress,
+                density: 0.0,
             };
             let ctx = ctx_of(&coords);
             let u = linear_field_u_local(&coords, A, B);
@@ -1887,6 +2271,7 @@ pub mod elements2d {
                 nu: NU,
                 thickness: 1.0,
                 kind: PlaneKind::Stress,
+                density: 0.0,
             };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
@@ -1924,6 +2309,7 @@ pub mod elements2d {
                         nu: 1.0 / 3.0,
                         thickness: 1.0,
                         kind: PlaneKind::Stress,
+                        density: 0.0,
                     }));
                 }
             }
@@ -1935,6 +2321,61 @@ pub mod elements2d {
             let result = solve_linear_static(&model).expect("cook's membrane mesh solves");
             let tip: f64 = (0..=n).map(|j| result.displacements.iter().find(|d| d.node_id == node_id(n, j)).unwrap().values[Dof::Ty.index()]).sum::<f64>() / (n as f64 + 1.0);
             assert!(tip > 0.0 && tip.is_finite(), "tip deflection = {tip}");
+        }
+
+        /// ⚖️ Consistent-mass physical sanity check (same identity `bar2_mass_total_equals_rho_a_l` uses):
+        /// the sum of the pure-`Tx` submatrix must equal the element's total mass `ρtA`.
+        #[test]
+        fn tri3_cst_mass_total_equals_rho_t_area() {
+            let (density, thickness) = (7850.0, 0.02);
+            let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
+            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness, kind: PlaneKind::Stress, density };
+            let ctx = ctx_of(&coords);
+            let m = el.mass(&ctx).expect("tri3cst reports mass");
+            let area = triangle_signed_area(&coords).abs();
+            let sum_tx: f64 = (0..3).flat_map(|r| (0..3).map(move |c| (2 * r, 2 * c))).map(|(r, c)| m.get(r, c)).sum();
+            let expected = density * thickness * area;
+            assert!((sum_tx - expected).abs() / expected < 1e-9, "sum={sum_tx} expected={expected}");
+        }
+
+        fn triangle_signed_area(coords: &[[f64; 2]]) -> f64 {
+            0.5 * ((coords[1][0] - coords[0][0]) * (coords[2][1] - coords[0][1]) - (coords[2][0] - coords[0][0]) * (coords[1][1] - coords[0][1]))
+        }
+
+        #[test]
+        fn quad4_mass_total_equals_rho_t_area() {
+            let (density, thickness) = (2400.0, 0.15);
+            let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
+            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness, kind: PlaneKind::Strain, density };
+            let ctx = ctx_of(&coords);
+            let m = el.mass(&ctx).expect("quad4 reports mass");
+            // Shoelace area of the (convex) quad, split as two triangles from vertex 0.
+            let area = triangle_signed_area(&[coords[0], coords[1], coords[2]]).abs() + triangle_signed_area(&[coords[0], coords[2], coords[3]]).abs();
+            let sum_tx: f64 = (0..4).flat_map(|r| (0..4).map(move |c| (2 * r, 2 * c))).map(|(r, c)| m.get(r, c)).sum();
+            let expected = density * thickness * area;
+            assert!((sum_tx - expected).abs() / expected < 1e-6, "sum={sum_tx} expected={expected}");
+        }
+
+        /// 🌀 `Tri3Cst::geometric_stiffness` must vanish under a pure rigid translation (zero stress ⇒
+        /// zero `Kg`, same reasoning `beam_eb2_geometric_stiffness_rigid_translation_gives_zero_force` uses)
+        /// and be symmetric under a genuinely deforming field.
+        #[test]
+        fn tri3_cst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
+            let el = Tri3Cst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
+            let ctx = ctx_of(&coords);
+            let u = linear_field_u_local(&coords, A, B);
+            let kg = el.geometric_stiffness(&ctx, &u).expect("tri3cst reports geometric stiffness");
+            for r in 0..6 {
+                for c in 0..6 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let kg_rigid = el.geometric_stiffness(&ctx, &rigid_translation_u_local(3, 1.5, -2.3)).unwrap();
+            let f = kg_rigid.mul_vec(&rigid_translation_u_local(3, 0.4, 0.6));
+            for i in 0..6 {
+                assert!(f.get(i).abs() < 1e-9, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
         }
     }
     // #endregion 🔖ContinuumTests
@@ -1973,7 +2414,7 @@ pub mod elements2d {
         #[test]
         fn plate_dkt_patch_test_reproduces_constant_curvature() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
-            let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS };
+            let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
             let ctx = ctx_of(&coords);
             let u = constant_curvature_u_local(&coords);
             let d = d_matrix_plate(E, NU, THICKNESS);
@@ -1992,7 +2433,7 @@ pub mod elements2d {
         #[test]
         fn plate_dkt_rigid_translation_gives_zero_force() {
             let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
-            let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS };
+            let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
             let ctx = ctx_of(&coords);
             let ke = el.stiffness_global(&ctx);
             let rigid = VecD::from_vec(vec![0.7, 0.0, 0.0, 0.7, 0.0, 0.0, 0.7, 0.0, 0.0]);
@@ -2032,6 +2473,7 @@ pub mod elements2d {
                         e,
                         nu,
                         thickness: t,
+                        density: 0.0,
                     }));
                     elements.push(Box::new(PlateDkt {
                         id: format!("t{i}_{j}b"),
@@ -2039,6 +2481,7 @@ pub mod elements2d {
                         e,
                         nu,
                         thickness: t,
+                        density: 0.0,
                     }));
                 }
             }
@@ -2157,6 +2600,39 @@ pub mod elements3d {
                 out.set(i + 3, i, m);
             }
             Some(out)
+        }
+
+        /// 🌬️ Consistent end-load `wL/2` at each node from a global member UDL `(wx,wy,wz)` — same
+        /// exact-split reasoning as `elements2d::Bar2::equivalent_nodal_loads`.
+        fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
+            let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
+            let l = vec3d_length(d);
+            let half = l / 2.0;
+            Some(VecD::from_vec(vec![udl.wx * half, udl.wy * half, udl.wz * half, udl.wx * half, udl.wy * half, udl.wz * half]))
+        }
+
+        /// 🌀 3D truss geometric stiffness under axial force `n` (tension-positive, `recover`'s convention):
+        /// `N/L·(I₃ − ccᵀ)` per 3x3 node block — the 3D analogue of `elements2d::Bar2::geometric_stiffness`.
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+            let d = vec3d_sub(ctx.positions[1], ctx.positions[0]);
+            let l = vec3d_length(d);
+            let c = vec3d_normalize(d);
+            let k = self.e * self.a / l;
+            let du = [u_elem.get(3) - u_elem.get(0), u_elem.get(4) - u_elem.get(1), u_elem.get(5) - u_elem.get(2)];
+            let n = k * (c[0] * du[0] + c[1] * du[1] + c[2] * du[2]);
+            let coeff = n / l;
+            let mut kg = MatD::zeros(6, 6);
+            for i in 0..3 {
+                for j in 0..3 {
+                    let identity = if i == j { 1.0 } else { 0.0 };
+                    let v = coeff * (identity - c[i] * c[j]);
+                    kg.set(i, j, v);
+                    kg.set(i, j + 3, -v);
+                    kg.set(i + 3, j, -v);
+                    kg.set(i + 3, j + 3, v);
+                }
+            }
+            Some(kg)
         }
     }
     // #endregion 🔖Bar3
@@ -2477,6 +2953,7 @@ pub mod elements3d {
         pub nodes: [String; 4],
         pub e: f64,
         pub nu: f64,
+        pub density: f64,
     }
 
     impl Tet4 {
@@ -2547,6 +3024,49 @@ pub mod elements3d {
             let von_mises = von_mises_solid(sxx, syy, szz, sxy, syz, sxz);
             ElementResult::Solid { gauss: vec![SolidStress { sxx, syy, szz, sxy, syz, sxz, von_mises }] }
         }
+
+        /// 🏋️ Consistent tet mass `ρV/20 * (2 on the diagonal, 1 off-diagonal)` per direction — the
+        /// standard closed-form linear-tetrahedron consistent mass (Cook, Malkus, Plesha & Witt), exact
+        /// since `Ni=Li` are the tet's own barycentric coordinates.
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let v = Self::volume(ctx);
+            let mut m = MatD::zeros(12, 12);
+            for i in 0..4 {
+                for j in 0..4 {
+                    let scalar = self.density * v / 20.0 * if i == j { 2.0 } else { 1.0 };
+                    for a in 0..3 {
+                        m.set(3 * i + a, 3 * j + a, scalar);
+                    }
+                }
+            }
+            Some(m)
+        }
+
+        /// 🌀 Initial-stress geometric stiffness `Kg = V·Gᵀ·(σ̂⊗I₃)·G` from the element's own (constant)
+        /// stress state under `u_elem` — the 3D analogue of `elements2d::plane_geometric_stiffness`,
+        /// `σ̂` the full 3x3 stress tensor built from the recovered `[sxx,syy,szz,sxy,syz,sxz]`.
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+            let v = Self::volume(ctx);
+            let grads = Self::gradients(ctx);
+            let b = solid_b_matrix(&grads);
+            let d = d_matrix_solid(self.e, self.nu);
+            let strain = b.mul_vec(u_elem);
+            let stress = d.mul_vec(&strain);
+            let (sxx, syy, szz, sxy, syz, sxz) = (stress.get(0), stress.get(1), stress.get(2), stress.get(3), stress.get(4), stress.get(5));
+            let mut kg = MatD::zeros(12, 12);
+            for i in 0..4 {
+                let gi = grads[i];
+                for j in 0..4 {
+                    let gj = grads[j];
+                    let s = gi[0] * (sxx * gj[0] + sxy * gj[1] + sxz * gj[2]) + gi[1] * (sxy * gj[0] + syy * gj[1] + syz * gj[2]) + gi[2] * (sxz * gj[0] + syz * gj[1] + szz * gj[2]);
+                    let val = s * v;
+                    for a in 0..3 {
+                        kg.add_at(3 * i + a, 3 * j + a, val);
+                    }
+                }
+            }
+            Some(kg)
+        }
     }
     // #endregion 🔖Tet4
 
@@ -2580,6 +3100,16 @@ pub mod elements3d {
         pts
     }
 
+    /// 🧭 Per-node trilinear shape values `Ni = 0.125*(1+ξξi)(1+ηηi)(1+ζζi)` at one point — shared by
+    /// `mass`'s `Nᵀ·N` (the stiffness/recover Gauss loop only needed `hex8_param_derivs`, not values).
+    fn hex8_shape(xi: f64, eta: f64, zeta: f64) -> [f64; 8] {
+        let mut n = [0.0; 8];
+        for (i, c) in HEX8_CORNERS.iter().enumerate() {
+            n[i] = 0.125 * (1.0 + xi * c[0]) * (1.0 + eta * c[1]) * (1.0 + zeta * c[2]);
+        }
+        n
+    }
+
     /// 🧭 Per-node parametric shape-function derivatives `[∂Ni/∂ξ, ∂Ni/∂η, ∂Ni/∂ζ]` at one Gauss point.
     fn hex8_param_derivs(xi: f64, eta: f64, zeta: f64) -> [[f64; 3]; 8] {
         let mut out = [[0.0; 3]; 8];
@@ -2606,6 +3136,7 @@ pub mod elements3d {
         pub nodes: [String; 8],
         pub e: f64,
         pub nu: f64,
+        pub density: f64,
     }
 
     impl Hex8 {
@@ -2674,6 +3205,53 @@ pub mod elements3d {
                 .collect();
             ElementResult::Solid { gauss }
         }
+
+        /// 🏋️ Consistent trilinear mass `ρ∫Nᵀ·N·dV` over the same 2x2x2 Gauss rule as stiffness — exact,
+        /// since `Ni·Nj` (biquadratic-per-axis) is within that rule's precision.
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let mut m = MatD::zeros(24, 24);
+            for (p, weight) in hex8_gauss_points() {
+                let (det_j, _) = Self::gradients_at(ctx, p[0], p[1], p[2]);
+                let n_vals = hex8_shape(p[0], p[1], p[2]);
+                let scale = self.density * det_j * weight;
+                for i in 0..8 {
+                    for j in 0..8 {
+                        let v = n_vals[i] * n_vals[j] * scale;
+                        for a in 0..3 {
+                            m.add_at(3 * i + a, 3 * j + a, v);
+                        }
+                    }
+                }
+            }
+            Some(m)
+        }
+
+        /// 🌀 Initial-stress geometric stiffness, same `Gᵀ(σ̂⊗I₃)G` pattern as `Tet4::geometric_stiffness`
+        /// but Gauss-integrated over the element's own 2x2x2 rule (stress varies point-to-point).
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_elem: &VecD) -> Option<MatD> {
+            let d = d_matrix_solid(self.e, self.nu);
+            let mut kg = MatD::zeros(24, 24);
+            for (p, weight) in hex8_gauss_points() {
+                let (det_j, grads) = Self::gradients_at(ctx, p[0], p[1], p[2]);
+                let b = solid_b_matrix(&grads);
+                let strain = b.mul_vec(u_elem);
+                let stress = d.mul_vec(&strain);
+                let (sxx, syy, szz, sxy, syz, sxz) = (stress.get(0), stress.get(1), stress.get(2), stress.get(3), stress.get(4), stress.get(5));
+                let scale = det_j * weight;
+                for i in 0..8 {
+                    let gi = grads[i];
+                    for j in 0..8 {
+                        let gj = grads[j];
+                        let s = gi[0] * (sxx * gj[0] + sxy * gj[1] + sxz * gj[2]) + gi[1] * (sxy * gj[0] + syy * gj[1] + syz * gj[2]) + gi[2] * (sxz * gj[0] + syz * gj[1] + szz * gj[2]);
+                        let val = s * scale;
+                        for a in 0..3 {
+                            kg.add_at(3 * i + a, 3 * j + a, val);
+                        }
+                    }
+                }
+            }
+            Some(kg)
+        }
     }
     // #endregion 🔖Hex8
 
@@ -2719,6 +3297,7 @@ pub mod elements3d {
         pub e: f64,
         pub nu: f64,
         pub thickness: f64,
+        pub density: f64,
     }
 
     /// 🎯 Small dimensionless drilling-stabilization factor — standard "just enough to avoid
@@ -2840,6 +3419,57 @@ pub mod elements3d {
             let von_mises_bottom = surface(-1.0);
 
             ElementResult::Shell { gauss: vec![ShellState { nxx, nyy, nxy, mxx, myy, mxy, von_mises_top, von_mises_bottom }] }
+        }
+
+        /// 🏋️ Lumped translational mass `ρtA/3` on each node's `[Tx,Ty,Tz]` — diagonal and isotropic
+        /// (equal in all 3 local translation directions), so it needs no local->global rotation, unlike
+        /// `local_stiffness`. Zero rotational inertia, same lumping rationale as `PlateDkt::mass`.
+        fn mass(&self, ctx: &ElementContext) -> Option<MatD> {
+            let (coords, _) = Self::local_coords(ctx);
+            let (_, det_j, _) = jacobian_2d(&coords, &shape_tri3(0.0, 0.0).1);
+            let area = 0.5 * det_j;
+            let share = self.density * self.thickness * area / 3.0;
+            let mut m = MatD::zeros(18, 18);
+            for i in 0..3 {
+                for a in 0..3 {
+                    m.set(6 * i + a, 6 * i + a, share);
+                }
+            }
+            Some(m)
+        }
+
+        /// 🌀 Geometric stiffness from the facet's own (constant) CST membrane forces `Nxx,Nyy,Nxy`
+        /// acting on the LINEAR CST-interpolated out-of-plane `w` gradient (the standard flat-facet
+        /// simplification — the DKT bending field's rotation-driven curvature correction is neglected
+        /// for this coupling, following common practice for flat shell buckling), local `Tz` dof per
+        /// node using the SAME constant gradient `local_stiffness`'s membrane block computes.
+        fn geometric_stiffness(&self, ctx: &ElementContext, u_element: &VecD) -> Option<MatD> {
+            let (coords, r) = Self::local_coords(ctx);
+            let t = shell_transform(&r);
+            let u_loc = t.mul_vec(u_element);
+
+            let mem_idx = [0usize, 1, 6, 7, 12, 13];
+            let u_mem = VecD::from_vec(mem_idx.iter().map(|&i| u_loc.get(i)).collect());
+            let d_mem = d_matrix_plane_stress(self.e, self.nu);
+            let (_, dn) = shape_tri3(1.0 / 3.0, 1.0 / 3.0);
+            let (_, det_j, d_n_xy) = jacobian_2d(&coords, &dn);
+            let b_mem = b_matrix_plane(&d_n_xy);
+            let eps = b_mem.mul_vec(&u_mem);
+            let sigma = d_mem.mul_vec(&eps);
+            let (nxx, nyy, nxy) = (sigma.get(0) * self.thickness, sigma.get(1) * self.thickness, sigma.get(2) * self.thickness);
+
+            let area = 0.5 * det_j;
+            let w_idx = [2usize, 8, 14];
+            let mut kg_local = MatD::zeros(18, 18);
+            for i in 0..3 {
+                let (gix, giy) = (d_n_xy[i][0], d_n_xy[i][1]);
+                for j in 0..3 {
+                    let (gjx, gjy) = (d_n_xy[j][0], d_n_xy[j][1]);
+                    let s = gix * nxx * gjx + gix * nxy * gjy + giy * nxy * gjx + giy * nyy * gjy;
+                    kg_local.add_at(w_idx[i], w_idx[j], s * area);
+                }
+            }
+            Some(t.transpose().matmul(&kg_local).matmul(&t))
         }
     }
     // #endregion 🔖ShellFacet3
@@ -3101,7 +3731,7 @@ pub mod elements3d {
             let positions = skew_tet_positions();
             let field = LinearField::sample();
             let ctx = ElementContext { positions: positions.to_vec() };
-            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu };
+            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density: 0.0 };
             let ke = tet.stiffness_global(&ctx);
             assert_eq!(ke.rows, 12);
             let u = field.nodal_vector(&positions);
@@ -3117,12 +3747,77 @@ pub mod elements3d {
             let (e, nu) = (200e9, 0.3);
             let positions = skew_tet_positions();
             let ctx = ElementContext { positions: positions.to_vec() };
-            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu };
+            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density: 0.0 };
             let ke = tet.stiffness_global(&ctx);
             let rigid = VecD::from_vec((0..4).flat_map(|_| [1.0, 2.0, 3.0]).collect());
             let f = ke.mul_vec(&rigid);
             for i in 0..12 {
                 assert!(f.get(i).abs() < 1e-3, "rigid-body force[{i}] = {}", f.get(i));
+            }
+        }
+
+        fn tet_volume(positions: &[[f64; 3]; 4]) -> f64 {
+            let e1 = [positions[1][0] - positions[0][0], positions[1][1] - positions[0][1], positions[1][2] - positions[0][2]];
+            let e2 = [positions[2][0] - positions[0][0], positions[2][1] - positions[0][1], positions[2][2] - positions[0][2]];
+            let e3 = [positions[3][0] - positions[0][0], positions[3][1] - positions[0][1], positions[3][2] - positions[0][2]];
+            let cross = [e1[1] * e2[2] - e1[2] * e2[1], e1[2] * e2[0] - e1[0] * e2[2], e1[0] * e2[1] - e1[1] * e2[0]];
+            (cross[0] * e3[0] + cross[1] * e3[1] + cross[2] * e3[2]).abs() / 6.0
+        }
+
+        /// ⚖️ `Tet4::mass`'s total (the pure-`Tx` submatrix's sum) equals `ρV` — same partition-of-unity
+        /// identity as `Bar3`'s.
+        #[test]
+        fn tet4_mass_total_equals_rho_v() {
+            let (density, e, nu) = (2400.0, 200e9, 0.3);
+            let positions = skew_tet_positions();
+            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density };
+            let ctx = ElementContext { positions: positions.to_vec() };
+            let m = tet.mass(&ctx).expect("tet4 reports mass");
+            let sum_tx: f64 = (0..4).flat_map(|r| (0..4).map(move |c| (3 * r, 3 * c))).map(|(r, c)| m.get(r, c)).sum();
+            let expected = density * tet_volume(&positions);
+            assert!((sum_tx - expected).abs() / expected < 1e-9, "sum={sum_tx} expected={expected}");
+        }
+
+        /// ⚖️ A single `Tet4` under self-weight only: the vertical reaction sum must equal `ρVg` — the
+        /// same strong equilibrium check `analyses`'s beam self-weight test uses, now exercised on a
+        /// continuum solid element (only possible once `Tet4::mass` exists).
+        #[test]
+        fn tet4_self_weight_matches_total_mass_times_gravity() {
+            let (density, e, nu, g) = (2400.0, 30e9, 0.2, 9.81);
+            let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+            let nodes: Vec<Node> = (0..4).map(|i| Node { id: format!("n{i}"), pos: positions[i] }).collect();
+            let model = crate::analyses::AnalysisModel {
+                nodes,
+                elements: vec![Box::new(Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density })],
+                supports: vec![Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] }, Support { node_id: "n1".into(), fixed: vec![Dof::Ty, Dof::Tz] }, Support { node_id: "n2".into(), fixed: vec![Dof::Tz] }],
+            };
+            let case = crate::analyses::LoadCase { id: "self_weight".into(), nodal_loads: vec![], member_loads: vec![], self_weight: true };
+            let results = crate::analyses::solve_multi_case(&model, &[case], &[], [0.0, 0.0, -g]).expect("solves");
+            let result = results.get("self_weight").unwrap();
+            let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
+            let expected = density * tet_volume(&positions) * g;
+            assert!((total_tz_reaction - expected).abs() / expected < 1e-9, "reaction sum {total_tz_reaction} vs expected {expected}");
+        }
+
+        /// 🌀 `Tet4::geometric_stiffness`: zero under rigid translation and symmetric.
+        #[test]
+        fn tet4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let (e, nu) = (200e9, 0.3);
+            let positions = skew_tet_positions();
+            let field = LinearField::sample();
+            let ctx = ElementContext { positions: positions.to_vec() };
+            let tet = Tet4 { id: "t1".into(), nodes: ["n0".into(), "n1".into(), "n2".into(), "n3".into()], e, nu, density: 0.0 };
+            let u = field.nodal_vector(&positions);
+            let kg = tet.geometric_stiffness(&ctx, &u).expect("tet4 reports geometric stiffness");
+            for r in 0..12 {
+                for c in 0..12 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-6, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let rigid = VecD::from_vec((0..4).flat_map(|_| [1.0, 2.0, 3.0]).collect());
+            let f = kg.mul_vec(&rigid);
+            for i in 0..12 {
+                assert!(f.get(i).abs() < 1e-3, "rigid-body geometric force[{i}] = {}", f.get(i));
             }
         }
         // #endregion 🔖Tet4
@@ -3151,7 +3846,7 @@ pub mod elements3d {
             let field = LinearField::sample();
             let ctx = ElementContext { positions: positions.to_vec() };
             let nodes: [String; 8] = std::array::from_fn(|i| format!("n{i}"));
-            let hex = Hex8 { id: "h1".into(), nodes, e, nu };
+            let hex = Hex8 { id: "h1".into(), nodes, e, nu, density: 0.0 };
             let ke = hex.stiffness_global(&ctx);
             assert_eq!(ke.rows, 24);
             let u = field.nodal_vector(&positions);
@@ -3171,7 +3866,7 @@ pub mod elements3d {
             let positions = skew_hex_positions();
             let ctx = ElementContext { positions: positions.to_vec() };
             let nodes: [String; 8] = std::array::from_fn(|i| format!("n{i}"));
-            let hex = Hex8 { id: "h1".into(), nodes, e, nu };
+            let hex = Hex8 { id: "h1".into(), nodes, e, nu, density: 0.0 };
             let ke = hex.stiffness_global(&ctx);
             let rigid = VecD::from_vec((0..8).flat_map(|_| [1.0, 2.0, 3.0]).collect());
             let f = ke.mul_vec(&rigid);
@@ -3219,6 +3914,7 @@ pub mod elements3d {
                     ],
                     e,
                     nu,
+                    density: 0.0,
                 }));
             }
 
@@ -3244,6 +3940,44 @@ pub mod elements3d {
             assert!(tip_dz < 0.0, "tip should deflect toward -Z, got {tip_dz}");
             let ratio = tip_dz.abs() / expected;
             assert!(ratio > 0.02 && ratio < 3.0, "deflection ratio {ratio} (actual {tip_dz} vs beam-theory {expected}) out of order-of-magnitude range");
+        }
+
+        /// ⚖️ `Hex8::mass`'s total (pure-`Tx` submatrix sum) equals `ρV` on the UNIT cube (skewed hex
+        /// positions make an independent volume oracle fiddly — the axis-aligned unit cube's volume is
+        /// trivially `1.0`, isolating the mass identity from any volume-computation risk).
+        #[test]
+        fn hex8_mass_total_equals_rho_v() {
+            let density = 2400.0;
+            let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [1.0, 0.0, 1.0], [1.0, 1.0, 1.0], [0.0, 1.0, 1.0]];
+            let nodes: [String; 8] = std::array::from_fn(|i| format!("n{i}"));
+            let hex = Hex8 { id: "h1".into(), nodes, e: 200e9, nu: 0.3, density };
+            let ctx = ElementContext { positions: positions.to_vec() };
+            let m = hex.mass(&ctx).expect("hex8 reports mass");
+            let sum_tx: f64 = (0..8).flat_map(|r| (0..8).map(move |c| (3 * r, 3 * c))).map(|(r, c)| m.get(r, c)).sum();
+            assert!((sum_tx - density).abs() / density < 1e-9, "sum={sum_tx} expected={density}");
+        }
+
+        /// 🌀 `Hex8::geometric_stiffness`: zero under rigid translation and symmetric.
+        #[test]
+        fn hex8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let (e, nu) = (200e9, 0.3);
+            let positions = skew_hex_positions();
+            let field = LinearField::sample();
+            let ctx = ElementContext { positions: positions.to_vec() };
+            let nodes: [String; 8] = std::array::from_fn(|i| format!("n{i}"));
+            let hex = Hex8 { id: "h1".into(), nodes, e, nu, density: 0.0 };
+            let u = field.nodal_vector(&positions);
+            let kg = hex.geometric_stiffness(&ctx, &u).expect("hex8 reports geometric stiffness");
+            for r in 0..24 {
+                for c in 0..24 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-6, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let rigid = VecD::from_vec((0..8).flat_map(|_| [1.0, 2.0, 3.0]).collect());
+            let f = kg.mul_vec(&rigid);
+            for i in 0..24 {
+                assert!(f.get(i).abs() < 1e-3, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
         }
         // #endregion 🔖Hex8
     }
@@ -3278,7 +4012,7 @@ pub mod elements3d {
         #[test]
         fn shell_facet3_patch_test_reproduces_linear_membrane_and_constant_curvature() {
             let positions = aligned_triangle_positions();
-            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS };
+            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
             let ctx = ElementContext { positions: positions.to_vec() };
 
             let mut u = Vec::with_capacity(18);
@@ -3321,7 +4055,7 @@ pub mod elements3d {
         #[test]
         fn shell_facet3_rigid_translation_gives_zero_force() {
             let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.3], [0.5, 1.5, 0.7]];
-            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS };
+            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
             let ctx = ElementContext { positions: positions.to_vec() };
             let ke = el.stiffness_global(&ctx);
             let mut rigid = Vec::with_capacity(18);
@@ -3344,7 +4078,7 @@ pub mod elements3d {
             let p = -1000.0;
             let model = Model {
                 nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [1.0, 0.0, 0.0] }, Node { id: "c".into(), pos: [0.0, 1.0, 0.0] }],
-                elements: vec![Box::new(ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e, nu, thickness: t })],
+                elements: vec![Box::new(ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e, nu, thickness: t, density: 0.0 })],
                 supports: vec![
                     Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] },
                     Support { node_id: "b".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz, Dof::Rx, Dof::Ry, Dof::Rz] },
@@ -3356,6 +4090,59 @@ pub mod elements3d {
             let c = result.displacements.iter().find(|d| d.node_id == "c").unwrap();
             let dz = c.values[Dof::Tz.index()];
             assert!(dz.is_finite() && dz < 0.0, "tip deflection {dz} should be finite and negative (toward the -Tz load)");
+        }
+
+        /// ⚖️ `ShellFacet3::mass`'s total (pure-`Tx` submatrix sum) equals `ρtA` — same lumped-mass
+        /// row-sum identity `PlateDkt`'s translational lump satisfies.
+        #[test]
+        fn shell_facet3_mass_total_equals_rho_t_area() {
+            let (density, thickness) = (7850.0, 0.008);
+            let positions = aligned_triangle_positions();
+            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness, density };
+            let ctx = ElementContext { positions: positions.to_vec() };
+            let m = el.mass(&ctx).expect("shell facet reports mass");
+            let sum_tx: f64 = (0..3).flat_map(|r| (0..3).map(move |c| (6 * r, 6 * c))).map(|(r, c)| m.get(r, c)).sum();
+            // `aligned_triangle_positions` is `[[0,0,0],[2,0,0],[0.2,1.8,0]]` — shoelace area directly.
+            let area = 0.5 * ((positions[1][0] - positions[0][0]) * (positions[2][1] - positions[0][1]) - (positions[2][0] - positions[0][0]) * (positions[1][1] - positions[0][1])).abs();
+            let expected = density * thickness * area;
+            assert!((sum_tx - expected).abs() / expected < 1e-9, "sum={sum_tx} expected={expected}");
+        }
+
+        /// 🌀 A cantilevered flat shell panel (2 `ShellFacet3` triangles, one edge fully fixed) under
+        /// in-plane axial COMPRESSION at the free edge must produce a finite, positive lowest linear-
+        /// buckling load factor — possible only now that `ShellFacet3::geometric_stiffness` exists (a
+        /// `PlateDkt`-only panel would report no geometric stiffness at all, per its documented `None`).
+        #[test]
+        fn shell_facet3_membrane_compression_destabilizes_and_tension_stabilizes_out_of_plane_stiffness() {
+            let positions = aligned_triangle_positions();
+            let el = ShellFacet3 { id: "s".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness: THICKNESS, density: 0.0 };
+            let ctx = ElementContext { positions: positions.to_vec() };
+
+            // Uniform uniaxial membrane strain `u = k*x` (zero elsewhere) recovers a constant `Nxx`,
+            // compressive for k<0 and tensile for k>0 — same field shape `elements2d::continuum_tests`
+            // uses for its patch tests.
+            let field = |k: f64| {
+                let mut u = Vec::with_capacity(18);
+                for &[x, _, _] in &positions {
+                    u.extend_from_slice(&[k * x, 0.0, 0.0, 0.0, 0.0, 0.0]);
+                }
+                VecD::from_vec(u)
+            };
+            let kg_tension = el.geometric_stiffness(&ctx, &field(1e-4)).expect("shell reports geometric stiffness");
+            let kg_compression = el.geometric_stiffness(&ctx, &field(-1e-4)).expect("shell reports geometric stiffness");
+
+            // Node `b`'s local `Tz` sits at global index 8 (node 1 * 6 dof + 2) — the aligned-triangle
+            // fixture makes local == global, so this global diagonal entry is directly the out-of-plane
+            // stiffness contribution the buckling solver would add for node b.
+            let tz_b = 8usize;
+            assert!(kg_tension.get(tz_b, tz_b) > 0.0, "tension should STIFFEN out-of-plane bending, got Kg[b,Tz]={}", kg_tension.get(tz_b, tz_b));
+            assert!(kg_compression.get(tz_b, tz_b) < 0.0, "compression should DESTABILIZE out-of-plane bending, got Kg[b,Tz]={}", kg_compression.get(tz_b, tz_b));
+
+            for r in 0..18 {
+                for c in 0..18 {
+                    assert!((kg_compression.get(r, c) - kg_compression.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
         }
     }
     // #endregion 🔖ShellTests
@@ -4033,6 +4820,55 @@ pub mod mesh {
         }
         VolumeMesh { points: mesh.points.clone(), cells }
     }
+
+    /// 🧭 The average of `mesh.points` at `idxs` — shared by `boundary_faces`'s per-tet and per-face
+    /// centroid computations.
+    fn point_centroid(mesh: &VolumeMesh, idxs: &[u32]) -> [f64; 3] {
+        let mut c = [0.0; 3];
+        for &i in idxs {
+            let p = mesh.points[i as usize];
+            for k in 0..3 {
+                c[k] += p[k];
+            }
+        }
+        let n = idxs.len() as f64;
+        [c[0] / n, c[1] / n, c[2] / n]
+    }
+
+    /// 🧱 Every triangular face belonging to EXACTLY ONE `Tet4` cell — the mesh's outer surface (call
+    /// [`split_to_tets`] first if `mesh` still has `Wedge6`/`Hex8` cells; those contribute no faces here).
+    /// Each returned triangle is independently wound so its `cross(edge0,edge1)` normal points AWAY from
+    /// its own tet's centroid (outward) — determined per-tet via a centroid side-test, so the result
+    /// doesn't depend on any input node-order convention. Used by `fem_3d`'s solid mesh preview/rendering.
+    pub fn boundary_faces(mesh: &VolumeMesh) -> Vec<[u32; 3]> {
+        let mut counts: HashMap<[u32; 3], usize> = HashMap::new();
+        let mut oriented: HashMap<[u32; 3], [u32; 3]> = HashMap::new();
+
+        for cell in &mesh.cells {
+            let Cell::Tet4(t) = cell else { continue };
+            let [n0, n1, n2, n3] = *t;
+            let tet_centroid = point_centroid(mesh, &[n0, n1, n2, n3]);
+
+            for face in [[n0, n1, n2], [n0, n1, n3], [n0, n2, n3], [n1, n2, n3]] {
+                let mut key = face;
+                key.sort_unstable();
+                *counts.entry(key).or_insert(0) += 1;
+
+                let p = |i: u32| mesh.points[i as usize];
+                let (a, b, c) = (p(face[0]), p(face[1]), p(face[2]));
+                let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+                let e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+                let normal = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+                let face_centroid = point_centroid(mesh, &face);
+                let to_tet = [tet_centroid[0] - face_centroid[0], tet_centroid[1] - face_centroid[1], tet_centroid[2] - face_centroid[2]];
+                let dot = normal[0] * to_tet[0] + normal[1] * to_tet[1] + normal[2] * to_tet[2];
+                let outward = if dot > 0.0 { [face[0], face[2], face[1]] } else { face };
+                oriented.insert(key, outward);
+            }
+        }
+
+        counts.into_iter().filter(|(_, count)| *count == 1).map(|(key, _)| oriented[&key]).collect()
+    }
     // #endregion 🔖VolumeMesh
 
     // #region 🔖Quality
@@ -4350,6 +5186,43 @@ pub mod mesh {
             // Swap two nodes to invert the signed volume.
             let inverted = VolumeMesh { points, cells: vec![Cell::Tet4([1, 0, 2, 3])] };
             assert!(!volume_mesh_quality(&inverted).min_jacobian_sign_positive);
+        }
+
+        /// 🧱 A `side`x`side` square extruded `height` tall, 1 layer, split to tets — `boundary_faces`'s
+        /// total triangle area must equal the analytic box surface `2*side² + 4*side*height` (top + bottom
+        /// + 4 sides), which also confirms every internal (shared, appears-twice) face was excluded.
+        #[test]
+        fn boundary_faces_area_matches_extruded_box_surface() {
+            let side = 4.0;
+            let height = 3.0;
+            let domain = PlanarDomain { outer: square(side), holes: vec![] };
+            let mesh = triangulate(&domain, &no_refine()).expect("triangulates");
+            let volume_mesh = extrude_tri_mesh(&mesh, height, 1);
+            let tets = split_to_tets(&volume_mesh);
+
+            let faces = boundary_faces(&tets);
+            let tri_area = |f: &[u32; 3]| -> f64 {
+                let (a, b, c) = (tets.points[f[0] as usize], tets.points[f[1] as usize], tets.points[f[2] as usize]);
+                let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+                let e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+                let cross = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+                0.5 * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2]).sqrt()
+            };
+            let total_area: f64 = faces.iter().map(tri_area).sum();
+            let expected = 2.0 * side * side + 4.0 * side * height;
+            assert!((total_area - expected).abs() < 1e-6, "total={total_area} expected={expected}");
+
+            // Every boundary face must be wound so its normal points away from its own tet's centroid —
+            // spot-checked here on the bottom face (z=0, outward normal must have negative z).
+            for f in &faces {
+                if tets.points[f[0] as usize][2] < 1e-9 && tets.points[f[1] as usize][2] < 1e-9 && tets.points[f[2] as usize][2] < 1e-9 {
+                    let (a, b, c) = (tets.points[f[0] as usize], tets.points[f[1] as usize], tets.points[f[2] as usize]);
+                    let e0 = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+                    let e1 = [c[0] - a[0], c[1] - a[1], c[2] - a[2]];
+                    let normal_z = e0[0] * e1[1] - e0[1] * e1[0];
+                    assert!(normal_z < 0.0, "bottom face normal should point outward (-z), got normal_z={normal_z}");
+                }
+            }
         }
     }
     // #endregion 🔖Tests
@@ -5329,6 +6202,11 @@ pub trait Element {
     fn node_ids(&self) -> Vec<String>;
     fn dofs_per_node(&self) -> &[Dof];
     fn stiffness_global(&self, ctx: &ElementContext) -> MatD;
+    /// 🌬️ Fixed-end nodal loads equivalent to a per-unit-length `MemberUdl` in GLOBAL coordinates.
+    /// `None` (the default) means this element doesn't support member UDLs — meaningful for 2-node
+    /// line members (`Bar2`/`Bar3`/`BeamEb2`/`Frame3`); continuum/plate/shell elements have no per-unit-
+    /// length member concept, so distributed loading on them is the document layer's job (translated
+    /// into ordinary nodal loads from an `Area`/pressure load — see `fem_2d`/`fem_3d`'s bridges).
     fn equivalent_nodal_loads(&self, _ctx: &ElementContext, _udl: &MemberUdl) -> Option<VecD> {
         None
     }

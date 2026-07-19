@@ -70,7 +70,7 @@ pub fn jacobi_eigen_symmetric(a_in: &[f64], n: usize) -> Result<(Vec<f64>, Vec<f
                 d[q] += h;
                 a[p * n + q] = 0.0;
 
-                let mut rotate = |ip: f64, iq: f64| -> (f64, f64) { (ip - s * (iq + ip * tau), iq + s * (ip - iq * tau)) };
+                let rotate = |ip: f64, iq: f64| -> (f64, f64) { (ip - s * (iq + ip * tau), iq + s * (ip - iq * tau)) };
                 for i in 0..p {
                     let (np, nq) = rotate(a[i * n + p], a[i * n + q]);
                     a[i * n + p] = np;

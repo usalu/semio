@@ -33,6 +33,9 @@ pub enum FnKind {
     Ceil,
     Gamma,
     LogGamma,
+    /// 🔧 Digamma `ψ(x) = Γ'(x)/Γ(x)`; kept internal-ish (no series/eval entries in the first pass) but
+    /// needed as a first-class `FnKind` because `Γ'(x) = Γ(x)·ψ(x)` has no other closed form.
+    Digamma,
     Erf,
     Erfc,
     Zeta,
@@ -57,7 +60,7 @@ impl FnKind {
         use FnKind::*;
         match self {
             Sin | Cos | Tan | Cot | Sec | Csc | Asin | Acos | Atan | Acot | Asec | Acsc | Sinh | Cosh | Tanh | Asinh | Acosh | Atanh | Exp | Ln | Abs | Sign | Floor | Ceil | Gamma
-            | LogGamma | Erf | Erfc | Zeta => Some(1),
+            | LogGamma | Digamma | Erf | Erfc | Zeta => Some(1),
             BesselJ | BesselY | BesselI | BesselK | LegendreP | ChebyshevT | ChebyshevU | HermiteH | LaguerreL => Some(2),
             LambertW => Some(1),
             UserFn(_) => None,
@@ -93,6 +96,7 @@ impl FnKind {
             Ceil => "ceil".into(),
             Gamma => "gamma".into(),
             LogGamma => "loggamma".into(),
+            Digamma => "digamma".into(),
             Erf => "erf".into(),
             Erfc => "erfc".into(),
             Zeta => "zeta".into(),

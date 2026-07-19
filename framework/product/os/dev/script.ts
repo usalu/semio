@@ -610,6 +610,15 @@ self.addEventListener("message", async (event) => {
           value: await api.refreshUi(msg.instanceId, msg.requestJson),
         });
         break;
+      case "consumeMedia":
+        await api.consumeMedia(msg.instanceId, msg.portId, msg.descriptorJson, msg.data);
+        reply(requestId, "consumeMedia", { ok: true });
+        break;
+      case "produceMedia":
+        reply(requestId, "produceMedia", {
+          value: await api.produceMedia(msg.instanceId, msg.portId, msg.requestJson),
+        });
+        break;
       default:
         throw new Error(\`unknown worker message type: \${type}\`);
     }
@@ -700,6 +709,18 @@ async function createPluginApiInner() {
       const response = await plugin.refreshUi(instanceId, { json: requestJson });
       return response.json;
     },
+    async consumeMedia(instanceId, portId, descriptorJson, data) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      await plugin.consumeMedia(instanceId, portId, {
+        descriptorJson,
+        data: data instanceof Uint8Array ? data : new Uint8Array(data ?? []),
+      });
+    },
+    async produceMedia(instanceId, portId, requestJson) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const artifact = await plugin.produceMedia(instanceId, portId, requestJson ?? "");
+      return { descriptorJson: artifact.descriptorJson, data: artifact.data };
+    },
   };
   return {
     manifest: () => runSerialized(() => core.manifest()),
@@ -714,6 +735,10 @@ async function createPluginApiInner() {
     renderWithDocument: (instanceId, bodyKey, viewStateJson, documentJson) =>
       runSerialized(() => core.renderWithDocument(instanceId, bodyKey, viewStateJson, documentJson)),
     refreshUi: (instanceId, requestJson) => runSerialized(() => core.refreshUi(instanceId, requestJson)),
+    consumeMedia: (instanceId, portId, descriptorJson, data) =>
+      runSerialized(() => core.consumeMedia(instanceId, portId, descriptorJson, data)),
+    produceMedia: (instanceId, portId, requestJson) =>
+      runSerialized(() => core.produceMedia(instanceId, portId, requestJson)),
   };
 }
 
@@ -1341,7 +1366,7 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   studioE2eAssert(
     (await page
       .locator("[cmdk-item]")
-      .filter({ hasText: /commitCheckpoint/ })
+      .filter({ hasText: /checkpoint/i })
       .count()) > 0,
     "checkpoint command should be in command palette",
   );
@@ -1362,7 +1387,7 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
   if (await demoStudioRow.count()) {
     await demoStudioRow.dblclick({ force: true });
     await page.waitForFunction(() => location.pathname.startsWith("/studios/"), { timeout: 15_000 });
-    studioE2eAssert(/Catalogue/i.test(await page.locator("body").innerText()), "opened studio from home vfs");
+    await waitForStudioE2eCondition(page, ({ text }) => /Catalogue/i.test(text), "opened studio from home vfs", deadline);
     console.log("[DEBUG] home vfs open studio works");
   }
 

@@ -75,7 +75,7 @@ macro_rules! define_norm_family_app {
                             }
                         }
                         "evaluate" => {
-                            let _host = NormHost::<Family>::from_document(doc.projection.clone());
+                            return ActionEmit::commit(vec![SetDocumentOp::SetDocument { document: doc.projection.clone() }], "evaluate");
                         }
                         _ => {}
                     }

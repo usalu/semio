@@ -658,8 +658,11 @@ mod tests {
     // #region 🔖LogisticTests
     #[test]
     fn logistic_symmetric_data_has_near_zero_intercept() {
+        // Two labels flipped near the boundary (x=-1 -> y=1, x=1 -> y=0) so the data is not
+        // perfectly linearly separable — a perfectly separable fixture has no finite MLE and
+        // would make IRLS diverge by construction, which is correct behavior, not a bug.
         let xs = [-3.0, -2.0, -1.0, 1.0, 2.0, 3.0];
-        let ys = [0.0, 0.0, 0.0, 1.0, 1.0, 1.0];
+        let ys = [0.0, 0.0, 1.0, 0.0, 1.0, 1.0];
         let mut design = MatD::zeros(6, 1);
         for (row, &x) in xs.iter().enumerate() {
             design.set(row, 0, x);

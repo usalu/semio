@@ -5,9 +5,9 @@ pub mod component {
     //! 🧩 WASI P2 component exports for the plugin world contract.
 
     use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_attach_backbone, plugin_create_app,
+        ensure_plugin_initialized, plugin_attach_backbone, plugin_consume_media, plugin_create_app,
         plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_handle_command,
-        plugin_ingest_operations, plugin_load_document, plugin_manifest, plugin_refresh_ui,
+        plugin_ingest_operations, plugin_load_document, plugin_manifest, plugin_produce_media, plugin_refresh_ui,
         plugin_render_with_document,
     };
     use wit_bindgen::generate;
@@ -19,7 +19,7 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionInvocationJson, CommandInvocationJson, InvocationContextJson, InvocationResponseJson, MigrateDocumentInput,
+        ActionInvocationJson, CommandInvocationJson, InvocationContextJson, InvocationResponseJson, MediaArtifact, MigrateDocumentInput,
         MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
     };
 
@@ -113,6 +113,17 @@ pub mod component {
             ensure_plugin_initialized();
             plugin_detach_backbone(instance_id).map_err(PluginError::Message)
         }
+
+        fn consume_media(instance_id: u32, port_id: String, artifact: MediaArtifact) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_consume_media(instance_id, &port_id, &artifact.descriptor_json, artifact.data).map_err(PluginError::Message)
+        }
+
+        fn produce_media(instance_id: u32, port_id: String, request_json: String) -> Result<MediaArtifact, PluginError> {
+            ensure_plugin_initialized();
+            let (descriptor_json, data) = plugin_produce_media(instance_id, &port_id, &request_json).map_err(PluginError::Message)?;
+            Ok(MediaArtifact { descriptor_json, data })
+        }
     }
 
     export!(ComponentGuest);
@@ -160,7 +171,7 @@ use ui_wgpu::{
     UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -293,7 +304,11 @@ pub use semio_framework_core::{MediaClass, MediaType};
 /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
 /// `DocumentApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
 /// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
-pub use semio_framework_core::{Media, MediaError, MediaFingerprint, MediaPayload};
+pub use semio_framework_core::mesh::{Media, MediaError, MediaFingerprint, MediaPayload};
+/// 🎞️ `MediaWireFormat`/`OsMediaFormat` back `MediaArtifactDescriptor::wire` (see `🔖DocumentContract`
+/// below) — the plugin ABI's `consume-media`/`produce-media` payload framing, separate from
+/// `MediaPayload` above (which pairs with `Media`'s per-port `MediaType` projection).
+pub use semio_framework_core::{MediaWireFormat, OsMediaFormat};
 //#endregion 🔖MediaPort
 
 pub struct AppBuilder {
@@ -2710,6 +2725,50 @@ pub trait DocumentApp: Send + 'static {
     }
 }
 
+/// 🎞️ Rust mirror of WIT's `media-artifact` record (`framework/wit/world.wit`): `descriptor` is the
+/// parsed `descriptor-json`, `data` the sibling raw-bytes field. Deliberately separate from
+/// `mesh::Media` (which pairs a `MediaType` with a `MediaPayload` for the declared-port media graph
+/// via `export_media`/`import_media`) — `consume-media`/`produce-media` operate at the whole-document
+/// level, not a specific `MediaPortSpec`, so `PluginApp::{consume_media, produce_media}` below default
+/// to a document passthrough rather than requiring any `media_ports()` declaration at all.
+#[derive(Clone, Debug)]
+pub struct MediaArtifact {
+    pub descriptor: MediaArtifactDescriptor,
+    pub data: Vec<u8>,
+}
+
+/// 🎞️ Rust mirror of WIT's `media-artifact.descriptor-json` JSON shape. `edge_id`/`port_id`/`kind_id`
+/// are dataflow-driver bookkeeping the SDK default below leaves untouched (opaque pass-through for the
+/// caller); `media_type` is the declared `MediaType` the wire claims to satisfy; `wire` is the actual
+/// encoding; `blob_hash` is set instead of inline `data` when the payload already lives in the host's
+/// blob store.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaArtifactDescriptor {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub port_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media_type: Option<MediaType>,
+    pub wire: MediaWireFormat,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub blob_hash: Option<String>,
+}
+
+/// 🚧 Failure producing/consuming a `MediaArtifact` through `PluginApp::{produce_media, consume_media}`.
+#[derive(Debug, thiserror::Error)]
+pub enum MediaArtifactError {
+    #[error("{0}")]
+    Payload(String),
+    #[error("document schema mismatch: expected {expected}, found {found}")]
+    SchemaMismatch { expected: String, found: String },
+    #[error("no binary importer registered for format {0:?}")]
+    NoImporter(OsMediaFormat),
+}
+
 /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
 /// (via {@link VcsDocumentApp}'s store) across calls — no per-call document JSON is threaded in.
 /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
@@ -2763,6 +2822,45 @@ pub trait PluginApp: Send {
     }
     fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
         Err(MediaError::NotImplemented)
+    }
+    /// 🎞️ ABI-level media artifact request for one port (`framework/wit/world.wit`'s `produce-media`).
+    /// Default: a whole-document passthrough (`wire: Document{schema: document_schema()}` wrapping
+    /// `document_json()`'s bytes) — the fallback every `PluginApp` gets for free without declaring any
+    /// `media_ports()`. Apps whose media output isn't simply their raw document (computed/derived
+    /// outputs) override this directly; `port` is accepted for parity with `export_media` and ignored
+    /// by the default (there is exactly one document to hand back).
+    fn produce_media(&mut self, port: &str) -> Result<MediaArtifact, MediaArtifactError> {
+        let json = self.document_json().map_err(MediaArtifactError::Payload)?;
+        Ok(MediaArtifact {
+            descriptor: MediaArtifactDescriptor {
+                edge_id: None,
+                port_id: Some(port.to_string()),
+                kind_id: None,
+                media_type: None,
+                wire: MediaWireFormat::Document { schema: self.document_schema().to_string() },
+                blob_hash: None,
+            },
+            data: json.into_bytes(),
+        })
+    }
+    /// 🎞️ ABI-level media artifact delivery for one port (`framework/wit/world.wit`'s `consume-media`).
+    /// Default: a `Document{schema}` wire matching this app's own `document_schema()` loads straight
+    /// through `load_document` — the same envelope `read-app-document`/`load-app-document` already
+    /// round-trip. Anything else (a foreign document schema, or a `Binary{format}` wire) has no
+    /// SDK-level importer registry yet, so the default rejects it; apps that need one override this
+    /// method directly.
+    fn consume_media(&mut self, _port: &str, artifact: MediaArtifact) -> Result<(), MediaArtifactError> {
+        match artifact.descriptor.wire {
+            MediaWireFormat::Document { schema } if schema == self.document_schema() => {
+                let json = String::from_utf8(artifact.data).map_err(|error| MediaArtifactError::Payload(error.to_string()))?;
+                self.load_document(&json).map_err(MediaArtifactError::Payload)
+            }
+            MediaWireFormat::Document { schema } => Err(MediaArtifactError::SchemaMismatch {
+                expected: self.document_schema().to_string(),
+                found: schema,
+            }),
+            MediaWireFormat::Binary { format } => Err(MediaArtifactError::NoImporter(format)),
+        }
     }
 }
 
@@ -3352,7 +3450,7 @@ pub mod plugin_runtime {
 // #region plugin_runtime
 //! 📤 WASM component export glue for plugin bundles.
 
-use crate::app::{ActionMeta, AppInstance, Plugin, PluginBundle};
+use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
 use semio_framework_core::{kernel::InvocationResult, PluginManifest, ViewState};
 use ui_wgpu::{framework_panel_tab_label, UiNode};
 use serde::{Deserialize, Serialize};
@@ -3568,6 +3666,29 @@ pub fn plugin_detach_backbone(instance_id: u32) -> Result<(), String> {
         instance.app.detach_backbone();
         Ok(())
     })
+}
+
+/// 🎞️ WIT `consume-media` glue — decodes the incoming `media-artifact` (`descriptor-json` + `data`)
+/// and dispatches to `PluginApp::consume_media`.
+pub fn plugin_consume_media(instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), String> {
+    let descriptor: MediaArtifactDescriptor = serde_json::from_str(descriptor_json).map_err(|error| error.to_string())?;
+    let artifact = MediaArtifact { descriptor, data };
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.consume_media(port_id, artifact).map_err(|error| error.to_string())
+    })
+}
+
+/// 🎞️ WIT `produce-media` glue — dispatches to `PluginApp::produce_media` and encodes the result back
+/// into `(descriptor-json, data)` for the `media-artifact` WIT record. `_request_json` is reserved for
+/// future parameterized requests; unused by the SDK default (see `PluginApp::produce_media`).
+pub fn plugin_produce_media(instance_id: u32, port_id: &str, _request_json: &str) -> Result<(String, Vec<u8>), String> {
+    let artifact = with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.produce_media(port_id).map_err(|error| error.to_string())
+    })?;
+    let descriptor_json = serde_json::to_string(&artifact.descriptor).map_err(|error| error.to_string())?;
+    Ok((descriptor_json, artifact.data))
 }
 
 pub fn plugin_render(instance_id: u32, body_key: &str, view_state_json: &str) -> Result<UiNode, String> {

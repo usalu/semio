@@ -1,26 +1,37 @@
 {
   "nodes": [
     { "id": "n1", "x": 0.0, "y": 0.0, "z": 0.0 },
-    { "id": "n2", "x": 3.0, "y": 0.0, "z": 0.0 }
+    { "id": "n2", "x": 3.0, "y": 0.0, "z": 0.0 },
+    { "id": "sc0", "x": 5.0, "y": 0.0, "z": 0.0 },
+    { "id": "sc1", "x": 6.0, "y": 0.0, "z": 0.0 },
+    { "id": "sc2", "x": 6.0, "y": 1.0, "z": 0.0 },
+    { "id": "sc3", "x": 5.0, "y": 1.0, "z": 0.0 }
   ],
   "elements": [
     { "kind": "frame", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "hea200", "roll": 0.0 }
   ],
   "materials": [
-    { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "g": 80770000000.0, "rho": 7850.0 }
+    { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "g": 80770000000.0, "nu": 0.3, "rho": 7850.0 }
   ],
   "sections": [
     { "id": "hea200", "name": "HEA 200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 }
   ],
+  "solids": [
+    { "id": "sol1", "name": "Slab", "outline": [[5.0, 0.0], [6.0, 0.0], [6.0, 1.0], [5.0, 1.0]], "holes": [], "baseZ": 0.0, "height": 0.5, "layers": 1, "meshSize": 0.5, "materialId": "steel" }
+  ],
   "supports": [
-    { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] }
+    { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] },
+    { "id": "s2", "nodeId": "sc0", "fixed": ["Tx", "Ty", "Tz"] },
+    { "id": "s3", "nodeId": "sc1", "fixed": ["Tx", "Ty", "Tz"] },
+    { "id": "s4", "nodeId": "sc2", "fixed": ["Tx", "Ty", "Tz"] },
+    { "id": "s5", "nodeId": "sc3", "fixed": ["Tx", "Ty", "Tz"] }
   ],
   "loadCases": [
     {
       "id": "point",
       "name": "Point Load",
       "loads": [
-        { "id": "l1", "nodeId": "n2", "dof": "Tz", "value": -5000.0 }
+        { "kind": "nodal", "id": "l1", "nodeId": "n2", "dof": "Tz", "value": -5000.0 }
       ],
       "selfWeight": false
     },
@@ -28,7 +39,15 @@
       "id": "point2",
       "name": "Point Load 2",
       "loads": [
-        { "id": "l2", "nodeId": "n2", "dof": "Tz", "value": -2000.0 }
+        { "kind": "nodal", "id": "l2", "nodeId": "n2", "dof": "Tz", "value": -2000.0 }
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "pressure",
+      "name": "Slab Pressure",
+      "loads": [
+        { "kind": "area", "id": "a1", "solidId": "sol1", "pressure": 10000.0 }
       ],
       "selfWeight": false
     }

@@ -3,11 +3,14 @@
  * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
  * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OpEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
- * `framework/product/os/dev/script.ts`. The OS kernel itself (media graph, program registry, ops)
- * is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of it. It still
- * exposes a small legacy `osBaselineResource`/`mergeOsProgramDefinition`/`registerAppVcsHandler`
- * app-registration shim kept alive only because `compose/client/lib/sketchpad/js/index.ts` still
- * calls it; do not extend that shim further.
+ * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (op application, program
+ * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
+ * one exception is {@link planMediaFlow}: a pure, side-effect-free scheduling function has no state
+ * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_media_flow`
+ * (`framework/product/os/core/rs/lib.rs`) with shared fixtures (`framework/product/os/core/fixtures/`)
+ * asserting parity. This file still exposes a small legacy `osBaselineResource`/
+ * `mergeOsProgramDefinition`/`registerAppVcsHandler` app-registration shim kept alive only because
+ * `compose/client/lib/sketchpad/js/index.ts` still calls it; do not extend that shim further.
  */
 // #endregion Header
 
@@ -357,6 +360,113 @@ export type BackboneWorkerRequest = ({ readonly kind: "open" } & DocumentActorCo
 export type BackboneWorkerResponse = { readonly kind: "event"; readonly documentId: string; readonly event: DocumentEvent } | { readonly kind: "ready" };
 //#endregion 🔖SyncProtocol
 
+//#region 🔖MediaFlow
+/**
+ * 🎬 TS mirror of `media_graph::{OsMediaPort,OsMediaGraphNode,OsMediaGraphEdge,OsMediaGraph}` (Rust,
+ * `framework/product/os/core/rs/lib.rs`) — camelCase-field-identical (Rust: `#[serde(rename_all =
+ * "camelCase")]`). See this file's header for why only this pure-planner slice is hand-mirrored.
+ */
+export type OsMediaPort = {
+  readonly id: string;
+  readonly resourceKind: string;
+  readonly direction: string;
+};
+
+export type OsMediaGraphNode = {
+  readonly id: string;
+  readonly instanceId: string;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly inputs: readonly OsMediaPort[];
+  readonly outputs: readonly OsMediaPort[];
+};
+
+export type OsMediaGraphEdge = {
+  readonly id: string;
+  readonly sourceNodeId: string;
+  readonly sourcePortId: string;
+  readonly targetNodeId: string;
+  readonly targetPortId: string;
+};
+
+export type OsMediaGraph = {
+  readonly schema: string;
+  readonly nodes: readonly OsMediaGraphNode[];
+  readonly edges: readonly OsMediaGraphEdge[];
+};
+
+/** 🚚 TS twin of Rust `MediaFlowDelivery`. */
+export type MediaFlowDelivery = {
+  readonly edgeId: string;
+  readonly producerInstanceId: string;
+  readonly producerPortId: string;
+  readonly consumerInstanceId: string;
+  readonly consumerPortId: string;
+};
+
+/**
+ * 🧭 TS twin of Rust `media_flow_topological_node_order` — DFS post-order reversed into a
+ * topological node order (source before target); deterministic purely from `graph.nodes`/
+ * `graph.edges` insertion order, so it matches the Rust side edge-for-edge.
+ */
+function mediaFlowTopologicalNodeOrder(graph: OsMediaGraph): readonly string[] {
+  const adjacency = new Map<string, string[]>();
+  for (const edge of graph.edges) {
+    const targets = adjacency.get(edge.sourceNodeId) ?? [];
+    targets.push(edge.targetNodeId);
+    adjacency.set(edge.sourceNodeId, targets);
+  }
+  const visited = new Set<string>();
+  const order: string[] = [];
+  const dfs = (nodeId: string): void => {
+    if (visited.has(nodeId)) return;
+    visited.add(nodeId);
+    for (const next of adjacency.get(nodeId) ?? []) dfs(next);
+    order.push(nodeId);
+  };
+  for (const node of graph.nodes) dfs(node.id);
+  order.reverse();
+  return order;
+}
+
+/**
+ * 🚚 TS twin of Rust `plan_media_flow` — plans one {@link MediaFlowDelivery} per edge in the
+ * downstream closure of `dirtyInstanceIds`, propagating dirtiness onto each edge's consumer instance
+ * so multi-hop chains (A→B→C) resolve in a single topological pass. Pure/side-effect-free.
+ */
+export function planMediaFlow(graph: OsMediaGraph, dirtyInstanceIds: ReadonlySet<string>): readonly MediaFlowDelivery[] {
+  const nodeById = new Map<string, OsMediaGraphNode>(graph.nodes.map((node) => [node.id, node]));
+  const edgesBySource = new Map<string, OsMediaGraphEdge[]>();
+  for (const edge of graph.edges) {
+    const edges = edgesBySource.get(edge.sourceNodeId) ?? [];
+    edges.push(edge);
+    edgesBySource.set(edge.sourceNodeId, edges);
+  }
+  const order = mediaFlowTopologicalNodeOrder(graph);
+  const dirty = new Set(dirtyInstanceIds);
+  const deliveries: MediaFlowDelivery[] = [];
+  for (const nodeId of order) {
+    const node = nodeById.get(nodeId);
+    if (!node || !dirty.has(node.instanceId)) continue;
+    for (const edge of edgesBySource.get(nodeId) ?? []) {
+      const targetNode = nodeById.get(edge.targetNodeId);
+      if (!targetNode) continue;
+      deliveries.push({
+        edgeId: edge.id,
+        producerInstanceId: node.instanceId,
+        producerPortId: edge.sourcePortId,
+        consumerInstanceId: targetNode.instanceId,
+        consumerPortId: edge.targetPortId,
+      });
+      dirty.add(targetNode.instanceId);
+    }
+  }
+  return deliveries;
+}
+//#endregion 🔖MediaFlow
+
 //#region 🧪Tests
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
@@ -423,6 +533,97 @@ if (import.meta.vitest) {
       expect(utilities.map((utility) => utility.id)).toEqual(["framework.sync.file", "framework.sync.folder", "framework.sync.remote"]);
       expect(utilities.find((utility) => utility.id === "framework.sync.folder")?.pressed).toBe(true);
       expect(utilities.find((utility) => utility.id === "framework.sync.file")?.pressed).toBe(false);
+    });
+  });
+
+  describe("@semio-tech/framework-os-core media flow", () => {
+    const mediaNode = (id: string, instanceId: string): OsMediaGraphNode => ({
+      id,
+      instanceId,
+      x: 0,
+      y: 0,
+      width: 160,
+      height: 72,
+      inputs: [{ id: `${instanceId}:in`, resourceKind: "2d.drawing", direction: "in" }],
+      outputs: [{ id: `${instanceId}:out`, resourceKind: "2d.drawing", direction: "out" }],
+    });
+
+    it("plans a single delivery across one dirty edge", () => {
+      const graph: OsMediaGraph = {
+        schema: "s.media-graph",
+        nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
+        edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" }],
+      };
+      const deliveries = planMediaFlow(graph, new Set(["app-1"]));
+      expect(deliveries).toEqual([{ edgeId: "edge-1", producerInstanceId: "app-1", producerPortId: "app-1:out", consumerInstanceId: "app-2", consumerPortId: "app-2:in" }]);
+    });
+
+    it("plans a chain in topological order when only the root is dirty", () => {
+      const graph: OsMediaGraph = {
+        schema: "s.media-graph",
+        nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2"), mediaNode("node-3", "app-3")],
+        edges: [
+          { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" },
+          { id: "edge-bc", sourceNodeId: "node-2", sourcePortId: "app-2:out", targetNodeId: "node-3", targetPortId: "app-3:in" },
+        ],
+      };
+      const deliveries = planMediaFlow(graph, new Set(["app-1"]));
+      expect(deliveries.map((delivery) => delivery.edgeId)).toEqual(["edge-ab", "edge-bc"]);
+    });
+
+    it("plans a diamond with one delivery per incoming edge", () => {
+      const graph: OsMediaGraph = {
+        schema: "s.media-graph",
+        nodes: [mediaNode("node-1", "app-a"), mediaNode("node-2", "app-b"), mediaNode("node-3", "app-c"), mediaNode("node-4", "app-d")],
+        edges: [
+          { id: "edge-ab", sourceNodeId: "node-1", sourcePortId: "app-a:out", targetNodeId: "node-2", targetPortId: "app-b:in" },
+          { id: "edge-ac", sourceNodeId: "node-1", sourcePortId: "app-a:out", targetNodeId: "node-3", targetPortId: "app-c:in" },
+          { id: "edge-bd", sourceNodeId: "node-2", sourcePortId: "app-b:out", targetNodeId: "node-4", targetPortId: "app-d:in" },
+          { id: "edge-cd", sourceNodeId: "node-3", sourcePortId: "app-c:out", targetNodeId: "node-4", targetPortId: "app-d:in" },
+        ],
+      };
+      const deliveries = planMediaFlow(graph, new Set(["app-a"]));
+      const edgeIds = deliveries.map((delivery) => delivery.edgeId);
+      expect(edgeIds).toHaveLength(4);
+      expect(edgeIds.indexOf("edge-bd")).toBeGreaterThan(edgeIds.indexOf("edge-ab"));
+      expect(edgeIds.indexOf("edge-cd")).toBeGreaterThan(edgeIds.indexOf("edge-ac"));
+    });
+
+    it("plans nothing when no instance is dirty", () => {
+      const graph: OsMediaGraph = {
+        schema: "s.media-graph",
+        nodes: [mediaNode("node-1", "app-1"), mediaNode("node-2", "app-2")],
+        edges: [{ id: "edge-1", sourceNodeId: "node-1", sourcePortId: "app-1:out", targetNodeId: "node-2", targetPortId: "app-2:in" }],
+      };
+      expect(planMediaFlow(graph, new Set())).toEqual([]);
+    });
+
+    it("plans nothing for a dirty node with no outgoing edges", () => {
+      const graph: OsMediaGraph = { schema: "s.media-graph", nodes: [mediaNode("node-1", "app-1")], edges: [] };
+      expect(planMediaFlow(graph, new Set(["app-1"]))).toEqual([]);
+    });
+
+    // 🔬 Shared fixtures replay (`framework/product/os/core/fixtures/*.json`) — the same files drive
+    // the Rust harness's `media_flow_fixtures_match_expected_deliveries` test. Node builtins are
+    // imported dynamically inside this vitest-only block so they never reach the browser bundle (this
+    // whole `if (import.meta.vitest)` block is stripped from production builds).
+    it("matches the Rust plan_media_flow across shared fixtures", async () => {
+      const { readdirSync, readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, join } = await import("node:path");
+      const fixturesDir = join(dirname(fileURLToPath(import.meta.url)), "..", "fixtures");
+      const files = readdirSync(fixturesDir).filter((file) => file.endsWith(".json"));
+      expect(files.length).toBeGreaterThanOrEqual(5);
+      for (const file of files) {
+        const fixture = JSON.parse(readFileSync(join(fixturesDir, file), "utf8")) as {
+          name: string;
+          graph: OsMediaGraph;
+          dirtyInstanceIds: readonly string[];
+          expectedDeliveries: readonly MediaFlowDelivery[];
+        };
+        const deliveries = planMediaFlow(fixture.graph, new Set(fixture.dirtyInstanceIds));
+        expect(deliveries).toEqual(fixture.expectedDeliveries);
+      }
     });
   });
 }

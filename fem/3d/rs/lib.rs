@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 use fem_core::ElementResult;
-use fem_core::{analyses, Bar3, Dof, Element, Frame3, Model, NodalLoad, Node, Support};
+use fem_core::{analyses, Bar3, Dof, Element, Frame3, MemberUdl, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 #[cfg(target_arch = "wasm32")]
@@ -32,8 +32,9 @@ pub enum FemElement {
     Frame { id: String, start: String, end: String, material_id: String, section_id: String, roll: f64 },
 }
 
-/// 🧱 Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), and density
-/// `rho` (kg/m³, drives self-weight via `Bar3`/`Frame3`'s `mass()`).
+/// 🧱 Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), Poisson's ratio
+/// `nu` (dimensionless, drives `Tet4` solid elements), and density `rho` (kg/m³, drives self-weight via
+/// `Bar3`/`Frame3`/`Tet4`'s `mass()`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FemMaterial {
@@ -41,6 +42,7 @@ pub struct FemMaterial {
     pub name: String,
     pub e: f64,
     pub g: f64,
+    pub nu: f64,
     pub rho: f64,
 }
 
@@ -65,24 +67,34 @@ pub struct FemSupport {
     pub fixed: Vec<Dof>,
 }
 
-/// 🏋️ A concentrated load on one node's global DOF, part of a `FemLoadCase`.
+/// 🏋️ A load — a concentrated nodal force/moment, a member UDL on a `Bar`/`Frame` element, or a normal
+/// pressure (Pa) over a meshed `FemSolid`'s top face, simplified as a uniform global `-Z` nodal load
+/// (see `area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct FemNodalLoad {
-    pub id: String,
-    pub node_id: String,
-    pub dof: Dof,
-    pub value: f64,
+#[serde(tag = "kind", rename_all = "camelCase")]
+pub enum FemLoad {
+    #[serde(rename_all = "camelCase")]
+    Nodal { id: String, node_id: String, dof: Dof, value: f64 },
+    #[serde(rename_all = "camelCase")]
+    MemberUdl { id: String, element_id: String, wx: f64, wy: f64, wz: f64 },
+    #[serde(rename_all = "camelCase")]
+    Area { id: String, solid_id: String, pressure: f64 },
 }
 
-/// 📦 A named set of nodal loads solved together, plus an optional self-weight contribution; v0
-/// `fem_3d` scope has no member UDLs.
+/// 🪪 A `FemLoad`'s stable id, across every variant.
+pub fn load_id(load: &FemLoad) -> &str {
+    match load {
+        FemLoad::Nodal { id, .. } | FemLoad::MemberUdl { id, .. } | FemLoad::Area { id, .. } => id,
+    }
+}
+
+/// 📦 A named set of loads applied together for one analysis run, optionally including self-weight.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FemLoadCase {
     pub id: String,
     pub name: String,
-    pub loads: Vec<FemNodalLoad>,
+    pub loads: Vec<FemLoad>,
     pub self_weight: bool,
 }
 
@@ -112,6 +124,24 @@ impl Default for FemAnalysisSettings {
     }
 }
 
+/// 🧱 A meshed continuum solid — a polygon footprint (with optional holes) extruded upward from
+/// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
+/// (see `resolve_geometry`) — mirrors `fem_2d::FemRegion`, extended into 3D via `fem_core::mesh`'s
+/// extrusion + tet-splitting.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FemSolid {
+    pub id: String,
+    pub name: String,
+    pub outline: Vec<[f64; 2]>,
+    pub holes: Vec<Vec<[f64; 2]>>,
+    pub base_z: f64,
+    pub height: f64,
+    pub layers: usize,
+    pub mesh_size: f64,
+    pub material_id: String,
+}
+
 /// 🎥 Opaque camera state string; the plugin layer owns and interprets its shape.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -133,6 +163,7 @@ pub struct Fem3dDocument {
     pub elements: Vec<FemElement>,
     pub materials: Vec<FemMaterial>,
     pub sections: Vec<FemSection>,
+    pub solids: Vec<FemSolid>,
     pub supports: Vec<FemSupport>,
     pub load_cases: Vec<FemLoadCase>,
     pub combinations: Vec<FemCombination>,
@@ -178,6 +209,13 @@ pub struct MaterialsDiff {
 pub struct SectionsDiff {
     pub removed: Vec<String>,
     pub set: Vec<(usize, FemSection)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SolidsDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, FemSolid)>,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -253,6 +291,19 @@ fn apply_sections_diff(sections: &mut Vec<FemSection>, diff: &SectionsDiff) {
     }
 }
 
+fn apply_solids_diff(solids: &mut Vec<FemSolid>, diff: &SolidsDiff) {
+    for id in &diff.removed {
+        solids.retain(|entry| &entry.id != id);
+    }
+    for (index, solid) in &diff.set {
+        if let Some(pos) = solids.iter().position(|entry| entry.id == solid.id) {
+            solids[pos] = solid.clone();
+        } else {
+            solids.insert((*index).min(solids.len()), solid.clone());
+        }
+    }
+}
+
 fn apply_supports_diff(supports: &mut Vec<FemSupport>, diff: &SupportsDiff) {
     for id in &diff.removed {
         supports.retain(|entry| &entry.id != id);
@@ -302,6 +353,7 @@ pub struct Fem3dDiff {
     pub elements: ElementsDiff,
     pub materials: MaterialsDiff,
     pub sections: SectionsDiff,
+    pub solids: SolidsDiff,
     pub supports: SupportsDiff,
     pub load_cases: LoadCasesDiff,
     pub combinations: CombinationsDiff,
@@ -316,6 +368,7 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
         apply_elements_diff(&mut next.elements, &self.elements);
         apply_materials_diff(&mut next.materials, &self.materials);
         apply_sections_diff(&mut next.sections, &self.sections);
+        apply_solids_diff(&mut next.solids, &self.solids);
         apply_supports_diff(&mut next.supports, &self.supports);
         apply_load_cases_diff(&mut next.load_cases, &self.load_cases);
         apply_combinations_diff(&mut next.combinations, &self.combinations);
@@ -337,6 +390,8 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
         self.materials.set.extend(other.materials.set);
         self.sections.removed.extend(other.sections.removed);
         self.sections.set.extend(other.sections.set);
+        self.solids.removed.extend(other.solids.removed);
+        self.solids.set.extend(other.solids.set);
         self.supports.removed.extend(other.supports.removed);
         self.supports.set.extend(other.supports.set);
         self.load_cases.removed.extend(other.load_cases.removed);
@@ -365,6 +420,8 @@ pub enum Fem3dOp {
     RemoveMaterial { id: String },
     SetSection { index: usize, section: FemSection },
     RemoveSection { id: String },
+    SetSolid { index: usize, solid: FemSolid },
+    RemoveSolid { id: String },
     SetSupport { index: usize, support: FemSupport },
     RemoveSupport { id: String },
     SetLoadCase { index: usize, load_case: FemLoadCase },
@@ -389,6 +446,10 @@ fn material_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
 
 fn section_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
     doc.sections.iter().position(|entry| entry.id == id)
+}
+
+fn solid_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
+    doc.solids.iter().position(|entry| entry.id == id)
 }
 
 fn support_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
@@ -417,6 +478,8 @@ impl Operation<Fem3dDocument> for Fem3dOp {
             Fem3dOp::RemoveMaterial { id } => diff.materials.removed.push(id.clone()),
             Fem3dOp::SetSection { index, section } => diff.sections.set.push((*index, section.clone())),
             Fem3dOp::RemoveSection { id } => diff.sections.removed.push(id.clone()),
+            Fem3dOp::SetSolid { index, solid } => diff.solids.set.push((*index, solid.clone())),
+            Fem3dOp::RemoveSolid { id } => diff.solids.removed.push(id.clone()),
             Fem3dOp::SetSupport { index, support } => diff.supports.set.push((*index, support.clone())),
             Fem3dOp::RemoveSupport { id } => diff.supports.removed.push(id.clone()),
             Fem3dOp::SetLoadCase { index, load_case } => diff.load_cases.set.push((*index, load_case.clone())),
@@ -451,6 +514,11 @@ impl Operation<Fem3dDocument> for Fem3dOp {
                 None => vec![Fem3dOp::RemoveSection { id: section.id.clone() }],
             },
             Fem3dOp::RemoveSection { id } => section_index(projection, id).map(|index| vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
+            Fem3dOp::SetSolid { solid, .. } => match solid_index(projection, &solid.id) {
+                Some(index) => vec![Fem3dOp::SetSolid { index, solid: projection.solids[index].clone() }],
+                None => vec![Fem3dOp::RemoveSolid { id: solid.id.clone() }],
+            },
+            Fem3dOp::RemoveSolid { id } => solid_index(projection, id).map(|index| vec![Fem3dOp::SetSolid { index, solid: projection.solids[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetSupport { support, .. } => match support_index(projection, &support.id) {
                 Some(index) => vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }],
                 None => vec![Fem3dOp::RemoveSupport { id: support.id.clone() }],
@@ -492,6 +560,10 @@ pub enum Fem3dError {
     SectionNotFound(String),
     #[error("node not found: {0}")]
     NodeNotFound(String),
+    #[error("unknown solid id: {0}")]
+    UnknownSolidId(String),
+    #[error("solid {solid_id} failed to mesh: {reason}")]
+    MeshFailed { solid_id: String, reason: String },
     #[error("load case not found: {0}")]
     LoadCaseNotFound(String),
     #[error("mode index out of range: {0}")]
@@ -501,14 +573,38 @@ pub enum Fem3dError {
 }
 // #endregion 🔖Errors
 
-/// 🧩 `resolve_geometry`'s resolved `(nodes, elements, supports)` triple.
-type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>);
+// #region 🔖SolidMeshing
+/// 📐 Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula — mirrors `fem_2d`'s helper of
+/// the same purpose.
+fn triangle_area_2d(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
+    (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
+}
 
-/// 🌉 Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) into
-/// their `fem_core` equivalents — the geometry shared by both `build_model` (single frozen-signature
-/// solve) and `fem3d_solve_all` (multi-case/combination solve).
+/// 🌐 One meshed `FemSolid`'s resolved geometry, reused by `resolve_geometry`'s caller for area-load
+/// tributary-area computation. `node_ids`/`points` cover the FULL volume mesh (every layer); the top
+/// surface (needed for `FemLoad::Area`) is exactly `top_footprint_tris` over `top_footprint_points`
+/// (the ORIGINAL flat triangulation, since `extrude_tri_mesh` numbers each layer's points in that same
+/// order — see its doc — so the top layer's node ids are `node_ids[top_offset + footprint_point_index]`).
+struct MeshedSolid {
+    solid_id: String,
+    node_ids: Vec<String>,
+    top_offset: usize,
+    top_footprint_points: Vec<[f64; 2]>,
+    top_footprint_tris: Vec<[u32; 3]>,
+}
+
+/// 🧩 `resolve_geometry`'s resolved `(nodes, elements, meshed solids, supports)` quadruple.
+type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedSolid>, Vec<Support>);
+
+/// 🌉 Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) plus
+/// every `FemSolid` meshed into `Tet4` elements (footprint triangulated via `fem_core::mesh::triangulate`,
+/// extruded via `extrude_tri_mesh`, split via `split_to_tets` — mirrors `fem_2d::build_nodes_and_elements`'s
+/// `Tri3Cst` region meshing) — the geometry shared by `build_model`, `fem3d_solve_all`, modal, and
+/// buckling. A solid boundary point coinciding (within `1e-9`, all of x/y/z) with an existing document
+/// node reuses that node's id; otherwise a node is synthesized once per unique mesh point as
+/// `{solid_id}_m{point_index}`.
 fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dError> {
-    let nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
+    let mut nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
@@ -537,20 +633,91 @@ fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dError>
             }
         }
     }
+
+    let mut meshed_solids = Vec::with_capacity(doc.solids.len());
+    for solid in &doc.solids {
+        let material = doc.materials.iter().find(|m| m.id == solid.material_id).ok_or_else(|| Fem3dError::MaterialNotFound(solid.material_id.clone()))?;
+        let domain = fem_core::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
+        let opts = fem_core::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
+        let layers = solid.layers.max(1);
+        let volume_mesh = fem_core::mesh::extrude_tri_mesh(&tri_mesh, solid.height, layers);
+        let tet_mesh = fem_core::mesh::split_to_tets(&volume_mesh);
+        let points: Vec<[f64; 3]> = tet_mesh.points.iter().map(|p| [p[0], p[1], p[2] + solid.base_z]).collect();
+
+        let mut node_ids = Vec::with_capacity(points.len());
+        for (point_index, p) in points.iter().enumerate() {
+            let id = match doc.nodes.iter().find(|n| (n.x - p[0]).abs() < 1e-9 && (n.y - p[1]).abs() < 1e-9 && (n.z - p[2]).abs() < 1e-9) {
+                Some(n) => n.id.clone(),
+                None => {
+                    let synthetic_id = format!("{}_m{}", solid.id, point_index);
+                    nodes.push(Node { id: synthetic_id.clone(), pos: *p });
+                    synthetic_id
+                }
+            };
+            node_ids.push(id);
+        }
+
+        for (cell_index, cell) in tet_mesh.cells.iter().enumerate() {
+            let fem_core::mesh::Cell::Tet4(t) = cell else { continue };
+            let tet_nodes = [node_ids[t[0] as usize].clone(), node_ids[t[1] as usize].clone(), node_ids[t[2] as usize].clone(), node_ids[t[3] as usize].clone()];
+            elements.push(Box::new(fem_core::elements3d::Tet4 { id: format!("{}_c{}", solid.id, cell_index), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }));
+        }
+
+        // The LAST extrusion layer's points are the top surface — `extrude_tri_mesh` numbers points
+        // layer-by-layer in `tri_mesh.points`' own order (see its doc), so index `top_offset + i` is
+        // footprint point `i`'s top-layer node, and `tri_mesh.tris` is directly the top surface's
+        // triangulation (that layer's wedges pass their top cap through `split_to_tets` unsplit).
+        let top_offset = layers * tri_mesh.points.len();
+        meshed_solids.push(MeshedSolid { solid_id: solid.id.clone(), node_ids, top_offset, top_footprint_points: tri_mesh.points, top_footprint_tris: tri_mesh.tris });
+    }
+
     let supports = doc.supports.iter().map(|support| Support { node_id: support.node_id.clone(), fixed: support.fixed.clone() }).collect();
-    Ok((nodes, elements, supports))
+    Ok((nodes, elements, meshed_solids, supports))
 }
 
-/// 🌉 Resolves a `Fem3dDocument` load case into a `fem_core::Model`: nodes, `Bar3`/`Frame3` elements
-/// (materials/sections looked up by id), supports, and the named load case's nodal loads.
-pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
-    let mut model = Model { nodes, elements, supports, nodal_loads: Vec::new(), member_loads: Vec::new() };
-    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
-    for load in &case.loads {
-        model.nodal_loads.push(NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value });
+/// 🌬️ Converts a `FemLoad::Area` (uniform pressure, Pa) into per-node global `-Z` nodal loads on a
+/// solid's TOP surface — `pressure * tributaryArea` at each top node, tributary area `(1/3)` of the
+/// summed area of every top-surface triangle touching that node. Mirrors `fem_2d::area_load_nodal_loads`.
+fn area_load_nodal_loads_3d(solid: &MeshedSolid, pressure: f64) -> Vec<NodalLoad> {
+    let mut tributary: HashMap<String, f64> = HashMap::new();
+    for tri in &solid.top_footprint_tris {
+        let area = triangle_area_2d(solid.top_footprint_points[tri[0] as usize], solid.top_footprint_points[tri[1] as usize], solid.top_footprint_points[tri[2] as usize]);
+        for &idx in tri {
+            let node_id = solid.node_ids[solid.top_offset + idx as usize].clone();
+            *tributary.entry(node_id).or_insert(0.0) += area / 3.0;
+        }
     }
-    Ok(model)
+    tributary.into_iter().map(|(node_id, trib)| NodalLoad { node_id, dof: Dof::Tz, value: -pressure * trib }).collect()
+}
+
+/// 🌬️ Translates one `FemLoadCase`'s loads into `(nodal_loads, member_loads)`, resolving `Area` loads
+/// against the already-meshed `solids` — shared by `build_model`, `fem3d_solve_all`, and buckling's
+/// reference-case resolution.
+fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<(Vec<NodalLoad>, Vec<(String, MemberUdl)>), Fem3dError> {
+    let mut nodal_loads = Vec::new();
+    let mut member_loads = Vec::new();
+    for load in loads {
+        match load {
+            FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
+            FemLoad::MemberUdl { element_id, wx, wy, wz, .. } => member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: *wz })),
+            FemLoad::Area { solid_id, pressure, .. } => {
+                let solid = solids.iter().find(|s| &s.solid_id == solid_id).ok_or_else(|| Fem3dError::UnknownSolidId(solid_id.clone()))?;
+                nodal_loads.extend(area_load_nodal_loads_3d(solid, *pressure));
+            }
+        }
+    }
+    Ok((nodal_loads, member_loads))
+}
+// #endregion 🔖SolidMeshing
+
+/// 🌉 Resolves a `Fem3dDocument` load case into a `fem_core::Model`: nodes, `Bar3`/`Frame3`/`Tet4`
+/// elements (materials/sections looked up by id), supports, and the named load case's translated loads.
+pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, Fem3dError> {
+    let (nodes, elements, solids, supports) = resolve_geometry(doc)?;
+    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
+    let (nodal_loads, member_loads) = translate_loads(&case.loads, &solids)?;
+    Ok(Model { nodes, elements, supports, nodal_loads, member_loads })
 }
 
 /// 🚀 Frozen entry point: builds the model for `case_id` and runs `fem_core::solve_linear_static`.
@@ -566,18 +733,13 @@ pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<fem_core::Stati
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
 /// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
 pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::StaticResult>, Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
+    let (nodes, elements, solids, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
-    let cases: Vec<analyses::LoadCase> = doc
-        .load_cases
-        .iter()
-        .map(|case| analyses::LoadCase {
-            id: case.id.clone(),
-            nodal_loads: case.loads.iter().map(|load| NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value }).collect(),
-            member_loads: Vec::new(),
-            self_weight: case.self_weight,
-        })
-        .collect();
+    let mut cases = Vec::with_capacity(doc.load_cases.len());
+    for case in &doc.load_cases {
+        let (nodal_loads, member_loads) = translate_loads(&case.loads, &solids)?;
+        cases.push(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight });
+    }
     let combinations: Vec<analyses::Combination> = doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.clone() }).collect();
     analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
 }
@@ -609,7 +771,7 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 
 /// 🎵 Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
 pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
+    let (nodes, elements, _solids, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     analyses::modal(&model, doc.analysis.modal_count).map_err(Fem3dError::from)
 }
@@ -618,7 +780,7 @@ pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, Fem3dEr
 /// `mode_index`'s shape into a per-node `[f64;6]` displacement map. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
 pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
+    let (nodes, elements, _solids, supports) = resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let result = analyses::modal(&model, doc.analysis.modal_count)?;
@@ -631,17 +793,19 @@ pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result
     Ok((freq, values))
 }
 
-/// 🌉 Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`.
-fn buckling_case(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::LoadCase, Fem3dError> {
+/// 🌉 Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`, mirroring
+/// `fem2d`'s `buckling_inputs` — translates the named case's loads (incl. `Area` against `solids`).
+fn buckling_case(doc: &Fem3dDocument, case_id: &str, solids: &[MeshedSolid]) -> Result<analyses::LoadCase, Fem3dError> {
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
-    Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads: case.loads.iter().map(|load| NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value }).collect(), member_loads: Vec::new(), self_weight: case.self_weight })
+    let (nodal_loads, member_loads) = translate_loads(&case.loads, solids)?;
+    Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight })
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
 pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
+    let (nodes, elements, solids, supports) = resolve_geometry(doc)?;
+    let case = buckling_case(doc, case_id, &solids)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
-    let case = buckling_case(doc, case_id)?;
     analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem3dError::from)
 }
 
@@ -649,9 +813,9 @@ pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::Bu
 /// analysis as `fem3d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
 pub fn fem3d_buckling_mode_values(doc: &Fem3dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem3dError> {
-    let (nodes, elements, supports) = resolve_geometry(doc)?;
+    let (nodes, elements, solids, supports) = resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
-    let case = buckling_case(doc, case_id)?;
+    let case = buckling_case(doc, case_id, &solids)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let result = analyses::buckling(&model, &case, doc.analysis.buckling_count)?;
     let factor = *result.factors.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
@@ -663,6 +827,58 @@ pub fn fem3d_buckling_mode_values(doc: &Fem3dDocument, case_id: &str, mode_index
     Ok((factor, values))
 }
 // #endregion 🔖ModalBuckling
+
+// #region 🔖SolidMeshPreview
+/// 🗺️ One meshed solid's cheap preview geometry — the full volume mesh (points/tets) plus its outer
+/// boundary triangulation (via `fem_core::mesh::boundary_faces`) for surface rendering, WITHOUT
+/// building any `fem_core::Element`. Mirrors `fem_2d::RegionMesh`/`fem2d_mesh_preview`.
+pub struct SolidMesh {
+    pub solid_id: String,
+    pub points: Vec<[f64; 3]>,
+    pub tets: Vec<[u32; 4]>,
+    pub boundary_tris: Vec<[u32; 3]>,
+    pub node_ids: Vec<String>,
+}
+
+/// 🗺️ Triangulates+extrudes+tet-splits every `FemSolid` in `doc` (same deterministic
+/// `fem_core::mesh` calls as `resolve_geometry`, so tet indices line up with `"{solid_id}_c{i}"`
+/// element ids) and returns just the geometry plus its outer surface — cheap enough for every render.
+pub fn fem3d_mesh_preview(doc: &Fem3dDocument) -> Result<Vec<SolidMesh>, Fem3dError> {
+    let mut out = Vec::with_capacity(doc.solids.len());
+    for solid in &doc.solids {
+        let domain = fem_core::mesh::PlanarDomain { outer: solid.outline.clone(), holes: solid.holes.clone() };
+        let opts = fem_core::mesh::MeshOpts { max_edge: solid.mesh_size, min_angle_deg: 20.0 };
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| Fem3dError::MeshFailed { solid_id: solid.id.clone(), reason: e.to_string() })?;
+        let volume_mesh = fem_core::mesh::extrude_tri_mesh(&tri_mesh, solid.height, solid.layers.max(1));
+        let tet_mesh = fem_core::mesh::split_to_tets(&volume_mesh);
+        let points: Vec<[f64; 3]> = tet_mesh.points.iter().map(|p| [p[0], p[1], p[2] + solid.base_z]).collect();
+        let node_ids = points
+            .iter()
+            .enumerate()
+            .map(|(point_index, p)| match doc.nodes.iter().find(|n| (n.x - p[0]).abs() < 1e-9 && (n.y - p[1]).abs() < 1e-9 && (n.z - p[2]).abs() < 1e-9) {
+                Some(n) => n.id.clone(),
+                None => format!("{}_m{}", solid.id, point_index),
+            })
+            .collect();
+        let tets: Vec<[u32; 4]> = tet_mesh.cells.iter().filter_map(|c| match c { fem_core::mesh::Cell::Tet4(t) => Some(*t), _ => None }).collect();
+        let boundary_mesh = fem_core::mesh::VolumeMesh { points: points.clone(), cells: tet_mesh.cells };
+        let boundary_tris = fem_core::mesh::boundary_faces(&boundary_mesh);
+        out.push(SolidMesh { solid_id: solid.id.clone(), points, tets, boundary_tris, node_ids });
+    }
+    Ok(out)
+}
+
+/// 🎨 Nodal-averaged von Mises stress for `case_id`'s solved result, keyed by node id — the
+/// document-layer bridge to `fem_core::analyses::nodal_averaged_scalar`, mirroring `fem_2d`'s
+/// `fem2d_nodal_von_mises`, feeding `fem-plugin`'s solid stress contour rendering.
+pub fn fem3d_nodal_von_mises(doc: &Fem3dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem3dError> {
+    let (nodes, elements, _solids, supports) = resolve_geometry(doc)?;
+    let model = analyses::AnalysisModel { nodes, elements, supports };
+    let results = fem3d_solve_all(doc)?;
+    let result = results.get(case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
+    Ok(analyses::nodal_averaged_scalar(&model, result, analyses::StressScalar::VonMises))
+}
+// #endregion 🔖SolidMeshPreview
 // #endregion 🔖Bridge
 
 // #region 🔖WasmBridge
@@ -733,10 +949,11 @@ mod tests {
         let doc = Fem3dDocument {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
             elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
-            materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, rho: 7850.0 }],
+            materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
+            solids: vec![],
             supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() }],
-            load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -p }], self_weight: false }],
+            load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -p }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -754,14 +971,15 @@ mod tests {
                 FemElement::Bar { id: "b2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
                 FemElement::Bar { id: "b3".into(), start: "n4".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
             ],
-            materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, rho: 7850.0 }],
+            materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "rod".into(), name: "Rod".into(), area: 0.001, iy: 1e-6, iz: 1e-6, j: 1e-6 }],
+            solids: vec![],
             supports: vec![
                 FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() },
                 FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: Dof::ALL.to_vec() },
                 FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: Dof::ALL.to_vec() },
             ],
-            load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n3".into(), dof: Dof::Tz, value: -1000.0 }], self_weight: false }],
+            load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Tz, value: -1000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -800,7 +1018,7 @@ mod tests {
     #[test]
     fn material_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let material = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, g: 79e9, rho: 7900.0 };
+        let material = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 };
         let after_set = round_trip(&base, &Fem3dOp::SetMaterial { index: 0, material });
         round_trip(&after_set, &Fem3dOp::RemoveMaterial { id: "steel".into() });
     }
@@ -824,7 +1042,7 @@ mod tests {
     #[test]
     fn load_case_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }], self_weight: false };
+        let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }], self_weight: false };
         let after_set = round_trip(&base, &Fem3dOp::SetLoadCase { index: 0, load_case });
         round_trip(&after_set, &Fem3dOp::RemoveLoadCase { id: "point".into() });
     }
@@ -949,7 +1167,7 @@ mod tests {
     #[test]
     fn fem3d_solve_all_returns_case_and_combination_results() {
         let (mut doc, ..) = cantilever_fixture();
-        doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![FemNodalLoad { id: "l2".into(), node_id: "n2".into(), dof: Dof::Tz, value: -2000.0 }], self_weight: false });
+        doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: Dof::Tz, value: -2000.0 }], self_weight: false });
         doc.combinations = vec![FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35), ("point2".into(), 1.0)] }];
 
         let results = fem3d_solve_all(&doc).expect("solves");
@@ -984,7 +1202,111 @@ mod tests {
         assert!(total_tz_reaction.abs() > 1e-6, "self-weight reaction should be nonzero");
         assert!((total_tz_reaction - expected).abs() / expected < 0.02, "reaction sum {total_tz_reaction} vs expected {expected}");
     }
+
+    /// 🌬️ A `FemLoad::MemberUdl` on the cantilever fixture's `Frame3`: base shear must equal the
+    /// classical `wL` total, same benchmark `elements3d::tests::frame3_udl_cantilever_matches_hand_calc`
+    /// checks headlessly, now exercised through the document bridge's load translation.
+    #[test]
+    fn member_udl_load_matches_total_wl() {
+        let (mut doc, _e, _iy, l, _p, _iz) = cantilever_fixture();
+        let w = 800.0;
+        doc.load_cases = vec![FemLoadCase { id: "udl".into(), name: "UDL".into(), loads: vec![FemLoad::MemberUdl { id: "u1".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -w }], self_weight: false }];
+        let results = fem3d_solve_all(&doc).expect("solves");
+        let result = results.get("udl").unwrap();
+        let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
+        let expected = w * l;
+        assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
+    }
     // #endregion 🔖SolveAll
+
+    // #region 🔖Solids
+    /// 🧱 A 2m x 1m x 0.5m slab footprint at the origin, meshed at `mesh_size`, with all 4 footprint
+    /// corners as pre-placed document nodes fully fixed in translation (`Tet4` has no rotational DOF) —
+    /// mirrors `fem_2d`'s `rectangle_region_doc` fixture pattern for `FemSolid`.
+    fn solid_slab_doc() -> Fem3dDocument {
+        Fem3dDocument {
+            nodes: vec![
+                FemNode { id: "sc0".into(), x: 0.0, y: 0.0, z: 0.0 },
+                FemNode { id: "sc1".into(), x: 2.0, y: 0.0, z: 0.0 },
+                FemNode { id: "sc2".into(), x: 2.0, y: 1.0, z: 0.0 },
+                FemNode { id: "sc3".into(), x: 0.0, y: 1.0, z: 0.0 },
+            ],
+            elements: vec![],
+            materials: vec![FemMaterial { id: "concrete".into(), name: "Concrete".into(), e: 30e9, g: 12.5e9, nu: 0.2, rho: 2400.0 }],
+            sections: vec![],
+            solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into() }],
+            supports: vec![
+                FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
+                FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
+                FemSupport { id: "s3".into(), node_id: "sc2".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
+                FemSupport { id: "s4".into(), node_id: "sc3".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
+            ],
+            load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
+            combinations: vec![],
+            analysis: FemAnalysisSettings::default(),
+            camera: FemCamera::default(),
+        }
+    }
+
+    #[test]
+    fn solid_op_round_trips() {
+        let base = solid_slab_doc();
+        let updated = FemSolid { id: "sol1".into(), name: "Slab Updated".into(), outline: base.solids[0].outline.clone(), holes: vec![], base_z: 0.0, height: 0.8, layers: 2, mesh_size: 0.5, material_id: "concrete".into() };
+        let after_set = round_trip(&base, &Fem3dOp::SetSolid { index: 0, solid: updated });
+        assert_eq!(after_set.solids[0].height, 0.8);
+        round_trip(&after_set, &Fem3dOp::RemoveSolid { id: "sol1".into() });
+    }
+
+    #[test]
+    fn solid_self_weight_matches_total_mass_times_gravity() {
+        let doc = solid_slab_doc();
+        let results = fem3d_solve_all(&doc).expect("solid self-weight solves");
+        let result = results.get("self").unwrap();
+        let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
+        let (footprint_area, height, rho, g) = (2.0 * 1.0, 0.5, 2400.0, 9.81);
+        let expected = rho * footprint_area * height * g;
+        assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
+    }
+
+    /// ⚖️ A uniform pressure over the solid's top face must balance EXACTLY (mesh-independent, since
+    /// tributary-area nodal loads sum to `pressure * footprintArea` regardless of triangulation) —
+    /// possible only now that `fem_3d` meshes solids at all.
+    #[test]
+    fn solid_area_load_matches_pressure_times_footprint_area() {
+        let mut doc = solid_slab_doc();
+        doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
+        let results = fem3d_solve_all(&doc).expect("solid pressure load solves");
+        let result = results.get("pressure").unwrap();
+        let total_tz_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Tz).map(|r| r.value).sum();
+        let expected = 8000.0 * 2.0 * 1.0;
+        assert!((total_tz_reaction - expected).abs() / expected < 1e-6, "reaction sum {total_tz_reaction} vs expected {expected}");
+    }
+
+    #[test]
+    fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
+        let doc = solid_slab_doc();
+        let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
+        assert_eq!(previews.len(), 1);
+        assert_eq!(previews[0].solid_id, "sol1");
+        assert!(!previews[0].tets.is_empty(), "expected at least one tet");
+        assert!(!previews[0].boundary_tris.is_empty(), "expected boundary triangles");
+        assert_eq!(previews[0].node_ids.len(), previews[0].points.len());
+        for corner_id in ["sc0", "sc1", "sc2", "sc3"] {
+            assert!(previews[0].node_ids.contains(&corner_id.to_string()), "expected corner {corner_id} to be reused");
+        }
+    }
+
+    #[test]
+    fn fem3d_nodal_von_mises_returns_finite_values_for_solid() {
+        let mut doc = solid_slab_doc();
+        doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "Pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), solid_id: "sol1".into(), pressure: 8000.0 }], self_weight: false }];
+        let averaged = fem3d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
+        assert!(!averaged.is_empty());
+        for v in averaged.values() {
+            assert!(v.is_finite() && *v >= 0.0, "von mises {v} should be finite and non-negative");
+        }
+    }
+    // #endregion 🔖Solids
 
     // #region 🔖ModalBuckling
     #[test]
@@ -1040,8 +1362,9 @@ mod tests {
     fn example_fixture_parses() {
         let json = include_str!("../example/default.fem3d.json");
         let doc: Fem3dDocument = serde_json::from_str(json).expect("example fixture parses");
-        assert_eq!(doc.nodes.len(), 2);
+        assert_eq!(doc.nodes.len(), 6);
         assert_eq!(doc.elements.len(), 1);
+        assert_eq!(doc.solids.len(), 1);
         let result = fem3d_solve(&doc, "point").expect("example fixture solves");
         assert!(result.checks.residual_norm < 1e-6);
 
@@ -1049,6 +1372,19 @@ mod tests {
         assert!(all_results.contains_key("point"), "expected point case result");
         assert!(all_results.contains_key("point2"), "expected point2 case result");
         assert!(all_results.contains_key("uls"), "expected uls combination result");
+        let pressure = all_results.get("pressure").expect("expected pressure case result (solid area load)");
+        assert!(pressure.checks.residual_norm < 1e-6, "residual {}", pressure.checks.residual_norm);
+
+        let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
+        assert_eq!(previews.len(), 1);
+        assert!(!previews[0].tets.is_empty(), "expected at least one tet");
+        assert!(!previews[0].boundary_tris.is_empty(), "expected boundary triangles");
+
+        let averaged = fem3d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
+        assert!(!averaged.is_empty(), "expected at least one averaged nodal value");
+        for v in averaged.values() {
+            assert!(v.is_finite() && *v >= 0.0, "von mises {v} should be finite and non-negative");
+        }
     }
 }
 // #endregion 🔖Tests

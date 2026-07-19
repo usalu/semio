@@ -6568,20 +6568,25 @@ pub struct SpecMetrics {
     pub bonus_taken: bool,
 }
 
-/// ⚡ Exact speculative decoding: verifies `draft_tokens` (with the draft model's per-position
-/// probability `draft_probs`) against `target_logits` (the target model's logits for the state as
-/// it would be after accepting the prefix so far), accepting position `i` with probability
-/// `min(1, p_target(draft_i) / p_draft(draft_i))`. On the first rejection, resamples from the
-/// clamped residual `max(0, p_target - p_draft)` (renormalized) and stops — this is what makes
-/// the scheme *exact*: the resulting token distribution is identical to sampling from
-/// `target_logits` directly at every position, never worse than plain target-only sampling. If
-/// every draft is accepted, draws one bonus token from the final target row. All verification
-/// draws come from a dedicated [`StreamPurpose::Speculative`] sub-stream (split from `state.rng`
-/// once, up front), so speculation never perturbs the sequence's ordinary selection stream.
-/// Accepted/resampled/bonus tokens are committed through [`commit_token_to_state`] one at a time
-/// (not as a single all-or-nothing transaction), so constraint/penalty/stop state stays exactly
-/// what non-speculative decoding would have produced for the same accepted prefix.
-pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, draft_tokens: &[TokenId], draft_probs: &[f32], mut target_logits: impl FnMut(&SequenceState) -> Vec<f32>, observer: &mut dyn SamplingObserver) -> Result<(Vec<SamplingResult>, SpecMetrics), SamplingError> {
+/// ⚡ Exact speculative decoding: verifies `draft_tokens` against `target_logits` (the target
+/// model's logits for the state as it would be after accepting the prefix so far), accepting
+/// position `i` with probability `min(1, p_target(draft_i) / p_draft(draft_i))`. On the first
+/// rejection, resamples from the clamped residual `max(0, p_target(t) - p_draft(t))` (renormalized
+/// over *every* token `t`, not just the drafted one) and stops — this is what makes the scheme
+/// *exact*: the resulting token distribution is identical to sampling from `target_logits`
+/// directly at every position. `draft_distributions[i]` must therefore be the draft model's
+/// **full** per-token probability vector for position `i` (same vocabulary shape as the target
+/// logits) — a residual computed from only the drafted token's own probability (treating every
+/// other token as if the draft model assigned it zero mass) is a different, *biased* algorithm,
+/// not exact speculative decoding. If every draft is accepted, draws one bonus token from the
+/// final target row. All verification draws come from a dedicated [`StreamPurpose::Speculative`]
+/// sub-stream (split from `state.rng` once, up front), so speculation never perturbs the
+/// sequence's ordinary selection stream. Accepted/resampled/bonus tokens are committed through
+/// [`commit_token_to_state`] one at a time (not as a single all-or-nothing transaction), so
+/// constraint/penalty/stop state stays exactly what non-speculative decoding would have produced
+/// for the same accepted prefix.
+#[allow(clippy::too_many_arguments)]
+pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, draft_tokens: &[TokenId], draft_distributions: &[Vec<f32>], mut target_logits: impl FnMut(&SequenceState) -> Vec<f32>, observer: &mut dyn SamplingObserver) -> Result<(Vec<SamplingResult>, SpecMetrics), SamplingError> {
     let mut results = Vec::new();
     let mut metrics = SpecMetrics { proposed: draft_tokens.len(), accepted: 0, bonus_taken: false };
     let stream_key = StreamKey { request: 0, sequence: state.id().get(), beam: 0, candidate: 0, purpose: StreamPurpose::Speculative };
@@ -6596,8 +6601,9 @@ pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws
         ws.set_accum(config.accum);
         ws.reset_for_step(&raw_logits, config.sanitize)?;
         ws.sort_live_by_prob_desc();
-        let target_prob = ws.live().iter().position(|&t| t == draft_tokens[i].get()).map(|idx| ws.probs()[idx]).unwrap_or(0.0);
-        let accept_prob = (target_prob as f64 / (draft_probs[i] as f64).max(1e-12)).min(1.0);
+        let target_prob = ws.live().iter().position(|&t| t == draft_tokens[i].get()).map_or(0.0, |idx| ws.probs()[idx]);
+        let draft_prob = draft_distributions[i].get(draft_tokens[i].get() as usize).copied().unwrap_or(0.0);
+        let accept_prob = (target_prob as f64 / (draft_prob as f64).max(1e-12)).min(1.0);
 
         if spec_rng.next_f64() < accept_prob {
             let logprob = (target_prob.max(f32::MIN_POSITIVE) as f64).ln();
@@ -6607,7 +6613,7 @@ pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws
             observer.on_token(state.id(), &result);
             results.push(result);
         } else {
-            let residual: Vec<f32> = ws.probs().iter().enumerate().map(|(idx, &p)| (p - if ws.live()[idx] == draft_tokens[i].get() { draft_probs[i] } else { 0.0 }).max(0.0)).collect();
+            let residual: Vec<f32> = ws.live().iter().zip(ws.probs().iter()).map(|(&t, &p)| (p - draft_distributions[i].get(t as usize).copied().unwrap_or(0.0)).max(0.0)).collect();
             let sum: f32 = residual.iter().sum();
             let normalized: Vec<f32> = if sum > 0.0 { residual.iter().map(|&r| r / sum).collect() } else { ws.probs().to_vec() };
             let cdf = cumulative_from_probs(&normalized);
@@ -6763,6 +6769,354 @@ pub fn sharded_sample(collective: &mut dyn Collective, local_logits: &[f32], loc
     Some(candidates[idx].token)
 }
 // #endregion 🔖Sharded
+
+// #region 🔖Diffusion
+/// 🌫️ A caller-owned latent buffer plus its logical shape (e.g. `[batch, channels, height,
+/// width]`). Purely descriptive — solvers and the denoiser trait operate on plain `&[f32]`/`&mut
+/// [f32]` slices directly (avoids an awkward "mutable slice behind a shared struct reference"
+/// pattern); this type exists for callers setting up or reading back a run's buffers.
+pub struct LatentView<'a> {
+    pub data: &'a mut [f32],
+    pub shape: [usize; 4],
+}
+
+impl LatentView<'_> {
+    pub fn len(&self) -> usize {
+        self.shape.iter().product()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+fn linspace(a: f64, b: f64, n: usize) -> Vec<f64> {
+    if n <= 1 {
+        return vec![a];
+    }
+    (0..n).map(|i| a + (b - a) * i as f64 / (n as f64 - 1.0)).collect()
+}
+
+fn betas_to_sigmas(betas: &[f64]) -> Vec<f64> {
+    let mut alpha_bar = 1.0;
+    betas
+        .iter()
+        .map(|&beta| {
+            alpha_bar *= 1.0 - beta;
+            ((1.0 - alpha_bar) / alpha_bar.max(1e-12)).sqrt()
+        })
+        .collect()
+}
+
+/// 🌫️ Noise-level (`sigma`) schedules. All variants produce a monotonically non-increasing
+/// sequence from `sigmas(steps)[0]` (most noise) down toward `0` (a clean sample).
+#[derive(Clone, PartialEq, Debug)]
+pub enum NoiseSchedule {
+    Linear { beta_start: f64, beta_end: f64 },
+    ScaledLinear { beta_start: f64, beta_end: f64 },
+    Cosine { s: f64 },
+    Karras { sigma_min: f64, sigma_max: f64, rho: f64 },
+    Exponential { sigma_min: f64, sigma_max: f64 },
+    Polynomial { sigma_min: f64, sigma_max: f64, power: f64 },
+    Custom(Vec<f64>),
+}
+
+impl NoiseSchedule {
+    /// 🌫️ Produces `steps` sigma values, descending.
+    pub fn sigmas(&self, steps: usize) -> Vec<f64> {
+        match self {
+            Self::Linear { beta_start, beta_end } => {
+                let mut s = betas_to_sigmas(&linspace(*beta_start, *beta_end, steps));
+                s.reverse();
+                s
+            }
+            Self::ScaledLinear { beta_start, beta_end } => {
+                let betas: Vec<f64> = linspace(beta_start.sqrt(), beta_end.sqrt(), steps).iter().map(|b| b * b).collect();
+                let mut s = betas_to_sigmas(&betas);
+                s.reverse();
+                s
+            }
+            Self::Cosine { s: s_offset } => {
+                let f = |t: f64| ((t + s_offset) / (1.0 + s_offset) * core::f64::consts::FRAC_PI_2).cos().powi(2);
+                let f0 = f(0.0);
+                let n = steps.max(1);
+                let mut out: Vec<f64> = (0..n)
+                    .map(|i| {
+                        let alpha_bar = (f(i as f64 / (n as f64 - 1.0).max(1.0)) / f0).clamp(1e-9, 1.0);
+                        ((1.0 - alpha_bar) / alpha_bar).sqrt()
+                    })
+                    .collect();
+                out.reverse();
+                out
+            }
+            Self::Karras { sigma_min, sigma_max, rho } => {
+                let n = steps.max(1);
+                (0..n)
+                    .map(|i| {
+                        let t = i as f64 / (n as f64 - 1.0).max(1.0);
+                        (sigma_max.powf(1.0 / rho) + t * (sigma_min.powf(1.0 / rho) - sigma_max.powf(1.0 / rho))).powf(*rho)
+                    })
+                    .collect()
+            }
+            Self::Exponential { sigma_min, sigma_max } => {
+                let n = steps.max(1);
+                (0..n)
+                    .map(|i| {
+                        let t = i as f64 / (n as f64 - 1.0).max(1.0);
+                        (sigma_max.ln() + t * (sigma_min.ln() - sigma_max.ln())).exp()
+                    })
+                    .collect()
+            }
+            Self::Polynomial { sigma_min, sigma_max, power } => {
+                let n = steps.max(1);
+                (0..n)
+                    .map(|i| {
+                        let t = i as f64 / (n as f64 - 1.0).max(1.0);
+                        (sigma_max.powf(1.0 / power) + t * (sigma_min.powf(1.0 / power) - sigma_max.powf(1.0 / power))).powf(*power)
+                    })
+                    .collect()
+            }
+            Self::Custom(values) => values.clone(),
+        }
+    }
+}
+
+/// 🌫️ What a [`Denoiser`]'s raw output represents.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum PredictionType {
+    Epsilon,
+    VPrediction,
+    Sample,
+}
+
+/// 🌫️ Converts a [`Denoiser`]'s raw prediction into a denoised (`x0`) estimate. `VPrediction` uses
+/// one common (EDM-style) `sigma_data = 1` parametrization: `c_skip = 1/(sigma²+1)`, `c_out =
+/// -sigma/sqrt(sigma²+1)` — other papers' exact v-prediction constants vary; this is a documented
+/// choice, not a universal standard.
+fn to_denoised(prediction_type: PredictionType, x: &[f32], sigma: f64, raw: &[f32]) -> Vec<f32> {
+    match prediction_type {
+        PredictionType::Sample => raw.to_vec(),
+        PredictionType::Epsilon => x.iter().zip(raw).map(|(&xi, &ei)| xi - (sigma as f32) * ei).collect(),
+        PredictionType::VPrediction => {
+            let sigma2_1 = (sigma * sigma + 1.0) as f32;
+            let c_skip = 1.0 / sigma2_1;
+            let c_out = -(sigma as f32) / sigma2_1.sqrt();
+            x.iter().zip(raw).map(|(&xi, &vi)| c_skip * xi + c_out * vi).collect()
+        }
+    }
+}
+
+/// 🌫️ Which conditioning branch a [`Denoiser`] call evaluates, for classifier-free guidance.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum GuidanceBranch {
+    Conditional,
+    Unconditional,
+}
+
+/// 🌫️ Caller-supplied model evaluation: predicts (in `prediction_type`'s parametrization) the
+/// noise/sample for `latent` at noise level `sigma`. Diffusion/image sampling never runs model
+/// inference itself (same non-responsibility as token sampling, § 1) — this trait is the seam.
+pub trait Denoiser {
+    fn prediction_type(&self) -> PredictionType;
+    #[allow(clippy::too_many_arguments)]
+    fn denoise(&mut self, latent: &[f32], shape: [usize; 4], sigma: f64, step: usize, branch: GuidanceBranch, out: &mut [f32]) -> Result<(), SamplingError>;
+}
+
+/// 🌫️ Classifier-free guidance: `guided = uncond + scale * (cond - uncond)`, with optional
+/// variance-rescaling (Lin et al., "Common Diffusion Noise Schedules and Sample Steps are Flawed")
+/// to counter over-saturation at high `scale`.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Guidance {
+    pub scale: f64,
+    pub rescale: f64,
+}
+
+fn std_dev(values: &[f32]) -> f64 {
+    let n = values.len() as f64;
+    if n == 0.0 {
+        return 0.0;
+    }
+    let mean: f64 = values.iter().map(|&x| x as f64).sum::<f64>() / n;
+    let var: f64 = values.iter().map(|&x| (x as f64 - mean).powi(2)).sum::<f64>() / n;
+    var.sqrt()
+}
+
+impl Guidance {
+    fn combine(&self, cond: &[f32], uncond: &[f32], out: &mut [f32]) {
+        for i in 0..out.len() {
+            out[i] = uncond[i] + (self.scale as f32) * (cond[i] - uncond[i]);
+        }
+        if self.rescale > 0.0 {
+            let std_cond = std_dev(cond);
+            let std_guided = std_dev(out);
+            if std_guided > 1e-8 {
+                let factor = (std_cond / std_guided) as f32;
+                let rescale = self.rescale as f32;
+                for v in out.iter_mut() {
+                    *v = *v * rescale * factor + *v * (1.0 - rescale);
+                }
+            }
+        }
+    }
+}
+
+fn normal_std(rng: &mut dyn RandomSource) -> f32 {
+    let u1 = rng.next_f64_open01();
+    let u2 = rng.next_f64();
+    ((-2.0 * u1.ln()).sqrt() * (2.0 * core::f64::consts::PI * u2).cos()) as f32
+}
+
+fn euler_step(x: &mut [f32], denoised: &[f32], sigma: f64, sigma_next: f64) {
+    let sigma_f = sigma.max(1e-10) as f32;
+    let dt = (sigma_next - sigma) as f32;
+    for i in 0..x.len() {
+        let d = (x[i] - denoised[i]) / sigma_f;
+        x[i] += d * dt;
+    }
+}
+
+fn euler_ancestral_step(x: &mut [f32], denoised: &[f32], sigma: f64, sigma_next: f64, rng: &mut dyn RandomSource) {
+    let sigma_up = if sigma > 1e-10 { (sigma_next.powi(2) * (sigma.powi(2) - sigma_next.powi(2)) / sigma.powi(2)).max(0.0).sqrt() } else { 0.0 };
+    let sigma_down = (sigma_next.powi(2) - sigma_up.powi(2)).max(0.0).sqrt();
+    euler_step(x, denoised, sigma, sigma_down);
+    if sigma_up > 1e-10 {
+        for xi in x.iter_mut() {
+            *xi += (sigma_up as f32) * normal_std(rng);
+        }
+    }
+}
+
+fn heun_correct(x: &mut [f32], denoised0: &[f32], x_euler: &[f32], denoised1: &[f32], sigma: f64, sigma_next: f64) {
+    let sigma_f = sigma.max(1e-10) as f32;
+    let sigma_next_f = sigma_next.max(1e-10) as f32;
+    let dt = (sigma_next - sigma) as f32;
+    for i in 0..x.len() {
+        let d0 = (x[i] - denoised0[i]) / sigma_f;
+        let d1 = (x_euler[i] - denoised1[i]) / sigma_next_f;
+        x[i] += (d0 + d1) * 0.5 * dt;
+    }
+}
+
+fn ddim_step(x: &mut [f32], denoised: &[f32], sigma: f64, sigma_next: f64, eta: f64, rng: &mut dyn RandomSource) {
+    let alpha_bar = 1.0 / (1.0 + sigma * sigma);
+    let alpha_bar_next = 1.0 / (1.0 + sigma_next * sigma_next);
+    let sigma_ddim = if alpha_bar < 1.0 { eta * ((1.0 - alpha_bar_next) / (1.0 - alpha_bar) * (1.0 - alpha_bar / alpha_bar_next)).max(0.0).sqrt() } else { 0.0 };
+    let sigma_f = sigma.max(1e-10) as f32;
+    let dir_coeff = ((1.0 - alpha_bar_next - sigma_ddim * sigma_ddim).max(0.0)).sqrt() as f32;
+    let alpha_bar_next_sqrt = alpha_bar_next.sqrt() as f32;
+    for i in 0..x.len() {
+        let eps = (x[i] - denoised[i]) / sigma_f;
+        x[i] = alpha_bar_next_sqrt * denoised[i] + dir_coeff * eps;
+    }
+    if sigma_ddim > 1e-10 {
+        for xi in x.iter_mut() {
+            *xi += (sigma_ddim as f32) * normal_std(rng);
+        }
+    }
+}
+
+/// 🌫️ Which ODE/SDE solver [`run_diffusion`] uses to step from one noise level to the next.
+/// Covers the most commonly used solvers; PLMS/DPM/DPM++/UniPC-style multistep solvers are a
+/// documented scope cut for this delivery (they need retained solver-state history across steps,
+/// which [`Solver`] doesn't yet carry).
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub enum Solver {
+    Euler,
+    EulerAncestral,
+    Heun,
+    Ddim { eta: f64 },
+}
+
+/// 🌫️ One [`run_diffusion`] configuration.
+pub struct DiffusionRunConfig {
+    pub schedule: NoiseSchedule,
+    pub solver: Solver,
+    pub steps: usize,
+    pub guidance: Option<Guidance>,
+    pub seed: u64,
+}
+
+/// 🌫️ Whether [`run_diffusion`]'s step callback wants to continue or cancel the run.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum StepControlFlow {
+    Continue,
+    Cancel,
+}
+
+fn eval_denoised(denoiser: &mut dyn Denoiser, x: &[f32], shape: [usize; 4], sigma: f64, guidance: Option<&Guidance>, step: usize) -> Result<Vec<f32>, SamplingError> {
+    let prediction_type = denoiser.prediction_type();
+    let mut raw_cond = vec![0.0f32; x.len()];
+    denoiser.denoise(x, shape, sigma, step, GuidanceBranch::Conditional, &mut raw_cond)?;
+    let raw = if let Some(g) = guidance {
+        let mut raw_uncond = vec![0.0f32; x.len()];
+        denoiser.denoise(x, shape, sigma, step, GuidanceBranch::Unconditional, &mut raw_uncond)?;
+        let mut combined = vec![0.0f32; x.len()];
+        g.combine(&raw_cond, &raw_uncond, &mut combined);
+        combined
+    } else {
+        raw_cond
+    };
+    Ok(to_denoised(prediction_type, x, sigma, &raw))
+}
+
+/// 🌫️ Runs the reverse diffusion process on `latent` in place, from `schedule.sigmas(steps + 1)`'s
+/// most-noisy value down to its last (typically `0`) — the "Text-to-image latent initialization"
+/// and "Partial denoising" generation modes (see [`img2img_start_index`] and [`apply_inpaint_mask`]
+/// for image-to-image / inpainting on top of this same loop). `step_callback(step, sigma_next,
+/// latent)` fires after every step — it can preview, modify (e.g. blend in [`apply_inpaint_mask`]),
+/// or cancel (returning [`StepControlFlow::Cancel`], which surfaces as [`SamplingError::Cancelled`]).
+pub fn run_diffusion(config: &DiffusionRunConfig, latent: &mut [f32], shape: [usize; 4], denoiser: &mut dyn Denoiser, mut step_callback: impl FnMut(usize, f64, &mut [f32]) -> StepControlFlow) -> Result<(), SamplingError> {
+    let sigmas = config.schedule.sigmas(config.steps + 1);
+    let mut rng = CounterRng::from_root(config.seed, StreamKey { request: 0, sequence: 0, beam: 0, candidate: 0, purpose: StreamPurpose::Diffusion });
+
+    for i in 0..config.steps {
+        let sigma = sigmas[i];
+        let sigma_next = sigmas.get(i + 1).copied().unwrap_or(0.0);
+        let denoised = eval_denoised(denoiser, latent, shape, sigma, config.guidance.as_ref(), i)?;
+
+        match config.solver {
+            Solver::Euler => euler_step(latent, &denoised, sigma, sigma_next),
+            Solver::EulerAncestral => euler_ancestral_step(latent, &denoised, sigma, sigma_next, &mut rng),
+            Solver::Heun => {
+                if sigma_next <= 1e-10 {
+                    euler_step(latent, &denoised, sigma, sigma_next);
+                } else {
+                    let mut x_euler = latent.to_vec();
+                    euler_step(&mut x_euler, &denoised, sigma, sigma_next);
+                    let denoised_next = eval_denoised(denoiser, &x_euler, shape, sigma_next, config.guidance.as_ref(), i)?;
+                    heun_correct(latent, &denoised, &x_euler, &denoised_next, sigma, sigma_next);
+                }
+            }
+            Solver::Ddim { eta } => ddim_step(latent, &denoised, sigma, sigma_next, eta, &mut rng),
+        }
+
+        if let StepControlFlow::Cancel = step_callback(i, sigma_next, latent) {
+            return Err(SamplingError::Cancelled);
+        }
+    }
+    Ok(())
+}
+
+/// 🌫️ Image-to-image: the sigma-schedule index to start denoising from, given `strength` in
+/// `[0, 1]` (`1.0` = full generation from pure noise, `0.0` = skip denoising entirely, returning
+/// the original image essentially unchanged).
+pub fn img2img_start_index(sigma_count: usize, strength: f64) -> usize {
+    let strength = strength.clamp(0.0, 1.0);
+    (((1.0 - strength) * sigma_count as f64).round() as usize).min(sigma_count)
+}
+
+/// 🌫️ Inpainting: re-noises `original` to the current `sigma` and blends it into `x` wherever
+/// `mask[i] > 0` (`1.0` = fully keep the (re-noised) original, `0.0` = fully keep the freely
+/// generated content), matching the "hold the known region, regenerate the rest" contract.
+pub fn apply_inpaint_mask(x: &mut [f32], original: &[f32], mask: &[f32], sigma: f64, rng: &mut dyn RandomSource) {
+    for i in 0..x.len() {
+        if mask[i] > 0.0 {
+            let noisy_original = original[i] + (sigma as f32) * normal_std(rng);
+            x[i] = mask[i] * noisy_original + (1.0 - mask[i]) * x[i];
+        }
+    }
+}
+// #endregion 🔖Diffusion
 
 // #region 🔖Tests
 #[cfg(test)]
@@ -8859,9 +9213,13 @@ mod tests {
         let vocab = Vocabulary::new(4).with_eos(vec![TokenId::new(3)]);
         let beam_config = BeamSearchConfig { width: 4, length_penalty: 1.0, max_steps: 3 };
         let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
-        // 🌳 Fixed per-step logits regardless of history: token 1 (logit 3) always dominates, token 3
-        // (EOS) is next-best — so the true best sequence is "1, 1, 3".
-        let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, |_state| vec![0.0, 3.0, 1.0, 2.0]).unwrap();
+        // 🌳 Token 1 dominates for the first two steps (building the best possible 2-token prefix);
+        // from step 2 on, EOS (token 3) overwhelmingly dominates every beam alike, so whichever beam
+        // carries the best prefix into that step produces the overall best-scoring finished
+        // hypothesis: "1, 1, 3". Raw (non-length-normalized) cumulative log-probability would instead
+        // favor never stopping ("1, 1, 1, ...") — this scenario is deliberately shaped so the length
+        // penalty isn't what's under test, only "beam search finds the argmax-per-step path".
+        let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, |state| if state.generated().len() < 2 { vec![0.0, 3.0, -5.0, -5.0] } else { vec![-5.0, -5.0, -5.0, 10.0] }).unwrap();
         assert!(!hypotheses.is_empty());
         let best = &hypotheses[0];
         assert_eq!(best.state.generated(), &[TokenId::new(1), TokenId::new(1), TokenId::new(3)]);
@@ -8930,8 +9288,8 @@ mod tests {
         let mut ws = LogitsWorkspace::new(4);
         let mut observer = NullObserver;
         let draft_tokens = [TokenId::new(1), TokenId::new(1)];
-        let draft_probs = [0.9f32, 0.9];
-        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_probs, |_state| vec![0.0, 9.0, 0.0, 0.0], &mut observer).unwrap();
+        let draft_distributions = vec![vec![0.05f32, 0.9, 0.03, 0.02], vec![0.05f32, 0.9, 0.03, 0.02]];
+        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_distributions, |_state| vec![0.0, 9.0, 0.0, 0.0], &mut observer).unwrap();
         assert_eq!(metrics.proposed, 2);
         assert_eq!(metrics.accepted, 2);
         assert!(metrics.bonus_taken);
@@ -8949,8 +9307,8 @@ mod tests {
         // 🎲 Draft proposes token 0 with high confidence, but the target model overwhelmingly
         // prefers token 1 — acceptance probability is near zero, so this should almost always reject.
         let draft_tokens = [TokenId::new(0)];
-        let draft_probs = [0.99f32];
-        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_probs, |_state| vec![-10.0, 10.0, -10.0, -10.0], &mut observer).unwrap();
+        let draft_distributions = vec![vec![0.99f32, 0.01, 0.0, 0.0]];
+        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_distributions, |_state| vec![-10.0, 10.0, -10.0, -10.0], &mut observer).unwrap();
         assert_eq!(metrics.accepted, 0);
         assert!(!metrics.bonus_taken);
         assert_eq!(results.len(), 1);
@@ -8977,8 +9335,8 @@ mod tests {
             let mut draft_rng = CounterRng::from_seed(seed ^ 0xD3AF);
             let cdf = cumulative_from_probs(&draft_probs_dist);
             let draft_token = TokenId::new(cdf_binary_search(&cdf, draft_rng.next_f64()) as u32);
-            let draft_prob = draft_probs_dist[draft_token.get() as usize];
-            let (results, _metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &[draft_token], &[draft_prob], |_state| target.to_vec(), &mut observer).unwrap();
+            let draft_distributions = vec![draft_probs_dist.to_vec()];
+            let (results, _metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &[draft_token], &draft_distributions, |_state| target.to_vec(), &mut observer).unwrap();
             counts_spec[results[0].token.get() as usize] += 1;
         }
 
@@ -9007,12 +9365,16 @@ mod tests {
         let full_logits = [1.0f32, 2.0, 0.5, 3.0, -1.0, 0.2, 4.0, 0.1];
         let mut ws = LogitsWorkspace::new(8);
         ws.reset_for_step(&full_logits, SanitizePolicy::NegInfNan).unwrap();
-        let unsharded_sum = ws.softmax_over_live();
-        let mut unsharded_probs = vec![0.0f32; 8];
+        // 📐 `softmax_over_live`'s return value is the raw pre-normalization partition sum (useful
+        // for e.g. logsumexp), not the post-normalization probability sum — check `ws.probs()` for
+        // that instead.
+        ws.softmax_over_live();
+        let mut unsharded_probs = [0.0f32; 8];
         for (&tok, &p) in ws.live().iter().zip(ws.probs().iter()) {
             unsharded_probs[tok as usize] = p;
         }
-        assert!((unsharded_sum - 1.0).abs() < 1e-4);
+        let prob_sum: f32 = ws.probs().iter().sum();
+        assert!((prob_sum - 1.0).abs() < 1e-4);
 
         let shard0 = &full_logits[..4];
         let shard1 = &full_logits[4..];
@@ -9071,7 +9433,7 @@ mod tests {
         let mut ws = LogitsWorkspace::new(4);
         ws.reset_for_step(&full_logits, SanitizePolicy::NegInfNan).unwrap();
         ws.sort_live_by_prob_desc();
-        let mut expected = vec![0.0f32; 4];
+        let mut expected = [0.0f32; 4];
         for (&tok, &p) in ws.live().iter().zip(ws.probs().iter()) {
             expected[tok as usize] = p;
         }
@@ -9081,5 +9443,207 @@ mod tests {
         }
     }
     // #endregion 🔖ShardedTests
+
+    // #region 🔖DiffusionTests
+    struct ConstantDenoiser {
+        target: f32,
+    }
+    impl Denoiser for ConstantDenoiser {
+        fn prediction_type(&self) -> PredictionType {
+            PredictionType::Sample
+        }
+        fn denoise(&mut self, _latent: &[f32], _shape: [usize; 4], _sigma: f64, _step: usize, _branch: GuidanceBranch, out: &mut [f32]) -> Result<(), SamplingError> {
+            for o in out.iter_mut() {
+                *o = self.target;
+            }
+            Ok(())
+        }
+    }
+
+    #[test]
+    fn all_noise_schedules_are_non_increasing() {
+        let schedules = vec![
+            NoiseSchedule::Linear { beta_start: 0.0001, beta_end: 0.02 },
+            NoiseSchedule::ScaledLinear { beta_start: 0.0001, beta_end: 0.02 },
+            NoiseSchedule::Cosine { s: 0.008 },
+            NoiseSchedule::Karras { sigma_min: 0.01, sigma_max: 10.0, rho: 7.0 },
+            NoiseSchedule::Exponential { sigma_min: 0.01, sigma_max: 10.0 },
+            NoiseSchedule::Polynomial { sigma_min: 0.01, sigma_max: 10.0, power: 2.0 },
+        ];
+        for schedule in schedules {
+            let sigmas = schedule.sigmas(10);
+            assert_eq!(sigmas.len(), 10);
+            for w in sigmas.windows(2) {
+                assert!(w[0] >= w[1] - 1e-9, "{schedule:?} sigmas not non-increasing: {sigmas:?}");
+            }
+        }
+    }
+
+    #[test]
+    fn custom_schedule_returns_its_values_verbatim() {
+        let values = vec![5.0, 3.0, 1.0, 0.0];
+        let schedule = NoiseSchedule::Custom(values.clone());
+        assert_eq!(schedule.sigmas(4), values);
+    }
+
+    #[test]
+    fn euler_solver_converges_exactly_to_a_constant_target_when_schedule_reaches_zero() {
+        // 📐 With a constant (x-independent) `Sample` prediction, the Euler update at the final
+        // step (sigma_next == 0) reduces algebraically to `x_next = denoised` exactly — a good
+        // closed-form check that doesn't depend on any specific schedule shape.
+        let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![10.0, 5.0, 2.0, 0.5, 0.0]), solver: Solver::Euler, steps: 4, guidance: None, seed: 0 };
+        let mut latent = vec![0.0f32; 4];
+        let mut denoiser = ConstantDenoiser { target: 5.0 };
+        run_diffusion(&config, &mut latent, [1, 1, 1, 4], &mut denoiser, |_, _, _| StepControlFlow::Continue).unwrap();
+        for &v in &latent {
+            assert!((v - 5.0).abs() < 1e-3, "v={v}");
+        }
+    }
+
+    #[test]
+    fn ddim_eta_zero_is_deterministic_regardless_of_seed() {
+        let run = |seed: u64| {
+            let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![4.0, 2.0, 1.0, 0.0]), solver: Solver::Ddim { eta: 0.0 }, steps: 3, guidance: None, seed };
+            let mut latent = vec![1.0f32; 4];
+            let mut denoiser = ConstantDenoiser { target: 3.0 };
+            run_diffusion(&config, &mut latent, [1, 1, 1, 4], &mut denoiser, |_, _, _| StepControlFlow::Continue).unwrap();
+            latent
+        };
+        assert_eq!(run(1), run(999));
+    }
+
+    #[test]
+    fn euler_ancestral_and_ddim_with_eta_differ_across_seeds() {
+        let run = |seed: u64| {
+            let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![4.0, 2.0, 1.0, 0.2]), solver: Solver::EulerAncestral, steps: 3, guidance: None, seed };
+            let mut latent = vec![1.0f32; 4];
+            let mut denoiser = ConstantDenoiser { target: 3.0 };
+            run_diffusion(&config, &mut latent, [1, 1, 1, 4], &mut denoiser, |_, _, _| StepControlFlow::Continue).unwrap();
+            latent
+        };
+        assert_ne!(run(1), run(2), "ancestral sampling's injected noise should differ across seeds");
+    }
+
+    #[test]
+    fn guidance_combine_extrapolates_away_from_unconditional() {
+        let guidance = Guidance { scale: 2.0, rescale: 0.0 };
+        let cond = [1.0f32, 2.0];
+        let uncond = [0.0f32, 0.0];
+        let mut out = [0.0f32; 2];
+        guidance.combine(&cond, &uncond, &mut out);
+        assert_eq!(out, [2.0, 4.0]);
+    }
+
+    #[test]
+    fn run_diffusion_with_guidance_evaluates_both_branches_every_step() {
+        struct BranchTrackingDenoiser {
+            cond_calls: usize,
+            uncond_calls: usize,
+        }
+        impl Denoiser for BranchTrackingDenoiser {
+            fn prediction_type(&self) -> PredictionType {
+                PredictionType::Sample
+            }
+            fn denoise(&mut self, _latent: &[f32], _shape: [usize; 4], _sigma: f64, _step: usize, branch: GuidanceBranch, out: &mut [f32]) -> Result<(), SamplingError> {
+                match branch {
+                    GuidanceBranch::Conditional => {
+                        self.cond_calls += 1;
+                        out.fill(1.0);
+                    }
+                    GuidanceBranch::Unconditional => {
+                        self.uncond_calls += 1;
+                        out.fill(0.0);
+                    }
+                }
+                Ok(())
+            }
+        }
+        let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![2.0, 1.0, 0.0]), solver: Solver::Euler, steps: 2, guidance: Some(Guidance { scale: 1.5, rescale: 0.0 }), seed: 0 };
+        let mut latent = vec![0.0f32; 2];
+        let mut denoiser = BranchTrackingDenoiser { cond_calls: 0, uncond_calls: 0 };
+        run_diffusion(&config, &mut latent, [1, 1, 1, 2], &mut denoiser, |_, _, _| StepControlFlow::Continue).unwrap();
+        assert_eq!(denoiser.cond_calls, 2);
+        assert_eq!(denoiser.uncond_calls, 2);
+    }
+
+    #[test]
+    fn heun_solver_uses_two_evaluations_per_non_final_step() {
+        struct CountingDenoiser {
+            calls: usize,
+        }
+        impl Denoiser for CountingDenoiser {
+            fn prediction_type(&self) -> PredictionType {
+                PredictionType::Sample
+            }
+            fn denoise(&mut self, _latent: &[f32], _shape: [usize; 4], _sigma: f64, _step: usize, _branch: GuidanceBranch, out: &mut [f32]) -> Result<(), SamplingError> {
+                self.calls += 1;
+                out.fill(2.0);
+                Ok(())
+            }
+        }
+        let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![4.0, 2.0, 0.0]), solver: Solver::Heun, steps: 2, guidance: None, seed: 0 };
+        let mut latent = vec![0.0f32; 2];
+        let mut denoiser = CountingDenoiser { calls: 0 };
+        run_diffusion(&config, &mut latent, [1, 1, 1, 2], &mut denoiser, |_, _, _| StepControlFlow::Continue).unwrap();
+        // step 0 (sigma_next=2.0, not final): 2 evaluations; step 1 (sigma_next=0.0, final): 1 evaluation.
+        assert_eq!(denoiser.calls, 3);
+    }
+
+    #[test]
+    fn run_diffusion_cancellation_stops_the_run_and_errors() {
+        let config = DiffusionRunConfig { schedule: NoiseSchedule::Custom(vec![4.0, 2.0, 1.0, 0.0]), solver: Solver::Euler, steps: 3, guidance: None, seed: 0 };
+        let mut latent = vec![0.0f32; 2];
+        let mut denoiser = ConstantDenoiser { target: 1.0 };
+        let mut calls = 0;
+        let result = run_diffusion(&config, &mut latent, [1, 1, 1, 2], &mut denoiser, |_, _, _| {
+            calls += 1;
+            if calls == 1 {
+                StepControlFlow::Cancel
+            } else {
+                StepControlFlow::Continue
+            }
+        });
+        assert!(result.is_err());
+        assert_eq!(calls, 1);
+    }
+
+    #[test]
+    fn img2img_start_index_boundaries() {
+        assert_eq!(img2img_start_index(10, 1.0), 0);
+        assert_eq!(img2img_start_index(10, 0.0), 10);
+        assert_eq!(img2img_start_index(10, 0.5), 5);
+    }
+
+    #[test]
+    fn apply_inpaint_mask_blends_by_mask_weight() {
+        let mut x = [10.0f32, 10.0, 10.0];
+        let original = [0.0f32, 0.0, 0.0];
+        let mask = [1.0f32, 0.0, 0.5];
+        let mut rng = CounterRng::from_seed(1);
+        // 🌫️ sigma = 0.0 means the re-noised original equals the original exactly, isolating the
+        // blend-weight arithmetic from the injected-noise term.
+        apply_inpaint_mask(&mut x, &original, &mask, 0.0, &mut rng);
+        assert!((x[0] - 0.0).abs() < 1e-6, "fully masked (1.0) must fall back to the original");
+        assert_eq!(x[1], 10.0, "unmasked (0.0) must stay untouched");
+        assert!((x[2] - 5.0).abs() < 1e-6, "half-masked (0.5) must blend 50/50");
+    }
+
+    #[test]
+    fn prediction_type_conversions_round_trip_through_denoised() {
+        let x = [2.0f32, -1.0];
+        let sigma = 0.5;
+        let target = [3.0f32, 3.0];
+
+        let sample_raw = target;
+        assert_eq!(to_denoised(PredictionType::Sample, &x, sigma, &sample_raw), target.to_vec());
+
+        // 📐 epsilon such that `x - sigma*eps == target` exactly.
+        let eps: Vec<f32> = x.iter().zip(target).map(|(&xi, ti)| (xi - ti) / sigma as f32).collect();
+        let denoised = to_denoised(PredictionType::Epsilon, &x, sigma, &eps);
+        for (d, t) in denoised.iter().zip(target) {
+            assert!((d - t).abs() < 1e-4);
+        }
+    }
+    // #endregion 🔖DiffusionTests
 }
 // #endregion 🔖Tests

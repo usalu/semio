@@ -2772,6 +2772,17 @@
       }
     },
     {
+      "name": "🧪test🏗️fem",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p fem_core -p fem_2d -p fem_3d -p fem-plugin",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.55
+      }
+    },
+    {
       "name": "🧪test📏norm",
       "type": "node-terminal",
       "request": "launch",

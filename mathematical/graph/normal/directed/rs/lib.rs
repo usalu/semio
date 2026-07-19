@@ -331,7 +331,8 @@ impl DirectedGraph {
     /// 🏷️ Sets `attrs[name]` on every listed `(source, target)` edge that exists; missing pairs are skipped — NetworkX `set_edge_attributes`, keyed by direction.
     pub fn set_edge_attributes(&mut self, name: &str, values: impl IntoIterator<Item = ((NodeId, NodeId), PropertyValue)>) {
         for ((u, v), value) in values {
-            if let Some(id) = self.0.edges_between(u, v).next().map(|e| e.id) {
+            let edge_id = self.0.edges_between(u, v).next().map(|e| e.id);
+            if let Some(id) = edge_id {
                 if let Some(attrs) = self.0.edge_attrs_mut(id) {
                     attrs.insert(name.to_string(), value);
                 }

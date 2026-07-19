@@ -19,6 +19,10 @@ pub struct Symbol {
 }
 
 impl Symbol {
+    pub(crate) fn new(name: &str, assumptions: AssumeSet) -> Self {
+        Self { name: Rc::from(name), assumptions }
+    }
+
     pub fn name(&self) -> &str {
         &self.name
     }

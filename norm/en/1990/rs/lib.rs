@@ -421,24 +421,42 @@ pub struct Document {
     pub q_k: Vec<(String, f64)>,
     pub resistance_kn: f64,
     pub consequence_class: u8,
-    pub use_de_na: bool,
+    pub annex: AnnexChoice,
+    /// 🌍 Seismic accidental action A_Ed [kN] combined per Eq. 6.12b; 0.0 disables the seismic situation.
+    pub seismic_a_ed_kn: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)], resistance_kn: 300.0, consequence_class: 2, use_de_na: true }
+        Self { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)], resistance_kn: 300.0, consequence_class: 2, annex: AnnexChoice::De, seismic_a_ed_kn: 40.0 }
     }
 }
 
 pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1990Family>;
 
+/// 🧮 Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
+pub fn combination_6_12b(annex: &dyn NationalAnnex, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
+    let mut sum = actions.g_k + seismic_a_ed_kn;
+    for (cat, q) in &actions.q_k {
+        sum += annex.psi_2(cat) * q;
+    }
+    sum
+}
+
+/// ✅ Check the seismic design situation per EN 1990 Eq. 6.12b.
+pub fn check_seismic_situation(annex: &dyn NationalAnnex, actions: &ActionSet, seismic_a_ed_kn: f64, resistance_kn: f64) -> CheckResult {
+    let ed = combination_6_12b(annex, actions, seismic_a_ed_kn);
+    CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4.3.4", "6.12b"), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), "seismic design situation", annex.choice())
+}
+
 pub fn evaluate(document: &Document) -> CheckReport {
     let actions = ActionSet { g_k: document.g_k, q_k: document.q_k.clone() };
-    let annex: &dyn NationalAnnex = if document.use_de_na { &NaDe } else { &NaEn };
+    let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     append_combination_set(&mut report, annex, DesignSituation::Persistent, &actions, document.resistance_kn);
     append_combination_set(&mut report, annex, DesignSituation::Accidental, &actions, document.resistance_kn);
+    report.push(check_seismic_situation(annex, &actions, document.seismic_a_ed_kn, document.resistance_kn));
     report.push(check_reliability_index(3.9, document.consequence_class));
     report
 }
@@ -594,7 +612,25 @@ mod tests {
         let report = evaluate(&doc);
         let persistent = check_combination_set(&NaDe, DesignSituation::Persistent, &actions, doc.resistance_kn);
         let accidental = check_combination_set(&NaDe, DesignSituation::Accidental, &actions, doc.resistance_kn);
-        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + 1);
+        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + 2);
         assert!(report.checks.iter().any(|c| (c.computed.value / 1000.0 - accidental_ed).abs() < 1e-6));
+    }
+
+    #[test]
+    fn evaluate_seismic_situation_numeric() {
+        let doc = Document::default();
+        let report = evaluate(&doc);
+        let seismic = report.checks.iter().find(|c| c.clause.section == "6.12b").expect("seismic 6.12b check present");
+        assert!((seismic.computed.value / 1000.0 - 155.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn seismic_combination_de_vs_en_diverge_on_other_psi_2() {
+        let actions = ActionSet { g_k: 100.0, q_k: vec![("other".into(), 50.0)] };
+        let de_ed = combination_6_12b(&NaDe, &actions, 40.0);
+        let en_ed = combination_6_12b(&NaEn, &actions, 40.0);
+        assert!((de_ed - 165.0).abs() < 1e-9);
+        assert!((en_ed - 155.0).abs() < 1e-9);
+        assert!(de_ed > en_ed);
     }
 }

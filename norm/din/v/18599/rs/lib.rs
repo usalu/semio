@@ -1,8 +1,9 @@
 //! ⚡ DIN V 18599 energy performance balancing method for buildings.
+//! 🇩🇪 National standard — no EN/DE annex split; all checks report AnnexChoice::De.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 use norm_din_4108::part_2::Layer;
-use norm_din_en_16798::part_7 as ventilation_16798;
+use norm_din_en_16798::part_3 as ventilation_16798;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Shared
@@ -80,6 +81,7 @@ pub struct BalancingInputs {
     pub renewable_kwh: f64,
     pub annual_limit_kwh: f64,
     pub energy_carrier: String,
+    pub reference_q_p_kwh: f64,
 }
 
 impl BalancingInputs {
@@ -120,6 +122,7 @@ pub fn from_building(wall_layers: &[Layer], floor_area_m2: f64, occupants: u32, 
         renewable_kwh: 15.0 * floor_area_m2,
         annual_limit_kwh: 75.0 * floor_area_m2,
         energy_carrier: "natural_gas".into(),
+        reference_q_p_kwh: tabular_specific_primary_energy_kwh_m2(UseClass::Residential) * floor_area_m2,
     })
 }
 
@@ -222,10 +225,33 @@ pub fn tabular_specific_primary_energy_kwh_m2(use_class: UseClass) -> f64 {
 pub mod part_1 {
     use super::*;
 
-    /// 📜 General balancing scope check (DIN V 18599-1).
+    /// ⚡ One final-energy delivery by carrier, feeding the primary-energy aggregation (DIN V 18599-1 §6).
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    pub struct FinalEnergyDelivery {
+        pub carrier: String,
+        pub q_f_kwh: f64,
+    }
+
+    /// ⚡ Primary energy aggregation Q_p = Σ Q_f,i · f_p,i across final-energy carriers (DIN V 18599-1 §6, factors from -10 Table 12).
+    pub fn aggregate_primary_energy_kwh(deliveries: &[FinalEnergyDelivery]) -> f64 {
+        deliveries.iter().map(|d| d.q_f_kwh * primary_energy_factor(&d.carrier)).sum()
+    }
+
+    fn final_energy_breakdown(inputs: &BalancingInputs) -> Vec<FinalEnergyDelivery> {
+        let q_f = net_heating_demand_kwh(inputs) + cooling_demand_kwh(inputs) + dhw_demand_kwh(inputs);
+        vec![FinalEnergyDelivery { carrier: inputs.energy_carrier.clone(), q_f_kwh: q_f }]
+    }
+
+    /// ✅ Primary-energy aggregation Q_p against the reference-building target (DIN V 18599-1 §6).
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
-        let scope = inputs.heated_area_m2;
-        Ok(CheckResult::from_minimum(ClauseId::new("DIN V 18599-1", "§5", "5.1"), Quantity::new(norm_core::QuantityKind::Area, scope), Quantity::new(norm_core::QuantityKind::Area, 1.0), "general balancing scope", AnnexChoice::De))
+        let q_p = aggregate_primary_energy_kwh(&final_energy_breakdown(inputs));
+        Ok(CheckResult::from_utilization(
+            ClauseId::new("DIN V 18599-1", "§6", "6.1"),
+            Quantity::new(norm_core::QuantityKind::Energy, q_p),
+            Quantity::new(norm_core::QuantityKind::Energy, inputs.reference_q_p_kwh),
+            "primary energy aggregation Q_p vs. reference building target",
+            AnnexChoice::De,
+        ))
     }
 }
 // #endregion 🔖Part1
@@ -649,5 +675,34 @@ mod tests {
         assert!((primary_energy_factor("district_heat") - 0.7).abs() < 1e-9);
         assert!((primary_energy_factor("electricity_grid") - 1.8).abs() < 1e-9);
         assert!((reference_area_factor(UseClass::Office) - 1.20).abs() < 1e-9);
+    }
+
+    #[test]
+    fn part_1_primary_energy_aggregation_worked_example() {
+        let deliveries = vec![
+            part_1::FinalEnergyDelivery { carrier: "natural_gas".into(), q_f_kwh: 10_000.0 },
+            part_1::FinalEnergyDelivery { carrier: "electricity_grid".into(), q_f_kwh: 2_000.0 },
+        ];
+        let q_p = part_1::aggregate_primary_energy_kwh(&deliveries);
+        assert!((q_p - 14_600.0).abs() < 1e-9, "q_p = {q_p}, expected 10000*1.1 + 2000*1.8 = 14600");
+    }
+
+    #[test]
+    fn part_1_check_reached_via_balance_annual() {
+        let inputs = reference_100m2_inputs();
+        let check = part_1::check(&inputs).unwrap();
+        assert_eq!(check.clause.family, "DIN V 18599-1");
+        let report = balance_annual(&inputs).unwrap();
+        assert!(report.checks.iter().any(|c| c.clause.family == "DIN V 18599-1" && c.clause.part == "§6"));
+    }
+
+    #[test]
+    fn part_8_cooling_demand_numeric_worked_example() {
+        let inputs = reference_100m2_inputs();
+        let cdh = part_8::cooling_degree_hours(&inputs.climate);
+        let expected_q_c = (inputs.h_t + inputs.h_v) * cdh * 0.35 / 1000.0;
+        let q_c = part_8::cooling_demand_kwh(&inputs);
+        assert!((q_c - expected_q_c).abs() < 1e-6, "q_c = {q_c}, expected {expected_q_c}");
+        assert!((q_c - 69.23).abs() < 1.0, "q_c = {q_c}, expected ~69.23 kWh");
     }
 }

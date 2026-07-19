@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio-tech/compose-go` router: `bun ./script.ts <test>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../repo/lib/js/index.ts";
+/** 🧭 `@semio-tech/compose-go` router: `bun ./script.ts test [level]`. */
+import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, goLevelTestArgs } from "../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCmd("go", ["test", "-v", "./..."], { cwd: this.root });
+  run(segments: string[]): void {
+    const { level, rest } = resolveTestLevel(segments);
+    runTestBudgeted("go", ["test", "-v", "./...", ...goLevelTestArgs(level), ...rest], { cwd: this.root });
   }
 }
 

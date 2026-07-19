@@ -120,8 +120,9 @@ impl UndirectedGraph {
 
     /// 🗑️ NetworkX `remove_edge(u, v)`: looks the edge id up by endpoints first, since simple graphs address edges by their pair.
     pub fn remove_edge(&mut self, u: NodeId, v: NodeId) -> bool {
-        match self.0.edges_between(u, v).next() {
-            Some(edge) => self.0.remove_edge(edge.id),
+        let existing = self.0.edges_between(u, v).next().map(|edge| edge.id);
+        match existing {
+            Some(id) => self.0.remove_edge(id),
             None => false,
         }
     }
@@ -288,8 +289,9 @@ impl UndirectedGraph {
     /// 🏷️ NetworkX `set_edge_attributes`: merges `attrs` into the edge between each `(u, v)`; pairs without an edge are silently skipped.
     pub fn set_edge_attributes(&mut self, values: impl IntoIterator<Item = (NodeId, NodeId, PropertyBag)>) {
         for (u, v, attrs) in values {
-            if let Some(edge) = self.0.edges_between(u, v).next() {
-                if let Some(existing) = self.0.edge_attrs_mut(edge.id) {
+            let edge_id = self.0.edges_between(u, v).next().map(|edge| edge.id);
+            if let Some(id) = edge_id {
+                if let Some(existing) = self.0.edge_attrs_mut(id) {
                     existing.extend(attrs);
                 }
             }

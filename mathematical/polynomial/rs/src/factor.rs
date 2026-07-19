@@ -3,7 +3,7 @@
 
 use crate::finite::factor_mod_p;
 use crate::univariate::PolyU;
-use mathematical_number::{primes, GcdDomain, Integer, IntegralDomain, ModInt, Natural, Rational, Ring};
+use mathematical_number::{primes, Integer, IntegralDomain, ModInt, Natural, Rational};
 use mathematical_random::Rng;
 
 // #region 🔖Conversions

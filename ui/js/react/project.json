@@ -37,6 +37,30 @@
         "forwardAllArgs": true
       }
     },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/js/react",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/js/react",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/js/react",
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
     "typecheck": {
       "executor": "nx:run-commands",
       "options": {

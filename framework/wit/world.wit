@@ -47,6 +47,18 @@ interface types {
     data: list<u8>,
   }
 
+  /// 🎞️ Payload crossing the plugin ABI on one declared media-graph port (`consume-media`/
+  /// `produce-media`). `descriptor-json` is a JSON object `{ edgeId?, portId?, kindId?, mediaType?,
+  /// wire, blobHash? }` — `mediaType` mirrors `framework/core/rs/lib.rs`'s `MediaType` (`{class,
+  /// form}`), `wire` mirrors its `MediaWireFormat` (`{kind:"document",schema}` or
+  /// `{kind:"binary",format}`). `data` carries the artifact's raw bytes (UTF-8 document JSON for a
+  /// `document` wire) and is empty when `descriptor-json.blobHash` is set instead — the payload
+  /// already lives in the host's blob store (see `write-blob`/`read-blob` on the `host` interface).
+  record media-artifact {
+    descriptor-json: string,
+    data: list<u8>,
+  }
+
   variant plugin-error {
     message(string),
   }
@@ -65,6 +77,7 @@ interface plugin {
     ui-refresh-response-json,
     migrate-document-input,
     migrate-document-output,
+    media-artifact,
     plugin-error,
   };
 
@@ -102,6 +115,18 @@ interface plugin {
   load-app-document: func(instance-id: u32, document-json: string) -> result<_, plugin-error>;
   attach-backbone: func(instance-id: u32, uri: string) -> result<_, plugin-error>;
   detach-backbone: func(instance-id: u32) -> result<_, plugin-error>;
+  /// 🔌 Delivers a typed media artifact to a plugin instance's declared input port — the WIT-level
+  /// counterpart of the plugin SDK's `PluginApp::consume_media`. Every `PluginApp` gets a default
+  /// (whole-document passthrough for a matching `document` wire); apps whose input isn't simply their
+  /// own document override the SDK method directly.
+  consume-media: func(instance-id: u32, port-id: string, artifact: media-artifact) -> result<_, plugin-error>;
+  /// 🎬 Requests a typed media artifact from a plugin instance's declared output port — the WIT-level
+  /// counterpart of `PluginApp::produce_media`. Optional override point: most apps' "media output" is
+  /// just their document (the host can instead call `read-app-document` and transcode server-side), so
+  /// this only matters for apps whose output isn't simply their raw document (computed/derived
+  /// outputs). `request-json` is reserved for future parameterized requests and currently ignored by
+  /// the SDK default.
+  produce-media: func(instance-id: u32, port-id: string, request-json: string) -> result<media-artifact, plugin-error>;
 }
 
 interface host {

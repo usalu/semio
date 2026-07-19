@@ -3,6 +3,7 @@
 
 use crate::expr::{Constant, Expr, Kind, RelOp};
 use crate::fnkind::FnKind;
+use std::ops::Neg;
 
 // #region 🔖Precedence
 #[derive(Clone, Copy, PartialEq, PartialOrd)]
@@ -91,8 +92,12 @@ fn write_paren_if_needed(e: &Expr, min_prec: Prec, out: &mut String) {
     }
 }
 
+/// ➕ Prints in the conventional "highest-degree/most-complex term first, plain constant last" order —
+/// the reverse of `Add`'s canonical storage order (which puts the numeric coefficient first, an
+/// internal invariant unrelated to how a human expects to read the sum).
 fn write_add(terms: &[Expr], out: &mut String) {
-    for (i, term) in terms.iter().enumerate() {
+    let reordered: Vec<Expr> = terms.iter().rev().cloned().collect();
+    for (i, term) in reordered.iter().enumerate() {
         let (is_neg, display_term) = extract_negation(term);
         if i == 0 {
             if is_neg {
@@ -128,7 +133,8 @@ fn extract_negation(term: &Expr) -> (bool, Expr) {
 }
 
 fn write_mul(factors: &[Expr], out: &mut String) {
-    // Recover a/b: a Pow(base, negative-exponent) factor becomes the denominator.
+    // Recover a/b: a Pow(base, negative-exponent) factor becomes the denominator, and a Rational
+    // numeric coefficient splits into a numerator/denominator pair rather than printing "1/2*x".
     let mut numer: Vec<Expr> = Vec::new();
     let mut denom: Vec<Expr> = Vec::new();
     for f in factors {
@@ -137,6 +143,16 @@ fn write_mul(factors: &[Expr], out: &mut String) {
                 denom.push(Expr::pow(base.clone(), exp.clone().neg()));
                 continue;
             }
+        }
+        if let Kind::Rational(r) = f.kind() {
+            if r.numer().abs_integer() != mathematical_number::Integer::one() {
+                numer.push(Expr::from(r.numer().abs_integer()));
+            }
+            if r.numer().is_negative() {
+                numer.insert(0, Expr::integer(-1));
+            }
+            denom.push(Expr::from(mathematical_number::Integer::from_natural(r.denom().clone())));
+            continue;
         }
         numer.push(f.clone());
     }
@@ -216,7 +232,8 @@ fn write_latex(e: &Expr, out: &mut String) {
         Kind::Constant(c) => out.push_str(latex_constant(c)),
         Kind::Bool(b) => out.push_str(if *b { "\\text{true}" } else { "\\text{false}" }),
         Kind::Add(terms) => {
-            for (i, term) in terms.iter().enumerate() {
+            let reordered: Vec<Expr> = terms.iter().rev().cloned().collect();
+            for (i, term) in reordered.iter().enumerate() {
                 let (is_neg, display_term) = extract_negation(term);
                 if i == 0 {
                     if is_neg {

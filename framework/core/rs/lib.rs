@@ -5418,6 +5418,7 @@ pub use mesh::{
     OsMediaCapability, ResourceKindSpec,
     MediaClass, MediaForm, MediaType, MediaWireFormat, MediaKindDescriptor, MediaPortDirection, MediaPortSpec,
     MediaCompat, media_types_compatible,
+    Media, MediaPayload, MediaFingerprint, MediaError, MediaConverter,
 };
 pub use platform::{PanelVisibility, Platform, PlatformSpec};
 pub use ui::*;

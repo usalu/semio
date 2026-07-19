@@ -1,19 +1,19 @@
 //! 🧱 EN 1996 design of masonry structures.
 
-use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use norm_core::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, Quantity};
 use serde::{Deserialize, Serialize};
 
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
 
-    /// 🇩🇪 Partial factor γ_M per DIN EN 1996-1-1/NA.
+    /// 🇩🇪 Partial factor γ_M per DIN EN 1996-1-1/NA (flat, independent of masonry class).
     pub fn gamma_m() -> f64 {
-        2.0
+        super::AnnexParams { annex: super::AnnexChoice::De, masonry_class: super::MasonryClass::default(), accidental: false }.gamma_m()
     }
 }
 
 /// 🧱 Masonry unit type per EN 1996-1-1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MasonryUnit {
     Clay,
     CalciumSilicate,
@@ -29,6 +29,54 @@ impl MasonryUnit {
         }
     }
 }
+
+// #region 🔖Annex
+/// 🧱 Masonry manufacturing-control class underlying the EN-recommended γ_M table (EN 1996-1-1 Table 2.1-style).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum MasonryClass {
+    Class1,
+    Class2,
+    Class3,
+    Class4,
+    Class5,
+}
+
+impl MasonryClass {
+    pub fn gamma_m_en(self) -> f64 {
+        match self {
+            Self::Class1 => 1.5,
+            Self::Class2 => 1.7,
+            Self::Class3 => 2.0,
+            Self::Class4 => 2.2,
+            Self::Class5 => 2.5,
+        }
+    }
+}
+
+impl Default for MasonryClass {
+    fn default() -> Self {
+        Self::Class3
+    }
+}
+
+/// ⚖️ Resolved national-annex parameters governing the masonry partial factor γ_M (EN 1996-1-1 §2.4.3 vs DIN EN 1996-1-1/NA).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct AnnexParams {
+    pub annex: AnnexChoice,
+    pub masonry_class: MasonryClass,
+    pub accidental: bool,
+}
+
+impl AnnexParams {
+    pub fn gamma_m(self) -> f64 {
+        match self.annex {
+            AnnexChoice::En => self.masonry_class.gamma_m_en(),
+            AnnexChoice::De if self.accidental => 1.3,
+            AnnexChoice::De => 1.5,
+        }
+    }
+}
+// #endregion 🔖Annex
 
 // #region 🔖Part1_1
 pub mod part_1_1 {
@@ -105,44 +153,123 @@ pub mod part_1_2 {
 // #endregion 🔖Part1_2
 
 // #region 🔖Part2
+/// 🧱 EN 1996-2 selection of materials & execution: exposure-class durability admissibility and bed-joint execution checks.
 pub mod part_2 {
     use super::*;
 
-    pub fn lintel_shear_resistance_kn(a_mm2: f64, f_vk_mpa: f64, gamma_m: f64) -> f64 {
-        let f_vd = part_1_1::shear_design_strength_mpa(f_vk_mpa, gamma_m);
-        part_1_1::shear_resistance_kn(a_mm2, f_vd)
+    /// 🌦️ Masonry durability exposure class (EN 1996-1-1 Annex B-style categorisation MX1–MX5).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum ExposureClass {
+        Mx1,
+        Mx2,
+        Mx3,
+        Mx4,
+        Mx5,
     }
 
-    pub fn check_lintel_shear(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
-        part_1_1::check_shear(v_ed_kn, v_rd_kn, AnnexChoice::En)
+    /// 🧪 General-purpose mortar compressive-strength class per EN 998-2.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    pub enum MortarClass {
+        M1,
+        M2_5,
+        M5,
+        M10,
+        M20,
+    }
+
+    impl MortarClass {
+        pub fn compressive_strength_mpa(self) -> f64 {
+            match self {
+                Self::M1 => 1.0,
+                Self::M2_5 => 2.5,
+                Self::M5 => 5.0,
+                Self::M10 => 10.0,
+                Self::M20 => 20.0,
+            }
+        }
+    }
+
+    /// 📊 Minimum admissible mortar strength [MPa] for a (unit, exposure) pair; ∞ marks an inadmissible combination.
+    fn required_mortar_strength_mpa(exposure: ExposureClass, unit: MasonryUnit) -> f64 {
+        match (exposure, unit) {
+            (ExposureClass::Mx1, _) => 1.0,
+            (ExposureClass::Mx2, MasonryUnit::Aac) => 2.5,
+            (ExposureClass::Mx2, MasonryUnit::Clay) | (ExposureClass::Mx2, MasonryUnit::CalciumSilicate) => 5.0,
+            (ExposureClass::Mx3, MasonryUnit::Clay) | (ExposureClass::Mx3, MasonryUnit::CalciumSilicate) => 10.0,
+            (ExposureClass::Mx3, MasonryUnit::Aac) => f64::INFINITY,
+            (ExposureClass::Mx4, MasonryUnit::Clay) => 20.0,
+            (ExposureClass::Mx4, _) => f64::INFINITY,
+            (ExposureClass::Mx5, MasonryUnit::Clay) => 20.0,
+            (ExposureClass::Mx5, _) => f64::INFINITY,
+        }
+    }
+
+    pub fn is_combination_admissible(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> bool {
+        mortar.compressive_strength_mpa() >= required_mortar_strength_mpa(exposure, unit)
+    }
+
+    pub fn check_exposure_mortar(exposure: ExposureClass, unit: MasonryUnit, mortar: MortarClass) -> CheckResult {
+        let required = required_mortar_strength_mpa(exposure, unit);
+        CheckResult::from_minimum(
+            ClauseId::new("EN 1996-2", "Annex B", "B.1"),
+            Quantity::stress_mpa(mortar.compressive_strength_mpa()),
+            Quantity::stress_mpa(required),
+            format!("{} unit / {:?} mortar in exposure {:?}", unit.label(), mortar, exposure),
+            AnnexChoice::En,
+        )
+    }
+
+    /// 📏 General-purpose mortar bed-joint thickness must fall within 6–15mm per EN 1996-2 §8.
+    pub fn check_bed_joint_thickness(thickness_mm: f64) -> CheckResult {
+        let clause = ClauseId::new("EN 1996-2", "§8", "8.1");
+        let computed = Quantity::length_m(thickness_mm / 1000.0);
+        let limit = Quantity::length_m(0.015);
+        let within_range = (6.0..=15.0).contains(&thickness_mm);
+        let utilization = thickness_mm / 15.0;
+        if within_range {
+            CheckResult::pass(clause, computed, limit, utilization, "bed-joint thickness within 6-15mm general-purpose mortar range", AnnexChoice::En)
+        } else {
+            CheckResult::fail(clause, computed, limit, utilization, "bed-joint thickness outside 6-15mm general-purpose mortar range", AnnexChoice::En)
+        }
     }
 }
 // #endregion 🔖Part2
 
 // #region 🔖Part3
+/// 📐 EN 1996-3 simplified Φ_s reduction-factor method for slender plain masonry walls (§4.2); prior retaining-wall/earth-pressure content was deleted as out-of-scope for EN 1996-3 — earth pressure and retaining-wall stability belong to EN 1997, and there is no clean EN 1996-1-1 "basement wall" analogue for it.
 pub mod part_3 {
     use super::*;
 
-    /// 🌍 Active earth pressure coefficient K_a per Rankine (c=0).
-    pub fn active_earth_pressure_coefficient(phi_deg: f64) -> f64 {
-        let phi_rad = phi_deg.to_radians();
-        ((1.0 - phi_rad.sin()) / (1.0 + phi_rad.sin())).powi(2)
+    /// 📉 Simplified capacity-reduction factor Φ_s per EN 1996-3 §4.2 (valid while ≥ 0).
+    pub fn phi_s(h_ef_mm: f64, t_ef_mm: f64) -> f64 {
+        let ratio = h_ef_mm / t_ef_mm;
+        (0.85 - 0.0011 * ratio * ratio).max(0.0)
     }
 
-    /// 🌍 Resultant active earth pressure [kN/m] on retaining wall.
-    pub fn active_earth_pressure_kn_m(gamma_soil_kn_m3: f64, h_m: f64, phi_deg: f64) -> f64 {
-        let ka = active_earth_pressure_coefficient(phi_deg);
-        0.5 * gamma_soil_kn_m3 * h_m * h_m * ka
+    pub fn n_rd_kn(phi_s: f64, f_d_mpa: f64, area_mm2: f64) -> f64 {
+        phi_s * f_d_mpa * area_mm2 / 1000.0
     }
 
-    /// 🌍 Overturning moment [kNm/m] at wall base from active earth pressure.
-    pub fn retaining_wall_overturning_moment_knm(gamma_soil_kn_m3: f64, h_m: f64, phi_deg: f64) -> f64 {
-        let ka = active_earth_pressure_coefficient(phi_deg);
-        gamma_soil_kn_m3 * h_m.powi(3) * ka / 6.0
+    /// 🚧 The simplified method only applies up to 3 storeys and a slenderness ratio of 27 (EN 1996-3 §1.1 scope).
+    pub fn is_applicable(storeys: u32, h_ef_mm: f64, t_ef_mm: f64) -> bool {
+        storeys <= 3 && h_ef_mm / t_ef_mm <= 27.0
     }
 
-    pub fn check_retaining_wall(m_ed: f64, m_rd: f64) -> CheckResult {
-        part_1_1::check_flexure(m_ed, m_rd, AnnexChoice::En)
+    pub fn check_simplified_compression(n_ed_kn: f64, phi_s: f64, f_d_mpa: f64, area_mm2: f64, storeys: u32, h_ef_mm: f64, t_ef_mm: f64, annex: AnnexChoice) -> CheckResult {
+        let clause = ClauseId::new("EN 1996-3", "§4.2", "4.2");
+        if !is_applicable(storeys, h_ef_mm, t_ef_mm) {
+            return CheckResult {
+                clause,
+                status: CheckStatus::NotApplicable,
+                computed: Quantity::force_kn(n_ed_kn),
+                limit: Quantity::force_kn(0.0),
+                utilization: 0.0,
+                message: "simplified method not applicable: exceeds storey count or slenderness limit".into(),
+                annex,
+            };
+        }
+        let n_rd = n_rd_kn(phi_s, f_d_mpa, area_mm2);
+        CheckResult::from_utilization(clause, Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd), "simplified compression method N_Rd", annex)
     }
 }
 // #endregion 🔖Part3
@@ -164,43 +291,27 @@ fn parse_masonry_unit(value: &str) -> MasonryUnit {
     }
 }
 
-/// 📋 Full EN 1996 check across flexure, compression, shear, sliding, fire wall, and retaining parts.
-pub fn check_full_masonry(
-    m_ed_knm: f64,
-    n_ed_kn: f64,
-    v_ed_kn: f64,
-    h_ed_kn: f64,
-    z_mm3: f64,
-    area_mm2: f64,
-    shear_area_mm2: f64,
-    f_k_mpa: f64,
-    f_vk_mpa: f64,
-    gamma_m: f64,
-    mu: f64,
-    wall_thickness_mm: f64,
-    fire_resistance_min: u32,
-    unit: MasonryUnit,
-    gamma_soil_kn_m3: f64,
-    wall_height_m: f64,
-    phi_deg: f64,
-    m_rd_knm: f64,
-) -> CheckReport {
-    let f_d = part_1_1::design_strength_mpa(f_k_mpa, gamma_m);
-    let f_vd = part_1_1::shear_design_strength_mpa(f_vk_mpa, gamma_m);
-    let sigma = n_ed_kn * 1000.0 / area_mm2;
-    let m_rd_flex = part_1_1::flexural_resistance_knm(z_mm3, f_d);
-    let v_rd = part_1_1::shear_resistance_kn(shear_area_mm2, f_vd);
-    let h_rd = part_1_1::sliding_resistance_kn(mu, n_ed_kn, f_vd, shear_area_mm2);
-    let annex = AnnexChoice::De;
+/// 📋 Full EN 1996 check across flexure, compression, shear, sliding (part 1-1), fire wall (part 1-2), exposure/bed-joint (part 2), and the simplified method (part 3).
+pub fn check_full_masonry(document: &Document) -> CheckReport {
+    let g_m = document.annex_params().gamma_m();
+    let f_d = part_1_1::design_strength_mpa(document.f_k_mpa, g_m);
+    let f_vd = part_1_1::shear_design_strength_mpa(document.f_vk_mpa, g_m);
+    let sigma = document.n_ed_kn * 1000.0 / document.area_mm2;
+    let m_rd_flex = part_1_1::flexural_resistance_knm(document.z_mm3, f_d);
+    let v_rd = part_1_1::shear_resistance_kn(document.shear_area_mm2, f_vd);
+    let h_rd = part_1_1::sliding_resistance_kn(document.mu, document.n_ed_kn, f_vd, document.shear_area_mm2);
+    let unit = parse_masonry_unit(&document.unit);
     let mut report = CheckReport::default();
-    report.push(part_1_1::check_flexure(m_ed_knm, m_rd_flex, annex));
-    report.push(part_1_1::check_compression(sigma, f_d, annex));
-    report.push(part_1_1::check_shear(v_ed_kn, v_rd, annex));
-    report.push(part_1_1::check_sliding(h_ed_kn, h_rd, annex));
-    let required_fire = part_1_2::required_wall_thickness_mm(fire_resistance_min, unit);
-    report.push(part_1_2::check_fire_wall(wall_thickness_mm, required_fire));
-    let m_overturn = part_3::retaining_wall_overturning_moment_knm(gamma_soil_kn_m3, wall_height_m, phi_deg);
-    report.push(part_3::check_retaining_wall(m_overturn, m_rd_knm));
+    report.push(part_1_1::check_flexure(document.m_ed_knm, m_rd_flex, document.annex));
+    report.push(part_1_1::check_compression(sigma, f_d, document.annex));
+    report.push(part_1_1::check_shear(document.v_ed_kn, v_rd, document.annex));
+    report.push(part_1_1::check_sliding(document.h_ed_kn, h_rd, document.annex));
+    let required_fire = part_1_2::required_wall_thickness_mm(document.fire_resistance_min, unit);
+    report.push(part_1_2::check_fire_wall(document.wall_thickness_mm, required_fire));
+    report.push(part_2::check_exposure_mortar(document.exposure, unit, document.mortar));
+    report.push(part_2::check_bed_joint_thickness(document.bed_joint_thickness_mm));
+    let phi_s = part_3::phi_s(document.h_ef_mm, document.t_ef_mm);
+    report.push(part_3::check_simplified_compression(document.n_ed_kn, phi_s, f_d, document.area_mm2, document.storeys, document.h_ef_mm, document.t_ef_mm, document.annex));
     report
 }
 
@@ -219,15 +330,26 @@ pub struct Document {
     pub shear_area_mm2: f64,
     pub f_k_mpa: f64,
     pub f_vk_mpa: f64,
-    pub gamma_m: f64,
+    pub annex: AnnexChoice,
+    pub masonry_class: MasonryClass,
+    pub design_situation: DesignSituation,
     pub mu: f64,
     pub wall_thickness_mm: f64,
     pub fire_resistance_min: u32,
     pub unit: String,
-    pub gamma_soil_kn_m3: f64,
-    pub wall_height_m: f64,
-    pub phi_deg: f64,
-    pub m_rd_knm: f64,
+    pub exposure: part_2::ExposureClass,
+    pub mortar: part_2::MortarClass,
+    pub bed_joint_thickness_mm: f64,
+    pub storeys: u32,
+    pub h_ef_mm: f64,
+    pub t_ef_mm: f64,
+}
+
+impl Document {
+    /// ⚖️ Derive the resolved γ_M annex parameters from this document's annex/class/situation inputs.
+    pub fn annex_params(&self) -> AnnexParams {
+        AnnexParams { annex: self.annex, masonry_class: self.masonry_class, accidental: self.design_situation == DesignSituation::Accidental }
+    }
 }
 
 impl Default for Document {
@@ -242,15 +364,19 @@ impl Default for Document {
             shear_area_mm2: 300_000.0,
             f_k_mpa: 5.0,
             f_vk_mpa: 0.15,
-            gamma_m: 2.0,
+            annex: AnnexChoice::De,
+            masonry_class: MasonryClass::default(),
+            design_situation: DesignSituation::Persistent,
             mu: 0.4,
-            wall_thickness_mm: 100.0,
+            wall_thickness_mm: 240.0,
             fire_resistance_min: 60,
             unit: "clay".into(),
-            gamma_soil_kn_m3: 18.0,
-            wall_height_m: 3.0,
-            phi_deg: 30.0,
-            m_rd_knm: 25.0,
+            exposure: part_2::ExposureClass::Mx1,
+            mortar: part_2::MortarClass::M5,
+            bed_joint_thickness_mm: 12.0,
+            storeys: 2,
+            h_ef_mm: 2500.0,
+            t_ef_mm: 240.0,
         }
     }
 }
@@ -259,26 +385,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1996Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_full_masonry(
-        document.m_ed_knm,
-        document.n_ed_kn,
-        document.v_ed_kn,
-        document.h_ed_kn,
-        document.z_mm3,
-        document.area_mm2,
-        document.shear_area_mm2,
-        document.f_k_mpa,
-        document.f_vk_mpa,
-        document.gamma_m,
-        document.mu,
-        document.wall_thickness_mm,
-        document.fire_resistance_min,
-        parse_masonry_unit(&document.unit),
-        document.gamma_soil_kn_m3,
-        document.wall_height_m,
-        document.phi_deg,
-        document.m_rd_knm,
-    )
+    check_full_masonry(document)
 }
 
 pub struct En1996Family;
@@ -306,7 +413,7 @@ mod tests {
         let sigma = 200.0 * 1000.0 / 500_000.0;
         let f_d = part_1_1::design_strength_mpa(5.0, na_de::gamma_m());
         assert!((sigma - 0.4_f64).abs() < 1e-9);
-        assert!((f_d - 2.5_f64).abs() < 1e-9);
+        assert!((f_d - (5.0 / 1.5)).abs() < 1e-9);
         let report = check_masonry_wall(200.0, 500_000.0, 5.0, na_de::gamma_m());
         assert!(!report.checks.is_empty());
         assert!(report.checks[0].utilization < 1.0);
@@ -319,30 +426,75 @@ mod tests {
     }
 
     #[test]
-    fn active_earth_pressure_rankine() {
-        let ka = part_3::active_earth_pressure_coefficient(30.0);
-        assert!((ka - 0.111).abs() < 0.01);
-        let p_a = part_3::active_earth_pressure_kn_m(18.0, 3.0, 30.0);
-        assert!((p_a - 9.0).abs() < 1.0);
-    }
-
-    #[test]
     fn fire_wall_r60_clay() {
         let required = part_1_2::required_wall_thickness_mm(60, MasonryUnit::Clay);
         assert!((required - 90.0).abs() < 0.1);
     }
 
     #[test]
+    fn exposure_mortar_mx1_clay_m1_admissible() {
+        let result = part_2::check_exposure_mortar(part_2::ExposureClass::Mx1, MasonryUnit::Clay, part_2::MortarClass::M1);
+        assert_eq!(result.status, CheckStatus::Pass);
+    }
+
+    #[test]
+    fn exposure_mortar_mx4_aac_inadmissible() {
+        let result = part_2::check_exposure_mortar(part_2::ExposureClass::Mx4, MasonryUnit::Aac, part_2::MortarClass::M20);
+        assert_eq!(result.status, CheckStatus::Fail);
+    }
+
+    #[test]
+    fn bed_joint_thickness_range() {
+        let ok = part_2::check_bed_joint_thickness(12.0);
+        assert_eq!(ok.status, CheckStatus::Pass);
+        let too_thin = part_2::check_bed_joint_thickness(3.0);
+        assert_eq!(too_thin.status, CheckStatus::Fail);
+    }
+
+    #[test]
+    fn simplified_method_worked_example() {
+        let phi_s = part_3::phi_s(3600.0, 240.0);
+        assert!((phi_s - 0.6025).abs() < 1e-9);
+        let gamma_m = AnnexParams { annex: AnnexChoice::De, masonry_class: MasonryClass::Class3, accidental: false }.gamma_m();
+        assert!((gamma_m - 1.5).abs() < 1e-9);
+        let f_d = part_1_1::design_strength_mpa(5.0, gamma_m);
+        assert!((f_d - 10.0 / 3.0).abs() < 1e-9);
+        let n_rd = part_3::n_rd_kn(phi_s, f_d, 240_000.0);
+        assert!((n_rd - 482.0).abs() < 0.5);
+    }
+
+    #[test]
+    fn simplified_method_applicability_guard() {
+        assert!(part_3::is_applicable(2, 2500.0, 240.0));
+        assert!(!part_3::is_applicable(4, 2500.0, 240.0));
+        assert!(!part_3::is_applicable(2, 8000.0, 240.0));
+        let result = part_3::check_simplified_compression(100.0, 0.6, 3.0, 100_000.0, 4, 2500.0, 240.0, AnnexChoice::De);
+        assert_eq!(result.status, CheckStatus::NotApplicable);
+    }
+
+    #[test]
+    fn gamma_m_diverges_en_class2_vs_de_flat() {
+        let en = AnnexParams { annex: AnnexChoice::En, masonry_class: MasonryClass::Class2, accidental: false };
+        let de = AnnexParams { annex: AnnexChoice::De, masonry_class: MasonryClass::Class2, accidental: false };
+        assert!((en.gamma_m() - 1.7).abs() < 1e-9);
+        assert!((de.gamma_m() - 1.5).abs() < 1e-9);
+        let phi_s = part_3::phi_s(3600.0, 240.0);
+        let area_mm2 = 240_000.0;
+        let n_rd_en = part_3::n_rd_kn(phi_s, part_1_1::design_strength_mpa(5.0, en.gamma_m()), area_mm2);
+        let n_rd_de = part_3::n_rd_kn(phi_s, part_1_1::design_strength_mpa(5.0, de.gamma_m()), area_mm2);
+        assert!(n_rd_de > n_rd_en);
+        assert!((n_rd_de - n_rd_en).abs() > 1.0);
+    }
+
+    #[test]
     fn full_masonry_worked_example() {
-        let report = check_full_masonry(8.0, 200.0, 35.0, 20.0, 8_000_000.0, 500_000.0, 300_000.0, 5.0, 0.15, 2.0, 0.4, 100.0, 60, MasonryUnit::Clay, 18.0, 3.0, 30.0, 25.0);
-        assert_eq!(report.checks.len(), 6);
-        let m_overturn = part_3::retaining_wall_overturning_moment_knm(18.0, 3.0, 30.0);
-        assert!((m_overturn - 9.0).abs() < 0.5);
+        let report = check_full_masonry(&Document::default());
+        assert_eq!(report.checks.len(), 8);
     }
 
     #[test]
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
-        assert_eq!(report.checks.len(), 6);
+        assert_eq!(report.checks.len(), 8);
     }
 }

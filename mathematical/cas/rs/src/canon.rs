@@ -7,11 +7,10 @@ use crate::expr::{Constant, Expr, Kind, Symbol};
 use crate::fnkind::FnKind;
 use mathematical_number::{primes, Integer, Natural, Rational};
 use std::collections::BTreeMap;
-use std::rc::Rc;
 
 // #region 🔖Leaves
 pub(crate) fn make_symbol(name: &str, assumptions: AssumeSet) -> Expr {
-    Expr::from_kind_unchecked(Kind::Symbol(Symbol { name: Rc::from(name), assumptions: assumptions.close() }))
+    Expr::from_kind_unchecked(Kind::Symbol(Symbol::new(name, assumptions.close())))
 }
 
 pub(crate) fn make_integer(n: Integer) -> Expr {
@@ -190,6 +189,13 @@ pub(crate) fn make_mul(factors: Vec<Expr>) -> Expr {
         } else {
             symbolic.push(f);
         }
+    }
+
+    // `zoo` (directionless complex infinity) swallows every finite factor's sign, so it must be
+    // checked before the signed `oo`/`-oo` contagion below: `0 * zoo` is still `Undefined`, but
+    // `zoo * -oo` (or any other signed infinity) collapses to `zoo`, not a signed infinity.
+    if symbolic.iter().any(|t| matches!(t.kind(), Kind::Constant(Constant::ComplexInf))) {
+        return if numeric.is_zero() { Expr::constant(Constant::Undefined) } else { Expr::constant(Constant::ComplexInf) };
     }
 
     let inf_terms: Vec<&Expr> = symbolic.iter().filter(|t| matches!(t.kind(), Kind::Constant(Constant::Inf) | Kind::Constant(Constant::NegInf))).collect();
@@ -472,6 +478,18 @@ mod tests {
         let x = Expr::symbol("x");
         let e = make_mul(vec![x, Expr::integer(0)]);
         assert_eq!(e, Expr::integer(0));
+    }
+
+    #[test]
+    fn mul_zero_times_complex_infinity_is_undefined() {
+        let e = make_mul(vec![Expr::integer(0), Expr::constant(Constant::ComplexInf)]);
+        assert_eq!(e, Expr::constant(Constant::Undefined));
+    }
+
+    #[test]
+    fn mul_nonzero_times_complex_infinity_is_complex_infinity() {
+        let e = make_mul(vec![Expr::integer(5), Expr::constant(Constant::ComplexInf)]);
+        assert_eq!(e, Expr::constant(Constant::ComplexInf));
     }
 
     #[test]

@@ -653,11 +653,11 @@ pub mod app_studio {
     use semio_framework_os::{
         apply_flow_fixture_to_os_media_graph, build_os_media_flow_operator_infos, create_default_os_parameter,
         create_os_document_id, create_os_id, list_os_media_graph_vfs_children, list_os_programs,
-        materialize_os_app_instance_document_json, media_port_spec_id, os_app_primary_output_kind,
+        materialize_os_app_instance_document_json, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
         os_app_registration, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
         os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
         patch_os_parameter, MediaGraphPosition, OsAppInstance, OsDocumentRef, OsMediaGraphCamera,
-        OsMediaGraphVfsNodeRecord, OsOp, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
+        OsMediaGraphVfsNodeRecord, OsMediaPort, OsOp, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
         OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
     };
     use semio_framework_plugin::{
@@ -884,6 +884,28 @@ pub mod app_studio {
                     .map(|node| node.instance_id.clone())
             })
             .collect()
+    }
+
+    /// @emoji 🤝 Resolves the source/target `OsMediaPort`s for a proposed connect from the live projection
+    /// and negotiates their wire contract — shared by both connect entry points (`"connectMediaPorts"` and
+    /// the `nodeGraphEdit`/`"connect"` fixture edit) so neither can push an `OsOp::ConnectMediaPorts` for an
+    /// incompatible or unresolved pair of ports.
+    fn negotiate_media_connect(projection: &OsProjection, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<semio_framework_os::MediaContract, String> {
+        let source_port: &OsMediaPort = projection
+            .media_graph
+            .nodes
+            .iter()
+            .find(|node| node.id == source_node_id)
+            .and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id))
+            .ok_or_else(|| format!("unknown source port {source_node_id}:{source_port_id}"))?;
+        let target_port: &OsMediaPort = projection
+            .media_graph
+            .nodes
+            .iter()
+            .find(|node| node.id == target_node_id)
+            .and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id))
+            .ok_or_else(|| format!("unknown target port {target_node_id}:{target_port_id}"))?;
+        negotiate_media_contract(source_port, target_port)
     }
 
     fn media_graph_context_menu_json(labels: &SStudioLabels) -> String {
@@ -2171,15 +2193,19 @@ pub mod app_studio {
                         args.and_then(|value| value.get("targetPortId"))
                             .and_then(|value| value.as_str()),
                     ) {
-                        ops.push(OsOp::ConnectMediaPorts {
-                            edge: semio_framework_os::OsMediaGraphEdge {
-                                id: create_os_id("edge"),
-                                source_node_id: source_node_id.into(),
-                                source_port_id: source_port_id.into(),
-                                target_node_id: target_node_id.into(),
-                                target_port_id: target_port_id.into(),
-                            },
-                        });
+                        match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
+                            Ok(contract) => ops.push(OsOp::ConnectMediaPorts {
+                                edge: semio_framework_os::OsMediaGraphEdge {
+                                    id: create_os_id("edge"),
+                                    source_node_id: source_node_id.into(),
+                                    source_port_id: source_port_id.into(),
+                                    target_node_id: target_node_id.into(),
+                                    target_port_id: target_port_id.into(),
+                                    contract,
+                                },
+                            }),
+                            Err(reason) => effects.push(HostEffect::Notify { message: reason }),
+                        }
                     }
                 }
                 "disconnectMediaEdge" => {
@@ -2497,15 +2523,19 @@ pub mod app_studio {
                                     edit.get("targetNodeId").and_then(|value| value.as_str()),
                                     edit.get("targetPortId").and_then(|value| value.as_str()),
                                 ) {
-                                    ops.push(OsOp::ConnectMediaPorts {
-                                        edge: semio_framework_os::OsMediaGraphEdge {
-                                            id: create_os_id("edge"),
-                                            source_node_id: source_node_id.into(),
-                                            source_port_id: source_port_id.into(),
-                                            target_node_id: target_node_id.into(),
-                                            target_port_id: target_port_id.into(),
-                                        },
-                                    });
+                                    match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
+                                        Ok(contract) => ops.push(OsOp::ConnectMediaPorts {
+                                            edge: semio_framework_os::OsMediaGraphEdge {
+                                                id: create_os_id("edge"),
+                                                source_node_id: source_node_id.into(),
+                                                source_port_id: source_port_id.into(),
+                                                target_node_id: target_node_id.into(),
+                                                target_port_id: target_port_id.into(),
+                                                contract,
+                                            },
+                                        }),
+                                        Err(reason) => effects.push(HostEffect::Notify { message: reason }),
+                                    }
                                 }
                             }
                             "deleteSelection" => {
@@ -3038,8 +3068,8 @@ pub mod app_studio {
     mod tests {
         use super::*;
         use semio_framework_os::{
-            apply_os_operation, merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port,
-            validate_media_graph, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput,
+            apply_os_operation, merge_os_program_definition, os_baseline_resource, os_in_port, os_out_port, register_resource_descriptor, validate_media_graph, MediaClass, MediaForm, MediaType, MediaWireFormat, OsAppResourceSpec,
+            OsMediaFormat, OsMediaGraphNode, OsMediaPort, OsPlatformAppInput, OsPlatformInput, ResourceKindSpec,
         };
         use semio_framework_plugin::{testkit, HistoryView, ModeDefinition, PluginApp, UiControlNode, UiNode, VcsDocumentApp};
 
@@ -3176,6 +3206,135 @@ pub mod app_studio {
             assert!((node.x - 120.0).abs() < 0.01);
             assert!((node.y - 160.0).abs() < 0.01);
         }
+
+        //#region 🔖MediaContractConnect
+        #[test]
+        fn connect_media_ports_rejects_incompatible_types_via_notice() {
+            register_resource_descriptor(&ResourceKindSpec {
+                id: "test.contract.2d".into(),
+                name: "Test 2D".into(),
+                source_format: "test.2d".into(),
+                component_kind: "test".into(),
+                dimension: "2d".into(),
+                media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                schema: "test.contract.2d.schema".into(),
+                export_formats: vec![OsMediaFormat::Svg],
+                import_formats: vec![OsMediaFormat::Svg],
+            });
+            register_resource_descriptor(&ResourceKindSpec {
+                id: "test.contract.3d".into(),
+                name: "Test 3D".into(),
+                source_format: "test.3d".into(),
+                component_kind: "test".into(),
+                dimension: "3d".into(),
+                media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                schema: "test.contract.3d.schema".into(),
+                export_formats: vec![OsMediaFormat::Glb],
+                import_formats: vec![OsMediaFormat::Glb],
+            });
+            let mut projection = demo_studio_projection();
+            projection.media_graph.nodes.push(OsMediaGraphNode {
+                id: "contract-src".into(),
+                instance_id: "contract-src".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 1.0,
+                height: 1.0,
+                inputs: vec![],
+                outputs: vec![OsMediaPort { id: "contract-src:out".into(), resource_kind: "test.contract.2d".into(), direction: "out".into() }],
+            });
+            projection.media_graph.nodes.push(OsMediaGraphNode {
+                id: "contract-dst".into(),
+                instance_id: "contract-dst".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 1.0,
+                height: 1.0,
+                inputs: vec![OsMediaPort { id: "contract-dst:in".into(), resource_kind: "test.contract.3d".into(), direction: "in".into() }],
+                outputs: vec![],
+            });
+            let mut app = StudioApp::new();
+            let emit = studio_emit(
+                &mut app,
+                &projection,
+                "connectMediaPorts",
+                json!({ "sourceNodeId": "contract-src", "sourcePortId": "contract-src:out", "targetNodeId": "contract-dst", "targetPortId": "contract-dst:in" }),
+            );
+            assert!(emit.ops.is_empty(), "an incompatible connect must not push OsOp::ConnectMediaPorts");
+            assert!(matches!(emit.effects.first(), Some(HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
+        }
+
+        #[test]
+        fn connect_media_ports_negotiates_a_contract_for_compatible_types() {
+            register_resource_descriptor(&ResourceKindSpec {
+                id: "test.contract.doc-a".into(),
+                name: "Test Doc A".into(),
+                source_format: "test.doc".into(),
+                component_kind: "test".into(),
+                dimension: "data".into(),
+                media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                schema: "test.contract.doc.schema".into(),
+                export_formats: vec![],
+                import_formats: vec![],
+            });
+            register_resource_descriptor(&ResourceKindSpec {
+                id: "test.contract.doc-b".into(),
+                name: "Test Doc B".into(),
+                source_format: "test.doc".into(),
+                component_kind: "test".into(),
+                dimension: "data".into(),
+                media_capability: semio_framework_os::OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                schema: "test.contract.doc.schema".into(),
+                export_formats: vec![],
+                import_formats: vec![],
+            });
+            let mut projection = demo_studio_projection();
+            projection.media_graph.nodes.push(OsMediaGraphNode {
+                id: "contract-src-2".into(),
+                instance_id: "contract-src-2".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 1.0,
+                height: 1.0,
+                inputs: vec![],
+                outputs: vec![OsMediaPort { id: "contract-src-2:out".into(), resource_kind: "test.contract.doc-a".into(), direction: "out".into() }],
+            });
+            projection.media_graph.nodes.push(OsMediaGraphNode {
+                id: "contract-dst-2".into(),
+                instance_id: "contract-dst-2".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 1.0,
+                height: 1.0,
+                inputs: vec![OsMediaPort { id: "contract-dst-2:in".into(), resource_kind: "test.contract.doc-b".into(), direction: "in".into() }],
+                outputs: vec![],
+            });
+            let mut app = StudioApp::new();
+            let emit = studio_emit(
+                &mut app,
+                &projection,
+                "connectMediaPorts",
+                json!({ "sourceNodeId": "contract-src-2", "sourcePortId": "contract-src-2:out", "targetNodeId": "contract-dst-2", "targetPortId": "contract-dst-2:in" }),
+            );
+            let edge = emit
+                .ops
+                .iter()
+                .find_map(|op| match op {
+                    OsOp::ConnectMediaPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
+                    _ => None,
+                })
+                .expect("a compatible connect must push OsOp::ConnectMediaPorts with a negotiated contract");
+            assert_eq!(edge.contract.kind_id, "test.contract.doc-b");
+            assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
+            assert!(edge.contract.conversion.is_none());
+            let next = apply_ops(&projection, &emit.ops);
+            assert!(validate_media_graph(&next.media_graph).ok, "a freshly negotiated edge must pass validate_media_graph's contract-consistency check");
+        }
+        //#endregion 🔖MediaContractConnect
 
         #[test]
         fn spawns_draw_app_instance() {

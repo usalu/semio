@@ -1,0 +1,25 @@
+{
+  "name": "diamond",
+  "graph": {
+    "schema": "s.media-graph",
+    "nodes": [
+      { "id": "node-1", "instanceId": "app-a", "x": 0, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-a:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-a:out", "resourceKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-2", "instanceId": "app-b", "x": 200, "y": -80, "width": 160, "height": 72, "inputs": [{ "id": "app-b:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-b:out", "resourceKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-3", "instanceId": "app-c", "x": 200, "y": 80, "width": 160, "height": 72, "inputs": [{ "id": "app-c:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-c:out", "resourceKind": "2d.drawing", "direction": "out" }] },
+      { "id": "node-4", "instanceId": "app-d", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-d:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-d:out", "resourceKind": "2d.drawing", "direction": "out" }] }
+    ],
+    "edges": [
+      { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-2", "targetPortId": "app-b:in" },
+      { "id": "edge-ac", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-3", "targetPortId": "app-c:in" },
+      { "id": "edge-bd", "sourceNodeId": "node-2", "sourcePortId": "app-b:out", "targetNodeId": "node-4", "targetPortId": "app-d:in" },
+      { "id": "edge-cd", "sourceNodeId": "node-3", "sourcePortId": "app-c:out", "targetNodeId": "node-4", "targetPortId": "app-d:in" }
+    ]
+  },
+  "dirtyInstanceIds": ["app-a"],
+  "expectedDeliveries": [
+    { "edgeId": "edge-ab", "producerInstanceId": "app-a", "producerPortId": "app-a:out", "consumerInstanceId": "app-b", "consumerPortId": "app-b:in" },
+    { "edgeId": "edge-ac", "producerInstanceId": "app-a", "producerPortId": "app-a:out", "consumerInstanceId": "app-c", "consumerPortId": "app-c:in" },
+    { "edgeId": "edge-cd", "producerInstanceId": "app-c", "producerPortId": "app-c:out", "consumerInstanceId": "app-d", "consumerPortId": "app-d:in" },
+    { "edgeId": "edge-bd", "producerInstanceId": "app-b", "producerPortId": "app-b:out", "consumerInstanceId": "app-d", "consumerPortId": "app-d:in" }
+  ]
+}

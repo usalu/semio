@@ -38,13 +38,13 @@ impl Interval {
         // Widen outward until both bounds are certified to contain r; converges in a handful of ulps
         // since to_f64 is already within ~1 ulp of the true value.
         for _ in 0..4 {
-            if Self::rational_le_f64(r, lo) {
+            if Self::f64_le_rational(lo, r) {
                 break;
             }
             lo = lo.next_down();
         }
         for _ in 0..4 {
-            if Self::f64_le_rational(hi, r) {
+            if Self::rational_le_f64(r, hi) {
                 break;
             }
             hi = hi.next_up();

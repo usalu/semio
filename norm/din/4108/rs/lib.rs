@@ -1,4 +1,5 @@
 //! 🌡️ DIN 4108 thermal protection: minimum insulation, moisture, design values, U-value proof, airtightness.
+//! 🇩🇪 National standard — no EN/DE annex split; all checks report AnnexChoice::De.
 
 use norm_core::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity, TableEntry1D};
 use serde::{Deserialize, Serialize};
@@ -8,6 +9,7 @@ pub const R_SE_WALL_M2K_W: f64 = 0.04;
 pub const F_RSI_MINIMUM: f64 = 0.25;
 
 // #region 🔖Part1
+/// ⚠️ DIN 4108-1 (terms, symbols, applicability) is withdrawn from current normative practice; `scope_check` is kept only for clause-trace continuity across parts, while `check_input_plausibility` performs the substantive input validation part 1 no longer defines.
 pub mod part_1 {
     use super::*;
 
@@ -72,6 +74,38 @@ pub mod part_1 {
             limit: Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
             utilization: if applies { 1.0 } else { 0.0 },
             message: format!("scope: {} for {:?}", part_scope(part), element),
+            annex: AnnexChoice::De,
+        }
+    }
+
+    pub const U_VALUE_PLAUSIBLE_MIN_W_M2K: f64 = 0.1;
+    pub const U_VALUE_PLAUSIBLE_MAX_W_M2K: f64 = 5.0;
+
+    /// ✅ Basic input-plausibility validation for an envelope Document (λ>0, R_T>0, U within a sane range), replacing DIN 4108-1's withdrawn definitions role.
+    pub fn check_input_plausibility(layers: &[part_2::Layer], u_value: f64) -> CheckResult {
+        if layers.is_empty() {
+            return CheckResult {
+                clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
+                status: norm_core::CheckStatus::NotApplicable,
+                computed: Quantity::new(norm_core::QuantityKind::Dimensionless, 0.0),
+                limit: Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
+                utilization: 0.0,
+                message: "no layers supplied; input plausibility validation not applicable".into(),
+                annex: AnnexChoice::De,
+            };
+        }
+        let lambda_ok = layers.iter().all(|l| l.lambda_w_mk > 0.0);
+        let r_total = part_2::total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W);
+        let r_ok = r_total > 0.0;
+        let u_ok = (U_VALUE_PLAUSIBLE_MIN_W_M2K..=U_VALUE_PLAUSIBLE_MAX_W_M2K).contains(&u_value);
+        let plausible = lambda_ok && r_ok && u_ok;
+        CheckResult {
+            clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
+            status: if plausible { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::Fail },
+            computed: Quantity::u_value_w_m2k(u_value),
+            limit: Quantity::u_value_w_m2k(U_VALUE_PLAUSIBLE_MAX_W_M2K),
+            utilization: if plausible { u_value / U_VALUE_PLAUSIBLE_MAX_W_M2K } else { 2.0 },
+            message: format!("input plausibility: λ>0={lambda_ok}, R_T>0={r_ok} ({r_total:.3} m²K/W), U∈[{U_VALUE_PLAUSIBLE_MIN_W_M2K},{U_VALUE_PLAUSIBLE_MAX_W_M2K}]={u_ok} ({u_value:.3} W/m²K)"),
             annex: AnnexChoice::De,
         }
     }
@@ -470,6 +504,103 @@ pub mod part_8 {
 }
 // #endregion 🔖Part8
 
+// #region 🔖Part10
+pub mod part_10 {
+    use super::*;
+
+    /// 🏷️ Factory-made thermal insulation application type codes (DIN 4108-10 Table 1).
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ApplicationType {
+        Dad,
+        Daa,
+        Duk,
+        Dz,
+        Di,
+        Deo,
+    }
+
+    /// 📋 Human-readable usage per application type (DIN 4108-10 Table 1).
+    pub fn application_description(application: ApplicationType) -> &'static str {
+        match application {
+            ApplicationType::Dad => "roof insulation above rafters",
+            ApplicationType::Daa => "roof insulation between rafters",
+            ApplicationType::Duk => "insulation under screed",
+            ApplicationType::Dz => "perimeter insulation",
+            ApplicationType::Di => "interior insulation",
+            ApplicationType::Deo => "external wall insulation with render (ETICS)",
+        }
+    }
+
+    /// 🔩 Compressive-strength / dimensional-stability application classes (DIN 4108-10), ordered dm < dk < dg by increasing load-bearing demand.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum ApplicationClass {
+        Dm,
+        Dk,
+        Dg,
+    }
+
+    /// 📋 Minimum required application class per usage (DIN 4108-10 Table 1).
+    pub fn minimum_class(application: ApplicationType) -> ApplicationClass {
+        match application {
+            ApplicationType::Dad | ApplicationType::Daa | ApplicationType::Di => ApplicationClass::Dm,
+            ApplicationType::Deo => ApplicationClass::Dk,
+            ApplicationType::Duk | ApplicationType::Dz => ApplicationClass::Dg,
+        }
+    }
+
+    /// ✅ Check that a declared product application class is admissible for its declared usage (DIN 4108-10).
+    pub fn check_application_class(application: ApplicationType, declared_class: ApplicationClass) -> CheckResult {
+        let required = minimum_class(application);
+        let admissible = declared_class >= required;
+        CheckResult {
+            clause: ClauseId::new("DIN 4108-10", "Table 1", "1.1"),
+            status: if admissible { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::Fail },
+            computed: Quantity::new(norm_core::QuantityKind::Dimensionless, declared_class as i32 as f64),
+            limit: Quantity::new(norm_core::QuantityKind::Dimensionless, required as i32 as f64),
+            utilization: if admissible { 1.0 } else { 2.0 },
+            message: format!("application class {declared_class:?} for {} (requires >= {required:?})", application_description(application)),
+            annex: AnnexChoice::De,
+        }
+    }
+}
+// #endregion 🔖Part10
+
+// #region 🔖BB2
+pub mod bb_2 {
+    use super::*;
+
+    /// 🌉 Beiblatt-2-conform detail allowance ΔU_WB [W/(m²K)] when thermal bridges follow standard-conforming details.
+    pub const DELTA_U_WB_CONFORM_W_M2K: f64 = 0.05;
+
+    /// 🌉 Blanket flat-rate surcharge ΔU_WB [W/(m²K)] applied when details are not Beiblatt-2-conform.
+    pub const DELTA_U_WB_FLAT_RATE_W_M2K: f64 = 0.10;
+
+    /// 📐 Area-normalised thermal-bridge surcharge ΔU_WB,actual = Σ(ψ·l) / A [W/(m²K)] (DIN 4108 Beiblatt 2).
+    pub fn delta_u_wb_actual_w_m2k(psi_l_sum_w_k: f64, envelope_area_m2: f64) -> f64 {
+        if envelope_area_m2 <= 0.0 {
+            return f64::INFINITY;
+        }
+        psi_l_sum_w_k / envelope_area_m2
+    }
+
+    /// ✅ Beiblatt 2 equivalence check: ΔU_WB,actual against the conform detail allowance, or the flat-rate surcharge if details are not Beiblatt-2-conform.
+    pub fn check_beiblatt_2_equivalence(psi_l_sum_w_k: f64, envelope_area_m2: f64, details_conform: bool) -> Result<CheckResult, NormError> {
+        if envelope_area_m2 <= 0.0 {
+            return Err(NormError::InvalidValue { field: "envelope_area_m2".into(), reason: "must be positive".into() });
+        }
+        let actual = delta_u_wb_actual_w_m2k(psi_l_sum_w_k, envelope_area_m2);
+        let limit = if details_conform { DELTA_U_WB_CONFORM_W_M2K } else { DELTA_U_WB_FLAT_RATE_W_M2K };
+        Ok(CheckResult::from_utilization(
+            ClauseId::new("DIN 4108 Bbl.2", "§5", "5.1"),
+            Quantity::u_value_w_m2k(actual),
+            Quantity::u_value_w_m2k(limit),
+            "thermal bridge surcharge ΔU_WB (Beiblatt 2 equivalence)",
+            AnnexChoice::De,
+        ))
+    }
+}
+// #endregion 🔖BB2
+
 /// 📋 Run all applicable DIN 4108 checks for a typical opaque wall.
 pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
     check_opaque_wall_with_bridges(category, layers, climate, airtightness_n50, 0.02)
@@ -494,6 +625,25 @@ fn parse_airtightness_class(class: &str) -> part_7::AirtightnessClass {
     }
 }
 
+fn parse_application_type(value: &str) -> part_10::ApplicationType {
+    match value.to_ascii_uppercase().as_str() {
+        "DAA" => part_10::ApplicationType::Daa,
+        "DUK" => part_10::ApplicationType::Duk,
+        "DZ" => part_10::ApplicationType::Dz,
+        "DI" => part_10::ApplicationType::Di,
+        "DEO" => part_10::ApplicationType::Deo,
+        _ => part_10::ApplicationType::Dad,
+    }
+}
+
+fn parse_application_class(value: &str) -> part_10::ApplicationClass {
+    match value.to_ascii_lowercase().as_str() {
+        "dk" => part_10::ApplicationClass::Dk,
+        "dg" => part_10::ApplicationClass::Dg,
+        _ => part_10::ApplicationClass::Dm,
+    }
+}
+
 /// 📋 Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
 pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
     check_full_envelope(
@@ -511,10 +661,14 @@ pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers
         "mineral_wool",
         "AW-01",
         "class2",
+        100.0,
+        true,
+        "DEO",
+        "dk",
     )
 }
 
-/// 📋 Full DIN 4108 parts 1–8 envelope compliance check.
+/// 📋 Full DIN 4108 parts 1, 2–8, 10, and Beiblatt 2 envelope compliance check.
 pub fn check_full_envelope(
     category: part_2::BuildingCategory,
     layers: &[part_2::Layer],
@@ -530,11 +684,17 @@ pub fn check_full_envelope(
     material_id: &str,
     catalog_id: &str,
     airtightness_class: &str,
+    envelope_area_m2: f64,
+    bb2_details_conform: bool,
+    application_type: &str,
+    declared_application_class: &str,
 ) -> Result<CheckReport, NormError> {
     let mut report = CheckReport::default();
     for part in [part_1::NormPart::Part1, part_1::NormPart::Part2, part_1::NormPart::Part3, part_1::NormPart::Part4, part_1::NormPart::Part5, part_1::NormPart::Part6, part_1::NormPart::Part7, part_1::NormPart::Part8] {
         report.push(part_1::scope_check(part, part_1::BuildingElement::OpaqueWall));
     }
+    let u = part_2::u_value_from_resistance(part_2::total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
+    report.push(part_1::check_input_plausibility(layers, u));
     let limit = part_2::climate_adjusted_u_limit(category, climate);
     report.push(part_2::check_minimum_thermal_protection(category, layers, climate)?);
     let moisture_layers = moisture_layers_from_wall(layers, moisture_mu_exterior, moisture_mu_interior);
@@ -550,8 +710,9 @@ pub fn check_full_envelope(
     report.push(part_5::check_summer_heat_protection(layers, climate, t_int_c, solar_absorptance, irradiance_w_m2)?);
     report.push(part_6::check_u_value_with_bridges(layers, psi_times_l_sum, limit)?);
     report.push(part_7::check_airtightness(airtightness_n50, parse_airtightness_class(airtightness_class)));
-    let u = part_2::u_value_from_resistance(part_2::total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
     report.push(part_8::check_against_catalog(catalog_id, u)?);
+    report.push(part_10::check_application_class(parse_application_type(application_type), parse_application_class(declared_application_class)));
+    report.push(bb_2::check_beiblatt_2_equivalence(psi_times_l_sum, envelope_area_m2, bb2_details_conform)?);
     Ok(report)
 }
 
@@ -582,6 +743,10 @@ pub struct Document {
     pub irradiance_w_m2: f64,
     pub moisture_mu_exterior: f64,
     pub moisture_mu_interior: f64,
+    pub envelope_area_m2: f64,
+    pub bb2_details_conform: bool,
+    pub application_type: String,
+    pub declared_application_class: String,
 }
 
 impl Default for Document {
@@ -601,6 +766,10 @@ impl Default for Document {
             irradiance_w_m2: 600.0,
             moisture_mu_exterior: 15.0,
             moisture_mu_interior: 1.3,
+            envelope_area_m2: 100.0,
+            bb2_details_conform: true,
+            application_type: "DEO".into(),
+            declared_application_class: "dk".into(),
         }
     }
 }
@@ -634,6 +803,10 @@ pub fn evaluate(document: &Document) -> CheckReport {
         &document.material_id,
         &document.catalog_id,
         &document.airtightness_class,
+        document.envelope_area_m2,
+        document.bb2_details_conform,
+        &document.application_type,
+        &document.declared_application_class,
     )
     .unwrap_or_else(|err| {
         let mut report = CheckReport::default();
@@ -789,5 +962,46 @@ mod tests {
         let f_dry = part_3::interior_surface_temperature_factor(&sample_moisture_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
         let f_humid = part_3::interior_surface_temperature_factor(&sample_moisture_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.8);
         assert!(f_humid < f_dry, "humidity correction must reduce f_Rsi");
+    }
+
+    #[test]
+    fn part_1_plausibility_flags_implausible_u_value() {
+        let layers = sample_wall();
+        let ok = part_1::check_input_plausibility(&layers, 0.224);
+        assert_eq!(ok.status, norm_core::CheckStatus::Pass);
+        let bad = part_1::check_input_plausibility(&layers, 12.0);
+        assert_eq!(bad.status, norm_core::CheckStatus::Fail);
+        let na = part_1::check_input_plausibility(&[], 0.3);
+        assert_eq!(na.status, norm_core::CheckStatus::NotApplicable);
+    }
+
+    #[test]
+    fn part_10_application_class_admissibility() {
+        let admissible = part_10::check_application_class(part_10::ApplicationType::Deo, part_10::ApplicationClass::Dk);
+        assert_eq!(admissible.status, norm_core::CheckStatus::Pass);
+        let inadmissible = part_10::check_application_class(part_10::ApplicationType::Duk, part_10::ApplicationClass::Dm);
+        assert_eq!(inadmissible.status, norm_core::CheckStatus::Fail);
+        assert_eq!(part_10::minimum_class(part_10::ApplicationType::Duk), part_10::ApplicationClass::Dg);
+    }
+
+    #[test]
+    fn bb2_worked_example_conform_details_pass() {
+        let psi_l_sum = 18.0;
+        let area = 400.0;
+        let delta = bb_2::delta_u_wb_actual_w_m2k(psi_l_sum, area);
+        assert!((delta - 0.045).abs() < 1e-9, "delta = {delta}");
+        let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, true).unwrap();
+        assert_eq!(check.status, norm_core::CheckStatus::Pass);
+    }
+
+    #[test]
+    fn bb2_non_conform_details_fall_back_to_flat_rate_surcharge() {
+        let psi_l_sum = 32.0;
+        let area = 400.0;
+        let check = bb_2::check_beiblatt_2_equivalence(psi_l_sum, area, false).unwrap();
+        assert!((check.limit.value - bb_2::DELTA_U_WB_FLAT_RATE_W_M2K).abs() < 1e-9);
+        assert_eq!(check.status, norm_core::CheckStatus::Pass);
+        let over_flat_rate = bb_2::check_beiblatt_2_equivalence(45.0, area, false).unwrap();
+        assert_eq!(over_flat_rate.status, norm_core::CheckStatus::Fail);
     }
 }

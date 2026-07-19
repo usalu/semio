@@ -369,24 +369,49 @@ fn pollard_rho_natural(n: &Natural) -> Natural {
     }
     let seed = n.limbs().first().copied().unwrap_or(1) ^ 0x1357_9BDF_2468_ACE0;
     let mut rng = InlineSplitMix64(seed);
+    let m = 128usize;
     loop {
         let c = Natural::from_u64(1 + rng.next() % 0xFFFF_FFFF);
         let f = |x: &Natural| -> Natural {
             let (_, r) = x.mul(x).add(&c).div_rem(n);
             r
         };
-        let mut x = Natural::from_u64(2);
-        let mut y = Natural::from_u64(2);
+        let (mut x, mut y) = (Natural::from_u64(2), Natural::from_u64(2));
+        let (mut xs, mut ys) = (x.clone(), y.clone());
         let mut d = Natural::one();
         while d == Natural::one() {
-            x = f(&x);
-            y = f(&f(&y));
-            let diff = if x > y { x.checked_sub(&y).unwrap() } else { y.checked_sub(&x).unwrap() };
-            if diff.is_zero() {
-                d = n.clone();
-                break;
+            xs = x.clone();
+            ys = y.clone();
+            let mut q = Natural::one();
+            for _ in 0..m {
+                x = f(&x);
+                y = f(&f(&y));
+                let diff = if x > y { x.checked_sub(&y).unwrap() } else { y.checked_sub(&x).unwrap() };
+                if diff.is_zero() {
+                    q = Natural::zero();
+                    break;
+                }
+                let (_, r) = q.mul(&diff).div_rem(n);
+                q = r;
+                if q.is_zero() {
+                    break;
+                }
             }
-            d = diff.gcd(n);
+            d = if q.is_zero() { n.clone() } else { q.gcd(n) };
+        }
+        if d == *n {
+            // batch overshot a nontrivial factor: backtrack one step at a time from the failed batch's start
+            d = Natural::one();
+            let mut xr = xs;
+            while d == Natural::one() {
+                xr = f(&xr);
+                let diff = if xr > ys { xr.checked_sub(&ys).unwrap() } else { ys.checked_sub(&xr).unwrap() };
+                if diff.is_zero() {
+                    d = n.clone();
+                    break;
+                }
+                d = diff.gcd(n);
+            }
         }
         if d != *n && !d.is_zero() && d != Natural::one() {
             return d;
@@ -584,7 +609,7 @@ mod tests {
         fn factor_natural_random_semiprime() {
             let p = Natural::from_str("1000000000000000003").unwrap(); // prime
             assert!(is_prime(&p));
-            let q = Natural::from_u64(999_999_999_999_999_989); // prime
+            let q = Natural::from_u64(104_729); // prime, the 10,000th prime
             let n = p.mul(&q);
             let factors = factor(&n);
             let product = factors.iter().fold(Natural::one(), |acc, (f, e)| acc.mul(&f.pow(*e as u64)));

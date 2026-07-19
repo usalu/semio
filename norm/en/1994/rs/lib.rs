@@ -1,20 +1,43 @@
 //! 🔗 EN 1994 design of composite steel and concrete structures.
 
-use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity, QuantityKind};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
-
-    /// 🇩🇪 DIN EN 1994-1-1/NA: partial factor γ_V for shear connectors.
-    pub const GAMMA_V: f64 = 1.25;
-
-    pub fn gamma_v() -> f64 {
-        GAMMA_V
-    }
 }
 // #endregion 🔖NaDe
+
+// #region 🔖AnnexParams
+/// 🇪🇺 National-annex NDPs for EN 1994 (composite steel-concrete structures).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct AnnexParams {
+    pub choice: AnnexChoice,
+    pub gamma_v: f64,
+    pub gamma_c: f64,
+    pub gamma_s: f64,
+}
+
+impl AnnexParams {
+    /// 📖 EN-recommended NDPs per EN 1994-1-1 §2.4.1.2.
+    pub fn en() -> Self {
+        Self { choice: AnnexChoice::En, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15 }
+    }
+
+    /// 🇩🇪 DIN EN 1994-1-1/NA does not amend γ_V, γ_C, or γ_S — intentionally equal to EN.
+    pub fn de() -> Self {
+        Self { choice: AnnexChoice::De, gamma_v: 1.25, gamma_c: 1.5, gamma_s: 1.15 }
+    }
+
+    pub fn for_annex(annex: AnnexChoice) -> Self {
+        match annex {
+            AnnexChoice::En => Self::en(),
+            AnnexChoice::De => Self::de(),
+        }
+    }
+}
+// #endregion 🔖AnnexParams
 
 // #region 🔖Part1_1
 pub mod part_1_1 {
@@ -47,21 +70,51 @@ pub mod part_1_1 {
         delta_n_kn * 1000.0 / connector_spacing_mm
     }
 
-    /// 📐 Shear connector resistance P_Rd [kN] per EN 1994-1-1 §6.6.3.
-    pub fn connector_resistance_kn(d_mm: f64, _h_mm: f64, f_ck_mpa: f64, f_u_mpa: f64) -> f64 {
-        let alpha = 0.8;
-        let eta = 1.0;
-        let p_b = 0.29 * alpha * d_mm * d_mm * (f_ck_mpa * f_u_mpa).sqrt();
+    /// 📐 Stud height-to-diameter reduction factor α per EN 1994-1-1 §6.6.3.1(1).
+    pub fn stud_alpha(h_sc_mm: f64, d_mm: f64) -> f64 {
+        let ratio = h_sc_mm / d_mm;
+        if ratio > 4.0 {
+            1.0
+        } else {
+            0.2 * (ratio + 1.0)
+        }
+    }
+
+    /// 📐 Shear connector resistance P_Rd [kN] per EN 1994-1-1 §6.6.3.1, Eq. 6.18/6.19 — governing branch is the lesser of stud shank shear-off and concrete/dowel crushing.
+    pub fn connector_resistance_kn(d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> f64 {
+        let params = AnnexParams::for_annex(annex);
+        let alpha = stud_alpha(h_sc_mm, d_mm);
         let p_pl = 0.8 * f_u_mpa * std::f64::consts::PI * d_mm * d_mm / 4.0;
-        eta * p_b.min(p_pl) / na_de::gamma_v() / 1000.0
+        let p_b = 0.29 * alpha * d_mm * d_mm * (f_ck_mpa * e_cm_mpa).sqrt();
+        p_pl.min(p_b) / params.gamma_v / 1000.0
+    }
+
+    /// 📐 Minimum degree of shear connection η_min per EN 1994-1-1 §6.6.1.2 (equal-flange rolled/welded sections, f_y ≤ 355 MPa).
+    pub fn min_shear_connection_degree(span_m: f64, f_y_mpa: f64) -> f64 {
+        let eta_min = if span_m <= 25.0 {
+            1.0 - (355.0 / f_y_mpa) * (0.75 - 0.03 * span_m)
+        } else {
+            1.0 - (355.0 / f_y_mpa) * 0.30
+        };
+        eta_min.max(0.4)
     }
 
     pub fn check_composite_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.2", "6.2"), Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0), "composite bending ULS", annex)
+        CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.2", "6.2"), Quantity::new(QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(QuantityKind::Moment, m_rd * 1_000_000.0), "composite bending ULS", annex)
     }
 
     pub fn check_longitudinal_shear(v_ed_kn: f64, v_l_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.6", "6.6"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_l_rd_kn), "longitudinal shear", annex)
+    }
+
+    pub fn check_stud_resistance(v_ed_per_stud_kn: f64, d_mm: f64, h_sc_mm: f64, f_ck_mpa: f64, f_u_mpa: f64, e_cm_mpa: f64, annex: AnnexChoice) -> CheckResult {
+        let p_rd = connector_resistance_kn(d_mm, h_sc_mm, f_ck_mpa, f_u_mpa, e_cm_mpa, annex);
+        CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.6.3.1", "6.6.3.1"), Quantity::force_kn(v_ed_per_stud_kn), Quantity::force_kn(p_rd), "shear stud resistance", annex)
+    }
+
+    pub fn check_shear_connection_degree(eta: f64, span_m: f64, f_y_mpa: f64, annex: AnnexChoice) -> CheckResult {
+        let eta_min = min_shear_connection_degree(span_m, f_y_mpa);
+        CheckResult::from_minimum(ClauseId::new("EN 1994-1-1", "§6.6.1.2", "6.6.1.2"), Quantity::new(QuantityKind::Dimensionless, eta), Quantity::new(QuantityKind::Dimensionless, eta_min), "minimum degree of shear connection", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -115,6 +168,25 @@ pub mod part_2 {
         }
     }
 
+    /// 🇪🇺 Partial factor γ_Mf,s for shear stud fatigue per EN 1994-2 §6.8.3(1).
+    pub const GAMMA_MF_S: f64 = 1.0;
+
+    /// 📐 Reference detail category Δτ_c [MPa] at N_ref cycles for a headed stud shear connector, per EN 1994-2 Table 6.1.
+    pub const STUD_DELTA_TAU_C_MPA: f64 = 90.0;
+    pub const STUD_N_REF: f64 = 2.0e6;
+    pub const STUD_FATIGUE_SLOPE_M: f64 = 8.0;
+
+    /// 📐 Stud fatigue shear-stress resistance Δτ_c(N) [MPa] from the S-N curve per EN 1994-2 §6.8.3, Eq. 6.24.
+    pub fn stud_fatigue_resistance_mpa(n_cycles: f64) -> f64 {
+        STUD_DELTA_TAU_C_MPA * (STUD_N_REF / n_cycles).powf(1.0 / STUD_FATIGUE_SLOPE_M)
+    }
+
+    /// 🌉 Stud fatigue check Δτ ≤ Δτ_c(N) / γ_Mf,s per EN 1994-2 §6.8.3.
+    pub fn check_stud_fatigue(delta_tau_mpa: f64, n_cycles: f64) -> CheckResult {
+        let limit = stud_fatigue_resistance_mpa(n_cycles) / GAMMA_MF_S;
+        CheckResult::from_utilization(ClauseId::new("EN 1994-2", "§6.8.3", "6.8.3"), Quantity::stress_mpa(delta_tau_mpa), Quantity::stress_mpa(limit), "stud fatigue shear stress range", AnnexChoice::En)
+    }
+
     /// 🌉 Bridge composite bending + fatigue check.
     pub fn check_bridge_composite(m_ed_knm: f64, m_rd_knm: f64, delta_sigma_mpa: f64, detail: &str) -> CheckReport {
         let mut report = CheckReport::default();
@@ -128,8 +200,7 @@ pub mod part_2 {
 // #endregion 🔖Part2
 
 /// 📋 Composite slab beam check.
-pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f64, eta: f64, v_l_rd: f64) -> CheckReport {
-    let annex = AnnexChoice::De;
+pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f64, eta: f64, v_l_rd: f64, annex: AnnexChoice) -> CheckReport {
     let m_rd = part_1_1::plastic_moment_partial_knm(m_pla, m_pl_rd, eta);
     let mut report = CheckReport::default();
     report.push(part_1_1::check_composite_bending(m_ed_knm, m_rd, annex));
@@ -146,7 +217,8 @@ fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
     }
 }
 
-/// 📋 Full EN 1994 check across composite, fire, and bridge fatigue parts.
+/// 📋 Full EN 1994 check across composite bending/shear, stud resistance, shear connection degree, fire, and bridge fatigue parts.
+#[allow(clippy::too_many_arguments)]
 pub fn check_full_composite(
     m_ed_knm: f64,
     v_ed_kn: f64,
@@ -159,8 +231,21 @@ pub fn check_full_composite(
     deck_type: &str,
     delta_sigma_mpa: f64,
     fatigue_detail: &str,
+    annex: AnnexChoice,
+    d_mm: f64,
+    h_sc_mm: f64,
+    f_ck_mpa: f64,
+    f_u_mpa: f64,
+    e_cm_mpa: f64,
+    v_ed_per_stud_kn: f64,
+    span_m: f64,
+    f_y_mpa: f64,
+    n_cycles_stud: f64,
+    delta_tau_stud_mpa: f64,
 ) -> CheckReport {
-    let mut report = check_composite_beam(m_ed_knm, v_ed_kn, m_pla, m_pl_rd, eta, v_l_rd);
+    let mut report = check_composite_beam(m_ed_knm, v_ed_kn, m_pla, m_pl_rd, eta, v_l_rd, annex);
+    report.push(part_1_1::check_stud_resistance(v_ed_per_stud_kn, d_mm, h_sc_mm, f_ck_mpa, f_u_mpa, e_cm_mpa, annex));
+    report.push(part_1_1::check_shear_connection_degree(eta, span_m, f_y_mpa, annex));
     report.push(part_1_2::check_fire_composite(insulation_thickness_mm, parse_fire_rating(fire_rating), deck_type));
     let category = part_2::bridge_fatigue_category(fatigue_detail);
     report.push(CheckResult::from_utilization(
@@ -170,6 +255,7 @@ pub fn check_full_composite(
         "bridge composite fatigue",
         AnnexChoice::En,
     ));
+    report.push(part_2::check_stud_fatigue(delta_tau_stud_mpa, n_cycles_stud));
     report
 }
 
@@ -179,6 +265,7 @@ use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Document {
+    pub annex: AnnexChoice,
     pub m_ed_knm: f64,
     pub v_ed_kn: f64,
     pub m_pla: f64,
@@ -190,11 +277,22 @@ pub struct Document {
     pub deck_type: String,
     pub delta_sigma_mpa: f64,
     pub fatigue_detail: String,
+    pub d_mm: f64,
+    pub h_sc_mm: f64,
+    pub f_ck_mpa: f64,
+    pub f_u_mpa: f64,
+    pub e_cm_mpa: f64,
+    pub v_ed_per_stud_kn: f64,
+    pub span_m: f64,
+    pub f_y_mpa: f64,
+    pub n_cycles_stud: f64,
+    pub delta_tau_stud_mpa: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
         Self {
+            annex: AnnexChoice::De,
             m_ed_knm: 200.0,
             v_ed_kn: 120.0,
             m_pla: 80.0,
@@ -206,6 +304,16 @@ impl Default for Document {
             deck_type: "trapezoidal".into(),
             delta_sigma_mpa: 65.0,
             fatigue_detail: "stud_welded".into(),
+            d_mm: 19.0,
+            h_sc_mm: 95.0,
+            f_ck_mpa: 30.0,
+            f_u_mpa: 450.0,
+            e_cm_mpa: 33_000.0,
+            v_ed_per_stud_kn: 40.0,
+            span_m: 8.0,
+            f_y_mpa: 355.0,
+            n_cycles_stud: 2_000_000.0,
+            delta_tau_stud_mpa: 40.0,
         }
     }
 }
@@ -226,6 +334,17 @@ pub fn evaluate(document: &Document) -> CheckReport {
         &document.deck_type,
         document.delta_sigma_mpa,
         &document.fatigue_detail,
+        document.annex,
+        document.d_mm,
+        document.h_sc_mm,
+        document.f_ck_mpa,
+        document.f_u_mpa,
+        document.e_cm_mpa,
+        document.v_ed_per_stud_kn,
+        document.span_m,
+        document.f_y_mpa,
+        document.n_cycles_stud,
+        document.delta_tau_stud_mpa,
     )
 }
 
@@ -251,7 +370,7 @@ mod tests {
 
     #[test]
     fn composite_beam_e2e() {
-        let report = check_composite_beam(200.0, 120.0, 80.0, 250.0, 0.75, 150.0);
+        let report = check_composite_beam(200.0, 120.0, 80.0, 250.0, 0.75, 150.0, AnnexChoice::De);
         assert!(!report.checks.is_empty());
         let m_rd: f64 = 80.0 + 0.75 * (250.0 - 80.0);
         assert!((m_rd - 207.5).abs() < 0.1);
@@ -278,9 +397,27 @@ mod tests {
     }
 
     #[test]
-    fn stud_connector_resistance() {
-        let p_rd = part_1_1::connector_resistance_kn(19.0, 100.0, 30.0, 450.0);
-        assert!((p_rd - 7.8).abs() < 1.0);
+    fn stud_connector_resistance_worked_example() {
+        let d = 19.0_f64;
+        let h_sc = 5.0 * d;
+        let f_u: f64 = 450.0;
+        let f_ck: f64 = 30.0;
+        let e_cm: f64 = 33_000.0;
+        let alpha = part_1_1::stud_alpha(h_sc, d);
+        assert!((alpha - 1.0).abs() < 1e-9);
+        let p_pl = 0.8 * f_u * std::f64::consts::PI * d * d / 4.0;
+        let p_b = 0.29 * alpha * d * d * (f_ck * e_cm).sqrt();
+        assert!(p_pl < p_b, "shank shear-off branch should govern for this worked example");
+        let expected_p_rd_kn = p_pl / 1.25 / 1000.0;
+        assert!((expected_p_rd_kn - 81.656).abs() < 0.01);
+        let p_rd = part_1_1::connector_resistance_kn(d, h_sc, f_ck, f_u, e_cm, AnnexChoice::En);
+        assert!((p_rd - expected_p_rd_kn).abs() < 1e-6);
+    }
+
+    #[test]
+    fn min_shear_connection_degree_span_8m() {
+        let eta_min = part_1_1::min_shear_connection_degree(8.0, 355.0);
+        assert!((eta_min - 0.49).abs() < 1e-6);
     }
 
     #[test]
@@ -296,23 +433,44 @@ mod tests {
     }
 
     #[test]
-    fn na_de_gamma_v() {
-        assert!((na_de::gamma_v() - 1.25).abs() < 1e-9);
+    fn stud_fatigue_resistance_at_reference_cycles() {
+        let delta_tau_c = part_2::stud_fatigue_resistance_mpa(part_2::STUD_N_REF);
+        assert!((delta_tau_c - 90.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn annex_params_document_equality() {
+        let en = AnnexParams::en();
+        let de = AnnexParams::de();
+        assert!((en.gamma_v - de.gamma_v).abs() < 1e-9);
+        assert!((en.gamma_c - de.gamma_c).abs() < 1e-9);
+        assert!((en.gamma_s - de.gamma_s).abs() < 1e-9);
+        let p_rd_en = part_1_1::connector_resistance_kn(19.0, 95.0, 30.0, 450.0, 33_000.0, AnnexChoice::En);
+        let p_rd_de = part_1_1::connector_resistance_kn(19.0, 95.0, 30.0, 450.0, 33_000.0, AnnexChoice::De);
+        assert!((p_rd_en - p_rd_de).abs() < 1e-9);
+        let check_en = part_1_1::check_stud_resistance(40.0, 19.0, 95.0, 30.0, 450.0, 33_000.0, AnnexChoice::En);
+        let check_de = part_1_1::check_stud_resistance(40.0, 19.0, 95.0, 30.0, 450.0, 33_000.0, AnnexChoice::De);
+        assert!((check_en.utilization - check_de.utilization).abs() < 1e-9);
     }
 
     #[test]
     fn full_composite_worked_example() {
-        let report = check_full_composite(180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded");
-        assert_eq!(report.checks.len(), 4);
+        let report = check_full_composite(
+            180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded", AnnexChoice::De, 19.0, 95.0, 30.0, 450.0, 33_000.0, 40.0, 8.0, 355.0, 2_000_000.0, 40.0,
+        );
+        assert_eq!(report.checks.len(), 7);
         let m_rd = part_1_1::plastic_moment_partial_knm(80.0, 250.0, 0.75);
         assert!((m_rd - 207.5).abs() < 0.1);
         assert!(report.checks[0].utilization < 1.0);
-        assert!(report.checks[2].utilization < 1.0);
+        assert!(report.checks[2].utilization < 1.0, "stud resistance check should pass");
+        assert!(report.checks[3].utilization < 1.0, "shear connection degree check should pass");
+        assert!(report.checks[4].utilization < 1.0, "fire check should pass");
+        assert!(report.checks[6].utilization < 1.0, "stud fatigue check should pass");
     }
 
     #[test]
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
-        assert_eq!(report.checks.len(), 4);
+        assert_eq!(report.checks.len(), 7);
     }
 }

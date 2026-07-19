@@ -2,7 +2,7 @@
 //! rigorous isolating rational intervals for every real root, refined by bisection.
 
 use crate::univariate::PolyU;
-use mathematical_number::{GcdDomain, Integer, Rational};
+use mathematical_number::{Integer, Rational};
 
 // #region 🔖RootBounds
 /// 📏 Cauchy's bound: every real root of `f` has absolute value `<= 1 + max(|a_i|)/|lc|`.

@@ -102,10 +102,10 @@ const WGPU_RENDERER_DIR_URL = "/renderer-modules/wgpu";
 async function resolveWgpuRendererModuleUrl(): Promise<string> {
   const indexUrl = `${WGPU_RENDERER_DIR_URL}/index.html`;
   const res = await fetch(indexUrl);
-  if (!res.ok) throw new Error(`[DEBUG] fetch ${indexUrl} failed: ${res.status}`);
+  if (!res.ok) throw new Error(`fetch ${indexUrl} failed: ${res.status}`);
   const html = await res.text();
   const match = html.match(/from ['"]\/([^'"]+\.js)['"]/);
-  if (!match) throw new Error(`[DEBUG] could not locate renderer module script inside ${indexUrl}`);
+  if (!match) throw new Error(`could not locate renderer module script inside ${indexUrl}`);
   return `${WGPU_RENDERER_DIR_URL}/${match[1]}`;
 }
 

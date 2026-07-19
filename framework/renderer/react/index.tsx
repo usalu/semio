@@ -2,7 +2,7 @@
 /** @emoji 🎨 `@semio-tech/framework-renderer-react` — trusted React renderer for declarative Rust plugin UI trees. */
 // #endregion 🧱Header
 
-export type { ActionDescriptor, UiNode } from "@semio-tech/framework-core";
+export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework-core";
 
 import React, {
   lazy,
@@ -4212,7 +4212,7 @@ export function FrameworkOsShell({
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
-          console.error("[DEBUG] action failed", actionError, JSON.stringify((actionError as { payload?: unknown }).payload ?? null));
+          console.error("[DEBUG] action failed", actionError);
         });
     },
     [
@@ -8174,6 +8174,9 @@ type WorldMeshData = {
   readonly positions: readonly number[];
   readonly normals: readonly number[];
   readonly indices: readonly number[];
+  /** Per-vertex RGB (0..1, 3 floats per vertex) — e.g. FEM stress contours. Native wgpu renderer has no
+   * per-vertex color pipeline yet, so this is a react-renderer-only capability for now. */
+  readonly colors?: readonly number[];
   readonly uvs?: readonly number[];
   readonly faceIds?: readonly number[];
   readonly vertexIds?: readonly number[];
@@ -8724,6 +8727,7 @@ function geometryFromMesh(mesh: WorldMeshData) {
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.positions), 3));
   geometry.setAttribute("normal", new BufferAttribute(new Float32Array(mesh.normals), 3));
   if (mesh.uvs?.length) geometry.setAttribute("uv", new BufferAttribute(new Float32Array(mesh.uvs), 2));
+  if (mesh.colors?.length) geometry.setAttribute("color", new BufferAttribute(new Float32Array(mesh.colors), 3));
   if (mesh.indices.length > 0) geometry.setIndex([...mesh.indices]);
   return geometry;
 }
@@ -8861,17 +8865,21 @@ function PaintTexturedMesh({
   readonly children?: React.ReactNode;
 } & ComponentProps<"mesh">) {
   const paintMap = textureBase64 ? useLoader(TextureLoader, paintTextureUrl(textureBase64)) : null;
+  // Per-vertex colors (e.g. FEM stress contours) multiply against the material's own `color` in
+  // three.js, so white lets them show through unmodified — `style.meshColor` would otherwise tint them.
+  const hasVertexColors = geometry.hasAttribute("color");
   return (
     <mesh geometry={geometry} {...meshProps}>
       <meshStandardMaterial
-        color={style.meshColor}
+        color={hasVertexColors ? "#ffffff" : style.meshColor}
+        vertexColors={hasVertexColors}
         map={paintMap ?? undefined}
         side={DoubleSide}
         flatShading={flatShading}
         metalness={0}
         roughness={1}
-        emissive={style.meshColor}
-        emissiveIntensity={style.emissiveIntensity}
+        emissive={hasVertexColors ? "#000000" : style.meshColor}
+        emissiveIntensity={hasVertexColors ? 0 : style.emissiveIntensity}
         transparent={style.opacity < 1}
         opacity={style.opacity}
       />

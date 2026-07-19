@@ -16,6 +16,7 @@ members = [
     "remodel/rs",
     "remodel/plugin/rs",
     "remodel/image/rs",
+    "remodel/video/rs",
     "remodel/camera/rs",
     "remodel/feature/rs",
     "remodel/sfm/rs",

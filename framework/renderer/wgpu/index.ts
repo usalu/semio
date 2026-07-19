@@ -109,7 +109,7 @@ export async function buildIconAtlas(): Promise<{
 export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => void> {
   const rootId = options.rootId ?? "root";
   const root = document.getElementById(rootId);
-  if (!root) throw new Error(`[DEBUG] missing #${rootId}`);
+  if (!root) throw new Error(`missing #${rootId}`);
 
   const pluginEntries = options.plugins ?? [];
   const [handles, iconAtlas] = await Promise.all([
@@ -130,7 +130,7 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   };
   if (rendererModule.default) await rendererModule.default();
   if (!rendererModule.semioRendererBoot) {
-    throw new Error("[DEBUG] wgpu renderer module missing semioRendererBoot");
+    throw new Error("wgpu renderer module missing semioRendererBoot");
   }
   await rendererModule.semioRendererBoot(handles, options.plugin ?? "s");
   if (rendererModule.uploadIconAtlas) {

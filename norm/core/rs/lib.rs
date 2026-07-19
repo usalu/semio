@@ -27,6 +27,7 @@ pub enum QuantityKind {
     HeatTransferCoefficient,
     AirPermeability,
     VentilationRate,
+    Acceleration,
 }
 
 /// 📊 A scalar value tagged with its physical quantity kind (SI units).
@@ -63,6 +64,10 @@ impl Quantity {
 
     pub fn u_value_w_m2k(value: f64) -> Self {
         Self::new(QuantityKind::HeatTransferCoefficient, value)
+    }
+
+    pub fn acceleration_m_s2(value: f64) -> Self {
+        Self::new(QuantityKind::Acceleration, value)
     }
 }
 // #endregion 🔖Quantity

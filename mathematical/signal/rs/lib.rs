@@ -513,9 +513,7 @@ mod tests {
     fn xcorr_peaks_at_known_shift() {
         let base = gaussian_smooth_1d(&seeded_noise(200, 99), 2.0);
         let mut shifted = vec![0.0; 200];
-        for t in 5..200 {
-            shifted[t] = base[t - 5];
-        }
+        shifted[5..200].copy_from_slice(&base[0..195]);
         let c = xcorr_normalized(&base, &shifted, 10);
         assert_eq!(c.len(), 21);
         let mut peak = 0;
@@ -549,9 +547,9 @@ mod tests {
         let dt = 0.1;
         let x: Vec<f64> = (0..50).map(|i| (i as f64 * dt).powi(3)).collect();
         let d1 = savitzky_golay(&x, 7, 3, 1, dt);
-        for i in 3..47 {
+        for (i, &value) in d1.iter().enumerate().take(47).skip(3) {
             let expected = 3.0 * (i as f64 * dt).powi(2);
-            assert!((d1[i] - expected).abs() < 1e-6);
+            assert!((value - expected).abs() < 1e-6);
         }
     }
 

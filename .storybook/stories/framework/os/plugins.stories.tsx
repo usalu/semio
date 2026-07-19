@@ -113,9 +113,9 @@ function assertPluginMatrixCoverage(): void {
   for (const target of PLUGIN_BUILD_TARGETS) {
     const exportName = toPascalCase(target.pluginId);
     const story = EXPORTED_STORIES[exportName];
-    if (!story) throw new Error(`[DEBUG] plugins.stories.tsx: missing literal export "${exportName}" for registry pluginId ${JSON.stringify(target.pluginId)}`);
+    if (!story) throw new Error(`plugins.stories.tsx: missing literal export "${exportName}" for registry pluginId ${JSON.stringify(target.pluginId)}`);
     if (story.args?.plugin !== target.pluginId) {
-      throw new Error(`[DEBUG] plugins.stories.tsx: export "${exportName}" args.plugin ${JSON.stringify(story.args?.plugin)} !== registry pluginId ${JSON.stringify(target.pluginId)}`);
+      throw new Error(`plugins.stories.tsx: export "${exportName}" args.plugin ${JSON.stringify(story.args?.plugin)} !== registry pluginId ${JSON.stringify(target.pluginId)}`);
     }
   }
 }

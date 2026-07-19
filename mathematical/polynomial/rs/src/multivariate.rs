@@ -13,8 +13,10 @@ pub enum MonomialOrder {
 // #endregion 🔖MonomialOrder
 
 // #region 🔖Monomial
-/// 🎛️ Exponent vector; fixed arity (`exps.len()`) per polynomial instance.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+/// 🎛️ Exponent vector; fixed arity (`exps.len()`) per polynomial instance. `Ord` here is a plain
+/// lexicographic order on the raw vector — used only for deterministic deduplication/sorting, distinct
+/// from the context-dependent `cmp_by` (Lex/GrLex/GrevLex) used for polynomial arithmetic.
+#[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 pub struct Monomial {
     exps: Vec<u32>,
 }
@@ -341,7 +343,7 @@ impl<C: Field> PolyM<C> {
                 break;
             }
         }
-        current.sort_by(|a, b| a.leading_term().map(|t| t.0.clone()).cmp(&b.leading_term().map(|t| t.0.clone())));
+        current.sort_by(|a, b| a.leading_term().map(|t| t.0.clone()).into_iter().cmp(b.leading_term().map(|t| t.0.clone())));
         current
     }
 

@@ -438,4 +438,3 @@ mod tests {
         vcs::test_support::assert_store_roundtrip(document, op);
     }
 }
-// [DEBUG] compile-speed verification touch 1784460360

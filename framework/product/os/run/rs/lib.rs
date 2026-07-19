@@ -507,7 +507,7 @@ impl MediaNodeHost for WasmtimeNodeHost {
 mod tests {
     use super::*;
     use semio_framework_core::MediaPayload;
-    use semio_framework_os::{OsMediaGraphEdge, OsMediaPort};
+    use semio_framework_os::{placeholder_media_contract, OsMediaGraphEdge, OsMediaPort};
 
     /// 🧪 A fake `MediaNodeHost` for tests: no wasm at all, just a per-instance document string and
     /// a fixed structured output per port, so `StudioRunner`'s dirty/clean bookkeeping can be
@@ -575,7 +575,7 @@ mod tests {
             inputs: vec![OsMediaPort { id: "in".into(), resource_kind: "data.value".into(), direction: "in".into() }],
             outputs: Vec::new(),
         };
-        let edge = OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "out".into(), target_node_id: "node-b".into(), target_port_id: "in".into() };
+        let edge = OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-a".into(), source_port_id: "out".into(), target_node_id: "node-b".into(), target_port_id: "in".into(), contract: placeholder_media_contract("data.value") };
         let graph = OsMediaGraph { schema: "s.media-graph".into(), nodes: vec![source, target], edges: vec![edge] };
         let instances = vec![
             OsAppInstance { id: "instance-a".into(), program_id: "program".into(), app_id: "app-a".into(), label: "A".into(), yields: "data.value".into(), document: semio_framework_os::OsDocumentRef { document_id: "instance-a".into(), schema: "app-a.document".into() } },
@@ -594,7 +594,7 @@ mod tests {
     #[test]
     fn detects_cycles() {
         let (mut graph, _) = two_node_graph();
-        graph.edges.push(OsMediaGraphEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "in".into(), target_node_id: "node-a".into(), target_port_id: "out".into() });
+        graph.edges.push(OsMediaGraphEdge { id: "edge-2".into(), source_node_id: "node-b".into(), source_port_id: "in".into(), target_node_id: "node-a".into(), target_port_id: "out".into(), contract: placeholder_media_contract("data.value") });
         assert!(matches!(topological_order(&graph), Err(RunError::Cycle(_))));
     }
 

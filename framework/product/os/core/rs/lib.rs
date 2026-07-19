@@ -1175,7 +1175,7 @@ pub mod host {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::media_graph::{empty_media_graph, validate_media_graph};
+        use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph};
         use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
         use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
@@ -1613,7 +1613,7 @@ pub mod host {
             store_a.dispatch_apply(vec![OsOp::RemoveAppInstance { instance_id: node_b_instance.clone() }]).expect("remove node b");
             store_b
                 .dispatch_apply(vec![OsOp::ConnectMediaPorts {
-                    edge: OsMediaGraphEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id },
+                    edge: OsMediaGraphEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
                 }])
                 .expect("wire edge to node b");
             store_a.tick().expect("pump a");
@@ -2657,7 +2657,8 @@ pub mod media_graph {
 
     use crate::host::OsOp;
     use crate::instance::{create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id, parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding};
-    use crate::registry::{os_app_primary_output_kind, os_app_registration, OsAppRegistration};
+    use crate::registry::{os_app_primary_output_kind, os_app_registration, os_resource_descriptor, OsAppRegistration, OsResourceDescriptor};
+    use semio_framework_core::{media_types_compatible, MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -2690,6 +2691,60 @@ pub mod media_graph {
         pub outputs: Vec<OsMediaPort>,
     }
 
+    //#region 🔖MediaContract
+    /// 🤝 A connect-time negotiated wire contract between two `OsMediaPort`s — produced by
+    /// `negotiate_media_contract` and stored on `OsMediaGraphEdge` so later passes (`validate_media_graph`,
+    /// merge reconciliation) can re-check it without re-resolving the resource registry. `kind_id`/`media_type`
+    /// describe the *accepted* (target) side — see `semio_framework_core::media_types_compatible`.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct MediaContract {
+        pub kind_id: String,
+        pub media_type: MediaType,
+        pub wire: MediaWireFormat,
+        pub conversion: Option<(MediaForm, MediaForm)>,
+    }
+
+    /// @emoji 🤝 Negotiates the wire contract for connecting `source_port` (a producer/output) to
+    /// `target_port` (a consumer/input): resolves each port's `OsResourceDescriptor` from the resource
+    /// registry, checks `media_types_compatible`, and picks a shared wire format. `Err` means the connect
+    /// must be rejected outright (see the `s::plugin` connect handlers).
+    pub fn negotiate_media_contract(source_port: &OsMediaPort, target_port: &OsMediaPort) -> Result<MediaContract, String> {
+        let source_descriptor = os_resource_descriptor(&source_port.resource_kind);
+        let target_descriptor = os_resource_descriptor(&target_port.resource_kind);
+        let conversion = match media_types_compatible(&source_descriptor.media_type, &target_descriptor.media_type) {
+            MediaCompat::Direct => None,
+            MediaCompat::Convert { from, to } => Some((from, to)),
+            MediaCompat::Reject => {
+                return Err(format!(
+                    "cannot connect `{}` ({:?}/{:?}) to `{}` ({:?}/{:?}): incompatible media types",
+                    source_port.resource_kind, source_descriptor.media_type.class, source_descriptor.media_type.form, target_port.resource_kind, target_descriptor.media_type.class, target_descriptor.media_type.form
+                ));
+            }
+        };
+        let wire = negotiate_wire_format(&source_descriptor, &target_descriptor)
+            .ok_or_else(|| format!("cannot connect `{}` to `{}`: no shared wire format", source_port.resource_kind, target_port.resource_kind))?;
+        Ok(MediaContract { kind_id: target_descriptor.kind.clone(), media_type: target_descriptor.media_type, wire, conversion })
+    }
+
+    /// 🔀 Prefers a shared `Document{schema}` wire (structured payloads round-trip losslessly) over a shared
+    /// `Binary{format}` wire (the first common `OsMediaFormat` between the two descriptors' export/import
+    /// lists) — see `MediaWireFormat`.
+    fn negotiate_wire_format(source: &OsResourceDescriptor, target: &OsResourceDescriptor) -> Option<MediaWireFormat> {
+        if !source.schema.is_empty() && source.schema == target.schema {
+            return Some(MediaWireFormat::Document { schema: source.schema.clone() });
+        }
+        source.export_formats.iter().find(|format| target.import_formats.contains(format)).map(|format| MediaWireFormat::Binary { format: *format })
+    }
+
+    /// 🧪 Placeholder contract for test/fixture edges built without a real port-negotiation context — mirrors
+    /// `registry::os_resource_descriptor`'s unregistered-kind fallback (`Data`/`Value`, schema pinned to
+    /// `kind_id` itself).
+    pub fn placeholder_media_contract(kind_id: &str) -> MediaContract {
+        MediaContract { kind_id: kind_id.into(), media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value }, wire: MediaWireFormat::Document { schema: kind_id.into() }, conversion: None }
+    }
+    //#endregion 🔖MediaContract
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct OsMediaGraphEdge {
@@ -2698,6 +2753,7 @@ pub mod media_graph {
         pub source_port_id: String,
         pub target_node_id: String,
         pub target_port_id: String,
+        pub contract: MediaContract,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2744,7 +2800,7 @@ pub mod media_graph {
         OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: graph.nodes.iter().map(|node| sync_media_node_parameter_ports(node, bindings)).collect(), edges: graph.edges.clone() }
     }
 
-    /// @emoji ✅ Validates media graph connectivity and cycle freedom.
+    /// @emoji ✅ Validates media graph connectivity, cycle freedom, and edge-contract consistency.
     pub fn validate_media_graph(graph: &OsMediaGraph) -> MediaGraphValidation {
         let mut errors = Vec::new();
         let node_ids: HashSet<_> = graph.nodes.iter().map(|node| node.id.clone()).collect();
@@ -2756,6 +2812,23 @@ pub mod media_graph {
                 errors.push(format!("missing target node {}", edge.target_node_id));
             }
         }
+
+        //#region ContractConsistency
+        // 🛡️ Defense in depth for merged/imported studio documents: re-negotiate each edge's endpoints
+        // against the *current* resource registry and flag any edge whose stored `contract` no longer
+        // matches — a concurrent re-typing or a stale import can leave a wire's contract behind.
+        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        for edge in &graph.edges {
+            let Some(source_port) = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)) else { continue };
+            let Some(target_port) = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)) else { continue };
+            match negotiate_media_contract(source_port, target_port) {
+                Ok(contract) if contract == edge.contract => {}
+                Ok(_) => errors.push(format!("edge {} contract stale: no longer matches negotiated port types", edge.id)),
+                Err(reason) => errors.push(format!("edge {} contract invalid: {reason}", edge.id)),
+            }
+        }
+        //#endregion ContractConsistency
+
         let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
         for edge in &graph.edges {
             adjacency.entry(edge.source_node_id.clone()).or_default().push(edge.target_node_id.clone());
@@ -2882,14 +2955,21 @@ pub mod media_graph {
         let synapses = fixture.get("synapses").and_then(Value::as_array).cloned().unwrap_or_default();
         let fixture_endpoints: HashSet<_> = synapses.iter().filter_map(synapse_endpoints).collect();
         let graph_endpoints: HashSet<_> = graph.edges.iter().map(edge_endpoints).collect();
+        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
         for synapse in &synapses {
             let Some(endpoints) = synapse_endpoints(synapse) else { continue };
             if graph_endpoints.contains(&endpoints) {
                 continue;
             }
             let (source_node_id, source_port_id, target_node_id, target_port_id) = endpoints;
+            // 🤝 Only wire the edge if the endpoints still negotiate a valid contract — a stale/hand-edited
+            // fixture referencing an incompatible or now-removed port silently drops the synapse instead of
+            // producing an untyped edge (see `negotiate_media_contract`).
+            let Some(source_port) = node_by_id.get(source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == source_port_id)) else { continue };
+            let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
+            let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
             let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string).unwrap_or_else(|| create_os_id("edge"));
-            ops.push(OsOp::ConnectMediaPorts { edge: OsMediaGraphEdge { id, source_node_id, source_port_id, target_node_id, target_port_id } });
+            ops.push(OsOp::ConnectMediaPorts { edge: OsMediaGraphEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
         }
         if fixture.get("synapses").and_then(Value::as_array).is_some() {
             for edge in &graph.edges {
@@ -2956,6 +3036,10 @@ pub mod media_graph {
                     "sourcePortId": edge.source_port_id,
                     "targetNodeId": edge.target_node_id,
                     "targetPortId": edge.target_port_id,
+                    // 🏷️ Data plumbing only (no renderer changes here) — lets a later ticket badge/dash
+                    // conversion edges without re-deriving the contract client-side.
+                    "contract": edge.contract,
+                    "isConversion": edge.contract.conversion.is_some(),
                 })
             })
             .collect();
@@ -3062,6 +3146,79 @@ pub mod media_graph {
             .collect()
     }
     //#endregion 🔖MediaGraph
+
+    //#region 🔖MediaFlow
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct MediaFlowDelivery {
+        pub edge_id: String,
+        pub producer_instance_id: String,
+        pub producer_port_id: String,
+        pub consumer_instance_id: String,
+        pub consumer_port_id: String,
+        // 🩹 `OsMediaGraphEdge` has no `contract` field yet (see `reconcile_os_media_graph`'s baseline
+        // comment above). Once a sibling ticket lands `contract: MediaContract` on the edge, carry it
+        // through here too so delivery-execution knows what to transcode.
+    }
+
+    /// @emoji 🧭 Post-order DFS reversed into a topological node order (source before target); same
+    /// recursive shape as `validate_media_graph`'s cycle-detection DFS, but collects the traversal
+    /// order instead of flagging revisits (the graph is validated acyclic before planning runs).
+    fn media_flow_topological_node_order(graph: &OsMediaGraph) -> Vec<String> {
+        let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
+        for edge in &graph.edges {
+            adjacency.entry(edge.source_node_id.clone()).or_default().push(edge.target_node_id.clone());
+        }
+        let mut visited = HashSet::new();
+        let mut order = Vec::new();
+        fn dfs(node_id: &str, adjacency: &HashMap<String, Vec<String>>, visited: &mut HashSet<String>, order: &mut Vec<String>) {
+            if !visited.insert(node_id.to_string()) {
+                return;
+            }
+            for next in adjacency.get(node_id).into_iter().flatten() {
+                dfs(next, adjacency, visited, order);
+            }
+            order.push(node_id.to_string());
+        }
+        for node in &graph.nodes {
+            dfs(&node.id, &adjacency, &mut visited, &mut order);
+        }
+        order.reverse();
+        order
+    }
+
+    /// @emoji 🚚 Plans one [`MediaFlowDelivery`] per edge in the downstream closure of `dirty_instance_ids`,
+    /// propagating dirtiness onto each edge's consumer instance so multi-hop chains (A→B→C) resolve in a
+    /// single topological pass. Pure/side-effect-free — callers own applying the deliveries.
+    pub fn plan_media_flow(graph: &OsMediaGraph, dirty_instance_ids: &HashSet<String>) -> Vec<MediaFlowDelivery> {
+        let node_by_id: HashMap<&str, &OsMediaGraphNode> = graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+        let mut edges_by_source: HashMap<&str, Vec<&OsMediaGraphEdge>> = HashMap::new();
+        for edge in &graph.edges {
+            edges_by_source.entry(edge.source_node_id.as_str()).or_default().push(edge);
+        }
+        let order = media_flow_topological_node_order(graph);
+        let mut dirty = dirty_instance_ids.clone();
+        let mut deliveries = Vec::new();
+        for node_id in &order {
+            let Some(node) = node_by_id.get(node_id.as_str()) else { continue };
+            if !dirty.contains(&node.instance_id) {
+                continue;
+            }
+            for edge in edges_by_source.get(node_id.as_str()).into_iter().flatten() {
+                let Some(target_node) = node_by_id.get(edge.target_node_id.as_str()) else { continue };
+                deliveries.push(MediaFlowDelivery {
+                    edge_id: edge.id.clone(),
+                    producer_instance_id: node.instance_id.clone(),
+                    producer_port_id: edge.source_port_id.clone(),
+                    consumer_instance_id: target_node.instance_id.clone(),
+                    consumer_port_id: edge.target_port_id.clone(),
+                });
+                dirty.insert(target_node.instance_id.clone());
+            }
+        }
+        deliveries
+    }
+    //#endregion 🔖MediaFlow
 
     //#region 🔖ProgramRegistry
     #[derive(Clone, Debug, Default)]
@@ -3661,7 +3818,7 @@ pub mod media_graph {
             let mut graph = empty_media_graph();
             graph.nodes.push(media_node("node-1", "app-1", 40.0, 80.0));
             graph.nodes.push(media_node("node-2", "app-2", 300.0, 80.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into() });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
             let camera = OsMediaGraphCamera { x: 12.0, y: -8.0, zoom: 1.5 };
             let fixture = os_media_graph_to_flow_fixture(&graph, &[], &camera);
             assert_eq!(fixture["camera"]["x"], 12.0);
@@ -3679,7 +3836,7 @@ pub mod media_graph {
             let mut graph = empty_media_graph();
             graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
             graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
-            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into() });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
             let mut fixture = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
             fixture["synapses"] = json!([
                 { "id": "", "from": "node-2", "fromPort": "app-2:out", "to": "node-1", "toPort": "app-1:in" }
@@ -3697,6 +3854,106 @@ pub mod media_graph {
             assert!(removal_ops.contains(&OsOp::RemoveAppInstance { instance_id: "app-2".into() }));
             assert!(!removal_ops.iter().any(|op| matches!(op, OsOp::DisconnectMediaEdge { .. })));
         }
+
+        //#region 🔖MediaFlow
+        fn dirty_set(instance_ids: &[&str]) -> HashSet<String> {
+            instance_ids.iter().map(|id| id.to_string()).collect()
+        }
+
+        #[test]
+        fn plans_a_single_delivery_across_one_dirty_edge() {
+            let mut graph = empty_media_graph();
+            graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
+            graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
+            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-1"]));
+            assert_eq!(
+                deliveries,
+                vec![MediaFlowDelivery { edge_id: "edge-1".into(), producer_instance_id: "app-1".into(), producer_port_id: "app-1:out".into(), consumer_instance_id: "app-2".into(), consumer_port_id: "app-2:in".into() }]
+            );
+        }
+
+        #[test]
+        fn plans_a_chain_in_topological_order_when_only_the_root_is_dirty() {
+            let mut graph = empty_media_graph();
+            graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
+            graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
+            graph.nodes.push(media_node("node-3", "app-3", 400.0, 0.0));
+            graph.edges.push(OsMediaGraphEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-bc".into(), source_node_id: "node-2".into(), source_port_id: "app-2:out".into(), target_node_id: "node-3".into(), target_port_id: "app-3:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-1"]));
+            assert_eq!(deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect::<Vec<_>>(), vec!["edge-ab", "edge-bc"], "A→B must be planned before B→C");
+        }
+
+        #[test]
+        fn plans_a_diamond_with_one_delivery_per_incoming_edge() {
+            // 🔀 One delivery per edge, not per node: D has two producers (B and C), so D is the
+            // target of two separate deliveries rather than a single merged one.
+            let mut graph = empty_media_graph();
+            graph.nodes.push(media_node("node-1", "app-a", 0.0, 0.0));
+            graph.nodes.push(media_node("node-2", "app-b", 200.0, -80.0));
+            graph.nodes.push(media_node("node-3", "app-c", 200.0, 80.0));
+            graph.nodes.push(media_node("node-4", "app-d", 400.0, 0.0));
+            graph.edges.push(OsMediaGraphEdge { id: "edge-ab".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-2".into(), target_port_id: "app-b:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-ac".into(), source_node_id: "node-1".into(), source_port_id: "app-a:out".into(), target_node_id: "node-3".into(), target_port_id: "app-c:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-bd".into(), source_node_id: "node-2".into(), source_port_id: "app-b:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            graph.edges.push(OsMediaGraphEdge { id: "edge-cd".into(), source_node_id: "node-3".into(), source_port_id: "app-c:out".into(), target_node_id: "node-4".into(), target_port_id: "app-d:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            let deliveries = plan_media_flow(&graph, &dirty_set(&["app-a"]));
+            let edge_ids: Vec<&str> = deliveries.iter().map(|delivery| delivery.edge_id.as_str()).collect();
+            assert_eq!(edge_ids.len(), 4);
+            let index_of = |id: &str| edge_ids.iter().position(|candidate| *candidate == id).unwrap();
+            assert!(index_of("edge-bd") > index_of("edge-ab"), "B→D must be planned after A→B");
+            assert!(index_of("edge-cd") > index_of("edge-ac"), "C→D must be planned after A→C");
+        }
+
+        #[test]
+        fn plans_nothing_when_no_instance_is_dirty() {
+            let mut graph = empty_media_graph();
+            graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
+            graph.nodes.push(media_node("node-2", "app-2", 200.0, 0.0));
+            graph.edges.push(OsMediaGraphEdge { id: "edge-1".into(), source_node_id: "node-1".into(), source_port_id: "app-1:out".into(), target_node_id: "node-2".into(), target_port_id: "app-2:in".into(), contract: placeholder_media_contract("2d.drawing") });
+            assert!(plan_media_flow(&graph, &dirty_set(&[])).is_empty());
+        }
+
+        #[test]
+        fn plans_nothing_for_a_dirty_node_with_no_outgoing_edges() {
+            let mut graph = empty_media_graph();
+            graph.nodes.push(media_node("node-1", "app-1", 0.0, 0.0));
+            assert!(plan_media_flow(&graph, &dirty_set(&["app-1"])).is_empty());
+        }
+
+        /// 🔬 Shared fixtures replay (`framework/product/os/core/fixtures/*.json`) — the same files
+        /// drive `planMediaFlow`'s vitest harness in `js/index.ts`, keeping the two implementations
+        /// in lockstep. See `framework/product/os/core/fixtures/README.md`.
+        #[derive(Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        struct MediaFlowFixture {
+            name: String,
+            graph: OsMediaGraph,
+            dirty_instance_ids: Vec<String>,
+            expected_deliveries: Vec<MediaFlowDelivery>,
+        }
+
+        #[test]
+        fn media_flow_fixtures_match_expected_deliveries() {
+            let fixtures_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures");
+            let entries = std::fs::read_dir(&fixtures_dir).unwrap_or_else(|error| panic!("read fixtures dir {fixtures_dir:?}: {error}"));
+            let mut fixture_count = 0;
+            for entry in entries {
+                let path = entry.expect("dir entry").path();
+                if path.extension().and_then(|extension| extension.to_str()) != Some("json") {
+                    continue;
+                }
+                let contents = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("read fixture {path:?}: {error}"));
+                let fixture: MediaFlowFixture = serde_json::from_str(&contents).unwrap_or_else(|error| panic!("parse fixture {path:?}: {error}"));
+                let dirty: HashSet<String> = fixture.dirty_instance_ids.into_iter().collect();
+                let deliveries = plan_media_flow(&fixture.graph, &dirty);
+                assert_eq!(deliveries, fixture.expected_deliveries, "fixture {} mismatch", fixture.name);
+                fixture_count += 1;
+            }
+            assert!(fixture_count >= 5, "expected media-flow fixtures in {fixtures_dir:?}, found {fixture_count}");
+        }
+        //#endregion 🔖MediaFlow
     }
     //#endregion 🧪Tests
     // #endregion media_graph
@@ -3707,7 +3964,7 @@ pub mod registry {
     //! 🗂️ Plugin manifest registry and OS program/resource catalog.
 
     use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, ProgramDefinition, ResourceKindSpec, WindowKindDefinition};
+    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, OsMediaFormat, PluginManifest, ProgramDefinition, ResourceKindSpec, WindowKindDefinition};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
@@ -3727,6 +3984,12 @@ pub mod registry {
         /// 🧬 The `MediaType` this resource kind negotiates on the media graph — see
         /// `semio_framework_core::media_types_compatible`.
         pub media_type: MediaType,
+        /// 🔌 Structured-payload schema id, mirrored from `ResourceKindSpec::schema` — see
+        /// `crate::media_graph::negotiate_media_contract`, which prefers a matching schema over a shared
+        /// binary `OsMediaFormat`.
+        pub schema: String,
+        pub export_formats: Vec<OsMediaFormat>,
+        pub import_formats: Vec<OsMediaFormat>,
     }
 
     /// 🗂️ One registered resource kind's full catalog entry — the descriptor plus the media capability
@@ -3746,6 +4009,9 @@ pub mod registry {
                 component_kind: spec.component_kind.clone(),
                 dimension: spec.dimension.clone(),
                 media_type: spec.media_type,
+                schema: spec.schema.clone(),
+                export_formats: spec.export_formats.clone(),
+                import_formats: spec.import_formats.clone(),
             },
             media_capability: spec.media_capability,
         }
@@ -3766,6 +4032,9 @@ pub mod registry {
                     component_kind: "parameter".into(),
                     dimension: "data".into(),
                     media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                    schema: "parameter.value".into(),
+                    export_formats: Vec::new(),
+                    import_formats: Vec::new(),
                 },
                 media_capability: OsMediaCapability::MeshOnly,
             },
@@ -3813,6 +4082,9 @@ pub mod registry {
             component_kind: "panel".into(),
             dimension: "unknown".into(),
             media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            schema: kind.into(),
+            export_formats: Vec::new(),
+            import_formats: Vec::new(),
         })
     }
 
@@ -4171,11 +4443,11 @@ pub use media_export_raster::{
 pub use media_export_simple::{map_points_svg, pages_rects_svg, title_card_svg, wrap_svg};
 pub use media_graph::{
     apply_flow_fixture_to_os_media_graph, assert_os_media_export_coverage, assert_os_media_import_coverage, build_os_media_flow_operator_infos, empty_media_graph, export_os_app_instance_media, import_os_app_instance_media,
-    list_os_media_graph_vfs_children, media_graph_node_for_instance, os_media_export_extension_for_format, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id, os_media_graph_vfs_import_id,
-    os_media_graph_vfs_instance_folder_id, os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability, register_os_media_export_handler,
-    register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_media_graph_parameter_ports, validate_media_graph, MediaGraphPosition, MediaGraphValidation, OsMediaCapability, OsMediaExportResult,
-    OsMediaFlowOperatorInfo, OsMediaFormat, OsMediaGraph, OsMediaGraphCamera, OsMediaGraphEdge, OsMediaGraphNode, OsMediaGraphVfsNodeRecord, OsMediaGraphVfsSchema, OsMediaNodeGraphPayload, OsMediaPort, ProgramRegistry, OS_MEDIA_FLOW_MODULE_ID,
-    OS_MEDIA_GRAPH_SCHEMA, OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
+    list_os_media_graph_vfs_children, media_graph_node_for_instance, negotiate_media_contract, os_media_export_extension_for_format, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload, os_media_graph_vfs_export_id,
+    os_media_graph_vfs_import_id, os_media_graph_vfs_instance_folder_id, os_media_graph_vfs_instance_id, os_media_graph_vfs_schema, os_media_graph_vfs_source_id, os_media_neuron_kind_for_node, os_resource_media_capability,
+    placeholder_media_contract, register_os_media_export_handler, register_os_media_import_handler, required_os_media_export_formats, required_os_media_import_formats, sync_media_graph_parameter_ports, validate_media_graph, MediaContract,
+    MediaGraphPosition, MediaGraphValidation, OsMediaCapability, OsMediaExportResult, OsMediaFlowOperatorInfo, OsMediaFormat, OsMediaGraph, OsMediaGraphCamera, OsMediaGraphEdge, OsMediaGraphNode, OsMediaGraphVfsNodeRecord, OsMediaGraphVfsSchema,
+    OsMediaNodeGraphPayload, OsMediaPort, ProgramRegistry, OS_MEDIA_FLOW_MODULE_ID, OS_MEDIA_GRAPH_SCHEMA, OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
 };
 pub use registry::{
     list_os_programs, list_os_resource_descriptors, merge_os_program_definition, os_app_primary_output_kind, os_app_registration, os_baseline_resource, os_in_port, os_out_port, os_program_by_id, os_resource_descriptor, register_os_builtin_program,

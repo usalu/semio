@@ -1,0 +1,13 @@
+{
+  "title": "Edge Contracts and Typed Connect",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Add typed media wire contracts to the S/Semios media graph: (1) define MediaContract{kind_id, media_type, wire, conversion} and add it as a field on OsMediaGraphEdge in framework/product/os/core/rs/lib.rs, updating every constructor; (2) implement negotiate_media_contract(source_port, target_port) -\u003e Result\u003cMediaContract,String\u003e using the existing media_types_compatible() lattice function (framework/core/rs/lib.rs, region MediaType, currently uncalled) and the R1a resource-kind registry to resolve descriptors and pick a shared wire format; (3) wire negotiation into both s/plugin/rs/lib.rs connect handlers (\"connectMediaPorts\" action and the flow-fixture \"connect\" edit path) so incompatible connects are rejected via the existing notice/error surface instead of pushing OsOp::ConnectMediaPorts, and compatible ones carry the negotiated contract; (4) extend validate_media_graph to also flag edges whose stored contract is inconsistent with current endpoint descriptors, reported via the same error shape as its existing cycle-detection failures; (5) thread contract/conversion data into the JSON node-graph payload serialization for edges (data plumbing only, no renderer changes). Verify with cargo check -p semio-framework-os -p s-plugin (or actual package names) run in foreground, and extend existing media_graph connect/validate tests with a rejected-incompatible-connect case and a contract-carrying compatible-connect case.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2160"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪76c223e0c2bd4fe192bc5eb9cfd47b16"
+  ]
+}

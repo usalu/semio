@@ -329,6 +329,29 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
+    /// @emoji 🔌 Delivers a typed media artifact to the plugin instance's declared input port — the
+    /// ABI-level counterpart of the plugin SDK's `PluginApp::consume_media`.
+    pub fn consume_media(&self, instance_id: u32, port_id: &str, descriptor_json: &str, data: Vec<u8>) -> Result<(), PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let artifact = semio::framework::types::MediaArtifact { descriptor_json: descriptor_json.to_string(), data };
+        let result = bindings.semio_framework_plugin().call_consume_media(&mut *store, instance_id, port_id, &artifact).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// @emoji 🎬 Requests a typed media artifact from the plugin instance's declared output port — the
+    /// ABI-level counterpart of `PluginApp::produce_media`. Returns `(descriptor_json, data)` mirroring
+    /// the WIT `media-artifact` record's two fields.
+    pub fn produce_media(&self, instance_id: u32, port_id: &str, request_json: &str) -> Result<(String, Vec<u8>), PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_produce_media(&mut *store, instance_id, port_id, request_json).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        let artifact = Self::plugin_result(result)?;
+        Ok((artifact.descriptor_json, artifact.data))
+    }
+
     pub fn handle_action(&self, instance_id: u32, action_json: &str, view_state: &ViewState) -> Result<InvocationResult, PluginHostError> {
         let context_json = serde_json::json!({
             "viewState": view_state,

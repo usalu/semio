@@ -12337,7 +12337,23 @@ pub mod kit_backbone {
         })
     }
 
+    /// @emoji 🧩 Accepts both the flat golden-fixture shape (`{designId, blueprintId, position, ...}`) and the canonical wrapped wire shape [`kit_operation_step_input_json`] emits for `CreateFixedPiece` (`{"CreateFixedPiece": {"scope": {"CreateFixedPiece": {design_id, blueprint_id, ...}}, "input": {"FixedPiece": {position, ...}}}}`) — the two callers of [`kit_operation_from_stored`] persist different shapes for this one kind.
     async fn stored_create_fixed_piece_operation(input: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
+        if let Some(wrapped) = input.get("CreateFixedPiece") {
+            let scope = kit_scope_from_json(wrapped.get("scope").ok_or_else(|| ComposeError::invalid("scope"))?)?;
+            let crate::operation::Scope::CreateFixedPiece { design_id, blueprint_id, .. } = scope else {
+                return Err(ComposeError::invalid("createFixedPiece expects Scope::CreateFixedPiece"));
+            };
+            let input = kit_input_from_json(wrapped.get("input").ok_or_else(|| ComposeError::invalid("input"))?)?;
+            let crate::operation::Input::FixedPiece { position, name, description } = input else {
+                return Err(ComposeError::invalid("createFixedPiece expects Input::FixedPiece"));
+            };
+            let piece_id = crate::id::Id::new().await;
+            return Ok(crate::operation::Operation::CreateFixedPiece {
+                scope: crate::operation::Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids: Vec::new() },
+                input: crate::operation::Input::FixedPiece { position, name, description },
+            });
+        }
         let design_id = id_from_str(input.get("designId").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("designId"))?);
         let blueprint_id = id_from_str(input.get("blueprintId").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("blueprintId"))?);
         let position = position_input_from_json(input.get("position").ok_or_else(|| ComposeError::invalid("position"))?)?;

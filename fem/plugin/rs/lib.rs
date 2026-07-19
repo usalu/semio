@@ -2,9 +2,9 @@
 
 use fem_core::{Dof, ElementResult};
 use semio_framework_plugin::{
-    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, ui_text, world3d_default_camera,
+    build_canvas_2d_scene, build_world_3d_scene, create_default_layout, ui_stack_vertical, ui_text, world3d_default_camera,
     world3d_default_selection_json, world3d_meshes_json_from_kinds, world3d_scene, AppLabelsOverlay, ActionArgDef,
-    ActionArgOption, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HistoryView, SurfaceKind, UiNode,
+    ActionArgOption, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, SurfaceKind, UiNode,
     ViewState, WorldSunConfig,
 };
 use serde_json::{json, Value};
@@ -36,10 +36,9 @@ const MOMENT_SCALE_2D: f64 = 0.001;
 const DEFORM_SCALE_3D: f64 = 200.0;
 /// 🧊 Half-extent-ish scale of the small box instance drawn at each node.
 const NODE_SIZE_3D: f64 = 0.05;
-/// 🧊 Scale of each small sphere marker used to approximate a member's extent (see `fem3d_instances_json`).
-const MEMBER_MARKER_SIZE_3D: f64 = 0.03;
-/// 🧊 Number of sphere markers interpolated along a member's length.
-const MEMBER_SEGMENTS_3D: usize = 5;
+/// 🧊 Cross-section (x/y) thickness of the oriented box prism drawn for each `Bar`/`Frame` member —
+/// a fixed visual thickness, not the member's actual section dimensions (see `fem3d_structural_instances`).
+const MEMBER_THICKNESS_3D: f64 = 0.05;
 
 /// 🎨 Blue→green→yellow→red banded ramp for von Mises stress contour fill colors, low to high.
 const VON_MISES_BANDS: [&str; 8] = ["#1d4ed8", "#2563eb", "#0ea5e9", "#22c55e", "#eab308", "#f97316", "#ef4444", "#b91c1c"];
@@ -92,6 +91,61 @@ fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f
         ],
         "fill": { "color": [r, g, b, alpha] },
     })
+}
+
+/// 🌡️ A filled polygon Canvas2d path layer (arbitrary vertex count) — the marching-triangle contour
+/// bands need this (a clipped triangle can come out as a quad), unlike `filled_triangle_layer`'s
+/// fixed 3-point shape.
+fn filled_polygon_layer(id: String, points: &[(f64, f64)], color: &str, alpha: f64) -> Value {
+    let (r, g, b) = hex_to_rgb01(color);
+    let mut segments = Vec::with_capacity(points.len() + 1);
+    for (i, &(x, y)) in points.iter().enumerate() {
+        segments.push(if i == 0 { json!({ "kind": "move", "to": [x, y] }) } else { json!({ "kind": "line", "to": [x, y] }) });
+    }
+    segments.push(json!({ "kind": "close" }));
+    json!({
+        "id": id,
+        "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        "segments": segments,
+        "fill": { "color": [r, g, b, alpha] },
+    })
+}
+
+/// ✂️ One point of a polygon being clipped for contour banding: screen position plus the (linearly
+/// interpolated across the source triangle) scalar value driving the clip.
+type ValuedPoint = ((f64, f64), f64);
+
+/// ✂️ Interpolates the crossing point where the segment `a->b`'s value equals `threshold`.
+fn interpolate_at_value(a: ValuedPoint, b: ValuedPoint, threshold: f64) -> ValuedPoint {
+    let t = if (b.1 - a.1).abs() < 1e-12 { 0.5 } else { (threshold - a.1) / (b.1 - a.1) };
+    ((a.0 .0 + (b.0 .0 - a.0 .0) * t, a.0 .1 + (b.0 .1 - a.0 .1) * t), threshold)
+}
+
+/// ✂️ Sutherland-Hodgman clip of a (convex, value-carrying) polygon against a scalar half-plane —
+/// keeps the portion where `value >= threshold` (`keep_above`) or `value <= threshold` (else),
+/// inserting an interpolated vertex at every edge crossing. The core of marching-triangle contour
+/// banding: clipping a triangle's linear value field against 2 thresholds bands it into one polygon.
+fn clip_by_value(poly: &[ValuedPoint], threshold: f64, keep_above: bool) -> Vec<ValuedPoint> {
+    if poly.is_empty() {
+        return Vec::new();
+    }
+    let n = poly.len();
+    let mut out = Vec::with_capacity(n + 1);
+    for i in 0..n {
+        let cur = poly[i];
+        let prev = poly[(i + n - 1) % n];
+        let cur_in = if keep_above { cur.1 >= threshold } else { cur.1 <= threshold };
+        let prev_in = if keep_above { prev.1 >= threshold } else { prev.1 <= threshold };
+        if cur_in {
+            if !prev_in {
+                out.push(interpolate_at_value(prev, cur, threshold));
+            }
+            out.push(cur);
+        } else if prev_in {
+            out.push(interpolate_at_value(prev, cur, threshold));
+        }
+    }
+    out
 }
 
 /// 🌡️ A stress-contour legend: a small vertical stack of `VON_MISES_BANDS` swatches plus min/max text
@@ -176,6 +230,25 @@ fn fem2d_region_triangles(doc: &fem_2d::Fem2dDocument) -> Vec<(String, [(f64, f6
     out
 }
 
+/// 🗺️ Every meshed region's triangles as `(element_id, screen points, node ids)` — like
+/// `fem2d_region_triangles` but also carrying each vertex's mesh node id, needed to look values up in
+/// `fem2d_nodal_von_mises`'s node-keyed map for banded contour rendering.
+fn fem2d_region_mesh_triangles(doc: &fem_2d::Fem2dDocument) -> Vec<(String, [(f64, f64); 3], [String; 3])> {
+    let mut out = Vec::new();
+    let Ok(meshes) = fem_2d::fem2d_mesh_preview(doc) else { return out };
+    for mesh in &meshes {
+        for (tri_index, tri) in mesh.tris.iter().enumerate() {
+            let id = format!("{}_t{}", mesh.region_id, tri_index);
+            let p0 = mesh.points[tri[0] as usize];
+            let p1 = mesh.points[tri[1] as usize];
+            let p2 = mesh.points[tri[2] as usize];
+            let node_ids = [mesh.node_ids[tri[0] as usize].clone(), mesh.node_ids[tri[1] as usize].clone(), mesh.node_ids[tri[2] as usize].clone()];
+            out.push((id, [screen_2d(p0[0], p0[1]), screen_2d(p1[0], p1[1]), screen_2d(p2[0], p2[1])], node_ids));
+        }
+    }
+    out
+}
+
 /// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
 /// display scale — shared by the static, modal, and buckling results renders.
 fn fem2d_deformed_shape_layers(doc: &fem_2d::Fem2dDocument, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<Value> {
@@ -225,11 +298,11 @@ fn render_fem2d_results(doc: &fem_2d::Fem2dDocument, display: &ResultDisplay) ->
     }
 }
 
-/// 📊 Static results: undeformed structure faintly, plus a deformed-shape polyline, (for beams) a
-/// moment-diagram polyline, and (for meshed regions) a filled von-Mises stress contour per `Tri3Cst`
-/// element with a color-swatch legend. `source_id` selects a `fem2d_solve_all` case/combination id,
-/// falling back to the first load case when `None`/unknown (preserves v0's default behavior).
-/// v0 limitation: reaction values are not rendered as text labels.
+/// 📊 Static results: undeformed structure faintly, plus a deformed-shape polyline, text labels at
+/// every support reaction, (for beams) a moment-diagram polyline, and (for meshed regions) a
+/// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
+/// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
+/// when `None`/unknown (preserves v0's default behavior).
 fn render_fem2d_results_static(doc: &fem_2d::Fem2dDocument, source_id: Option<&str>) -> UiNode {
     let results = match fem_2d::fem2d_solve_all(doc) {
         Ok(results) => results,
@@ -252,6 +325,18 @@ fn render_fem2d_results_static(doc: &fem_2d::Fem2dDocument, source_id: Option<&s
         disp_map.insert(d.node_id.clone(), d.values);
     }
     layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, DEFORM_SCALE_2D));
+
+    //#region 🔖ReactionLabels
+    for reaction in &result.reactions {
+        let Some(node) = find_node_2d(&doc.nodes, &reaction.node_id) else { continue };
+        let (sx, sy) = screen_2d(node.x, node.y);
+        layers.push(json!({
+            "id": format!("reaction-{}-{:?}", reaction.node_id, reaction.dof),
+            "transform": [1.0, 0.0, 0.0, 1.0, sx + 8.0, sy + 14.0],
+            "text": { "content": format!("{:?}: {:.0} N", reaction.dof, reaction.value), "size": 10.0 },
+        }));
+    }
+    //#endregion 🔖ReactionLabels
 
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -283,22 +368,35 @@ fn render_fem2d_results_static(doc: &fem_2d::Fem2dDocument, source_id: Option<&s
     }
 
     //#region 🔖StressContour
-    let region_tris = fem2d_region_triangles(doc);
-    let mut contour_cells: Vec<(&String, &[(f64, f64); 3], f64)> = Vec::new();
-    for (id, tri) in &region_tris {
-        if let Some((_, ElementResult::Plane { gauss })) = result.elements.iter().find(|(eid, _)| eid == id) {
-            if !gauss.is_empty() {
-                let avg = gauss.iter().map(|g| g.von_mises).sum::<f64>() / gauss.len() as f64;
-                contour_cells.push((id, tri, avg));
-            }
+    let nodal_von_mises = fem_2d::fem2d_nodal_von_mises(doc, &case_id).unwrap_or_default();
+    let mesh_triangles = fem2d_region_mesh_triangles(doc);
+    let mut valued_triangles: Vec<([(f64, f64); 3], [f64; 3])> = Vec::new();
+    for (_, tri_points, node_ids) in &mesh_triangles {
+        if let (Some(&v0), Some(&v1), Some(&v2)) = (nodal_von_mises.get(&node_ids[0]), nodal_von_mises.get(&node_ids[1]), nodal_von_mises.get(&node_ids[2])) {
+            valued_triangles.push((*tri_points, [v0, v1, v2]));
         }
     }
-    if !contour_cells.is_empty() {
-        let min = contour_cells.iter().map(|(_, _, v)| *v).fold(f64::INFINITY, f64::min);
-        let max = contour_cells.iter().map(|(_, _, v)| *v).fold(f64::NEG_INFINITY, f64::max);
-        for (id, tri, value) in &contour_cells {
-            let color = von_mises_color(*value, min, max);
-            layers.push(filled_triangle_layer(format!("contour-{id}"), tri[0], tri[1], tri[2], color, 0.85));
+    if !valued_triangles.is_empty() {
+        let min = valued_triangles.iter().flat_map(|(_, v)| v.iter().copied()).fold(f64::INFINITY, f64::min);
+        let max = valued_triangles.iter().flat_map(|(_, v)| v.iter().copied()).fold(f64::NEG_INFINITY, f64::max);
+        let n_bands = VON_MISES_BANDS.len();
+        let span = (max - min).max(1e-9);
+        let boundaries: Vec<f64> = (0..=n_bands).map(|k| min + span * k as f64 / n_bands as f64).collect();
+        for (tri_index, (points, values)) in valued_triangles.iter().enumerate() {
+            let base: Vec<ValuedPoint> = points.iter().zip(values.iter()).map(|(&p, &v)| (p, v)).collect();
+            for band in 0..n_bands {
+                let mut poly = base.clone();
+                if band > 0 {
+                    poly = clip_by_value(&poly, boundaries[band], true);
+                }
+                if band < n_bands - 1 {
+                    poly = clip_by_value(&poly, boundaries[band + 1], false);
+                }
+                if poly.len() >= 3 {
+                    let screen_points: Vec<(f64, f64)> = poly.iter().map(|(p, _)| *p).collect();
+                    layers.push(filled_polygon_layer(format!("contour-{tri_index}-{band}"), &screen_points, VON_MISES_BANDS[band], 0.85));
+                }
+            }
         }
         layers.extend(von_mises_legend_layers(min, max));
     }
@@ -612,28 +710,60 @@ fn fem3d_element_id(element: &fem_3d::FemElement) -> &str {
     }
 }
 
-fn lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
-    [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
+/// 🧭 Hamilton quaternion product `a * b`, both `[x,y,z,w]` — applying `b`'s rotation first, then `a`'s.
+fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
+    let (ax, ay, az, aw) = (a[0], a[1], a[2], a[3]);
+    let (bx, by, bz, bw) = (b[0], b[1], b[2], b[3]);
+    [aw * bx + ax * bw + ay * bz - az * by, aw * by - ax * bz + ay * bw + az * bx, aw * bz + ax * by - ay * bx + az * bw, aw * bw - ax * bx - ay * by - az * bz]
 }
 
-/// 🧊 Builds World3d `instances_json`: one small box per node, plus a chain of small sphere markers
-/// interpolated along each member's length. `displacements` (node id -> 6-DOF values), when present,
-/// offsets every node position (scaled by `deform_scale`) before building instances — used by the
-/// results window's deformed/mode-shape views. v0 simplification: members are approximated by
-/// interpolated sphere markers rather than an oriented extruded prism (a proper stretched/rotated box
-/// transform is future work).
-fn fem3d_instances_json(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> String {
-    let node_pos = |node: &fem_3d::FemNode| -> [f64; 3] {
-        let mut p = [node.x, node.y, node.z];
-        if let Some(map) = displacements {
-            if let Some(d) = map.get(&node.id) {
-                p[0] += d[Dof::Tx.index()] * deform_scale;
-                p[1] += d[Dof::Ty.index()] * deform_scale;
-                p[2] += d[Dof::Tz.index()] * deform_scale;
-            }
+/// 🧭 Rotation of `roll` radians about the LOCAL +Z axis — applied before `quat_z_to` reorients +Z to
+/// the member direction, so this spins the box prism about its own long axis (matches `Frame3`'s roll).
+fn quat_roll_z(roll: f64) -> [f64; 4] {
+    let h = roll / 2.0;
+    [0.0, 0.0, h.sin(), h.cos()]
+}
+
+/// 🧭 Shortest-arc rotation taking local `+Z` (the `"box"` mesh's long axis) onto unit direction `dir`
+/// — the standard "rotate A onto B" quaternion (`axis = cross(from,to)`, `angle = acos(dot(from,to))`),
+/// specialized for `from = (0,0,1)` so `cross` reduces to `(-dir.y, dir.x, 0)`. Handles the antiparallel
+/// case (`dir ≈ (0,0,-1)`) with a fixed 180° flip about the X axis, since `cross` degenerates to zero there.
+fn quat_z_to(dir: [f64; 3]) -> [f64; 4] {
+    let dot = dir[2].clamp(-1.0, 1.0);
+    if dot > 0.999_999 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    if dot < -0.999_999 {
+        return [1.0, 0.0, 0.0, 0.0];
+    }
+    let axis = [-dir[1], dir[0], 0.0];
+    let axis_len = (axis[0] * axis[0] + axis[1] * axis[1]).sqrt();
+    let axis_n = [axis[0] / axis_len, axis[1] / axis_len, 0.0];
+    let half = dot.acos() / 2.0;
+    let s = half.sin();
+    [axis_n[0] * s, axis_n[1] * s, axis_n[2] * s, half.cos()]
+}
+
+/// 🧊 Node-position resolver shared by every 3D instance/mesh builder: `displacements` (node id -> 6-DOF
+/// values), when present, offsets a node's position by its solved displacement scaled by `deform_scale`.
+fn fem3d_deformed_position(pos: [f64; 3], node_id: &str, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> [f64; 3] {
+    let mut p = pos;
+    if let Some(map) = displacements {
+        if let Some(d) = map.get(node_id) {
+            p[0] += d[Dof::Tx.index()] * deform_scale;
+            p[1] += d[Dof::Ty.index()] * deform_scale;
+            p[2] += d[Dof::Tz.index()] * deform_scale;
         }
-        p
-    };
+    }
+    p
+}
+
+/// 🧊 One small box instance per node, plus one ORIENTED box prism per `Bar`/`Frame` member — position
+/// at the (possibly deformed) midpoint, `scale=[t,t,length]` so the mesh's own long (local Z) axis
+/// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
+/// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
+fn fem3d_structural_instances(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Vec<Value> {
+    let node_pos = |node: &fem_3d::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
 
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
@@ -652,21 +782,96 @@ fn fem3d_instances_json(doc: &fem_3d::Fem3dDocument, displacements: Option<&Hash
         let (Some(n1), Some(n2)) = (find_node_3d(&doc.nodes, start), find_node_3d(&doc.nodes, end)) else { continue };
         let p1 = node_pos(n1);
         let p2 = node_pos(n2);
+        let d = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
+        let length = (d[0] * d[0] + d[1] * d[1] + d[2] * d[2]).sqrt().max(1e-9);
+        let dir = [d[0] / length, d[1] / length, d[2] / length];
+        let roll = match element {
+            fem_3d::FemElement::Frame { roll, .. } => *roll,
+            fem_3d::FemElement::Bar { .. } => 0.0,
+        };
+        let rotation = quat_mul(quat_z_to(dir), quat_roll_z(roll));
+        let mid = [(p1[0] + p2[0]) / 2.0, (p1[1] + p2[1]) / 2.0, (p1[2] + p2[2]) / 2.0];
         let id = fem3d_element_id(element);
-        for i in 0..=MEMBER_SEGMENTS_3D {
-            let t = i as f64 / MEMBER_SEGMENTS_3D as f64;
-            let p = lerp3(p1, p2, t);
-            instances.push(json!({
-                "id": format!("el-{id}-{i}"),
-                "meshId": "sphere",
-                "position": p,
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [MEMBER_MARKER_SIZE_3D, MEMBER_MARKER_SIZE_3D, MEMBER_MARKER_SIZE_3D],
-                "label": id,
-            }));
-        }
+        instances.push(json!({
+            "id": format!("el-{id}"),
+            "meshId": "box",
+            "position": mid,
+            "rotation": rotation,
+            "scale": [MEMBER_THICKNESS_3D, MEMBER_THICKNESS_3D, length],
+            "label": id,
+        }));
     }
-    serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
+    instances
+}
+
+/// 🧱 Every `FemSolid`'s boundary surface as a custom `meshes_json` entry (flat per-face normals, one
+/// duplicated vertex triple per triangle) plus its one identity-transform instance — `nodal_stress`,
+/// when present, colors each vertex by `von_mises_color` (min/max taken across ALL solids' averaged
+/// values), driving the react renderer's vertex-color contour (see `PaintTexturedMesh`). `displacements`
+/// deforms vertex positions the same way `fem3d_structural_instances` deforms node/member instances.
+fn fem3d_solid_mesh_entries(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (Vec<Value>, Vec<Value>) {
+    let mut meshes = Vec::new();
+    let mut instances = Vec::new();
+    let Ok(solid_meshes) = fem_3d::fem3d_mesh_preview(doc) else { return (meshes, instances) };
+    let (min, max) = match nodal_stress {
+        Some(map) if !map.is_empty() => (map.values().cloned().fold(f64::INFINITY, f64::min), map.values().cloned().fold(f64::NEG_INFINITY, f64::max)),
+        _ => (0.0, 1.0),
+    };
+
+    for solid in &solid_meshes {
+        let mut positions: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut normals: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut colors: Vec<f64> = Vec::with_capacity(solid.boundary_tris.len() * 9);
+        let mut indices: Vec<u32> = Vec::with_capacity(solid.boundary_tris.len() * 3);
+
+        let vertex_pos = |idx: u32| -> [f64; 3] { fem3d_deformed_position(solid.points[idx as usize], &solid.node_ids[idx as usize], displacements, deform_scale) };
+        let vertex_color = |idx: u32| -> (f64, f64, f64) {
+            let Some(stress_map) = nodal_stress else { return (0.78, 0.78, 0.8) };
+            let value = stress_map.get(&solid.node_ids[idx as usize]).copied().unwrap_or(min);
+            hex_to_rgb01(von_mises_color(value, min, max))
+        };
+
+        for &[a, b, c] in &solid.boundary_tris {
+            let (pa, pb, pc) = (vertex_pos(a), vertex_pos(b), vertex_pos(c));
+            let e0 = [pb[0] - pa[0], pb[1] - pa[1], pb[2] - pa[2]];
+            let e1 = [pc[0] - pa[0], pc[1] - pa[1], pc[2] - pa[2]];
+            let raw = [e0[1] * e1[2] - e0[2] * e1[1], e0[2] * e1[0] - e0[0] * e1[2], e0[0] * e1[1] - e0[1] * e1[0]];
+            let raw_len = (raw[0] * raw[0] + raw[1] * raw[1] + raw[2] * raw[2]).sqrt().max(1e-12);
+            let n = [raw[0] / raw_len, raw[1] / raw_len, raw[2] / raw_len];
+            let base = (positions.len() / 3) as u32;
+            for (idx, p) in [(a, pa), (b, pb), (c, pc)] {
+                positions.extend_from_slice(&p);
+                normals.extend_from_slice(&n);
+                let (r, g, bl) = vertex_color(idx);
+                colors.extend_from_slice(&[r, g, bl]);
+            }
+            indices.extend_from_slice(&[base, base + 1, base + 2]);
+        }
+
+        let mesh_id = format!("solid-{}", solid.solid_id);
+        meshes.push(json!({ "id": mesh_id, "data": { "positions": positions, "normals": normals, "colors": colors, "indices": indices } }));
+        instances.push(json!({
+            "id": format!("solid-inst-{}", solid.solid_id),
+            "meshId": mesh_id,
+            "position": [0.0, 0.0, 0.0],
+            "rotation": [0.0, 0.0, 0.0, 1.0],
+            "scale": [1.0, 1.0, 1.0],
+            "label": solid.solid_id,
+        }));
+    }
+    (meshes, instances)
+}
+
+/// 🧊 Builds the FULL `(meshes_json, instances_json)` pair for a 3D scene: the `"box"` primitive mesh
+/// plus every `FemSolid`'s custom surface mesh, and every node/member/solid instance — shared by the
+/// model window and every results view (static/modal/buckling).
+fn fem3d_scene_parts(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64, nodal_stress: Option<&HashMap<String, f64>>) -> (String, String) {
+    let mut meshes: Vec<Value> = serde_json::from_str(&world3d_meshes_json_from_kinds(&["box".to_string()])).unwrap_or_default();
+    let mut instances = fem3d_structural_instances(doc, displacements, deform_scale);
+    let (solid_meshes, solid_instances) = fem3d_solid_mesh_entries(doc, displacements, deform_scale, nodal_stress);
+    meshes.extend(solid_meshes);
+    instances.extend(solid_instances);
+    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
 }
 
 fn fem3d_camera_json(doc: &fem_3d::Fem3dDocument) -> String {
@@ -677,9 +882,15 @@ fn fem3d_camera_json(doc: &fem_3d::Fem3dDocument) -> String {
     }
 }
 
+/// 🏷️ Wraps a `World3d` scene node with a text caption above it — `World3dScene` itself has no text
+/// field, so a vertical `UiNode` stack (already how the shell composes surfaces) is the idiomatic way
+/// to show a frequency/load-factor/case caption in-scene, mirroring the 2D results window's caption layer.
+fn with_caption(scene: UiNode, caption: String) -> UiNode {
+    ui_stack_vertical(vec![ui_text(caption), scene])
+}
+
 fn render_fem3d_model(doc: &fem_3d::Fem3dDocument) -> UiNode {
-    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, None, DEFORM_SCALE_3D);
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, None, DEFORM_SCALE_3D, None);
     build_world_3d_scene(
         FEM3D_BODY_MODEL,
         FEM3D_APP_ID,
@@ -696,9 +907,10 @@ fn render_fem3d_results(doc: &fem_3d::Fem3dDocument, display: &ResultDisplay) ->
     }
 }
 
-/// 📊 Static results: solved fresh on every render (see `Fem3dPlayApp` doc comment) — same node/member
-/// instances as the model window, offset by the solved displacements. `source_id` selects a
-/// `fem3d_solve_all` case/combination id, falling back to the first load case when `None`/unknown.
+/// 📊 Static results: solved fresh on every render (see `Fem3dPlayApp` doc comment) — same node/member/
+/// solid instances as the model window, offset by the solved displacements, solids additionally colored
+/// by nodal-averaged von Mises stress. `source_id` selects a `fem3d_solve_all` case/combination id,
+/// falling back to the first load case when `None`/unknown. Caption names the active case.
 fn render_fem3d_results_static(doc: &fem_3d::Fem3dDocument, source_id: Option<&str>) -> UiNode {
     let results = match fem_3d::fem3d_solve_all(doc) {
         Ok(results) => results,
@@ -718,50 +930,50 @@ fn render_fem3d_results_static(doc: &fem_3d::Fem3dDocument, source_id: Option<&s
     for d in &result.displacements {
         disp_map.insert(d.node_id.clone(), d.values);
     }
-    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, Some(&disp_map), DEFORM_SCALE_3D);
-    build_world_3d_scene(
+    let nodal_stress = fem_3d::fem3d_nodal_von_mises(doc, &case_id).ok();
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), DEFORM_SCALE_3D, nodal_stress.as_ref());
+    let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
         world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    )
+    );
+    with_caption(scene, format!("Case: {case_id}"))
 }
 
 /// 📊 Modal mode-shape overlay: instances offset by the selected mode's shape, scaled by
-/// `doc.analysis.deformation_scale`. v0 limitation: `World3dScene` has no text-caption field, so the
-/// frequency value isn't shown in-scene (unlike the 2D results window's caption layer).
+/// `doc.analysis.deformation_scale`, with a frequency caption.
 fn render_fem3d_results_modal(doc: &fem_3d::Fem3dDocument, mode_index: usize) -> UiNode {
-    let (_freq_hz, disp_map) = match fem_3d::fem3d_modal_mode_values(doc, mode_index) {
+    let (freq_hz, disp_map) = match fem_3d::fem3d_modal_mode_values(doc, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(format!("Modal analysis error: {e}")),
     };
-    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, Some(&disp_map), doc.analysis.deformation_scale);
-    build_world_3d_scene(
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), doc.analysis.deformation_scale, None);
+    let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
         world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    )
+    );
+    with_caption(scene, format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1))
 }
 
 /// 📊 Buckling mode-shape overlay: instances offset by the selected mode's shape, scaled by
 /// `doc.analysis.deformation_scale`. `source_id` selects the reference load case, falling back to the
-/// first load case when `None`. Same caption limitation as `render_fem3d_results_modal`.
+/// first load case when `None`. Caption names the mode and its load factor.
 fn render_fem3d_results_buckling(doc: &fem_3d::Fem3dDocument, source_id: Option<&str>, mode_index: usize) -> UiNode {
     let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
         return ui_text("No load case defined");
     };
-    let (_factor, disp_map) = match fem_3d::fem3d_buckling_mode_values(doc, &case_id, mode_index) {
+    let (factor, disp_map) = match fem_3d::fem3d_buckling_mode_values(doc, &case_id, mode_index) {
         Ok(values) => values,
         Err(e) => return ui_text(format!("Buckling analysis error: {e}")),
     };
-    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, Some(&disp_map), doc.analysis.deformation_scale);
-    build_world_3d_scene(
+    let (meshes_json, instances_json) = fem3d_scene_parts(doc, Some(&disp_map), doc.analysis.deformation_scale, None);
+    let scene = build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
         world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
-    )
+    );
+    with_caption(scene, format!("Buckling mode {}: factor {factor:.3}", mode_index + 1))
 }
 //#endregion 🔖Fem3dRender
 
@@ -838,7 +1050,7 @@ impl DocumentApp for Fem3dPlayApp {
                 ) {
                     let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
                     let index = doc.projection.materials.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g, rho: 7850.0 } }]);
+                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g, nu: 0.3, rho: 7850.0 } }]);
                 }
             }
             "addSection" => {
@@ -869,8 +1081,8 @@ impl DocumentApp for Fem3dPlayApp {
                     args.and_then(|v| v.get("value")).and_then(Value::as_f64),
                 ) {
                     let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_3d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
-                    let load_id = next_id(load_case.loads.iter().map(|l| l.id.clone()), "l");
-                    load_case.loads.push(fem_3d::FemNodalLoad { id: load_id, node_id: node_id.into(), dof, value });
+                    let load_id = next_id(load_case.loads.iter().map(|l| fem_3d::load_id(l).to_string()), "l");
+                    load_case.loads.push(fem_3d::FemLoad::Nodal { id: load_id, node_id: node_id.into(), dof, value });
                     let index = doc.projection.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.projection.load_cases.len());
                     return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case }]);
                 }
@@ -1077,6 +1289,7 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use semio_framework_plugin::HistoryView;
 
     fn history_view() -> HistoryView {
         HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None }
@@ -1260,6 +1473,20 @@ mod tests {
     }
     //#endregion 🔖ContourRender
 
+    //#region 🔖ReactionLabels
+    #[test]
+    fn results_window_renders_reaction_labels_2d() {
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
+        let json_fixture = include_str!("../../2d/example/default.fem2d.json");
+        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("reaction-"), "expected reaction-prefixed text label layers: {json}");
+    }
+    //#endregion 🔖ReactionLabels
+
     //#region 🔖ModeShapeRender
     #[test]
     fn results_window_renders_modal_mode_shape() {
@@ -1305,5 +1532,52 @@ mod tests {
         assert!(!json_3d.contains("Buckling analysis error"), "unexpected buckling error: {json_3d}");
     }
     //#endregion 🔖ModeShapeRender
+
+    //#region 🔖SolidRenderAndCaptions
+    #[test]
+    fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
+        let app = Fem3dPlayApp::default();
+        let json_fixture = include_str!("../../3d/example/default.fem3d.json");
+        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node = app.render(FEM3D_BODY_MODEL, &doc, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("solid-sol1"), "expected a solid- mesh/instance id for the example fixture's solid: {json}");
+        assert!(json.contains("el-e1"), "expected a single oriented box instance per member (no -{{i}} sphere chain): {json}");
+        assert!(!json.contains("\\\"sphere\\\""), "sphere markers should be gone: {json}");
+    }
+
+    #[test]
+    fn results_scene_includes_solid_vertex_colors_3d() {
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("pressure".into()), mode: DisplayMode::Static } };
+        let json_fixture = include_str!("../../3d/example/default.fem3d.json");
+        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node = app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("solid-sol1"), "expected the solid mesh in the results scene: {json}");
+        assert!(json.contains("\\\"colors\\\""), "expected a vertex colors array on the solid mesh data: {json}");
+        assert!(json.contains("Case: pressure"), "expected a case-id caption: {json}");
+    }
+
+    #[test]
+    fn results_scene_captions_name_mode_and_factor_3d() {
+        let app_modal = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let json_fixture = include_str!("../../3d/example/default.fem3d.json");
+        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node_modal = app_modal.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
+        let json_modal = serde_json::to_string(&node_modal).unwrap();
+        assert!(json_modal.contains("Hz"), "expected a frequency caption: {json_modal}");
+
+        let app_buckling = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("point".into()), mode: DisplayMode::Buckling(0) } };
+        let node_buckling = app_buckling.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
+        let json_buckling = serde_json::to_string(&node_buckling).unwrap();
+        assert!(json_buckling.contains("factor"), "expected a load-factor caption: {json_buckling}");
+    }
+    //#endregion 🔖SolidRenderAndCaptions
 }
 //#endregion 🧪Tests

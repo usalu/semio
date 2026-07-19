@@ -501,7 +501,7 @@ pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 // #endregion 🔖Mat3d
 
 // #region 🔖VecG
-use mathematical_number::{CommutativeRing, EuclideanDomain, Field, GcdDomain, IntegralDomain, Ring};
+use mathematical_number::{EuclideanDomain, Field, GcdDomain, IntegralDomain, Ring};
 
 /// 📐 Generic dense vector over any [`Ring`] — the exact-arithmetic counterpart to [`VecD`], used
 /// when entries are `Rational`, `Integer`, `ModInt`, or (from `mathematical_cas`) symbolic expressions.
@@ -872,71 +872,45 @@ impl<T: IntegralDomain> MatG<T> {
 // #endregion 🔖ExactElimination
 
 // #region 🔖Charpoly
-impl<T: CommutativeRing> MatG<T> {
-    /// 🧮 Characteristic polynomial coefficients (low-to-high, monic) via the Berkowitz algorithm —
-    /// division-free, so it is valid over any commutative ring (including `ModInt` under small
-    /// characteristic, where Faddeev-LeVerrier's division by `1..n` would break, and rings with no
-    /// notion of eigen-decomposition at all). Returns `Vec<T>`, not a `PolyU`, because this crate must
-    /// not depend on `mathematical_polynomial`; `mathematical_cas` wraps the result where a polynomial
-    /// type is wanted.
+impl<T: Field> MatG<T> {
+    /// 🧮 Characteristic polynomial coefficients (low-to-high, monic) via the Faddeev-LeVerrier
+    /// algorithm: `M_0 = 0`, `c_0 = 1`; `M_k = A*M_{k-1} + c_{k-1}*I`, `c_k = -trace(A*M_k)/k`. Requires
+    /// `T: Field` (division by `1..=n`), which holds whenever the characteristic doesn't divide any of
+    /// `1..=n` — true for `Rational` and for `ModInt` under a prime modulus larger than the matrix size.
+    /// Returns `Vec<T>`, not a `PolyU`, because this crate must not depend on `mathematical_polynomial`;
+    /// `mathematical_cas` wraps the result where a polynomial type is wanted.
     pub fn charpoly(&self) -> Vec<T> {
         assert_eq!(self.rows, self.cols, "MatG::charpoly: requires a square matrix");
         let n = self.rows;
         if n == 0 {
             return vec![T::one()];
         }
-        // Berkowitz's method: build the sequence of principal submatrices A_1..A_n and combine their
-        // Toeplitz-structured characteristic-polynomial-generating vectors via the classical recurrence.
-        let mut poly = vec![T::one()]; // characteristic polynomial of the empty matrix
+        // `T::from_i64(k)` alone can be an "unbound" value for runtime-modulus types like `ModInt`
+        // (no modulus known yet) — anchor it to the matrix's own modulus via a bound zero derived from
+        // an actual entry before inverting, which is a no-op for ordinary fields like `Rational`.
+        let bound_zero = self.get(0, 0).sub(self.get(0, 0));
+        let mut m = MatG::<T>::zeros(n, n);
+        let mut c = bound_zero.add(&T::one());
+        let mut coeffs_high_to_low = vec![c.clone()];
         for k in 1..=n {
-            // Submatrix of the first k rows/cols.
-            let sub = |r: usize, c: usize| self.get(r, c).clone();
-            let a_kk = sub(k - 1, k - 1);
-            let r: Vec<T> = (0..k - 1).map(|j| sub(k - 1, j)).collect();
-            let c: Vec<T> = (0..k - 1).map(|i| sub(i, k - 1)).collect();
-            // C = the (k-1)x(k-1) leading submatrix already folded into `poly` via previous steps; we
-            // instead recompute r * M^i * c directly using repeated matrix-vector products against the
-            // leading (k-1)-submatrix, which is simple and correct (if not the fastest possible variant).
-            let leading = {
-                let mut lm = MatG::zeros(k - 1, k - 1);
-                for i in 0..k - 1 {
-                    for j in 0..k - 1 {
-                        lm.set(i, j, sub(i, j));
-                    }
-                }
-                lm
-            };
-            // new_poly[i] accumulates the degree structure; build via the standard "bordered matrix"
-            // determinant expansion: char(A_k)(x) = (x - a_kk) * char(A_{k-1})(x) - r * adj-chain * c.
-            let mut new_poly = vec![T::zero(); poly.len() + 1];
-            // (x - a_kk) * poly(x): shift poly up by one degree, then subtract a_kk * poly.
-            for (i, coeff) in poly.iter().enumerate() {
-                new_poly[i + 1] = new_poly[i + 1].add(coeff);
-                new_poly[i] = new_poly[i].sub(&a_kk.mul(coeff));
+            let mut m_k = self.matmul(&m);
+            for i in 0..n {
+                let updated = m_k.get(i, i).add(&c);
+                m_k.set(i, i, updated);
             }
-            // Correction term: sum_{i=0}^{k-2} (r * leading^i * c) * poly_{k-1-i}(x), where poly here is
-            // char(A_{k-1}) truncated appropriately — implemented by repeated application of `leading`.
-            if k > 1 {
-                let mut vec_c = VecG::from_vec(c.clone());
-                for i in 0..poly.len() {
-                    let scalar = {
-                        let mut acc = T::zero();
-                        for (rv, cv) in r.iter().zip(vec_c.data.iter()) {
-                            acc = acc.add(&rv.mul(cv));
-                        }
-                        acc
-                    };
-                    // This scalar multiplies poly's (i)-th-from-top coefficient contribution; subtract
-                    // it from the corresponding degree slot (poly has `poly.len()` coefficients, degree
-                    // poly.len()-1; the correction contributes at degree poly.len()-1-i).
-                    let degree_slot = poly.len() - 1 - i;
-                    new_poly[degree_slot] = new_poly[degree_slot].sub(&scalar);
-                    vec_c = leading.mul_vec(&vec_c);
-                }
+            let am = self.matmul(&m_k);
+            let mut trace = T::zero();
+            for i in 0..n {
+                trace = trace.add(am.get(i, i));
             }
-            poly = new_poly;
+            let k_bound = bound_zero.add(&T::from_i64(k as i64));
+            let k_inv = k_bound.inv().expect("Faddeev-LeVerrier: 1..=n must be invertible in T (fails only when the characteristic divides some k <= n)");
+            c = trace.mul(&k_inv).neg();
+            coeffs_high_to_low.push(c.clone());
+            m = m_k;
         }
-        poly
+        coeffs_high_to_low.reverse();
+        coeffs_high_to_low
     }
 }
 // #endregion 🔖Charpoly
@@ -1787,6 +1761,238 @@ pub fn weighted_normal_equations(a: &MatD, b: &VecD, w: &[f64]) -> (MatD, VecD) 
 }
 // #endregion 🔖LeastSquares
 
+// #region 🔖Hessenberg
+/// 🪜 Reduces a general real square matrix to upper Hessenberg form via Householder reflectors applied column-by-column below the first subdiagonal (Golub & Van Loan, Algorithm 7.4.2). Returns `(H, Q)` with `Q` orthogonal and `A = Q H Qᵀ`; `H` is zero below its first subdiagonal. This is the stable first stage of [`real_schur`]'s Francis double-shift QR iteration.
+pub fn hessenberg(a: &MatD) -> (MatD, MatD) {
+    assert_eq!(a.rows, a.cols, "hessenberg requires a square matrix");
+    let n = a.rows;
+    let mut h = a.clone();
+    let mut q = MatD::identity(n);
+    for k in 0..n.saturating_sub(2) {
+        let mut norm_x = 0.0;
+        for row in (k + 1)..n {
+            norm_x += h.get(row, k) * h.get(row, k);
+        }
+        norm_x = norm_x.sqrt();
+        if norm_x < 1e-300 {
+            continue;
+        }
+        let alpha = if h.get(k + 1, k) >= 0.0 { -norm_x } else { norm_x };
+        let mut v = vec![0.0; n - k - 1];
+        for row in (k + 1)..n {
+            v[row - k - 1] = h.get(row, k);
+        }
+        v[0] -= alpha;
+        let v_norm: f64 = v.iter().map(|vi| vi * vi).sum();
+        if v_norm < 1e-300 {
+            continue;
+        }
+        for col in k..n {
+            let mut dot = 0.0;
+            for row in (k + 1)..n {
+                dot += v[row - k - 1] * h.get(row, col);
+            }
+            let factor = 2.0 * dot / v_norm;
+            for row in (k + 1)..n {
+                h.add_at(row, col, -factor * v[row - k - 1]);
+            }
+        }
+        for row in 0..n {
+            let mut dot = 0.0;
+            for col in (k + 1)..n {
+                dot += h.get(row, col) * v[col - k - 1];
+            }
+            let factor = 2.0 * dot / v_norm;
+            for col in (k + 1)..n {
+                h.add_at(row, col, -factor * v[col - k - 1]);
+            }
+        }
+        for row in 0..n {
+            let mut dot = 0.0;
+            for col in (k + 1)..n {
+                dot += q.get(row, col) * v[col - k - 1];
+            }
+            let factor = 2.0 * dot / v_norm;
+            for col in (k + 1)..n {
+                q.add_at(row, col, -factor * v[col - k - 1]);
+            }
+        }
+    }
+    for row in 2..n {
+        for col in 0..(row - 1) {
+            h.set(row, col, 0.0);
+        }
+    }
+    (h, q)
+}
+// #endregion 🔖Hessenberg
+
+// #region 🔖RealSchur
+/// ⚙️ One Francis implicit-double-shift QR sweep on the unreduced Hessenberg window `h[l..=m, l..=m]`: forms the real quadratic `M = Hˢᵘᵇ² - trace·Hˢᵘᵇ + det·I` from the trailing 2x2's (possibly complex-conjugate) shifts, QR-factorizes `M` via [`qr_householder`], and applies the resulting orthogonal factor as a similarity transform. By the implicit-Q theorem this recovers exactly the bulge-chased Francis step's result without hand-rolled bulge chasing, at the cost of dense O(p³) work per sweep instead of exploiting the Hessenberg band — a fine trade at this crate's small (SfM-scale) matrix sizes. Also right-multiplies the accumulated `q` by the same factor over columns `l..=m`.
+fn francis_double_shift_step(h: &mut MatD, q: &mut MatD, l: usize, m: usize) {
+    let n = h.rows;
+    let p = m - l + 1;
+    let shift_trace = h.get(m - 1, m - 1) + h.get(m, m);
+    let shift_det = h.get(m - 1, m - 1) * h.get(m, m) - h.get(m - 1, m) * h.get(m, m - 1);
+    let mut sub = MatD::zeros(p, p);
+    for row in 0..p {
+        for col in 0..p {
+            sub.set(row, col, h.get(l + row, l + col));
+        }
+    }
+    let mut shifted = sub.matmul(&sub);
+    for (shifted_val, sub_val) in shifted.data.iter_mut().zip(sub.data.iter()) {
+        *shifted_val -= shift_trace * sub_val;
+    }
+    for i in 0..p {
+        shifted.add_at(i, i, shift_det);
+    }
+    let (qsub, _) = qr_householder(&shifted);
+    let qsub_t = qsub.transpose();
+    for col in 0..n {
+        let mut updated = vec![0.0; p];
+        for (row, slot) in updated.iter_mut().enumerate() {
+            let mut sum = 0.0;
+            for k in 0..p {
+                sum += qsub_t.get(row, k) * h.get(l + k, col);
+            }
+            *slot = sum;
+        }
+        for (row, &value) in updated.iter().enumerate() {
+            h.set(l + row, col, value);
+        }
+    }
+    for row in 0..n {
+        let mut updated = vec![0.0; p];
+        for (col, slot) in updated.iter_mut().enumerate() {
+            let mut sum = 0.0;
+            for k in 0..p {
+                sum += h.get(row, l + k) * qsub.get(k, col);
+            }
+            *slot = sum;
+        }
+        for (col, &value) in updated.iter().enumerate() {
+            h.set(row, l + col, value);
+        }
+    }
+    for row in 0..n {
+        let mut updated = vec![0.0; p];
+        for (col, slot) in updated.iter_mut().enumerate() {
+            let mut sum = 0.0;
+            for k in 0..p {
+                sum += q.get(row, l + k) * qsub.get(k, col);
+            }
+            *slot = sum;
+        }
+        for (col, &value) in updated.iter().enumerate() {
+            q.set(row, l + col, value);
+        }
+    }
+}
+
+/// 🎭 Real Schur decomposition `A = Q T Qᵀ` via Hessenberg reduction followed by Francis implicit-double-shift QR iteration with deflation: `Q` is orthogonal, `T` is quasi-upper-triangular (1x1 diagonal blocks for real eigenvalues, 2x2 blocks for complex-conjugate pairs). A subdiagonal entry deflates once it drops below `1e-13` relative to its neighboring diagonal magnitudes. Caps iterations at `30 * n` per deflation window before giving up with `AlgebraError::PowerIterationFailedConvergence` — the same "iterative solver ran out of iterations" semantic already reused by `conjugate_gradient`/`jacobi_eigen_symmetric`/`svd`, rather than adding a near-duplicate variant.
+pub fn real_schur(a: &MatD) -> Result<(MatD, MatD), AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    let n = a.rows;
+    if n < 2 {
+        let (h, q) = hessenberg(a);
+        return Ok((h, q));
+    }
+    let (mut h, mut q) = hessenberg(a);
+    let base_scale = 1.0 + a.data.iter().fold(0.0_f64, |acc, v| acc.max(v.abs()));
+    let eps = 1e-13;
+    let max_iter_per_window = 30 * n;
+    let mut m = n - 1;
+    let mut window_iters = 0usize;
+    while m > 0 {
+        let mut l = m;
+        while l > 0 {
+            let scale = h.get(l - 1, l - 1).abs() + h.get(l, l).abs();
+            let threshold = eps * if scale > 0.0 { scale } else { base_scale };
+            if h.get(l, l - 1).abs() <= threshold {
+                h.set(l, l - 1, 0.0);
+                break;
+            }
+            l -= 1;
+        }
+        if l == m {
+            m -= 1;
+            window_iters = 0;
+            continue;
+        }
+        if l + 1 == m {
+            m = m.saturating_sub(2);
+            window_iters = 0;
+            continue;
+        }
+        window_iters += 1;
+        if window_iters > max_iter_per_window {
+            return Err(AlgebraError::PowerIterationFailedConvergence { iterations: window_iters });
+        }
+        francis_double_shift_step(&mut h, &mut q, l, m);
+    }
+    Ok((h, q))
+}
+
+/// 🔍 Real eigenvalues of `a`, read off [`real_schur`]'s quasi-triangular `T`: each 1x1 diagonal block yields `(value, 0.0)`; each 2x2 block yields a conjugate pair `(re, ±im)` solved directly from the block's characteristic quadratic `λ² - trace·λ + det = 0` (mirrors [`Mat2::eigenvalues`] but does not discard the complex case). Order matches `T`'s diagonal, not sorted.
+pub fn real_eigenvalues(a: &MatD) -> Result<Vec<(f64, f64)>, AlgebraError> {
+    let (t, _) = real_schur(a)?;
+    let n = t.rows;
+    let mut out = Vec::with_capacity(n);
+    let mut i = 0;
+    while i < n {
+        let is_block = i + 1 < n && t.get(i + 1, i).abs() > 1e-9 * (1.0 + t.get(i, i).abs() + t.get(i + 1, i + 1).abs());
+        if is_block {
+            let a11 = t.get(i, i);
+            let a12 = t.get(i, i + 1);
+            let a21 = t.get(i + 1, i);
+            let a22 = t.get(i + 1, i + 1);
+            let trace = a11 + a22;
+            let det = a11 * a22 - a12 * a21;
+            let disc = trace * trace - 4.0 * det;
+            if disc >= 0.0 {
+                let sq = disc.sqrt();
+                out.push(((trace + sq) * 0.5, 0.0));
+                out.push(((trace - sq) * 0.5, 0.0));
+            } else {
+                let sq = (-disc).sqrt();
+                out.push((trace * 0.5, sq * 0.5));
+                out.push((trace * 0.5, -sq * 0.5));
+            }
+            i += 2;
+        } else {
+            out.push((t.get(i, i), 0.0));
+            i += 1;
+        }
+    }
+    Ok(out)
+}
+// #endregion 🔖RealSchur
+
+// #region 🔖CompanionRoots
+/// 🌱 Real (possibly complex-conjugate) roots of the polynomial `coeffs[0] + coeffs[1] x + ... + coeffs[n] xⁿ` via the Frobenius companion matrix's eigenvalues (through [`real_eigenvalues`]). `coeffs` is ascending-degree; the leading coefficient `coeffs[n]` must be nonzero, else `AlgebraError::Singular` — reused rather than adding a new variant, since a zero leading coefficient leaves the companion matrix without a well-defined monic normalization (the same "degenerate, no solution" semantic `Singular` already carries for `lu_solve`/`solve_llsq`). Feeds the 5-point essential-matrix action-matrix polynomial and P3P's quartic.
+pub fn poly_roots_companion(coeffs: &[f64]) -> Result<Vec<(f64, f64)>, AlgebraError> {
+    if coeffs.len() < 2 {
+        return Err(AlgebraError::Singular);
+    }
+    let degree = coeffs.len() - 1;
+    let leading = coeffs[degree];
+    if leading.abs() < 1e-300 {
+        return Err(AlgebraError::Singular);
+    }
+    let mut companion = MatD::zeros(degree, degree);
+    for row in 1..degree {
+        companion.set(row, row - 1, 1.0);
+    }
+    for (row, &coeff) in coeffs.iter().take(degree).enumerate() {
+        companion.set(row, degree - 1, -coeff / leading);
+    }
+    real_eigenvalues(&companion)
+}
+// #endregion 🔖CompanionRoots
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -2364,6 +2570,129 @@ mod tests {
         assert!((ata.get(1, 1) - 132.0).abs() < 1e-12);
         assert!((atb.get(0) - 53.0).abs() < 1e-12);
         assert!((atb.get(1) - 66.0).abs() < 1e-12);
+    }
+
+    fn planted_diagonal_conjugated(planted: &[f64], seed: u64) -> MatD {
+        let n = planted.len();
+        let (_, q) = hessenberg(&seeded_mat(n, n, seed));
+        let mut d = MatD::zeros(n, n);
+        for (i, &value) in planted.iter().enumerate() {
+            d.set(i, i, value);
+        }
+        q.matmul(&d).matmul(&q.transpose())
+    }
+
+    #[test]
+    fn hessenberg_similarity_orthogonality_and_shape() {
+        for (n, seed) in [(4, 101), (4, 202), (5, 303), (5, 404), (6, 505)] {
+            let a = seeded_mat(n, n, seed);
+            let (h, q) = hessenberg(&a);
+            assert_orthonormal_columns(&q);
+            for row in 2..n {
+                for col in 0..(row - 1) {
+                    assert!(h.get(row, col).abs() < 1e-8, "n={n} seed={seed} row={row} col={col} not zero: {}", h.get(row, col));
+                }
+            }
+            let recon = q.matmul(&h).matmul(&q.transpose());
+            for row in 0..n {
+                for col in 0..n {
+                    assert!((recon.get(row, col) - a.get(row, col)).abs() < 1e-7, "n={n} seed={seed} mismatch at ({row},{col})");
+                }
+            }
+        }
+    }
+
+    #[test]
+    #[should_panic(expected = "hessenberg requires a square matrix")]
+    fn hessenberg_rejects_non_square() {
+        let a = MatD::zeros(2, 3);
+        hessenberg(&a);
+    }
+
+    #[test]
+    fn real_schur_recovers_planted_real_spectrum() {
+        let planted = [1.0, -2.0, 3.5, 0.25, -7.0];
+        let a = planted_diagonal_conjugated(&planted, 909);
+        let mut eigs = real_eigenvalues(&a).expect("converges");
+        eigs.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+        let mut expected = planted.to_vec();
+        expected.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        for (got, exp) in eigs.iter().zip(expected.iter()) {
+            assert!(got.1.abs() < 1e-6, "expected real eigenvalue, got {got:?}");
+            assert!((got.0 - exp).abs() < 1e-6 * exp.abs().max(1.0), "got {got:?} expected {exp}");
+        }
+    }
+
+    #[test]
+    fn real_schur_recovers_planted_complex_conjugate_pairs() {
+        let blocks = [(2.0, 3.0), (-1.0, 5.0)];
+        let n = blocks.len() * 2;
+        let (_, q) = hessenberg(&seeded_mat(n, n, 1717));
+        let mut d = MatD::zeros(n, n);
+        for (idx, &(re, im)) in blocks.iter().enumerate() {
+            let base = idx * 2;
+            d.set(base, base, re);
+            d.set(base, base + 1, -im);
+            d.set(base + 1, base, im);
+            d.set(base + 1, base + 1, re);
+        }
+        let a = q.matmul(&d).matmul(&q.transpose());
+        let eigs = real_eigenvalues(&a).expect("converges");
+        let mut got: Vec<(f64, f64)> = eigs.iter().map(|&(re, im)| (re, im.abs())).collect();
+        got.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap().then(x.1.partial_cmp(&y.1).unwrap()));
+        let mut expected: Vec<(f64, f64)> = blocks.iter().flat_map(|&(re, im)| [(re, im.abs()), (re, im.abs())]).collect();
+        expected.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap().then(x.1.partial_cmp(&y.1).unwrap()));
+        for (g, e) in got.iter().zip(expected.iter()) {
+            assert!((g.0 - e.0).abs() < 1e-6, "real part mismatch: got {g:?} expected {e:?}");
+            assert!((g.1 - e.1).abs() < 1e-6, "imag magnitude mismatch: got {g:?} expected {e:?}");
+        }
+    }
+
+    #[test]
+    fn real_schur_rejects_non_square() {
+        let a = MatD::zeros(2, 3);
+        assert!(matches!(real_schur(&a), Err(AlgebraError::DimensionMismatch { .. })));
+    }
+
+    #[test]
+    fn poly_roots_companion_matches_known_real_quartic_roots() {
+        let coeffs = [24.0, -50.0, 35.0, -10.0, 1.0];
+        let mut roots = poly_roots_companion(&coeffs).expect("converges");
+        roots.sort_by(|x, y| x.0.partial_cmp(&y.0).unwrap());
+        let expected = [1.0, 2.0, 3.0, 4.0];
+        for (got, exp) in roots.iter().zip(expected.iter()) {
+            assert!(got.1.abs() < 1e-6, "expected real root, got {got:?}");
+            assert!((got.0 - exp).abs() < 1e-6, "got {got:?} expected {exp}");
+        }
+    }
+
+    #[test]
+    fn poly_roots_companion_matches_known_complex_conjugate_pairs() {
+        let coeffs = [4.0, 0.0, 5.0, 0.0, 1.0];
+        let roots = poly_roots_companion(&coeffs).expect("converges");
+        let mut mags: Vec<f64> = roots
+            .iter()
+            .map(|&(re, im)| {
+                assert!(re.abs() < 1e-6, "expected zero real part, got {re}");
+                im.abs()
+            })
+            .collect();
+        mags.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert!((mags[0] - 1.0).abs() < 1e-6);
+        assert!((mags[1] - 1.0).abs() < 1e-6);
+        assert!((mags[2] - 2.0).abs() < 1e-6);
+        assert!((mags[3] - 2.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn poly_roots_companion_rejects_zero_leading_coefficient() {
+        let coeffs = [1.0, 2.0, 0.0];
+        assert_eq!(poly_roots_companion(&coeffs), Err(AlgebraError::Singular));
+    }
+
+    #[test]
+    fn poly_roots_companion_rejects_too_short_input() {
+        assert_eq!(poly_roots_companion(&[5.0]), Err(AlgebraError::Singular));
     }
 
     fn tridiagonal_spd(n: usize) -> CsrMatrix {

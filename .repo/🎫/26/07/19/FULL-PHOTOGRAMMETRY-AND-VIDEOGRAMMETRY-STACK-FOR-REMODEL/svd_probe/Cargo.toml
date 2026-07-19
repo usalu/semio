@@ -1,0 +1,9 @@
+[package]
+name = "svd_probe"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+mathematical_algebra = { path = "/Users/ueli/Documents/semio/mathematical/algebra/rs" }
+
+[workspace]

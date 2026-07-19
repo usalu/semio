@@ -1,0 +1,13 @@
+{
+  "title": "Media Artifact WIT and SDK Contract",
+  "emoji": "📤",
+  "status": "open",
+  "description": "Add typed media artifact exchange to the plugin ABI: WIT surface (media-artifact record + consume-media/produce-media funcs in the `plugin` interface), native host-side calling machinery in framework/plugin/host/rs/lib.rs, web/dev host calling machinery in the JS dev host, and SDK default trait-method implementations (consume_media/produce_media) for DocumentApp/VcsDocumentApp in framework/plugin/rs/lib.rs that reuse existing document snapshot ingest / read paths. Part of the typed media dataflow program (S/Semios media graph plugins exchanging typed media artifacts over the WASM component ABI). Sibling ticket R1b is concurrently adding MediaContract near framework/product/os/core/rs/lib.rs's media_graph region — do not touch that file's media_graph region or s/plugin/rs/lib.rs's connect handlers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2161"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8e0104413c994ea5ac15b722ce65b366"
+  ]
+}

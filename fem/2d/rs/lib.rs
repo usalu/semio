@@ -574,7 +574,7 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGeometry, Fem
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(Box::new(fem_core::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: fem_core::elements2d::PlaneKind::Stress }));
+            elements.push(Box::new(fem_core::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: fem_core::elements2d::PlaneKind::Stress, density: material.rho }));
         }
 
         meshed_regions.push(MeshedRegion { region_id: region.id.clone(), material_id: region.material_id.clone(), thickness: region.thickness, node_ids, points: tri_mesh.points, tris: tri_mesh.tris });
@@ -585,10 +585,10 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGeometry, Fem
 
 /// ⚖️ Lumped self-weight nodal loads (downward, global `-Y`) — `ρ·A·L` split evenly at a bar/beam's
 /// two end nodes, `ρ·thickness·triangleArea` split evenly at each region triangle's 3 nodes, summed
-/// per node. A simple document-bridge translation feeding the frozen `fem2d_solve`/`Model` (which has
-/// no native self-weight concept); `fem2d_solve_all` additionally gets self-weight natively through
-/// `fem_core::analyses`' own `element.mass()`-based pipeline for `Bar2`/`BeamEb2` (now real density),
-/// though NOT for `Tri3Cst` regions, since `Tri3Cst` implements no `mass()`.
+/// per node. A simple document-bridge translation feeding ONLY the frozen `fem2d_solve`/`build_model`
+/// path (which has no native self-weight concept) — `fem2d_solve_all` never calls this helper, since it
+/// gets self-weight natively through `fem_core::analyses`' own `element.mass()`-based pipeline for
+/// EVERY massed element (`Bar2`/`BeamEb2` and now `Tri3Cst` regions too), so the two paths never overlap.
 fn self_weight_nodal_loads(doc: &Fem2dDocument, regions: &[MeshedRegion]) -> Vec<NodalLoad> {
     let mut totals: HashMap<String, f64> = HashMap::new();
 
@@ -824,6 +824,11 @@ pub struct RegionMesh {
     pub region_id: String,
     pub points: Vec<[f64; 2]>,
     pub tris: Vec<[u32; 3]>,
+    /// 🪪 Per-point node id, SAME coincident-node resolution `build_nodes_and_elements` uses (existing
+    /// doc node within `1e-9` reused, else synthesized `"{region_id}_m{point_index}"`) — lets a caller
+    /// (`fem-plugin`'s nodal-averaged contour rendering) map `fem2d_nodal_von_mises`'s node-keyed map
+    /// straight onto this mesh's triangles.
+    pub node_ids: Vec<String>,
 }
 
 /// 🗺️ Triangulates every `FemRegion` in `doc` (same `fem_core::mesh::triangulate` call as
@@ -835,9 +840,30 @@ pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dE
         let domain = fem_core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = fem_core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
         let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
-        out.push(RegionMesh { region_id: region.id.clone(), points: tri_mesh.points, tris: tri_mesh.tris });
+        let node_ids = tri_mesh
+            .points
+            .iter()
+            .enumerate()
+            .map(|(point_index, p)| match doc.nodes.iter().find(|n| (n.x - p[0]).abs() < 1e-9 && (n.y - p[1]).abs() < 1e-9) {
+                Some(n) => n.id.clone(),
+                None => format!("{}_m{}", region.id, point_index),
+            })
+            .collect();
+        out.push(RegionMesh { region_id: region.id.clone(), points: tri_mesh.points, tris: tri_mesh.tris, node_ids });
     }
     Ok(out)
+}
+
+/// 🎨 Nodal-averaged von Mises stress for `case_id`'s solved result (via `fem2d_solve_all`, so `case_id`
+/// may name either a `FemLoadCase` or a `FemCombination`), keyed by node id — the document-layer bridge
+/// to `fem_core::analyses::nodal_averaged_scalar`, feeding `fem-plugin`'s banded contour rendering.
+pub fn fem2d_nodal_von_mises(doc: &Fem2dDocument, case_id: &str) -> Result<HashMap<String, f64>, Fem2dError> {
+    let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
+    let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
+    let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
+    let results = fem2d_solve_all(doc)?;
+    let result = results.get(case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
+    Ok(fem_core::analyses::nodal_averaged_scalar(&model, result, fem_core::analyses::StressScalar::VonMises))
 }
 // #endregion 🔖MeshPreview
 // #endregion 🔖Bridge
@@ -1142,6 +1168,23 @@ mod tests {
         assert!(total_ty_reaction.abs() > 1e-3, "expected nonzero reactions from self-weight, got {total_ty_reaction}");
         assert!((total_ty_reaction - expected).abs() / expected < 0.01, "reaction sum {total_ty_reaction} vs expected {expected}");
     }
+
+    /// ⚖️ Region self-weight through the NATIVE `fem2d_solve_all` path (now possible since `Tri3Cst`
+    /// gained `mass()`): total vertical reaction must equal `ρ·thickness·Area·g` — exercised on the SAME
+    /// `rectangle_region_doc` fixture `build_model_meshes_region_and_solves` only checks for a small
+    /// residual on, now checked for the exact expected total instead. This also guards against
+    /// double-counting: `fem2d_solve_all` must NOT also apply the lumped `self_weight_nodal_loads`
+    /// translation (that helper is exclusive to `build_model`/`fem2d_solve` — see its doc comment).
+    #[test]
+    fn region_self_weight_via_solve_all_matches_total_mass_times_gravity() {
+        let doc = rectangle_region_doc();
+        let results = fem2d_solve_all(&doc).expect("region self-weight solves via solve_all");
+        let result = results.get("self").unwrap();
+        let total_ty_reaction: f64 = result.reactions.iter().filter(|r| r.dof == Dof::Ty).map(|r| r.value).sum();
+        let (thickness, area, rho) = (0.02, 4.0 * 2.0, 7850.0);
+        let expected = rho * thickness * area * GRAVITY_G;
+        assert!((total_ty_reaction - expected).abs() / expected < 0.01, "reaction sum {total_ty_reaction} vs expected {expected}");
+    }
     // #endregion 🔖SelfWeight
 
     // #region 🔖SolveAll
@@ -1296,8 +1339,32 @@ mod tests {
         assert_eq!(meshes[0].region_id, "r1");
         assert!(!meshes[0].tris.is_empty(), "expected at least one triangle");
         assert!(!meshes[0].points.is_empty(), "expected mesh points");
+        assert_eq!(meshes[0].node_ids.len(), meshes[0].points.len(), "one node id per mesh point");
+        // `rectangle_region_doc`'s 4 outline corners coincide with existing doc nodes `c0..c3`, so those
+        // 4 mesh points must resolve to the doc's own node ids, not synthesized `r1_m*` ids.
+        for corner_id in ["c0", "c1", "c2", "c3"] {
+            assert!(meshes[0].node_ids.contains(&corner_id.to_string()), "expected corner {corner_id} to be reused, got {:?}", meshes[0].node_ids);
+        }
     }
     // #endregion 🔖MeshPreview
+
+    // #region 🔖NodalVonMises
+    /// 🎨 `fem2d_nodal_von_mises` returns one value per mesh node, and a uniform area-pressure load
+    /// (biaxial-ish but still smoothly varying membrane stress) produces FINITE values at every node —
+    /// not a tight numeric benchmark (the region isn't a pure patch-test field), just a wiring check that
+    /// the document-bridge correctly plumbs `fem_core::analyses::nodal_averaged_scalar`.
+    #[test]
+    fn fem2d_nodal_von_mises_returns_one_value_per_mesh_node() {
+        let mut doc = rectangle_region_doc();
+        doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
+        let averaged = fem2d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
+        let meshes = fem2d_mesh_preview(&doc).expect("mesh preview succeeds");
+        for node_id in &meshes[0].node_ids {
+            let v = *averaged.get(node_id).unwrap_or_else(|| panic!("missing averaged value for node {node_id}"));
+            assert!(v.is_finite() && v >= 0.0, "node {node_id}: von mises {v} should be finite and non-negative");
+        }
+    }
+    // #endregion 🔖NodalVonMises
 
     // #region 🔖ExampleFixture
     #[test]
