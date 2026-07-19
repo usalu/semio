@@ -5217,6 +5217,20 @@ name = "mathematical_algebra"
 version = "0.1.0"
 
 [[package]]
+name = "mathematical_causal"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_probability",
+ "mathematical_random",
+ "mathematical_statistics",
+ "mathematical_tabular",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "mathematical_geometry"
 version = "0.1.0"
 dependencies = [
@@ -5631,8 +5645,37 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_probability"
+version = "0.1.0"
+dependencies = [
+ "mathematical_random",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "mathematical_random"
 version = "0.1.0"
+
+[[package]]
+name = "mathematical_statistics"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_probability",
+ "mathematical_tabular",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "mathematical_tabular"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
 
 [[package]]
 name = "matrixmultiply"

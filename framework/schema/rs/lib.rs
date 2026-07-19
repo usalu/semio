@@ -18,6 +18,10 @@ pub enum SchemaError {
 }
 //#endregion 🔖Errors
 
+//#region 🔖EntityCatalog
+include!("generated.rs");
+//#endregion 🔖EntityCatalog
+
 //#region 🔖SchemaRegistry
 pub struct SchemaRegistry {
     schemas: HashMap<String, Value>,

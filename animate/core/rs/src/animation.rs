@@ -1,6 +1,5 @@
 //! 🎞️ Animation trait, leaf animations, composites, and `.animate()` builder.
 
-
 use crate::rate::{map_child_alpha, RateFunc};
 use crate::sobject::{Sobject, VSobject};
 use mathematical_geometry::{cubic_point_at, Affine, CubicBez, Point, Vec2};
@@ -58,11 +57,7 @@ where
 }
 
 /// ▶️ Drive an animation to a parent alpha in [0,1], mutating scene mobjects.
-pub fn interpolate_at(
-    mobjects: &mut HashMap<u64, Box<dyn Sobject>>,
-    animation: &mut dyn Animation,
-    parent_alpha: f64,
-) {
+pub fn interpolate_at(mobjects: &mut HashMap<u64, Box<dyn Sobject>>, animation: &mut dyn Animation, parent_alpha: f64) {
     animation.apply(mobjects, parent_alpha);
 }
 
@@ -77,13 +72,7 @@ pub struct Create {
 
 impl Create {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::linear,
-            started: false,
-            snapshot_ratio: 1.0,
-        }
+        Self { target_id, run_time, rate: crate::rate::linear, started: false, snapshot_ratio: 1.0 }
     }
 
     pub fn with_rate(mut self, rate: RateFunc) -> Self {
@@ -133,14 +122,7 @@ pub struct FadeIn {
 
 impl FadeIn {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            target_opacity: 1.0,
-            start_opacity: 0.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, target_opacity: 1.0, start_opacity: 0.0, primed: false }
     }
 }
 
@@ -188,13 +170,7 @@ pub struct FadeOut {
 
 impl FadeOut {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, start_opacity: 1.0, primed: false }
     }
 }
 
@@ -240,12 +216,7 @@ pub struct Transform {
 
 impl Transform {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -292,13 +263,7 @@ pub struct Rotate {
 
 impl Rotate {
     pub fn new(target_id: u64, angle: f64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            angle,
-            run_time,
-            rate: crate::rate::smooth,
-            start_transform: None,
-        }
+        Self { target_id, angle, run_time, rate: crate::rate::smooth, start_transform: None }
     }
 }
 
@@ -343,12 +308,7 @@ pub struct MoveAlongPath {
 
 impl MoveAlongPath {
     pub fn new(target_id: u64, path: CubicBez, run_time: f64) -> Self {
-        Self {
-            target_id,
-            path,
-            run_time,
-            rate: crate::rate::linear,
-        }
+        Self { target_id, path, run_time, rate: crate::rate::linear }
     }
 
     pub fn position_at(&self, alpha: f64) -> Point {
@@ -391,12 +351,7 @@ pub struct AnimationGroup {
 impl AnimationGroup {
     pub fn new(animations: Vec<Box<dyn Animation>>) -> Self {
         let n = animations.len();
-        Self {
-            animations,
-            run_time: None,
-            rate: crate::rate::linear,
-            begun: vec![false; n],
-        }
+        Self { animations, run_time: None, rate: crate::rate::linear, begun: vec![false; n] }
     }
 
     pub fn with_lag_ratio(self, lag_ratio: f64) -> LaggedStart {
@@ -456,14 +411,7 @@ impl Succession {
         let durations: Vec<f64> = animations.iter().map(|a| a.duration()).collect();
         let total = durations.iter().sum();
         let n = animations.len();
-        Self {
-            animations,
-            rate: crate::rate::linear,
-            active_index: None,
-            begun: vec![false; n],
-            durations,
-            total,
-        }
+        Self { animations, rate: crate::rate::linear, active_index: None, begun: vec![false; n], durations, total }
     }
 
     fn slot_bounds(&self, index: usize) -> (f64, f64) {
@@ -542,10 +490,7 @@ pub struct LaggedStart {
 
 impl LaggedStart {
     pub fn new(animations: Vec<Box<dyn Animation>>, lag_ratio: f64) -> Self {
-        Self {
-            group: AnimationGroup::new(animations),
-            lag_ratio: lag_ratio.clamp(0.0, 1.0),
-        }
+        Self { group: AnimationGroup::new(animations), lag_ratio: lag_ratio.clamp(0.0, 1.0) }
     }
 
     fn from_group(group: AnimationGroup, lag_ratio: f64) -> Self {
@@ -621,14 +566,7 @@ where
     F: Fn(usize) -> Box<dyn Animation> + Send,
 {
     pub fn new(count: usize, lag_ratio: f64, run_time: f64, factory: F) -> Self {
-        Self {
-            count,
-            lag_ratio,
-            factory,
-            run_time,
-            cache: (0..count).map(|_| None).collect(),
-            begun: vec![false; count],
-        }
+        Self { count, lag_ratio, factory, run_time, cache: (0..count).map(|_| None).collect(), begun: vec![false; count] }
     }
 }
 
@@ -654,11 +592,7 @@ where
     fn apply(&mut self, mobjects: &mut HashMap<u64, Box<dyn Sobject>>, parent_alpha: f64) {
         let alpha = eased_alpha(self, parent_alpha);
         for i in 0..self.count {
-            let start = if self.count <= 1 {
-                0.0
-            } else {
-                i as f64 / (self.count - 1) as f64 * self.lag_ratio
-            };
+            let start = if self.count <= 1 { 0.0 } else { i as f64 / (self.count - 1) as f64 * self.lag_ratio };
             let child_alpha = map_child_alpha(alpha, start, 1.0);
             if child_alpha <= 0.0 {
                 continue;
@@ -678,11 +612,7 @@ where
         }
     }
     fn get_all_mobjects(&self) -> Vec<u64> {
-        self.cache
-            .iter()
-            .flatten()
-            .flat_map(|a| a.get_all_mobjects())
-            .collect()
+        self.cache.iter().flatten().flat_map(|a| a.get_all_mobjects()).collect()
     }
 }
 
@@ -721,11 +651,7 @@ pub struct AnimateBuilder<'a> {
 
 impl<'a> AnimateBuilder<'a> {
     pub fn new(target: &'a mut dyn Sobject, run_time: f64) -> Self {
-        Self {
-            target,
-            run_time,
-            rate: crate::rate::smooth,
-        }
+        Self { target, run_time, rate: crate::rate::smooth }
     }
 
     pub fn with_rate(mut self, rate: RateFunc) -> Self {
@@ -734,24 +660,11 @@ impl<'a> AnimateBuilder<'a> {
     }
 
     pub fn fade_in(self) -> FadeIn {
-        FadeIn {
-            target_id: self.target.id(),
-            run_time: self.run_time,
-            rate: self.rate,
-            target_opacity: 1.0,
-            start_opacity: 0.0,
-            primed: false,
-        }
+        FadeIn { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, target_opacity: 1.0, start_opacity: 0.0, primed: false }
     }
 
     pub fn fade_out(self) -> FadeOut {
-        FadeOut {
-            target_id: self.target.id(),
-            run_time: self.run_time,
-            rate: self.rate,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        FadeOut { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, start_opacity: 1.0, primed: false }
     }
 
     pub fn create(self) -> Create {
@@ -759,12 +672,7 @@ impl<'a> AnimateBuilder<'a> {
     }
 
     pub fn transform(self) -> Transform {
-        Transform {
-            target_id: self.target.id(),
-            run_time: self.run_time,
-            rate: self.rate,
-            primed: false,
-        }
+        Transform { target_id: self.target.id(), run_time: self.run_time, rate: self.rate, primed: false }
     }
 
     pub fn rotate(self, angle: f64) -> Rotate {
@@ -787,13 +695,7 @@ pub struct Shift {
 
 impl Shift {
     pub fn new(target_id: u64, delta: Vec2, run_time: f64) -> Self {
-        Self {
-            target_id,
-            delta,
-            run_time,
-            rate: crate::rate::smooth,
-            start_transform: None,
-        }
+        Self { target_id, delta, run_time, rate: crate::rate::smooth, start_transform: None }
     }
 }
 
@@ -842,13 +744,7 @@ pub struct ApplyMethod {
 
 impl ApplyMethod {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            scale_factor: 1.2,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, scale_factor: 1.2, start_transform: None }
     }
 }
 
@@ -897,12 +793,7 @@ pub struct FocusOn {
 
 impl FocusOn {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_transform: None }
     }
 }
 
@@ -952,13 +843,7 @@ pub struct Blink {
 
 impl Blink {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_opacity: 1.0, primed: false }
     }
 }
 
@@ -1004,12 +889,7 @@ pub struct TracedPath {
 
 impl TracedPath {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::linear,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::linear, primed: false }
     }
 }
 
@@ -1050,10 +930,7 @@ pub struct ChangeSpeed {
 
 impl ChangeSpeed {
     pub fn new(animation: Box<dyn Animation>, speed_factor: f64) -> Self {
-        Self {
-            animation,
-            speed_factor: speed_factor.max(1e-9),
-        }
+        Self { animation, speed_factor: speed_factor.max(1e-9) }
     }
 }
 
@@ -1106,10 +983,7 @@ pub fn apply_parent_opacity_tree(root: &mut dyn Sobject, parent_opacity: f64) {
 
 /// 🎞️ Compile animations into a flat timeline with durations.
 pub fn compile_animations(animations: &[Box<dyn Animation>]) -> Vec<Duration> {
-    animations
-        .iter()
-        .map(|a| Duration::from_secs_f64(a.duration().max(0.0)))
-        .collect()
+    animations.iter().map(|a| Duration::from_secs_f64(a.duration().max(0.0))).collect()
 }
 
 #[cfg(test)]

@@ -156,7 +156,8 @@ use semio_framework_core::{
     WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
-    collect_window_kind_ids_from_layout, ActionDescriptor, NamedLayout, UiNode, UiTreeItemNode, UiTreeNode,
+    collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ActionDescriptor, NamedLayout, UiButtonNode,
+    UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode,
     UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
 };
 use serde::Serialize;
@@ -1197,6 +1198,185 @@ mod panel_kit_tests {
 }
 //#endregion 🔖PanelKit
 
+//#region 🔖FormKit
+// 📋 Shared form-panel builder — lifts the `Section > labeled Field rows > submit Button` skeleton
+// (and the sibling `entity_detail` read-only `KeyValue` summary block) duplicated across plugin crates
+// that render declarative forms/detail panels, mirroring `PanelTreeBuilder`'s namespaced builder-pattern
+// shape above (`namespace` prefixes every id, method chaining ends in `.build() -> UiNode`).
+
+/// 📋 Fluent builder for a `Section` of labeled `Field` rows ending in an optional submit `Button` —
+/// same namespaced-id / method-chaining shape as `PanelTreeBuilder`.
+pub struct FormPanelBuilder {
+    namespace: String,
+    fields: Vec<UiNode>,
+    submit: Option<UiButtonNode>,
+}
+
+impl FormPanelBuilder {
+    /// 📋 `namespace` prefixes every field id built via `.field_id()`/`.field()`/`.from_dictionary()`.
+    pub fn new(namespace: impl Into<String>) -> Self {
+        Self { namespace: namespace.into(), fields: Vec::new(), submit: None }
+    }
+
+    /// 📋 Builds a namespaced field id: `"{namespace}.field.{id}"` — mirrors `PanelTreeBuilder::item_id`.
+    pub fn field_id(&self, id: &str) -> String {
+        format!("{}.field.{id}", self.namespace)
+    }
+
+    /// 📋 Adds one labeled field row: `control` wraps into a `UiFieldNode` via `ui_control_to_node`.
+    pub fn field(mut self, id: &str, label: &str, description: Option<String>, control: UiControlNode) -> Self {
+        let field_id = self.field_id(id);
+        self.fields.push(UiNode::Field(UiFieldNode {
+            id: field_id,
+            label: label.into(),
+            description,
+            required: None,
+            error: None,
+            child: Box::new(ui_control_to_node(control)),
+        }));
+        self
+    }
+
+    /// 📋 Routes the OS `form.dictionary` resource shape (see the `ResourceKindSpec { id:
+    /// "form.dictionary", source_format: "forms.dictionary", .. }` registered by `forms/plugin`'s
+    /// `create_forms_app`) into a sequence of text-input field rows: each top-level entry in the
+    /// `dictionary_json` array — `{ "id", "label"?, "description"?, "value"? }` — becomes one field
+    /// dispatching the shared `on_change` action (its `args` are left to the caller; the emitted input's
+    /// own id already carries which field changed).
+    pub fn from_dictionary(mut self, dictionary_json: &Value, on_change: ActionDescriptor) -> Self {
+        let Some(entries) = dictionary_json.as_array() else { return self };
+        for entry in entries {
+            let Some(id) = entry.get("id").and_then(Value::as_str) else { continue };
+            let label = entry.get("label").and_then(Value::as_str).unwrap_or(id).to_string();
+            let description = entry.get("description").and_then(Value::as_str).map(str::to_string);
+            let value = entry.get("value").and_then(Value::as_str).unwrap_or_default().to_string();
+            let field_id = self.field_id(id);
+            let control = UiControlNode::Input(UiInputNode {
+                id: field_id,
+                input_kind: "text".into(),
+                value,
+                placeholder: None,
+                commit: None,
+                min: None,
+                max: None,
+                step: None,
+                accept: None,
+                on_change: on_change.clone(),
+            });
+            self = self.field(id, &label, description, control);
+        }
+        self
+    }
+
+    /// 📋 Sets the trailing submit `Button` row.
+    pub fn submit(mut self, label: &str, action: ActionDescriptor) -> Self {
+        self.submit = Some(UiButtonNode {
+            id: Some(self.field_id("submit")),
+            icon_id: String::new(),
+            label: label.into(),
+            action,
+            style: None,
+            disabled: None,
+            loading: None,
+        });
+        self
+    }
+
+    /// 📋 Builds `Section > Fields > Button` — the section id is the builder's namespace.
+    pub fn build(self) -> UiNode {
+        let mut children = self.fields;
+        if let Some(submit) = self.submit {
+            children.push(UiNode::Button(submit));
+        }
+        UiNode::Section(UiSectionNode { id: self.namespace, label: None, default_open: Some(true), loading: None, children })
+    }
+}
+
+/// 📋 A read-only entity-detail panel: `title`/`subtitle` header text, a `KeyValue` summary block built
+/// from `entries` (reusing `ui_wgpu`'s existing `UiKeyValueEntry` rather than a duplicate local type),
+/// and trailing action buttons.
+pub fn entity_detail(title: &str, subtitle: Option<&str>, entries: Vec<UiKeyValueEntry>, actions: Vec<UiButtonNode>) -> UiNode {
+    let mut children = vec![ui_text(title)];
+    if let Some(subtitle) = subtitle {
+        children.push(ui_text(subtitle));
+    }
+    children.push(UiNode::KeyValue(UiKeyValueNode { entries }));
+    children.extend(actions.into_iter().map(UiNode::Button));
+    ui_stack_vertical(children)
+}
+
+#[cfg(test)]
+mod form_kit_tests {
+    use super::*;
+
+    #[test]
+    fn form_panel_builder_wraps_a_field_control_and_submit_button() {
+        let on_change = ActionDescriptor { controller_id: "app".into(), action: "setValue".into(), args: None };
+        let submit_action = ActionDescriptor { controller_id: "app".into(), action: "submit".into(), args: None };
+        let node = FormPanelBuilder::new("ns-play-form")
+            .field(
+                "name",
+                "Name",
+                Some("Full name".into()),
+                UiControlNode::Input(UiInputNode {
+                    id: "ns-play-form.field.name".into(),
+                    input_kind: "text".into(),
+                    value: String::new(),
+                    placeholder: None,
+                    commit: None,
+                    min: None,
+                    max: None,
+                    step: None,
+                    accept: None,
+                    on_change,
+                }),
+            )
+            .submit("Submit", submit_action)
+            .build();
+        let UiNode::Section(section) = node else { panic!("expected a Section node") };
+        assert_eq!(section.id, "ns-play-form");
+        assert_eq!(section.children.len(), 2);
+        let UiNode::Field(field) = &section.children[0] else { panic!("expected a Field node") };
+        assert_eq!(field.id, "ns-play-form.field.name");
+        assert_eq!(field.description.as_deref(), Some("Full name"));
+        let UiNode::Button(button) = &section.children[1] else { panic!("expected a Button node") };
+        assert_eq!(button.label, "Submit");
+    }
+
+    #[test]
+    fn form_panel_builder_from_dictionary_routes_entries_into_field_rows() {
+        let on_change = ActionDescriptor { controller_id: "app".into(), action: "setValue".into(), args: None };
+        let dictionary = serde_json::json!([
+            { "id": "email", "label": "Email", "description": "Contact email", "value": "a@b.com" },
+            { "id": "phone" },
+        ]);
+        let node = FormPanelBuilder::new("ns-play-form").from_dictionary(&dictionary, on_change).build();
+        let UiNode::Section(section) = node else { panic!("expected a Section node") };
+        assert_eq!(section.children.len(), 2);
+        let UiNode::Field(email_field) = &section.children[0] else { panic!("expected a Field node") };
+        assert_eq!(email_field.id, "ns-play-form.field.email");
+        assert_eq!(email_field.label, "Email");
+        let UiNode::Field(phone_field) = &section.children[1] else { panic!("expected a Field node") };
+        assert_eq!(phone_field.label, "phone");
+    }
+
+    #[test]
+    fn entity_detail_builds_a_stack_with_header_key_value_and_actions() {
+        let action = ActionDescriptor { controller_id: "app".into(), action: "edit".into(), args: None };
+        let node = entity_detail(
+            "Widget",
+            Some("A widget"),
+            vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into() }],
+            vec![UiButtonNode { id: None, icon_id: "edit".into(), label: "Edit".into(), action, style: None, disabled: None, loading: None }],
+        );
+        let UiNode::Stack(stack) = node else { panic!("expected a Stack node") };
+        assert_eq!(stack.children.len(), 4);
+        let UiNode::KeyValue(key_value) = &stack.children[2] else { panic!("expected a KeyValue node") };
+        assert_eq!(key_value.entries[0].value, "gizmo");
+    }
+}
+//#endregion 🔖FormKit
+
 //#region 🔖Terminology
 // 🗣️ Shared locale-label resolution — replaces the ~25x hand-rolled `struct XLabels { .. }` +
 // `const X_LABELS_EN/DE` + `fn x_labels(view_state) -> &'static XLabels` pattern duplicated per app,
@@ -1262,6 +1442,13 @@ macro_rules! app_labels {
             }
         }
     };
+}
+
+/// 🗣️ Picks `de` or `en` by `is_de` — replaces the ~inline `if is_de { "..." } else { "..." }` pairs
+/// duplicated per app for one-off labels that don't warrant a full `app_labels!` struct or a
+/// `localized_label_map` entry.
+pub fn bilingual(en: &str, de: &str, is_de: bool) -> String {
+    (if is_de { de } else { en }).to_string()
 }
 
 /// 🗣️ Builds an (id -> localized label) map from `(id, en, de)` triples — replaces the per-crate
@@ -1344,6 +1531,12 @@ mod terminology_tests {
         assert_eq!(resolve_labels::<SampleLabels>(&en).greeting, "Hello");
         assert_eq!(resolve_labels::<SampleLabels>(&de).greeting, "Hallo");
         assert_eq!(resolve_labels::<SampleLabels>(&none).greeting, "Hello");
+    }
+
+    #[test]
+    fn bilingual_picks_en_or_de_by_flag() {
+        assert_eq!(bilingual("Hello", "Hallo", false), "Hello");
+        assert_eq!(bilingual("Hello", "Hallo", true), "Hallo");
     }
 
     #[test]

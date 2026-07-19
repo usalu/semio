@@ -1,0 +1,13 @@
+{
+  "title": "Causal Inference Framework for Mathematical Crates",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Turn `mathematical/` into a full mathematical framework by adding a causal-inference stack: a new `mathematical/causal/rs` crate (`mathematical_causal`) that computes causal skeletons from tabular data and answers what-if (interventional/counterfactual) questions, plus three general-purpose reusable substrate crates it depends on: `mathematical/tabular/rs` (column-oriented dataset with continuous/categorical columns, CSV, missing values), `mathematical/probability/rs` (special functions + distributions with cdf/quantile/sampling), `mathematical/statistics/rs` (descriptive stats, correlation/partial-correlation, OLS/logistic regression, hypothesis tests, information theory).\n\nCausal scope (Maximal, per plan approved in /Users/ueli/.claude/plans/turn-mathematical-into-a-ethereal-biscuit.md): DAG/CPDAG/PAG graph layer, d-separation, CI-test abstraction (Fisher-z, G²), PC-stable discovery, GES (BIC score-based), DirectLiNGAM, FCI (latent confounders → PAG), backdoor/frontdoor identification, full Shpitser-Pearl ID algorithm, linear-Gaussian SCM (fit/simulate/intervene/counterfactual via abduction-action-prediction), discrete CPT-based SCM with variable elimination, ATE estimators (naive/g-formula/IPW with bootstrap CI), and a WhatIf query API.\n\nZero new external dependencies — all numerics in-house (matches the sibling NetworkX-parity effort's philosophy). Depends only on `mathematical_graph` core (not the in-flight algorithm sub-crates), `mathematical_algebra`, and a `mathematical_random`-compatible `RandomSource` trait.\n\nFull design is in the approved plan file: /Users/ueli/.claude/plans/turn-mathematical-into-a-ethereal-biscuit.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2129"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4ef09d12b17e40a8a545b3d7b61fec23"
+  ]
+}

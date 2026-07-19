@@ -20,11 +20,6 @@ declare global {
   interface Window {
     __COMPOSE_E2E_KIT_FOLDER__?: string;
     __COMPOSE_E2E_KIT_FILE__?: string;
-    windowControls: {
-      minimize(): Promise<unknown>;
-      maximize(): Promise<unknown>;
-      close(): Promise<unknown>;
-    };
     os: {
       getUserId(): Promise<string>;
     };

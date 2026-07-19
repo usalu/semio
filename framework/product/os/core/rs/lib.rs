@@ -15,7 +15,7 @@ pub mod host {
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use ui_wgpu::{ui_stack_vertical, ui_text, ActionDescriptor, UiButtonNode, UiNode};
+    use ui_wgpu::{ui_recovery_panel, UiNode};
     use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -229,41 +229,12 @@ pub mod host {
 
         //#region 🔖ActionKernel
 
+        /// @emoji 🩺 Delegates to `ui_wgpu::ui_recovery_panel`'s `🔖StatusBuilders` builder — this host
+        /// has no locale on hand at this call site (no `ViewState` threaded into `recovery_ui`), so
+        /// `is_de` is pinned to `false` (English) until a locale source is plumbed through.
         pub fn recovery_ui(&self, plugin_id: &str) -> UiNode {
-            let state = self.supervisor.get(plugin_id).copied().unwrap_or(PluginSupervisorState::Unloaded);
-            if state != PluginSupervisorState::Quarantined {
-                return ui_stack_vertical(vec![ui_text("Plugin is not quarantined.")]);
-            }
-            ui_stack_vertical(vec![
-                ui_text("This app stopped responding."),
-                UiNode::Button(UiButtonNode {
-                    id: Some("recovery-restart-app".into()),
-                    icon_id: "restart".into(),
-                    label: "Restart app".into(),
-                    action: ActionDescriptor { controller_id: plugin_id.into(), action: "recovery.restartApp".into(), args: None },
-                    style: None,
-                    disabled: None,
-                    loading: None,
-                }),
-                UiNode::Button(UiButtonNode {
-                    id: Some("recovery-disable-plugin".into()),
-                    icon_id: "disable".into(),
-                    label: "Disable plugin".into(),
-                    action: ActionDescriptor { controller_id: plugin_id.into(), action: "recovery.disablePlugin".into(), args: None },
-                    style: None,
-                    disabled: None,
-                    loading: None,
-                }),
-                UiNode::Button(UiButtonNode {
-                    id: Some("recovery-show-diagnostics".into()),
-                    icon_id: "diagnostics".into(),
-                    label: "Show diagnostics".into(),
-                    action: ActionDescriptor { controller_id: plugin_id.into(), action: "recovery.showDiagnostics".into(), args: None },
-                    style: None,
-                    disabled: None,
-                    loading: None,
-                }),
-            ])
+            let quarantined = self.supervisor.get(plugin_id).copied() == Some(PluginSupervisorState::Quarantined);
+            ui_recovery_panel(plugin_id, quarantined, false)
         }
         //#endregion 🔖ActionKernel
 

@@ -1280,7 +1280,19 @@ pub struct UiStackNode {
     pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub drop_action: Option<ActionDescriptor>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub drop_overlay: Option<UiDropOverlaySpec>,
     pub children: Vec<UiNode>,
+}
+
+/// 📥 Hover-state copy for a `UiStackNode`'s `drop_overlay`: shown while a drag is over the stack, ahead of `drop_action` firing on release.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UiDropOverlaySpec {
+    pub title: String,
+    pub hint: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub accept: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1954,6 +1966,10 @@ pub enum SurfaceKind {
     GraphTimeline,
     #[serde(rename = "block-list")]
     BlockList,
+    #[serde(rename = "diff-view")]
+    DiffView,
+    #[serde(rename = "event-feed")]
+    EventFeed,
 }
 
 impl SurfaceKind {
@@ -1972,6 +1988,8 @@ impl SurfaceKind {
             Self::InkCanvas => "ink-canvas",
             Self::GraphTimeline => "graph-timeline",
             Self::BlockList => "block-list",
+            Self::DiffView => "diff-view",
+            Self::EventFeed => "event-feed",
         }
     }
 
@@ -2533,6 +2551,32 @@ pub struct GraphTimelineScene {
     pub columns_json: String,
 }
 
+/** @emoji 🆚 A before/after text comparison. `mode` picks the renderer's layout (`"unified"` inline
+ * hunks or `"split"` side-by-side panes); `language` is an optional syntax-highlighting hint. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DiffViewScene {
+    pub before: String,
+    pub after: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mode: Option<String>,
+}
+
+/** @emoji 📰 A chronological feed of host-authored events. `entries_json` is a
+ * `{id, timestampMs, iconId, title, detail?, tone?}[]` array; `activate_action` (if set) is the
+ * action name fired with the clicked entry's `id` when an entry is activated. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EventFeedScene {
+    pub entries_json: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub follow: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub activate_action: Option<String>,
+}
+
 /** @emoji 🧩 A palette entry for a block kind insertable into a [`BlockListScene`], contributed
  * either by the host app's own built-ins or by a `Contribution::ProtocolBlockKind` module. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2602,6 +2646,10 @@ pub struct UiComponentSceneNode {
     pub graph_timeline: Option<GraphTimelineScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub block_list: Option<BlockListScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub diff_view: Option<DiffViewScene>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub event_feed: Option<EventFeedScene>,
 }
 //#endregion 🔖ComponentScenes
 
@@ -2682,6 +2730,23 @@ impl TextEditorScene {
             rename_json: None,
         }
     }
+
+    /** @emoji 📖 Builds a read-only JSON viewer scene: a pretty-printed JSON buffer, `"json"`
+     * language, and `settingsJson` set to `{"readOnly":true}`. */
+    pub fn json_view(json_pretty: String) -> Self {
+        let mut scene = Self::base(json_pretty, Some("json".into()), None);
+        scene.settings_json = Some(serde_json::json!({ "readOnly": true }).to_string());
+        scene
+    }
+
+    /** @emoji ⌨️ Builds an editable code-input scene wired to a host settings-change action:
+     * `settingsJson` carries `{"readOnly":false,"onEditSettings":<ActionDescriptor>}`, fired by the
+     * renderer when the user edits editor settings (font size, tab width, ...) via its own chrome. */
+    pub fn code_input(buffer: String, language: &str, on_edit_settings: ActionDescriptor) -> Self {
+        let mut scene = Self::base(buffer, Some(language.into()), None);
+        scene.settings_json = Some(serde_json::json!({ "readOnly": false, "onEditSettings": on_edit_settings }).to_string());
+        scene
+    }
 }
 
 //#region 🔖SceneActions
@@ -2742,6 +2807,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         activate: None,
         children,
         drop_action: None,
+        drop_overlay: None,
     })
 }
 
@@ -2852,6 +2918,8 @@ fn component_scene(
         ink_canvas: None,
         graph_timeline: None,
         block_list: None,
+        diff_view: None,
+        event_feed: None,
     })
 }
 
@@ -3192,6 +3260,194 @@ pub fn build_graph_timeline_scene(
         ..node
     })
 }
+
+pub fn build_diff_view_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: DiffViewScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::DiffView,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        diff_view: Some(scene),
+        ..node
+    })
+}
+
+pub fn build_event_feed_scene(
+    surface_id: impl Into<String>,
+    controller_id: impl Into<String>,
+    scene: EventFeedScene,
+) -> UiNode {
+    let UiNode::ComponentScene(node) = component_scene(
+        surface_id,
+        controller_id,
+        SurfaceKind::EventFeed,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+        None,
+    ) else {
+        unreachable!()
+    };
+    UiNode::ComponentScene(UiComponentSceneNode {
+        event_feed: Some(scene),
+        ..node
+    })
+}
+
+//#region 🔖StatusBuilders
+/** @emoji 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
+ * optional call-to-action button. */
+pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: Option<UiButtonNode>) -> UiNode {
+    let mut children = vec![UiNode::Text(UiTextNode { value: title.into(), emphasize: Some(true), data_attributes: None })];
+    if let Some(description) = description {
+        children.push(ui_text(description));
+    }
+    if let Some(action) = action {
+        children.push(UiNode::Button(action));
+    }
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("standard".into()),
+        padding: Some("standard".into()),
+        id: Some(id.into()),
+        selected: None,
+        loading: None,
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        children,
+    })
+}
+
+/** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
+pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) -> UiNode {
+    let mut children = vec![UiNode::Text(UiTextNode { value: message.into(), emphasize: Some(true), data_attributes: None })];
+    if let Some(retry) = retry {
+        children.push(UiNode::Button(UiButtonNode {
+            id: Some(format!("{id}.retry")),
+            icon_id: "icon.retry".into(),
+            label: "Retry".into(),
+            action: retry,
+            style: None,
+            disabled: None,
+            loading: None,
+        }));
+    }
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("standard".into()),
+        padding: Some("standard".into()),
+        id: Some(id.into()),
+        selected: None,
+        loading: None,
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        children,
+    })
+}
+
+/** @emoji 🩺 Builds a plugin-recovery panel: bilingual (en/de) crash copy plus three fixed actions —
+ * restart the app (`recovery.restartApp`), disable the offending plugin (`recovery.disablePlugin`), or
+ * open diagnostics (`recovery.showDiagnostics`). `quarantined` swaps in the host-auto-disabled copy. */
+pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiNode {
+    let title = if is_de { "Plugin-Wiederherstellung" } else { "Plugin Recovery" };
+    let message = match (quarantined, is_de) {
+        (true, true) => "Dieses Plugin wurde nach wiederholten Abstürzen unter Quarantäne gestellt.",
+        (true, false) => "This plugin was quarantined after repeated crashes.",
+        (false, true) => "Dieses Plugin ist abgestürzt.",
+        (false, false) => "This plugin crashed.",
+    };
+    let restart_label = if is_de { "App neu starten" } else { "Restart App" };
+    let disable_label = if is_de { "Plugin deaktivieren" } else { "Disable Plugin" };
+    let diagnostics_label = if is_de { "Diagnose anzeigen" } else { "Show Diagnostics" };
+    let args = Some(serde_json::json!({ "pluginId": plugin_id }));
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("standard".into()),
+        padding: Some("standard".into()),
+        id: Some("recovery.panel".into()),
+        selected: None,
+        loading: None,
+        activate: None,
+        drop_action: None,
+        drop_overlay: None,
+        children: vec![
+            UiNode::Text(UiTextNode { value: title.into(), emphasize: Some(true), data_attributes: None }),
+            ui_text(message),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery.restartApp".into()),
+                icon_id: "icon.restart".into(),
+                label: restart_label.into(),
+                action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.restartApp".into(), args: args.clone() },
+                style: None,
+                disabled: None,
+                loading: None,
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery.disablePlugin".into()),
+                icon_id: "icon.disable".into(),
+                label: disable_label.into(),
+                action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.disablePlugin".into(), args: args.clone() },
+                style: None,
+                disabled: None,
+                loading: None,
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some("recovery.showDiagnostics".into()),
+                icon_id: "icon.diagnostics".into(),
+                label: diagnostics_label.into(),
+                action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.showDiagnostics".into(), args },
+                style: None,
+                disabled: None,
+                loading: None,
+            }),
+        ],
+    })
+}
+
+/** @emoji 📥 Builds a drop-zone `Stack` for importing files: `drop_overlay` supplies the hover-state
+ * title/hint/accept copy, `drop_action` fires once the drop completes. */
+pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&str>, drop_action: ActionDescriptor) -> UiNode {
+    UiNode::Stack(UiStackNode {
+        direction: "vertical".into(),
+        gap: Some("standard".into()),
+        padding: Some("standard".into()),
+        id: Some(id.into()),
+        selected: None,
+        loading: None,
+        activate: None,
+        drop_action: Some(drop_action),
+        drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into) }),
+        children: vec![ui_text(title), ui_text(hint)],
+    })
+}
+//#endregion 🔖StatusBuilders
 //#endregion 🔖UiNode
 
 //#region 🔖WireFormatGoldenTests
@@ -3219,6 +3475,7 @@ mod ui_node_wire_format_tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children: vec![
                 UiNode::Text(UiTextNode {
                     value: "Hello".into(),
@@ -3379,6 +3636,8 @@ mod ui_node_wire_format_tests {
                     ink_canvas: None,
                     graph_timeline: None,
                     block_list: None,
+                    diff_view: None,
+                    event_feed: None,
                 }),
                 UiNode::ExternalSlot(UiExternalSlotNode {
                     plugin_id: "plugin1".into(),
@@ -3418,7 +3677,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, loading);
     }
 
-    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\"]";
+    const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";
 
     #[test]
     fn surface_kind_serializes_to_golden_json() {
@@ -3435,6 +3694,8 @@ mod ui_node_wire_format_tests {
             SurfaceKind::IconRender,
             SurfaceKind::InkCanvas,
             SurfaceKind::GraphTimeline,
+            SurfaceKind::DiffView,
+            SurfaceKind::EventFeed,
         ];
         let json = serde_json::to_string(&kinds).unwrap();
         assert_eq!(json, GOLDEN_SURFACE_KIND_JSON);
@@ -3477,6 +3738,8 @@ mod ui_node_wire_format_tests {
             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
             TextEditorScene::base("buf".into(), Some("rust".into()), None),
             BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
+            DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()) },
+            EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()) },
         );
         let json = serde_json::to_string(&scenes).unwrap();
         assert_eq!(json, GOLDEN_SCENES_JSON);
@@ -3493,6 +3756,8 @@ mod ui_node_wire_format_tests {
             NodeGraphScene,
             TextEditorScene,
             BlockListScene,
+            DiffViewScene,
+            EventFeedScene,
         ) = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, scenes);
     }
@@ -4180,6 +4445,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         loading: section.loading,
         activate: None,
         drop_action: tree_node.drop_action.clone(),
+        drop_overlay: None,
         children: section.items.iter().map(|item| tree_item_row(tree_node, item)).collect(),
     })
 }
@@ -4215,6 +4481,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
         loading: item.loading,
         activate: item.action.clone(),
         drop_action: None,
+        drop_overlay: None,
         children,
     })
 }
@@ -4412,6 +4679,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
         })
     }
@@ -5133,6 +5401,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children: Vec::new(),
         }));
         tree.node_mut(id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
@@ -9846,6 +10115,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
         })
     }
@@ -12113,6 +12383,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
         })
     }
@@ -12239,7 +12510,7 @@ mod tests {
     }
 
     fn loading_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: Some(true), activate: None, drop_action: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: Some(true), activate: None, drop_action: None, drop_overlay: None, children })
     }
 
     #[test]
@@ -12466,7 +12737,7 @@ mod tests {
     }
 
     fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, activate: None, drop_action, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -12483,7 +12754,7 @@ mod tests {
     }
 
     fn activatable_stack(selected: bool) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, activate: Some(action()), drop_action: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -13871,6 +14142,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children: Vec::new(),
         });
         let id = tree.insert_child(Some(tree_id), Node::new(NodeKey::Explicit(item_id.into()), WidgetSpec(spec)));
@@ -13907,6 +14179,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children: Vec::new(),
         })
     }
@@ -14446,7 +14719,7 @@ mod tests {
     }
 
     fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, activate: Some(action), drop_action: None, children: Vec::new() })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
     }
 
     #[test]
@@ -14619,6 +14892,8 @@ mod tests {
             ink_canvas: None,
             graph_timeline: None,
             block_list: None,
+            diff_view: None,
+            event_feed: None,
         })
     }
 
@@ -14632,6 +14907,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
         })
     }
@@ -14826,6 +15102,7 @@ fn root_stack() -> UiNode {
         loading: None,
         activate: None,
         drop_action: None,
+        drop_overlay: None,
         children: Vec::new(),
     })
 }
@@ -14847,6 +15124,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
         loading: None,
         activate: None,
         drop_action: None,
+        drop_overlay: None,
         children: Vec::new(),
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_AXIS, ordinal), WidgetSpec(spec)));
@@ -14871,6 +15149,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
         loading: None,
         activate: None,
         drop_action: None,
+        drop_overlay: None,
         children: Vec::new(),
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Positional(SHELL_STACK, ordinal), WidgetSpec(spec)));
@@ -15216,6 +15495,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
         })
     }
@@ -15484,7 +15764,7 @@ mod tests {
     /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
     /// instead of an artifact of divergent layout math.
     fn leaf(child: UiNode) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, activate: None, drop_action: None, children: vec![child] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
     }
 
     fn assert_equivalent(kind: &str, node: &UiNode) {
@@ -15506,6 +15786,7 @@ mod tests {
             loading: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children: vec![
                 UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None }),
                 UiNode::Separator(UiSeparatorNode {}),
@@ -15715,6 +15996,8 @@ mod tests {
             ink_canvas: None,
             graph_timeline: None,
             block_list: None,
+            diff_view: None,
+            event_feed: None,
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ComponentScene should paint its placeholder border chrome");

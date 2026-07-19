@@ -1,4 +1,4 @@
-import { lazy, memo, Suspense, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
+import { lazy, memo, Suspense, useState, type ComponentType, type LazyExoticComponent, type ReactElement, type ReactNode } from "react";
 import {
   Button,
   ChromeAwareWindowScrollSurface,
@@ -36,7 +36,7 @@ import {
   type TreePanelConfig,
 } from "@semio-tech/ui-react";
 import { ICONS, type IconName } from "@semio-tech/ui-asset";
-import type { ActionDescriptor, ComponentKind, ComponentSceneHostProps, UiControlNode, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "@semio-tech/framework-core";
+import type { ActionDescriptor, ComponentKind, ComponentSceneHostProps, UiControlNode, UiNode, UiStackNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode } from "@semio-tech/framework-core";
 
 //#region ComponentSceneHostRegistry
 /** 🧩 Wraps a dynamic host-module import into a lazily-loaded component bound to a named export. */
@@ -60,6 +60,8 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
   "ink-canvas": lazyHost(() => import("./components/ink-canvas-host.tsx"), "InkCanvasHost"),
   "graph-timeline": lazyHost(() => import("./components/graph-timeline-host.tsx"), "GraphTimelineHost"),
   "block-list": lazyHost(() => import("./components/block-list-host.tsx"), "BlockListHost"),
+  "diff-view": lazyHost(() => import("./components/diff-view-host.tsx"), "DiffViewHost"),
+  "event-feed": lazyHost(() => import("./components/event-feed-host.tsx"), "EventFeedHost"),
 };
 //#endregion ComponentSceneHostRegistry
 
@@ -483,65 +485,90 @@ function uiNodeKey(node: UiNode, index: number): string {
   return `${node.type}:${index}`;
 }
 
+/** @emoji 🫳 Stateful host for a {@link UiStackNode} — the plain stack layout/click/drop wiring plus local drag-over tracking so `dropOverlay` can show a full-bleed hint while a drag hovers, ahead of `dropAction` firing on release. */
+function UiStackHost({ node, context }: { readonly node: UiStackNode; readonly context: UiInterpreterContext }) {
+  const [dragOver, setDragOver] = useState(false);
+  const activate = node.activate;
+  const dropAction = node.dropAction;
+  const dropOverlay = node.dropOverlay;
+  return (
+    <div
+      className={cn(
+        "relative flex min-h-0 min-w-0 flex-1",
+        node.direction === "horizontal" ? "flex-row" : "flex-col",
+        node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
+        node.padding === "none" ? "p-0" : "p-double",
+        `semio-ui-stack semio-ui-stack--${node.direction}`,
+        activate && cn(borderElementClass, "border bg-panel cursor-pointer rounded-md"),
+        node.selected && "ring-primary border-primary ring-1",
+      )}
+      data-ui-stack={node.id}
+      role={activate ? "button" : undefined}
+      onClick={
+        activate
+          ? (event) => {
+              event.stopPropagation();
+              dispatchUiAction(context.onAction, activate, {});
+            }
+          : undefined
+      }
+      onDragOver={
+        dropAction
+          ? (event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+              if (dropOverlay && !dragOver) setDragOver(true);
+            }
+          : undefined
+      }
+      onDragLeave={
+        dropAction && dropOverlay
+          ? (event) => {
+              event.preventDefault();
+              setDragOver(false);
+            }
+          : undefined
+      }
+      onDrop={
+        dropAction
+          ? (event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setDragOver(false);
+              const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
+              if (!encoded?.trim()) return;
+              try {
+                dispatchUiAction(context.onAction, dropAction, JSON.parse(encoded) as Record<string, unknown>);
+              } catch {
+                return;
+              }
+            }
+          : undefined
+      }
+    >
+      {node.children.map((child, index) => (
+        <div key={uiNodeKey(child, index)} className="flex-auto">
+          {interpretUiNode(child, context)}
+        </div>
+      ))}
+      {dropOverlay && dragOver ? (
+        <div
+          className="border-primary pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-single rounded-md border-2 border-dashed p-double text-center"
+          style={{ background: "color-mix(in oklab, var(--panel) 92%, transparent)" }}
+        >
+          <p className="text-sm font-semibold">{dropOverlay.title}</p>
+          <p className="text-muted-foreground text-xs">{dropOverlay.hint}</p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 /** @emoji 🌳 Interprets a declarative {@link UiNode} tree into ui-react components. */
 export function interpretUiNode(node: UiNode, context: UiInterpreterContext): ReactNode {
   switch (node.type) {
-    case "stack": {
-      const activate = node.activate;
-      const dropAction = node.dropAction;
-      return (
-        <div
-          className={cn(
-            "flex min-h-0 min-w-0 flex-1",
-            node.direction === "horizontal" ? "flex-row" : "flex-col",
-            node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
-            node.padding === "none" ? "p-0" : "p-double",
-            `semio-ui-stack semio-ui-stack--${node.direction}`,
-            activate && cn(borderElementClass, "border bg-panel cursor-pointer rounded-md"),
-            node.selected && "ring-primary border-primary ring-1",
-          )}
-          data-ui-stack={node.id}
-          role={activate ? "button" : undefined}
-          onClick={
-            activate
-              ? (event) => {
-                  event.stopPropagation();
-                  dispatchUiAction(context.onAction, activate, {});
-                }
-              : undefined
-          }
-          onDragOver={
-            dropAction
-              ? (event) => {
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "copy";
-                }
-              : undefined
-          }
-          onDrop={
-            dropAction
-              ? (event) => {
-                  event.preventDefault();
-                  event.stopPropagation();
-                  const encoded = [...event.dataTransfer.types].filter((kind) => kind.startsWith("application/x-semio-")).map((kind) => event.dataTransfer.getData(kind))[0];
-                  if (!encoded?.trim()) return;
-                  try {
-                    dispatchUiAction(context.onAction, dropAction, JSON.parse(encoded) as Record<string, unknown>);
-                  } catch {
-                    return;
-                  }
-                }
-              : undefined
-          }
-        >
-          {node.children.map((child, index) => (
-            <div key={uiNodeKey(child, index)} className="flex-auto">
-              {interpretUiNode(child, context)}
-            </div>
-          ))}
-        </div>
-      );
-    }
+    case "stack":
+      return <UiStackHost node={node} context={context} />;
     case "text":
       return <p className={node.emphasize ? "font-semibold" : "text-sm"}>{node.value}</p>;
     case "button":

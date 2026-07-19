@@ -15,13 +15,7 @@ pub struct AnimationHashInput {
 
 impl AnimationHashInput {
     pub fn new(kind: impl Into<String>, run_time: f64) -> Self {
-        Self {
-            kind: kind.into(),
-            run_time,
-            target_ids: Vec::new(),
-            rate: "linear".into(),
-            extras: Vec::new(),
-        }
+        Self { kind: kind.into(), run_time, target_ids: Vec::new(), rate: "linear".into(), extras: Vec::new() }
     }
 
     pub fn with_targets(mut self, ids: Vec<u64>) -> Self {
@@ -42,11 +36,7 @@ impl AnimationHashInput {
 
 /// 🔐 Hash a single animation descriptor.
 pub fn hash_animation(input: &AnimationHashInput) -> String {
-    let mut parts = vec![
-        input.kind.clone(),
-        format_number_for_hash(input.run_time),
-        input.rate.clone(),
-    ];
+    let mut parts = vec![input.kind.clone(), format_number_for_hash(input.run_time), input.rate.clone()];
     for id in &input.target_ids {
         parts.push(id.to_string());
     }
@@ -62,13 +52,7 @@ pub fn hash_animation_timeline(children: Vec<String>) -> String {
 /// 🎬 Hash a scene configuration snapshot.
 pub fn hash_scene_config(frame_rate: f64, width: u32, height: u32, mobject_count: usize) -> String {
     let rate = format_number_for_hash(frame_rate);
-    hash_parts(&[
-        "SceneConfig",
-        &rate,
-        &width.to_string(),
-        &height.to_string(),
-        &mobject_count.to_string(),
-    ])
+    hash_parts(&["SceneConfig", &rate, &width.to_string(), &height.to_string(), &mobject_count.to_string()])
 }
 
 #[cfg(test)]

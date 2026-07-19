@@ -7,10 +7,10 @@ use mathematical_geometry::{append_shape_to_path, BezPath, Point, Rect};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use typst::foundations::{Bytes, Datetime};
+use typst::layout::Abs;
 use typst::layout::PagedDocument;
 use typst::syntax::{FileId, Source, VirtualPath};
 use typst::text::{Font, FontBook};
-use typst::layout::Abs;
 use typst::utils::LazyHash;
 use typst::LibraryExt;
 use typst::{Library, World};
@@ -33,11 +33,7 @@ impl Text {
         let svg = typst_markup_to_svg(&wrap_text(&content, TEXT_SIZE_PT)).unwrap_or_default();
         let mut inner = svg_to_vobject(&svg, color);
         inner.set_name(content.to_string());
-        Self {
-            inner,
-            content,
-            font_size: TEXT_SIZE_PT,
-        }
+        Self { inner, content, font_size: TEXT_SIZE_PT }
     }
 
     pub fn as_sobject(&self) -> &VSobject {
@@ -64,11 +60,7 @@ pub struct DecimalNumber {
 impl DecimalNumber {
     pub fn new(value: f64, decimals: u32, color: Color) -> Self {
         let inner = Text::new(format_decimal(value, decimals), color);
-        Self {
-            value,
-            inner,
-            decimals,
-        }
+        Self { value, inner, decimals }
     }
 
     pub fn lerp_value(&mut self, target: f64, t: f64, color: Color) {
@@ -91,10 +83,7 @@ pub struct Integer {
 
 impl Integer {
     pub fn new(value: i64, color: Color) -> Self {
-        Self {
-            value,
-            inner: Text::new(value.to_string(), color),
-        }
+        Self { value, inner: Text::new(value.to_string(), color) }
     }
 
     pub fn as_sobject(&self) -> &VSobject {
@@ -113,10 +102,7 @@ impl Paragraph {
     pub fn new(lines: Vec<impl Into<EcoString>>, color: Color) -> Self {
         let lines: Vec<EcoString> = lines.into_iter().map(Into::into).collect();
         let body = lines.iter().map(|l| l.as_str()).collect::<Vec<_>>().join("\n");
-        Self {
-            lines,
-            inner: Text::new(body, color),
-        }
+        Self { lines, inner: Text::new(body, color) }
     }
 
     pub fn as_sobject(&self) -> &VSobject {
@@ -134,20 +120,11 @@ pub struct Code {
 impl Code {
     pub fn new(source: impl Into<EcoString>, color: Color) -> Self {
         let source = source.into();
-        let wrapped = format!(
-            "#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set text(size: {TEXT_SIZE_PT}pt, font: \"Courier New\")\n`{source}`"
-        );
+        let wrapped = format!("#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set text(size: {TEXT_SIZE_PT}pt, font: \"Courier New\")\n`{source}`");
         let svg = typst_markup_to_svg(&wrapped).unwrap_or_default();
         let mut inner_v = svg_to_vobject(&svg, color);
         inner_v.set_name(source.to_string());
-        Self {
-            source: source.clone(),
-            inner: Text {
-                inner: inner_v,
-                content: source,
-                font_size: TEXT_SIZE_PT,
-            },
-        }
+        Self { source: source.clone(), inner: Text { inner: inner_v, content: source, font_size: TEXT_SIZE_PT } }
     }
 
     pub fn as_sobject(&self) -> &VSobject {
@@ -165,10 +142,7 @@ pub struct MathText {
 impl MathText {
     pub fn new(expr: impl Into<EcoString>, color: Color) -> Self {
         let latex = expr.into();
-        let wrapped = format!(
-            "#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set text(size: {}pt)\n$ {latex} $",
-            TEXT_PAGE_PT, TEXT_PAGE_PT, TEXT_MARGIN_PT, TEXT_SIZE_PT
-        );
+        let wrapped = format!("#set page(width: {}pt, height: {}pt, margin: {}pt, fill: none)\n#set text(size: {}pt)\n$ {latex} $", TEXT_PAGE_PT, TEXT_PAGE_PT, TEXT_MARGIN_PT, TEXT_SIZE_PT);
         let svg = typst_markup_to_svg(&wrapped).unwrap_or_default();
         let mut inner = svg_to_vobject(&svg, color);
         inner.set_name(latex.to_string());
@@ -182,9 +156,7 @@ impl MathText {
 
 fn wrap_text(text: &str, size: f64) -> String {
     let escaped = text.replace('\\', "\\\\").replace('"', "\\\"");
-    format!(
-        "#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {size}pt)\n\"{escaped}\""
-    )
+    format!("#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set align(center + horizon)\n#set text(size: {size}pt)\n\"{escaped}\"")
 }
 
 fn svg_to_vobject(svg: &str, color: Color) -> VSobject {
@@ -245,17 +217,10 @@ fn collect_svg_paths(node: &usvg::Node, scale: f64, offset_y: f64, out: &mut Vec
                         p.line_to(map_svg_point(pt.x, pt.y, scale, offset_y));
                     }
                     usvg::tiny_skia_path::PathSegment::QuadTo(c, pt) => {
-                        p.quad_to(
-                            map_svg_point(c.x, c.y, scale, offset_y),
-                            map_svg_point(pt.x, pt.y, scale, offset_y),
-                        );
+                        p.quad_to(map_svg_point(c.x, c.y, scale, offset_y), map_svg_point(pt.x, pt.y, scale, offset_y));
                     }
                     usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, pt) => {
-                        p.curve_to(
-                            map_svg_point(c1.x, c1.y, scale, offset_y),
-                            map_svg_point(c2.x, c2.y, scale, offset_y),
-                            map_svg_point(pt.x, pt.y, scale, offset_y),
-                        );
+                        p.curve_to(map_svg_point(c1.x, c1.y, scale, offset_y), map_svg_point(c2.x, c2.y, scale, offset_y), map_svg_point(pt.x, pt.y, scale, offset_y));
                     }
                     usvg::tiny_skia_path::PathSegment::Close => p.close_path(),
                 }
@@ -321,13 +286,7 @@ fn typst_compile_markup_to_svg(markup: &str, fonts: &'static [Font], book: &'sta
             None
         }
     }
-    let w = AnimateTypstWorld {
-        library,
-        book,
-        main,
-        source,
-        fonts,
-    };
+    let w = AnimateTypstWorld { library, book, main, source, fonts };
     let warned = typst::compile::<PagedDocument>(&w);
     let doc = warned.output.ok()?;
     if doc.pages.is_empty() {

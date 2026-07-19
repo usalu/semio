@@ -63,12 +63,7 @@ pub fn square(side: f64, center: Point, fill: Color, stroke: Option<Color>, stro
 
 /// ▭ Rectangle.
 pub fn rectangle(width: f64, height: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
-    let r = Rect::new(
-        center.x() - width / 2.0,
-        center.y() - height / 2.0,
-        center.x() + width / 2.0,
-        center.y() + height / 2.0,
-    );
+    let r = Rect::new(center.x() - width / 2.0, center.y() - height / 2.0, center.x() + width / 2.0, center.y() + height / 2.0);
     let mut path = BezPath::new();
     append_shape_to_path(&mut path, &r, 0.01);
     styled_path(path, fill, stroke, stroke_width)
@@ -76,12 +71,7 @@ pub fn rectangle(width: f64, height: f64, center: Point, fill: Color, stroke: Op
 
 /// ▢ Rounded rectangle.
 pub fn rounded_rectangle(width: f64, height: f64, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
-    let rect = Rect::new(
-        center.x() - width / 2.0,
-        center.y() - height / 2.0,
-        center.x() + width / 2.0,
-        center.y() + height / 2.0,
-    );
+    let rect = Rect::new(center.x() - width / 2.0, center.y() - height / 2.0, center.x() + width / 2.0, center.y() + height / 2.0);
     let r = RoundedRect::new(rect, RoundedRectRadii::new(radius, radius, radius, radius));
     let mut path = BezPath::new();
     append_shape_to_path(&mut path, &r, 0.01);
@@ -104,11 +94,7 @@ pub fn polygon(vertices: &[Point], fill: Color, stroke: Option<Color>, stroke_wi
 /// △ Equilateral triangle.
 pub fn triangle(side: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
     let h = side * 3.0_f64.sqrt() / 2.0;
-    let verts = [
-        Point::new(center.x(), center.y() + 2.0 * h / 3.0),
-        Point::new(center.x() - side / 2.0, center.y() - h / 3.0),
-        Point::new(center.x() + side / 2.0, center.y() - h / 3.0),
-    ];
+    let verts = [Point::new(center.x(), center.y() + 2.0 * h / 3.0), Point::new(center.x() - side / 2.0, center.y() - h / 3.0), Point::new(center.x() + side / 2.0, center.y() - h / 3.0)];
     polygon(&verts, fill, stroke, stroke_width)
 }
 
@@ -150,11 +136,7 @@ pub fn sector(center: Point, radius: f64, start_angle: f64, sweep: f64, fill: Co
 /// { } Brace under content.
 pub fn brace(start: Point, end: Point, direction: Vec2, color: Color, width: f64) -> VSobject {
     let mid = Point::new((start.x() + end.x()) / 2.0, (start.y() + end.y()) / 2.0);
-    let dir = if direction.hypot() < 1e-9 {
-        Vec2::new(0.0, -1.0)
-    } else {
-        direction / direction.hypot()
-    };
+    let dir = if direction.hypot() < 1e-9 { Vec2::new(0.0, -1.0) } else { direction / direction.hypot() };
     let depth = (end - start).hypot() * 0.15;
     let tip = mid + dir * depth;
     let mut path = BezPath::new();
@@ -236,14 +218,7 @@ pub fn dashed_line(start: Point, end: Point, color: Color, width: f64, dash_len:
 }
 
 /// ⬭ Axis-aligned ellipse.
-pub fn ellipse(
-    center: Point,
-    width: f64,
-    height: f64,
-    fill: Color,
-    stroke: Option<Color>,
-    stroke_width: f64,
-) -> VSobject {
+pub fn ellipse(center: Point, width: f64, height: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
     let rx = width / 2.0;
     let ry = height / 2.0;
     let steps = 64;
@@ -262,14 +237,7 @@ pub fn ellipse(
 }
 
 /// ⬡ Regular polygon with `n` sides inscribed in a circle.
-pub fn regular_polygon(
-    n: u32,
-    radius: f64,
-    center: Point,
-    fill: Color,
-    stroke: Option<Color>,
-    stroke_width: f64,
-) -> VSobject {
+pub fn regular_polygon(n: u32, radius: f64, center: Point, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
     let sides = n.max(3) as usize;
     let verts: Vec<Point> = (0..sides)
         .map(|i| {
@@ -281,13 +249,7 @@ pub fn regular_polygon(
 }
 
 /// ▢ Rectangle around an Sobject's bounds.
-pub fn surrounding_rectangle(
-    mobject: &dyn Sobject,
-    buff: f64,
-    fill: Color,
-    stroke: Option<Color>,
-    stroke_width: f64,
-) -> VSobject {
+pub fn surrounding_rectangle(mobject: &dyn Sobject, buff: f64, fill: Color, stroke: Option<Color>, stroke_width: f64) -> VSobject {
     let b = mobject.bounds();
     rectangle(b.width() + buff * 2.0, b.height() + buff * 2.0, b.center(), fill, stroke, stroke_width)
 }
@@ -317,15 +279,7 @@ pub fn boolean_difference(a: &VSobject, b: &VSobject, fill: Color, stroke: Optio
 }
 
 /// ➡️ Grid of small arrows sampling a vector field.
-pub fn arrow_vector_field<F>(
-    x_range: (f64, f64),
-    y_range: (f64, f64),
-    cols: u32,
-    rows: u32,
-    field: F,
-    color: Color,
-    arrow_scale: f64,
-) -> Group
+pub fn arrow_vector_field<F>(x_range: (f64, f64), y_range: (f64, f64), cols: u32, rows: u32, field: F, color: Color, arrow_scale: f64) -> Group
 where
     F: Fn(f64, f64) -> Vec2,
 {
@@ -353,13 +307,7 @@ where
 }
 
 /// 〰️ Stream lines traced through a vector field from seed points.
-pub fn stream_lines<F>(
-    seeds: &[(f64, f64)],
-    field: F,
-    color: Color,
-    steps: u32,
-    step_size: f64,
-) -> Group
+pub fn stream_lines<F>(seeds: &[(f64, f64)], field: F, color: Color, steps: u32, step_size: f64) -> Group
 where
     F: Fn(f64, f64) -> Vec2,
 {

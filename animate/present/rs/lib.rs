@@ -1,16 +1,342 @@
 //! 🎞️ Animate present deck document + typed VCS on `vcs`.
 
-pub mod present;
+pub mod present {
+    //! 🎞️ Scene-based presentation documents and static site compiler.
 
-pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileError, PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA, SceneAssetBundle};
+    pub mod compiler {
+        //! 🌐 Headless static-site compiler for animate present decks.
 
-use vcs::{
-    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, materialize_document_projection,
-    CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
-};
+        use crate::PresentDeck;
+        use animate_core::{AnimateConfig, QualityPreset};
+        use animate_video::{render_scene, scene_for_hash, OutputFormat};
+        use serde::{Deserialize, Serialize};
+        use serde_json::json;
+        use std::fs;
+        use std::path::{Path, PathBuf};
+
+        /// 🚨 Static-site compilation failure.
+        #[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+        #[error("{message}")]
+        pub struct PresentCompileError {
+            pub message: String,
+        }
+
+        impl PresentCompileError {
+            fn new(message: impl Into<String>) -> Self {
+                Self { message: message.into() }
+            }
+        }
+
+        pub type Result<T> = std::result::Result<T, PresentCompileError>;
+
+        /// 📦 Rendered scene clip paths for present sites and plugin export.
+        #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct SceneAssetBundle {
+            pub scene_hash: String,
+            pub mp4: Option<PathBuf>,
+            pub last_frame: Option<PathBuf>,
+            pub subtitles: Option<PathBuf>,
+            pub sections: Option<PathBuf>,
+        }
+
+        /// 🎬 Renders one animate scene hash into `output_dir/scenes/{hash}`.
+        pub fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<SceneAssetBundle> {
+            let scene_dir = output_dir.join("scenes").join(scene_hash);
+            fs::create_dir_all(&scene_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            let config = AnimateConfig::from_quality(QualityPreset::Medium).with_output_dir(&scene_dir).with_media_dir(scene_dir.join("media")).with_subtitles_path(scene_dir.join("scene.srt"));
+            let scene = scene_for_hash(config.clone(), scene_hash);
+            let outputs = render_scene(scene, config, &[OutputFormat::Mp4, OutputFormat::LastFrame]).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            Ok(SceneAssetBundle { scene_hash: scene_hash.into(), mp4: outputs.mp4, last_frame: outputs.last_frame, subtitles: Some(scene_dir.join("scene.srt")), sections: outputs.sections })
+        }
+
+        /// 📦 Writes `index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
+        pub fn compile_present_site(deck: &PresentDeck, output_dir: &Path) -> Result<()> {
+            fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            let deck_json = serde_json::to_string_pretty(deck).map_err(|error| PresentCompileError::new(format!("deck json: {error}")))?;
+            fs::write(output_dir.join("deck.json"), &deck_json).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            fs::write(output_dir.join("index.html"), index_html(&deck_json)).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            fs::write(output_dir.join("styles.css"), styles_css()).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            fs::write(output_dir.join("manifest.json"), serde_json::to_string_pretty(&site_manifest(deck)).map_err(|error| PresentCompileError::new(error.to_string()))?).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            fs::write(output_dir.join("player.js"), player_boot_js()).map_err(|error| PresentCompileError::new(error.to_string()))?;
+            Ok(())
+        }
+
+        fn site_manifest(deck: &PresentDeck) -> serde_json::Value {
+            json!({
+                "schema": "animate.present.site",
+                "deckSchema": deck.schema,
+                "title": deck.tiles.first().map(|tile| tile.name.as_str()).unwrap_or("Animate Present"),
+                "tileCount": deck.tiles.len(),
+                "player": {
+                    "kind": "wgpu",
+                    "wasm": "/animate/plugin/wasm/animate_plugin_bg.wasm",
+                    "js": "/animate/plugin/wasm/animate_plugin.js",
+                    "boot": "/animate/plugin/wasm/boot.js"
+                },
+                "assets": {
+                    "deck": "deck.json",
+                    "styles": "styles.css",
+                    "player": "player.js",
+                    "scenes": "scenes"
+                }
+            })
+        }
+
+        fn index_html(deck_json: &str) -> String {
+            let escaped = deck_json.replace('&', "&amp;").replace('<', "&lt;");
+            format!(
+                r#"<!DOCTYPE html>
+        <html lang="en">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>Animate Present</title>
+          <link rel="stylesheet" href="styles.css" />
+          <link rel="manifest" href="manifest.json" />
+        </head>
+        <body>
+          <main id="animate-present-root" data-deck-schema="animate.present.deck">
+            <canvas id="animate-present-canvas" width="1280" height="720"></canvas>
+            <script id="animate-present-deck" type="application/json">{escaped}</script>
+          </main>
+          <script type="module" src="/animate/plugin/wasm/animate_plugin.js"></script>
+          <script type="module" src="player.js"></script>
+        </body>
+        </html>
+        "#
+            )
+        }
+
+        fn styles_css() -> &'static str {
+            r#"html, body {
+          margin: 0;
+          height: 100%;
+          background: #0b0d12;
+          color: #f4f6fb;
+          font-family: system-ui, sans-serif;
+        }
+
+        #animate-present-root {
+          display: grid;
+          place-items: center;
+          min-height: 100%;
+        }
+
+        #animate-present-canvas {
+          width: min(100vw, 1280px);
+          height: auto;
+          aspect-ratio: 16 / 9;
+          border: 1px solid #2a3140;
+          border-radius: 8px;
+          background: #11151d;
+        }
+        "#
+        }
+
+        fn player_boot_js() -> &'static str {
+            r#"const root = document.getElementById("animate-present-root");
+        const canvas = document.getElementById("animate-present-canvas");
+        const deckNode = document.getElementById("animate-present-deck");
+        const deck = deckNode ? JSON.parse(deckNode.textContent || "{}") : {};
+
+        function collectSceneClips(node, clips = {}) {
+          if (!node || typeof node !== "object") {
+            return clips;
+          }
+          const metadata = node.metadata;
+          if (metadata && typeof metadata.sceneHash === "string" && metadata.sceneHash.length > 0) {
+            clips[metadata.sceneHash] = `scenes/${metadata.sceneHash}/scene.mp4`;
+          }
+          if (Array.isArray(node.slides)) {
+            for (const slide of node.slides) {
+              collectSceneClips(slide, clips);
+            }
+          }
+          if (Array.isArray(node.sections)) {
+            for (const section of node.sections) {
+              collectSceneClips(section, clips);
+            }
+          }
+          if (Array.isArray(node.chapters)) {
+            for (const chapter of node.chapters) {
+              collectSceneClips(chapter, clips);
+            }
+          }
+          if (Array.isArray(node.sequences)) {
+            for (const sequence of node.sequences) {
+              collectSceneClips(sequence, clips);
+            }
+          }
+          if (Array.isArray(node.thoughts)) {
+            for (const thought of node.thoughts) {
+              collectSceneClips(thought, clips);
+            }
+          }
+          if (node.arrangement) {
+            collectSceneClips(node.arrangement, clips);
+          }
+          if (node.sceneHash) {
+            clips[node.sceneHash] = `scenes/${node.sceneHash}/scene.mp4`;
+          }
+          return clips;
+        }
+
+        async function bootAnimatePresentPlayer() {
+          const wasmUrl = "/animate/plugin/wasm/animate_plugin_bg.wasm";
+          const init = globalThis.AnimatePluginInit || globalThis.default;
+          const sceneClips = collectSceneClips(deck);
+          if (typeof init !== "function") {
+            console.warn("[animate-present] wasm player waiting for animate plugin", { wasmUrl, deck, sceneClips });
+            return;
+          }
+          await init({ canvas, deck, appId: "animate-present-play", sceneClips });
+        }
+
+        bootAnimatePresentPlayer().catch((error) => {
+          console.error("[animate-present] player boot failed", error);
+        });
+        "#
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+            use crate::{default_present_deck, populate_tile_drafts_from_grid, FigureTileGridSeedSpec};
+
+            #[test]
+            fn compile_present_site_writes_static_bundle() {
+                let deck = default_present_deck();
+                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
+                let deck = PresentDeck { tiles, ..deck };
+                let output = std::env::temp_dir().join(format!("animate-present-{}", std::process::id()));
+                let _ = std::fs::remove_dir_all(&output);
+                compile_present_site(&deck, &output).expect("compile site");
+                let index = std::fs::read_to_string(output.join("index.html")).expect("index.html");
+                assert!(index.contains("animate.present.deck"));
+                assert!(index.contains("animate_plugin.js"));
+                let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");
+                assert!(player.contains("sceneClips"));
+                let manifest: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
+                assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
+                assert_eq!(manifest.pointer("/player/wasm").and_then(|v| v.as_str()), Some("/animate/plugin/wasm/animate_plugin_bg.wasm"));
+                let deck_file: PresentDeck = serde_json::from_str(&std::fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
+                assert_eq!(deck_file.tiles.len(), 4);
+                let _ = std::fs::remove_dir_all(&output);
+            }
+
+            #[test]
+            fn compile_scene_to_assets_writes_mp4() {
+                let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
+                let _ = std::fs::remove_dir_all(&output);
+                let bundle = compile_scene_to_assets("demo123", &output).expect("compile scene");
+                assert_eq!(bundle.scene_hash, "demo123");
+                assert!(bundle.mp4.as_ref().is_some_and(|path| path.exists()));
+                let _ = std::fs::remove_dir_all(&output);
+            }
+        }
+    }
+
+    pub mod slide {
+        //! 🎭 Scene-based presentation document types for slide/section timelines.
+
+        use animate_core::Section;
+        use serde::{Deserialize, Serialize};
+
+        pub const PRESENT_SCENE_SCHEMA: &str = "animate.present.scene";
+
+        /// 🖼️ One slide within a presentation section — may reference a compiled animate scene hash.
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct PresentSlide {
+            pub id: String,
+            pub title: String,
+            #[serde(default, skip_serializing_if = "Option::is_none")]
+            pub scene_hash: Option<String>,
+            #[serde(default, skip_serializing_if = "Vec::is_empty")]
+            pub timeline_sections: Vec<Section>,
+        }
+
+        /// 📚 Vertical column of slides (reveal.js sequence analogue).
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct PresentSection {
+            pub id: String,
+            pub title: String,
+            pub slides: Vec<PresentSlide>,
+        }
+
+        /// 🎬 Full scene-based presentation document — sections of slides plus optional tile deck overlay.
+        #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+        #[serde(rename_all = "camelCase")]
+        pub struct PresentScene {
+            pub schema: String,
+            pub title: String,
+            pub sections: Vec<PresentSection>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            pub deck: Option<crate::PresentDeck>,
+        }
+
+        impl PresentScene {
+            pub fn empty(title: impl Into<String>) -> Self {
+                Self { schema: PRESENT_SCENE_SCHEMA.into(), title: title.into(), sections: Vec::new(), deck: None }
+            }
+
+            pub fn slide_count(&self) -> usize {
+                self.sections.iter().map(|section| section.slides.len()).sum()
+            }
+
+            /// 🎬 Collects unique scene hashes referenced by slides.
+            pub fn scene_hashes(&self) -> Vec<String> {
+                let mut hashes = Vec::new();
+                for section in &self.sections {
+                    for slide in &section.slides {
+                        if let Some(hash) = &slide.scene_hash {
+                            if !hashes.iter().any(|existing| existing == hash) {
+                                hashes.push(hash.clone());
+                            }
+                        }
+                    }
+                }
+                hashes
+            }
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use super::*;
+
+            #[test]
+            fn present_scene_counts_slides() {
+                let scene = PresentScene {
+                    schema: PRESENT_SCENE_SCHEMA.into(),
+                    title: "Demo".into(),
+                    sections: vec![PresentSection {
+                        id: "s1".into(),
+                        title: "Intro".into(),
+                        slides: vec![
+                            PresentSlide { id: "a".into(), title: "A".into(), scene_hash: None, timeline_sections: Vec::new() },
+                            PresentSlide { id: "b".into(), title: "B".into(), scene_hash: Some("abc123".into()), timeline_sections: vec![Section::new("main", 0.0, 5.0)] },
+                        ],
+                    }],
+                    deck: None,
+                };
+                assert_eq!(scene.slide_count(), 2);
+                assert_eq!(scene.scene_hashes(), vec!["abc123".to_string()]);
+            }
+        }
+    }
+
+    pub use compiler::{compile_present_site, compile_scene_to_assets, PresentCompileError, SceneAssetBundle};
+    pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA};
+}
+
+pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileError, PresentScene, PresentSection, PresentSlide, SceneAssetBundle, PRESENT_SCENE_SCHEMA};
+
+use serde::{Deserialize, Serialize};
 #[cfg(any(test, target_arch = "wasm32"))]
 use vcs::DocumentVcsCommand;
-use serde::{Deserialize, Serialize};
+use vcs::{collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, materialize_document_projection, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
 
@@ -75,34 +401,15 @@ pub type PresentEnvelope = DocumentVcsEnvelope<PresentDeck, PresentOp>;
 pub type PresentStore = DocumentVcsStore<PresentDeck, PresentOp>;
 
 pub fn empty_present_deck() -> PresentDeck {
-    PresentDeck {
-        schema: PRESENT_DECK_SCHEMA.into(),
-        source: default_figure_tile_source(),
-        tiles: Vec::new(),
-    }
+    PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
 }
 
 pub fn default_figure_tile_source() -> FigureTileSource {
-    FigureTileSource {
-        src: "/bauteilbörse.png".into(),
-        kind: "figure".into(),
-        frame: FigureTileFrame {
-            x: 0.127,
-            y: 0.1,
-            width: 0.746,
-            height: 0.75,
-        },
-        source_aspect: Some(1222.0 / 896.0),
-        pdf_page: None,
-    }
+    FigureTileSource { src: "/bauteilbörse.png".into(), kind: "figure".into(), frame: FigureTileFrame { x: 0.127, y: 0.1, width: 0.746, height: 0.75 }, source_aspect: Some(1222.0 / 896.0), pdf_page: None }
 }
 
 pub fn default_present_deck() -> PresentDeck {
-    PresentDeck {
-        schema: PRESENT_DECK_SCHEMA.into(),
-        source: default_figure_tile_source(),
-        tiles: Vec::new(),
-    }
+    PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
 }
 //#endregion 🔖Domain
 
@@ -170,15 +477,7 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
     let mut cells = Vec::new();
     for row in 0..rows {
         for column in 0..columns {
-            cells.push(SplitGridCell {
-                key: format!("{}-r{row}-c{column}", spec.key_prefix),
-                crop: FigureTileFrame {
-                    x: frame.x + column as f64 * crop_width,
-                    y: frame.y + row as f64 * crop_height,
-                    width: crop_width,
-                    height: crop_height,
-                },
-            });
+            cells.push(SplitGridCell { key: format!("{}-r{row}-c{column}", spec.key_prefix), crop: FigureTileFrame { x: frame.x + column as f64 * crop_width, y: frame.y + row as f64 * crop_height, width: crop_width, height: crop_height } });
         }
     }
     let _ = (cell_width, cell_height);
@@ -186,28 +485,15 @@ pub fn split_figure_grid(spec: SplitFigureGridSpec<'_>) -> Vec<SplitGridCell> {
 }
 
 pub fn populate_tile_drafts_from_grid(spec: FigureTileGridSeedSpec<'_>) -> Vec<FigureTileDraft> {
-    split_figure_grid(SplitFigureGridSpec {
-        rows: spec.rows,
-        columns: spec.columns,
-        frame: &spec.source.frame,
-        gap: spec.gap,
-        key_prefix: spec.key_prefix,
-    })
-    .into_iter()
-    .map(|cell| FigureTileDraft {
-        id: cell.key.clone(),
-        name: cell.key,
-        crop: cell.crop,
-    })
-    .collect()
+    split_figure_grid(SplitFigureGridSpec { rows: spec.rows, columns: spec.columns, frame: &spec.source.frame, gap: spec.gap, key_prefix: spec.key_prefix })
+        .into_iter()
+        .map(|cell| FigureTileDraft { id: cell.key.clone(), name: cell.key, crop: cell.crop })
+        .collect()
 }
 
 pub fn build_tile_morph_prompt(source: &FigureTileSource, drafts: &[FigureTileDraft]) -> String {
     fn format_frame(frame: &FigureTileFrame) -> String {
-        format!(
-            "{{ x: {:.6}, y: {:.6}, width: {:.6}, height: {:.6} }}",
-            frame.x, frame.y, frame.width, frame.height
-        )
+        format!("{{ x: {:.6}, y: {:.6}, width: {:.6}, height: {:.6} }}", frame.x, frame.y, frame.width, frame.height)
     }
     let kind = if source.kind.is_empty() { "figure" } else { source.kind.as_str() };
     let mut lines = vec![
@@ -229,12 +515,7 @@ pub fn build_tile_morph_prompt(source: &FigureTileSource, drafts: &[FigureTileDr
     lines.push(String::new());
     lines.push("## Tiles (normalized source crops; overlap allowed)".into());
     for draft in drafts {
-        lines.push(format!(
-            "- {} ({}): crop {}",
-            draft.name,
-            draft.id,
-            format_frame(&draft.crop)
-        ));
+        lines.push(format!("- {} ({}): crop {}", draft.name, draft.id, format_frame(&draft.crop)));
     }
     let embodiment_hint = match kind {
         "video" => "Use video embodiments for tile participants and the source clip.",
@@ -258,10 +539,7 @@ pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Pat
     if hashes.is_empty() {
         return Err(PresentError::NoSceneHashes);
     }
-    hashes
-        .into_iter()
-        .map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(PresentError::from))
-        .collect()
+    hashes.into_iter().map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(PresentError::from)).collect()
 }
 //#endregion 🔖VideoExport
 
@@ -282,10 +560,7 @@ pub struct FigureTileDraftPatch {
 
 impl Patchable<FigureTileDraftPatch> for FigureTileDraft {
     fn apply_patch(&mut self, patch: &FigureTileDraftPatch) -> FigureTileDraftPatch {
-        let inverse = FigureTileDraftPatch {
-            name: patch.name.as_ref().map(|_| self.name.clone()),
-            crop: patch.crop.as_ref().map(|_| self.crop.clone()),
-        };
+        let inverse = FigureTileDraftPatch { name: patch.name.as_ref().map(|_| self.name.clone()), crop: patch.crop.as_ref().map(|_| self.crop.clone()) };
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -310,10 +585,7 @@ fn apply_tile_diff(tiles: &mut Vec<FigureTileDraft>, diff: &CollectionDiff<Strin
     }
 }
 
-fn absorb_tile_diff(
-    target: &mut Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>,
-    incoming: Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>,
-) {
+fn absorb_tile_diff(target: &mut Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>, incoming: Option<CollectionDiff<String, FigureTileDraftPatch, FigureTileDraft>>) {
     if let Some(b) = incoming {
         match target {
             Some(a) => {
@@ -383,37 +655,19 @@ impl Operation<PresentDeck> for PresentOp {
 
     fn diff(&self, projection: &PresentDeck) -> PresentDiff {
         match self {
-            PresentOp::Tiles(op) => PresentDiff {
-                tiles: Some(collection_diff_from_op(&projection.tiles, op)),
-                ..Default::default()
-            },
-            PresentOp::SetSource { source } => PresentDiff {
-                source: Some(source.clone()),
-                ..Default::default()
-            },
-            PresentOp::SetTiles { tiles } => PresentDiff {
-                set_tiles: Some(tiles.clone()),
-                ..Default::default()
-            },
-            PresentOp::SetDeck { deck } => PresentDiff {
-                deck: Some(deck.clone()),
-                ..Default::default()
-            },
+            PresentOp::Tiles(op) => PresentDiff { tiles: Some(collection_diff_from_op(&projection.tiles, op)), ..Default::default() },
+            PresentOp::SetSource { source } => PresentDiff { source: Some(source.clone()), ..Default::default() },
+            PresentOp::SetTiles { tiles } => PresentDiff { set_tiles: Some(tiles.clone()), ..Default::default() },
+            PresentOp::SetDeck { deck } => PresentDiff { deck: Some(deck.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &PresentDeck) -> Vec<Self> {
         match self {
             PresentOp::Tiles(op) => vec![PresentOp::Tiles(invert_collection_op(&projection.tiles, op))],
-            PresentOp::SetSource { .. } => vec![PresentOp::SetSource {
-                source: projection.source.clone(),
-            }],
-            PresentOp::SetTiles { .. } => vec![PresentOp::SetTiles {
-                tiles: projection.tiles.clone(),
-            }],
-            PresentOp::SetDeck { .. } => vec![PresentOp::SetDeck {
-                deck: projection.clone(),
-            }],
+            PresentOp::SetSource { .. } => vec![PresentOp::SetSource { source: projection.source.clone() }],
+            PresentOp::SetTiles { .. } => vec![PresentOp::SetTiles { tiles: projection.tiles.clone() }],
+            PresentOp::SetDeck { .. } => vec![PresentOp::SetDeck { deck: projection.clone() }],
         }
     }
 }
@@ -462,34 +716,22 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<PresentDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: PresentEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: PresentEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     PresentStore::new(envelope)
                 }
-                None => PresentStore::new(create_document_vcs_envelope(
-                    PRESENT_DECK_SCHEMA,
-                    "animate-present",
-                    empty_present_deck(),
-                    None,
-                )),
+                None => PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -512,13 +754,7 @@ mod tests {
     #[test]
     fn grid_seed_produces_tiles() {
         let source = default_figure_tile_source();
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-            source: &source,
-            rows: 3,
-            columns: 5,
-            gap: 0.0,
-            key_prefix: "tile",
-        });
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
         assert_eq!(tiles.len(), 15);
         assert_eq!(tiles[0].id, "tile-r0-c0");
     }
@@ -532,16 +768,7 @@ mod tests {
     #[test]
     fn morph_prompt_lists_tiles() {
         let source = default_figure_tile_source();
-        let tiles = vec![FigureTileDraft {
-            id: "t1".into(),
-            name: "t1".into(),
-            crop: FigureTileFrame {
-                x: 0.1,
-                y: 0.1,
-                width: 0.2,
-                height: 0.2,
-            },
-        }];
+        let tiles = vec![FigureTileDraft { id: "t1".into(), name: "t1".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } }];
         let prompt = build_tile_morph_prompt(&source, &tiles);
         assert!(prompt.contains("t1"));
         assert!(prompt.contains("Source media"));
@@ -560,13 +787,7 @@ mod tests {
     #[test]
     fn set_tiles_and_clear_round_trip() {
         let deck = default_present_deck();
-        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-            source: &deck.source,
-            rows: 2,
-            columns: 2,
-            gap: 0.0,
-            key_prefix: "tile",
-        });
+        let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let seeded = round_trip(&deck, &PresentOp::SetTiles { tiles: tiles.clone() });
         assert_eq!(seeded.tiles.len(), 4);
         let cleared = round_trip(&seeded, &PresentOp::SetTiles { tiles: Vec::new() });
@@ -576,28 +797,12 @@ mod tests {
     #[test]
     fn tile_add_patch_remove_round_trip() {
         let deck = default_present_deck();
-        let tile = FigureTileDraft {
-            id: "t1".into(),
-            name: "A".into(),
-            crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
-        };
+        let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
         let added = round_trip(&deck, &PresentOp::Tiles(CollectionOp::Add { index: 0, item: tile }));
         assert_eq!(added.tiles.len(), 1);
-        let renamed = round_trip(
-            &added,
-            &PresentOp::Tiles(CollectionOp::Patch {
-                id: "t1".into(),
-                patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None },
-            }),
-        );
+        let renamed = round_trip(&added, &PresentOp::Tiles(CollectionOp::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
         assert_eq!(renamed.tiles[0].name, "Renamed");
-        let recropped = round_trip(
-            &renamed,
-            &PresentOp::Tiles(CollectionOp::Patch {
-                id: "t1".into(),
-                patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) },
-            }),
-        );
+        let recropped = round_trip(&renamed, &PresentOp::Tiles(CollectionOp::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) } }));
         assert_eq!(recropped.tiles[0].crop.width, 0.4);
         let removed = round_trip(&recropped, &PresentOp::Tiles(CollectionOp::Remove { id: "t1".into() }));
         assert!(removed.tiles.is_empty());
@@ -605,27 +810,10 @@ mod tests {
 
     #[test]
     fn present_deck_materializes() {
-        let mut store = PresentStore::new(create_document_vcs_envelope(
-            PRESENT_DECK_SCHEMA,
-            "animate-present",
-            empty_present_deck(),
-            None,
-        ));
+        let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![PresentOp::Tiles(CollectionOp::Add {
-                    index: 0,
-                    item: FigureTileDraft {
-                        id: "t1".into(),
-                        name: "A".into(),
-                        crop: FigureTileFrame {
-                            x: 0.0,
-                            y: 0.0,
-                            width: 1.0,
-                            height: 1.0,
-                        },
-                    },
-                })],
+                operations: vec![PresentOp::Tiles(CollectionOp::Add { index: 0, item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");

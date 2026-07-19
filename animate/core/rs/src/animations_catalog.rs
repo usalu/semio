@@ -7,24 +7,17 @@ use mathematical_geometry::{Affine, Point, Vec2};
 use std::collections::HashMap;
 
 fn scale_about_center(base: Affine, center: Point, factor: f64) -> Affine {
-    let t = Affine::IDENTITY.translate((center.x(), center.y()))
-        * Affine::IDENTITY.scale(factor)
-        * Affine::IDENTITY.translate((-center.x(), -center.y()));
+    let t = Affine::IDENTITY.translate((center.x(), center.y())) * Affine::IDENTITY.scale(factor) * Affine::IDENTITY.translate((-center.x(), -center.y()));
     base * t
 }
 
 fn rotate_about_center(base: Affine, center: Point, angle: f64) -> Affine {
-    let t = Affine::IDENTITY.translate((center.x(), center.y()))
-        * Affine::IDENTITY.rotate(angle)
-        * Affine::IDENTITY.translate((-center.x(), -center.y()));
+    let t = Affine::IDENTITY.translate((center.x(), center.y())) * Affine::IDENTITY.rotate(angle) * Affine::IDENTITY.translate((-center.x(), -center.y()));
     base * t
 }
 
 fn lerp_point(a: Point, b: Point, t: f64) -> Point {
-    Point::new(
-        a.x() + (b.x() - a.x()) * t,
-        a.y() + (b.y() - a.y()) * t,
-    )
+    Point::new(a.x() + (b.x() - a.x()) * t, a.y() + (b.y() - a.y()) * t)
 }
 
 pub struct DrawBorderThenFill {
@@ -37,13 +30,7 @@ pub struct DrawBorderThenFill {
 
 impl DrawBorderThenFill {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-            fill_opacity: 1.0,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false, fill_opacity: 1.0 }
     }
 }
 
@@ -101,12 +88,7 @@ pub struct FadeTransform {
 
 impl FadeTransform {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -156,12 +138,7 @@ pub struct ReplacementTransform {
 
 impl ReplacementTransform {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -212,13 +189,7 @@ pub struct TransformFromCopy {
 
 impl TransformFromCopy {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false, start_transform: None }
     }
 }
 
@@ -282,12 +253,7 @@ pub struct MoveToTarget {
 
 impl MoveToTarget {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -335,12 +301,7 @@ pub struct Restore {
 
 impl Restore {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -390,13 +351,7 @@ pub struct Flash {
 
 impl Flash {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_opacity: 1.0, primed: false }
     }
 }
 
@@ -444,12 +399,7 @@ pub struct Circumscribe {
 
 impl Circumscribe {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_transform: None }
     }
 }
 
@@ -499,13 +449,7 @@ pub struct GrowFromPoint {
 
 impl GrowFromPoint {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            grow_point: Point::ZERO,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, grow_point: Point::ZERO, start_transform: None }
     }
 }
 
@@ -558,14 +502,7 @@ pub struct ShrinkToCenter {
 
 impl ShrinkToCenter {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            start_transform: None,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, start_transform: None, start_opacity: 1.0, primed: false }
     }
 }
 
@@ -627,13 +564,7 @@ pub struct SpinInFromNothing {
 
 impl SpinInFromNothing {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            angle: std::f64::consts::TAU,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, angle: std::f64::consts::TAU, start_transform: None }
     }
 }
 
@@ -688,14 +619,7 @@ pub struct ChangeDecimalToValue {
 
 impl ChangeDecimalToValue {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            value: 0.0,
-            start_opacity: 1.0,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, value: 0.0, start_opacity: 1.0, primed: false }
     }
 }
 
@@ -723,11 +647,7 @@ impl Animation for ChangeDecimalToValue {
             self.primed = true;
         }
         with_vsobject(mobjects, target_id, |v| {
-            let flicker = if alpha < 0.5 {
-                1.0 - alpha * 0.6
-            } else {
-                0.4 + (alpha - 0.5) * 1.2
-            };
+            let flicker = if alpha < 0.5 { 1.0 - alpha * 0.6 } else { 0.4 + (alpha - 0.5) * 1.2 };
             v.set_opacity(self.start_opacity * flicker.clamp(0.2, 1.0));
             let center = v.center();
             let pulse = 1.0 + 0.08 * (alpha * std::f64::consts::TAU).sin().abs();
@@ -749,12 +669,7 @@ pub struct Broadcast {
 
 impl Broadcast {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_transform: None }
     }
 }
 
@@ -804,13 +719,7 @@ pub struct ApplyWave {
 
 impl ApplyWave {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            amplitude: 0.2,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, amplitude: 0.2, start_transform: None }
     }
 }
 
@@ -859,13 +768,7 @@ pub struct Wiggle {
 
 impl Wiggle {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            angle: 0.1,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, angle: 0.1, start_transform: None }
     }
 }
 
@@ -914,12 +817,7 @@ pub struct CyclicReplace {
 
 impl CyclicReplace {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            cycle_ids: vec![target_id],
-            run_time,
-            rate: crate::rate::smooth,
-            start_centers: Vec::new(),
-        }
+        Self { cycle_ids: vec![target_id], run_time, rate: crate::rate::smooth, start_centers: Vec::new() }
     }
 }
 
@@ -990,14 +888,7 @@ pub struct Swap {
 
 impl Swap {
     pub fn new(target_id: u64, swap_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            swap_id,
-            run_time,
-            rate: crate::rate::smooth,
-            a_center: None,
-            b_center: None,
-        }
+        Self { target_id, swap_id, run_time, rate: crate::rate::smooth, a_center: None, b_center: None }
     }
 }
 
@@ -1057,12 +948,7 @@ pub struct TransformMatchingShapes {
 
 impl TransformMatchingShapes {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -1110,12 +996,7 @@ pub struct Homotopy {
 
 impl Homotopy {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, start_transform: None }
     }
 }
 
@@ -1164,12 +1045,7 @@ pub struct ShowPassingFlash {
 
 impl ShowPassingFlash {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::linear,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::linear, primed: false }
     }
 }
 
@@ -1215,14 +1091,7 @@ pub struct SpiralIn {
 
 impl SpiralIn {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            angle: std::f64::consts::TAU * 2.0,
-            origin: Point::ZERO,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, angle: std::f64::consts::TAU * 2.0, origin: Point::ZERO, start_transform: None }
     }
 }
 
@@ -1275,12 +1144,7 @@ pub struct Uncreate {
 
 impl Uncreate {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -1318,12 +1182,7 @@ pub struct Write {
 
 impl Write {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            primed: false,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, primed: false }
     }
 }
 
@@ -1364,12 +1223,7 @@ pub struct GrowFromCenter {
 
 impl GrowFromCenter {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::smooth,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::smooth, start_transform: None }
     }
 }
 
@@ -1420,12 +1274,7 @@ pub struct Indicate {
 
 impl Indicate {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::there_and_back,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::there_and_back, start_transform: None }
     }
 }
 
@@ -1474,13 +1323,7 @@ pub struct Rotating {
 
 impl Rotating {
     pub fn new(target_id: u64, run_time: f64) -> Self {
-        Self {
-            target_id,
-            run_time,
-            rate: crate::rate::linear,
-            angle: std::f64::consts::TAU,
-            start_transform: None,
-        }
+        Self { target_id, run_time, rate: crate::rate::linear, angle: std::f64::consts::TAU, start_transform: None }
     }
 }
 

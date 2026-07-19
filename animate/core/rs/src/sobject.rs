@@ -2,8 +2,8 @@
 
 use crate::color::Color;
 use crate::updater::Updater;
-use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
 use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
+use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static SOBJECT_ID: AtomicU64 = AtomicU64::new(1);
@@ -24,13 +24,7 @@ pub struct Style {
 
 impl Default for Style {
     fn default() -> Self {
-        Self {
-            fill: Some(Color::WHITE),
-            stroke: None,
-            fill_opacity: 1.0,
-            stroke_opacity: 1.0,
-            stroke_width: 4.0,
-        }
+        Self { fill: Some(Color::WHITE), stroke: None, fill_opacity: 1.0, stroke_opacity: 1.0, stroke_width: 4.0 }
     }
 }
 
@@ -55,10 +49,7 @@ impl Bounds {
     }
 
     pub fn empty() -> Self {
-        Self {
-            min: Point::ZERO,
-            max: Point::ZERO,
-        }
+        Self { min: Point::ZERO, max: Point::ZERO }
     }
 }
 
@@ -158,20 +149,7 @@ pub struct VSobjectSnapshot {
 
 impl VSobject {
     pub fn new() -> Self {
-        Self {
-            id: next_id(),
-            name: String::new(),
-            paths: Vec::new(),
-            style: Style::default(),
-            opacity: 1.0,
-            parent_opacity: 1.0,
-            transform: Affine::IDENTITY,
-            point_ratio: 1.0,
-            z_order: 0,
-            saved: None,
-            target: None,
-            updaters: Vec::new(),
-        }
+        Self { id: next_id(), name: String::new(), paths: Vec::new(), style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, point_ratio: 1.0, z_order: 0, saved: None, target: None, updaters: Vec::new() }
     }
 
     pub fn from_path(path: BezPath) -> Self {
@@ -195,13 +173,7 @@ impl VSobject {
     }
 
     fn snapshot(&self) -> VSobjectSnapshot {
-        VSobjectSnapshot {
-            paths: self.paths.clone(),
-            style: self.style.clone(),
-            opacity: self.opacity,
-            transform: self.transform,
-            point_ratio: self.point_ratio,
-        }
+        VSobjectSnapshot { paths: self.paths.clone(), style: self.style.clone(), opacity: self.opacity, transform: self.transform, point_ratio: self.point_ratio }
     }
 
     fn restore_snapshot(&mut self, snap: VSobjectSnapshot) {
@@ -364,14 +336,7 @@ fn lerp_affine(a: Affine, b: Affine, t: f64) -> Affine {
     let ta = a.to_kurbo().as_coeffs();
     let tb = b.to_kurbo().as_coeffs();
     let t = t.clamp(0.0, 1.0);
-    Affine::new([
-        lerp_f64(ta[0], tb[0], t),
-        lerp_f64(ta[1], tb[1], t),
-        lerp_f64(ta[2], tb[2], t),
-        lerp_f64(ta[3], tb[3], t),
-        lerp_f64(ta[4], tb[4], t),
-        lerp_f64(ta[5], tb[5], t),
-    ])
+    Affine::new([lerp_f64(ta[0], tb[0], t), lerp_f64(ta[1], tb[1], t), lerp_f64(ta[2], tb[2], t), lerp_f64(ta[3], tb[3], t), lerp_f64(ta[4], tb[4], t), lerp_f64(ta[5], tb[5], t)])
 }
 
 impl Default for VSobject {
@@ -424,10 +389,7 @@ impl Sobject for VSobject {
             }
         }
         if let Some(bb) = bounding_box(&pts) {
-            Bounds {
-                min: Point::new(bb.min_x, bb.min_y),
-                max: Point::new(bb.max_x, bb.max_y),
-            }
+            Bounds { min: Point::new(bb.min_x, bb.min_y), max: Point::new(bb.max_x, bb.max_y) }
         } else {
             Bounds::empty()
         }
@@ -515,19 +477,7 @@ pub struct GroupSnapshot {
 
 impl Group {
     pub fn new(children: Vec<Box<dyn Sobject>>) -> Self {
-        Self {
-            id: next_id(),
-            name: String::new(),
-            children,
-            style: Style::default(),
-            opacity: 1.0,
-            parent_opacity: 1.0,
-            transform: Affine::IDENTITY,
-            z_order: 0,
-            saved: None,
-            target: None,
-            updaters: Vec::new(),
-        }
+        Self { id: next_id(), name: String::new(), children, style: Style::default(), opacity: 1.0, parent_opacity: 1.0, transform: Affine::IDENTITY, z_order: 0, saved: None, target: None, updaters: Vec::new() }
     }
 
     pub fn empty() -> Self {
@@ -622,10 +572,7 @@ impl Sobject for Group {
         for c in &mut self.children {
             c.save_state();
         }
-        self.saved = Some(GroupSnapshot {
-            opacity: self.opacity,
-            transform: self.transform,
-        });
+        self.saved = Some(GroupSnapshot { opacity: self.opacity, transform: self.transform });
     }
     fn restore(&mut self) {
         for c in &mut self.children {
@@ -640,10 +587,7 @@ impl Sobject for Group {
         for c in &mut self.children {
             c.generate_target();
         }
-        self.target = Some(GroupSnapshot {
-            opacity: self.opacity,
-            transform: self.transform,
-        });
+        self.target = Some(GroupSnapshot { opacity: self.opacity, transform: self.transform });
     }
     fn has_target(&self) -> bool {
         self.target.is_some() || self.children.iter().any(|c| c.has_target())
@@ -697,26 +641,14 @@ pub fn vgroup(children: Vec<Box<dyn Sobject>>) -> VGroup {
 pub fn next_to(mover: &mut dyn Sobject, anchor: &dyn Sobject, direction: Vec2, buff: f64) {
     let mb = mover.bounds();
     let ab = anchor.bounds();
-    let dir = if direction.hypot() < 1e-9 {
-        Vec2::new(1.0, 0.0)
-    } else {
-        direction / direction.hypot()
-    };
+    let dir = if direction.hypot() < 1e-9 { Vec2::new(1.0, 0.0) } else { direction / direction.hypot() };
     let shift = if dir.x().abs() > dir.y().abs() {
         let edge = if dir.x() > 0.0 { ab.max.x() } else { ab.min.x() };
-        let target = if dir.x() > 0.0 {
-            edge + buff + mb.width() / 2.0
-        } else {
-            edge - buff - mb.width() / 2.0
-        };
+        let target = if dir.x() > 0.0 { edge + buff + mb.width() / 2.0 } else { edge - buff - mb.width() / 2.0 };
         Vec2::new(target - mb.center().x(), 0.0)
     } else {
         let edge = if dir.y() > 0.0 { ab.max.y() } else { ab.min.y() };
-        let target = if dir.y() > 0.0 {
-            edge + buff + mb.height() / 2.0
-        } else {
-            edge - buff - mb.height() / 2.0
-        };
+        let target = if dir.y() > 0.0 { edge + buff + mb.height() / 2.0 } else { edge - buff - mb.height() / 2.0 };
         Vec2::new(0.0, target - mb.center().y())
     };
     mover.shift(shift);
@@ -727,19 +659,11 @@ pub fn arrange(group: &mut Group, direction: Vec2, buff: f64) {
     if group.children.is_empty() {
         return;
     }
-    let dir = if direction.hypot() < 1e-9 {
-        Vec2::new(1.0, 0.0)
-    } else {
-        direction / direction.hypot()
-    };
+    let dir = if direction.hypot() < 1e-9 { Vec2::new(1.0, 0.0) } else { direction / direction.hypot() };
     let mut cursor = group.children[0].center();
     for child in group.children.iter_mut().skip(1) {
         let b = child.bounds();
-        let step = if dir.x().abs() > dir.y().abs() {
-            b.width() / 2.0 + buff
-        } else {
-            b.height() / 2.0 + buff
-        };
+        let step = if dir.x().abs() > dir.y().abs() { b.width() / 2.0 + buff } else { b.height() / 2.0 + buff };
         cursor = Point::new(cursor.x() + dir.x() * step, cursor.y() + dir.y() * step);
         child.move_to(cursor);
     }

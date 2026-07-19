@@ -1,5 +1,7 @@
 //! 🕸️ Pure graph foundation: topology markers, node/handle/edge kinds, and index-based algorithms; the interactive board engine lives in `infinite_board`.
 
+use std::collections::{BTreeMap, BTreeSet};
+
 pub use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 
 // #region 🔖Ids
@@ -70,6 +72,8 @@ pub fn orient_endpoints<E: Copy + Ord, D: Directedness>(source: E, target: E) ->
 pub trait PortModel {
     type Endpoint: Copy + Ord + std::fmt::Debug;
     const HAS_PORTS: bool;
+    /// 🪢 Whether this port model allows parallel edges between the same pair (the port axis IS the multi-edge axis: `Ported` ~ NetworkX `Multi(Di)Graph`, `Normal` ~ NetworkX `(Di)Graph`).
+    const MULTI_EDGES: bool;
     fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64;
     fn try_handle_endpoint(handle_id: HandleId) -> Option<Self::Endpoint>;
     fn endpoint_as_handle(endpoint: Self::Endpoint) -> Option<HandleId>;
@@ -82,6 +86,7 @@ pub struct Normal;
 impl PortModel for Normal {
     type Endpoint = NodeId;
     const HAS_PORTS: bool = false;
+    const MULTI_EDGES: bool = false;
     fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
         endpoint
     }
@@ -100,6 +105,7 @@ pub struct Ported;
 impl PortModel for Ported {
     type Endpoint = HandleId;
     const HAS_PORTS: bool = true;
+    const MULTI_EDGES: bool = true;
     fn endpoint_as_u64(endpoint: Self::Endpoint) -> u64 {
         endpoint
     }

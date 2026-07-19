@@ -46,11 +46,7 @@ pub struct CacheConfig {
 
 impl Default for CacheConfig {
     fn default() -> Self {
-        Self {
-            enabled: true,
-            max_entries: 10_000,
-            partial_movie_dir: PathBuf::from("partial_movie_files"),
-        }
+        Self { enabled: true, max_entries: 10_000, partial_movie_dir: PathBuf::from("partial_movie_files") }
     }
 }
 

@@ -60,12 +60,7 @@ impl Color {
 
     pub fn lerp(self, other: Self, t: f64) -> Self {
         let t = t.clamp(0.0, 1.0);
-        Self {
-            r: self.r + (other.r - self.r) * t,
-            g: self.g + (other.g - self.g) * t,
-            b: self.b + (other.b - self.b) * t,
-            a: self.a + (other.a - self.a) * t,
-        }
+        Self { r: self.r + (other.r - self.r) * t, g: self.g + (other.g - self.g) * t, b: self.b + (other.b - self.b) * t, a: self.a + (other.a - self.a) * t }
     }
 
     pub fn to_array(self) -> [f64; 4] {
@@ -104,11 +99,7 @@ impl Gradient {
             let (t0, c0) = pair[0];
             let (t1, c1) = pair[1];
             if t >= t0 && t <= t1 {
-                let u = if (t1 - t0).abs() < 1e-9 {
-                    0.0
-                } else {
-                    (t - t0) / (t1 - t0)
-                };
+                let u = if (t1 - t0).abs() < 1e-9 { 0.0 } else { (t - t0) / (t1 - t0) };
                 return c0.lerp(c1, u);
             }
         }

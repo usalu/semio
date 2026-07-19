@@ -11,9 +11,7 @@ pub struct ValueTracker {
 
 impl ValueTracker {
     pub fn new(value: f64) -> Self {
-        Self {
-            value: Arc::new(Mutex::new(value)),
-        }
+        Self { value: Arc::new(Mutex::new(value)) }
     }
 
     pub fn get(&self) -> f64 {
@@ -47,13 +45,7 @@ impl Updater {
     where
         F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
     {
-        Self {
-            id: UPDATER_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed),
-            name: name.into(),
-            active: true,
-            dt_scale: 1.0,
-            callback: Arc::new(callback),
-        }
+        Self { id: UPDATER_ID.fetch_add(1, std::sync::atomic::Ordering::Relaxed), name: name.into(), active: true, dt_scale: 1.0, callback: Arc::new(callback) }
     }
 
     pub fn invoke(&self, target: &mut dyn Sobject, dt: f64) {

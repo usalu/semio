@@ -7793,6 +7793,169 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 
 // #endregion 🎍NotFound
 
+// #region 🚦StatusSurface
+// Tone-based status-surface kit: badges, status chips, stat tiles, and empty/error placeholders.
+// Consumers MUST use StatusTone (never hardcoded palette colors) for tone-driven styling.
+
+/** @emoji 🚦 Semantic tone shared by {@link Badge}, {@link StatusChip}, and {@link StatCard} deltas. */
+export type StatusTone = "neutral" | "info" | "success" | "warning" | "danger";
+
+/**
+ * STATUS_TONE_SURFACE_CLASS holds the border/background/foreground classes for a StatusTone.
+ **/
+const STATUS_TONE_SURFACE_CLASS: Record<StatusTone, string> = {
+  neutral: "bg-muted text-muted-foreground",
+  info: "border-info-border bg-info-bg text-info-foreground",
+  success: "border-success-border bg-success-bg text-success-foreground",
+  warning: "border-warning-border bg-warning-bg text-warning-foreground",
+  danger: "border-destructive-border bg-destructive-bg text-destructive-foreground",
+};
+
+/**
+ * STATUS_TONE_DOT_CLASS holds the solid dot background class for a StatusTone.
+ **/
+const STATUS_TONE_DOT_CLASS: Record<StatusTone, string> = {
+  neutral: "bg-muted-foreground",
+  info: "bg-info-border",
+  success: "bg-success-border",
+  warning: "bg-warning-border",
+  danger: "bg-destructive-border",
+};
+
+/**
+ * Props interface for the Badge component.
+ **/
+export interface BadgeProps {
+  id?: string;
+  tone?: StatusTone;
+  text: string;
+  icon?: React.ReactNode;
+}
+
+/** @emoji 🏷️ Small tone-colored pill for inline status labels. */
+export function Badge({ id, tone = "neutral", text, icon }: BadgeProps): React.ReactElement {
+  return (
+    <span id={id} data-slot="badge" className={cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs font-medium", STATUS_TONE_SURFACE_CLASS[tone])}>
+      {icon ? <span className="inline-flex shrink-0 items-center justify-center size-tiny">{icon}</span> : null}
+      <span className="truncate">{text}</span>
+    </span>
+  );
+}
+
+/**
+ * Props interface for the StatusChip component.
+ **/
+export interface StatusChipProps {
+  id?: string;
+  status: "ok" | "busy" | "error" | "offline";
+  label: string;
+}
+
+/**
+ * STATUS_CHIP_TONE maps a StatusChip status to its StatusTone.
+ **/
+const STATUS_CHIP_TONE: Record<StatusChipProps["status"], StatusTone> = {
+  ok: "success",
+  busy: "warning",
+  error: "danger",
+  offline: "neutral",
+};
+
+/** @emoji 🟢 Inline dot-and-label indicator for live status (connection, task, presence). */
+export function StatusChip({ id, status, label }: StatusChipProps): React.ReactElement {
+  const tone = STATUS_CHIP_TONE[status];
+  return (
+    <span id={id} data-slot="status-chip" data-status={status} className="inline-flex items-center gap-half text-xs text-muted-foreground">
+      <span className={cn("size-tiny shrink-0 rounded-full", STATUS_TONE_DOT_CLASS[tone])} aria-hidden />
+      <span className="truncate">{label}</span>
+    </span>
+  );
+}
+
+/**
+ * Props interface for the StatCard component.
+ **/
+export interface StatCardProps {
+  id?: string;
+  label: string;
+  value: string;
+  delta?: { value: string; tone: StatusTone };
+  icon?: React.ReactNode;
+}
+
+/** @emoji 📊 Labelled metric tile with an optional tone-colored delta badge. */
+export function StatCard({ id, label, value, delta, icon }: StatCardProps): React.ReactElement {
+  return (
+    <div id={id} data-slot="stat-card" className="flex flex-col gap-single border p-single">
+      <div className="flex items-center gap-single text-muted-foreground">
+        {icon ? <span className="inline-flex shrink-0 items-center justify-center size-small">{icon}</span> : null}
+        <span className="truncate text-xs">{label}</span>
+      </div>
+      <div className="flex items-baseline gap-single">
+        <span className="text-xl font-semibold text-foreground">{value}</span>
+        {delta ? <Badge tone={delta.tone} text={delta.value} /> : null}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Props interface for the EmptyState component.
+ **/
+export interface EmptyStateProps {
+  id?: string;
+  icon?: React.ReactNode;
+  title: string;
+  description?: string;
+  action?: { label: string; onClick: () => void };
+}
+
+/** @emoji 📭 Centered placeholder for lists or panels with no content yet. */
+export function EmptyState({ id, icon, title, description, action }: EmptyStateProps): React.ReactElement {
+  return (
+    <div id={id} data-slot="empty-state" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
+      <div className="flex items-center justify-center size-huge text-muted-foreground">{icon || <BoxIcon className="size-huge" />}</div>
+      <h2 className="text-xl font-semibold">{title}</h2>
+      {description && <p className="text-muted-foreground max-w-md">{description}</p>}
+      {action && (
+        <button type="button" onClick={action.onClick} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
+          <span>{action.label}</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Props interface for the ErrorView component.
+ **/
+export interface ErrorViewProps {
+  id?: string;
+  title?: string;
+  message: string;
+  onRetry?: () => void;
+}
+
+/** @emoji 🚨 Centered error placeholder with an optional retry action. */
+export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): React.ReactElement {
+  return (
+    <div id={id} data-slot="error-view" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
+      <div className="flex items-center justify-center size-huge text-destructive-foreground">
+        <AlertCircleIcon className="size-huge" />
+      </div>
+      <h2 className="text-xl font-semibold">{title || "Something went wrong"}</h2>
+      <p className="text-muted-foreground max-w-md">{message}</p>
+      {onRetry && (
+        <button type="button" onClick={onRetry} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
+          <span>Retry</span>
+        </button>
+      )}
+    </div>
+  );
+}
+
+// #endregion 🚦StatusSurface
+
 // #region 🎺LoadingRow
 // Skeleton loading row with pulsing icon and name.
 // Consumers MUST provide a name for the placeholder.
@@ -11433,6 +11596,71 @@ function NavbarExampleSelect({ id, label, value, options, onValueChange, classNa
 export { NavbarExampleSelect };
 
 // #endregion 🩺Navbar
+
+// #region 🔗RouteLink
+// Anchor that intercepts same-origin, protocol-less clicks for client-side navigation via history.pushState.
+// Consumers MUST rely on isInternalRouteHref's same-origin heuristic; external/absolute hrefs always fall through to a plain anchor.
+
+/** @emoji 🔗 Whether an anchor `href` looks like an in-app route (same-origin, no explicit scheme) rather than an external target. */
+function isInternalRouteHref(href: string | undefined): boolean {
+  if (!href) return false;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(href)) return false;
+  if (href.startsWith("//")) return false;
+  return true;
+}
+
+/** @emoji 🔗 Anchor that navigates via `history.pushState` + a synthetic `popstate` for internal hrefs, and behaves as a plain anchor for external/absolute ones or modified/non-primary clicks. */
+export function RouteLink({ href, target, download, onClick, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>): React.ReactElement {
+  const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
+    onClick?.(event);
+    if (event.defaultPrevented) return;
+    if (download !== undefined || (target && target !== "_self")) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!isInternalRouteHref(href)) return;
+    event.preventDefault();
+    history.pushState(null, "", href);
+    dispatchEvent(new PopStateEvent("popstate"));
+  };
+  return <a href={href} target={target} download={download} onClick={handleClick} data-slot="route-link" {...props} />;
+}
+
+// #endregion 🔗RouteLink
+
+// #region 🪟DesktopTitlebar
+// Draggable Electron-style window title bar with minimize/maximize/close controls.
+// Consumers MUST omit `controls` on non-Electron hosts; no control buttons render without it.
+
+/** @emoji 🪟 Configuration for {@link DesktopTitlebar} window controls. */
+export interface DesktopTitlebarProps {
+  title: string;
+  controls?: { minimize(): void; maximize(): void; close(): void };
+  children?: React.ReactNode;
+}
+
+/** @emoji 🪟 Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
+export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
+  return (
+    <div data-slot="desktop-titlebar" className={cn(borderNormalBottomClass, "flex h-large shrink-0 items-center gap-single px-single")} style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+      <span className="truncate text-sm font-semibold">{title}</span>
+      {children}
+      {controls ? (
+        <div className="ms-auto flex items-center gap-tiny" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
+          <button type="button" onClick={controls.minimize} aria-label="Minimize" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+            <Icon icon="minus" size="tiny" />
+          </button>
+          <button type="button" onClick={controls.maximize} aria-label="Maximize" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+            <Icon icon="square" size="tiny" />
+          </button>
+          <button type="button" onClick={controls.close} aria-label="Close" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-destructive-bg hover:text-destructive-foreground">
+            <Icon icon="x" size="tiny" />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+// #endregion 🪟DesktopTitlebar
 
 // #region 🏷️Tabs
 // Tab container built on Radix primitives.

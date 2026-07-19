@@ -398,7 +398,15 @@ export type UiStackNode = {
   readonly loading?: boolean;
   readonly activate?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
+  readonly dropOverlay?: UiDropOverlaySpec;
   readonly children: readonly UiNode[];
+};
+
+/** 📥 Hover-state copy for a {@link UiStackNode}'s `dropOverlay` — shown while a drag is over the stack, ahead of `dropAction` firing on release. */
+export type UiDropOverlaySpec = {
+  readonly title: string;
+  readonly hint: string;
+  readonly accept?: string;
 };
 
 export type UiSeparatorNode = { readonly type: "separator" };
@@ -651,6 +659,31 @@ export type BlockListScene = {
   readonly draggingId?: string;
 };
 
+/** 🆚 A before/after text diff surface scene payload — mirrors the wasm `componentScene` node's `diffView` field. */
+export type DiffViewScene = {
+  readonly before: string;
+  readonly after: string;
+  readonly language?: string;
+  readonly mode?: "unified" | "split";
+};
+
+/** 📰 One entry of an {@link EventFeedScene}'s `entriesJson` array. */
+export type EventFeedEntry = {
+  readonly id: string;
+  readonly timestampMs: number;
+  readonly iconId: string;
+  readonly title: string;
+  readonly detail?: string;
+  readonly tone?: string;
+};
+
+/** 📰 A scrolling event/log feed surface scene payload — mirrors the wasm `componentScene` node's `eventFeed` field. `entriesJson` is an {@link EventFeedEntry}`[]` array. */
+export type EventFeedScene = {
+  readonly entriesJson: string;
+  readonly follow?: boolean;
+  readonly activateAction?: string;
+};
+
 /** 🔌 A plugin-contributed external body rendered inline — mirrors the wasm `externalSlot` node. */
 export type UiExternalSlotNode = {
   readonly type: "externalSlot";
@@ -661,7 +694,7 @@ export type UiExternalSlotNode = {
 };
 
 /** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
-export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list";
+export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
 export type UiComponentSceneNode = {
@@ -684,6 +717,8 @@ export type UiComponentSceneNode = {
   readonly inkCanvas?: InkCanvasScene;
   readonly graphTimeline?: GraphTimelineScene;
   readonly blockList?: BlockListScene;
+  readonly diffView?: DiffViewScene;
+  readonly eventFeed?: EventFeedScene;
 };
 
 /** 🧷 Shared prop shape for every `framework/renderer/react/components/*-host.tsx` component. */

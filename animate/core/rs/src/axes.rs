@@ -19,12 +19,7 @@ impl Axes {
         let x_axis = arrow(origin, Point::new(origin.x() + x_length, origin.y()), color, 3.0, 0.2);
         let y_axis = arrow(origin, Point::new(origin.x(), origin.y() + y_length), color, 3.0, 0.2);
         let group = Group::new(vec![Box::new(x_axis), Box::new(y_axis)]);
-        Self {
-            group,
-            x_length,
-            y_length,
-            origin,
-        }
+        Self { group, x_length, y_length, origin }
     }
 
     pub fn with_tick_labels(mut self, x_ticks: &[f64], y_ticks: &[f64], color: Color) -> Self {
@@ -33,24 +28,14 @@ impl Axes {
             let mut label = Text::new(format!("{x:.1}"), color);
             label.inner.move_to(Point::new(p.x(), p.y() - 0.25));
             self.group.add_child(Box::new(label.inner));
-            self.group.add_child(Box::new(line(
-                Point::new(p.x(), p.y() - 0.08),
-                Point::new(p.x(), p.y() + 0.08),
-                color.with_alpha(0.6),
-                1.0,
-            )));
+            self.group.add_child(Box::new(line(Point::new(p.x(), p.y() - 0.08), Point::new(p.x(), p.y() + 0.08), color.with_alpha(0.6), 1.0)));
         }
         for &y in y_ticks {
             let p = self.coords_to_point(0.0, y);
             let mut label = Text::new(format!("{y:.1}"), color);
             label.inner.move_to(Point::new(p.x() - 0.35, p.y()));
             self.group.add_child(Box::new(label.inner));
-            self.group.add_child(Box::new(line(
-                Point::new(p.x() - 0.08, p.y()),
-                Point::new(p.x() + 0.08, p.y()),
-                color.with_alpha(0.6),
-                1.0,
-            )));
+            self.group.add_child(Box::new(line(Point::new(p.x() - 0.08, p.y()), Point::new(p.x() + 0.08, p.y()), color.with_alpha(0.6), 1.0)));
         }
         self
     }
@@ -138,37 +123,20 @@ impl NumberPlane {
         let x_len = (x_range.1 - x_range.0) * unit_size;
         let y_len = (y_range.1 - y_range.0) * unit_size;
         let axes = Axes::new(x_len, y_len, origin, color);
-        let mut children: Vec<Box<dyn Sobject>> = vec![
-            Box::new(arrow(origin, Point::new(origin.x() + x_len, origin.y()), color, 3.0, 0.2)),
-            Box::new(arrow(origin, Point::new(origin.x(), origin.y() + y_len), color, 3.0, 0.2)),
-        ];
+        let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(arrow(origin, Point::new(origin.x() + x_len, origin.y()), color, 3.0, 0.2)), Box::new(arrow(origin, Point::new(origin.x(), origin.y() + y_len), color, 3.0, 0.2))];
         let grid_color = color.with_alpha(0.25);
         let x_steps = ((x_range.1 - x_range.0) as i32).abs().max(1);
         let y_steps = ((y_range.1 - y_range.0) as i32).abs().max(1);
         for i in 0..=x_steps {
             let x = origin.x() + i as f64 * unit_size;
-            children.push(Box::new(line(
-                Point::new(x, origin.y()),
-                Point::new(x, origin.y() + y_len),
-                grid_color,
-                1.0,
-            )));
+            children.push(Box::new(line(Point::new(x, origin.y()), Point::new(x, origin.y() + y_len), grid_color, 1.0)));
         }
         for j in 0..=y_steps {
             let y = origin.y() + j as f64 * unit_size;
-            children.push(Box::new(line(
-                Point::new(origin.x(), y),
-                Point::new(origin.x() + x_len, y),
-                grid_color,
-                1.0,
-            )));
+            children.push(Box::new(line(Point::new(origin.x(), y), Point::new(origin.x() + x_len, y), grid_color, 1.0)));
         }
         let group = Group::new(children);
-        Self {
-            axes,
-            group,
-            unit_size,
-        }
+        Self { axes, group, unit_size }
     }
 }
 
@@ -186,18 +154,9 @@ impl NumberLine {
         let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
         for i in 0..=tick_count {
             let x = start.x() + length * i as f64 / tick_count as f64;
-            children.push(Box::new(line(
-                Point::new(x, start.y() - 0.1),
-                Point::new(x, start.y() + 0.1),
-                color,
-                1.5,
-            )));
+            children.push(Box::new(line(Point::new(x, start.y() - 0.1), Point::new(x, start.y() + 0.1), color, 1.5)));
         }
-        Self {
-            group: Group::new(children),
-            start,
-            length,
-        }
+        Self { group: Group::new(children), start, length }
     }
 
     pub fn number_to_point(&self, n: f64) -> Point {
@@ -222,23 +181,12 @@ impl IntegerLine {
         let mut children: Vec<Box<dyn Sobject>> = vec![Box::new(axis)];
         for value in min..=max {
             let x = start.x() + (value - min) as f64 * unit_size;
-            children.push(Box::new(line(
-                Point::new(x, start.y() - 0.12),
-                Point::new(x, start.y() + 0.12),
-                color,
-                1.5,
-            )));
+            children.push(Box::new(line(Point::new(x, start.y() - 0.12), Point::new(x, start.y() + 0.12), color, 1.5)));
             if value % 5 == 0 {
                 children.push(Box::new(dot(Point::new(x, start.y()), 0.04, color)));
             }
         }
-        Self {
-            group: Group::new(children),
-            start,
-            unit_size,
-            min,
-            max,
-        }
+        Self { group: Group::new(children), start, unit_size, min, max }
     }
 
     pub fn integer_to_point(&self, n: i32) -> Point {

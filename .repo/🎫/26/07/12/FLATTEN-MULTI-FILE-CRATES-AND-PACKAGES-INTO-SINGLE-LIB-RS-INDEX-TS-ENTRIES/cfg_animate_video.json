@@ -1,0 +1,11 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/animate/video/rs/lib.rs",
+  "mods": [
+    {"keyword": "pub mod", "name": "cache", "path": "/Users/ueli/Documents/semio/animate/video/rs/cache.rs"},
+    {"keyword": "pub mod", "name": "preview", "path": "/Users/ueli/Documents/semio/animate/video/rs/preview.rs"},
+    {"keyword": "pub mod", "name": "render", "path": "/Users/ueli/Documents/semio/animate/video/rs/render.rs"},
+    {"keyword": "pub mod", "name": "renderer", "path": "/Users/ueli/Documents/semio/animate/video/rs/renderer.rs"},
+    {"keyword": "pub mod", "name": "scenes", "path": "/Users/ueli/Documents/semio/animate/video/rs/scenes.rs"},
+    {"keyword": "pub mod", "name": "writer", "path": "/Users/ueli/Documents/semio/animate/video/rs/writer.rs"}
+  ]
+}

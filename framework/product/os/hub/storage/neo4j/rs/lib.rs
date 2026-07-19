@@ -77,16 +77,9 @@ impl Neo4jStorage {
 
     /// @emoji 🌱 Seeds a default studio, its default document, and a `Documents/default` node.
     pub async fn seed(&self) -> StorageResult<()> {
-        let mut existing = self
-            .graph
-            .execute(query("MATCH (s:Studio {id: 'default'}) RETURN s.id AS id"))
-            .await
-            .map_err(backend)?;
+        let mut existing = self.graph.execute(query("MATCH (s:Studio {id: 'default'}) RETURN s.id AS id")).await.map_err(backend)?;
         if existing.next().await.map_err(backend)?.is_none() {
-            self.graph
-                .run(query("CREATE (s:Studio {id: 'default', name: 'Studio', createdAt: $created_at})").param("created_at", now_ms()))
-                .await
-                .map_err(backend)?;
+            self.graph.run(query("CREATE (s:Studio {id: 'default', name: 'Studio', createdAt: $created_at})").param("created_at", now_ms())).await.map_err(backend)?;
         }
         self.ensure_document("default", "default").await?;
         let mut node_count = self.graph.execute(query("MATCH (n:Node) RETURN count(n) AS c")).await.map_err(backend)?;
@@ -103,11 +96,7 @@ impl Neo4jStorage {
 impl HubStorage for Neo4jStorage {
     //#region Documents
     async fn ensure_document(&self, studio_id: &str, id: &str) -> StorageResult<DocumentRecord> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (d:Document {id: $id}) RETURN d.schema AS schema, d.snapshot AS snapshot, d.version AS version").param("id", id))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (d:Document {id: $id}) RETURN d.schema AS schema, d.snapshot AS snapshot, d.version AS version").param("id", id)).await.map_err(backend)?;
         if let Some(row) = result.next().await.map_err(backend)? {
             let schema: String = row.get("schema").map_err(backend)?;
             let snapshot_json: String = row.get("snapshot").map_err(backend)?;
@@ -215,13 +204,7 @@ impl HubStorage for Neo4jStorage {
         let mut result = self.graph.execute(q).await.map_err(backend)?;
         let mut rows = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
-            rows.push(NodeRecord {
-                id: row.get("id").map_err(backend)?,
-                studio_id: studio_id.to_string(),
-                parent_id: row.get::<String>("parentId").ok(),
-                name: row.get("name").map_err(backend)?,
-                kind: row.get("kind").map_err(backend)?,
-            });
+            rows.push(NodeRecord { id: row.get("id").map_err(backend)?, studio_id: studio_id.to_string(), parent_id: row.get::<String>("parentId").ok(), name: row.get("name").map_err(backend)?, kind: row.get("kind").map_err(backend)? });
         }
         Ok(rows)
     }
@@ -285,14 +268,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn authorized_by_token(&self, document_id: &str, token: Option<&str>) -> StorageResult<bool> {
-        let mut count_result = self
-            .graph
-            .execute(
-                query("MATCH (:ShareToken)-[:FOR_DOCUMENT]->(:Document {id: $document_id}) RETURN count(*) AS c")
-                    .param("document_id", document_id),
-            )
-            .await
-            .map_err(backend)?;
+        let mut count_result = self.graph.execute(query("MATCH (:ShareToken)-[:FOR_DOCUMENT]->(:Document {id: $document_id}) RETURN count(*) AS c").param("document_id", document_id)).await.map_err(backend)?;
         let has_tokens: i64 = count_result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
         if has_tokens == 0 {
             return Ok(true);
@@ -300,15 +276,8 @@ impl HubStorage for Neo4jStorage {
         match token {
             None => Ok(false),
             Some(token) => {
-                let mut valid_result = self
-                    .graph
-                    .execute(
-                        query("MATCH (t:ShareToken {token: $token})-[:FOR_DOCUMENT]->(:Document {id: $document_id}) RETURN count(*) AS c")
-                            .param("token", token)
-                            .param("document_id", document_id),
-                    )
-                    .await
-                    .map_err(backend)?;
+                let mut valid_result =
+                    self.graph.execute(query("MATCH (t:ShareToken {token: $token})-[:FOR_DOCUMENT]->(:Document {id: $document_id}) RETURN count(*) AS c").param("token", token).param("document_id", document_id)).await.map_err(backend)?;
                 let valid: i64 = valid_result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
                 Ok(valid > 0)
             }
@@ -317,14 +286,7 @@ impl HubStorage for Neo4jStorage {
     //#endregion
 
     //#region Users
-    async fn create_user(
-        &self,
-        email: &str,
-        display_name: &str,
-        password_hash: Option<&str>,
-        sso_subject: Option<&str>,
-        sso_provider: Option<&str>,
-    ) -> StorageResult<UserRecord> {
+    async fn create_user(&self, email: &str, display_name: &str, password_hash: Option<&str>, sso_subject: Option<&str>, sso_provider: Option<&str>) -> StorageResult<UserRecord> {
         let id = Uuid::now_v7().to_string();
         let created_at = now_ms();
         self.graph
@@ -355,11 +317,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn get_user_by_email(&self, email: &str) -> StorageResult<Option<UserRecord>> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (u:User {email: $email}) RETURN u AS u").param("email", email))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (u:User {email: $email}) RETURN u AS u").param("email", email)).await.map_err(backend)?;
         match result.next().await.map_err(backend)? {
             Some(row) => Ok(Some(user_from_node(&row)?)),
             None => Ok(None),
@@ -367,15 +325,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn get_user_by_sso_subject(&self, provider: &str, subject: &str) -> StorageResult<Option<UserRecord>> {
-        let mut result = self
-            .graph
-            .execute(
-                query("MATCH (u:User {ssoProvider: $provider, ssoSubject: $subject}) RETURN u AS u")
-                    .param("provider", provider)
-                    .param("subject", subject),
-            )
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (u:User {ssoProvider: $provider, ssoSubject: $subject}) RETURN u AS u").param("provider", provider).param("subject", subject)).await.map_err(backend)?;
         match result.next().await.map_err(backend)? {
             Some(row) => Ok(Some(user_from_node(&row)?)),
             None => Ok(None),
@@ -383,11 +333,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn list_users(&self, limit: i64, offset: i64) -> StorageResult<Vec<UserRecord>> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (u:User) RETURN u AS u ORDER BY u.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (u:User) RETURN u AS u ORDER BY u.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset)).await.map_err(backend)?;
         let mut users = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             users.push(user_from_node(&row)?);
@@ -418,14 +364,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn list_studios_for_user(&self, user_id: &str) -> StorageResult<Vec<(StudioRecord, StudioRole)>> {
-        let mut result = self
-            .graph
-            .execute(
-                query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(s:Studio) RETURN s AS s, m.role AS role ORDER BY s.createdAt")
-                    .param("user_id", user_id),
-            )
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(s:Studio) RETURN s AS s, m.role AS role ORDER BY s.createdAt").param("user_id", user_id)).await.map_err(backend)?;
         let mut studios = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let studio = studio_from_node(&row)?;
@@ -438,11 +377,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn list_studios(&self, limit: i64, offset: i64) -> StorageResult<Vec<StudioRecord>> {
-        let mut result = self
-            .graph
-            .execute(query("MATCH (s:Studio) RETURN s AS s ORDER BY s.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset))
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (s:Studio) RETURN s AS s ORDER BY s.createdAt SKIP $offset LIMIT $limit").param("limit", limit).param("offset", offset)).await.map_err(backend)?;
         let mut studios = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             studios.push(studio_from_node(&row)?);
@@ -451,14 +386,8 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn list_documents_for_studio(&self, studio_id: &str) -> StorageResult<Vec<DocumentRecord>> {
-        let mut result = self
-            .graph
-            .execute(
-                query("MATCH (d:Document)-[:IN_STUDIO]->(:Studio {id: $studio_id}) RETURN d.id AS id, d.schema AS schema, d.snapshot AS snapshot, d.version AS version")
-                    .param("studio_id", studio_id),
-            )
-            .await
-            .map_err(backend)?;
+        let mut result =
+            self.graph.execute(query("MATCH (d:Document)-[:IN_STUDIO]->(:Studio {id: $studio_id}) RETURN d.id AS id, d.schema AS schema, d.snapshot AS snapshot, d.version AS version").param("studio_id", studio_id)).await.map_err(backend)?;
         let mut documents = Vec::new();
         while let Some(row) = result.next().await.map_err(backend)? {
             let snapshot_json: String = row.get("snapshot").map_err(backend)?;
@@ -493,27 +422,12 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn remove_membership(&self, studio_id: &str, user_id: &str) -> StorageResult<()> {
-        self.graph
-            .run(
-                query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) DELETE m")
-                    .param("user_id", user_id)
-                    .param("studio_id", studio_id),
-            )
-            .await
-            .map_err(backend)?;
+        self.graph.run(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) DELETE m").param("user_id", user_id).param("studio_id", studio_id)).await.map_err(backend)?;
         Ok(())
     }
 
     async fn get_role(&self, studio_id: &str, user_id: &str) -> StorageResult<Option<StudioRole>> {
-        let mut result = self
-            .graph
-            .execute(
-                query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) RETURN m.role AS role")
-                    .param("user_id", user_id)
-                    .param("studio_id", studio_id),
-            )
-            .await
-            .map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (:User {id: $user_id})-[m:MEMBER_OF]->(:Studio {id: $studio_id}) RETURN m.role AS role").param("user_id", user_id).param("studio_id", studio_id)).await.map_err(backend)?;
         match result.next().await.map_err(backend)? {
             Some(row) => {
                 let role: String = row.get("role").map_err(backend)?;
@@ -549,10 +463,7 @@ impl HubStorage for Neo4jStorage {
     async fn get_auth_session(&self, id: &str) -> StorageResult<Option<AuthSessionRecord>> {
         let mut result = self
             .graph
-            .execute(
-                query("MATCH (a:AuthSession {id: $id})-[:BELONGS_TO]->(u:User) RETURN a.id AS id, u.id AS userId, a.createdAt AS createdAt, a.expiresAt AS expiresAt, a.ssoProvider AS ssoProvider")
-                    .param("id", id),
-            )
+            .execute(query("MATCH (a:AuthSession {id: $id})-[:BELONGS_TO]->(u:User) RETURN a.id AS id, u.id AS userId, a.createdAt AS createdAt, a.expiresAt AS expiresAt, a.ssoProvider AS ssoProvider").param("id", id))
             .await
             .map_err(backend)?;
         match result.next().await.map_err(backend)? {
@@ -574,13 +485,7 @@ impl HubStorage for Neo4jStorage {
     //#endregion
 
     //#region SyncSessions
-    async fn record_sync_session_open(
-        &self,
-        document_id: &str,
-        user_id: Option<&str>,
-        studio_role: Option<StudioRole>,
-        client_label: &str,
-    ) -> StorageResult<SyncSessionRecord> {
+    async fn record_sync_session_open(&self, document_id: &str, user_id: Option<&str>, studio_role: Option<StudioRole>, client_label: &str) -> StorageResult<SyncSessionRecord> {
         let id = Uuid::now_v7().to_string();
         let connected_at = now_ms();
         let role_str = studio_role.map(|r| r.as_str().to_string()).unwrap_or_default();
@@ -622,22 +527,11 @@ impl HubStorage for Neo4jStorage {
                     .map_err(backend)?;
             }
         }
-        Ok(SyncSessionRecord {
-            id,
-            document_id: document_id.to_string(),
-            user_id: user_id.map(str::to_string),
-            studio_role,
-            client_label: client_label.to_string(),
-            connected_at,
-            disconnected_at: None,
-        })
+        Ok(SyncSessionRecord { id, document_id: document_id.to_string(), user_id: user_id.map(str::to_string), studio_role, client_label: client_label.to_string(), connected_at, disconnected_at: None })
     }
 
     async fn record_sync_session_close(&self, sync_session_id: &str) -> StorageResult<()> {
-        self.graph
-            .run(query("MATCH (s:SyncSession {id: $id}) SET s.disconnectedAt = $disconnected_at").param("id", sync_session_id).param("disconnected_at", now_ms()))
-            .await
-            .map_err(backend)?;
+        self.graph.run(query("MATCH (s:SyncSession {id: $id}) SET s.disconnectedAt = $disconnected_at").param("id", sync_session_id).param("disconnected_at", now_ms())).await.map_err(backend)?;
         Ok(())
     }
 
@@ -681,20 +575,10 @@ impl HubStorage for Neo4jStorage {
     /// the cost of re-encoding/re-writing the (potentially large) property.
     async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord> {
         let hash = hash_bytes(bytes);
-        let mut existing = self
-            .graph
-            .execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.hash AS hash").param("hash", hash.clone()))
-            .await
-            .map_err(backend)?;
+        let mut existing = self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.hash AS hash").param("hash", hash.clone())).await.map_err(backend)?;
         if existing.next().await.map_err(backend)?.is_none() {
             self.graph
-                .run(
-                    query("CREATE (b:Blob {hash: $hash, mediaType: $media_type, size: $size, bytes: $bytes})")
-                        .param("hash", hash.clone())
-                        .param("media_type", media_type)
-                        .param("size", bytes.len() as i64)
-                        .param("bytes", BASE64.encode(bytes)),
-                )
+                .run(query("CREATE (b:Blob {hash: $hash, mediaType: $media_type, size: $size, bytes: $bytes})").param("hash", hash.clone()).param("media_type", media_type).param("size", bytes.len() as i64).param("bytes", BASE64.encode(bytes)))
                 .await
                 .map_err(backend)?;
         }
@@ -702,8 +586,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn get_blob(&self, hash: &str) -> StorageResult<Option<Vec<u8>>> {
-        let mut result =
-            self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.bytes AS bytes").param("hash", hash)).await.map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN b.bytes AS bytes").param("hash", hash)).await.map_err(backend)?;
         if let Some(row) = result.next().await.map_err(backend)? {
             let encoded: String = row.get("bytes").map_err(backend)?;
             let decoded = BASE64.decode(encoded).map_err(backend)?;
@@ -713,8 +596,7 @@ impl HubStorage for Neo4jStorage {
     }
 
     async fn has_blob(&self, hash: &str) -> StorageResult<bool> {
-        let mut result =
-            self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN count(b) AS c").param("hash", hash)).await.map_err(backend)?;
+        let mut result = self.graph.execute(query("MATCH (b:Blob {hash: $hash}) RETURN count(b) AS c").param("hash", hash)).await.map_err(backend)?;
         let count: i64 = result.next().await.map_err(backend)?.and_then(|row| row.get("c").ok()).unwrap_or(0);
         Ok(count > 0)
     }
@@ -736,12 +618,7 @@ fn user_from_node(row: &neo4rs::Row) -> StorageResult<UserRecord> {
 
 fn studio_from_node(row: &neo4rs::Row) -> StorageResult<StudioRecord> {
     let node: neo4rs::Node = row.get("s").map_err(backend)?;
-    Ok(StudioRecord {
-        id: node.get("id").map_err(backend)?,
-        name: node.get("name").map_err(backend)?,
-        owner_user_id: node.get("ownerUserId").map_err(backend)?,
-        created_at: node.get("createdAt").map_err(backend)?,
-    })
+    Ok(StudioRecord { id: node.get("id").map_err(backend)?, name: node.get("name").map_err(backend)?, owner_user_id: node.get("ownerUserId").map_err(backend)?, created_at: node.get("createdAt").map_err(backend)? })
 }
 
 //#region 🔖Tests

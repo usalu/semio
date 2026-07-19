@@ -46,22 +46,11 @@ pub trait Scene {
     }
 
     fn play(&mut self, mut animation: Box<dyn Animation>) {
-        let pending_introducers = if animation.is_introducer() {
-            animation.get_all_mobjects()
-        } else {
-            Vec::new()
-        };
+        let pending_introducers = if animation.is_introducer() { animation.get_all_mobjects() } else { Vec::new() };
         for id in &pending_introducers {
-            debug_assert!(
-                self.mobjects().contains_key(id),
-                "introducer animation requires mobject {id} to exist in scene"
-            );
+            debug_assert!(self.mobjects().contains_key(id), "introducer animation requires mobject {id} to exist in scene");
         }
-        let remover_ids = if animation.is_remover() {
-            animation.get_all_mobjects()
-        } else {
-            Vec::new()
-        };
+        let remover_ids = if animation.is_remover() { animation.get_all_mobjects() } else { Vec::new() };
         animation.begin();
         let duration = animation.duration().max(0.0);
         let steps = (duration * self.config().frame_rate).ceil() as u64;
@@ -108,12 +97,7 @@ pub trait Scene {
     }
 
     fn render_frame_index(&self, frame: u64) -> SceneFrame {
-        SceneFrame {
-            frame,
-            time: frame as f64 / self.config().frame_rate,
-            mobject_count: self.mobjects().len(),
-            section: self.sections().find_at_time(self.scene_time()).map(|s| s.name.clone()),
-        }
+        SceneFrame { frame, time: frame as f64 / self.config().frame_rate, mobject_count: self.mobjects().len(), section: self.sections().find_at_time(self.scene_time()).map(|s| s.name.clone()) }
     }
 }
 
@@ -151,17 +135,8 @@ pub struct BasicScene {
 
 impl BasicScene {
     pub fn new(config: AnimateConfig) -> Self {
-        let camera = Camera::new(
-            config.width as f64 / 100.0,
-            config.height as f64 / 100.0,
-        );
-        Self {
-            config,
-            camera,
-            mobjects: HashMap::new(),
-            sections: SectionList::new(),
-            scene_time: 0.0,
-        }
+        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
+        Self { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 }
     }
 
     pub fn run_construct<S: Scene>(&mut self, scene: &mut S) {
@@ -222,9 +197,7 @@ pub struct TestScene {
 
 impl TestScene {
     pub fn new() -> Self {
-        Self {
-            inner: BasicScene::new(AnimateConfig::default().with_frame_rate(60.0)),
-        }
+        Self { inner: BasicScene::new(AnimateConfig::default().with_frame_rate(60.0)) }
     }
 }
 
@@ -276,20 +249,8 @@ pub struct MovingCameraScene {
 
 impl MovingCameraScene {
     pub fn new(config: AnimateConfig) -> Self {
-        let camera = Camera::new(
-            config.width as f64 / 100.0,
-            config.height as f64 / 100.0,
-        );
-        Self {
-            moving_camera: MovingCamera::new(camera.clone()),
-            inner: BasicScene {
-                config,
-                camera,
-                mobjects: HashMap::new(),
-                sections: SectionList::new(),
-                scene_time: 0.0,
-            },
-        }
+        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
+        Self { moving_camera: MovingCamera::new(camera.clone()), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
     }
 }
 
@@ -339,20 +300,8 @@ pub struct ThreeDScene {
 
 impl ThreeDScene {
     pub fn new(config: AnimateConfig) -> Self {
-        let camera = Camera::new(
-            config.width as f64 / 100.0,
-            config.height as f64 / 100.0,
-        );
-        Self {
-            three_d_camera: ThreeDCamera::new(camera.clone()),
-            inner: BasicScene {
-                config,
-                camera,
-                mobjects: HashMap::new(),
-                sections: SectionList::new(),
-                scene_time: 0.0,
-            },
-        }
+        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
+        Self { three_d_camera: ThreeDCamera::new(camera.clone()), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
     }
 }
 
@@ -398,20 +347,8 @@ pub struct ZoomedScene {
 
 impl ZoomedScene {
     pub fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
-        let camera = Camera::new(
-            config.width as f64 / 100.0,
-            config.height as f64 / 100.0,
-        );
-        Self {
-            zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor),
-            inner: BasicScene {
-                config,
-                camera,
-                mobjects: HashMap::new(),
-                sections: SectionList::new(),
-                scene_time: 0.0,
-            },
-        }
+        let camera = Camera::new(config.width as f64 / 100.0, config.height as f64 / 100.0);
+        Self { zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor), inner: BasicScene { config, camera, mobjects: HashMap::new(), sections: SectionList::new(), scene_time: 0.0 } }
     }
 }
 
@@ -456,9 +393,7 @@ pub struct VectorScene {
 
 impl VectorScene {
     pub fn new(config: AnimateConfig) -> Self {
-        Self {
-            inner: BasicScene::new(config),
-        }
+        Self { inner: BasicScene::new(config) }
     }
 }
 

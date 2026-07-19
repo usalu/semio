@@ -500,6 +500,516 @@ pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 }
 // #endregion 🔖Mat3d
 
+// #region 🔖CsrMatrix
+/// 🕸️ Sparse matrix in compressed-sparse-row form, for large graph-adjacency / Laplacian-style numerics where a dense `MatD` would be wasteful.
+#[derive(Clone, Debug, PartialEq)]
+pub struct CsrMatrix {
+    pub rows: usize,
+    pub cols: usize,
+    pub row_ptr: Vec<usize>,
+    pub col_idx: Vec<usize>,
+    pub values: Vec<f64>,
+}
+
+impl CsrMatrix {
+    /// 🕸️ Builds a CSR matrix from `(row, col, value)` triplets, summing duplicate `(row, col)` entries and sorting column indices within each row for deterministic iteration.
+    pub fn from_triplets(rows: usize, cols: usize, triplets: &[(usize, usize, f64)]) -> Self {
+        let mut by_row: Vec<Vec<(usize, f64)>> = vec![Vec::new(); rows];
+        for &(row, col, value) in triplets {
+            by_row[row].push((col, value));
+        }
+        let mut row_ptr = Vec::with_capacity(rows + 1);
+        let mut col_idx = Vec::new();
+        let mut values = Vec::new();
+        row_ptr.push(0);
+        for entries in by_row.iter_mut() {
+            entries.sort_by_key(|&(col, _)| col);
+            let mut last_col: Option<usize> = None;
+            for &(col, value) in entries.iter() {
+                if last_col == Some(col) {
+                    let idx = values.len() - 1;
+                    values[idx] += value;
+                } else {
+                    col_idx.push(col);
+                    values.push(value);
+                    last_col = Some(col);
+                }
+            }
+            row_ptr.push(col_idx.len());
+        }
+        Self { rows, cols, row_ptr, col_idx, values }
+    }
+
+    pub fn nnz(&self) -> usize {
+        self.values.len()
+    }
+
+    pub fn row(&self, r: usize) -> impl Iterator<Item = (usize, f64)> + '_ {
+        let start = self.row_ptr[r];
+        let end = self.row_ptr[r + 1];
+        self.col_idx[start..end].iter().copied().zip(self.values[start..end].iter().copied())
+    }
+
+    /// 🕸️ Sparse matrix-vector product `A x`.
+    pub fn spmv(&self, x: &VecD) -> VecD {
+        assert_eq!(self.cols, x.len(), "spmv dimension mismatch");
+        let mut out = VecD::zeros(self.rows);
+        for row in 0..self.rows {
+            let mut sum = 0.0;
+            for (col, value) in self.row(row) {
+                sum += value * x.get(col);
+            }
+            out.set(row, sum);
+        }
+        out
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut triplets = Vec::with_capacity(self.nnz());
+        for row in 0..self.rows {
+            for (col, value) in self.row(row) {
+                triplets.push((col, row, value));
+            }
+        }
+        Self::from_triplets(self.cols, self.rows, &triplets)
+    }
+
+    pub fn to_dense(&self) -> MatD {
+        let mut out = MatD::zeros(self.rows, self.cols);
+        for row in 0..self.rows {
+            for (col, value) in self.row(row) {
+                out.set(row, col, value);
+            }
+        }
+        out
+    }
+}
+// #endregion 🔖CsrMatrix
+
+// #region 🔖AlgebraError
+/// ⚠️ Error type for fallible dense/sparse linear-algebra operations: decompositions, iterative solvers, eigensolvers.
+#[derive(Clone, Debug, PartialEq)]
+pub enum AlgebraError {
+    NotPositiveDefinite,
+    Singular,
+    DimensionMismatch { expected: (usize, usize), got: (usize, usize) },
+    PowerIterationFailedConvergence { iterations: usize },
+    NotSymmetric,
+}
+
+impl std::fmt::Display for AlgebraError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::NotPositiveDefinite => write!(f, "matrix is not positive definite"),
+            Self::Singular => write!(f, "matrix is singular"),
+            Self::DimensionMismatch { expected, got } => write!(f, "dimension mismatch: expected {expected:?}, got {got:?}"),
+            Self::PowerIterationFailedConvergence { iterations } => write!(f, "iterative solver failed to converge after {iterations} iterations"),
+            Self::NotSymmetric => write!(f, "matrix is not symmetric"),
+        }
+    }
+}
+
+impl std::error::Error for AlgebraError {}
+// #endregion 🔖AlgebraError
+
+// #region 🔖Cholesky
+/// 🧮 Dense Cholesky decomposition `A = L Lᵀ` of a symmetric positive-definite matrix via the standard column-by-column algorithm; returns `AlgebraError::NotPositiveDefinite` the moment a diagonal pivot goes non-positive.
+pub fn cholesky(a: &MatD) -> Result<MatD, AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    let n = a.rows;
+    let mut l = MatD::zeros(n, n);
+    for col in 0..n {
+        let mut sum = a.get(col, col);
+        for k in 0..col {
+            sum -= l.get(col, k) * l.get(col, k);
+        }
+        if sum <= 0.0 {
+            return Err(AlgebraError::NotPositiveDefinite);
+        }
+        let pivot = sum.sqrt();
+        l.set(col, col, pivot);
+        for row in (col + 1)..n {
+            let mut sum = a.get(row, col);
+            for k in 0..col {
+                sum -= l.get(row, k) * l.get(col, k);
+            }
+            l.set(row, col, sum / pivot);
+        }
+    }
+    Ok(l)
+}
+
+/// 🧮 Solves `A x = b` given the Cholesky factor `L` of `A` (`A = L Lᵀ`), via forward substitution `L y = b` then back substitution `Lᵀ x = y`.
+pub fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
+    let n = l.rows;
+    let mut y = vec![0.0; n];
+    for row in 0..n {
+        let mut sum = b.get(row);
+        for k in 0..row {
+            sum -= l.get(row, k) * y[k];
+        }
+        y[row] = sum / l.get(row, row);
+    }
+    let mut x = vec![0.0; n];
+    for row in (0..n).rev() {
+        let mut sum = y[row];
+        for k in (row + 1)..n {
+            sum -= l.get(k, row) * x[k];
+        }
+        x[row] = sum / l.get(row, row);
+    }
+    VecD(x)
+}
+// #endregion 🔖Cholesky
+
+// #region 🔖QrHouseholder
+/// 🪞 Dense QR decomposition via Householder reflections; works for any `rows >= cols` matrix, returning orthogonal `Q` (rows x rows) and upper-triangular `R` (rows x cols) with `Q * R == A` up to float tolerance.
+pub fn qr_householder(a: &MatD) -> (MatD, MatD) {
+    let m = a.rows;
+    let n = a.cols;
+    let mut r = a.clone();
+    let mut q = MatD::identity(m);
+    let steps = n.min(m.saturating_sub(1));
+    for k in 0..steps {
+        let mut norm_x = 0.0;
+        for row in k..m {
+            norm_x += r.get(row, k) * r.get(row, k);
+        }
+        norm_x = norm_x.sqrt();
+        if norm_x < 1e-14 {
+            continue;
+        }
+        let alpha = if r.get(k, k) >= 0.0 { -norm_x } else { norm_x };
+        let mut v = vec![0.0; m - k];
+        for row in k..m {
+            v[row - k] = r.get(row, k);
+        }
+        v[0] -= alpha;
+        let v_norm: f64 = v.iter().map(|vi| vi * vi).sum();
+        if v_norm < 1e-28 {
+            continue;
+        }
+        for col in 0..n {
+            let mut dot = 0.0;
+            for row in k..m {
+                dot += v[row - k] * r.get(row, col);
+            }
+            let factor = 2.0 * dot / v_norm;
+            for row in k..m {
+                r.add_at(row, col, -factor * v[row - k]);
+            }
+        }
+        for row in 0..m {
+            let mut dot = 0.0;
+            for col in k..m {
+                dot += q.get(row, col) * v[col - k];
+            }
+            let factor = 2.0 * dot / v_norm;
+            for col in k..m {
+                q.add_at(row, col, -factor * v[col - k]);
+            }
+        }
+    }
+    (q, r)
+}
+// #endregion 🔖QrHouseholder
+
+// #region 🔖JacobiEigenSymmetric
+/// 🔄 Full eigendecomposition of a small-to-medium dense symmetric matrix via the classical cyclic Jacobi rotation method (O(n³) per sweep — realistic ceiling is a few thousand rows; use `lanczos_extreme_eigen` for large sparse matrices instead). Eigenvalues are returned ascending; eigenvectors are the columns of the returned matrix, matched by index.
+pub fn jacobi_eigen_symmetric(a: &MatD, max_sweeps: usize) -> Result<(Vec<f64>, MatD), AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    let n = a.rows;
+    for row in 0..n {
+        for col in 0..n {
+            if (a.get(row, col) - a.get(col, row)).abs() > 1e-9 {
+                return Err(AlgebraError::NotSymmetric);
+            }
+        }
+    }
+    let mut m = a.clone();
+    let mut v = MatD::identity(n);
+    let off_diag_norm = |m: &MatD| -> f64 {
+        let mut sum = 0.0;
+        for row in 0..n {
+            for col in 0..n {
+                if row != col {
+                    sum += m.get(row, col) * m.get(row, col);
+                }
+            }
+        }
+        sum.sqrt()
+    };
+    let tol = 1e-12 * (1.0 + a.data.iter().map(|x| x.abs()).fold(0.0_f64, f64::max));
+    let mut converged = false;
+    for _sweep in 0..max_sweeps {
+        if off_diag_norm(&m) < tol {
+            converged = true;
+            break;
+        }
+        for p in 0..n {
+            for q in (p + 1)..n {
+                let apq = m.get(p, q);
+                if apq.abs() < 1e-300 {
+                    continue;
+                }
+                let app = m.get(p, p);
+                let aqq = m.get(q, q);
+                let theta = (aqq - app) / (2.0 * apq);
+                let t = theta.signum() / (theta.abs() + (1.0 + theta * theta).sqrt());
+                let c = 1.0 / (1.0 + t * t).sqrt();
+                let s = t * c;
+                for k in 0..n {
+                    let mkp = m.get(k, p);
+                    let mkq = m.get(k, q);
+                    m.set(k, p, c * mkp - s * mkq);
+                    m.set(k, q, s * mkp + c * mkq);
+                }
+                for k in 0..n {
+                    let mpk = m.get(p, k);
+                    let mqk = m.get(q, k);
+                    m.set(p, k, c * mpk - s * mqk);
+                    m.set(q, k, s * mpk + c * mqk);
+                }
+                for k in 0..n {
+                    let vkp = v.get(k, p);
+                    let vkq = v.get(k, q);
+                    v.set(k, p, c * vkp - s * vkq);
+                    v.set(k, q, s * vkp + c * vkq);
+                }
+            }
+        }
+    }
+    if !converged {
+        return Err(AlgebraError::PowerIterationFailedConvergence { iterations: max_sweeps });
+    }
+    let eigenvalues: Vec<f64> = (0..n).map(|i| m.get(i, i)).collect();
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&i, &j| eigenvalues[i].partial_cmp(&eigenvalues[j]).unwrap());
+    let sorted_vals: Vec<f64> = order.iter().map(|&i| eigenvalues[i]).collect();
+    let mut sorted_vecs = MatD::zeros(n, n);
+    for (new_col, &old_col) in order.iter().enumerate() {
+        for row in 0..n {
+            sorted_vecs.set(row, new_col, v.get(row, old_col));
+        }
+    }
+    Ok((sorted_vals, sorted_vecs))
+}
+// #endregion 🔖JacobiEigenSymmetric
+
+// #region 🔖LanczosExtremeEigen
+/// 🕸️ Extreme eigenpairs of a large sparse symmetric matrix via Lanczos iteration with full reorthogonalization: builds a small tridiagonal Krylov-subspace matrix, diagonalizes it with `jacobi_eigen_symmetric`, and lifts the Ritz vectors back to the original space. Feeds algebraic-connectivity / Fiedler-vector algorithms in later NetworkX-parity waves. `largest` selects by eigenvalue magnitude, not sign.
+pub fn lanczos_extreme_eigen(a: &CsrMatrix, k: usize, largest: bool, max_iter: usize, seed: u64) -> Result<(Vec<f64>, Vec<VecD>), AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    let n = a.rows;
+    let m = max_iter.min(n);
+    let mut rng_state = seed ^ 0x9E37_79B9_7F4A_7C15;
+    let mut next_rand = move || {
+        rng_state ^= rng_state << 13;
+        rng_state ^= rng_state >> 7;
+        rng_state ^= rng_state << 17;
+        (rng_state as f64 / u64::MAX as f64) * 2.0 - 1.0
+    };
+    let mut v0 = VecD::from_vec((0..n).map(|_| next_rand()).collect());
+    if v0.norm2() < 1e-300 {
+        v0 = VecD::from_vec(vec![1.0; n]);
+    }
+    let norm0 = v0.norm2().max(1e-300);
+    v0 = v0.scale(1.0 / norm0);
+    let mut basis: Vec<VecD> = vec![v0];
+    let mut alpha = Vec::with_capacity(m);
+    let mut beta = Vec::with_capacity(m);
+    for j in 0..m {
+        let mut w = a.spmv(&basis[j]);
+        alpha.push(basis[j].dot(&w));
+        for basis_vec in basis.iter() {
+            let proj = basis_vec.dot(&w);
+            w = w.sub(&basis_vec.scale(proj));
+        }
+        for basis_vec in basis.iter() {
+            let proj = basis_vec.dot(&w);
+            w = w.sub(&basis_vec.scale(proj));
+        }
+        let bj = w.norm2();
+        if j + 1 < m {
+            beta.push(bj);
+            if bj < 1e-12 {
+                break;
+            }
+            basis.push(w.scale(1.0 / bj));
+        }
+    }
+    let dim = alpha.len();
+    let mut t = MatD::zeros(dim, dim);
+    for i in 0..dim {
+        t.set(i, i, alpha[i]);
+        if i + 1 < dim {
+            t.set(i, i + 1, beta[i]);
+            t.set(i + 1, i, beta[i]);
+        }
+    }
+    let (ritz_vals, ritz_vecs) = jacobi_eigen_symmetric(&t, 500)?;
+    let mut order: Vec<usize> = (0..dim).collect();
+    order.sort_by(|&x, &y| ritz_vals[y].abs().partial_cmp(&ritz_vals[x].abs()).unwrap());
+    if !largest {
+        order.reverse();
+    }
+    let take = k.min(dim);
+    let mut eigenvalues = Vec::with_capacity(take);
+    let mut eigenvectors = Vec::with_capacity(take);
+    for &idx in order.iter().take(take) {
+        eigenvalues.push(ritz_vals[idx]);
+        let mut vec_full = VecD::zeros(n);
+        for (col_i, basis_vec) in basis.iter().enumerate() {
+            let coeff = ritz_vecs.get(col_i, idx);
+            vec_full = vec_full.add(&basis_vec.scale(coeff));
+        }
+        eigenvectors.push(vec_full);
+    }
+    Ok((eigenvalues, eigenvectors))
+}
+// #endregion 🔖LanczosExtremeEigen
+
+// #region 🔖PowerIteration
+/// 🔁 Dominant eigenpair of a large sparse symmetric matrix via power iteration; convergence is measured via the residual `‖A x - λ x‖`. To recover further eigenpairs, deflate by rebuilding `a`'s triplets with `λ v vᵀ` subtracted and re-call — this returns a single eigenpair by design so callers control the deflation loop.
+pub fn power_iteration(a: &CsrMatrix, max_iter: usize, tol: f64, seed: u64) -> Result<(f64, VecD), AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    let n = a.rows;
+    let mut rng_state = seed ^ 0x2545_F491_4F6C_DD1D;
+    let mut next_rand = move || {
+        rng_state ^= rng_state << 13;
+        rng_state ^= rng_state >> 7;
+        rng_state ^= rng_state << 17;
+        (rng_state as f64 / u64::MAX as f64) * 2.0 - 1.0
+    };
+    let mut v = VecD::from_vec((0..n).map(|_| next_rand()).collect());
+    let norm = v.norm2().max(1e-300);
+    v = v.scale(1.0 / norm);
+    for _ in 0..max_iter {
+        let w = a.spmv(&v);
+        let norm_w = w.norm2();
+        if norm_w < 1e-300 {
+            return Ok((0.0, v));
+        }
+        let v_next = w.scale(1.0 / norm_w);
+        let av_next = a.spmv(&v_next);
+        let lambda = v_next.dot(&av_next);
+        let residual = av_next.sub(&v_next.scale(lambda)).norm2();
+        v = v_next;
+        if residual < tol {
+            return Ok((lambda, v));
+        }
+    }
+    Err(AlgebraError::PowerIterationFailedConvergence { iterations: max_iter })
+}
+// #endregion 🔖PowerIteration
+
+// #region 🔖ConjugateGradient
+/// 🧮 Conjugate-gradient solver for sparse symmetric positive-definite systems `A x = b`; feeds Laplacian-style solves (current-flow centrality, resistance distance) in later NetworkX-parity waves. Reuses `AlgebraError::PowerIterationFailedConvergence` for the non-convergence case (same "iterative solver ran out of iterations" semantic as power iteration and Jacobi).
+pub fn conjugate_gradient(a: &CsrMatrix, b: &VecD, tol: f64, max_iter: usize) -> Result<VecD, AlgebraError> {
+    if a.rows != a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, a.rows), got: (a.rows, a.cols) });
+    }
+    if a.rows != b.len() {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, 1), got: (b.len(), 1) });
+    }
+    let mut x = VecD::zeros(a.rows);
+    let mut r = b.sub(&a.spmv(&x));
+    let mut p = r.clone();
+    let mut rs_old = r.dot(&r);
+    if rs_old.sqrt() < tol {
+        return Ok(x);
+    }
+    for iteration in 0..max_iter {
+        let ap = a.spmv(&p);
+        let denom = p.dot(&ap);
+        if denom.abs() < 1e-300 {
+            return Err(AlgebraError::PowerIterationFailedConvergence { iterations: iteration });
+        }
+        let alpha = rs_old / denom;
+        x = x.add(&p.scale(alpha));
+        r = r.sub(&ap.scale(alpha));
+        let rs_new = r.dot(&r);
+        if rs_new.sqrt() < tol {
+            return Ok(x);
+        }
+        p = r.add(&p.scale(rs_new / rs_old));
+        rs_old = rs_new;
+    }
+    Err(AlgebraError::PowerIterationFailedConvergence { iterations: max_iter })
+}
+// #endregion 🔖ConjugateGradient
+
+// #region 🔖ExpmPade
+/// 🧮 Dense matrix exponential via scaling-and-squaring with an order-6 diagonal Padé approximant (coefficients from the closed-form `(2m-j)! m! / ((2m)! j! (m-j)!)` formula, m=6). O(n³) cost — fine for graphs up to a few hundred nodes; callers on bigger graphs should prefer eigen-based communicability once that's built in a later wave.
+pub fn expm_pade(a: &MatD) -> MatD {
+    assert_eq!(a.rows, a.cols, "expm_pade requires a square matrix");
+    let n = a.rows;
+    if n == 0 {
+        return MatD::zeros(0, 0);
+    }
+    let one_norm = {
+        let mut max_col_sum = 0.0_f64;
+        for col in 0..n {
+            let mut sum = 0.0;
+            for row in 0..n {
+                sum += a.get(row, col).abs();
+            }
+            max_col_sum = max_col_sum.max(sum);
+        }
+        max_col_sum
+    };
+    let mut squarings = 0i32;
+    let mut scaled_norm = one_norm;
+    while scaled_norm > 1.0 {
+        squarings += 1;
+        scaled_norm /= 2.0;
+    }
+    let factor = 2f64.powi(squarings);
+    let mut a_scaled = a.clone();
+    for value in a_scaled.data.iter_mut() {
+        *value /= factor;
+    }
+    const PADE_COEFFS: [f64; 7] = [1.0, 0.5, 5.0 / 44.0, 1.0 / 66.0, 1.0 / 792.0, 1.0 / 15840.0, 1.0 / 665_280.0];
+    let mut powers = Vec::with_capacity(7);
+    powers.push(MatD::identity(n));
+    for i in 1..7 {
+        powers.push(powers[i - 1].matmul(&a_scaled));
+    }
+    let mut n_mat = MatD::zeros(n, n);
+    let mut d_mat = MatD::zeros(n, n);
+    for (i, coeff) in PADE_COEFFS.iter().enumerate() {
+        let sign = if i % 2 == 0 { 1.0 } else { -1.0 };
+        for idx in 0..n_mat.data.len() {
+            n_mat.data[idx] += coeff * powers[i].data[idx];
+            d_mat.data[idx] += sign * coeff * powers[i].data[idx];
+        }
+    }
+    let mut result = MatD::zeros(n, n);
+    for col in 0..n {
+        let mut rhs = VecD::zeros(n);
+        for row in 0..n {
+            rhs.set(row, n_mat.get(row, col));
+        }
+        let x = d_mat.lu_solve(&rhs).expect("Padé denominator of a scaled matrix argument is diagonally dominant and thus non-singular");
+        for row in 0..n {
+            result.set(row, col, x.get(row));
+        }
+    }
+    for _ in 0..squarings {
+        result = result.matmul(&result);
+    }
+    result
+}
+// #endregion 🔖ExpmPade
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -727,6 +1237,277 @@ mod tests {
         let b = [0.0, 1.0, 0.0];
         let c = vec3d_cross(a, b);
         assert!((c[2] - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn csr_from_triplets_dedupes_and_sorts() {
+        let triplets = [(0, 1, 2.0), (0, 1, 3.0), (0, 0, 1.0), (1, 0, 4.0)];
+        let m = CsrMatrix::from_triplets(2, 2, &triplets);
+        assert_eq!(m.nnz(), 3);
+        let row0: Vec<(usize, f64)> = m.row(0).collect();
+        assert_eq!(row0, vec![(0, 1.0), (1, 5.0)]);
+    }
+
+    #[test]
+    fn csr_spmv_matches_dense_mul_vec() {
+        let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 1, 3.0)];
+        let m = CsrMatrix::from_triplets(2, 2, &triplets);
+        let x = VecD::from_vec(vec![1.0, 2.0]);
+        let sparse_result = m.spmv(&x);
+        let dense_result = m.to_dense().mul_vec(&x);
+        assert_eq!(sparse_result, dense_result);
+    }
+
+    #[test]
+    fn csr_transpose_swaps_rows_and_cols() {
+        let triplets = [(0, 1, 5.0)];
+        let m = CsrMatrix::from_triplets(2, 3, &triplets);
+        let t = m.transpose();
+        assert_eq!(t.rows, 3);
+        assert_eq!(t.cols, 2);
+        assert_eq!(t.row(1).collect::<Vec<_>>(), vec![(0, 5.0)]);
+    }
+
+    #[test]
+    fn algebra_error_display_is_human_readable() {
+        assert_eq!(AlgebraError::Singular.to_string(), "matrix is singular");
+        assert_eq!(AlgebraError::NotSymmetric.to_string(), "matrix is not symmetric");
+    }
+
+    #[test]
+    fn cholesky_matches_hand_solved_spd_system() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 4.0);
+        a.set(0, 1, 2.0);
+        a.set(1, 0, 2.0);
+        a.set(1, 1, 3.0);
+        let l = cholesky(&a).expect("SPD");
+        let reconstructed = l.matmul(&l.transpose());
+        for row in 0..2 {
+            for col in 0..2 {
+                assert!((reconstructed.get(row, col) - a.get(row, col)).abs() < 1e-9);
+            }
+        }
+        let b = VecD::from_vec(vec![6.0, 5.0]);
+        let x = cholesky_solve(&l, &b);
+        let x_lu = a.lu_solve(&b).expect("solvable");
+        for i in 0..2 {
+            assert!((x.get(i) - x_lu.get(i)).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn cholesky_rejects_non_positive_definite() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 2.0);
+        a.set(1, 0, 2.0);
+        a.set(1, 1, 1.0);
+        assert_eq!(cholesky(&a), Err(AlgebraError::NotPositiveDefinite));
+    }
+
+    #[test]
+    fn qr_householder_reconstructs_and_is_orthogonal() {
+        let mut a = MatD::zeros(3, 2);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 0.0);
+        a.set(1, 0, 0.0);
+        a.set(1, 1, 1.0);
+        a.set(2, 0, 1.0);
+        a.set(2, 1, 1.0);
+        let (q, r) = qr_householder(&a);
+        let product = q.matmul(&r);
+        for row in 0..3 {
+            for col in 0..2 {
+                assert!((product.get(row, col) - a.get(row, col)).abs() < 1e-9);
+                if row > col {
+                    assert!(r.get(row, col).abs() < 1e-9);
+                }
+            }
+        }
+        let qt_q = q.transpose().matmul(&q);
+        for i in 0..3 {
+            for j in 0..3 {
+                let expected = if i == j { 1.0 } else { 0.0 };
+                assert!((qt_q.get(i, j) - expected).abs() < 1e-9);
+            }
+        }
+    }
+
+    #[test]
+    fn jacobi_eigen_diagonal_matrix_returns_sorted_diagonal() {
+        let mut a = MatD::zeros(3, 3);
+        a.set(0, 0, 5.0);
+        a.set(1, 1, 1.0);
+        a.set(2, 2, 3.0);
+        let (vals, vecs) = jacobi_eigen_symmetric(&a, 100).expect("converges");
+        assert!((vals[0] - 1.0).abs() < 1e-9);
+        assert!((vals[1] - 3.0).abs() < 1e-9);
+        assert!((vals[2] - 5.0).abs() < 1e-9);
+        for col in 0..3 {
+            let mut norm = 0.0;
+            for row in 0..3 {
+                norm += vecs.get(row, col) * vecs.get(row, col);
+            }
+            assert!((norm - 1.0).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn jacobi_eigen_matches_characteristic_polynomial_roots() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 2.0);
+        a.set(0, 1, 1.0);
+        a.set(1, 0, 1.0);
+        a.set(1, 1, 2.0);
+        let (vals, _) = jacobi_eigen_symmetric(&a, 100).expect("converges");
+        assert!((vals[0] - 1.0).abs() < 1e-9);
+        assert!((vals[1] - 3.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn jacobi_eigen_rejects_asymmetric_matrix() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 2.0);
+        a.set(1, 0, 3.0);
+        a.set(1, 1, 4.0);
+        assert_eq!(jacobi_eigen_symmetric(&a, 100), Err(AlgebraError::NotSymmetric));
+    }
+
+    #[test]
+    fn jacobi_eigen_reports_non_convergence_with_zero_sweeps() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 2.0);
+        a.set(0, 1, 1.0);
+        a.set(1, 0, 1.0);
+        a.set(1, 1, 2.0);
+        assert_eq!(jacobi_eigen_symmetric(&a, 0), Err(AlgebraError::PowerIterationFailedConvergence { iterations: 0 }));
+    }
+
+    #[test]
+    fn power_iteration_finds_dominant_eigenpair() {
+        let triplets = [(0, 0, 1.0), (1, 1, 5.0), (2, 2, 2.0)];
+        let a = CsrMatrix::from_triplets(3, 3, &triplets);
+        let (lambda, v) = power_iteration(&a, 200, 1e-10, 7).expect("converges");
+        assert!((lambda - 5.0).abs() < 1e-6);
+        assert!(v.get(1).abs() > 0.99);
+    }
+
+    #[test]
+    fn power_iteration_rejects_non_square() {
+        let a = CsrMatrix::from_triplets(2, 3, &[]);
+        assert!(matches!(power_iteration(&a, 10, 1e-6, 1), Err(AlgebraError::DimensionMismatch { .. })));
+    }
+
+    #[test]
+    fn conjugate_gradient_matches_hand_solved_system() {
+        let triplets = [(0, 0, 2.0), (0, 1, 1.0), (1, 0, 1.0), (1, 1, 3.0)];
+        let a = CsrMatrix::from_triplets(2, 2, &triplets);
+        let b = VecD::from_vec(vec![5.0, 10.0]);
+        let x = conjugate_gradient(&a, &b, 1e-10, 100).expect("converges");
+        assert!((x.get(0) - 1.0).abs() < 1e-6);
+        assert!((x.get(1) - 3.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn conjugate_gradient_reports_non_convergence_with_zero_iterations() {
+        let triplets = [(0, 0, 2.0), (1, 1, 2.0)];
+        let a = CsrMatrix::from_triplets(2, 2, &triplets);
+        let b = VecD::from_vec(vec![1.0, 1.0]);
+        assert_eq!(conjugate_gradient(&a, &b, 1e-12, 0), Err(AlgebraError::PowerIterationFailedConvergence { iterations: 0 }));
+    }
+
+    #[test]
+    fn lanczos_extreme_eigen_finds_largest_on_diagonal_matrix() {
+        let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
+        let a = CsrMatrix::from_triplets(4, 4, &triplets);
+        let (vals, _) = lanczos_extreme_eigen(&a, 2, true, 4, 11).expect("converges");
+        let mut sorted = vals.clone();
+        sorted.sort_by(|x, y| y.partial_cmp(x).unwrap());
+        assert!((sorted[0] - 4.0).abs() < 1e-6);
+        assert!((sorted[1] - 3.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn lanczos_extreme_eigen_finds_smallest_on_diagonal_matrix() {
+        let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
+        let a = CsrMatrix::from_triplets(4, 4, &triplets);
+        let (vals, _) = lanczos_extreme_eigen(&a, 2, false, 4, 11).expect("converges");
+        let mut sorted = vals.clone();
+        sorted.sort_by(|x, y| x.partial_cmp(y).unwrap());
+        assert!((sorted[0] - 1.0).abs() < 1e-6);
+        assert!((sorted[1] - 2.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn lanczos_extreme_eigen_rejects_non_square() {
+        let a = CsrMatrix::from_triplets(2, 3, &[]);
+        assert!(matches!(lanczos_extreme_eigen(&a, 1, true, 5, 1), Err(AlgebraError::DimensionMismatch { .. })));
+    }
+
+    #[test]
+    fn expm_pade_of_zero_matrix_is_identity() {
+        let z = MatD::zeros(3, 3);
+        let e = expm_pade(&z);
+        assert_eq!(e, MatD::identity(3));
+    }
+
+    #[test]
+    fn expm_pade_of_diagonal_matrix_is_elementwise_exp() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 1.0);
+        a.set(1, 1, 2.0);
+        let e = expm_pade(&a);
+        assert!((e.get(0, 0) - 1.0_f64.exp()).abs() < 1e-8);
+        assert!((e.get(1, 1) - 2.0_f64.exp()).abs() < 1e-8);
+        assert!(e.get(0, 1).abs() < 1e-12);
+        assert!(e.get(1, 0).abs() < 1e-12);
+    }
+
+    fn tridiagonal_spd(n: usize) -> CsrMatrix {
+        let mut triplets = Vec::new();
+        for i in 0..n {
+            triplets.push((i, i, 2.0));
+            if i + 1 < n {
+                triplets.push((i, i + 1, -1.0));
+                triplets.push((i + 1, i, -1.0));
+            }
+        }
+        CsrMatrix::from_triplets(n, n, &triplets)
+    }
+
+    mod long {
+        use super::*;
+
+        #[test]
+        fn conjugate_gradient_converges_on_tridiagonal_system() {
+            let n = 40;
+            let a = tridiagonal_spd(n);
+            let x_true = VecD::from_vec((0..n).map(|i| (i as f64) + 1.0).collect());
+            let b = a.spmv(&x_true);
+            let x = conjugate_gradient(&a, &b, 1e-10, 1000).expect("converges");
+            for i in 0..n {
+                assert!((x.get(i) - x_true.get(i)).abs() < 1e-6);
+            }
+        }
+
+        #[test]
+        fn lanczos_matches_dense_jacobi_on_tridiagonal() {
+            let n = 16;
+            let a_sparse = tridiagonal_spd(n);
+            let a_dense = a_sparse.to_dense();
+            let (lanczos_vals, _) = lanczos_extreme_eigen(&a_sparse, 3, true, n, 42).expect("lanczos succeeds");
+            let (dense_vals, _) = jacobi_eigen_symmetric(&a_dense, 500).expect("jacobi succeeds");
+            let mut dense_top3: Vec<f64> = dense_vals.clone();
+            dense_top3.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            dense_top3.truncate(3);
+            let mut lanczos_sorted = lanczos_vals.clone();
+            lanczos_sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
+            for (l, d) in lanczos_sorted.iter().zip(dense_top3.iter()) {
+                assert!((l - d).abs() < 1e-6);
+            }
+        }
     }
 }
 // #endregion 🔖Tests

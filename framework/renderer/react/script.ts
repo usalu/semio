@@ -2,11 +2,12 @@
 /** @emoji 🎨 `@semio-tech/framework-renderer-react` task router. */
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runVitest } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments, "vitest.config.ts");
+    const { rest } = resolveTestLevel(segments);
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

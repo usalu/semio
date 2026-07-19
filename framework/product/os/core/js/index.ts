@@ -11,6 +11,8 @@
  */
 // #endregion Header
 
+import type { UtilityLeaf } from "@semio-tech/framework-core";
+
 export type OsProgramResourceMap = Readonly<Record<string, { readonly kind: string; readonly id: string; readonly label: string }>>;
 
 const programDefinitions = new Map<string, unknown>();
@@ -177,19 +179,11 @@ export function applyBackboneMessage(storedEnvelopeJson: string | null, messageJ
 }
 //#endregion 🔀ApplyBackboneMessage
 
-export type FrameworkSyncUtilityLeaf = {
-  readonly id: string;
-  readonly kind: "toggle";
-  readonly iconId: string;
-  readonly label?: string;
-  readonly text?: string;
-  readonly title?: string;
-  readonly order?: number;
-  readonly pressed?: boolean;
+/** 🍃 Sync-controller-scoped toggle leaf — narrows the canonical {@link UtilityLeaf} `"toggle"` variant instead of duplicating its fields. */
+export type FrameworkSyncUtilityLeaf = Extract<UtilityLeaf, { readonly kind: "toggle" }> & {
   readonly category: "sync";
   readonly controllerId: typeof FRAMEWORK_SYNC_CONTROLLER_ID;
   readonly action: string;
-  readonly args?: unknown;
 };
 
 export function buildFrameworkSyncUtilities(activeUri: string | null): readonly FrameworkSyncUtilityLeaf[] {
@@ -202,6 +196,51 @@ export function buildFrameworkSyncUtilities(activeUri: string | null): readonly 
   ];
 }
 //#endregion 🔖Backbone
+
+//#region 🔖DesktopWindowChrome
+/** 🪟 IPC channel names for the desktop window chrome controls (minimize/maximize/close) — shared literal between a host's `ipcMain.handle` registration and the renderer's `invoke` bridge. */
+export const DESKTOP_WINDOW_CONTROL_CHANNELS = {
+  minimize: "framework.window.minimize",
+  maximize: "framework.window.maximize",
+  close: "framework.window.close",
+} as const;
+
+/** 🎛️ Renderer-facing surface for the three desktop window chrome controls. */
+export type DesktopWindowControls = { minimize(): Promise<unknown>; maximize(): Promise<unknown>; close(): Promise<unknown> };
+
+/**
+ * 🔌 Registers host-side handlers for {@link DESKTOP_WINDOW_CONTROL_CHANNELS} against a structural
+ * `ipc.handle`-shaped port — no `electron` types leak into this signature; a real Electron app wires
+ * its `ipcMain`/`BrowserWindow` in at the call site. `maximize` toggles based on `isMaximized()`;
+ * a null `focusedWindow()` is a no-op.
+ */
+export function registerDesktopWindowControlHandlers(
+  ipc: { handle(channel: string, fn: () => void): void },
+  focusedWindow: () => { minimize(): void; isMaximized(): boolean; maximize(): void; unmaximize(): void; close(): void } | null,
+): void {
+  ipc.handle(DESKTOP_WINDOW_CONTROL_CHANNELS.minimize, () => {
+    focusedWindow()?.minimize();
+  });
+  ipc.handle(DESKTOP_WINDOW_CONTROL_CHANNELS.maximize, () => {
+    const window = focusedWindow();
+    if (!window) return;
+    if (window.isMaximized()) window.unmaximize();
+    else window.maximize();
+  });
+  ipc.handle(DESKTOP_WINDOW_CONTROL_CHANNELS.close, () => {
+    focusedWindow()?.close();
+  });
+}
+
+/** 🌉 Renderer-side {@link DesktopWindowControls} backed by a structural `invoke`-shaped port (e.g. `electron`'s `ipcRenderer.invoke`). */
+export function desktopWindowControlsBridge(invoke: (channel: string) => Promise<unknown>): DesktopWindowControls {
+  return {
+    minimize: () => invoke(DESKTOP_WINDOW_CONTROL_CHANNELS.minimize),
+    maximize: () => invoke(DESKTOP_WINDOW_CONTROL_CHANNELS.maximize),
+    close: () => invoke(DESKTOP_WINDOW_CONTROL_CHANNELS.close),
+  };
+}
+//#endregion 🔖DesktopWindowChrome
 
 //#region 🔖Blob
 /** 📦 Dev-server-proxied content-addressed blob endpoint: `PUT ${BLOB_ENDPOINT_PATH}?mediaType=` (raw

@@ -346,8 +346,8 @@ export class DevScript extends Script {
       parsingScope = false;
       if (segment !== "--") args.push(segment);
     }
-    // A single scope arg may itself be a comma-list composing top-level scopes ("ui,compose/algorithms").
-    // Multiple space-separated args keep the old slash-join behavior for hierarchical nx targets ("compose" "algorithms" -> "compose/algorithms").
+    // A single scope arg may itself be a comma-list composing top-level scopes ("ui,compose/algorithm").
+    // Multiple space-separated args keep the old slash-join behavior for hierarchical nx targets ("compose" "algorithm" -> "compose/algorithm").
     const scope = scopeSegments.length === 1 && scopeSegments[0]!.includes(",") ? scopeSegments[0]! : scopeSegments.join("/");
     const scopeIds = scope
       ? scope

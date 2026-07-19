@@ -182,12 +182,7 @@ fn tree_node(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
-    program
-        .elements
-        .iter()
-        .find(|element| &element.header.id == id)
-        .map(|element| element.header.name.clone())
-        .unwrap_or_else(|| id.to_string())
+    program.elements.iter().find(|element| &element.header.id == id).map_or_else(|| id.to_string(), |element| element.header.name.clone())
 }
 
 fn adjacency_kind_label(kind: &AdjacencyKind) -> &'static str {
@@ -248,8 +243,8 @@ fn default_element(name: impl Into<String>) -> ProgramElement {
     }
 }
 
-fn new_adjacency(program: &Program, a: EntityId, b: EntityId, kind: AdjacencyKind) -> Adjacency {
-    let (left, right) = normalize_pair(&a, &b);
+fn new_adjacency(program: &Program, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
+    let (left, right) = normalize_pair(a, b);
     Adjacency {
         header: EntityHeader::new(
             EntityId::new_serial("adjacency"),
@@ -935,7 +930,7 @@ fn report_record_from(program: &Program, kind: ReportKind, report: &ProgramRepor
     }
 }
 
-fn inspector_patch_action(register_id: &str, entity_id: &str, patch: Value) -> ActionDescriptor {
+fn inspector_patch_action(register_id: &str, entity_id: &str, patch: &Value) -> ActionDescriptor {
     architect_action(
         "patchRegisterItem",
         Some(json!({ "registerId": register_id, "entityId": entity_id, "patch": patch })),
@@ -2012,7 +2007,7 @@ impl DocumentApp for ArchitectApp {
                             updated.kind = kind;
                             updated
                         } else {
-                            new_adjacency(program, a, b, kind)
+                            new_adjacency(program, &a, &b, kind)
                         };
                         ActionEmit::ops(vec![ProgramOp::SetAdjacency { adjacency }])
                     }
@@ -2069,7 +2064,7 @@ impl DocumentApp for ArchitectApp {
             }
             "runAnalysis" => {
                 let kind = analysis_kind_from_args(args);
-                let result = run_analysis(program, kind.clone());
+                let result = run_analysis(program, kind);
                 let record = analysis_record_from(program, kind, &result);
                 self.runtime.last_analysis = Some(result.clone());
                 store_runtime_json(&mut self.runtime, &result);
@@ -2080,7 +2075,7 @@ impl DocumentApp for ArchitectApp {
             }
             "runReport" => {
                 let kind = report_kind_from_args(args);
-                let report = build_report(program, kind.clone());
+                let report = build_report(program, kind);
                 let record = report_record_from(program, kind, &report);
                 self.runtime.last_report = Some(report.clone());
                 store_runtime_json(&mut self.runtime, &report);
@@ -2161,11 +2156,9 @@ impl DocumentApp for ArchitectApp {
                             if let (Some(source), Some(target)) = (source, target) {
                                 let a = EntityId(source.into());
                                 let b = EntityId(target.into());
-                                let kind = find_adjacency(program, &a, &b)
-                                    .map(|row| row.kind.clone())
-                                    .unwrap_or(AdjacencyKind::Preferred);
+                                let kind = find_adjacency(program, &a, &b).map_or(AdjacencyKind::Preferred, |row| row.kind.clone());
                                 emitted.push(ProgramOp::SetAdjacency {
-                                    adjacency: new_adjacency(program, a, b, kind),
+                                    adjacency: new_adjacency(program, &a, &b, kind),
                                 });
                             }
                         }

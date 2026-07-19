@@ -44,6 +44,13 @@
         "command": "bun ./script.ts typecheck",
         "forwardAllArgs": true
       }
+    },
+    "check-ui-primitives": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/js/react",
+        "command": "bun ./script.ts check-ui-primitives"
+      }
     }
   }
 }

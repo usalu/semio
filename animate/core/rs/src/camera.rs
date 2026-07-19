@@ -15,23 +15,13 @@ pub struct Camera {
 
 impl Default for Camera {
     fn default() -> Self {
-        Self {
-            frame_center: Point::ZERO,
-            frame_width: 14.0,
-            frame_height: 8.0,
-            background: Color::BLACK,
-            transform: Affine::IDENTITY,
-        }
+        Self { frame_center: Point::ZERO, frame_width: 14.0, frame_height: 8.0, background: Color::BLACK, transform: Affine::IDENTITY }
     }
 }
 
 impl Camera {
     pub fn new(frame_width: f64, frame_height: f64) -> Self {
-        Self {
-            frame_width,
-            frame_height,
-            ..Self::default()
-        }
+        Self { frame_width, frame_height, ..Self::default() }
     }
 
     pub fn pixel_coords_to_scene(&self, px: f64, py: f64, pixel_width: u32, pixel_height: u32) -> Point {
@@ -62,21 +52,14 @@ impl MovingCamera {
     pub fn new(camera: Camera) -> Self {
         let target_center = camera.frame_center;
         let target_width = camera.frame_width;
-        Self {
-            camera,
-            target_center,
-            target_width,
-        }
+        Self { camera, target_center, target_width }
     }
 
     pub fn interpolate(&mut self, alpha: f64) {
         let a = alpha.clamp(0.0, 1.0);
         let c0 = self.camera.frame_center;
         let c1 = self.target_center;
-        self.camera.frame_center = Point::new(
-            c0.x() + (c1.x() - c0.x()) * a,
-            c0.y() + (c1.y() - c0.y()) * a,
-        );
+        self.camera.frame_center = Point::new(c0.x() + (c1.x() - c0.x()) * a, c0.y() + (c1.y() - c0.y()) * a);
         self.camera.frame_width = self.camera.frame_width + (self.target_width - self.camera.frame_width) * a;
         self.camera.frame_height = self.camera.frame_width * self.camera.frame_height / self.camera.frame_width.max(1e-9);
     }
@@ -99,13 +82,7 @@ pub struct ThreeDCamera {
 
 impl ThreeDCamera {
     pub fn new(camera: Camera) -> Self {
-        Self {
-            camera,
-            phi: 0.0,
-            theta: -std::f64::consts::FRAC_PI_2,
-            distance: 10.0,
-            gamma: 0.0,
-        }
+        Self { camera, phi: 0.0, theta: -std::f64::consts::FRAC_PI_2, distance: 10.0, gamma: 0.0 }
     }
 
     pub fn project(&self, x: f64, y: f64, z: f64) -> Point {
@@ -133,12 +110,7 @@ pub struct ZoomedCamera {
 
 impl ZoomedCamera {
     pub fn new(camera: Camera, zoom_factor: f64) -> Self {
-        Self {
-            camera,
-            zoom_factor,
-            display_corner: Vec2::new(1.0, 1.0),
-            display_size: (3.0, 2.0),
-        }
+        Self { camera, zoom_factor, display_corner: Vec2::new(1.0, 1.0), display_size: (3.0, 2.0) }
     }
 
     pub fn effective_frame_width(&self) -> f64 {

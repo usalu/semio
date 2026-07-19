@@ -1,0 +1,7 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/animate/present/rs/present/mod.rs",
+  "mods": [
+    {"keyword": "pub mod", "name": "compiler", "path": "/Users/ueli/Documents/semio/animate/present/rs/present/compiler.rs"},
+    {"keyword": "pub mod", "name": "slide", "path": "/Users/ueli/Documents/semio/animate/present/rs/present/slide.rs"}
+  ]
+}

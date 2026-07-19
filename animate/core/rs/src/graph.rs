@@ -28,11 +28,7 @@ impl Graph {
                 children.push(Box::new(circle(p, 0.2, color, None, 0.0)));
             }
         }
-        Self {
-            group: Group::new(children),
-            nodes,
-            edges,
-        }
+        Self { group: Group::new(children), nodes, edges }
     }
 
     pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
@@ -75,11 +71,7 @@ impl DiGraph {
                 children.push(Box::new(circle(p, node_r, color, Some(Color::WHITE), 1.0)));
             }
         }
-        Self {
-            group: Group::new(children),
-            nodes,
-            edges,
-        }
+        Self { group: Group::new(children), nodes, edges }
     }
 
     pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {

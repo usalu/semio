@@ -2908,7 +2908,7 @@ mod host_tests {
     fn board_host_rejects_kind_catalog_rows_with_legacy_label() {
         let mut h = BoardHost::new();
         let err = h.set_board_kind_catalogs_from_json(&serde_json::json!({"handleKinds":[{"id":"h","label":"legacy","color":"#112233"}]}).to_string()).unwrap_err();
-        assert!(err.contains("legacy label"));
+        assert!(err.to_string().contains("legacy label"));
     }
 
     #[test]

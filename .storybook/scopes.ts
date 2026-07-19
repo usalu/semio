@@ -89,7 +89,9 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     sourceRoots: [repoRelative("compose/client/lib/js"), repoRelative("compose/client/lib/rs"), repoRelative("asset"), repoRelative("compose/fixture")],
   },
   {
-    id: "compose/algorithms",
+    // Directory is singular (`stories/compose/algorithm/`) though the story `title`s read "algorithms" (plural) —
+    // the id must match the real directory (glob-matched), the titlePrefix documents the human-facing title.
+    id: "compose/algorithm",
     titlePrefix: "🏘️compose🧪algorithms",
     sourceRoots: [repoRelative("compose/dev/algorithm"), repoRelative("compose/client/lib/rs"), repoRelative("compose/fixture")],
     aliases: {
@@ -228,13 +230,13 @@ if (import.meta.vitest) {
       const ids = resolveActiveScopes("compose").map((s) => s.id);
       expect(ids).toContain("compose");
       expect(ids).toContain("compose/ui");
-      expect(ids).toContain("compose/algorithms");
+      expect(ids).toContain("compose/algorithm");
       expect(ids).not.toContain("ui");
     });
 
     it("composes multiple comma-separated scopes", () => {
-      const ids = resolveActiveScopes("ui,compose/algorithms").map((s) => s.id);
-      expect(ids).toEqual(["ui", "compose/algorithms"]);
+      const ids = resolveActiveScopes("ui,compose/algorithm").map((s) => s.id);
+      expect(ids).toEqual(["ui", "compose/algorithm"]);
     });
 
     it("throws on an unknown scope, listing registered ids", () => {
@@ -283,9 +285,9 @@ if (import.meta.vitest) {
 
   describe("scopeActive", () => {
     it("matches an active scope's own prefix and ancestors", () => {
-      const ids = resolveActiveScopes("compose/algorithms").map((s) => s.id);
+      const ids = resolveActiveScopes("compose/algorithm").map((s) => s.id);
       expect(scopeActive(ids, "compose")).toBe(true);
-      expect(scopeActive(ids, "compose/algorithms")).toBe(true);
+      expect(scopeActive(ids, "compose/algorithm")).toBe(true);
       expect(scopeActive(ids, "ui")).toBe(false);
     });
   });

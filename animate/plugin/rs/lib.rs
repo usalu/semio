@@ -1,24 +1,20 @@
 //! 🎞️ Animate present plugin — tile play app bundled as a hot-swappable WASM component.
 
 use animate_present::{
-    build_tile_morph_prompt, clamp_tile_crop, compile_scene_to_assets, default_present_deck, parse_grid_engagement,
-    populate_tile_drafts_from_grid, export_video_from_scene, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
+    build_tile_morph_prompt, clamp_tile_crop, compile_scene_to_assets, default_present_deck, export_video_from_scene, parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
     FigureTileGridSeedSpec, FigureTileSource, PresentDeck, PresentOp, PresentScene, PRESENT_DECK_SCHEMA,
 };
-use semio_framework_plugin::{SurfaceKind, PanelGroup, ActionArgDef, ActionArgOption, HostEffect,
-    build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-    ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionEmit, App,
-    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, ResourceKindSpec, UiFieldNode, UiInputNode, UiInspectorFieldGroup,
-    UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-    UI_INSPECTOR_MIXED_PLACEHOLDER,
+use semio_framework_plugin::{
+    build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
+    ActionDescriptor, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HostEffect, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
-use vcs::CollectionOp;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
+use vcs::CollectionOp;
 
 //#region 🔖Constants
 const ANIMATE_PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -49,20 +45,11 @@ struct AnimatePresentPlayRuntime {
 /// file — the genuine shell side-effect that replaces the retired ephemeral clipboard scratch (the
 /// landed `HostEffect` contract carries no clipboard variant, so the prompt is exported as media).
 fn tile_morph_prompt_effect(deck: &PresentDeck) -> HostEffect {
-    HostEffect::DownloadMediaExport {
-        filename: "tile-morph-prompt.md".into(),
-        mime_type: "text/markdown".into(),
-        data: build_tile_morph_prompt(&deck.source, &deck.tiles),
-        encoding: None,
-    }
+    HostEffect::DownloadMediaExport { filename: "tile-morph-prompt.md".into(), mime_type: "text/markdown".into(), data: build_tile_morph_prompt(&deck.source, &deck.tiles), encoding: None }
 }
 
 fn animate_present_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: ANIMATE_PRESENT_PLAY_CONTROLLER_ID.into(),
-        action: action.into(),
-        args,
-    }
+    ActionDescriptor { controller_id: ANIMATE_PRESENT_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
 }
 
 fn new_tile_id(prefix: &str) -> String {
@@ -71,9 +58,7 @@ fn new_tile_id(prefix: &str) -> String {
 }
 
 fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or_default()
+    args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default()
 }
 
 /// 🧹 Retains only the ids that reference an existing tile in `deck`.
@@ -106,12 +91,7 @@ struct TileCanvasLayer {
 }
 
 fn frame_to_canvas(frame: &FigureTileFrame, scale: f64) -> (f64, f64, f64, f64) {
-    (
-        frame.x * scale,
-        frame.y * scale,
-        frame.width * scale,
-        frame.height * scale,
-    )
+    (frame.x * scale, frame.y * scale, frame.width * scale, frame.height * scale)
 }
 
 /// 🖼️ Renders the actual source figure (image) as the backdrop layer, with crop tiles drawn on top of it.
@@ -133,16 +113,7 @@ fn deck_to_canvas_layers(deck: &PresentDeck, selected: &[String]) -> String {
     for tile in &deck.tiles {
         let (x, y, width, height) = frame_to_canvas(&tile.crop, SCALE);
         let selected_flag = selected.contains(&tile.id);
-        layers.push(TileCanvasLayer {
-            id: tile.id.clone(),
-            kind: if selected_flag { "tile-selected" } else { "tile" }.into(),
-            name: tile.name.clone(),
-            x,
-            y,
-            width,
-            height,
-            data_url: None,
-        });
+        layers.push(TileCanvasLayer { id: tile.id.clone(), kind: if selected_flag { "tile-selected" } else { "tile" }.into(), name: tile.name.clone(), x, y, width, height, data_url: None });
     }
     serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into())
 }
@@ -274,10 +245,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
         .map(|tile| UiTreeItemNode {
             id: tile.id.clone(),
             label: tile.name.clone(),
-            description: Some(format!(
-                "x={:.3} y={:.3} w={:.3} h={:.3}",
-                tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height
-            )),
+            description: Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)),
             icon_id: None,
             selected: Some(selected.contains(&tile.id)),
             default_open: None,
@@ -299,11 +267,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
             loading: None,
             label: Some(labels.tiles_section.into()),
             default_open: Some(true),
-            items: if items.is_empty() {
-                vec![tree_item("empty", labels.no_tiles)]
-            } else {
-                items
-            },
+            items: if items.is_empty() { vec![tree_item("empty", labels.no_tiles)] } else { items },
         }],
         selected_ids: Some(selected.to_vec()),
         highlighted_ids: None,
@@ -321,21 +285,10 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
         child: Box::new(UiNode::Input(UiInputNode {
             id: format!("animate.present.play.tile.crop.{field}.input"),
             input_kind: "number".into(),
-            value: if mixed.uniform {
-                format!("{:.6}", values.first().copied().unwrap_or(0.0))
-            } else {
-                String::new()
-            },
-            placeholder: if mixed.uniform {
-                None
-            } else {
-                Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-            },
+            value: if mixed.uniform { format!("{:.6}", values.first().copied().unwrap_or(0.0)) } else { String::new() },
+            placeholder: if mixed.uniform { None } else { Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into()) },
             commit: Some("blur".into()),
-            on_change: animate_present_action(
-                "patchTileCrops",
-                Some(json!({ "ids": tile_ids, "field": field })),
-            ),
+            on_change: animate_present_action("patchTileCrops", Some(json!({ "ids": tile_ids, "field": field }))),
             min: None,
             max: None,
             step: None,
@@ -357,10 +310,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
             children: vec![ui_text(labels.details_select_tile)],
         }]);
     }
-    let tiles: Vec<&FigureTileDraft> = selected
-        .iter()
-        .filter_map(|id| deck.tiles.iter().find(|tile| &tile.id == id))
-        .collect();
+    let tiles: Vec<&FigureTileDraft> = selected.iter().filter_map(|id| deck.tiles.iter().find(|tile| &tile.id == id)).collect();
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.not-found".into(),
@@ -391,15 +341,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         required: None,
         error: None,
     })];
-    identity_fields.push(ui_inspector_readonly_field(
-        "animate.present.play.tile.id",
-        labels.field_id,
-        if tile_ids.len() == 1 {
-            tile_ids.first().cloned().unwrap_or_default()
-        } else {
-            format!("{} {}", tile_ids.len(), labels.selected_suffix)
-        },
-    ));
+    identity_fields.push(ui_inspector_readonly_field("animate.present.play.tile.id", labels.field_id, if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix) }));
     if tile_ids.len() == 1 {
         identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
             id: Some(format!("animate.present.play.tile.{}.delete", tile_ids[0])),
@@ -429,34 +371,16 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
                 inspector_crop_field(&tile_ids, "x", labels.field_x, &tiles.iter().map(|tile| tile.crop.x).collect::<Vec<_>>()),
                 inspector_crop_field(&tile_ids, "y", labels.field_y, &tiles.iter().map(|tile| tile.crop.y).collect::<Vec<_>>()),
                 inspector_crop_field(&tile_ids, "width", labels.field_width, &tiles.iter().map(|tile| tile.crop.width).collect::<Vec<_>>()),
-                inspector_crop_field(
-                    &tile_ids,
-                    "height",
-                    labels.field_height,
-                    &tiles.iter().map(|tile| tile.crop.height).collect::<Vec<_>>(),
-                ),
+                inspector_crop_field(&tile_ids, "height", labels.field_height, &tiles.iter().map(|tile| tile.crop.height).collect::<Vec<_>>()),
             ],
         },
-        UiInspectorFieldGroup {
-            id: "animate.present.play.details.identity".into(),
-            label: labels.group_identity.into(),
-            default_open: None,
-            fields: identity_fields,
-        },
+        UiInspectorFieldGroup { id: "animate.present.play.details.identity".into(), label: labels.group_identity.into(), default_open: None, fields: identity_fields },
     ];
     ui_inspector_groups_to_tree(&groups)
 }
 
 fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> UiNode {
-    UiNode::Button(semio_framework_plugin::UiButtonNode {
-        id: Some(id.into()),
-        icon_id: "plus".into(),
-        label: label.into(),
-        action: animate_present_action(action, args),
-        style: None,
-        disabled: None,
-        loading: None,
-    })
+    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, disabled: None, loading: None })
 }
 
 fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
@@ -468,18 +392,8 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
             default_open: Some(true),
             children: vec![
                 ui_text(labels.catalogue_seed_desc),
-                catalogue_button(
-                    "animate.present.play.catalogue.seed-2x2",
-                    labels.catalogue_seed_2x2,
-                    "seedGrid",
-                    Some(json!({ "rows": 2, "columns": 2 })),
-                ),
-                catalogue_button(
-                    "animate.present.play.catalogue.seed-3x5",
-                    labels.catalogue_seed_3x5,
-                    "seedGrid",
-                    Some(json!({ "rows": 3, "columns": 5 })),
-                ),
+                catalogue_button("animate.present.play.catalogue.seed-2x2", labels.catalogue_seed_2x2, "seedGrid", Some(json!({ "rows": 2, "columns": 2 }))),
+                catalogue_button("animate.present.play.catalogue.seed-3x5", labels.catalogue_seed_3x5, "seedGrid", Some(json!({ "rows": 3, "columns": 5 }))),
                 catalogue_button("animate.present.play.catalogue.add-tile", labels.catalogue_add_tile, "addTile", None),
                 catalogue_button("animate.present.play.catalogue.clear", labels.catalogue_clear_tiles, "clearTiles", None),
             ],
@@ -490,12 +404,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
-                catalogue_button(
-                    "animate.present.play.catalogue.figure.catalogue",
-                    labels.catalogue_use_figure,
-                    "setSource",
-                    Some(json!(default_present_deck().source)),
-                ),
+                catalogue_button("animate.present.play.catalogue.figure.catalogue", labels.catalogue_use_figure, "setSource", Some(json!(default_present_deck().source))),
                 UiNode::Field(UiFieldNode {
                     id: "animate.present.play.catalogue.figure.src".into(),
                     label: labels.catalogue_active_source.into(),
@@ -524,16 +433,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
 
 //#region 🔖Render
 fn render_main_canvas(deck: &PresentDeck, selected: &[String]) -> UiNode {
-    build_canvas_2d_scene(
-        ANIMATE_PRESENT_PLAY_SURFACE_ID,
-        ANIMATE_PRESENT_PLAY_CONTROLLER_ID,
-        Canvas2dScene {
-            camera_x: 0.0,
-            camera_y: 0.0,
-            zoom: 1.0,
-            layers_json: deck_to_canvas_layers(deck, selected),
-        },
-    )
+    build_canvas_2d_scene(ANIMATE_PRESENT_PLAY_SURFACE_ID, ANIMATE_PRESENT_PLAY_CONTROLLER_ID, Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json: deck_to_canvas_layers(deck, selected) })
 }
 //#endregion 🔖Render
 
@@ -559,13 +459,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         default_present_deck()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, PresentDeck>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<PresentOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOp> {
         let deck = doc.projection;
         match action {
             "setSelectedIds" => {
@@ -575,35 +469,19 @@ impl DocumentApp for AnimatePresentPlayApp {
             "seedGrid" => {
                 let rows = args.and_then(|v| v.get("rows")).and_then(|v| v.as_u64()).unwrap_or(3) as u32;
                 let columns = args.and_then(|v| v.get("columns")).and_then(|v| v.as_u64()).unwrap_or(5) as u32;
-                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-                    source: &deck.source,
-                    rows,
-                    columns,
-                    gap: 0.0,
-                    key_prefix: "tile",
-                });
+                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
                 self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
                 ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
             }
             "addTile" => {
                 let id = new_tile_id("tile");
-                let crop = args
-                    .and_then(|v| v.get("crop"))
-                    .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
+                let crop = args.and_then(|v| v.get("crop")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
                 self.runtime.selected_ids = vec![id];
-                ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add {
-                    index: deck.tiles.len(),
-                    item: tile,
-                })])
+                ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
             }
             "deleteTile" => {
-                let target = args
-                    .and_then(|v| v.get("id"))
-                    .and_then(|v| v.as_str())
-                    .map(|id| vec![id.to_string()])
-                    .unwrap_or_else(|| self.runtime.selected_ids.clone());
+                let target = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()).map(|id| vec![id.to_string()]).unwrap_or_else(|| self.runtime.selected_ids.clone());
                 let target = valid_tile_ids(deck, target);
                 if target.is_empty() {
                     return ActionEmit::default();
@@ -620,41 +498,21 @@ impl DocumentApp for AnimatePresentPlayApp {
                 ActionEmit::ops(target.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Remove { id })).collect())
             }
             "renameTile" | "renameTiles" => {
-                let ids: Vec<String> = args
-                    .and_then(|v| v.get("ids"))
-                    .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .unwrap_or_default();
-                let name = args
-                    .and_then(|v| v.get("value").or_else(|| v.get("name")))
-                    .and_then(|v| v.as_str())
-                    .map(str::trim)
-                    .filter(|value| !value.is_empty());
+                let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+                let name = args.and_then(|v| v.get("value").or_else(|| v.get("name"))).and_then(|v| v.as_str()).map(str::trim).filter(|value| !value.is_empty());
                 match name {
                     Some(name) => {
                         let valid = valid_tile_ids(deck, ids);
                         if valid.is_empty() {
                             return ActionEmit::default();
                         }
-                        ActionEmit::ops(
-                            valid
-                                .into_iter()
-                                .map(|id| {
-                                    PresentOp::Tiles(CollectionOp::Patch {
-                                        id,
-                                        patch: FigureTileDraftPatch { name: Some(name.into()), crop: None },
-                                    })
-                                })
-                                .collect(),
-                        )
+                        ActionEmit::ops(valid.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
                     }
                     None => ActionEmit::default(),
                 }
             }
             "patchTileCrops" | "patchTileCrop" => {
-                let ids: Vec<String> = args
-                    .and_then(|v| v.get("ids"))
-                    .and_then(|v| serde_json::from_value(v.clone()).ok())
-                    .unwrap_or_default();
+                let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
                 let field = args.and_then(|v| v.get("field")).and_then(|v| v.as_str()).unwrap_or("");
                 let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64());
                 match value {
@@ -673,10 +531,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                                     "height" => crop.height = value,
                                     _ => {}
                                 }
-                                PresentOp::Tiles(CollectionOp::Patch {
-                                    id: tile.id.clone(),
-                                    patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) },
-                                })
+                                PresentOp::Tiles(CollectionOp::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
                             })
                             .collect();
                         if ops.is_empty() {
@@ -741,14 +596,8 @@ impl DocumentApp for AnimatePresentPlayApp {
             }
             "copyPrompt" => ActionEmit::effect(tile_morph_prompt_effect(deck)),
             "exportVideoFromDeck" => {
-                let output_dir = args
-                    .and_then(|value| value.get("outputDir"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("output/animate-video");
-                let scene = args
-                    .and_then(|value| value.get("scene"))
-                    .and_then(|value| serde_json::from_value::<PresentScene>(value.clone()).ok())
-                    .unwrap_or_else(|| PresentScene::empty("Deck export"));
+                let output_dir = args.and_then(|value| value.get("outputDir")).and_then(|value| value.as_str()).unwrap_or("output/animate-video");
+                let scene = args.and_then(|value| value.get("scene")).and_then(|value| serde_json::from_value::<PresentScene>(value.clone()).ok()).unwrap_or_else(|| PresentScene::empty("Deck export"));
                 match export_video_from_deck(&scene, output_dir) {
                     Ok(bundles) => ActionEmit::effect(HostEffect::DownloadMediaExport {
                         filename: "animate-video-export.json".into(),
@@ -756,12 +605,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                         data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()),
                         encoding: None,
                     }),
-                    Err(error) => ActionEmit::effect(HostEffect::DownloadMediaExport {
-                        filename: "animate-video-export-error.txt".into(),
-                        mime_type: "text/plain".into(),
-                        data: error.to_string(),
-                        encoding: None,
-                    }),
+                    Err(error) => ActionEmit::effect(HostEffect::DownloadMediaExport { filename: "animate-video-export-error.txt".into(), mime_type: "text/plain".into(), data: error.to_string(), encoding: None }),
                 }
             }
             "engagementInput" => {
@@ -771,20 +615,10 @@ impl DocumentApp for AnimatePresentPlayApp {
                 ActionEmit::default()
             }
             "engagementSubmit" => {
-                let value = args
-                    .and_then(|v| v.get("value"))
-                    .and_then(|v| v.as_str())
-                    .map(str::to_string)
-                    .unwrap_or_else(|| self.runtime.engagement_input.clone());
+                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()).map(str::to_string).unwrap_or_else(|| self.runtime.engagement_input.clone());
                 let trimmed = value.trim();
                 if let Some((rows, columns)) = parse_grid_engagement(trimmed) {
-                    let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-                        source: &deck.source,
-                        rows,
-                        columns,
-                        gap: 0.0,
-                        key_prefix: "tile",
-                    });
+                    let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
                     self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
                     self.runtime.engagement_input.clear();
                     return ActionEmit::ops(vec![PresentOp::SetTiles { tiles }]);
@@ -792,17 +626,10 @@ impl DocumentApp for AnimatePresentPlayApp {
                 match trimmed.to_lowercase().as_str() {
                     "add" => {
                         let id = new_tile_id("tile");
-                        let tile = FigureTileDraft {
-                            id: id.clone(),
-                            name: id.clone(),
-                            crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 },
-                        };
+                        let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                         self.runtime.selected_ids = vec![id];
                         self.runtime.engagement_input.clear();
-                        ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add {
-                            index: deck.tiles.len(),
-                            item: tile,
-                        })])
+                        ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
                     }
                     "clear" => {
                         self.runtime.selected_ids.clear();
@@ -835,23 +662,11 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// break those buttons, since `UiButtonNode` only carries actions). "Reset to Default Grid" has no
     /// existing UI wiring: it's reachable only from the footer command panel / palette, demonstrating a
     /// command that emits a real VCS-tracked operation.
-    fn handle_command(
-        &mut self,
-        command: &str,
-        _args: Option<&Value>,
-        doc: &DocumentView<'_, PresentDeck>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<PresentOp> {
+    fn handle_command(&mut self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOp> {
         let deck = doc.projection;
         match command {
             "animate.resetGrid" => {
-                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec {
-                    source: &deck.source,
-                    rows: 3,
-                    columns: 5,
-                    gap: 0.0,
-                    key_prefix: "tile",
-                });
+                let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
                 self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
                 ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
             }
@@ -965,18 +780,8 @@ fn animate_present_document_json_from_dwg(drawing: &semio_framework_core::DwgDra
     let frame = FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let deck = PresentDeck {
         schema: PRESENT_DECK_SCHEMA.into(),
-        source: FigureTileSource {
-            src: format!("data:image/png;base64,{png_base64}"),
-            kind: "image".into(),
-            frame: frame.clone(),
-            source_aspect: Some(width as f64 / height.max(1) as f64),
-            pdf_page: None,
-        },
-        tiles: vec![FigureTileDraft {
-            id: "imported-drawing".into(),
-            name: "Imported Drawing".into(),
-            crop: frame,
-        }],
+        source: FigureTileSource { src: format!("data:image/png;base64,{png_base64}"), kind: "image".into(), frame: frame.clone(), source_aspect: Some(width as f64 / height.max(1) as f64), pdf_page: None },
+        tiles: vec![FigureTileDraft { id: "imported-drawing".into(), name: "Imported Drawing".into(), crop: frame }],
     };
     serde_json::to_value(&deck).map_err(|error| error.to_string())
 }
@@ -999,8 +804,8 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionKind, ActionMeta, PluginApp, VcsDocumentApp};
     use semio_framework_plugin::app::AppActionRegistry;
+    use semio_framework_plugin::{ActionKind, ActionMeta, PluginApp, VcsDocumentApp};
 
     fn meta(actor: &str) -> ActionMeta {
         ActionMeta { actor: actor.into(), instance_id: 1 }
@@ -1020,19 +825,12 @@ mod tests {
     #[test]
     fn copy_prompt_is_shell_effect_not_view_mutation() {
         let mut app = new_app_with_registry();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
-            .expect("seed grid");
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
         let result = app.handle_action("copyPrompt", None, &ViewState::default(), &meta("local")).expect("copy prompt");
         assert!(result.operations.is_empty(), "copyPrompt is a host effect, not a document op");
-        assert!(
-            matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"),
-            "copyPrompt emits exactly one media-export host effect carrying the morph prompt",
-        );
+        assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt",);
         let definition = create_animate_present_app().definition;
-        assert!(
-            definition.actions.iter().any(|action| action.id == "copyPrompt" && matches!(action.kind, ActionKind::Shell)),
-            "copyPrompt is declared Shell-kind (host side-effect), never View",
-        );
+        assert!(definition.actions.iter().any(|action| action.id == "copyPrompt" && matches!(action.kind, ActionKind::Shell)), "copyPrompt is declared Shell-kind (host side-effect), never View",);
     }
 
     #[test]
@@ -1043,8 +841,7 @@ mod tests {
     }
 
     fn seed_2x2(app: &mut VcsDocumentApp<AnimatePresentPlayApp>) {
-        app.handle_action("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &ViewState::default(), &meta("local"))
-            .expect("seed grid");
+        app.handle_action("seedGrid", Some(&json!({ "rows": 2, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
     }
 
     #[test]
@@ -1070,8 +867,7 @@ mod tests {
     #[test]
     fn source_frame_renders_as_actual_image_layer_behind_tiles() {
         let mut app = new_app();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
-            .expect("seed grid");
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
         let deck = app.projection().expect("projection");
         let layers_json = deck_to_canvas_layers(&deck, &[]);
         let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
@@ -1089,8 +885,7 @@ mod tests {
     #[test]
     fn document_lists_seeded_tiles() {
         let mut app = new_app();
-        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local"))
-            .expect("seed grid");
+        app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
         let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("tile-r0-c0"));
@@ -1101,11 +896,9 @@ mod tests {
         let mut app = new_app();
         app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "Hero" })), &ViewState::default(), &meta("local"))
-            .expect("rename");
+        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "Hero" })), &ViewState::default(), &meta("local")).expect("rename");
         assert_eq!(app.projection().expect("projection").tiles[0].name, "Hero");
-        app.handle_action("deleteTile", Some(&json!({ "id": tile_id })), &ViewState::default(), &meta("local"))
-            .expect("delete");
+        app.handle_action("deleteTile", Some(&json!({ "id": tile_id })), &ViewState::default(), &meta("local")).expect("delete");
         assert!(app.projection().expect("projection").tiles.is_empty());
     }
 
@@ -1114,13 +907,7 @@ mod tests {
         let mut app = new_app();
         app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
-        app.handle_action(
-            "patchTileCrops",
-            Some(&json!({ "ids": [tile_id], "field": "width", "value": 0.5 })),
-            &ViewState::default(),
-            &meta("local"),
-        )
-        .expect("patch crop");
+        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id], "field": "width", "value": 0.5 })), &ViewState::default(), &meta("local")).expect("patch crop");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.5);
         app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
         assert_eq!(app.projection().expect("projection").tiles[0].crop.width, 0.2);
@@ -1173,12 +960,7 @@ mod tests {
             entities: vec![semio_framework_core::DwgEntity {
                 layer: 0,
                 color: semio_framework_core::DwgColor::ByLayer,
-                geometry: semio_framework_core::DwgGeometry::LwPolyline {
-                    closed: true,
-                    elevation: 0.0,
-                    vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]],
-                    bulges: vec![0.0, 0.0, 0.0, 0.0],
-                },
+                geometry: semio_framework_core::DwgGeometry::LwPolyline { closed: true, elevation: 0.0, vertices: vec![[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]], bulges: vec![0.0, 0.0, 0.0, 0.0] },
             }],
             extmin: [0.0, 0.0, 0.0],
             extmax: [10.0, 10.0, 0.0],
@@ -1211,12 +993,8 @@ mod tests {
         instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
         instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-        instance_a
-            .handle_action("addTile", Some(&json!({ "crop": { "x": 0.0, "y": 0.0, "width": 0.3, "height": 0.3 } })), &ViewState::default(), &meta("actor-a"))
-            .expect("a adds tile");
-        instance_b
-            .handle_action("setSource", Some(&json!({ "kind": "video" })), &ViewState::default(), &meta("actor-b"))
-            .expect("b sets source kind");
+        instance_a.handle_action("addTile", Some(&json!({ "crop": { "x": 0.0, "y": 0.0, "width": 0.3, "height": 0.3 } })), &ViewState::default(), &meta("actor-a")).expect("a adds tile");
+        instance_b.handle_action("setSource", Some(&json!({ "kind": "video" })), &ViewState::default(), &meta("actor-b")).expect("b sets source kind");
 
         instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");

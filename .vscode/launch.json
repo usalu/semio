@@ -2631,6 +2631,28 @@
       }
     },
     {
+      "name": "🧪verify🖌️ui-primitives",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-react:check-ui-primitives",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.11
+      }
+    },
+    {
+      "name": "🧪verify🎨raw-colors",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-tokens:check-no-raw-colors",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.12
+      }
+    },
+    {
       "name": "🧪verify🔁os-sync",
       "type": "node-terminal",
       "request": "launch",

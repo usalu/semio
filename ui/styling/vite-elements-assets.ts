@@ -475,6 +475,7 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
 }
 //#endregion 🔖MeshCollectionAssetPlugin
 
+//#region 🔖HostHtmlPlugin
 /** @emoji 🎬 Inline shell paint before Tailwind finishes compiling the play stylesheet. */
 export const PLAYGROUND_PLAY_BOOT_INLINE_STYLE =
   "html{color-scheme:light dark}html,body,#root{height:100%;margin:0}body{background-color:#f7f3e3;color:#001117}html.dark body{background-color:#001117;color:#f7f3e3}html:not([data-semio-styled]) body{visibility:hidden}";
@@ -488,7 +489,18 @@ export const PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT = `(function(){function reveal()
 /** @emoji 🎨 Synchronous active-theme bootstrap for play `index.html` heads: reapplies the persisted `UiTheme` snapshot's colors before first paint so non-semio themes don't flash the semio defaults. Runs after {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} so its resolved light/dark class wins the appearance choice; this script only overrides colors. */
 export const PLAYGROUND_PLAY_BOOT_THEME_SCRIPT = `(function(){try{var raw=localStorage.getItem("ui.chrome.theme.snapshot");if(!raw)return;var t=JSON.parse(raw);if(!t||!t.colors)return;var d=document.documentElement;var dark=d.classList.contains("dark");for(var k in t.colors){d.style.setProperty("--color-"+k.replace(/_/g,"-"),t.colors[k])}if(t.spacing)for(var s in t.spacing){d.style.setProperty("--spacing-"+s.replace(/_/g,"-"),t.spacing[s])}d.dataset.uiTheme=t.id;var appearance=t.appearances&&t.appearances[dark?"dark":"light"];var chrome=appearance&&appearance.chrome;function resolveSimple(ref){return ref&&ref.token&&t.colors[ref.token]?t.colors[ref.token]:undefined}var base=chrome&&resolveSimple(chrome.base);var fg=chrome&&resolveSimple(chrome.foreground);if(document.body){if(base)document.body.style.backgroundColor=base;if(fg)document.body.style.color=fg}}catch(e){}})();`;
 
-/** @emoji 🎬 Vite: inject early appearance + theme + stylesheet link into play `index.html` to avoid unstyled flashes. */
+/** @emoji 🧬 Boot-time head tags every semio host document shares (color-scheme inline style + synchronous
+ * appearance/theme scripts) — single source both {@link semioHostHtmlString} and
+ * {@link playgroundPlayBootHtmlPlugin} inject from, so the generalized host and playground never drift. */
+function semioHostBootHeadTags(): { readonly tag: string; readonly attrs?: Record<string, string>; readonly children?: string; readonly injectTo: "head-prepend" | "head" }[] {
+  return [
+    { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
+    { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
+    { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
+  ];
+}
+
+/** @emoji 🎬 Vite: inject early appearance + theme + stylesheet link into play `index.html` to avoid unstyled flashes — additive tag injection onto each play's own hand-authored `index.html`, sharing its boot-head fragment ({@link semioHostBootHeadTags}) with {@link semioHostHtmlVitePlugin} instead of duplicating the style/script assembly. */
 export function playgroundPlayBootHtmlPlugin(): Plugin {
   return {
     name: "playground-play-boot-html",
@@ -497,9 +509,7 @@ export function playgroundPlayBootHtmlPlugin(): Plugin {
       handler() {
         return {
           tags: [
-            { tag: "style", children: PLAYGROUND_PLAY_BOOT_INLINE_STYLE, injectTo: "head-prepend" },
-            { tag: "script", children: PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT, injectTo: "head-prepend" },
-            { tag: "script", children: PLAYGROUND_PLAY_BOOT_THEME_SCRIPT, injectTo: "head-prepend" },
+            ...semioHostBootHeadTags(),
             { tag: "link", attrs: { rel: "stylesheet", href: "./globals.css", id: "semio-play-styles" }, injectTo: "head" },
             { tag: "script", children: PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT, injectTo: "head" },
           ],
@@ -596,6 +606,114 @@ export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
     },
   ];
 }
+
+/** @emoji 🧬 Full-document spec for a semio host `index.html`: title, entry module, mount point, and
+ * optional CSP + pre-mount loading copy — everything an app needs beyond the shared boot scripts so it
+ * stops hand-authoring its own splash screen and `<style>` blocks. */
+export type SemioHostHtmlSpec = {
+  readonly title: string;
+  readonly entry: string;
+  readonly rootId?: string;
+  readonly bodyClass?: string;
+  readonly csp?: string;
+  readonly loading?: { readonly title: string };
+};
+
+/** @emoji 🪧 Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
+ * replaces it — inline-styled so it renders before any external stylesheet loads. */
+function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
+  if (!loading) {
+    return "";
+  }
+  return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${loading.title}</div>`;
+}
+
+/** @emoji 📄 Generates a complete semio host `index.html` document: doctype/head (title, favicon,
+ * optional CSP, boot style + appearance/theme scripts) and body (`#{rootId}` mount with pre-mount loading
+ * copy, the reveal script, and the entry module script) — the single source of truth
+ * {@link semioHostHtmlVitePlugin} renders from, reusable as-is by non-Vite hosts such as a VS Code webview. */
+export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
+  const rootId = spec.rootId ?? "root";
+  const cspTag = spec.csp ? `<meta http-equiv="Content-Security-Policy" content="${spec.csp}" />\n    ` : "";
+  const headTags = semioHostBootHeadTags()
+    .map((tag) => (tag.tag === "style" ? `<style>${tag.children}</style>` : `<script>${tag.children}</script>`))
+    .join("\n    ");
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    ${cspTag}<title>${spec.title}</title>
+    ${SEMIO_FAVICON_HEAD_HTML}
+    ${headTags}
+  </head>
+  <body${spec.bodyClass ? ` class="${spec.bodyClass}"` : ""}>
+    <div id="${rootId}">${semioHostLoadingHtml(spec.loading)}</div>
+    <script>${PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT}</script>
+    <script type="module" src="${spec.entry}"></script>
+  </body>
+</html>
+`;
+}
+
+/** @emoji 🎬 Vite: renders {@link semioHostHtmlString} as the app's `index.html` on every request/build
+ * (full-document replace, `order: "pre"` so later plugins such as `@vitejs/plugin-react`'s HMR preamble
+ * still layer on top) and bundles semio favicon serving ({@link semioFaviconVitePlugin}) — one call wires
+ * an app's whole boot surface instead of a hand-authored `index.html`. */
+export function semioHostHtmlVitePlugin(repoRoot: string, spec: SemioHostHtmlSpec): Plugin[] {
+  return [
+    ...semioFaviconVitePlugin(repoRoot),
+    {
+      name: "semio-host-html",
+      transformIndexHtml: {
+        order: "pre",
+        handler() {
+          return semioHostHtmlString(spec);
+        },
+      },
+    },
+  ];
+}
+//#endregion 🔖HostHtmlPlugin
+
+//#region 🔖StatusSurfaceHtml
+/** @emoji 🎨 Light/dark background+foreground hex pair mirrored from {@link PLAYGROUND_PLAY_BOOT_INLINE_STYLE}
+ * / {@link PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT} — this file has no `tokens.json` import, so these are the
+ * canonical values already baked into every other boot surface here, not new ones. */
+const SEMIO_STATUS_SURFACE_COLORS = { lightBg: "#f7f3e3", lightFg: "#001117", darkBg: "#001117", darkFg: "#f7f3e3" } as const;
+
+const SEMIO_STATUS_SURFACE_GLYPH: Record<"empty" | "error" | "loading", string> = { empty: "◌", error: "⚠", loading: "…" };
+
+function semioStatusSurfaceInlineStyle(): string {
+  const c = SEMIO_STATUS_SURFACE_COLORS;
+  return `html{color-scheme:light dark}html,body{height:100%;margin:0}body{background-color:${c.lightBg};color:${c.lightFg};display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif}@media (prefers-color-scheme: dark){body{background-color:${c.darkBg};color:${c.darkFg}}}`;
+}
+
+/** @emoji 🚦 Minimal, standalone status document (empty/error/loading) for host-agnostic contexts that
+ * can't run React — e.g. a WebView2 navigation-failure page — fully inline-styled so it renders with zero
+ * external CSS/JS dependency, reusing the same light/dark hex values every other boot surface in this
+ * file uses. */
+export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "loading"; readonly title: string; readonly description?: string }): string {
+  const description = spec.description ? `<p style="margin:8px 0 0;font-size:14px;opacity:0.72">${spec.description}</p>` : "";
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>${spec.title}</title>
+    <style>${semioStatusSurfaceInlineStyle()}</style>
+  </head>
+  <body data-status-kind="${spec.kind}">
+    <div style="text-align:center;max-width:28rem;padding:0 24px">
+      <p style="margin:0 0 8px;font-size:28px" aria-hidden="true">${SEMIO_STATUS_SURFACE_GLYPH[spec.kind]}</p>
+      <p style="margin:0;font-size:16px;font-weight:600">${spec.title}</p>
+      ${description}
+    </div>
+  </body>
+</html>
+`;
+}
+//#endregion 🔖StatusSurfaceHtml
 
 /** @emoji 🌐 Vite: serve and copy `ui/asset` at `/asset/*` for palette fonts and cursors. */
 export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
@@ -1487,6 +1605,65 @@ if (import.meta.vitest) {
       const kinds = tags.map((tag) => (tag.children === PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT ? "appearance" : tag.children === PLAYGROUND_PLAY_BOOT_THEME_SCRIPT ? "theme" : tag.attrs && "href" in tag.attrs ? "stylesheet" : "other"));
       expect(kinds.indexOf("appearance")).toBeLessThan(kinds.indexOf("theme"));
       expect(kinds.indexOf("theme")).toBeLessThan(kinds.indexOf("stylesheet"));
+    });
+  });
+
+  describe("semioHostHtmlString", () => {
+    it("renders title, entry module, root mount, favicon links, and boot scripts", () => {
+      const html = semioHostHtmlString({ title: "Semio App", entry: "/js/index.tsx" });
+      expect(html).toContain("<title>Semio App</title>");
+      expect(html).toContain('<script type="module" src="/js/index.tsx"></script>');
+      expect(html).toContain('<div id="root">');
+      expect(html).toContain(SEMIO_FAVICON_HEAD_HTML);
+      expect(html).toContain(PLAYGROUND_PLAY_BOOT_APPEARANCE_SCRIPT);
+      expect(html).toContain(PLAYGROUND_PLAY_BOOT_THEME_SCRIPT);
+      expect(html).toContain(PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT);
+    });
+
+    it("honors rootId, bodyClass, csp, and loading overrides", () => {
+      const html = semioHostHtmlString({
+        title: "Semio App",
+        entry: "/js/index.tsx",
+        rootId: "semio-root",
+        bodyClass: "semio-app-body",
+        csp: "default-src 'self'",
+        loading: { title: "Loading…" },
+      });
+      expect(html).toContain('<div id="semio-root">');
+      expect(html).toContain('<body class="semio-app-body">');
+      expect(html).toContain('<meta http-equiv="Content-Security-Policy" content="default-src \'self\'" />');
+      expect(html).toContain("Loading…");
+    });
+  });
+
+  describe("semioHostHtmlVitePlugin", () => {
+    it("bundles favicon serving plugins alongside the host html plugin", () => {
+      const plugins = semioHostHtmlVitePlugin(repoRoot, { title: "Semio App", entry: "/js/index.tsx" });
+      expect(plugins.map((plugin) => plugin.name)).toEqual(["semio-favicon-serve", "semio-favicon-build", "semio-host-html"]);
+    });
+
+    it("renders the same document semioHostHtmlString produces", () => {
+      const spec = { title: "Semio App", entry: "/js/index.tsx" };
+      const plugin = semioHostHtmlVitePlugin(repoRoot, spec).find((p) => p.name === "semio-host-html")!;
+      const result = (plugin.transformIndexHtml as { handler: () => string }).handler();
+      expect(result).toBe(semioHostHtmlString(spec));
+    });
+  });
+
+  describe("statusSurfaceHtml", () => {
+    it("renders title, description, and status kind with no external CSS dependency", () => {
+      const html = statusSurfaceHtml({ kind: "error", title: "Something went wrong", description: "Try again later." });
+      expect(html).toContain("Something went wrong");
+      expect(html).toContain("Try again later.");
+      expect(html).toContain('data-status-kind="error"');
+      expect(html).not.toContain("<link");
+      expect(html).not.toContain('rel="stylesheet"');
+    });
+
+    it("omits the description paragraph when none is given", () => {
+      const html = statusSurfaceHtml({ kind: "loading", title: "Loading…" });
+      expect(html).toContain('data-status-kind="loading"');
+      expect(html).not.toContain("<p style=\"margin:8px 0 0");
     });
   });
 

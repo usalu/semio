@@ -85,7 +85,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./script.ts dev storybook compose algorithms",
+        "command": "bun ./script.ts dev storybook compose algorithm",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"

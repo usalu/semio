@@ -7366,6 +7366,16 @@ pub fn handle_scene_wheel(
             set_scroll_offset(&scene.surface_id, "history", current + delta * 0.5);
             Vec::new()
         }
+        SurfaceKind::DiffView => {
+            let current = scroll_offset(&scene.surface_id, "diff");
+            set_scroll_offset(&scene.surface_id, "diff", current + delta * 0.5);
+            Vec::new()
+        }
+        SurfaceKind::EventFeed => {
+            let current = scroll_offset(&scene.surface_id, "feed");
+            set_scroll_offset(&scene.surface_id, "feed", current + delta * 0.5);
+            Vec::new()
+        }
         _ => Vec::new(),
     }
 }
@@ -7871,6 +7881,8 @@ pub fn render_component_scene(
         SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, gpu, board2d_states),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx),
+        SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
+        SurfaceKind::EventFeed => render_event_feed(scene, bounds, ctx),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
@@ -8029,6 +8041,8 @@ mod render_entry_tests {
             SurfaceKind::GraphTimeline,
             SurfaceKind::Table,
             SurfaceKind::VirtualFileSystem,
+            SurfaceKind::DiffView,
+            SurfaceKind::EventFeed,
         ] {
             assert!(!scene_has_bespoke_pointer_dispatch(kind), "{kind:?} previously received no interaction at all and must use the generic handlers");
         }
@@ -9301,6 +9315,339 @@ mod block_list_tests {
     }
 }
 //#endregion BlockListTests
+
+//#region DiffView
+#[derive(Clone, Copy, PartialEq, Debug)]
+enum DiffLineOp {
+    Equal,
+    Removed,
+    Added,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct DiffLine<'a> {
+    op: DiffLineOp,
+    text: &'a str,
+}
+
+/// 🧮 Above this many `before.len() * after.len()` DP cells, [`diff_lines`] skips the LCS table and
+/// falls back to a positional compare so a single huge [`SurfaceKind::DiffView`] payload can't blow
+/// up per-frame recompute cost (this crate re-derives the diff every render pass, mirroring how
+/// `render_graph_timeline` re-parses `columns_json` every frame rather than caching it).
+const DIFF_LCS_CELL_BUDGET: usize = 200_000;
+
+/// 🔀 Line-level LCS diff (classic DP backtrace). Falls back to a naive positional compare above
+/// [`DIFF_LCS_CELL_BUDGET`] cells.
+fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
+    let (n, m) = (before.len(), after.len());
+    if n.saturating_mul(m) > DIFF_LCS_CELL_BUDGET {
+        let mut out = Vec::with_capacity(n + m);
+        for i in 0..n.max(m) {
+            match (before.get(i), after.get(i)) {
+                (Some(b), Some(a)) if b == a => out.push(DiffLine { op: DiffLineOp::Equal, text: b }),
+                (Some(b), Some(a)) => {
+                    out.push(DiffLine { op: DiffLineOp::Removed, text: b });
+                    out.push(DiffLine { op: DiffLineOp::Added, text: a });
+                }
+                (Some(b), None) => out.push(DiffLine { op: DiffLineOp::Removed, text: b }),
+                (None, Some(a)) => out.push(DiffLine { op: DiffLineOp::Added, text: a }),
+                (None, None) => {}
+            }
+        }
+        return out;
+    }
+    let mut table = vec![vec![0u32; m + 1]; n + 1];
+    for i in (0..n).rev() {
+        for j in (0..m).rev() {
+            table[i][j] =
+                if before[i] == after[j] { table[i + 1][j + 1] + 1 } else { table[i + 1][j].max(table[i][j + 1]) };
+        }
+    }
+    let mut out = Vec::with_capacity(n + m);
+    let (mut i, mut j) = (0, 0);
+    while i < n && j < m {
+        if before[i] == after[j] {
+            out.push(DiffLine { op: DiffLineOp::Equal, text: before[i] });
+            i += 1;
+            j += 1;
+        } else if table[i + 1][j] >= table[i][j + 1] {
+            out.push(DiffLine { op: DiffLineOp::Removed, text: before[i] });
+            i += 1;
+        } else {
+            out.push(DiffLine { op: DiffLineOp::Added, text: after[j] });
+            j += 1;
+        }
+    }
+    while i < n {
+        out.push(DiffLine { op: DiffLineOp::Removed, text: before[i] });
+        i += 1;
+    }
+    while j < m {
+        out.push(DiffLine { op: DiffLineOp::Added, text: after[j] });
+        j += 1;
+    }
+    out
+}
+
+/// 🩹 Renders [`SurfaceKind::DiffView`]: a line-level diff of `before`/`after` text, either as a
+/// single scrolling column with `+`/`-` markers (default, or `mode: "unified"`) or as two aligned
+/// columns (`mode: "split"`). Text-only — no syntax highlighting for `language` yet. Add/remove rows
+/// are tinted with the theme's own `accent`/`error` tokens rather than new color literals, matching
+/// how `render_graph_timeline` reuses `theme.accent` for label chips.
+fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
+    let Some(diff) = &scene.diff_view else {
+        return render_placeholder("diff-view", bounds, ctx);
+    };
+    let before_lines: Vec<&str> = diff.before.split('\n').collect();
+    let after_lines: Vec<&str> = diff.after.split('\n').collect();
+    let ops = diff_lines(&before_lines, &after_lines);
+    let inner = bounds;
+    let pad = theme.padding_standard;
+    let row_h = theme.font_size_small + pad * 0.5;
+    let split = diff.mode.as_deref() == Some("split");
+
+    let scroll = scroll_offset(&scene.surface_id, "diff");
+    ctx.input.register_hit(HitTarget {
+        rect: inner,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "diff")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
+    ctx.draw.push_scissor(inner);
+    if ops.is_empty() {
+        draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        ctx.draw.pop_scissor();
+        return;
+    }
+
+    let col_w = if split { (inner.w * 0.5).max(1.0) } else { inner.w };
+    let right_x = inner.x + col_w;
+    for (row_index, line) in ops.iter().enumerate() {
+        let y = inner.y + row_index as f32 * row_h - scroll;
+        if y + row_h < inner.y || y > inner.y + inner.h {
+            continue;
+        }
+        if split {
+            match line.op {
+                DiffLineOp::Removed => {
+                    ctx.draw.push_solid([inner.x, y, col_w, row_h], theme.error.with_alpha(0.16));
+                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
+                }
+                DiffLineOp::Added => {
+                    ctx.draw.push_solid([right_x, y, col_w, row_h], theme.accent.with_alpha(0.16));
+                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
+                }
+                DiffLineOp::Equal => {
+                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
+                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
+                }
+            }
+            ctx.draw.push_line(right_x, y, right_x, y + row_h, theme.separator, theme.stroke_hairline);
+        } else {
+            let (bg, marker, color) = match line.op {
+                DiffLineOp::Added => (Some(theme.accent.with_alpha(0.16)), '+', theme.text),
+                DiffLineOp::Removed => (Some(theme.error.with_alpha(0.16)), '-', theme.text),
+                DiffLineOp::Equal => (None, ' ', theme.text_muted),
+            };
+            if let Some(bg) = bg {
+                ctx.draw.push_solid([inner.x, y, inner.w, row_h], bg);
+            }
+            draw_text(ctx, &format!("{marker} {}", line.text), inner.x + pad, y + row_h * 0.7, theme.font_size_small, color);
+        }
+    }
+    ctx.draw.pop_scissor();
+}
+//#endregion DiffView
+
+//#region DiffViewTests
+#[cfg(test)]
+mod diff_view_tests {
+    use super::*;
+
+    #[test]
+    fn identical_inputs_produce_only_equal_ops() {
+        let before = vec!["a", "b", "c"];
+        let after = vec!["a", "b", "c"];
+        let ops = diff_lines(&before, &after);
+        assert_eq!(ops.len(), 3);
+        assert!(ops.iter().all(|line| line.op == DiffLineOp::Equal));
+    }
+
+    #[test]
+    fn pure_addition_is_all_added_after_the_shared_prefix() {
+        let before = vec!["a"];
+        let after = vec!["a", "b", "c"];
+        let ops = diff_lines(&before, &after);
+        assert_eq!(ops[0].op, DiffLineOp::Equal);
+        assert_eq!(ops[1].op, DiffLineOp::Added);
+        assert_eq!(ops[2].op, DiffLineOp::Added);
+    }
+
+    #[test]
+    fn pure_removal_is_all_removed_after_the_shared_prefix() {
+        let before = vec!["a", "b", "c"];
+        let after = vec!["a"];
+        let ops = diff_lines(&before, &after);
+        assert_eq!(ops[0].op, DiffLineOp::Equal);
+        assert_eq!(ops[1].op, DiffLineOp::Removed);
+        assert_eq!(ops[2].op, DiffLineOp::Removed);
+    }
+
+    #[test]
+    fn changed_line_shows_as_a_remove_add_pair() {
+        let before = vec!["a", "old", "c"];
+        let after = vec!["a", "new", "c"];
+        let ops = diff_lines(&before, &after);
+        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Removed).count(), 1);
+        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Added).count(), 1);
+        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Equal).count(), 2);
+    }
+
+    #[test]
+    fn empty_inputs_produce_no_ops() {
+        assert!(diff_lines(&[], &[]).is_empty());
+    }
+
+    #[test]
+    fn oversized_inputs_use_the_positional_fallback_without_panicking() {
+        let before: Vec<&str> = vec!["x"; 2000];
+        let after: Vec<&str> = vec!["x"; 2000];
+        let ops = diff_lines(&before, &after);
+        assert_eq!(ops.len(), 2000);
+        assert!(ops.iter().all(|line| line.op == DiffLineOp::Equal));
+    }
+}
+//#endregion DiffViewTests
+
+//#region EventFeed
+/// 🪶 Mirrors a `SurfaceKind::EventFeed` entry's renderer-relevant fields — a single row in the feed.
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct EventFeedEntryJson {
+    id: String,
+    #[serde(default)]
+    label: String,
+    #[serde(default)]
+    detail: Option<String>,
+    #[serde(default)]
+    timestamp: Option<String>,
+}
+
+fn event_feed_row_height(entry: &EventFeedEntryJson, row_h: f32, theme: &Theme) -> f32 {
+    row_h + entry.detail.as_ref().map_or(0.0, |_| theme.font_size_small + theme.padding_standard * 0.25)
+}
+
+/// 📜 Renders [`SurfaceKind::EventFeed`]: a scrollable list of text rows (`entries_json`), each an
+/// optional timestamp + label + detail line. When `follow` is set the feed snaps to its bottom every
+/// frame (log-tail behavior); a manual wheel-scroll on a following feed is overridden on the next
+/// render, same tradeoff a live log tail makes. Rows dispatch `activate_action` (when set) with
+/// `{ "entryId": ... }`, mirroring `render_graph_timeline`'s per-row `checkoutCheckpoint` hit.
+fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
+    let Some(feed) = &scene.event_feed else {
+        return render_placeholder("event-feed", bounds, ctx);
+    };
+    let entries: Vec<EventFeedEntryJson> = serde_json::from_str(&feed.entries_json).unwrap_or_default();
+    let inner = bounds;
+    let pad = theme.padding_standard;
+    let row_h = theme.control_height;
+    if entries.is_empty() {
+        draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+        return;
+    }
+
+    let heights: Vec<f32> = entries.iter().map(|entry| event_feed_row_height(entry, row_h, theme)).collect();
+    let content_h: f32 = heights.iter().sum();
+    if feed.follow.unwrap_or(false) {
+        set_scroll_offset(&scene.surface_id, "feed", (content_h - inner.h).max(0.0));
+    }
+    let scroll = scroll_offset(&scene.surface_id, "feed");
+    ctx.input.register_hit(HitTarget {
+        rect: inner,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "feed")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
+    ctx.draw.push_scissor(inner);
+    let hovered_row = ctx.input.hovered_id.clone();
+    let mut y = inner.y - scroll;
+    for entry in entries.iter() {
+        let entry_h = event_feed_row_height(entry, row_h, theme);
+        if y + entry_h < inner.y || y > inner.y + inner.h {
+            y += entry_h;
+            continue;
+        }
+        let control_id = format!("{}.feed.{}", scene.surface_id, entry.id);
+        let hovered = hovered_row.as_deref() == Some(control_id.as_str());
+        let row_rect = Rect::new(inner.x, y, inner.w, entry_h);
+        if hovered {
+            ctx.draw.push_solid([row_rect.x, row_rect.y, row_rect.w, row_rect.h], theme.row_hover);
+        }
+        ctx.draw.push_line(
+            row_rect.x,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            row_rect.x + row_rect.w,
+            row_rect.y + row_rect.h - theme.stroke_hairline,
+            theme.separator,
+            1.0,
+        );
+        let mut label_x = inner.x + pad;
+        if let Some(timestamp) = &entry.timestamp {
+            draw_text(ctx, timestamp, label_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+            label_x += 64.0;
+        }
+        draw_text(ctx, &entry.label, label_x, y + row_h * 0.65, theme.font_size_small, theme.text);
+        if let Some(detail) = &entry.detail {
+            draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, theme.text_muted);
+        }
+        if let Some(action) = &feed.activate_action {
+            ctx.input.register_hit(HitTarget {
+                rect: row_rect,
+                event: Some(scene_action(scene, action, json!({ "entryId": entry.id }))),
+                control_id: Some(control_id),
+                kind: HitKind::Generic,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
+        y += entry_h;
+    }
+    ctx.draw.pop_scissor();
+}
+//#endregion EventFeed
+
+//#region EventFeedTests
+#[cfg(test)]
+mod event_feed_tests {
+    use super::*;
+
+    #[test]
+    fn entries_json_tolerates_missing_optional_fields() {
+        let json = r#"[{"id":"only-required"}]"#;
+        let entries: Vec<EventFeedEntryJson> = serde_json::from_str(json).unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].id, "only-required");
+        assert!(entries[0].label.is_empty());
+        assert!(entries[0].detail.is_none());
+        assert!(entries[0].timestamp.is_none());
+    }
+
+    #[test]
+    fn row_height_grows_when_detail_is_present() {
+        let theme = Theme::dark();
+        let without_detail = EventFeedEntryJson { id: "a".into(), label: "a".into(), detail: None, timestamp: None };
+        let with_detail =
+            EventFeedEntryJson { id: "b".into(), label: "b".into(), detail: Some("more".into()), timestamp: None };
+        let row_h = theme.control_height;
+        assert!(event_feed_row_height(&with_detail, row_h, &theme) > event_feed_row_height(&without_detail, row_h, &theme));
+    }
+}
+//#endregion EventFeedTests
 
 //#region GraphTimeline
 /** @emoji 🗄️ Mirrors `vcs::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */

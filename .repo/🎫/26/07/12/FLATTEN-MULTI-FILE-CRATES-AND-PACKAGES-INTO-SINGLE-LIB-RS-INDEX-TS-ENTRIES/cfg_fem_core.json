@@ -1,0 +1,11 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/fem/core/rs/lib.rs",
+  "mods": [
+    {"keyword": "pub mod", "name": "analyses", "path": "/Users/ueli/Documents/semio/fem/core/rs/analyses.rs"},
+    {"keyword": "pub mod", "name": "elements2d", "path": "/Users/ueli/Documents/semio/fem/core/rs/elements2d.rs"},
+    {"keyword": "pub mod", "name": "elements3d", "path": "/Users/ueli/Documents/semio/fem/core/rs/elements3d.rs"},
+    {"keyword": "pub mod", "name": "formulation", "path": "/Users/ueli/Documents/semio/fem/core/rs/formulation.rs"},
+    {"keyword": "pub mod", "name": "mesh", "path": "/Users/ueli/Documents/semio/fem/core/rs/mesh.rs"},
+    {"keyword": "pub mod", "name": "sparse", "path": "/Users/ueli/Documents/semio/fem/core/rs/sparse.rs"}
+  ]
+}

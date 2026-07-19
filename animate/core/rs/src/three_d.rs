@@ -17,12 +17,7 @@ pub struct ThreeDVSobject {
 
 impl ThreeDVSobject {
     pub fn new(inner: VSobject) -> Self {
-        Self {
-            inner,
-            yaw: 0.0,
-            pitch: 0.0,
-            depth: 0.0,
-        }
+        Self { inner, yaw: 0.0, pitch: 0.0, depth: 0.0 }
     }
 
     pub fn project_point(&self, p: (f64, f64, f64)) -> Point {
@@ -156,10 +151,7 @@ impl Surface {
                 prev = Some(p);
             }
         }
-        Self {
-            group: Group::new(children),
-            resolution: steps as u32,
-        }
+        Self { group: Group::new(children), resolution: steps as u32 }
     }
 }
 
@@ -189,55 +181,21 @@ pub fn sphere(radius: f64, center: (f64, f64, f64), color: Color) -> Group {
 /// 🧊 Cube wireframe.
 pub fn cube(side: f64, center: (f64, f64, f64), color: Color) -> Group {
     let h = side / 2.0;
-    let corners = [
-        (-h, -h, -h),
-        (h, -h, -h),
-        (h, h, -h),
-        (-h, h, -h),
-        (-h, -h, h),
-        (h, -h, h),
-        (h, h, h),
-        (-h, h, h),
-    ];
+    let corners = [(-h, -h, -h), (h, -h, -h), (h, h, -h), (-h, h, -h), (-h, -h, h), (h, -h, h), (h, h, h), (-h, h, h)];
     let td = ThreeDVSobject::new(VSobject::new());
-    let pts: Vec<Point> = corners
-        .iter()
-        .map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z)))
-        .collect();
+    let pts: Vec<Point> = corners.iter().map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z))).collect();
     let edges = [(0, 1), (1, 2), (2, 3), (3, 0), (4, 5), (5, 6), (6, 7), (7, 4), (0, 4), (1, 5), (2, 6), (3, 7)];
-    let children: Vec<Box<dyn Sobject>> = edges
-        .iter()
-        .map(|(a, b)| Box::new(line(pts[*a], pts[*b], color, 2.0)) as Box<dyn Sobject>)
-        .collect();
+    let children: Vec<Box<dyn Sobject>> = edges.iter().map(|(a, b)| Box::new(line(pts[*a], pts[*b], color, 2.0)) as Box<dyn Sobject>).collect();
     Group::new(children)
 }
 
 /// 🟦 Solid cube with filled projected faces.
 pub fn solid_cube(side: f64, center: (f64, f64, f64), fill: Color, stroke: Option<Color>, stroke_width: f64) -> Group {
     let h = side / 2.0;
-    let corners = [
-        (-h, -h, -h),
-        (h, -h, -h),
-        (h, h, -h),
-        (-h, h, -h),
-        (-h, -h, h),
-        (h, -h, h),
-        (h, h, h),
-        (-h, h, h),
-    ];
+    let corners = [(-h, -h, -h), (h, -h, -h), (h, h, -h), (-h, h, -h), (-h, -h, h), (h, -h, h), (h, h, h), (-h, h, h)];
     let td = ThreeDVSobject::new(VSobject::new());
-    let pts: Vec<Point> = corners
-        .iter()
-        .map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z)))
-        .collect();
-    let faces: [(&[usize], f64); 6] = [
-        (&[0, 1, 2, 3], 0.85),
-        (&[4, 5, 6, 7], 0.85),
-        (&[0, 1, 5, 4], 0.7),
-        (&[2, 3, 7, 6], 0.7),
-        (&[1, 2, 6, 5], 0.55),
-        (&[0, 3, 7, 4], 0.55),
-    ];
+    let pts: Vec<Point> = corners.iter().map(|(x, y, z)| td.project_point((center.0 + x, center.1 + y, center.2 + z))).collect();
+    let faces: [(&[usize], f64); 6] = [(&[0, 1, 2, 3], 0.85), (&[4, 5, 6, 7], 0.85), (&[0, 1, 5, 4], 0.7), (&[2, 3, 7, 6], 0.7), (&[1, 2, 6, 5], 0.55), (&[0, 3, 7, 4], 0.55)];
     let mut children: Vec<Box<dyn Sobject>> = Vec::new();
     for (indices, alpha) in faces {
         let verts: Vec<Point> = indices.iter().map(|&i| pts[i]).collect();

@@ -13,12 +13,7 @@ pub struct Section {
 
 impl Section {
     pub fn new(name: impl Into<String>, start_time: f64, end_time: f64) -> Self {
-        Self {
-            name: name.into(),
-            start_time,
-            end_time,
-            skip_animations: false,
-        }
+        Self { name: name.into(), start_time, end_time, skip_animations: false }
     }
 
     pub fn duration(&self) -> f64 {
@@ -43,12 +38,7 @@ impl SectionList {
     }
 
     pub fn begin_section(&mut self, name: impl Into<String>, skip_animations: bool) {
-        self.open = Some(Section {
-            name: name.into(),
-            start_time: 0.0,
-            end_time: 0.0,
-            skip_animations,
-        });
+        self.open = Some(Section { name: name.into(), start_time: 0.0, end_time: 0.0, skip_animations });
     }
 
     pub fn end_section(&mut self, end_time: f64) {

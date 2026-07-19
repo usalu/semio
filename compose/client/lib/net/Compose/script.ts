@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Compose.NET build router: `bun ./script.ts build`. */
-import { execFileSync, spawnSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/index.ts";
+import { spawnSync } from "node:child_process";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -15,8 +15,9 @@ class BuildScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(): void {
-    execFileSync("dotnet", ["test", "../Compose.Tests/Compose.Tests.csproj"], { cwd: this.root, stdio: "inherit" });
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments);
+    await runTestBudgeted("dotnet", ["test", "../Compose.Tests/Compose.Tests.csproj", ...dotnetLevelArgs(level), ...rest], { cwd: this.root });
   }
 }
 

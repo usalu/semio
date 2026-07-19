@@ -1133,6 +1133,11 @@ class PluginCapabilityLintScript extends BundleScript {
       reqwest: "forbidden",
       "web-sys": "forbidden",
       "js-sys": "forbidden",
+      egui: "forbidden",
+      eframe: "forbidden",
+      wgpu: "forbidden",
+      "wgpu-core": "forbidden",
+      winit: "forbidden",
     };
     const failures: string[] = [];
     for (const pkg of metadata.packages) {

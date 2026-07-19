@@ -40,11 +40,7 @@ impl Matrix {
         }
         let mut group = Group::new(children);
         arrange_grid(&mut group, nrows, ncols, cell_size);
-        Self {
-            group,
-            rows: nrows,
-            cols: ncols,
-        }
+        Self { group, rows: nrows, cols: ncols }
     }
 
     pub fn math(entries: &[&str], cell_size: (f64, f64), color: Color) -> Self {
@@ -59,11 +55,7 @@ impl Matrix {
         let rows = entries.len().div_ceil(cols);
         let mut group = Group::new(children);
         arrange(&mut group, Vec2::new(1.0, 0.0), cell_size.0 * 0.15);
-        Self {
-            group,
-            rows,
-            cols,
-        }
+        Self { group, rows, cols }
     }
 
     pub fn with_brackets(mut self, color: Color, padding: f64) -> Self {
@@ -103,11 +95,7 @@ impl Table {
         }
         let mut group = Group::new(children);
         arrange_grid(&mut group, nrows, ncols, cell_size);
-        Self {
-            group,
-            rows: nrows,
-            cols: ncols,
-        }
+        Self { group, rows: nrows, cols: ncols }
     }
 
     pub fn with_frame(mut self, color: Color, padding: f64) -> Self {
@@ -146,11 +134,7 @@ impl DecimalMatrix {
     }
 
     pub fn to_matrix_sobject(&self, cell_size: (f64, f64), color: Color) -> Matrix {
-        let rows: Vec<Vec<String>> = self
-            .values
-            .iter()
-            .map(|row| row.iter().map(|v| format!("{v:.2}")).collect())
-            .collect();
+        let rows: Vec<Vec<String>> = self.values.iter().map(|row| row.iter().map(|v| format!("{v:.2}")).collect()).collect();
         Matrix::from_rows(rows, cell_size, color)
     }
 }
@@ -169,11 +153,7 @@ mod tests {
 
     #[test]
     fn matrix_grid_layout() {
-        let m = Matrix::from_rows(
-            vec![vec!["a".into(), "b".into()], vec!["c".into(), "d".into()]],
-            (1.0, 1.0),
-            Color::WHITE,
-        );
+        let m = Matrix::from_rows(vec![vec!["a".into(), "b".into()], vec!["c".into(), "d".into()]], (1.0, 1.0), Color::WHITE);
         assert_eq!(m.rows, 2);
         assert_eq!(m.cols, 2);
         assert_eq!(m.group.children.len(), 4);
