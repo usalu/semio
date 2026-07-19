@@ -153,7 +153,7 @@ function PanelDockDemo() {
   );
 }
 
-export const PanelDock: Story = {
+export const PanelDockStory: Story = {
   name: "PanelDockProvider (drag a tab between the two panels)",
   render: () => (
     <ProbeShell title="PanelDockProvider → wires pointer-capture tab dragging across every Panel below it">

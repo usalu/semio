@@ -864,7 +864,7 @@ func getTestExecutor(t *testing.T) *Executor {
 // #endregion 🎼Helpers
 
 // 📦#region 🧳Collection
-func TestBundlesNonEmpty(t *testing.T) {
+func TestExhaustiveBundlesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle test in short mode")
 	}
@@ -887,7 +887,7 @@ func TestBundlesNonEmpty(t *testing.T) {
 	}
 }
 
-func TestContributorsNonEmpty(t *testing.T) {
+func TestExhaustiveContributorsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow contributor test in short mode")
 	}
@@ -910,7 +910,7 @@ func TestContributorsNonEmpty(t *testing.T) {
 	}
 }
 
-func TestTicketsNonEmpty(t *testing.T) {
+func TestExhaustiveTicketsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tickets test in short mode")
 	}
@@ -933,7 +933,7 @@ func TestTicketsNonEmpty(t *testing.T) {
 	}
 }
 
-func TestPoliciesNonEmpty(t *testing.T) {
+func TestExhaustivePoliciesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policies test in short mode")
 	}
@@ -956,7 +956,7 @@ func TestPoliciesNonEmpty(t *testing.T) {
 	}
 }
 
-func TestStatutesNonEmpty(t *testing.T) {
+func TestExhaustiveStatutesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statutes test in short mode")
 	}
@@ -993,7 +993,7 @@ func TestPolicyStatutesHaveMetadata(t *testing.T) {
 	}
 }
 
-func TestFoldersNonEmpty(t *testing.T) {
+func TestExhaustiveFoldersNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow folders test in short mode")
 	}
@@ -1016,7 +1016,7 @@ func TestFoldersNonEmpty(t *testing.T) {
 	}
 }
 
-func TestFilesNonEmpty(t *testing.T) {
+func TestExhaustiveFilesNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow files test in short mode")
 	}
@@ -1039,7 +1039,7 @@ func TestFilesNonEmpty(t *testing.T) {
 	}
 }
 
-func TestBreachsNonEmpty(t *testing.T) {
+func TestExhaustiveBreachsNonEmpty(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow breachs test in short mode")
 	}
@@ -1065,7 +1065,7 @@ func TestBreachsNonEmpty(t *testing.T) {
 	}
 }
 
-func TestTicketTitleValidation(t *testing.T) {
+func TestExhaustiveTicketTitleValidation(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket title validation test in short mode")
 	}
@@ -1140,7 +1140,7 @@ func TestBuildTechnologyLinkArgs(t *testing.T) {
 	}
 }
 
-func TestFilterTicketWorkspaceFiles(t *testing.T) {
+func TestExhaustiveFilterTicketWorkspaceFiles(t *testing.T) {
 	executor := getTestExecutor(t)
 	if executor == nil {
 		t.Fatal("executor is nil")
@@ -1290,7 +1290,7 @@ func TestStreamAndListTicketsIgnoreNestedWorkspaceFiles(t *testing.T) {
 	}
 }
 
-func TestNodesAndEdgesQuick(t *testing.T) {
+func TestExhaustiveNodesAndEdgesQuick(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges quick test in short mode")
 	}
@@ -1408,7 +1408,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 // #endregion 🧳Collection
 
 // 🌿#region 🌈Nodes and Edges
-func TestNodesAndEdges(t *testing.T) {
+func TestExhaustiveNodesAndEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow nodes/edges test in short mode")
 	}
@@ -1606,7 +1606,7 @@ func TestNodesAndEdges(t *testing.T) {
 	}
 }
 
-func TestNodeQuery(t *testing.T) {
+func TestExhaustiveNodeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow node query test in short mode")
 	}
@@ -1652,7 +1652,7 @@ func TestNodeQuery(t *testing.T) {
 	}
 }
 
-func TestSectionsEdges(t *testing.T) {
+func TestExhaustiveSectionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow sections edges test in short mode")
 	}
@@ -1738,7 +1738,7 @@ func TestSectionsEdges(t *testing.T) {
 	}
 }
 
-func TestDefinitionsEdges(t *testing.T) {
+func TestExhaustiveDefinitionsEdges(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definitions edges test in short mode")
 	}
@@ -1819,7 +1819,7 @@ func TestDefinitionsEdges(t *testing.T) {
 	}
 }
 
-func TestDefinitionKind(t *testing.T) {
+func TestExhaustiveDefinitionKind(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow definition kind test in short mode")
 	}
@@ -2011,7 +2011,7 @@ func normalizeRelativeTimes(s string) string {
 // #endregion 🎼Helpers
 
 // 🧪#region 🏩Codebase
-func TestCodebaseCommand(t *testing.T) {
+func TestExhaustiveCodebaseCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow codebase test in short mode")
 	}
@@ -3502,7 +3502,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	}
 }
 
-func TestFixViaGraphQL(t *testing.T) {
+func TestExhaustiveFixViaGraphQL(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow fix via graphql test in short mode")
 	}
@@ -4545,7 +4545,7 @@ func TestPolicyCheckCommand(t *testing.T) {
 	}
 }
 
-func TestPolicyBreachListCommand(t *testing.T) {
+func TestExhaustivePolicyBreachListCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy breach list test in short mode")
 	}
@@ -6154,7 +6154,7 @@ func TestRegisteredPoliciesHaveGroups(t *testing.T) {
 	}
 }
 
-func TestPolicyGroupsGraphQL(t *testing.T) {
+func TestExhaustivePolicyGroupsGraphQL(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow policy groups graphql test in short mode")
 	}
@@ -6221,7 +6221,7 @@ func TestBundleListCommand(t *testing.T) {
 	}
 }
 
-func TestBundleTreeCommand(t *testing.T) {
+func TestExhaustiveBundleTreeCommand(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow bundle tree test in short mode")
 	}
@@ -6631,7 +6631,7 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 	}
 }
 
-func TestGoalDocument(t *testing.T) {
+func TestExhaustiveGoalDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow goal document test in short mode")
 	}
@@ -8201,7 +8201,7 @@ func TestGoalListIDs(t *testing.T) {
 	}
 }
 
-func TestTicketListIDs(t *testing.T) {
+func TestExhaustiveTicketListIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket list ids test in short mode")
 	}
@@ -8617,7 +8617,7 @@ func TestGraphQLPoliciesQuery(t *testing.T) {
 	}
 }
 
-func TestGraphQLTicketsQuery(t *testing.T) {
+func TestExhaustiveGraphQLTicketsQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow graphql tickets query test in short mode")
 	}
@@ -8630,7 +8630,7 @@ func TestGraphQLTicketsQuery(t *testing.T) {
 	}
 }
 
-func TestGraphQLAnalyzeQuery(t *testing.T) {
+func TestExhaustiveGraphQLAnalyzeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow analyze query test in short mode")
 	}
@@ -8677,7 +8677,7 @@ func executeTreeCommand(args ...string) (string, error) {
 	return buf.String(), err
 }
 
-func TestTreeCommands(t *testing.T) {
+func TestExhaustiveTreeCommands(t *testing.T) {
 
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
@@ -8767,7 +8767,7 @@ func TestTreeCommands(t *testing.T) {
 	}
 }
 
-func TestCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
+func TestExhaustiveCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
@@ -8868,7 +8868,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	}
 }
 
-func TestCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
+func TestExhaustiveCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
@@ -8915,7 +8915,7 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoManagement(t *testing.T) {
 	}
 }
 
-func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
+func TestExhaustiveCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
@@ -9361,7 +9361,7 @@ func TestCliWrongArgs_ErrorMessages(t *testing.T) {
 	}
 }
 
-func TestCliJsonPureData(t *testing.T) {
+func TestExhaustiveCliJsonPureData(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow CLI JSON pure data test in short mode")
 	}
@@ -12442,7 +12442,7 @@ func TestToolTechnologyList(t *testing.T) {
 	}
 }
 
-func TestToolTechnologyTree(t *testing.T) {
+func TestExhaustiveToolTechnologyTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool technology tree test in short mode")
 	}
@@ -12475,7 +12475,7 @@ func TestToolGoalList(t *testing.T) {
 	}
 }
 
-func TestToolTicketList(t *testing.T) {
+func TestExhaustiveToolTicketList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool ticket list test in short mode")
 	}
@@ -12508,7 +12508,7 @@ func TestToolFolderList(t *testing.T) {
 	}
 }
 
-func TestToolFolderTree(t *testing.T) {
+func TestExhaustiveToolFolderTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool folder tree test in short mode")
 	}
@@ -12530,7 +12530,7 @@ func TestToolFileList(t *testing.T) {
 	}
 }
 
-func TestToolFileTree(t *testing.T) {
+func TestExhaustiveToolFileTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tool file tree test in short mode")
 	}
@@ -12648,7 +12648,7 @@ func TestToolFileCRUD(t *testing.T) {
 	}
 }
 
-func TestToolTicketLifecycle(t *testing.T) {
+func TestExhaustiveToolTicketLifecycle(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow ticket lifecycle test in short mode")
 	}
@@ -12719,7 +12719,7 @@ func TestParseTicketPath(t *testing.T) {
 	}
 }
 
-func TestMcpTicketCloseAutoResolve(t *testing.T) {
+func TestExhaustiveMcpTicketCloseAutoResolve(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mcp ticket close auto-resolve test in short mode")
 	}
@@ -12751,7 +12751,7 @@ func TestMcpTicketCloseAutoResolve(t *testing.T) {
 	}
 }
 
-func TestMcpTicketCloseWithFullYearPath(t *testing.T) {
+func TestExhaustiveMcpTicketCloseWithFullYearPath(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mcp ticket close full-year-path test in short mode")
 	}
@@ -15153,7 +15153,7 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 
 // #endregion 🗿Monorepo Tree
 
-func TestMigrateAuthorFieldsToString(t *testing.T) {
+func TestExhaustiveMigrateAuthorFieldsToString(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow migration test in short mode")
 	}

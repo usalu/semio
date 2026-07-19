@@ -21,7 +21,7 @@ async function expectCodaStory(page: Page, storyId: string): Promise<void> {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
 
-  await page.goto(`iframe.html?id=${storyId}&viewMode=story`, { waitUntil: "domcontentloaded" });
+  await page.goto(`iframe.html?id=${encodeURIComponent(storyId)}&viewMode=story`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
   await expect(page.locator("body")).not.toContainText("Failed to load the Storybook preview file");
   await page.waitForFunction(() => {

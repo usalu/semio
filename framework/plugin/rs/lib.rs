@@ -290,6 +290,10 @@ pub use semio_framework_core::{OsMediaCapability, ResourceKindSpec};
 /// `ResourceKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
 /// without a direct `semio-framework-core` dependency.
 pub use semio_framework_core::{MediaClass, MediaType};
+/// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
+/// `DocumentApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
+/// implementers never need a direct `semio-framework-core` dependency just to satisfy this trait.
+pub use semio_framework_core::{Media, MediaError, MediaFingerprint, MediaPayload};
 //#endregion 🔖MediaPort
 
 pub struct AppBuilder {
@@ -2668,6 +2672,42 @@ pub trait DocumentApp: Send + 'static {
     /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every plugin driven purely
     /// by user actions leaves it untouched.
     fn seed(&self, _store: &mut DocumentVcsStore<Self::Projection, Self::Op>) {}
+
+    /// 🎞️ Declares this app's media-graph ports (empty by default — an app with no ports simply
+    /// cannot be wired into a media graph; every other capability is unaffected).
+    fn media_ports(&self) -> Vec<MediaPortSpec> {
+        Vec::new()
+    }
+    /// 🎞️ Pure projection of the current document onto one declared output port — must not mutate
+    /// anything. Called by both the UI (preview/export) and a headless runner (moving media along a
+    /// media-graph edge). Default: `MediaError::NotImplemented` for apps that declare no ports.
+    fn export_media(
+        &self,
+        _port: &str,
+        _doc: &DocumentView<'_, Self::Projection>,
+    ) -> Result<Media, MediaError> {
+        Err(MediaError::NotImplemented)
+    }
+    /// 🎞️ Translates an incoming media value on one declared input port into ops — never mutates
+    /// state directly, so a headless import is exactly as undoable/syncable as a UI edit.
+    fn import_media(
+        &mut self,
+        _port: &str,
+        _media: &Media,
+        _doc: &DocumentView<'_, Self::Projection>,
+    ) -> Result<ActionEmit<Self::Op>, MediaError> {
+        Err(MediaError::NotImplemented)
+    }
+    /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
+    /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
+    /// materializing the full export (e.g. from a cached head edit id).
+    fn media_fingerprint(
+        &self,
+        port: &str,
+        doc: &DocumentView<'_, Self::Projection>,
+    ) -> Result<MediaFingerprint, MediaError> {
+        self.export_media(port, doc).map(|media| MediaFingerprint::of(&media))
+    }
 }
 
 /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
@@ -2710,6 +2750,19 @@ pub trait PluginApp: Send {
     }
     fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
+    }
+    /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless media-graph
+    /// runner calls without knowing the app's concrete `Projection`/`Op` types.
+    fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
+        Err(MediaError::NotImplemented)
+    }
+    /// 🎞️ Object-safe counterpart to `DocumentApp::import_media` — dispatches through the same
+    /// `DocumentVcsStore` as `handle_action`, so a headless import is an ordinary, undoable edit.
+    fn import_media(&mut self, _port: &str, _media: &Media, _meta: &ActionMeta) -> Result<InvocationResult, String> {
+        Err(MediaError::NotImplemented.to_string())
+    }
+    fn media_fingerprint(&mut self, _port: &str) -> Result<MediaFingerprint, MediaError> {
+        Err(MediaError::NotImplemented)
     }
 }
 
@@ -3136,6 +3189,33 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history };
         app.window_measures(&doc, view_state)
+    }
+
+    fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
+        self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.export_media(port, &doc)
+    }
+
+    fn import_media(&mut self, port: &str, media: &Media, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        self.refresh_cache()?;
+        let emit = {
+            let VcsDocumentApp { app, cache, .. } = self;
+            let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+            let doc = DocumentView { projection, history };
+            app.import_media(port, media, &doc).map_err(|error| error.to_string())?
+        };
+        self.dispatch_emit(&format!("import-media:{port}"), emit, meta)
+    }
+
+    fn media_fingerprint(&mut self, port: &str) -> Result<MediaFingerprint, MediaError> {
+        self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.media_fingerprint(port, &doc)
     }
 
     fn app_labels(&mut self, view_state: &ViewState) -> AppLabelsOverlay {

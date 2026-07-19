@@ -4,6 +4,9 @@
 // #region 🔖Ids
 /// 🧩 Index of one vocabulary entry. `u32` keeps candidate/mask arithmetic cheap even for
 /// million-token sharded vocabularies while staying far below any real model's vocab size.
+/// `#[repr(transparent)]` lets [`cast_u32_slice_to_token_ids`] hand out a typed view over a raw
+/// index buffer without copying.
+#[repr(transparent)]
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 pub struct TokenId(pub u32);
 
@@ -1008,6 +1011,2380 @@ impl TokenBitset {
 }
 // #endregion 🔖Bitset
 
+// #region 🔖Rng
+/// 🎲 Which sub-stream of randomness a draw belongs to, so unrelated concerns (selection noise vs.
+/// speculative-decoding acceptance vs. diffusion noise) never share bits even within one sequence.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(u8)]
+pub enum StreamPurpose {
+    Selection = 0,
+    Gumbel = 1,
+    Noise = 2,
+    Speculative = 3,
+    Beam = 4,
+    Diffusion = 5,
+}
+
+/// 🎲 Identifies one independent random stream by the ids that produced it — never by batch slot,
+/// so a continuous-batching reorder never changes which bits a sequence draws.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct StreamKey {
+    pub request: u64,
+    pub sequence: u64,
+    pub beam: u32,
+    pub candidate: u32,
+    pub purpose: StreamPurpose,
+}
+
+fn mix64(x: u64) -> u64 {
+    mathematical_random::SplitMix64::new(x).next_u64()
+}
+
+fn stream_seed(key: StreamKey) -> u64 {
+    let mut acc = mix64(key.request);
+    acc = mix64(acc ^ mix64(key.sequence));
+    acc = mix64(acc ^ mix64(key.beam as u64));
+    acc = mix64(acc ^ mix64(key.candidate as u64));
+    acc = mix64(acc ^ mix64(key.purpose as u64));
+    acc
+}
+
+/// 🎲 Which concrete generator produced a [`RngSnapshot`], so `restore` can reject a snapshot
+/// meant for the other kind instead of silently reinterpreting its words.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum RngKind {
+    Counter,
+    Xoshiro,
+}
+
+/// 🎲 Portable capture of a generator's internal state, text-serializable for [`SequenceState`]
+/// checkpoints.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct RngSnapshot {
+    pub kind: RngKind,
+    pub words: [u64; 4],
+}
+
+impl RngSnapshot {
+    /// 🎲 Compact `kind:hex:hex:hex:hex` text form.
+    pub fn to_text(&self) -> String {
+        let kind = match self.kind {
+            RngKind::Counter => "counter",
+            RngKind::Xoshiro => "xoshiro",
+        };
+        format!("{kind}:{:016x}:{:016x}:{:016x}:{:016x}", self.words[0], self.words[1], self.words[2], self.words[3])
+    }
+
+    /// 🎲 Inverse of [`RngSnapshot::to_text`].
+    pub fn from_text(text: &str) -> Result<Self, SamplingError> {
+        let mut parts = text.split(':');
+        let kind = match parts.next() {
+            Some("counter") => RngKind::Counter,
+            Some("xoshiro") => RngKind::Xoshiro,
+            _ => return Err(SamplingError::Corrupted { reason: "unknown rng snapshot kind" }),
+        };
+        let mut words = [0u64; 4];
+        for w in words.iter_mut() {
+            let part = parts.next().ok_or(SamplingError::Corrupted { reason: "truncated rng snapshot" })?;
+            *w = u64::from_str_radix(part, 16).map_err(|_| SamplingError::Corrupted { reason: "invalid rng snapshot hex" })?;
+        }
+        if parts.next().is_some() {
+            return Err(SamplingError::Corrupted { reason: "trailing data in rng snapshot" });
+        }
+        Ok(Self { kind, words })
+    }
+}
+
+/// 🎲 Object-safe source of randomness handed to samplers/warpers/search algorithms. Every
+/// implementation must be splittable into independent child streams keyed by [`StreamKey`] alone
+/// (never by call order), which is what keeps continuous-batching reorders and speculative
+/// verification bit-reproducible.
+pub trait RandomSource {
+    fn next_u64(&mut self) -> u64;
+    /// 🎲 Derives an independent child stream from `(self, key)` — order-independent across calls.
+    fn split(&self, key: StreamKey) -> Box<dyn RandomSource>;
+    fn snapshot(&self) -> RngSnapshot;
+    fn restore(&mut self, snapshot: &RngSnapshot) -> Result<(), SamplingError>;
+
+    /// 🎲 Uniform `f64` in `[0, 1)`.
+    fn next_f64(&mut self) -> f64 {
+        (self.next_u64() >> 11) as f64 * (1.0 / (1u64 << 53) as f64)
+    }
+
+    /// 🎲 Uniform `f64` in `(0, 1]` — safe as the argument to `ln()`, unlike `next_f64`.
+    fn next_f64_open01(&mut self) -> f64 {
+        (((self.next_u64() >> 11) + 1) as f64) * (1.0 / (1u64 << 53) as f64)
+    }
+
+    /// 🎲 Uniform `u64` in `[lo, hi)` via rejection sampling (no modulo bias).
+    fn next_range(&mut self, lo: u64, hi: u64) -> u64 {
+        debug_assert!(hi >= lo, "next_range: hi must be >= lo");
+        let range = hi - lo;
+        if range == 0 {
+            return lo;
+        }
+        let limit = u64::MAX - (u64::MAX % range);
+        loop {
+            let x = self.next_u64();
+            if x < limit {
+                return lo + x % range;
+            }
+        }
+    }
+
+    /// 🎲 Standard Gumbel(0, 1) draw, `-ln(-ln(u))` for `u` in `(0, 1]`.
+    fn gumbel(&mut self) -> f64 {
+        let u = self.next_f64_open01();
+        -(-u.ln()).ln()
+    }
+}
+
+/// 🎲 Default splittable [`RandomSource`]: a counter-based generator (double [`mix64`] of
+/// `key ^ mix64(counter)`, Philox-lite) chosen over a stepped generator specifically because
+/// splitting never advances or depends on the parent's step count — two sequences split from the
+/// same parent at different times still get independent, order-irrelevant streams.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct CounterRng {
+    key: u64,
+    ctr: u64,
+}
+
+impl CounterRng {
+    /// 🎲 A root stream from a plain seed, with no [`StreamKey`] semantics (tests, standalone use).
+    pub fn from_seed(seed: u64) -> Self {
+        Self { key: mix64(seed), ctr: 0 }
+    }
+
+    /// 🎲 A root stream combining a request-level seed with a full [`StreamKey`] in one step.
+    pub fn from_root(root_seed: u64, key: StreamKey) -> Self {
+        Self { key: mix64(mix64(root_seed) ^ stream_seed(key)), ctr: 0 }
+    }
+}
+
+impl RandomSource for CounterRng {
+    fn next_u64(&mut self) -> u64 {
+        let ctr = self.ctr;
+        self.ctr = self.ctr.wrapping_add(1);
+        mix64(self.key ^ mix64(ctr))
+    }
+
+    fn split(&self, key: StreamKey) -> Box<dyn RandomSource> {
+        Box::new(Self { key: mix64(self.key ^ stream_seed(key)), ctr: 0 })
+    }
+
+    fn snapshot(&self) -> RngSnapshot {
+        RngSnapshot { kind: RngKind::Counter, words: [self.key, self.ctr, 0, 0] }
+    }
+
+    fn restore(&mut self, snapshot: &RngSnapshot) -> Result<(), SamplingError> {
+        if snapshot.kind != RngKind::Counter {
+            return Err(SamplingError::Corrupted { reason: "rng snapshot kind mismatch: expected counter" });
+        }
+        self.key = snapshot.words[0];
+        self.ctr = snapshot.words[1];
+        Ok(())
+    }
+}
+
+/// 🎲 [`RandomSource`] adapter over [`mathematical_random::Rng`] (xoshiro256**), for callers who
+/// want that generator's statistical profile instead of the default counter-based stream.
+pub struct XoshiroSource(mathematical_random::Rng);
+
+impl XoshiroSource {
+    pub fn from_seed(seed: u64) -> Self {
+        Self(mathematical_random::Rng::from_seed(seed))
+    }
+}
+
+impl RandomSource for XoshiroSource {
+    fn next_u64(&mut self) -> u64 {
+        self.0.next_u64()
+    }
+
+    fn split(&self, key: StreamKey) -> Box<dyn RandomSource> {
+        let state = self.0.state();
+        let seed = mix64(state[0] ^ state[1] ^ stream_seed(key));
+        Box::new(Self::from_seed(seed))
+    }
+
+    fn snapshot(&self) -> RngSnapshot {
+        RngSnapshot { kind: RngKind::Xoshiro, words: self.0.state() }
+    }
+
+    fn restore(&mut self, snapshot: &RngSnapshot) -> Result<(), SamplingError> {
+        if snapshot.kind != RngKind::Xoshiro {
+            return Err(SamplingError::Corrupted { reason: "rng snapshot kind mismatch: expected xoshiro" });
+        }
+        self.0 = mathematical_random::Rng::from_state(snapshot.words);
+        Ok(())
+    }
+}
+// #endregion 🔖Rng
+
+// #region 🔖Vocabulary
+/// 📖 Static facts about the token space a [`SamplingConfig`] samples over.
+#[derive(Clone, PartialEq, Debug)]
+pub struct Vocabulary {
+    pub size: usize,
+    pub eos: Vec<TokenId>,
+    pub bos: Option<TokenId>,
+    pub pad: Option<TokenId>,
+    pub unk: Option<TokenId>,
+    pub special: TokenBitset,
+}
+
+impl Vocabulary {
+    /// 📖 A vocabulary of `size` tokens with no special tokens configured.
+    pub fn new(size: usize) -> Self {
+        Self { size, eos: Vec::new(), bos: None, pad: None, unk: None, special: TokenBitset::new_empty(size) }
+    }
+
+    pub fn with_eos(mut self, eos: Vec<TokenId>) -> Self {
+        self.eos = eos;
+        self
+    }
+
+    pub fn with_bos(mut self, bos: TokenId) -> Self {
+        self.bos = Some(bos);
+        self
+    }
+
+    pub fn with_pad(mut self, pad: TokenId) -> Self {
+        self.pad = Some(pad);
+        self
+    }
+
+    pub fn with_unk(mut self, unk: TokenId) -> Self {
+        self.unk = Some(unk);
+        self
+    }
+
+    /// 📖 Marks `tokens` as special (suppressible via `ProcessorSpec::SuppressSpecial`).
+    pub fn with_special(mut self, tokens: &[TokenId]) -> Self {
+        for &token in tokens {
+            self.special.set(token, true);
+        }
+        self
+    }
+
+    pub fn is_eos(&self, token: TokenId) -> bool {
+        self.eos.contains(&token)
+    }
+
+    /// 📖 Errors unless `len` matches this vocabulary's declared size.
+    pub fn validate_logits_len(&self, len: usize) -> Result<(), SamplingError> {
+        if len != self.size {
+            Err(SamplingError::VocabMismatch { expected: self.size, actual: len })
+        } else {
+            Ok(())
+        }
+    }
+}
+
+/// 📖 Maps [`TokenId`]s to their surface-form bytes, for constraints and stop matching that
+/// operate on generated text rather than raw ids.
+pub trait TokenTextAdapter {
+    fn vocab_size(&self) -> usize;
+    /// 📖 Raw (possibly partial-UTF-8) bytes of one token; `None` for byte-less special tokens.
+    fn token_bytes(&self, token: TokenId) -> Option<&[u8]>;
+    /// 📖 Stable hash of the whole token table, used to key automaton-state×token caches so a
+    /// swapped tokenizer can never silently reuse another tokenizer's cached transitions.
+    fn fingerprint(&self) -> u64;
+}
+
+/// 📖 Reference [`TokenTextAdapter`] over a plain `&[&[u8]]` token table.
+pub struct SliceTextAdapter<'a> {
+    tokens: &'a [&'a [u8]],
+}
+
+impl<'a> SliceTextAdapter<'a> {
+    pub fn new(tokens: &'a [&'a [u8]]) -> Self {
+        Self { tokens }
+    }
+}
+
+impl TokenTextAdapter for SliceTextAdapter<'_> {
+    fn vocab_size(&self) -> usize {
+        self.tokens.len()
+    }
+
+    fn token_bytes(&self, token: TokenId) -> Option<&[u8]> {
+        self.tokens.get(token.get() as usize).copied()
+    }
+
+    fn fingerprint(&self) -> u64 {
+        // 📖 FNV-1a over every token's bytes with a separator byte between entries so `["ab","c"]`
+        // and `["a","bc"]` never collide.
+        let mut hash = 0xcbf2_9ce4_8422_2325u64;
+        for token in self.tokens {
+            for &b in *token {
+                hash = (hash ^ b as u64).wrapping_mul(0x0000_0100_0000_01b3);
+            }
+            hash = (hash ^ 0xFF).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash
+    }
+}
+// #endregion 🔖Vocabulary
+
+// #region 🔖Schedules
+/// 📅 What a [`Schedule`] is evaluated against at one sampling step.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ScheduleInput {
+    pub step: StepIndex,
+    pub generated_len: usize,
+    pub last_entropy: Option<f64>,
+}
+
+/// 📅 A parameter value that may vary over the course of generation. Every warper/penalty knob
+/// that the feature tree calls out as schedulable is `Schedule`-typed in [`ProcessorSpec`].
+#[derive(Clone, PartialEq, Debug)]
+pub enum Schedule {
+    Constant(f64),
+    Linear { from: f64, to: f64, over_steps: u32 },
+    Exponential { from: f64, to: f64, over_steps: u32 },
+    Cosine { from: f64, to: f64, over_steps: u32 },
+    /// 📅 Step-indexed breakpoints; the value holds at the most recent breakpoint `<= step`.
+    Piecewise(Vec<(StepIndex, f64)>),
+    /// 📅 One value per generated-token position, clamped to the last entry past its length.
+    ByPosition(Vec<f64>),
+    EntropyScaled { base: f64, gain: f64, min: f64, max: f64 },
+    /// 📅 Escape hatch for host-defined logic; not text-serializable (see [`Schedule::to_json`]).
+    Callback(fn(ScheduleInput) -> f64),
+}
+
+impl Schedule {
+    /// 📅 Evaluates the schedule at `input`.
+    pub fn eval(&self, input: ScheduleInput) -> f64 {
+        match self {
+            Self::Constant(v) => *v,
+            Self::Linear { from, to, over_steps } => {
+                let t = schedule_progress(input.step, *over_steps);
+                from + (to - from) * t
+            }
+            Self::Exponential { from, to, over_steps } => {
+                let t = schedule_progress(input.step, *over_steps);
+                if *from > 0.0 && *to > 0.0 {
+                    from * (to / from).powf(t)
+                } else {
+                    from + (to - from) * t
+                }
+            }
+            Self::Cosine { from, to, over_steps } => {
+                let t = schedule_progress(input.step, *over_steps);
+                let cos_t = 0.5 * (1.0 - (core::f64::consts::PI * t).cos());
+                from + (to - from) * cos_t
+            }
+            Self::Piecewise(pieces) => {
+                let mut value = pieces.first().map(|(_, v)| *v).unwrap_or(0.0);
+                for (step, v) in pieces {
+                    if step.get() <= input.step.get() {
+                        value = *v;
+                    } else {
+                        break;
+                    }
+                }
+                value
+            }
+            Self::ByPosition(values) => {
+                if values.is_empty() {
+                    0.0
+                } else {
+                    values[input.generated_len.min(values.len() - 1)]
+                }
+            }
+            Self::EntropyScaled { base, gain, min, max } => {
+                let entropy = input.last_entropy.unwrap_or(0.0);
+                (base + gain * entropy).clamp(*min, *max)
+            }
+            Self::Callback(f) => f(input),
+        }
+    }
+
+    /// 📅 Structured form for config serialization; `Callback` encodes as a marker that
+    /// deliberately fails to round-trip (see [`Schedule::from_json`]).
+    pub fn to_json(&self) -> JsonValue {
+        let obj = |pairs: Vec<(&str, JsonValue)>| JsonValue::Object(pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+        match self {
+            Self::Constant(v) => obj(vec![("kind", JsonValue::Str("constant".into())), ("value", JsonValue::Num(*v))]),
+            Self::Linear { from, to, over_steps } => obj(vec![
+                ("kind", JsonValue::Str("linear".into())),
+                ("from", JsonValue::Num(*from)),
+                ("to", JsonValue::Num(*to)),
+                ("over_steps", JsonValue::Num(*over_steps as f64)),
+            ]),
+            Self::Exponential { from, to, over_steps } => obj(vec![
+                ("kind", JsonValue::Str("exponential".into())),
+                ("from", JsonValue::Num(*from)),
+                ("to", JsonValue::Num(*to)),
+                ("over_steps", JsonValue::Num(*over_steps as f64)),
+            ]),
+            Self::Cosine { from, to, over_steps } => obj(vec![
+                ("kind", JsonValue::Str("cosine".into())),
+                ("from", JsonValue::Num(*from)),
+                ("to", JsonValue::Num(*to)),
+                ("over_steps", JsonValue::Num(*over_steps as f64)),
+            ]),
+            Self::Piecewise(pieces) => obj(vec![
+                ("kind", JsonValue::Str("piecewise".into())),
+                (
+                    "pieces",
+                    JsonValue::Array(pieces.iter().map(|(s, v)| JsonValue::Array(vec![JsonValue::Num(s.get() as f64), JsonValue::Num(*v)])).collect()),
+                ),
+            ]),
+            Self::ByPosition(values) => obj(vec![
+                ("kind", JsonValue::Str("by_position".into())),
+                ("values", JsonValue::Array(values.iter().map(|v| JsonValue::Num(*v)).collect())),
+            ]),
+            Self::EntropyScaled { base, gain, min, max } => obj(vec![
+                ("kind", JsonValue::Str("entropy_scaled".into())),
+                ("base", JsonValue::Num(*base)),
+                ("gain", JsonValue::Num(*gain)),
+                ("min", JsonValue::Num(*min)),
+                ("max", JsonValue::Num(*max)),
+            ]),
+            Self::Callback(_) => obj(vec![("kind", JsonValue::Str("callback".into()))]),
+        }
+    }
+
+    /// 📅 Inverse of [`Schedule::to_json`]; rejects `"callback"` since function pointers are not
+    /// recoverable from serialized data.
+    pub fn from_json(value: &JsonValue) -> Result<Self, SamplingError> {
+        let kind = value.get("kind").and_then(JsonValue::as_str).ok_or(SamplingError::Corrupted { reason: "schedule missing kind" })?;
+        let num = |key: &'static str| value.get(key).and_then(JsonValue::as_f64).ok_or(SamplingError::Corrupted { reason: "schedule missing numeric field" });
+        match kind {
+            "constant" => Ok(Self::Constant(num("value")?)),
+            "linear" => Ok(Self::Linear { from: num("from")?, to: num("to")?, over_steps: num("over_steps")? as u32 }),
+            "exponential" => Ok(Self::Exponential { from: num("from")?, to: num("to")?, over_steps: num("over_steps")? as u32 }),
+            "cosine" => Ok(Self::Cosine { from: num("from")?, to: num("to")?, over_steps: num("over_steps")? as u32 }),
+            "piecewise" => {
+                let pieces = value.get("pieces").and_then(JsonValue::as_array).ok_or(SamplingError::Corrupted { reason: "piecewise schedule missing pieces" })?;
+                let mut out = Vec::with_capacity(pieces.len());
+                for piece in pieces {
+                    let pair = piece.as_array().ok_or(SamplingError::Corrupted { reason: "piecewise entry must be a pair" })?;
+                    let (Some(step), Some(v)) = (pair.first().and_then(JsonValue::as_f64), pair.get(1).and_then(JsonValue::as_f64)) else {
+                        return Err(SamplingError::Corrupted { reason: "piecewise entry must be [step, value]" });
+                    };
+                    out.push((StepIndex::new(step as u32), v));
+                }
+                Ok(Self::Piecewise(out))
+            }
+            "by_position" => {
+                let values = value.get("values").and_then(JsonValue::as_array).ok_or(SamplingError::Corrupted { reason: "by_position schedule missing values" })?;
+                let out = values.iter().map(|v| v.as_f64().ok_or(SamplingError::Corrupted { reason: "by_position value must be numeric" })).collect::<Result<Vec<_>, _>>()?;
+                Ok(Self::ByPosition(out))
+            }
+            "entropy_scaled" => Ok(Self::EntropyScaled { base: num("base")?, gain: num("gain")?, min: num("min")?, max: num("max")? }),
+            "callback" => Err(SamplingError::Corrupted { reason: "callback schedules cannot be deserialized" }),
+            _ => Err(SamplingError::Corrupted { reason: "unknown schedule kind" }),
+        }
+    }
+}
+
+fn schedule_progress(step: StepIndex, over_steps: u32) -> f64 {
+    if over_steps == 0 {
+        1.0
+    } else {
+        (step.get() as f64 / over_steps as f64).min(1.0)
+    }
+}
+// #endregion 🔖Schedules
+
+// #region 🔖Config
+/// ⚙️ Deterministic tie-breaking policy for greedy selection and every truncation warper's
+/// boundary decision.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum TieBreak {
+    #[default]
+    LowestTokenId,
+    HighestTokenId,
+    FirstSeen,
+}
+
+/// ⚙️ Which concrete algorithm backs [`SamplingMethod::Multinomial`].
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum MultinomialStrategy {
+    #[default]
+    CdfBinarySearch,
+    LinearScan,
+    Alias,
+}
+
+/// ⚙️ How a token is finally chosen from the (already-warped) live distribution.
+#[derive(Clone, PartialEq, Debug)]
+pub enum SamplingMethod {
+    Greedy { tie_break: TieBreak },
+    Multinomial { strategy: MultinomialStrategy },
+    GumbelMax,
+    GumbelTopK { k: usize },
+}
+
+impl Default for SamplingMethod {
+    fn default() -> Self {
+        Self::Greedy { tie_break: TieBreak::default() }
+    }
+}
+
+/// ⚙️ Whether a penalty/bias considers the prompt, the generated continuation, or both, when
+/// scanning a sequence's history.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum PenaltyScope {
+    #[default]
+    PromptAndGenerated,
+    GeneratedOnly,
+    PromptOnly,
+}
+
+/// ⚙️ Which Mirostat control law an adaptive processor runs.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum MirostatVersion {
+    V1,
+    V2,
+}
+
+/// ⚙️ One entry in the ordered processor pipeline. Every schedulable numeric parameter is
+/// [`Schedule`]-typed so config presets and per-step dynamics share one representation.
+#[derive(Clone, PartialEq, Debug)]
+pub enum ProcessorSpec {
+    Temperature { value: Schedule },
+    DynamicTemperature { base: Schedule, entropy_gain: f64, min: f64, max: f64 },
+    TopK { k: Schedule, min_keep: usize },
+    TopP { p: Schedule, min_keep: usize },
+    MinP { p: Schedule, min_keep: usize },
+    Typical { mass: Schedule, min_keep: usize },
+    LocallyTypical { mass: Schedule, min_keep: usize },
+    TailFree { z: Schedule, min_keep: usize },
+    Epsilon { cutoff: Schedule, min_keep: usize },
+    Eta { cutoff: Schedule, min_keep: usize },
+    TopA { power: Schedule, min_keep: usize },
+    RankTruncation { max_rank: usize },
+    AdaptiveTruncation { target_entropy: Option<f64>, target_effective_count: Option<f64> },
+    RepetitionPenalty { penalty: f32, scope: PenaltyScope },
+    PresencePenalty { penalty: f32, scope: PenaltyScope },
+    FrequencyPenalty { penalty: f32, scope: PenaltyScope },
+    DecayingPenalty { penalty: f32, window: usize, half_life: f64, scope: PenaltyScope },
+    TokenClassPenalty { classes: Vec<u16>, factors: Vec<f32> },
+    NoRepeatNgram { n: usize },
+    PhrasePenalty { phrases: Vec<Vec<TokenId>>, penalty: f32 },
+    LogitBiasSparse { entries: Vec<(TokenId, f32)> },
+    LogitBiasDense { values: Vec<f32> },
+    AllowTokens { tokens: Vec<TokenId> },
+    ForbidTokens { tokens: Vec<TokenId> },
+    SuppressSpecial,
+    BadWords { phrases: Vec<Vec<TokenId>> },
+    SequenceEncouragement { phrases: Vec<Vec<TokenId>>, bonus: f32 },
+    Mirostat { version: MirostatVersion, target_surprise: f64, learning_rate: f64 },
+    EntropyPid { target: f64, kp: f64, ki: f64, kd: f64 },
+    RepetitionController { window: usize, threshold: f64, boost: f64 },
+    ConfidenceController { low_entropy: f64, high_entropy: f64, low_temp: f64, high_temp: f64 },
+}
+
+/// ⚙️ One hand-rolled-constraint source. Compiled into a [`Constraint`] impl by the engine.
+#[derive(Clone, PartialEq, Debug)]
+pub enum ConstraintSpec {
+    Regex(String),
+    Trie(Vec<Vec<TokenId>>),
+    MustInclude(Vec<Vec<TokenId>>),
+    JsonMode,
+    Ebnf(String),
+    JsonSchema(JsonValue),
+}
+
+/// ⚙️ How matched stop text is reflected in the returned generation.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub enum StopTextMode {
+    #[default]
+    Include,
+    Exclude,
+    Separate,
+}
+
+/// ⚙️ Stop-condition configuration: token-level, text-sequence, and time-based stops.
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct StopSpec {
+    pub tokens: Vec<TokenId>,
+    pub sequences: Vec<Vec<u8>>,
+    pub mode: StopTextMode,
+    pub max_time_ms: Option<u64>,
+}
+
+/// ⚙️ Forced-token configuration: an initial BOS/prefix and/or exact tokens at fixed positions.
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct ForcedSpec {
+    pub bos: Option<TokenId>,
+    pub prefix: Vec<TokenId>,
+    pub at_position: Vec<(StepIndex, TokenId)>,
+}
+
+/// ⚙️ How many alternative log-probabilities to report alongside the selected token.
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub struct LogprobsSpec {
+    pub top_n: usize,
+    pub include_pre_truncation: bool,
+}
+
+/// ⚙️ Which optional per-step diagnostics to collect (all zero-cost when disabled).
+#[derive(Clone, Copy, PartialEq, Debug, Default)]
+pub struct DiagnosticsSpec {
+    pub enabled: bool,
+    pub timing: bool,
+}
+
+/// ⚙️ Everything needed to sample one sequence, independent of any particular model or backend.
+#[derive(Clone, PartialEq, Debug)]
+pub struct SamplingConfig {
+    pub method: SamplingMethod,
+    pub processors: Vec<ProcessorSpec>,
+    pub error_mode: ErrorMode,
+    pub sanitize: SanitizePolicy,
+    pub accum: Accum,
+    pub seed: u64,
+    pub candidate_count: usize,
+    pub min_tokens: usize,
+    pub max_tokens: usize,
+    pub forced: ForcedSpec,
+    pub stops: StopSpec,
+    pub constraints: Vec<ConstraintSpec>,
+    pub logprobs: LogprobsSpec,
+    pub limits: SamplingLimits,
+    pub diagnostics: DiagnosticsSpec,
+}
+
+impl Default for SamplingConfig {
+    fn default() -> Self {
+        Self {
+            method: SamplingMethod::default(),
+            processors: Vec::new(),
+            error_mode: ErrorMode::default(),
+            sanitize: SanitizePolicy::default(),
+            accum: Accum::default(),
+            seed: 0,
+            candidate_count: 1,
+            min_tokens: 0,
+            max_tokens: 4_096,
+            forced: ForcedSpec::default(),
+            stops: StopSpec::default(),
+            constraints: Vec::new(),
+            logprobs: LogprobsSpec::default(),
+            limits: SamplingLimits::default(),
+            diagnostics: DiagnosticsSpec::default(),
+        }
+    }
+}
+
+impl SamplingConfig {
+    /// ⚙️ Full structural validation: resource limits, cross-field consistency, and per-processor
+    /// sanity — run before generation starts and again whenever an override merges into a base.
+    pub fn validate(&self) -> Result<(), SamplingError> {
+        self.limits.validate()?;
+        if self.candidate_count == 0 {
+            return Err(SamplingError::InvalidConfig { field: "candidate_count", reason: "must be >= 1" });
+        }
+        if self.candidate_count > self.limits.max_candidates {
+            return Err(SamplingError::LimitExceeded { limit: "max_candidates" });
+        }
+        if self.min_tokens > self.max_tokens {
+            return Err(SamplingError::InvalidConfig { field: "min_tokens", reason: "must not exceed max_tokens" });
+        }
+        if self.stops.sequences.len() > self.limits.max_stop_sequences {
+            return Err(SamplingError::LimitExceeded { limit: "max_stop_sequences" });
+        }
+        let stop_bytes: usize = self.stops.sequences.iter().map(Vec::len).sum();
+        if stop_bytes > self.limits.max_stop_bytes {
+            return Err(SamplingError::LimitExceeded { limit: "max_stop_bytes" });
+        }
+        if self.forced.at_position.len() > self.limits.max_forced_tokens {
+            return Err(SamplingError::LimitExceeded { limit: "max_forced_tokens" });
+        }
+        if let SamplingMethod::GumbelTopK { k } = self.method {
+            if k == 0 {
+                return Err(SamplingError::InvalidConfig { field: "method.k", reason: "gumbel top-k requires k >= 1" });
+            }
+        }
+        for processor in &self.processors {
+            validate_processor_spec(processor, &self.limits)?;
+        }
+        for constraint in &self.constraints {
+            if let ConstraintSpec::Ebnf(text) | ConstraintSpec::Regex(text) = constraint {
+                if text.len() > self.limits.max_grammar_bytes {
+                    return Err(SamplingError::LimitExceeded { limit: "max_grammar_bytes" });
+                }
+            }
+        }
+        Ok(())
+    }
+
+    /// ⚙️ FNV-1a fingerprint of the canonical JSON form, stamped into serialized sequence state so
+    /// a resumed sequence can detect it was checkpointed under a different configuration.
+    pub fn fingerprint(&self) -> u64 {
+        let text = write_json(&self.to_json());
+        let mut hash = 0xcbf2_9ce4_8422_2325u64;
+        for &b in text.as_bytes() {
+            hash = (hash ^ b as u64).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash
+    }
+
+    /// ⚙️ Greedy decoding, no penalties or truncation — the deterministic baseline preset.
+    pub fn precise() -> Self {
+        Self { method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId }, ..Self::default() }
+    }
+
+    /// ⚙️ Temperature 0.7, top-p 0.9, min-p 0.05, mild repetition penalty — a general-purpose
+    /// preset balancing coherence and variety.
+    pub fn balanced() -> Self {
+        Self {
+            method: SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch },
+            processors: vec![
+                ProcessorSpec::Temperature { value: Schedule::Constant(0.7) },
+                ProcessorSpec::TopP { p: Schedule::Constant(0.9), min_keep: 1 },
+                ProcessorSpec::MinP { p: Schedule::Constant(0.05), min_keep: 1 },
+                ProcessorSpec::RepetitionPenalty { penalty: 1.1, scope: PenaltyScope::GeneratedOnly },
+            ],
+            ..Self::default()
+        }
+    }
+
+    /// ⚙️ Higher temperature and wider top-p/top-k for more diverse output.
+    pub fn creative() -> Self {
+        Self {
+            method: SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch },
+            processors: vec![
+                ProcessorSpec::Temperature { value: Schedule::Constant(1.0) },
+                ProcessorSpec::TopK { k: Schedule::Constant(100.0), min_keep: 1 },
+                ProcessorSpec::TopP { p: Schedule::Constant(0.95), min_keep: 1 },
+            ],
+            ..Self::default()
+        }
+    }
+
+    /// ⚙️ Fixed seed, greedy, tiny token budget — for reproducible tests, not production use.
+    pub fn deterministic_test() -> Self {
+        Self { method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId }, seed: 42, max_tokens: 64, ..Self::default() }
+    }
+
+    /// ⚙️ Structured JSON form (versioned: top-level `"version": 1`).
+    pub fn to_json(&self) -> JsonValue {
+        JsonValue::Object(vec![
+            ("version".into(), JsonValue::Num(1.0)),
+            ("method".into(), sampling_method_to_json(&self.method)),
+            ("processors".into(), JsonValue::Array(self.processors.iter().map(processor_spec_to_json).collect())),
+            ("error_mode".into(), JsonValue::Str(match self.error_mode { ErrorMode::Strict => "strict".into(), ErrorMode::Permissive => "permissive".into() })),
+            ("seed".into(), JsonValue::Num(self.seed as f64)),
+            ("candidate_count".into(), JsonValue::Num(self.candidate_count as f64)),
+            ("min_tokens".into(), JsonValue::Num(self.min_tokens as f64)),
+            ("max_tokens".into(), JsonValue::Num(self.max_tokens as f64)),
+        ])
+    }
+
+    /// ⚙️ Parses the `"version": 1` JSON form back into a config, tolerating unknown top-level
+    /// fields (forward compatibility) but rejecting a version it does not recognize.
+    pub fn from_json(value: &JsonValue) -> Result<Self, SamplingError> {
+        let version = value.get("version").and_then(JsonValue::as_f64).ok_or(SamplingError::Corrupted { reason: "config missing version" })?;
+        if version as u32 != 1 {
+            return Err(SamplingError::SerializationVersion { expected: 1, actual: version as u32 });
+        }
+        let method = value.get("method").ok_or(SamplingError::Corrupted { reason: "config missing method" }).and_then(sampling_method_from_json)?;
+        let processors = value
+            .get("processors")
+            .and_then(JsonValue::as_array)
+            .ok_or(SamplingError::Corrupted { reason: "config missing processors" })?
+            .iter()
+            .map(processor_spec_from_json)
+            .collect::<Result<Vec<_>, _>>()?;
+        let error_mode = match value.get("error_mode").and_then(JsonValue::as_str) {
+            Some("strict") => ErrorMode::Strict,
+            Some("permissive") | None => ErrorMode::Permissive,
+            Some(_) => return Err(SamplingError::Corrupted { reason: "unknown error_mode" }),
+        };
+        let num = |key: &'static str, default: f64| value.get(key).and_then(JsonValue::as_f64).unwrap_or(default);
+        Ok(Self {
+            method,
+            processors,
+            error_mode,
+            seed: num("seed", 0.0) as u64,
+            candidate_count: num("candidate_count", 1.0) as usize,
+            min_tokens: num("min_tokens", 0.0) as usize,
+            max_tokens: num("max_tokens", 4_096.0) as usize,
+            ..Self::default()
+        })
+    }
+}
+
+fn validate_processor_spec(spec: &ProcessorSpec, limits: &SamplingLimits) -> Result<(), SamplingError> {
+    match spec {
+        ProcessorSpec::NoRepeatNgram { n } => {
+            if *n == 0 || *n > limits.max_ngram_order {
+                return Err(SamplingError::LimitExceeded { limit: "max_ngram_order" });
+            }
+        }
+        ProcessorSpec::TokenClassPenalty { classes, factors } => {
+            if classes.len() != factors.len() {
+                return Err(SamplingError::InvalidConfig { field: "token_class_penalty", reason: "classes and factors must have equal length" });
+            }
+        }
+        ProcessorSpec::RankTruncation { max_rank } => {
+            if *max_rank == 0 {
+                return Err(SamplingError::InvalidConfig { field: "rank_truncation.max_rank", reason: "must be >= 1" });
+            }
+        }
+        _ => {}
+    }
+    Ok(())
+}
+
+fn sampling_method_to_json(method: &SamplingMethod) -> JsonValue {
+    let obj = |pairs: Vec<(&str, JsonValue)>| JsonValue::Object(pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    match method {
+        SamplingMethod::Greedy { tie_break } => obj(vec![("kind", JsonValue::Str("greedy".into())), ("tie_break", tie_break_to_json(*tie_break))]),
+        SamplingMethod::Multinomial { strategy } => obj(vec![("kind", JsonValue::Str("multinomial".into())), ("strategy", multinomial_strategy_to_json(*strategy))]),
+        SamplingMethod::GumbelMax => obj(vec![("kind", JsonValue::Str("gumbel_max".into()))]),
+        SamplingMethod::GumbelTopK { k } => obj(vec![("kind", JsonValue::Str("gumbel_top_k".into())), ("k", JsonValue::Num(*k as f64))]),
+    }
+}
+
+fn sampling_method_from_json(value: &JsonValue) -> Result<SamplingMethod, SamplingError> {
+    let kind = value.get("kind").and_then(JsonValue::as_str).ok_or(SamplingError::Corrupted { reason: "method missing kind" })?;
+    match kind {
+        "greedy" => Ok(SamplingMethod::Greedy { tie_break: tie_break_from_json(value.get("tie_break"))? }),
+        "multinomial" => Ok(SamplingMethod::Multinomial { strategy: multinomial_strategy_from_json(value.get("strategy"))? }),
+        "gumbel_max" => Ok(SamplingMethod::GumbelMax),
+        "gumbel_top_k" => Ok(SamplingMethod::GumbelTopK { k: value.get("k").and_then(JsonValue::as_f64).unwrap_or(1.0) as usize }),
+        _ => Err(SamplingError::Corrupted { reason: "unknown sampling method kind" }),
+    }
+}
+
+fn tie_break_to_json(tie_break: TieBreak) -> JsonValue {
+    JsonValue::Str(
+        match tie_break {
+            TieBreak::LowestTokenId => "lowest_token_id",
+            TieBreak::HighestTokenId => "highest_token_id",
+            TieBreak::FirstSeen => "first_seen",
+        }
+        .into(),
+    )
+}
+
+fn tie_break_from_json(value: Option<&JsonValue>) -> Result<TieBreak, SamplingError> {
+    match value.and_then(JsonValue::as_str) {
+        Some("lowest_token_id") | None => Ok(TieBreak::LowestTokenId),
+        Some("highest_token_id") => Ok(TieBreak::HighestTokenId),
+        Some("first_seen") => Ok(TieBreak::FirstSeen),
+        Some(_) => Err(SamplingError::Corrupted { reason: "unknown tie_break" }),
+    }
+}
+
+fn multinomial_strategy_to_json(strategy: MultinomialStrategy) -> JsonValue {
+    JsonValue::Str(
+        match strategy {
+            MultinomialStrategy::CdfBinarySearch => "cdf_binary_search",
+            MultinomialStrategy::LinearScan => "linear_scan",
+            MultinomialStrategy::Alias => "alias",
+        }
+        .into(),
+    )
+}
+
+fn multinomial_strategy_from_json(value: Option<&JsonValue>) -> Result<MultinomialStrategy, SamplingError> {
+    match value.and_then(JsonValue::as_str) {
+        Some("cdf_binary_search") | None => Ok(MultinomialStrategy::CdfBinarySearch),
+        Some("linear_scan") => Ok(MultinomialStrategy::LinearScan),
+        Some("alias") => Ok(MultinomialStrategy::Alias),
+        Some(_) => Err(SamplingError::Corrupted { reason: "unknown multinomial strategy" }),
+    }
+}
+
+fn penalty_scope_to_json(scope: PenaltyScope) -> JsonValue {
+    JsonValue::Str(
+        match scope {
+            PenaltyScope::PromptAndGenerated => "prompt_and_generated",
+            PenaltyScope::GeneratedOnly => "generated_only",
+            PenaltyScope::PromptOnly => "prompt_only",
+        }
+        .into(),
+    )
+}
+
+fn penalty_scope_from_json(value: Option<&JsonValue>) -> Result<PenaltyScope, SamplingError> {
+    match value.and_then(JsonValue::as_str) {
+        Some("prompt_and_generated") | None => Ok(PenaltyScope::PromptAndGenerated),
+        Some("generated_only") => Ok(PenaltyScope::GeneratedOnly),
+        Some("prompt_only") => Ok(PenaltyScope::PromptOnly),
+        Some(_) => Err(SamplingError::Corrupted { reason: "unknown penalty scope" }),
+    }
+}
+
+fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
+    let obj = |pairs: Vec<(&str, JsonValue)>| JsonValue::Object(pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect());
+    let tokens_json = |tokens: &[TokenId]| JsonValue::Array(tokens.iter().map(|t| JsonValue::Num(t.get() as f64)).collect());
+    let phrases_json = |phrases: &[Vec<TokenId>]| JsonValue::Array(phrases.iter().map(|p| tokens_json(p)).collect());
+    match spec {
+        ProcessorSpec::Temperature { value } => obj(vec![("kind", JsonValue::Str("temperature".into())), ("value", value.to_json())]),
+        ProcessorSpec::DynamicTemperature { base, entropy_gain, min, max } => obj(vec![
+            ("kind", JsonValue::Str("dynamic_temperature".into())),
+            ("base", base.to_json()),
+            ("entropy_gain", JsonValue::Num(*entropy_gain)),
+            ("min", JsonValue::Num(*min)),
+            ("max", JsonValue::Num(*max)),
+        ]),
+        ProcessorSpec::TopK { k, min_keep } => obj(vec![("kind", JsonValue::Str("top_k".into())), ("k", k.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::TopP { p, min_keep } => obj(vec![("kind", JsonValue::Str("top_p".into())), ("p", p.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::MinP { p, min_keep } => obj(vec![("kind", JsonValue::Str("min_p".into())), ("p", p.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::Typical { mass, min_keep } => obj(vec![("kind", JsonValue::Str("typical".into())), ("mass", mass.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::LocallyTypical { mass, min_keep } => obj(vec![("kind", JsonValue::Str("locally_typical".into())), ("mass", mass.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::TailFree { z, min_keep } => obj(vec![("kind", JsonValue::Str("tail_free".into())), ("z", z.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::Epsilon { cutoff, min_keep } => obj(vec![("kind", JsonValue::Str("epsilon".into())), ("cutoff", cutoff.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::Eta { cutoff, min_keep } => obj(vec![("kind", JsonValue::Str("eta".into())), ("cutoff", cutoff.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::TopA { power, min_keep } => obj(vec![("kind", JsonValue::Str("top_a".into())), ("power", power.to_json()), ("min_keep", JsonValue::Num(*min_keep as f64))]),
+        ProcessorSpec::RankTruncation { max_rank } => obj(vec![("kind", JsonValue::Str("rank_truncation".into())), ("max_rank", JsonValue::Num(*max_rank as f64))]),
+        ProcessorSpec::AdaptiveTruncation { target_entropy, target_effective_count } => obj(vec![
+            ("kind", JsonValue::Str("adaptive_truncation".into())),
+            ("target_entropy", target_entropy.map_or(JsonValue::Null, JsonValue::Num)),
+            ("target_effective_count", target_effective_count.map_or(JsonValue::Null, JsonValue::Num)),
+        ]),
+        ProcessorSpec::RepetitionPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("repetition_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
+        ProcessorSpec::PresencePenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("presence_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
+        ProcessorSpec::FrequencyPenalty { penalty, scope } => obj(vec![("kind", JsonValue::Str("frequency_penalty".into())), ("penalty", JsonValue::Num(*penalty as f64)), ("scope", penalty_scope_to_json(*scope))]),
+        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => obj(vec![
+            ("kind", JsonValue::Str("decaying_penalty".into())),
+            ("penalty", JsonValue::Num(*penalty as f64)),
+            ("window", JsonValue::Num(*window as f64)),
+            ("half_life", JsonValue::Num(*half_life)),
+            ("scope", penalty_scope_to_json(*scope)),
+        ]),
+        ProcessorSpec::TokenClassPenalty { classes, factors } => obj(vec![
+            ("kind", JsonValue::Str("token_class_penalty".into())),
+            ("classes", JsonValue::Array(classes.iter().map(|c| JsonValue::Num(*c as f64)).collect())),
+            ("factors", JsonValue::Array(factors.iter().map(|f| JsonValue::Num(*f as f64)).collect())),
+        ]),
+        ProcessorSpec::NoRepeatNgram { n } => obj(vec![("kind", JsonValue::Str("no_repeat_ngram".into())), ("n", JsonValue::Num(*n as f64))]),
+        ProcessorSpec::PhrasePenalty { phrases, penalty } => obj(vec![("kind", JsonValue::Str("phrase_penalty".into())), ("phrases", phrases_json(phrases)), ("penalty", JsonValue::Num(*penalty as f64))]),
+        ProcessorSpec::LogitBiasSparse { entries } => obj(vec![
+            ("kind", JsonValue::Str("logit_bias_sparse".into())),
+            ("entries", JsonValue::Array(entries.iter().map(|(t, b)| JsonValue::Array(vec![JsonValue::Num(t.get() as f64), JsonValue::Num(*b as f64)])).collect())),
+        ]),
+        ProcessorSpec::LogitBiasDense { values } => obj(vec![("kind", JsonValue::Str("logit_bias_dense".into())), ("values", JsonValue::Array(values.iter().map(|v| JsonValue::Num(*v as f64)).collect()))]),
+        ProcessorSpec::AllowTokens { tokens } => obj(vec![("kind", JsonValue::Str("allow_tokens".into())), ("tokens", tokens_json(tokens))]),
+        ProcessorSpec::ForbidTokens { tokens } => obj(vec![("kind", JsonValue::Str("forbid_tokens".into())), ("tokens", tokens_json(tokens))]),
+        ProcessorSpec::SuppressSpecial => obj(vec![("kind", JsonValue::Str("suppress_special".into()))]),
+        ProcessorSpec::BadWords { phrases } => obj(vec![("kind", JsonValue::Str("bad_words".into())), ("phrases", phrases_json(phrases))]),
+        ProcessorSpec::SequenceEncouragement { phrases, bonus } => obj(vec![("kind", JsonValue::Str("sequence_encouragement".into())), ("phrases", phrases_json(phrases)), ("bonus", JsonValue::Num(*bonus as f64))]),
+        ProcessorSpec::Mirostat { version, target_surprise, learning_rate } => obj(vec![
+            ("kind", JsonValue::Str("mirostat".into())),
+            ("version", JsonValue::Str(if *version == MirostatVersion::V1 { "v1".into() } else { "v2".into() })),
+            ("target_surprise", JsonValue::Num(*target_surprise)),
+            ("learning_rate", JsonValue::Num(*learning_rate)),
+        ]),
+        ProcessorSpec::EntropyPid { target, kp, ki, kd } => obj(vec![
+            ("kind", JsonValue::Str("entropy_pid".into())),
+            ("target", JsonValue::Num(*target)),
+            ("kp", JsonValue::Num(*kp)),
+            ("ki", JsonValue::Num(*ki)),
+            ("kd", JsonValue::Num(*kd)),
+        ]),
+        ProcessorSpec::RepetitionController { window, threshold, boost } => obj(vec![
+            ("kind", JsonValue::Str("repetition_controller".into())),
+            ("window", JsonValue::Num(*window as f64)),
+            ("threshold", JsonValue::Num(*threshold)),
+            ("boost", JsonValue::Num(*boost)),
+        ]),
+        ProcessorSpec::ConfidenceController { low_entropy, high_entropy, low_temp, high_temp } => obj(vec![
+            ("kind", JsonValue::Str("confidence_controller".into())),
+            ("low_entropy", JsonValue::Num(*low_entropy)),
+            ("high_entropy", JsonValue::Num(*high_entropy)),
+            ("low_temp", JsonValue::Num(*low_temp)),
+            ("high_temp", JsonValue::Num(*high_temp)),
+        ]),
+    }
+}
+
+fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, SamplingError> {
+    let kind = value.get("kind").and_then(JsonValue::as_str).ok_or(SamplingError::Corrupted { reason: "processor missing kind" })?;
+    let schedule = |key: &'static str| -> Result<Schedule, SamplingError> { value.get(key).ok_or(SamplingError::Corrupted { reason: "processor missing schedule field" }).and_then(Schedule::from_json) };
+    let num = |key: &'static str, default: f64| value.get(key).and_then(JsonValue::as_f64).unwrap_or(default);
+    let tokens = |key: &'static str| -> Vec<TokenId> {
+        value.get(key).and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).unwrap_or_default()
+    };
+    let phrases = |key: &'static str| -> Vec<Vec<TokenId>> {
+        value
+            .get(key)
+            .and_then(JsonValue::as_array)
+            .map(|a| a.iter().filter_map(JsonValue::as_array).map(|p| p.iter().filter_map(JsonValue::as_f64).map(|n| TokenId::new(n as u32)).collect()).collect())
+            .unwrap_or_default()
+    };
+    match kind {
+        "temperature" => Ok(ProcessorSpec::Temperature { value: schedule("value")? }),
+        "dynamic_temperature" => Ok(ProcessorSpec::DynamicTemperature { base: schedule("base")?, entropy_gain: num("entropy_gain", 0.0), min: num("min", 0.0), max: num("max", 2.0) }),
+        "top_k" => Ok(ProcessorSpec::TopK { k: schedule("k")?, min_keep: num("min_keep", 1.0) as usize }),
+        "top_p" => Ok(ProcessorSpec::TopP { p: schedule("p")?, min_keep: num("min_keep", 1.0) as usize }),
+        "min_p" => Ok(ProcessorSpec::MinP { p: schedule("p")?, min_keep: num("min_keep", 1.0) as usize }),
+        "typical" => Ok(ProcessorSpec::Typical { mass: schedule("mass")?, min_keep: num("min_keep", 1.0) as usize }),
+        "locally_typical" => Ok(ProcessorSpec::LocallyTypical { mass: schedule("mass")?, min_keep: num("min_keep", 1.0) as usize }),
+        "tail_free" => Ok(ProcessorSpec::TailFree { z: schedule("z")?, min_keep: num("min_keep", 1.0) as usize }),
+        "epsilon" => Ok(ProcessorSpec::Epsilon { cutoff: schedule("cutoff")?, min_keep: num("min_keep", 1.0) as usize }),
+        "eta" => Ok(ProcessorSpec::Eta { cutoff: schedule("cutoff")?, min_keep: num("min_keep", 1.0) as usize }),
+        "top_a" => Ok(ProcessorSpec::TopA { power: schedule("power")?, min_keep: num("min_keep", 1.0) as usize }),
+        "rank_truncation" => Ok(ProcessorSpec::RankTruncation { max_rank: num("max_rank", 1.0) as usize }),
+        "adaptive_truncation" => Ok(ProcessorSpec::AdaptiveTruncation {
+            target_entropy: value.get("target_entropy").and_then(JsonValue::as_f64),
+            target_effective_count: value.get("target_effective_count").and_then(JsonValue::as_f64),
+        }),
+        "repetition_penalty" => Ok(ProcessorSpec::RepetitionPenalty { penalty: num("penalty", 1.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
+        "presence_penalty" => Ok(ProcessorSpec::PresencePenalty { penalty: num("penalty", 0.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
+        "frequency_penalty" => Ok(ProcessorSpec::FrequencyPenalty { penalty: num("penalty", 0.0) as f32, scope: penalty_scope_from_json(value.get("scope"))? }),
+        "decaying_penalty" => Ok(ProcessorSpec::DecayingPenalty {
+            penalty: num("penalty", 0.0) as f32,
+            window: num("window", 16.0) as usize,
+            half_life: num("half_life", 1.0),
+            scope: penalty_scope_from_json(value.get("scope"))?,
+        }),
+        "token_class_penalty" => Ok(ProcessorSpec::TokenClassPenalty {
+            classes: value.get("classes").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as u16).collect()).unwrap_or_default(),
+            factors: value.get("factors").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default(),
+        }),
+        "no_repeat_ngram" => Ok(ProcessorSpec::NoRepeatNgram { n: num("n", 3.0) as usize }),
+        "phrase_penalty" => Ok(ProcessorSpec::PhrasePenalty { phrases: phrases("phrases"), penalty: num("penalty", 0.0) as f32 }),
+        "logit_bias_sparse" => Ok(ProcessorSpec::LogitBiasSparse {
+            entries: value
+                .get("entries")
+                .and_then(JsonValue::as_array)
+                .map(|a| {
+                    a.iter()
+                        .filter_map(JsonValue::as_array)
+                        .filter_map(|pair| Some((TokenId::new(pair.first()?.as_f64()? as u32), pair.get(1)?.as_f64()? as f32)))
+                        .collect()
+                })
+                .unwrap_or_default(),
+        }),
+        "logit_bias_dense" => Ok(ProcessorSpec::LogitBiasDense { values: value.get("values").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default() }),
+        "allow_tokens" => Ok(ProcessorSpec::AllowTokens { tokens: tokens("tokens") }),
+        "forbid_tokens" => Ok(ProcessorSpec::ForbidTokens { tokens: tokens("tokens") }),
+        "suppress_special" => Ok(ProcessorSpec::SuppressSpecial),
+        "bad_words" => Ok(ProcessorSpec::BadWords { phrases: phrases("phrases") }),
+        "sequence_encouragement" => Ok(ProcessorSpec::SequenceEncouragement { phrases: phrases("phrases"), bonus: num("bonus", 0.0) as f32 }),
+        "mirostat" => Ok(ProcessorSpec::Mirostat {
+            version: if value.get("version").and_then(JsonValue::as_str) == Some("v1") { MirostatVersion::V1 } else { MirostatVersion::V2 },
+            target_surprise: num("target_surprise", 5.0),
+            learning_rate: num("learning_rate", 0.1),
+        }),
+        "entropy_pid" => Ok(ProcessorSpec::EntropyPid { target: num("target", 2.0), kp: num("kp", 0.1), ki: num("ki", 0.0), kd: num("kd", 0.0) }),
+        "repetition_controller" => Ok(ProcessorSpec::RepetitionController { window: num("window", 16.0) as usize, threshold: num("threshold", 0.5), boost: num("boost", 0.2) }),
+        "confidence_controller" => Ok(ProcessorSpec::ConfidenceController {
+            low_entropy: num("low_entropy", 0.5),
+            high_entropy: num("high_entropy", 3.0),
+            low_temp: num("low_temp", 0.5),
+            high_temp: num("high_temp", 1.2),
+        }),
+        _ => Err(SamplingError::Corrupted { reason: "unknown processor kind" }),
+    }
+}
+
+/// ⚙️ Chainable constructor for [`SamplingConfig`]; `build()` runs full validation once.
+#[derive(Clone, Debug)]
+pub struct SamplingConfigBuilder {
+    config: SamplingConfig,
+}
+
+impl SamplingConfigBuilder {
+    pub fn new() -> Self {
+        Self { config: SamplingConfig::default() }
+    }
+
+    pub fn method(mut self, method: SamplingMethod) -> Self {
+        self.config.method = method;
+        self
+    }
+
+    pub fn processor(mut self, processor: ProcessorSpec) -> Self {
+        self.config.processors.push(processor);
+        self
+    }
+
+    pub fn error_mode(mut self, mode: ErrorMode) -> Self {
+        self.config.error_mode = mode;
+        self
+    }
+
+    pub fn sanitize(mut self, policy: SanitizePolicy) -> Self {
+        self.config.sanitize = policy;
+        self
+    }
+
+    pub fn accum(mut self, accum: Accum) -> Self {
+        self.config.accum = accum;
+        self
+    }
+
+    pub fn seed(mut self, seed: u64) -> Self {
+        self.config.seed = seed;
+        self
+    }
+
+    pub fn candidate_count(mut self, count: usize) -> Self {
+        self.config.candidate_count = count;
+        self
+    }
+
+    pub fn min_tokens(mut self, min_tokens: usize) -> Self {
+        self.config.min_tokens = min_tokens;
+        self
+    }
+
+    pub fn max_tokens(mut self, max_tokens: usize) -> Self {
+        self.config.max_tokens = max_tokens;
+        self
+    }
+
+    pub fn forced(mut self, forced: ForcedSpec) -> Self {
+        self.config.forced = forced;
+        self
+    }
+
+    pub fn stops(mut self, stops: StopSpec) -> Self {
+        self.config.stops = stops;
+        self
+    }
+
+    pub fn constraint(mut self, constraint: ConstraintSpec) -> Self {
+        self.config.constraints.push(constraint);
+        self
+    }
+
+    pub fn logprobs(mut self, logprobs: LogprobsSpec) -> Self {
+        self.config.logprobs = logprobs;
+        self
+    }
+
+    pub fn limits(mut self, limits: SamplingLimits) -> Self {
+        self.config.limits = limits;
+        self
+    }
+
+    pub fn diagnostics(mut self, diagnostics: DiagnosticsSpec) -> Self {
+        self.config.diagnostics = diagnostics;
+        self
+    }
+
+    /// ⚙️ Validates and returns the finished config.
+    pub fn build(self) -> Result<SamplingConfig, SamplingError> {
+        self.config.validate()?;
+        Ok(self.config)
+    }
+}
+
+impl Default for SamplingConfigBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+// #endregion 🔖Config
+
+// #region 🔖Candidates
+/// 🏅 One scored token, at whatever pipeline stage produced it (pre- or post-truncation, or the
+/// final selected token).
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct Candidate {
+    pub token: TokenId,
+    pub raw_logit: f32,
+    pub processed_logit: f32,
+    pub prob: f32,
+    pub logprob: f32,
+    pub rank: u32,
+}
+
+/// 🏅 Alternative log-probabilities reported alongside a selection, before and/or after
+/// truncation warpers ran (per [`LogprobsSpec`]).
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct TopLogprobs {
+    pub pre_truncation: Vec<Candidate>,
+    pub post_truncation: Vec<Candidate>,
+}
+
+/// 🏅 Optional per-step numerical/pipeline diagnostics (only populated when
+/// [`DiagnosticsSpec::enabled`]).
+#[derive(Clone, PartialEq, Debug, Default)]
+pub struct StepDiagnostics {
+    pub entropy: f64,
+    pub effective_count: f64,
+    pub truncation_mass: f64,
+    pub masked_by: Vec<(&'static str, u32)>,
+    pub timings_ns: Vec<(&'static str, u64)>,
+    pub fallback: Option<FallbackAction>,
+    pub health: Option<DistributionHealth>,
+}
+
+/// 🏅 Everything one [`sample_step_stateless`] call (or, later, a stateful engine step) returns.
+#[derive(Clone, PartialEq, Debug)]
+pub struct SamplingResult {
+    pub token: TokenId,
+    pub logprob: f32,
+    pub finish: Option<FinishReason>,
+    pub alternatives: Vec<Candidate>,
+    pub top_logprobs: Option<TopLogprobs>,
+    pub rng_stream: StreamKey,
+    pub diagnostics: Option<StepDiagnostics>,
+}
+// #endregion 🔖Candidates
+
+// #region 🔖Workspace
+/// 🧰 Reinterprets a `&[u32]` as `&[TokenId]` without copying.
+///
+/// SAFETY: `TokenId` is `#[repr(transparent)]` over `u32` (see its definition in `🔖Ids`), so the
+/// two types share identical size, alignment, and bit-pattern validity — every `u32` is a valid
+/// `TokenId`.
+fn cast_u32_slice_to_token_ids(ids: &[u32]) -> &[TokenId] {
+    unsafe { core::slice::from_raw_parts(ids.as_ptr().cast::<TokenId>(), ids.len()) }
+}
+
+fn argmax_token(logits: &[f32], tie_break: TieBreak) -> TokenId {
+    let mut best_idx = 0u32;
+    let mut best_val = f32::NEG_INFINITY;
+    for (i, &v) in logits.iter().enumerate() {
+        let better = match tie_break {
+            TieBreak::HighestTokenId => v >= best_val,
+            TieBreak::LowestTokenId | TieBreak::FirstSeen => v > best_val,
+        };
+        if better {
+            best_val = v;
+            best_idx = i as u32;
+        }
+    }
+    TokenId::new(best_idx)
+}
+
+fn argmax_index_in_slice(logits: &[f32], indices: &[u32]) -> u32 {
+    let mut best = indices[0];
+    let mut best_val = logits[best as usize];
+    for &idx in &indices[1..] {
+        let v = logits[idx as usize];
+        if v > best_val {
+            best_val = v;
+            best = idx;
+        }
+    }
+    best
+}
+
+/// 🧰 Per-step scratch state for one sequence's logits: raw/processed vocab-sized arrays, the
+/// hard-mask bitset, the shrinking `live` candidate-index list every warper operates on, and the
+/// buffers the shared prob-sort (`sort_live_by_prob_desc`) reuses so steady-state stepping never
+/// allocates once capacities have grown to the vocabulary size.
+pub struct LogitsWorkspace {
+    vocab_size: usize,
+    accum: Accum,
+    raw: Vec<f32>,
+    processed: Vec<f32>,
+    mask: TokenBitset,
+    live: Vec<u32>,
+    probs: Vec<f32>,
+    sort_order: Vec<u32>,
+    sorted_live_buf: Vec<u32>,
+    sorted_probs_buf: Vec<f32>,
+    saved_argmax: TokenId,
+}
+
+impl LogitsWorkspace {
+    pub fn new(vocab_size: usize) -> Self {
+        Self {
+            vocab_size,
+            accum: Accum::default(),
+            raw: vec![0.0; vocab_size],
+            processed: vec![0.0; vocab_size],
+            mask: TokenBitset::new_full(vocab_size),
+            live: (0..vocab_size as u32).collect(),
+            probs: Vec::with_capacity(vocab_size),
+            sort_order: Vec::with_capacity(vocab_size),
+            sorted_live_buf: Vec::with_capacity(vocab_size),
+            sorted_probs_buf: Vec::with_capacity(vocab_size),
+            saved_argmax: TokenId::new(0),
+        }
+    }
+
+    /// 🧰 Grows every buffer to `vocab_size` if it is larger than the workspace's current
+    /// capacity; a no-op (never shrinks) otherwise — the basis of pool reuse across batch slots.
+    pub fn ensure_capacity(&mut self, vocab_size: usize) {
+        if vocab_size <= self.vocab_size {
+            return;
+        }
+        self.vocab_size = vocab_size;
+        self.raw.resize(vocab_size, 0.0);
+        self.processed.resize(vocab_size, 0.0);
+        self.mask = TokenBitset::new_full(vocab_size);
+    }
+
+    pub fn set_accum(&mut self, accum: Accum) {
+        self.accum = accum;
+    }
+
+    pub fn vocab_size(&self) -> usize {
+        self.vocab_size
+    }
+
+    pub fn live(&self) -> &[u32] {
+        &self.live
+    }
+
+    pub fn set_live(&mut self, live: Vec<u32>) {
+        self.live = live;
+    }
+
+    pub fn processed(&self) -> &[f32] {
+        &self.processed
+    }
+
+    pub fn raw(&self) -> &[f32] {
+        &self.raw
+    }
+
+    pub fn probs(&self) -> &[f32] {
+        &self.probs
+    }
+
+    pub fn mask_mut(&mut self) -> &mut TokenBitset {
+        &mut self.mask
+    }
+
+    pub fn mask(&self) -> &TokenBitset {
+        &self.mask
+    }
+
+    pub fn saved_argmax(&self) -> TokenId {
+        self.saved_argmax
+    }
+
+    /// 🧰 Resets the workspace for a fresh step: copies `raw_logits` into `raw`, sanitizes it in
+    /// place per `policy`, mirrors the sanitized values into `processed`, fills the mask, resets
+    /// `live` to every vocabulary index, and records the (post-sanitize) argmax — the anchor the
+    /// fallback ladder uses once every other option is exhausted. Returns the count of altered
+    /// (NaN/Inf-resolved) entries.
+    pub fn reset_for_step(&mut self, raw_logits: &[f32], policy: SanitizePolicy) -> Result<usize, SamplingError> {
+        debug_assert_eq!(raw_logits.len(), self.vocab_size);
+        self.raw.copy_from_slice(raw_logits);
+        let altered = sanitize_logits(&mut self.raw, policy)?;
+        self.processed.copy_from_slice(&self.raw);
+        self.mask.fill();
+        self.live.clear();
+        self.live.extend(0..self.vocab_size as u32);
+        self.saved_argmax = argmax_token(&self.raw, TieBreak::LowestTokenId);
+        self.probs.clear();
+        Ok(altered)
+    }
+
+    /// 🧰 Removes every `live` entry whose mask bit is unset — call once after all hard-mask
+    /// processors have run, before any soft-penalty or truncation processor.
+    pub fn sync_live_with_mask(&mut self) {
+        let mask = &self.mask;
+        self.live.retain(|&idx| mask.get(TokenId::new(idx)));
+    }
+
+    pub fn scale_processed_over_live(&mut self, factor: f32) {
+        for &idx in &self.live {
+            self.processed[idx as usize] *= factor;
+        }
+    }
+
+    pub fn add_bias_over_live(&mut self, mut bias: impl FnMut(TokenId) -> f32) {
+        for &idx in &self.live {
+            self.processed[idx as usize] += bias(TokenId::new(idx));
+        }
+    }
+
+    /// 🧰 Collapses `live` to a single entry: the current argmax of `processed` restricted to
+    /// `live` — how `Temperature`/`DynamicTemperature` implement "temperature 0 == greedy".
+    pub fn collapse_live_to_argmax(&mut self) {
+        if self.live.is_empty() {
+            return;
+        }
+        let best = argmax_index_in_slice(&self.processed, &self.live);
+        self.live.clear();
+        self.live.push(best);
+    }
+
+    /// 🧰 Softmax over the *current* `live` order (does not sort); used by processors that need
+    /// this step's entropy without disturbing candidate order (e.g. [`DynamicTemperature`]).
+    pub fn softmax_over_live(&mut self) -> f64 {
+        let n = self.live.len();
+        self.probs.resize(n, 0.0);
+        softmax_live(&self.processed, &self.live, &mut self.probs, self.accum)
+    }
+
+    /// 🧰 Softmax over `live`, then reorders `live`/`probs` in lockstep by probability descending
+    /// (ties ascending token id) — the shared, allocation-amortized sort every truncation warper
+    /// (and the final distribution build) starts from.
+    pub fn sort_live_by_prob_desc(&mut self) {
+        self.softmax_over_live();
+        let n = self.live.len();
+        let Self { live, probs, sort_order, sorted_live_buf, sorted_probs_buf, .. } = self;
+        if sort_order.len() < n {
+            sort_order.resize(n, 0);
+        }
+        for (i, slot) in sort_order[..n].iter_mut().enumerate() {
+            *slot = i as u32;
+        }
+        sort_order[..n].sort_unstable_by(|&a, &b| {
+            probs[b as usize].partial_cmp(&probs[a as usize]).unwrap_or(core::cmp::Ordering::Equal).then_with(|| live[a as usize].cmp(&live[b as usize]))
+        });
+        if sorted_live_buf.len() < n {
+            sorted_live_buf.resize(n, 0);
+        }
+        if sorted_probs_buf.len() < n {
+            sorted_probs_buf.resize(n, 0.0);
+        }
+        for (slot, &idx) in sort_order[..n].iter().enumerate() {
+            sorted_live_buf[slot] = live[idx as usize];
+            sorted_probs_buf[slot] = probs[idx as usize];
+        }
+        core::mem::swap(live, sorted_live_buf);
+        core::mem::swap(probs, sorted_probs_buf);
+        live.truncate(n);
+        probs.truncate(n);
+    }
+
+    /// 🧰 Keeps the top `keep.max(min_keep)` entries of an already-[`LogitsWorkspace::sort_live_by_prob_desc`]-sorted
+    /// `live`/`probs` pair — every truncation warper's shared "never drop below `min_keep`" guarantee.
+    pub fn truncate_live_to(&mut self, keep: usize, min_keep: usize) {
+        let keep = keep.max(min_keep.min(self.live.len())).min(self.live.len());
+        self.live.truncate(keep);
+        self.probs.truncate(keep);
+    }
+}
+
+/// 🧰 Output of one [`TokenSampler::sample`] call; cleared (not deallocated) between steps.
+#[derive(Clone, Debug, Default)]
+pub struct SelectionBuffer {
+    pub chosen: Vec<Candidate>,
+}
+
+impl SelectionBuffer {
+    pub fn clear(&mut self) {
+        self.chosen.clear();
+    }
+}
+
+/// 🧰 Reusable pool of [`LogitsWorkspace`]s for batch/continuous-batching use, so per-slot state
+/// survives across steps instead of being reallocated.
+#[derive(Default)]
+pub struct WorkspacePool {
+    slots: Vec<LogitsWorkspace>,
+}
+
+impl WorkspacePool {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn acquire(&mut self, vocab_size: usize) -> LogitsWorkspace {
+        match self.slots.pop() {
+            Some(mut workspace) => {
+                workspace.ensure_capacity(vocab_size);
+                workspace
+            }
+            None => LogitsWorkspace::new(vocab_size),
+        }
+    }
+
+    pub fn release(&mut self, workspace: LogitsWorkspace) {
+        self.slots.push(workspace);
+    }
+}
+// #endregion 🔖Workspace
+
+// #region 🔖Traits
+/// 🔌 Read-only view of one sequence at one step, borrowed for the duration of a pipeline phase.
+pub struct StepView<'a> {
+    pub sequence: SequenceId,
+    pub step: StepIndex,
+    pub prompt: &'a [TokenId],
+    pub generated: &'a [TokenId],
+    pub vocab: &'a Vocabulary,
+    pub adapter: Option<&'a dyn TokenTextAdapter>,
+    pub last_entropy: Option<f64>,
+}
+
+fn schedule_input(view: &StepView<'_>) -> ScheduleInput {
+    ScheduleInput { step: view.step, generated_len: view.generated.len(), last_entropy: view.last_entropy }
+}
+
+/// 🔌 The renormalized live distribution handed to samplers: every slice shares indexing, sorted
+/// by probability descending with ties broken by ascending token id.
+pub struct Distribution<'a> {
+    pub tokens: &'a [TokenId],
+    pub probs: &'a [f32],
+    pub logprobs: &'a [f32],
+    pub cdf: &'a [f64],
+    pub entropy: f64,
+}
+
+/// 🔌 Which pipeline phase a [`LogitsProcessor`] belongs to; the (forthcoming, wave-4) engine
+/// dispatches hard masks before soft penalties before truncation.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum ProcessorKind {
+    HardMask,
+    SoftPenalty,
+    Truncation,
+}
+
+/// 🔌 Opaque undo-log position returned by `LogitsProcessor::save`/`Constraint::save`/`StopCondition::save`.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct StateMark(pub u64);
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct ConstraintMark(pub u64);
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct StopMark(pub u64);
+
+/// 🔌 One step of the logits pipeline: transforms `ws` in place (mask, soft penalty, or
+/// truncation), and optionally commits per-sequence effects once a token is definitively accepted.
+pub trait LogitsProcessor {
+    fn name(&self) -> &'static str;
+    fn kind(&self) -> ProcessorKind;
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError>;
+    fn commit(&mut self, _view: &StepView<'_>, _token: TokenId) {}
+    fn save(&mut self) -> StateMark {
+        StateMark::default()
+    }
+    fn rollback_to(&mut self, _mark: StateMark) {}
+    fn reset(&mut self) {}
+    fn fork(&self) -> Box<dyn LogitsProcessor>;
+}
+
+/// 🔌 Selects one or more tokens from the final [`Distribution`]; must write at least one
+/// candidate into `out` or return an error.
+pub trait TokenSampler {
+    fn name(&self) -> &'static str;
+    fn sample(&mut self, view: &StepView<'_>, dist: &Distribution<'_>, rng: &mut dyn RandomSource, out: &mut SelectionBuffer) -> Result<(), SamplingError>;
+    fn fork(&self) -> Box<dyn TokenSampler>;
+}
+
+/// 🔌 A structural/lexical constraint on the next token (regex, grammar, JSON mode, ...).
+pub trait Constraint {
+    fn name(&self) -> &'static str;
+    /// 🧱 ANDs the set of currently-valid tokens into `mask` (starts all-ones for the first
+    /// constraint in a composition).
+    fn fill_mask(&mut self, view: &StepView<'_>, mask: &mut TokenBitset) -> Result<(), SamplingError>;
+    fn accept(&mut self, view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError>;
+    fn is_satisfied(&self) -> bool;
+    fn is_finished(&self) -> bool;
+    fn is_dead(&self) -> bool;
+    fn save(&mut self) -> ConstraintMark;
+    fn rollback_to(&mut self, mark: ConstraintMark);
+    fn reset(&mut self);
+    fn fork(&self) -> Box<dyn Constraint>;
+}
+
+/// 🛑 Result of feeding one token's bytes to a [`StopCondition`].
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum StopPoll {
+    Continue,
+    Hold { ambiguous_bytes: usize },
+    Finished { reason: FinishReason, matched_bytes: usize },
+}
+
+pub trait StopCondition {
+    fn name(&self) -> &'static str;
+    fn on_token(&mut self, view: &StepView<'_>, token: TokenId) -> StopPoll;
+    fn save(&mut self) -> StopMark;
+    fn rollback_to(&mut self, mark: StopMark);
+    fn reset(&mut self);
+    fn fork(&self) -> Box<dyn StopCondition>;
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct ProcessorStats {
+    pub masked: u32,
+    pub timing_ns: u64,
+}
+
+/// 🔭 Hook points into the engine's per-step lifecycle; every method is a no-op default so
+/// observers only implement what they need.
+pub trait SamplingObserver {
+    fn on_step_start(&mut self, _sequence: SequenceId, _step: StepIndex) {}
+    fn on_processor(&mut self, _sequence: SequenceId, _name: &'static str, _stats: &ProcessorStats) {}
+    fn on_fallback(&mut self, _sequence: SequenceId, _error: &SamplingError, _action: FallbackAction) {}
+    fn on_token(&mut self, _sequence: SequenceId, _result: &SamplingResult) {}
+    fn on_finish(&mut self, _sequence: SequenceId, _reason: FinishReason) {}
+}
+
+/// 🗂️ One rank's local top candidate, for sharded-vocabulary all-gather.
+#[derive(Clone, Copy, PartialEq, Debug)]
+pub struct ShardCandidate {
+    pub token: TokenId,
+    pub logit: f32,
+}
+
+/// 🗂️ Deterministic collective-communication primitives sharded-vocabulary sampling needs.
+pub trait Collective {
+    fn rank(&self) -> usize;
+    fn world_size(&self) -> usize;
+    fn all_reduce_max_f32(&mut self, values: &mut [f32]) -> Result<(), SamplingError>;
+    fn all_reduce_sum_f64(&mut self, values: &mut [f64]) -> Result<(), SamplingError>;
+    /// 🗂️ Gathers every rank's local candidates into `out`, in rank order (deterministic).
+    fn all_gather_candidates(&mut self, local: &[ShardCandidate], out: &mut Vec<ShardCandidate>) -> Result<(), SamplingError>;
+}
+// #endregion 🔖Traits
+
+// #region 🔖Warpers
+/// 🌡️ `logit / temperature`; `temperature <= 0` collapses to greedy via [`LogitsWorkspace::collapse_live_to_argmax`].
+pub struct Temperature {
+    pub value: Schedule,
+}
+
+impl LogitsProcessor for Temperature {
+    fn name(&self) -> &'static str {
+        "temperature"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let value = self.value.eval(schedule_input(view));
+        if value <= 0.0 {
+            ws.collapse_live_to_argmax();
+        } else {
+            ws.scale_processed_over_live(1.0 / value as f32);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { value: self.value.clone() })
+    }
+}
+
+/// 🌡️ Temperature whose value tracks the live set's current entropy: `clamp(base + gain *
+/// entropy, min, max)`.
+pub struct DynamicTemperature {
+    pub base: Schedule,
+    pub entropy_gain: f64,
+    pub min: f64,
+    pub max: f64,
+}
+
+impl LogitsProcessor for DynamicTemperature {
+    fn name(&self) -> &'static str {
+        "dynamic_temperature"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.softmax_over_live();
+        let entropy = entropy_nats(ws.probs());
+        let temp = (self.base.eval(schedule_input(view)) + self.entropy_gain * entropy).clamp(self.min, self.max);
+        if temp <= 0.0 {
+            ws.collapse_live_to_argmax();
+        } else {
+            ws.scale_processed_over_live(1.0 / temp as f32);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { base: self.base.clone(), entropy_gain: self.entropy_gain, min: self.min, max: self.max })
+    }
+}
+
+/// 🌡️ Keeps exactly the top `k` live tokens by probability.
+pub struct TopK {
+    pub k: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for TopK {
+    fn name(&self) -> &'static str {
+        "top_k"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let k = self.k.eval(schedule_input(view)).round().max(1.0) as usize;
+        ws.sort_live_by_prob_desc();
+        ws.truncate_live_to(k, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { k: self.k.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Nucleus sampling: retains the smallest prefix (by descending probability) whose cumulative
+/// mass reaches `p`.
+pub struct TopP {
+    pub p: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for TopP {
+    fn name(&self) -> &'static str {
+        "top_p"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let p = self.p.eval(schedule_input(view)).clamp(0.0, 1.0);
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs();
+        let mut cumulative = 0.0f64;
+        let mut keep = probs.len();
+        for (i, &pr) in probs.iter().enumerate() {
+            cumulative += pr as f64;
+            if cumulative >= p {
+                keep = i + 1;
+                break;
+            }
+        }
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { p: self.p.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Retains tokens whose probability is at least `p` times the live set's maximum probability.
+pub struct MinP {
+    pub p: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for MinP {
+    fn name(&self) -> &'static str {
+        "min_p"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let p = self.p.eval(schedule_input(view)).clamp(0.0, 1.0) as f32;
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs();
+        let threshold = probs.first().copied().unwrap_or(0.0) * p;
+        let keep = probs.iter().take_while(|&&pr| pr >= threshold).count().max(1);
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { p: self.p.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Shared implementation for [`Typical`] and [`LocallyTypical`]: ranks tokens by absolute
+/// deviation of their surprisal (`-ln p`) from the live set's entropy and retains the smallest
+/// such prefix whose cumulative mass reaches `mass`.
+fn apply_typical_truncation(ws: &mut LogitsWorkspace, mass: f64, min_keep: usize) {
+    ws.softmax_over_live();
+    let n = ws.live().len();
+    if n == 0 {
+        return;
+    }
+    let probs = ws.probs().to_vec();
+    let entropy = entropy_nats(&probs);
+    let live = ws.live().to_vec();
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&a, &b| {
+        let da = (-(probs[a] as f64).ln() - entropy).abs();
+        let db = (-(probs[b] as f64).ln() - entropy).abs();
+        da.partial_cmp(&db).unwrap_or(core::cmp::Ordering::Equal).then_with(|| live[a].cmp(&live[b]))
+    });
+    let mut cumulative = 0.0f64;
+    let mut keep = 0usize;
+    for &i in &order {
+        cumulative += probs[i] as f64;
+        keep += 1;
+        if cumulative >= mass {
+            break;
+        }
+    }
+    keep = keep.max(min_keep.min(n));
+    let kept: Vec<u32> = order[..keep].iter().map(|&i| live[i]).collect();
+    ws.set_live(kept);
+}
+
+/// 🌡️ Locally typical sampling (global variant): see [`apply_typical_truncation`].
+pub struct Typical {
+    pub mass: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for Typical {
+    fn name(&self) -> &'static str {
+        "typical"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let mass = self.mass.eval(schedule_input(view)).clamp(0.0, 1.0);
+        apply_typical_truncation(ws, mass, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { mass: self.mass.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Locally typical sampling; this single-step engine applies the same rule as [`Typical`]
+/// (the "local" distinction only matters across multiple denoising passes, not one logits step).
+pub struct LocallyTypical {
+    pub mass: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for LocallyTypical {
+    fn name(&self) -> &'static str {
+        "locally_typical"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let mass = self.mass.eval(schedule_input(view)).clamp(0.0, 1.0);
+        apply_typical_truncation(ws, mass, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { mass: self.mass.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Tail-free sampling: cuts where the cumulative normalized second derivative of the sorted
+/// probability curve reaches `z`.
+pub struct TailFree {
+    pub z: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for TailFree {
+    fn name(&self) -> &'static str {
+        "tail_free"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let z = self.z.eval(schedule_input(view)).clamp(0.0, 1.0);
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs().to_vec();
+        let n = probs.len();
+        if n < 3 {
+            return Ok(());
+        }
+        let first_deriv: Vec<f32> = probs.windows(2).map(|w| (w[0] - w[1]).abs()).collect();
+        let second_deriv: Vec<f32> = first_deriv.windows(2).map(|w| (w[0] - w[1]).abs()).collect();
+        let total: f32 = second_deriv.iter().sum();
+        let mut keep = n;
+        if total > 0.0 {
+            let mut cumulative = 0.0f32;
+            for (i, &d) in second_deriv.iter().enumerate() {
+                cumulative += d / total;
+                if cumulative as f64 >= z {
+                    keep = i + 2;
+                    break;
+                }
+            }
+        }
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { z: self.z.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Drops any token with probability below an absolute `cutoff`.
+pub struct EpsilonCutoff {
+    pub cutoff: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for EpsilonCutoff {
+    fn name(&self) -> &'static str {
+        "epsilon"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let cutoff = self.cutoff.eval(schedule_input(view)).max(0.0);
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs();
+        let keep = probs.iter().take_while(|&&p| p as f64 >= cutoff).count().max(1);
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { cutoff: self.cutoff.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Entropy-adaptive cutoff: `eta = min(epsilon, sqrt(epsilon) * exp(-entropy))`.
+pub struct EtaCutoff {
+    pub cutoff: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for EtaCutoff {
+    fn name(&self) -> &'static str {
+        "eta"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let epsilon = self.cutoff.eval(schedule_input(view)).max(1e-12);
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs().to_vec();
+        let entropy = entropy_nats(&probs);
+        let eta = epsilon.min(epsilon.sqrt() * (-entropy).exp());
+        let keep = probs.iter().take_while(|&&p| p as f64 >= eta).count().max(1);
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { cutoff: self.cutoff.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Keeps tokens with `prob >= power * max_prob^2`.
+pub struct TopA {
+    pub power: Schedule,
+    pub min_keep: usize,
+}
+
+impl LogitsProcessor for TopA {
+    fn name(&self) -> &'static str {
+        "top_a"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let a = self.power.eval(schedule_input(view)).max(0.0);
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs();
+        let max_p = probs.first().copied().unwrap_or(0.0) as f64;
+        let threshold = a * max_p * max_p;
+        let keep = probs.iter().take_while(|&&p| p as f64 >= threshold).count().max(1);
+        ws.truncate_live_to(keep, self.min_keep);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { power: self.power.clone(), min_keep: self.min_keep })
+    }
+}
+
+/// 🌡️ Keeps only the top `max_rank` tokens by probability (a fixed-count variant of [`TopK`]
+/// used when rank alone, not a schedule, determines the cutoff).
+pub struct RankTruncation {
+    pub max_rank: usize,
+}
+
+impl LogitsProcessor for RankTruncation {
+    fn name(&self) -> &'static str {
+        "rank_truncation"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.sort_live_by_prob_desc();
+        ws.truncate_live_to(self.max_rank, 1);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { max_rank: self.max_rank })
+    }
+}
+
+/// 🌡️ Grows the kept prefix (by descending probability) until the renormalized subset's entropy
+/// drops to `target_entropy`, or its effective candidate count reaches `target_effective_count`.
+pub struct AdaptiveTruncation {
+    pub target_entropy: Option<f64>,
+    pub target_effective_count: Option<f64>,
+}
+
+impl LogitsProcessor for AdaptiveTruncation {
+    fn name(&self) -> &'static str {
+        "adaptive_truncation"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.sort_live_by_prob_desc();
+        let probs = ws.probs().to_vec();
+        let n = probs.len();
+        let mut keep = n;
+        let mut cumulative = 0.0f64;
+        'search: for (i, &p) in probs.iter().enumerate() {
+            cumulative += p as f64;
+            let mut renorm_entropy = 0.0f64;
+            for &q in &probs[..=i] {
+                let r = q as f64 / cumulative;
+                if r > 0.0 {
+                    renorm_entropy -= r * r.ln();
+                }
+            }
+            if let Some(target) = self.target_effective_count {
+                if renorm_entropy.exp() >= target {
+                    keep = i + 1;
+                    break 'search;
+                }
+            }
+            if let Some(target) = self.target_entropy {
+                if renorm_entropy <= target {
+                    keep = i + 1;
+                    break 'search;
+                }
+            }
+        }
+        ws.truncate_live_to(keep, 1);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { target_entropy: self.target_entropy, target_effective_count: self.target_effective_count })
+    }
+}
+
+/// 🌡️ Builds a [`LogitsProcessor`] from a [`ProcessorSpec`]. Grows across implementation waves;
+/// variants without a struct yet (penalties, biases, adaptive controllers — see later regions)
+/// fall through to an error until their region lands.
+pub fn build_processor(spec: &ProcessorSpec) -> Result<Box<dyn LogitsProcessor>, SamplingError> {
+    match spec {
+        ProcessorSpec::Temperature { value } => Ok(Box::new(Temperature { value: value.clone() })),
+        ProcessorSpec::DynamicTemperature { base, entropy_gain, min, max } => Ok(Box::new(DynamicTemperature { base: base.clone(), entropy_gain: *entropy_gain, min: *min, max: *max })),
+        ProcessorSpec::TopK { k, min_keep } => Ok(Box::new(TopK { k: k.clone(), min_keep: *min_keep })),
+        ProcessorSpec::TopP { p, min_keep } => Ok(Box::new(TopP { p: p.clone(), min_keep: *min_keep })),
+        ProcessorSpec::MinP { p, min_keep } => Ok(Box::new(MinP { p: p.clone(), min_keep: *min_keep })),
+        ProcessorSpec::Typical { mass, min_keep } => Ok(Box::new(Typical { mass: mass.clone(), min_keep: *min_keep })),
+        ProcessorSpec::LocallyTypical { mass, min_keep } => Ok(Box::new(LocallyTypical { mass: mass.clone(), min_keep: *min_keep })),
+        ProcessorSpec::TailFree { z, min_keep } => Ok(Box::new(TailFree { z: z.clone(), min_keep: *min_keep })),
+        ProcessorSpec::Epsilon { cutoff, min_keep } => Ok(Box::new(EpsilonCutoff { cutoff: cutoff.clone(), min_keep: *min_keep })),
+        ProcessorSpec::Eta { cutoff, min_keep } => Ok(Box::new(EtaCutoff { cutoff: cutoff.clone(), min_keep: *min_keep })),
+        ProcessorSpec::TopA { power, min_keep } => Ok(Box::new(TopA { power: power.clone(), min_keep: *min_keep })),
+        ProcessorSpec::RankTruncation { max_rank } => Ok(Box::new(RankTruncation { max_rank: *max_rank })),
+        ProcessorSpec::AdaptiveTruncation { target_entropy, target_effective_count } => Ok(Box::new(AdaptiveTruncation { target_entropy: *target_entropy, target_effective_count: *target_effective_count })),
+        _ => Err(SamplingError::InvalidConfig { field: "processors", reason: "processor kind not yet implemented" }),
+    }
+}
+// #endregion 🔖Warpers
+
+// #region 🔖Selection
+fn candidate_from(dist: &Distribution<'_>, index: usize) -> Candidate {
+    Candidate { token: dist.tokens[index], raw_logit: 0.0, processed_logit: 0.0, prob: dist.probs[index], logprob: dist.logprobs[index], rank: index as u32 }
+}
+
+/// 🎯 Walker's alias method, reimplemented locally (rather than reusing
+/// [`mathematical_random::AliasTable`]) because that type's `sample` is hard-wired to the
+/// concrete `mathematical_random::Rng` and cannot accept our `dyn RandomSource` trait object.
+struct AliasTable {
+    prob: Vec<f32>,
+    alias: Vec<u32>,
+}
+
+impl AliasTable {
+    fn new(weights: &[f32]) -> Self {
+        let n = weights.len();
+        if n == 0 {
+            return Self { prob: vec![1.0], alias: vec![0] };
+        }
+        let sum: f32 = weights.iter().sum();
+        if sum <= 0.0 {
+            let mut prob = vec![0.0; n];
+            prob[0] = 1.0;
+            return Self { prob, alias: vec![0; n] };
+        }
+        let mut scaled: Vec<f32> = weights.iter().map(|w| w / sum * n as f32).collect();
+        let mut small: Vec<usize> = Vec::new();
+        let mut large: Vec<usize> = Vec::new();
+        for (i, &p) in scaled.iter().enumerate() {
+            if p < 1.0 {
+                small.push(i);
+            } else {
+                large.push(i);
+            }
+        }
+        let mut prob = vec![0.0f32; n];
+        let mut alias = vec![0u32; n];
+        while let (Some(s), Some(l)) = (small.pop(), large.pop()) {
+            prob[s] = scaled[s];
+            alias[s] = l as u32;
+            scaled[l] = scaled[l] + scaled[s] - 1.0;
+            if scaled[l] < 1.0 {
+                small.push(l);
+            } else {
+                large.push(l);
+            }
+        }
+        for l in large {
+            prob[l] = 1.0;
+        }
+        for s in small {
+            prob[s] = 1.0;
+        }
+        Self { prob, alias }
+    }
+
+    fn sample(&self, rng: &mut dyn RandomSource) -> usize {
+        let n = self.prob.len();
+        let i = rng.next_range(0, n as u64) as usize;
+        if rng.next_f64() < self.prob[i] as f64 {
+            i
+        } else {
+            self.alias[i] as usize
+        }
+    }
+}
+
+/// 🎯 Deterministic argmax selection over the (already prob-sorted) [`Distribution`].
+pub struct GreedySampler {
+    pub tie_break: TieBreak,
+}
+
+impl TokenSampler for GreedySampler {
+    fn name(&self) -> &'static str {
+        "greedy"
+    }
+    fn sample(&mut self, _view: &StepView<'_>, dist: &Distribution<'_>, _rng: &mut dyn RandomSource, out: &mut SelectionBuffer) -> Result<(), SamplingError> {
+        if dist.tokens.is_empty() {
+            return Err(SamplingError::EmptyDistribution);
+        }
+        let max_prob = dist.probs[0];
+        let tie_epsilon = f32::EPSILON.max(max_prob.abs() * 1e-6);
+        let mut end = 0usize;
+        while end + 1 < dist.probs.len() && (dist.probs[end + 1] - max_prob).abs() <= tie_epsilon {
+            end += 1;
+        }
+        let idx = match self.tie_break {
+            TieBreak::HighestTokenId => end,
+            TieBreak::LowestTokenId | TieBreak::FirstSeen => 0,
+        };
+        out.chosen.push(candidate_from(dist, idx));
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn TokenSampler> {
+        Box::new(Self { tie_break: self.tie_break })
+    }
+}
+
+/// 🎯 Samples one token proportional to the live distribution via the configured strategy.
+pub struct MultinomialSampler {
+    pub strategy: MultinomialStrategy,
+}
+
+impl TokenSampler for MultinomialSampler {
+    fn name(&self) -> &'static str {
+        "multinomial"
+    }
+    fn sample(&mut self, _view: &StepView<'_>, dist: &Distribution<'_>, rng: &mut dyn RandomSource, out: &mut SelectionBuffer) -> Result<(), SamplingError> {
+        if dist.tokens.is_empty() {
+            return Err(SamplingError::EmptyDistribution);
+        }
+        let idx = match self.strategy {
+            MultinomialStrategy::CdfBinarySearch => cdf_binary_search(dist.cdf, rng.next_f64()),
+            MultinomialStrategy::LinearScan => {
+                let u = rng.next_f64();
+                let mut cumulative = 0.0f64;
+                let mut idx = dist.probs.len() - 1;
+                for (i, &p) in dist.probs.iter().enumerate() {
+                    cumulative += p as f64;
+                    if cumulative >= u {
+                        idx = i;
+                        break;
+                    }
+                }
+                idx
+            }
+            MultinomialStrategy::Alias => {
+                let table = AliasTable::new(dist.probs);
+                table.sample(rng)
+            }
+        };
+        out.chosen.push(candidate_from(dist, idx));
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn TokenSampler> {
+        Box::new(Self { strategy: self.strategy })
+    }
+}
+
+/// 🎯 Gumbel-max trick: `argmax(logprob_i + Gumbel_i)`, statistically equivalent to multinomial
+/// sampling but usable when only a perturb-then-argmax primitive is available.
+pub struct GumbelMaxSampler;
+
+impl TokenSampler for GumbelMaxSampler {
+    fn name(&self) -> &'static str {
+        "gumbel_max"
+    }
+    fn sample(&mut self, _view: &StepView<'_>, dist: &Distribution<'_>, rng: &mut dyn RandomSource, out: &mut SelectionBuffer) -> Result<(), SamplingError> {
+        if dist.tokens.is_empty() {
+            return Err(SamplingError::EmptyDistribution);
+        }
+        let mut best = 0usize;
+        let mut best_score = f64::NEG_INFINITY;
+        for i in 0..dist.tokens.len() {
+            let score = dist.logprobs[i] as f64 + rng.gumbel();
+            if score > best_score {
+                best_score = score;
+                best = i;
+            }
+        }
+        out.chosen.push(candidate_from(dist, best));
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn TokenSampler> {
+        Box::new(Self)
+    }
+}
+
+/// 🎯 Gumbel-top-k: `k` tokens without replacement, drawn by taking the top `k` of `logprob_i +
+/// Gumbel_i`.
+pub struct GumbelTopKSampler {
+    pub k: usize,
+}
+
+impl TokenSampler for GumbelTopKSampler {
+    fn name(&self) -> &'static str {
+        "gumbel_top_k"
+    }
+    fn sample(&mut self, _view: &StepView<'_>, dist: &Distribution<'_>, rng: &mut dyn RandomSource, out: &mut SelectionBuffer) -> Result<(), SamplingError> {
+        if dist.tokens.is_empty() {
+            return Err(SamplingError::EmptyDistribution);
+        }
+        let k = self.k.min(dist.tokens.len());
+        let mut scored: Vec<(f64, usize)> = (0..dist.tokens.len()).map(|i| (dist.logprobs[i] as f64 + rng.gumbel(), i)).collect();
+        scored.sort_unstable_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(core::cmp::Ordering::Equal).then_with(|| dist.tokens[a.1].cmp(&dist.tokens[b.1])));
+        for &(_, i) in scored.iter().take(k) {
+            out.chosen.push(candidate_from(dist, i));
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn TokenSampler> {
+        Box::new(Self { k: self.k })
+    }
+}
+
+/// 🎯 Builds a [`TokenSampler`] from a [`SamplingMethod`].
+pub fn build_sampler(method: &SamplingMethod) -> Box<dyn TokenSampler> {
+    match method {
+        SamplingMethod::Greedy { tie_break } => Box::new(GreedySampler { tie_break: *tie_break }),
+        SamplingMethod::Multinomial { strategy } => Box::new(MultinomialSampler { strategy: *strategy }),
+        SamplingMethod::GumbelMax => Box::new(GumbelMaxSampler),
+        SamplingMethod::GumbelTopK { k } => Box::new(GumbelTopKSampler { k: *k }),
+    }
+}
+// #endregion 🔖Selection
+
+// #region 🔖Engine
+fn cumulative_from_probs(probs: &[f32]) -> Vec<f64> {
+    let mut out = Vec::with_capacity(probs.len());
+    let mut sum = KahanSum::new();
+    for &p in probs {
+        sum.add(p as f64);
+        out.push(sum.value());
+    }
+    if let Some(last) = out.last_mut() {
+        *last = 1.0;
+    }
+    out
+}
+
+/// 🚂 Everything [`sample_step_stateless`] needs about the sequence beyond the raw logits.
+pub struct StatelessStepInput<'a> {
+    pub sequence: SequenceId,
+    pub step: StepIndex,
+    pub prompt: &'a [TokenId],
+    pub generated: &'a [TokenId],
+    pub vocab: &'a Vocabulary,
+    pub adapter: Option<&'a dyn TokenTextAdapter>,
+    pub last_entropy: Option<f64>,
+}
+
+/// 🚂 Runs one sampling step with no persistent per-sequence state (the "Stateless one-step
+/// sampling" operating mode from § 1): applies every configured warper in order, falls back
+/// through [`resolve_fallback`] if truncation empties the live set, builds the final distribution,
+/// then samples via `config.method`. Penalties, biases, constraints, and stop conditions are not
+/// yet applied here — they require [`SequenceState`] (added by the stateful engine in a later
+/// wave); see [`build_processor`] for which [`ProcessorSpec`] variants are wired up so far.
+pub fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorkspace, rng: &mut dyn RandomSource, raw_logits: &[f32], input: StatelessStepInput<'_>) -> Result<SamplingResult, SamplingError> {
+    input.vocab.validate_logits_len(raw_logits.len())?;
+    ws.set_accum(config.accum);
+    ws.reset_for_step(raw_logits, config.sanitize)?;
+
+    let view = StepView {
+        sequence: input.sequence,
+        step: input.step,
+        prompt: input.prompt,
+        generated: input.generated,
+        vocab: input.vocab,
+        adapter: input.adapter,
+        last_entropy: input.last_entropy,
+    };
+
+    let mut processors = Vec::with_capacity(config.processors.len());
+    for spec in &config.processors {
+        processors.push(build_processor(spec)?);
+    }
+    for processor in processors.iter_mut() {
+        if ws.live().is_empty() {
+            break;
+        }
+        processor.process(&view, ws)?;
+    }
+
+    let fallback = if ws.live().is_empty() {
+        let (action, token) = resolve_fallback(None, input.vocab.eos.first().copied(), Some(ws.saved_argmax()));
+        let token = token.ok_or(SamplingError::EmptyDistribution)?;
+        ws.set_live(vec![token.get()]);
+        Some(action)
+    } else {
+        None
+    };
+
+    ws.sort_live_by_prob_desc();
+    let cdf = cumulative_from_probs(ws.probs());
+    let logprobs: Vec<f32> = ws.probs().iter().map(|&p| (p as f64).ln() as f32).collect();
+    let entropy = entropy_nats(ws.probs());
+    let tokens = cast_u32_slice_to_token_ids(ws.live());
+    let dist = Distribution { tokens, probs: ws.probs(), logprobs: &logprobs, cdf: &cdf, entropy };
+
+    let mut sampler = build_sampler(&config.method);
+    let mut selection = SelectionBuffer::default();
+    sampler.sample(&view, &dist, rng, &mut selection)?;
+    let chosen = *selection.chosen.first().ok_or(SamplingError::EmptyDistribution)?;
+
+    let next_len = input.generated.len() + 1;
+    let finish = if input.vocab.is_eos(chosen.token) {
+        Some(FinishReason::EosToken)
+    } else if next_len >= config.max_tokens {
+        Some(FinishReason::MaxTokens)
+    } else {
+        None
+    };
+
+    let diagnostics = config.diagnostics.enabled.then(|| StepDiagnostics {
+        entropy,
+        effective_count: entropy.exp(),
+        truncation_mass: 0.0,
+        masked_by: Vec::new(),
+        timings_ns: Vec::new(),
+        fallback,
+        health: Some(DistributionHealth::assess(ws.live().len(), ws.probs().iter().map(|&p| p as f64).sum())),
+    });
+
+    Ok(SamplingResult {
+        token: chosen.token,
+        logprob: chosen.logprob,
+        finish,
+        alternatives: selection.chosen,
+        top_logprobs: None,
+        rng_stream: StreamKey { request: 0, sequence: input.sequence.get(), beam: 0, candidate: 0, purpose: StreamPurpose::Selection },
+        diagnostics,
+    })
+}
+// #endregion 🔖Engine
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -1329,5 +3706,852 @@ mod tests {
         assert_eq!(set.first_set(), Some(TokenId::new(40)));
     }
     // #endregion 🔖BitsetTests
+
+    // #region 🔖RngTests
+    #[test]
+    fn counter_rng_is_deterministic_for_same_seed() {
+        let mut a = CounterRng::from_seed(123);
+        let mut b = CounterRng::from_seed(123);
+        let seq_a: Vec<u64> = (0..32).map(|_| a.next_u64()).collect();
+        let seq_b: Vec<u64> = (0..32).map(|_| b.next_u64()).collect();
+        assert_eq!(seq_a, seq_b);
+    }
+
+    #[test]
+    fn counter_rng_different_seeds_diverge() {
+        let mut a = CounterRng::from_seed(1);
+        let mut b = CounterRng::from_seed(2);
+        let seq_a: Vec<u64> = (0..8).map(|_| a.next_u64()).collect();
+        let seq_b: Vec<u64> = (0..8).map(|_| b.next_u64()).collect();
+        assert_ne!(seq_a, seq_b);
+    }
+
+    #[test]
+    fn counter_rng_split_is_independent_of_call_order() {
+        let parent = CounterRng::from_seed(999);
+        let key_a = StreamKey { request: 1, sequence: 2, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+        let key_b = StreamKey { request: 1, sequence: 3, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+
+        // 🎲 Splitting in either order from the same parent must produce identical child streams.
+        let mut a_first = parent.split(key_a);
+        let mut b_first = parent.split(key_b);
+        let a_vals_1: Vec<u64> = (0..4).map(|_| a_first.next_u64()).collect();
+        let b_vals_1: Vec<u64> = (0..4).map(|_| b_first.next_u64()).collect();
+
+        let mut b_second = parent.split(key_b);
+        let mut a_second = parent.split(key_a);
+        let b_vals_2: Vec<u64> = (0..4).map(|_| b_second.next_u64()).collect();
+        let a_vals_2: Vec<u64> = (0..4).map(|_| a_second.next_u64()).collect();
+
+        assert_eq!(a_vals_1, a_vals_2);
+        assert_eq!(b_vals_1, b_vals_2);
+        assert_ne!(a_vals_1, b_vals_1);
+    }
+
+    #[test]
+    fn counter_rng_split_differs_by_purpose() {
+        let parent = CounterRng::from_seed(42);
+        let base = StreamKey { request: 1, sequence: 1, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+        let gumbel = StreamKey { purpose: StreamPurpose::Gumbel, ..base };
+        let mut a = parent.split(base);
+        let mut b = parent.split(gumbel);
+        assert_ne!(a.next_u64(), b.next_u64());
+    }
+
+    #[test]
+    fn counter_rng_snapshot_restore_resumes_identically() {
+        let mut original = CounterRng::from_seed(77);
+        for _ in 0..9 {
+            original.next_u64();
+        }
+        let snapshot = original.snapshot();
+        let mut resumed = CounterRng::from_seed(0);
+        resumed.restore(&snapshot).expect("matching kind restores cleanly");
+        let expected: Vec<u64> = (0..16).map(|_| original.next_u64()).collect();
+        let actual: Vec<u64> = (0..16).map(|_| resumed.next_u64()).collect();
+        assert_eq!(expected, actual);
+    }
+
+    #[test]
+    fn rng_snapshot_rejects_kind_mismatch_on_restore() {
+        let snapshot = CounterRng::from_seed(1).snapshot();
+        let mut xoshiro = XoshiroSource::from_seed(1);
+        assert!(xoshiro.restore(&snapshot).is_err());
+    }
+
+    #[test]
+    fn rng_snapshot_text_round_trips() {
+        let snapshot = RngSnapshot { kind: RngKind::Counter, words: [1, 2, 3, 4] };
+        let text = snapshot.to_text();
+        let parsed = RngSnapshot::from_text(&text).expect("valid snapshot text");
+        assert_eq!(snapshot, parsed);
+    }
+
+    #[test]
+    fn xoshiro_source_matches_underlying_rng_sequence() {
+        let mut source = XoshiroSource::from_seed(4242);
+        let mut reference = mathematical_random::Rng::from_seed(4242);
+        for _ in 0..16 {
+            assert_eq!(source.next_u64(), reference.next_u64());
+        }
+    }
+
+    #[test]
+    fn next_f64_open01_is_never_zero() {
+        let mut rng = CounterRng::from_seed(0);
+        for _ in 0..1000 {
+            let u = rng.next_f64_open01();
+            assert!(u > 0.0 && u <= 1.0, "u = {u} out of (0, 1]");
+        }
+    }
+
+    #[test]
+    fn next_range_stays_within_bounds() {
+        let mut rng = CounterRng::from_seed(5);
+        for _ in 0..1000 {
+            let x = rng.next_range(3, 9);
+            assert!((3..9).contains(&x));
+        }
+        assert_eq!(rng.next_range(4, 4), 4);
+    }
+    // #endregion 🔖RngTests
+
+    // #region 🔖VocabularyTests
+    #[test]
+    fn vocabulary_validates_logits_length() {
+        let vocab = Vocabulary::new(10);
+        assert!(vocab.validate_logits_len(10).is_ok());
+        assert!(vocab.validate_logits_len(9).is_err());
+    }
+
+    #[test]
+    fn vocabulary_is_eos_reflects_configured_set() {
+        let vocab = Vocabulary::new(10).with_eos(vec![TokenId::new(0), TokenId::new(1)]);
+        assert!(vocab.is_eos(TokenId::new(0)));
+        assert!(!vocab.is_eos(TokenId::new(2)));
+    }
+
+    #[test]
+    fn slice_text_adapter_returns_bytes_and_stable_fingerprint() {
+        let tokens: Vec<&[u8]> = vec![b"ab", b"c"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        assert_eq!(adapter.vocab_size(), 2);
+        assert_eq!(adapter.token_bytes(TokenId::new(0)), Some(b"ab".as_slice()));
+        assert_eq!(adapter.token_bytes(TokenId::new(5)), None);
+        let fp1 = adapter.fingerprint();
+        let fp2 = SliceTextAdapter::new(&tokens).fingerprint();
+        assert_eq!(fp1, fp2);
+
+        let different: Vec<&[u8]> = vec![b"a", b"bc"];
+        let fp3 = SliceTextAdapter::new(&different).fingerprint();
+        assert_ne!(fp1, fp3, "separator byte must prevent boundary-shift collisions");
+    }
+    // #endregion 🔖VocabularyTests
+
+    // #region 🔖ScheduleTests
+    #[test]
+    fn constant_schedule_ignores_input() {
+        let schedule = Schedule::Constant(0.7);
+        let input = ScheduleInput { step: StepIndex::new(50), generated_len: 50, last_entropy: None };
+        assert_eq!(schedule.eval(input), 0.7);
+    }
+
+    #[test]
+    fn linear_schedule_interpolates_and_clamps_at_bound() {
+        let schedule = Schedule::Linear { from: 0.0, to: 1.0, over_steps: 10 };
+        let at = |step: u32| schedule.eval(ScheduleInput { step: StepIndex::new(step), generated_len: 0, last_entropy: None });
+        assert!((at(0) - 0.0).abs() < 1e-9);
+        assert!((at(5) - 0.5).abs() < 1e-9);
+        assert!((at(10) - 1.0).abs() < 1e-9);
+        assert!((at(20) - 1.0).abs() < 1e-9, "must clamp past over_steps");
+    }
+
+    #[test]
+    fn cosine_schedule_starts_and_ends_at_bounds() {
+        let schedule = Schedule::Cosine { from: 1.0, to: 0.0, over_steps: 8 };
+        let at = |step: u32| schedule.eval(ScheduleInput { step: StepIndex::new(step), generated_len: 0, last_entropy: None });
+        assert!((at(0) - 1.0).abs() < 1e-9);
+        assert!((at(8) - 0.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn piecewise_schedule_holds_at_last_breakpoint() {
+        let schedule = Schedule::Piecewise(vec![(StepIndex::new(0), 1.0), (StepIndex::new(5), 2.0), (StepIndex::new(10), 3.0)]);
+        let at = |step: u32| schedule.eval(ScheduleInput { step: StepIndex::new(step), generated_len: 0, last_entropy: None });
+        assert_eq!(at(0), 1.0);
+        assert_eq!(at(3), 1.0);
+        assert_eq!(at(5), 2.0);
+        assert_eq!(at(7), 2.0);
+        assert_eq!(at(100), 3.0);
+    }
+
+    #[test]
+    fn by_position_schedule_clamps_past_its_length() {
+        let schedule = Schedule::ByPosition(vec![0.1, 0.2, 0.3]);
+        let at = |len: usize| schedule.eval(ScheduleInput { step: StepIndex::new(0), generated_len: len, last_entropy: None });
+        assert_eq!(at(0), 0.1);
+        assert_eq!(at(2), 0.3);
+        assert_eq!(at(50), 0.3);
+    }
+
+    #[test]
+    fn entropy_scaled_schedule_clamps_to_range() {
+        let schedule = Schedule::EntropyScaled { base: 0.5, gain: 1.0, min: 0.0, max: 1.0 };
+        let at = |entropy: f64| schedule.eval(ScheduleInput { step: StepIndex::new(0), generated_len: 0, last_entropy: Some(entropy) });
+        assert_eq!(at(-10.0), 0.0);
+        assert_eq!(at(10.0), 1.0);
+        assert!((at(0.0) - 0.5).abs() < 1e-9);
+    }
+
+    #[test]
+    fn schedule_json_round_trips_every_non_callback_variant() {
+        let schedules = vec![
+            Schedule::Constant(0.5),
+            Schedule::Linear { from: 0.0, to: 1.0, over_steps: 10 },
+            Schedule::Exponential { from: 0.1, to: 1.0, over_steps: 5 },
+            Schedule::Cosine { from: 1.0, to: 0.0, over_steps: 8 },
+            Schedule::Piecewise(vec![(StepIndex::new(0), 1.0), (StepIndex::new(4), 2.0)]),
+            Schedule::ByPosition(vec![0.1, 0.2]),
+            Schedule::EntropyScaled { base: 0.5, gain: 1.0, min: 0.0, max: 2.0 },
+        ];
+        for schedule in schedules {
+            let json = schedule.to_json();
+            let parsed = Schedule::from_json(&json).expect("round trip should succeed");
+            assert_eq!(schedule, parsed);
+        }
+    }
+
+    #[test]
+    fn callback_schedule_serializes_but_refuses_to_deserialize() {
+        fn double(input: ScheduleInput) -> f64 {
+            input.step.get() as f64 * 2.0
+        }
+        let schedule = Schedule::Callback(double);
+        let json = schedule.to_json();
+        assert!(Schedule::from_json(&json).is_err());
+    }
+    // #endregion 🔖ScheduleTests
+
+    // #region 🔖ConfigTests
+    #[test]
+    fn default_config_validates() {
+        assert!(SamplingConfig::default().validate().is_ok());
+    }
+
+    #[test]
+    fn all_presets_validate() {
+        assert!(SamplingConfig::precise().validate().is_ok());
+        assert!(SamplingConfig::balanced().validate().is_ok());
+        assert!(SamplingConfig::creative().validate().is_ok());
+        assert!(SamplingConfig::deterministic_test().validate().is_ok());
+    }
+
+    #[test]
+    fn builder_produces_a_validated_config() {
+        let config = SamplingConfigBuilder::new()
+            .method(SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch })
+            .processor(ProcessorSpec::Temperature { value: Schedule::Constant(0.8) })
+            .seed(7)
+            .max_tokens(128)
+            .build()
+            .expect("valid config");
+        assert_eq!(config.seed, 7);
+        assert_eq!(config.max_tokens, 128);
+        assert_eq!(config.processors.len(), 1);
+    }
+
+    #[test]
+    fn validate_rejects_min_tokens_above_max_tokens() {
+        let config = SamplingConfig { min_tokens: 10, max_tokens: 5, ..SamplingConfig::default() };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_zero_candidate_count() {
+        let config = SamplingConfig { candidate_count: 0, ..SamplingConfig::default() };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_candidate_count_above_limit() {
+        let mut limits = SamplingLimits::default();
+        limits.max_candidates = 4;
+        let config = SamplingConfig { candidate_count: 5, limits, ..SamplingConfig::default() };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_too_many_stop_sequences() {
+        let mut limits = SamplingLimits::default();
+        limits.max_stop_sequences = 1;
+        let config = SamplingConfig {
+            limits,
+            stops: StopSpec { sequences: vec![b"a".to_vec(), b"b".to_vec()], ..StopSpec::default() },
+            ..SamplingConfig::default()
+        };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_zero_no_repeat_ngram_order() {
+        let config = SamplingConfig { processors: vec![ProcessorSpec::NoRepeatNgram { n: 0 }], ..SamplingConfig::default() };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn validate_rejects_mismatched_token_class_penalty_lengths() {
+        let config = SamplingConfig {
+            processors: vec![ProcessorSpec::TokenClassPenalty { classes: vec![0, 1], factors: vec![0.5] }],
+            ..SamplingConfig::default()
+        };
+        assert!(config.validate().is_err());
+    }
+
+    #[test]
+    fn config_fingerprint_is_stable_and_sensitive_to_changes() {
+        let a = SamplingConfig::balanced();
+        let b = SamplingConfig::balanced();
+        assert_eq!(a.fingerprint(), b.fingerprint());
+        let c = SamplingConfig { seed: a.seed + 1, ..a.clone() };
+        assert_ne!(a.fingerprint(), c.fingerprint());
+    }
+
+    #[test]
+    fn config_json_round_trips_core_fields() {
+        let config = SamplingConfigBuilder::new()
+            .method(SamplingMethod::GumbelTopK { k: 3 })
+            .processor(ProcessorSpec::TopK { k: Schedule::Constant(40.0), min_keep: 1 })
+            .processor(ProcessorSpec::RepetitionPenalty { penalty: 1.2, scope: PenaltyScope::GeneratedOnly })
+            .seed(99)
+            .candidate_count(2)
+            .min_tokens(1)
+            .max_tokens(200)
+            .build()
+            .expect("valid config");
+        let json = config.to_json();
+        let parsed = SamplingConfig::from_json(&json).expect("valid round trip");
+        assert_eq!(parsed.method, config.method);
+        assert_eq!(parsed.processors, config.processors);
+        assert_eq!(parsed.seed, config.seed);
+        assert_eq!(parsed.candidate_count, config.candidate_count);
+        assert_eq!(parsed.min_tokens, config.min_tokens);
+        assert_eq!(parsed.max_tokens, config.max_tokens);
+    }
+
+    #[test]
+    fn config_json_rejects_unknown_version() {
+        let json = JsonValue::Object(vec![("version".into(), JsonValue::Num(2.0))]);
+        assert!(matches!(SamplingConfig::from_json(&json), Err(SamplingError::SerializationVersion { expected: 1, actual: 2 })));
+    }
+
+    #[test]
+    fn all_processor_spec_variants_round_trip_through_json() {
+        let specs = vec![
+            ProcessorSpec::Temperature { value: Schedule::Constant(0.7) },
+            ProcessorSpec::DynamicTemperature { base: Schedule::Constant(0.5), entropy_gain: 0.1, min: 0.0, max: 2.0 },
+            ProcessorSpec::TopK { k: Schedule::Constant(40.0), min_keep: 1 },
+            ProcessorSpec::TopP { p: Schedule::Constant(0.9), min_keep: 1 },
+            ProcessorSpec::MinP { p: Schedule::Constant(0.05), min_keep: 1 },
+            ProcessorSpec::Typical { mass: Schedule::Constant(0.9), min_keep: 1 },
+            ProcessorSpec::LocallyTypical { mass: Schedule::Constant(0.9), min_keep: 1 },
+            ProcessorSpec::TailFree { z: Schedule::Constant(0.95), min_keep: 1 },
+            ProcessorSpec::Epsilon { cutoff: Schedule::Constant(0.001), min_keep: 1 },
+            ProcessorSpec::Eta { cutoff: Schedule::Constant(0.001), min_keep: 1 },
+            ProcessorSpec::TopA { power: Schedule::Constant(2.0), min_keep: 1 },
+            ProcessorSpec::RankTruncation { max_rank: 50 },
+            ProcessorSpec::AdaptiveTruncation { target_entropy: Some(2.0), target_effective_count: None },
+            ProcessorSpec::RepetitionPenalty { penalty: 1.1, scope: PenaltyScope::GeneratedOnly },
+            ProcessorSpec::PresencePenalty { penalty: 0.5, scope: PenaltyScope::PromptAndGenerated },
+            ProcessorSpec::FrequencyPenalty { penalty: 0.3, scope: PenaltyScope::PromptOnly },
+            ProcessorSpec::DecayingPenalty { penalty: 0.5, window: 32, half_life: 4.0, scope: PenaltyScope::GeneratedOnly },
+            ProcessorSpec::TokenClassPenalty { classes: vec![0, 1], factors: vec![0.5, 0.9] },
+            ProcessorSpec::NoRepeatNgram { n: 3 },
+            ProcessorSpec::PhrasePenalty { phrases: vec![vec![TokenId::new(1), TokenId::new(2)]], penalty: 0.4 },
+            ProcessorSpec::LogitBiasSparse { entries: vec![(TokenId::new(5), 2.0)] },
+            ProcessorSpec::LogitBiasDense { values: vec![0.0, 1.0, -1.0] },
+            ProcessorSpec::AllowTokens { tokens: vec![TokenId::new(1)] },
+            ProcessorSpec::ForbidTokens { tokens: vec![TokenId::new(2)] },
+            ProcessorSpec::SuppressSpecial,
+            ProcessorSpec::BadWords { phrases: vec![vec![TokenId::new(3)]] },
+            ProcessorSpec::SequenceEncouragement { phrases: vec![vec![TokenId::new(4)]], bonus: 1.5 },
+            ProcessorSpec::Mirostat { version: MirostatVersion::V2, target_surprise: 5.0, learning_rate: 0.1 },
+            ProcessorSpec::EntropyPid { target: 2.0, kp: 0.1, ki: 0.01, kd: 0.0 },
+            ProcessorSpec::RepetitionController { window: 16, threshold: 0.5, boost: 0.2 },
+            ProcessorSpec::ConfidenceController { low_entropy: 0.5, high_entropy: 3.0, low_temp: 0.5, high_temp: 1.2 },
+        ];
+        for spec in specs {
+            let json = processor_spec_to_json(&spec);
+            let parsed = processor_spec_from_json(&json).expect("round trip should succeed");
+            assert_eq!(spec, parsed);
+        }
+    }
+    // #endregion 🔖ConfigTests
+
+    // #region 🔖WorkspaceTests
+    fn small_vocab() -> Vocabulary {
+        Vocabulary::new(8).with_eos(vec![TokenId::new(7)])
+    }
+
+    fn step_view<'a>(vocab: &'a Vocabulary, prompt: &'a [TokenId], generated: &'a [TokenId]) -> StepView<'a> {
+        StepView { sequence: SequenceId::new(1), step: StepIndex::new(generated.len() as u32), prompt, generated, vocab, adapter: None, last_entropy: None }
+    }
+
+    #[test]
+    fn workspace_reset_for_step_initializes_live_to_full_vocab_and_argmax() {
+        let mut ws = LogitsWorkspace::new(5);
+        let logits = [1.0f32, 3.0, 2.0, 3.0, 0.0];
+        ws.reset_for_step(&logits, SanitizePolicy::NegInfNan).expect("finite logits never error");
+        assert_eq!(ws.live(), &[0, 1, 2, 3, 4]);
+        // 📐 Ties between indices 1 and 3 (both 3.0) break toward the lowest token id.
+        assert_eq!(ws.saved_argmax(), TokenId::new(1));
+    }
+
+    #[test]
+    fn workspace_sync_live_with_mask_removes_masked_entries() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[0.0; 4], SanitizePolicy::NegInfNan).unwrap();
+        ws.mask_mut().set(TokenId::new(2), false);
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[0, 1, 3]);
+    }
+
+    #[test]
+    fn workspace_sort_live_by_prob_desc_orders_by_probability_then_token_id() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 3.0, 3.0, 0.5], SanitizePolicy::NegInfNan).unwrap();
+        ws.sort_live_by_prob_desc();
+        assert_eq!(ws.live(), &[1, 2, 0, 3]);
+        assert!(ws.probs()[0] >= ws.probs()[1]);
+        assert!(ws.probs()[1] >= ws.probs()[2]);
+    }
+
+    #[test]
+    fn workspace_truncate_live_to_respects_min_keep() {
+        let mut ws = LogitsWorkspace::new(5);
+        ws.reset_for_step(&[5.0, 4.0, 3.0, 2.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        ws.sort_live_by_prob_desc();
+        ws.truncate_live_to(1, 3);
+        assert_eq!(ws.live().len(), 3);
+    }
+
+    #[test]
+    fn workspace_collapse_live_to_argmax_leaves_single_best_entry() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 5.0, 2.0, 5.0], SanitizePolicy::NegInfNan).unwrap();
+        ws.collapse_live_to_argmax();
+        assert_eq!(ws.live(), &[1]);
+    }
+
+    #[test]
+    fn workspace_pool_reuses_released_workspace() {
+        let mut pool = WorkspacePool::new();
+        let ws = pool.acquire(16);
+        assert_eq!(ws.vocab_size(), 16);
+        pool.release(ws);
+        let reused = pool.acquire(16);
+        assert_eq!(reused.vocab_size(), 16);
+    }
+    // #endregion 🔖WorkspaceTests
+
+    // #region 🔖WarperTests
+    #[test]
+    fn temperature_zero_collapses_to_greedy() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 5.0, 2.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let mut temp = Temperature { value: Schedule::Constant(0.0) };
+        temp.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live(), &[1]);
+    }
+
+    #[test]
+    fn temperature_scales_processed_logits() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[2.0, 4.0, 6.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut temp = Temperature { value: Schedule::Constant(2.0) };
+        temp.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.processed(), &[1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn top_k_keeps_exactly_k_highest_probability_tokens() {
+        let mut ws = LogitsWorkspace::new(5);
+        ws.reset_for_step(&[5.0, 4.0, 3.0, 2.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(5);
+        let view = step_view(&vocab, &[], &[]);
+        let mut top_k = TopK { k: Schedule::Constant(2.0), min_keep: 1 };
+        top_k.process(&view, &mut ws).unwrap();
+        let mut kept = ws.live().to_vec();
+        kept.sort_unstable();
+        assert_eq!(kept, vec![0, 1]);
+    }
+
+    #[test]
+    fn top_p_retains_smallest_prefix_covering_cumulative_mass() {
+        let mut ws = LogitsWorkspace::new(4);
+        // 🌡️ Logits chosen so softmax gives one dominant token (~0.87) plus a long tail.
+        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut top_p = TopP { p: Schedule::Constant(0.5), min_keep: 1 };
+        top_p.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live(), &[0]);
+    }
+
+    #[test]
+    fn top_p_min_keep_overrides_a_too_small_cutoff() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut top_p = TopP { p: Schedule::Constant(0.01), min_keep: 3 };
+        top_p.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live().len(), 3);
+    }
+
+    #[test]
+    fn min_p_drops_tokens_far_below_the_maximum() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[10.0, 0.0, -10.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut min_p = MinP { p: Schedule::Constant(0.1), min_keep: 1 };
+        min_p.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live(), &[0]);
+    }
+
+    #[test]
+    fn typical_and_locally_typical_agree_on_the_same_input() {
+        let logits = [3.0f32, 1.0, 0.5, 0.1];
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+
+        let mut ws_a = LogitsWorkspace::new(4);
+        ws_a.reset_for_step(&logits, SanitizePolicy::NegInfNan).unwrap();
+        let mut typical = Typical { mass: Schedule::Constant(0.8), min_keep: 1 };
+        typical.process(&view, &mut ws_a).unwrap();
+
+        let mut ws_b = LogitsWorkspace::new(4);
+        ws_b.reset_for_step(&logits, SanitizePolicy::NegInfNan).unwrap();
+        let mut locally = LocallyTypical { mass: Schedule::Constant(0.8), min_keep: 1 };
+        locally.process(&view, &mut ws_b).unwrap();
+
+        let mut a = ws_a.live().to_vec();
+        let mut b = ws_b.live().to_vec();
+        a.sort_unstable();
+        b.sort_unstable();
+        assert_eq!(a, b);
+        assert!(!a.is_empty());
+    }
+
+    #[test]
+    fn tail_free_keeps_at_least_min_keep_on_short_live_sets() {
+        let mut ws = LogitsWorkspace::new(2);
+        ws.reset_for_step(&[1.0, 2.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(2);
+        let view = step_view(&vocab, &[], &[]);
+        let mut tail_free = TailFree { z: Schedule::Constant(0.9), min_keep: 1 };
+        tail_free.process(&view, &mut ws).unwrap();
+        assert!(!ws.live().is_empty());
+    }
+
+    #[test]
+    fn epsilon_cutoff_drops_near_zero_probability_tokens() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[20.0, -20.0, -20.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut epsilon = EpsilonCutoff { cutoff: Schedule::Constant(0.01), min_keep: 1 };
+        epsilon.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live(), &[0]);
+    }
+
+    #[test]
+    fn eta_cutoff_never_empties_live_set() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 2.0, 3.0, 4.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut eta = EtaCutoff { cutoff: Schedule::Constant(0.1), min_keep: 1 };
+        eta.process(&view, &mut ws).unwrap();
+        assert!(!ws.live().is_empty());
+    }
+
+    #[test]
+    fn top_a_drops_low_probability_tokens_relative_to_max() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[10.0, -10.0, -10.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut top_a = TopA { power: Schedule::Constant(0.5), min_keep: 1 };
+        top_a.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live(), &[0]);
+    }
+
+    #[test]
+    fn rank_truncation_keeps_exactly_max_rank_entries() {
+        let mut ws = LogitsWorkspace::new(5);
+        ws.reset_for_step(&[5.0, 4.0, 3.0, 2.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(5);
+        let view = step_view(&vocab, &[], &[]);
+        let mut rank = RankTruncation { max_rank: 2 };
+        rank.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.live().len(), 2);
+    }
+
+    #[test]
+    fn adaptive_truncation_targeting_effective_count_shrinks_a_peaked_distribution() {
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(6);
+        let view = step_view(&vocab, &[], &[]);
+        let mut adaptive = AdaptiveTruncation { target_entropy: None, target_effective_count: Some(1.5) };
+        adaptive.process(&view, &mut ws).unwrap();
+        assert!(ws.live().len() < 6);
+    }
+
+    #[test]
+    fn min_keep_guarantee_is_honored_by_every_truncation_warper() {
+        let vocab = Vocabulary::new(6);
+        let view = step_view(&vocab, &[], &[]);
+        let logits = [1.0f32, 1.0, 1.0, 1.0, 1.0, 1.0];
+        let min_keep = 4;
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&logits, SanitizePolicy::NegInfNan).unwrap();
+        TopK { k: Schedule::Constant(1.0), min_keep }.process(&view, &mut ws).unwrap();
+        assert!(ws.live().len() >= min_keep);
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&logits, SanitizePolicy::NegInfNan).unwrap();
+        TopP { p: Schedule::Constant(0.001), min_keep }.process(&view, &mut ws).unwrap();
+        assert!(ws.live().len() >= min_keep);
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&logits, SanitizePolicy::NegInfNan).unwrap();
+        MinP { p: Schedule::Constant(0.999), min_keep }.process(&view, &mut ws).unwrap();
+        assert!(ws.live().len() >= min_keep);
+    }
+    // #endregion 🔖WarperTests
+
+    // #region 🔖SelectionTests
+    fn distribution_fixture<'a>(tokens: &'a [TokenId], probs: &'a [f32], logprobs: &'a [f32], cdf: &'a [f64]) -> Distribution<'a> {
+        Distribution { tokens, probs, logprobs, cdf, entropy: entropy_nats(probs) }
+    }
+
+    #[test]
+    fn greedy_sampler_lowest_token_id_picks_first_of_a_tie() {
+        let tokens = [TokenId::new(0), TokenId::new(1), TokenId::new(2)];
+        let probs = [0.5f32, 0.5, 0.0];
+        let logprobs = [probs[0].ln(), probs[1].ln(), f32::NEG_INFINITY];
+        let cdf = [0.5, 1.0, 1.0];
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let mut sampler = GreedySampler { tie_break: TieBreak::LowestTokenId };
+        let mut out = SelectionBuffer::default();
+        let mut rng = CounterRng::from_seed(1);
+        sampler.sample(&step_view(&small_vocab(), &[], &[]), &dist, &mut rng, &mut out).unwrap();
+        assert_eq!(out.chosen[0].token, TokenId::new(0));
+    }
+
+    #[test]
+    fn greedy_sampler_highest_token_id_picks_last_of_a_tie() {
+        let tokens = [TokenId::new(0), TokenId::new(1), TokenId::new(2)];
+        let probs = [0.5f32, 0.5, 0.0];
+        let logprobs = [probs[0].ln(), probs[1].ln(), f32::NEG_INFINITY];
+        let cdf = [0.5, 1.0, 1.0];
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let mut sampler = GreedySampler { tie_break: TieBreak::HighestTokenId };
+        let mut out = SelectionBuffer::default();
+        let mut rng = CounterRng::from_seed(1);
+        sampler.sample(&step_view(&small_vocab(), &[], &[]), &dist, &mut rng, &mut out).unwrap();
+        assert_eq!(out.chosen[0].token, TokenId::new(1));
+    }
+
+    #[test]
+    fn greedy_sampler_errors_on_empty_distribution() {
+        let dist = distribution_fixture(&[], &[], &[], &[]);
+        let mut sampler = GreedySampler { tie_break: TieBreak::LowestTokenId };
+        let mut out = SelectionBuffer::default();
+        let mut rng = CounterRng::from_seed(1);
+        assert!(sampler.sample(&step_view(&small_vocab(), &[], &[]), &dist, &mut rng, &mut out).is_err());
+    }
+
+    #[test]
+    fn multinomial_cdf_binary_search_matches_expected_frequencies() {
+        let tokens = [TokenId::new(0), TokenId::new(1)];
+        let probs = [0.2f32, 0.8];
+        let logprobs = [probs[0].ln(), probs[1].ln()];
+        let cdf = [0.2, 1.0];
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let mut sampler = MultinomialSampler { strategy: MultinomialStrategy::CdfBinarySearch };
+        let mut rng = CounterRng::from_seed(2024);
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let draws = 20_000;
+        let mut count_1 = 0u32;
+        for _ in 0..draws {
+            let mut out = SelectionBuffer::default();
+            sampler.sample(&view, &dist, &mut rng, &mut out).unwrap();
+            if out.chosen[0].token == TokenId::new(1) {
+                count_1 += 1;
+            }
+        }
+        let ratio = count_1 as f64 / draws as f64;
+        assert!((ratio - 0.8).abs() < 0.02, "ratio {ratio} too far from 0.8");
+    }
+
+    #[test]
+    fn multinomial_strategies_agree_statistically() {
+        let tokens = [TokenId::new(0), TokenId::new(1), TokenId::new(2)];
+        let probs = [0.1f32, 0.3, 0.6];
+        let logprobs = [probs[0].ln(), probs[1].ln(), probs[2].ln()];
+        let cdf = cumulative_from_probs(&probs);
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let draws = 20_000;
+
+        for strategy in [MultinomialStrategy::CdfBinarySearch, MultinomialStrategy::LinearScan, MultinomialStrategy::Alias] {
+            let mut sampler = MultinomialSampler { strategy };
+            let mut rng = CounterRng::from_seed(555);
+            let mut counts = [0u32; 3];
+            for _ in 0..draws {
+                let mut out = SelectionBuffer::default();
+                sampler.sample(&view, &dist, &mut rng, &mut out).unwrap();
+                counts[out.chosen[0].token.get() as usize] += 1;
+            }
+            for (i, &expected) in probs.iter().enumerate() {
+                let ratio = counts[i] as f64 / draws as f64;
+                assert!((ratio - expected as f64).abs() < 0.03, "strategy {strategy:?} index {i}: ratio {ratio} vs expected {expected}");
+            }
+        }
+    }
+
+    #[test]
+    fn gumbel_max_sampler_matches_multinomial_marginals() {
+        let tokens = [TokenId::new(0), TokenId::new(1), TokenId::new(2)];
+        let probs = [0.2f32, 0.3, 0.5];
+        let logprobs = [probs[0].ln(), probs[1].ln(), probs[2].ln()];
+        let cdf = cumulative_from_probs(&probs);
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let mut sampler = GumbelMaxSampler;
+        let mut rng = CounterRng::from_seed(321);
+        let draws = 20_000;
+        let mut counts = [0u32; 3];
+        for _ in 0..draws {
+            let mut out = SelectionBuffer::default();
+            sampler.sample(&view, &dist, &mut rng, &mut out).unwrap();
+            counts[out.chosen[0].token.get() as usize] += 1;
+        }
+        for (i, &expected) in probs.iter().enumerate() {
+            let ratio = counts[i] as f64 / draws as f64;
+            assert!((ratio - expected as f64).abs() < 0.03, "index {i}: ratio {ratio} vs expected {expected}");
+        }
+    }
+
+    #[test]
+    fn gumbel_top_k_returns_k_distinct_tokens() {
+        let tokens = [TokenId::new(0), TokenId::new(1), TokenId::new(2), TokenId::new(3)];
+        let probs = [0.4f32, 0.3, 0.2, 0.1];
+        let logprobs = [probs[0].ln(), probs[1].ln(), probs[2].ln(), probs[3].ln()];
+        let cdf = cumulative_from_probs(&probs);
+        let dist = distribution_fixture(&tokens, &probs, &logprobs, &cdf);
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let mut sampler = GumbelTopKSampler { k: 2 };
+        let mut rng = CounterRng::from_seed(7);
+        let mut out = SelectionBuffer::default();
+        sampler.sample(&view, &dist, &mut rng, &mut out).unwrap();
+        assert_eq!(out.chosen.len(), 2);
+        assert_ne!(out.chosen[0].token, out.chosen[1].token);
+    }
+    // #endregion 🔖SelectionTests
+
+    // #region 🔖EngineTests
+    #[test]
+    fn stateless_step_is_deterministic_for_same_seed_and_config() {
+        let vocab = small_vocab();
+        let config = SamplingConfig::balanced();
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+
+        let run = || {
+            let mut ws = LogitsWorkspace::new(8);
+            let mut rng = CounterRng::from_seed(config.seed);
+            let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+            sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).unwrap()
+        };
+        let a = run();
+        let b = run();
+        assert_eq!(a.token, b.token);
+        assert_eq!(a.logprob, b.logprob);
+    }
+
+    #[test]
+    fn stateless_step_greedy_precise_always_picks_the_argmax() {
+        let vocab = small_vocab();
+        let config = SamplingConfig::precise();
+        let logits = [1.0f32, 2.0, 9.0, 3.0, 1.5, 0.2, 0.1, -5.0];
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(0);
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let result = sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).unwrap();
+        assert_eq!(result.token, TokenId::new(2));
+    }
+
+    #[test]
+    fn stateless_step_reports_eos_finish_reason() {
+        let vocab = small_vocab();
+        let config = SamplingConfig::precise();
+        let mut logits = [0.0f32; 8];
+        logits[7] = 100.0; // 📖 token 7 is the configured EOS token.
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(0);
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let result = sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).unwrap();
+        assert_eq!(result.token, TokenId::new(7));
+        assert_eq!(result.finish, Some(FinishReason::EosToken));
+    }
+
+    #[test]
+    fn stateless_step_reports_max_tokens_finish_reason() {
+        let vocab = small_vocab();
+        let config = SamplingConfig { max_tokens: 1, ..SamplingConfig::precise() };
+        let logits = [1.0f32, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(0);
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let result = sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).unwrap();
+        assert_eq!(result.finish, Some(FinishReason::MaxTokens));
+    }
+
+    #[test]
+    fn stateless_step_rejects_mismatched_logits_length() {
+        let vocab = small_vocab();
+        let config = SamplingConfig::precise();
+        let logits = [0.0f32; 4];
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(0);
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        assert!(sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).is_err());
+    }
+
+    #[test]
+    fn stateless_step_probabilities_sum_to_approximately_one() {
+        let vocab = small_vocab();
+        let config = SamplingConfig::balanced();
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(1);
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        sample_step_stateless(&config, &mut ws, &mut rng, &logits, input).unwrap();
+        let sum: f32 = ws.probs().iter().sum();
+        assert!((sum - 1.0).abs() < 1e-4, "sum = {sum}");
+    }
+    // #endregion 🔖EngineTests
 }
 // #endregion 🔖Tests

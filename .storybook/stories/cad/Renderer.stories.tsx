@@ -116,7 +116,7 @@ function CadBoxInteractionStory({ autoRun }: { readonly autoRun: boolean }): Rea
     return <div style={{ padding: 16, fontSize: 13 }}>Missing spatial interaction fixture: {BOX_INTERACTION_ID}</div>;
   }
 
-  return <CadBoxInteractionRuntimeHost spec={spec} opts={opts} kernel={kernelRef.current} autoRun={autoRun} />;
+  return <CadBoxInteractionRuntimeHost spec={spec} opts={opts} kernel={kernelRef.current!} autoRun={autoRun} />;
 }
 
 function CadBoxInteractionRuntimeHost({ spec, opts, kernel, autoRun }: { readonly spec: InteractionSpec; readonly opts: InteractionRuntimeOptions; readonly kernel: StoryBoxKernel; readonly autoRun: boolean }): ReactElement {

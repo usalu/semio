@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/puzzle-3d-rs` router: `bun ./script.ts wasm`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -22,7 +22,8 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted(["puzzle_3d"], this.repoRoot, segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["puzzle_3d"], this.repoRoot, rest);
   }
 }
 

@@ -4212,7 +4212,7 @@ export function FrameworkOsShell({
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
-          console.error("[DEBUG] action failed", actionError);
+          console.error("[DEBUG] action failed", actionError, JSON.stringify((actionError as { payload?: unknown }).payload ?? null));
         });
     },
     [

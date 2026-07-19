@@ -8727,6 +8727,7 @@ name = "semio-framework-core"
 version = "0.1.0"
 dependencies = [
  "pretty_assertions",
+ "semio-framework-hash",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

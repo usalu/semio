@@ -613,7 +613,9 @@ self.addEventListener("message", async (event) => {
         throw new Error(\`unknown worker message type: \${type}\`);
     }
   } catch (error) {
-    replyError(requestId, error instanceof Error ? error.message : String(error));
+    const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
+    const detail = payload !== undefined ? \` payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : "";
+    replyError(requestId, (error instanceof Error ? error.message : String(error)) + detail);
   }
 });
 `;

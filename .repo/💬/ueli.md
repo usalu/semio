@@ -240,6 +240,10 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+All code in this monorepo is not using any debugger anymore. Devs are not stepping through code anymore and agents only use console logs for debugging. Make sure to optimize and configure everything (such as rust, etc) to get maximum compile time speed.
+
+---
+
 Make sure that os, vcs and hub work perfectly together and are designed in conjunction.
 In general the app is local first and works with crqs and event sourcing approach. Instead of working with crud, all apps must emmt operations which modify the document. This solves the issue of having to merge documents but can be merged, combined, etc.
 In general there is a in memory graph and then optionally on another thread (due to blocking nature of io) a backbone is used. The ui is hence never blocked by io. the backbone is an actor and not a sink (e.g. when other processes edit the file, other authors edit a document on the server, etc).

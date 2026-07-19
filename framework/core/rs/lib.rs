@@ -1112,6 +1112,64 @@ pub fn media_types_compatible(produced: &MediaType, accepted: &MediaType) -> Med
 }
 //#endregion MediaType
 
+//#region Media
+/// 🎞️ The value that actually flows over a media-graph wire, produced by `DocumentApp::export_media` and consumed by `DocumentApp::import_media`. Kept separate from the `MediaType` lattice above (which only negotiates *compatibility*, never carries a value) so headless runners and the UI share one payload shape.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct Media {
+    pub media_type: MediaType,
+    pub payload: MediaPayload,
+}
+
+/// 📦 Structured payloads stay inline as canonical JSON (small, diffable); binary payloads are content-addressed through `vcs::BlobStore` so a `Media` value never carries megabytes across a WIT boundary.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum MediaPayload {
+    Structured { schema: String, json: String },
+    Binary { format: OsMediaFormat, blob_hash: String },
+}
+
+/// 🔑 A cheap identity for one port's current output, independent of serializing the full payload — the unit the `StudioRunner` compares to decide whether a downstream node actually needs to see a new value.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct MediaFingerprint(pub String);
+
+impl MediaFingerprint {
+    /// 🔑 Canonical fingerprint of a `Media` value: structured payloads hash their JSON text, binary payloads reuse their existing content hash directly (no re-hashing bytes already addressed by the blob store).
+    pub fn of(media: &Media) -> Self {
+        match &media.payload {
+            MediaPayload::Structured { schema, json } => {
+                MediaFingerprint(semio_framework_hash::hash_parts(&[schema.as_str(), json.as_str()]))
+            }
+            MediaPayload::Binary { blob_hash, .. } => MediaFingerprint(blob_hash.clone()),
+        }
+    }
+}
+
+/// 🚧 Failure exporting, importing, or fingerprinting media on a declared port.
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+pub enum MediaError {
+    #[error("unknown media port `{0}`")]
+    UnknownPort(String),
+    #[error("port `{port}` produced {produced:?} but the wire accepts {accepted:?}")]
+    Incompatible { port: String, produced: MediaType, accepted: MediaType },
+    #[error("media payload error on port `{0}`: {1}")]
+    Payload(String, String),
+    #[error("media ports are not implemented for this app")]
+    NotImplemented,
+}
+
+/// 🔀 A registered one-way conversion the media graph may insert on a wire when `media_types_compatible` reports `MediaCompat::Convert`. Kept behind a trait (never a bare closure) so converters can be enumerated, tested, and swapped without touching the runner.
+pub trait MediaConverter: Send + Sync {
+    fn from_form(&self) -> MediaForm;
+    fn to_form(&self) -> MediaForm;
+    fn convert(&self, media: &Media) -> Result<Media, MediaError>;
+}
+//#endregion Media
+
 //#region MeshCodec
 /// 🔌 Format-keyed mesh export codec; concrete implementations below are zero-dependency (hand-rolled OBJ/GLB/STL). B-Rep apps additionally get `SolidExporter` (kernel/3d/brep/rs) which wraps the real kernel's STEP/STL/OBJ writers, and reuse `GlbExporter`/`GlbImporter` here via a tessellation bridge so GLB is the same codec everywhere.
 pub trait MeshExporter: Send + Sync {

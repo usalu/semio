@@ -17,7 +17,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { OntologyTreeNode, ValidationReport } from "@semio-tech/coda-desktop/renderer";
 import { OntologyTree, ValidationTree } from "@semio-tech/coda-desktop/renderer";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🎨CodaThemeWrapper
@@ -78,7 +78,7 @@ const ontologyMeta = {
   component: OntologyTree,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
-  decorators: [(Story: React.ComponentType) => <CodaThemeWrapper><Story /></CodaThemeWrapper>],
+  decorators: [(Story: ComponentType) => <CodaThemeWrapper><Story /></CodaThemeWrapper>],
 } satisfies Meta<typeof OntologyTree>;
 
 export default ontologyMeta;

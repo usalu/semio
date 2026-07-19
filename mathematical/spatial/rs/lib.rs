@@ -379,8 +379,8 @@ impl PointOctree {
             let cz = (((p[2] - self.origin[2]) / cell).floor() as i64).clamp(0, MORTON_COORD_MAX) as u32;
             let slot = cells.entry(morton3_encode(cx, cy, cz)).or_insert((0, [0.0; 3]));
             slot.0 += 1;
-            for a in 0..3 {
-                slot.1[a] += p[a];
+            for (acc, v) in slot.1.iter_mut().zip(p.iter()) {
+                *acc += v;
             }
         }
         let mut keyed: Vec<(u64, usize, [f64; 3])> = cells.into_iter().map(|(code, (count, sum))| (code, count, sum)).collect();
@@ -490,7 +490,7 @@ mod tests {
         for v in q.iter_mut() {
             *v = rand_range(state, -80.0, 80.0);
         }
-        if qi % 5 == 0 {
+        if qi.is_multiple_of(5) {
             for v in q.iter_mut() {
                 *v += 300.0;
             }
@@ -710,8 +710,8 @@ mod tests {
             let cz = (((p[2] - origin[2]) / cell).floor() as i64).clamp(0, (1 << 21) - 1) as u32;
             let slot = want.entry(morton3_encode(cx, cy, cz)).or_insert((0, [0.0; 3]));
             slot.0 += 1;
-            for a in 0..3 {
-                slot.1[a] += p[a];
+            for (acc, v) in slot.1.iter_mut().zip(p.iter()) {
+                *acc += v;
             }
         }
         let mut want: Vec<(u64, usize, [f64; 3])> = want.into_iter().map(|(code, (count, sum))| (code, count, sum)).collect();
@@ -719,8 +719,8 @@ mod tests {
         assert_eq!(ds.len(), want.len());
         for (got, (_, count, sum)) in ds.iter().zip(want.iter()) {
             assert_eq!(got.0, *count);
-            for a in 0..3 {
-                assert!((got.1[a] - sum[a] / *count as f64).abs() < 1e-9);
+            for (g, s) in got.1.iter().zip(sum.iter()) {
+                assert!((g - s / *count as f64).abs() < 1e-9);
             }
         }
     }

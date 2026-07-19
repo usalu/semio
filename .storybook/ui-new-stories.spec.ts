@@ -46,7 +46,7 @@ const NEW_UI_STORY_IDS: readonly string[] = [
   "🖱️ui⚛️react-actiondropdown--with-transaction",
   "🖱️ui⚛️react-providers--ghost",
   "🖱️ui⚛️react-providers--interaction",
-  "🖱️ui⚛️react-providers--panel-dock",
+  "🖱️ui⚛️react-providers--panel-dock-story",
   "🖱️ui⚛️react-providers--transaction",
   "🖱️ui⚛️react-providers--tree-state",
   "🖱️ui⚛️react-providers--chrome-compact",

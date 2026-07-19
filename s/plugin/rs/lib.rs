@@ -531,12 +531,12 @@ pub mod app_home {
                     &[S_HOME_WINDOW.into()],
                     Some(&["Studios".into()]),
                 ))
-                .shell_action("createStudio", "Create Studio")
+                .operation("createStudio", "Create Studio")
                 .shell_action("bindStudioFile", "Bind Studio File")
-                .shell_action("importStudio", "Import Studio")
+                .operation("importStudio", "Import Studio")
                 .shell_action("openStudio", "Open Studio")
                 .shell_action("navigateVirtualFileSystemNode", "Navigate File System Node")
-                .shell_action("deleteVirtualFileSystemNode", "Delete File System Node")
+                .operation("deleteVirtualFileSystemNode", "Delete File System Node")
                 .shell_action("goHome", "Go Home")
                 .view_action("setActivePanelTab", "Set Active Panel Tab")
                 .keybinding("mod+n", "createStudio")

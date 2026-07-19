@@ -15,7 +15,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ValidationReport } from "@semio-tech/coda-desktop/renderer";
 import { ValidationTree } from "@semio-tech/coda-desktop/renderer";
-import type { ReactNode } from "react";
+import type { ComponentType, ReactNode } from "react";
 // #endregion 🔌Adapters
 
 // #region 🎨CodaThemeWrapper
@@ -146,7 +146,7 @@ const meta = {
   component: ValidationTree,
   parameters: { layout: "padded" },
   tags: ["autodocs"],
-  decorators: [(Story: React.ComponentType) => <CodaThemeWrapper><Story /></CodaThemeWrapper>],
+  decorators: [(Story: ComponentType) => <CodaThemeWrapper><Story /></CodaThemeWrapper>],
 } satisfies Meta<typeof ValidationTree>;
 
 export default meta;

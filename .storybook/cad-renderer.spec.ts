@@ -31,7 +31,7 @@ async function expectCadStory(page: Page, storyId: string): Promise<{ readonly d
     if (message.type() === "error") consoleErrors.push(message.text());
   });
 
-  await page.goto(`iframe.html?id=${storyId}&viewMode=story`, { waitUntil: "domcontentloaded" });
+  await page.goto(`iframe.html?id=${encodeURIComponent(storyId)}&viewMode=story`, { waitUntil: "domcontentloaded" });
   await expect(page.locator("body")).not.toContainText("Couldn't find story matching");
   await expect(page.locator("body")).not.toContainText("Failed to load the Storybook preview file");
   await page.waitForFunction(() => {
@@ -48,13 +48,13 @@ async function expectCadStory(page: Page, storyId: string): Promise<{ readonly d
 }
 
 test("cad idle: boots with the fresh primitive.box interaction, no committed solid yet", async ({ page }) => {
-  const { debug } = await expectCadStory(page, "cad--idle");
+  const { debug } = await expectCadStory(page, "📐cad--idle");
   const state = await readCadBoxDebug(debug);
   expect(state.lastBox).toBeNull();
 });
 
 test("cad committed box: scripted corner → corner → height → confirm commits a real box through the pure-JS StoryBoxKernel", async ({ page }) => {
-  const { debug } = await expectCadStory(page, "cad--committed-box");
+  const { debug } = await expectCadStory(page, "📐cad--committed-box");
   await expect.poll(async () => (await readCadBoxDebug(debug)).state).toBe("committed");
   const state = await readCadBoxDebug(debug);
   expect(state.lastBox).toEqual({ cornerA: [0, 0, 0], cornerB: [2, 3, 0], height: 4 });

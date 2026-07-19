@@ -33,9 +33,10 @@ type Story = StoryObj<typeof meta>;
 
 /** @emoji 🌳 {@link SortableTreeItems} only wires dnd-kit's `DndContext`/`SortableContext` — the drag handle
  * itself belongs to each `TreeItem` (via `sortable`/`sortableId`), which needs the same `TreeContext` a real
- * `Tree` section provides, so these stories host it via a section's `content` slot (see `Tree.stories.tsx`'s
- * "Settings" section for the same pattern). */
-function SortableRowsDemo({ initialRows }: { readonly initialRows: readonly { readonly id: string; readonly label: string }[] }) {
+ * `Tree` section provides. `TreeDataSection`/`TreeDataItem` have no free-form "content" slot, so this hosts
+ * the sortable block via a single item's `control` (same mechanism as `Panel.stories.tsx`'s `leafTab` helper),
+ * which `TreeDataItemView` renders as `TreeItem` children — already inside a fresh `TreeContext.Provider`. */
+function SortableRowsDemo({ initialRows }: { readonly initialRows: { id: string; label: string }[] }) {
   const [items, setItems] = useState(initialRows);
   return (
     <Tree
@@ -44,21 +45,27 @@ function SortableRowsDemo({ initialRows }: { readonly initialRows: readonly { re
           id: "sortable.story.section",
           label: "Variants",
           icon: <Folder size={14} />,
-          content: (
-            <SortableTreeItems
-              items={items}
-              onReorder={(oldIndex, newIndex) =>
-                setItems((prev) => {
-                  const next = [...prev];
-                  const [moved] = next.splice(oldIndex, 1);
-                  next.splice(newIndex, 0, moved!);
-                  return next;
-                })
-              }
-            >
-              {(item) => <TreeItem key={item.id} id={item.id} label={item.label} icon={<File size={12} />} sortable sortableId={item.id} />}
-            </SortableTreeItems>
-          ),
+          items: [
+            {
+              id: "sortable.story.section.host",
+              label: "",
+              control: (
+                <SortableTreeItems
+                  items={items}
+                  onReorder={(oldIndex, newIndex) =>
+                    setItems((prev) => {
+                      const next = [...prev];
+                      const [moved] = next.splice(oldIndex, 1);
+                      next.splice(newIndex, 0, moved!);
+                      return next;
+                    })
+                  }
+                >
+                  {(item) => <TreeItem key={item.id} id={item.id} label={item.label} icon={<File size={12} />} sortable sortableId={item.id} />}
+                </SortableTreeItems>
+              ),
+            },
+          ],
         },
       ]}
     />

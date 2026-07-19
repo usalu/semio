@@ -66,7 +66,7 @@ pub mod present {
             json!({
                 "schema": "animate.present.site",
                 "deckSchema": deck.schema,
-                "title": deck.tiles.first().map(|tile| tile.name.as_str()).unwrap_or("Animate Present"),
+                "title": deck.tiles.first().map_or("Animate Present", |tile| tile.name.as_str()),
                 "tileCount": deck.tiles.len(),
                 "player": {
                     "kind": "wgpu",
