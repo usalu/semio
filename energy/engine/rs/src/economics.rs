@@ -27,11 +27,7 @@ pub struct UtilityTariff {
 
 impl UtilityTariff {
     pub fn energy_cost(&self, energy_kwh: f64, hour: u8, month: u8) -> f64 {
-        let rate = self
-            .periods
-            .iter()
-            .find(|p| p.months.contains(&month) && hour >= p.start_hour && hour < p.end_hour)
-            .map_or(0.1, |p| p.energy_rate_per_kwh);
+        let rate = self.periods.iter().find(|p| p.months.contains(&month) && hour >= p.start_hour && hour < p.end_hour).map_or(0.1, |p| p.energy_rate_per_kwh);
         energy_kwh * rate
     }
 }
@@ -73,17 +69,8 @@ pub fn compute_lcca(annual_energy_cost: f64, params: &LccaParameters) -> LccaRes
     let pv_energy = present_value(annual_energy_cost, params.discount_rate, params.study_period_years);
     let pv_maint = present_value(params.annual_maintenance, params.discount_rate, params.study_period_years);
     let pv_total = params.initial_cost + pv_energy + pv_maint;
-    let simple_payback = if annual_energy_cost > 0.0 {
-        params.initial_cost / annual_energy_cost
-    } else {
-        f64::INFINITY
-    };
-    LccaResult {
-        present_value_energy: pv_energy,
-        present_value_maintenance: pv_maint,
-        present_value_total: pv_total,
-        simple_payback_years: simple_payback,
-    }
+    let simple_payback = if annual_energy_cost > 0.0 { params.initial_cost / annual_energy_cost } else { f64::INFINITY };
+    LccaResult { present_value_energy: pv_energy, present_value_maintenance: pv_maint, present_value_total: pv_total, simple_payback_years: simple_payback }
 }
 // #endregion 🔖Lcca
 
@@ -109,11 +96,7 @@ pub fn apply_tariffs(meters: &MeterStore, tariffs: &[UtilityTariff]) -> Economic
             }
         }
     }
-    EconomicsResult {
-        annual_energy_cost,
-        annual_demand_cost,
-        lcca: None,
-    }
+    EconomicsResult { annual_energy_cost, annual_demand_cost, lcca: None }
 }
 // #endregion 🔖Economics
 
@@ -129,15 +112,7 @@ mod tests {
 
     #[test]
     fn lcca_computes_payback() {
-        let params = LccaParameters {
-            study_period_years: 20,
-            discount_rate: 0.03,
-            inflation_rate: 0.02,
-            initial_cost: 10_000.0,
-            annual_maintenance: 500.0,
-            replacement_cost: 0.0,
-            replacement_interval_years: 0,
-        };
+        let params = LccaParameters { study_period_years: 20, discount_rate: 0.03, inflation_rate: 0.02, initial_cost: 10_000.0, annual_maintenance: 500.0, replacement_cost: 0.0, replacement_interval_years: 0 };
         let lcca = compute_lcca(2000.0, &params);
         assert!((lcca.simple_payback_years - 5.0).abs() < 1e-6);
     }

@@ -14,12 +14,7 @@ pub struct SourceEnergyFactors {
 
 impl Default for SourceEnergyFactors {
     fn default() -> Self {
-        Self {
-            electricity: 3.0,
-            natural_gas: 1.05,
-            district_heating: 1.2,
-            district_cooling: 1.1,
-        }
+        Self { electricity: 3.0, natural_gas: 1.05, district_heating: 1.2, district_cooling: 1.1 }
     }
 }
 
@@ -32,10 +27,7 @@ pub struct EmissionFactors {
 
 impl Default for EmissionFactors {
     fn default() -> Self {
-        Self {
-            electricity_kg_per_kwh: 0.4,
-            natural_gas_kg_per_kwh: 0.2,
-        }
+        Self { electricity_kg_per_kwh: 0.4, natural_gas_kg_per_kwh: 0.2 }
     }
 }
 
@@ -60,12 +52,7 @@ pub struct ResilienceMetrics {
 }
 
 /// 🛡️ Compute resilience metrics from zone temperature time series.
-pub fn compute_resilience(
-    zone_temps_c: &[f64],
-    heating_setpoint_c: f64,
-    cooling_setpoint_c: f64,
-    hvac_available: bool,
-) -> ResilienceMetrics {
+pub fn compute_resilience(zone_temps_c: &[f64], heating_setpoint_c: f64, cooling_setpoint_c: f64, hvac_available: bool) -> ResilienceMetrics {
     let mut m = ResilienceMetrics::default();
     for &t in zone_temps_c {
         if t > 32.0 {
@@ -90,20 +77,11 @@ pub fn compute_resilience(
 
 // #region 🔖Compute
 /// 🌿 Compute environmental metrics from meter totals.
-pub fn compute_environmental(
-    electricity_kwh: f64,
-    gas_kwh: f64,
-    factors: &SourceEnergyFactors,
-    emissions: &EmissionFactors,
-) -> EnvironmentalMetrics {
+pub fn compute_environmental(electricity_kwh: f64, gas_kwh: f64, factors: &SourceEnergyFactors, emissions: &EmissionFactors) -> EnvironmentalMetrics {
     let site = electricity_kwh + gas_kwh;
     let source = electricity_kwh * factors.electricity + gas_kwh * factors.natural_gas;
     let co2 = electricity_kwh * emissions.electricity_kg_per_kwh + gas_kwh * emissions.natural_gas_kg_per_kwh;
-    EnvironmentalMetrics {
-        site_energy_kwh: site,
-        source_energy_kwh: source,
-        co2_kg: co2,
-    }
+    EnvironmentalMetrics { site_energy_kwh: site, source_energy_kwh: source, co2_kg: co2 }
 }
 // #endregion 🔖Compute
 

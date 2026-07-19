@@ -73,14 +73,7 @@ pub struct MeterStore {
 
 impl MeterStore {
     pub fn get_or_create(&mut self, name: &str, fuel: FuelType, end_use: EndUse) -> &mut Meter {
-        self.meters.entry(name.to_string()).or_insert_with(|| Meter {
-            name: name.to_string(),
-            fuel,
-            end_use,
-            energy_j: 0.0,
-            peak_demand_w: 0.0,
-            peak_demand_hour: 0.0,
-        })
+        self.meters.entry(name.to_string()).or_insert_with(|| Meter { name: name.to_string(), fuel, end_use, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 })
     }
 
     pub fn facility_total_kwh(&self, fuel: FuelType) -> f64 {
@@ -103,14 +96,7 @@ mod tests {
 
     #[test]
     fn meter_accumulates_energy() {
-        let mut m = Meter {
-            name: "test".into(),
-            fuel: FuelType::Electricity,
-            end_use: EndUse::Heating,
-            energy_j: 0.0,
-            peak_demand_w: 0.0,
-            peak_demand_hour: 0.0,
-        };
+        let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Heating, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
         m.accumulate(1000.0, 3600.0, 1.0);
         assert!((m.energy_kwh() - 1.0).abs() < 1e-6);
     }

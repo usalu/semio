@@ -18,19 +18,9 @@ pub struct IdealLoadsConfig {
 
 impl Default for IdealLoadsConfig {
     fn default() -> Self {
-        Self {
-            max_heating_supply_air_temp_c: 50.0,
-            min_cooling_supply_air_temp_c: 13.0,
-            max_heating_capacity_w: None,
-            max_cooling_capacity_w: None,
-            outdoor_air_per_person_m3_s: 0.009_44,
-            outdoor_air_per_area_m3_s_m2: 0.0,
-        }
+        Self { max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.009_44, outdoor_air_per_area_m3_s_m2: 0.0 }
     }
 }
-
-/// ♻️ Compatibility alias used by the simulation kernel.
-pub type IdealLoadsSystem = IdealLoadsConfig;
 
 /// 🌬️ Economizer control mode.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -39,7 +29,9 @@ pub enum EconomizerControl {
     None,
     DifferentialDryBulb,
     DifferentialEnthalpy,
-    FixedDryBulb { lockout_c: f64 },
+    FixedDryBulb {
+        lockout_c: f64,
+    },
 }
 
 /// 💧 Humidity control mode.
@@ -98,14 +90,8 @@ pub fn ideal_loads_deliver(input: &IdealLoadsInput, system: &IdealLoadsConfig) -
 }
 
 /// 🎯 Ideal loads with explicit economizer and humidity controls.
-pub fn ideal_loads_deliver_with_controls(
-    input: &IdealLoadsInput,
-    system: &IdealLoadsConfig,
-    economizer: EconomizerControl,
-    humidity_control: HumidityControl,
-) -> IdealLoadsOutput {
-    let oa_vol = system.outdoor_air_per_person_m3_s * input.occupancy
-        + system.outdoor_air_per_area_m3_s_m2 * input.floor_area_m2;
+pub fn ideal_loads_deliver_with_controls(input: &IdealLoadsInput, system: &IdealLoadsConfig, economizer: EconomizerControl, humidity_control: HumidityControl) -> IdealLoadsOutput {
+    let oa_vol = system.outdoor_air_per_person_m3_s * input.occupancy + system.outdoor_air_per_area_m3_s_m2 * input.floor_area_m2;
     let economizer_active = economizer_allows_oa(economizer, input);
     let oa_m_dot = oa_vol.max(0.0) * RHO_AIR_REF;
 
@@ -132,22 +118,18 @@ pub fn ideal_loads_deliver_with_controls(
     let mut supply_w = input.zone_humidity_ratio;
 
     match humidity_control {
-        HumidityControl::HumidifyOnly | HumidityControl::HumidifyAndDehumidify => {
-            if input.zone_humidity_ratio < 0.008 {
-                humidification = 0.001 * oa_m_dot.max(0.01);
-                latent_heating = humidification * H_FG_0C;
-                supply_w = 0.008;
-            }
+        HumidityControl::HumidifyOnly | HumidityControl::HumidifyAndDehumidify if input.zone_humidity_ratio < 0.008 => {
+            humidification = 0.001 * oa_m_dot.max(0.01);
+            latent_heating = humidification * H_FG_0C;
+            supply_w = 0.008;
         }
         _ => {}
     }
     match humidity_control {
-        HumidityControl::DehumidifyOnly | HumidityControl::HumidifyAndDehumidify => {
-            if input.zone_humidity_ratio > 0.012 {
-                dehumidification = 0.001 * oa_m_dot.max(0.01);
-                latent_cooling = dehumidification * H_FG_0C;
-                supply_w = 0.012;
-            }
+        HumidityControl::DehumidifyOnly | HumidityControl::HumidifyAndDehumidify if input.zone_humidity_ratio > 0.012 => {
+            dehumidification = 0.001 * oa_m_dot.max(0.01);
+            latent_cooling = dehumidification * H_FG_0C;
+            supply_w = 0.012;
         }
         _ => {}
     }
@@ -199,14 +181,7 @@ mod tests {
     use super::*;
 
     fn unlimited_system() -> IdealLoadsConfig {
-        IdealLoadsConfig {
-            max_heating_supply_air_temp_c: 50.0,
-            min_cooling_supply_air_temp_c: 13.0,
-            max_heating_capacity_w: None,
-            max_cooling_capacity_w: None,
-            outdoor_air_per_person_m3_s: 0.01,
-            outdoor_air_per_area_m3_s_m2: 0.0,
-        }
+        IdealLoadsConfig { max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.01, outdoor_air_per_area_m3_s_m2: 0.0 }
     }
 
     #[test]
@@ -232,10 +207,7 @@ mod tests {
 
     #[test]
     fn capacity_limits_cooling() {
-        let system = IdealLoadsConfig {
-            max_cooling_capacity_w: Some(1000.0),
-            ..unlimited_system()
-        };
+        let system = IdealLoadsConfig { max_cooling_capacity_w: Some(1000.0), ..unlimited_system() };
         let input = IdealLoadsInput {
             zone_temp_c: 30.0,
             zone_humidity_ratio: 0.01,
@@ -268,12 +240,7 @@ mod tests {
             occupancy: 1.0,
             floor_area_m2: 30.0,
         };
-        let out = ideal_loads_deliver_with_controls(
-            &input,
-            &system,
-            EconomizerControl::DifferentialDryBulb,
-            HumidityControl::None,
-        );
+        let out = ideal_loads_deliver_with_controls(&input, &system, EconomizerControl::DifferentialDryBulb, HumidityControl::None);
         assert!(out.economizer_active);
     }
 }

@@ -59,9 +59,7 @@ impl SizingManager {
         let sf = config.sizing_factor * config.safety_factor;
 
         for zone in &model.zones {
-            let area = model.surfaces_for_zone(zone.id).iter().map(|s| {
-                crate::geometry::surface_area_m2(&s.vertices_m)
-            }).sum::<f64>().max(1.0);
+            let area = model.surfaces_for_zone(zone.id).iter().map(|s| crate::geometry::surface_area_m2(&s.vertices_m)).sum::<f64>().max(1.0);
 
             let u_avg = 0.3;
             let delta_t_heat = 20.0 - config.heating_design_day.dry_bulb_max_c;
@@ -70,28 +68,13 @@ impl SizingManager {
             let cooling_load = u_avg * area * delta_t_cool.max(0.0) * sf;
             let ventilation = zone.volume_m3 * 0.5 * CP_DRY_AIR * 1.2 * delta_t_cool.max(0.0) / 3600.0;
 
-            tables.zone_loads.push(SizingResult {
-                component: format!("{} heating", zone.name),
-                design_load_w: heating_load,
-                design_flow_m3_s: zone.volume_m3 * 0.01 / 3600.0,
-                autosized: true,
-            });
-            tables.zone_loads.push(SizingResult {
-                component: format!("{} cooling", zone.name),
-                design_load_w: cooling_load + ventilation,
-                design_flow_m3_s: zone.volume_m3 * 0.02 / 3600.0,
-                autosized: true,
-            });
+            tables.zone_loads.push(SizingResult { component: format!("{} heating", zone.name), design_load_w: heating_load, design_flow_m3_s: zone.volume_m3 * 0.01 / 3600.0, autosized: true });
+            tables.zone_loads.push(SizingResult { component: format!("{} cooling", zone.name), design_load_w: cooling_load + ventilation, design_flow_m3_s: zone.volume_m3 * 0.02 / 3600.0, autosized: true });
         }
 
         for ils in &model.ideal_loads {
             if let Some(zone) = model.zone_by_id(ils.zone_id) {
-                tables.equipment.push(SizingResult {
-                    component: format!("IdealLoads {}", zone.name),
-                    design_load_w: zone.volume_m3 * 50.0 * sf,
-                    design_flow_m3_s: zone.volume_m3 * 0.015 / 3600.0,
-                    autosized: true,
-                });
+                tables.equipment.push(SizingResult { component: format!("IdealLoads {}", zone.name), design_load_w: zone.volume_m3 * 50.0 * sf, design_flow_m3_s: zone.volume_m3 * 0.015 / 3600.0, autosized: true });
             }
         }
 
@@ -113,27 +96,15 @@ impl SizingManager {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::model::EntityId;
     use crate::model::{Model, Site, Zone};
 
     #[test]
     fn sizes_zone_with_surfaces() {
         let model = Model {
             name: "Test".into(),
-            site: Site {
-                latitude_deg: 45.0,
-                longitude_deg: 0.0,
-                elevation_m: 100.0,
-                time_zone_hours: 0.0,
-                north_axis_deg: 0.0,
-            },
-            zones: vec![Zone {
-                id: EntityId(1),
-                name: "Z1".into(),
-                volume_m3: 200.0,
-                multiplier: 1,
-                conditioned: true,
-                part_of_total_floor_area: true,
-            }],
+            site: Site { latitude_deg: 45.0, longitude_deg: 0.0, elevation_m: 100.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
+            zones: vec![Zone { id: EntityId(1), name: "Z1".into(), volume_m3: 200.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
             ..Default::default()
         };
         let tables = SizingManager::size(&model, &SizingConfig::default());

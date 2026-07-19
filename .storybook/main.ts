@@ -2,7 +2,7 @@
 // #region 🧲Header
 // 💻 .storybook/main.ts
 // Specs: Aggregate the existing package-local Storybook trees into one root monorepo Storybook.
-// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), scope-aware dev slices via `STORYBOOK_SCOPE`, and module-worker-safe Vite behavior.
+// Summary: Configures the workspace Storybook with shared aliases, MDX support, Vite `resolve.conditions` so `node_modules` `exports` resolve (`import` before `storybook`), a composable scope system driven by `.storybook/scopes.ts` (`STORYBOOK_SCOPE` is a comma-separated list of hierarchical scope ids), and module-worker-safe Vite behavior.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -13,32 +13,25 @@ import { dirname, join, resolve } from "node:path";
 import tailwindcss from "@tailwindcss/vite";
 import type { StorybookConfig } from "@storybook/react-vite";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages } from "../ui/styling/vite-elements-assets.ts";
+import { uiAssetsVitePlugin, createWorkspaceViteResolveConfig, findWorkspacePackages, playgroundAssetVitePlugins } from "../ui/styling/vite-elements-assets.ts";
 import rehypeSlug from "rehype-slug";
 import remarkFrontmatter from "remark-frontmatter";
 import remarkGfm from "remark-gfm";
 import remarkMdxFrontmatter from "remark-mdx-frontmatter";
+import { resolveActiveScopes, buildScopeStoryGlobs, buildScopeAliases, buildScopeWatchIgnores, type StoryScope } from "./scopes.ts";
 
 const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const repoRootPath = resolve(__dirname, "..");
 const storybookScope = process.env.STORYBOOK_SCOPE ?? "";
-const storybookScopePrefix = storybookScope ? `${storybookScope}/` : "";
-const productionStorySlices = (process.env.STORYBOOK_PRODUCTION_SLICES ?? "")
-  .split(",")
-  .map((slice) => slice.trim())
-  .filter(Boolean);
-const productionSliceBuild = productionStorySlices.length > 0;
 
 const uiReactDir = resolve(repoRootPath, "ui/js/react");
 const uiStylingDir = resolve(repoRootPath, "ui/styling/js");
 const composeJsDir = resolve(repoRootPath, "compose/client/lib/js");
-const composeRsWasmEntryPath = resolve(repoRootPath, "compose/client/lib/rs/pkg/compose.js");
 const composeAssetsDir = resolve(repoRootPath, "asset");
 const composeFixturesDir = resolve(repoRootPath, "compose/fixture");
 const puzzleAssetsDir = resolve(repoRootPath, "puzzle/asset");
-const composeAlgorithmsEntryPath = resolve(repoRootPath, "compose/dev/algorithm/index.ts");
 const uiAssetsRootPath = resolve(repoRootPath, "ui/asset");
 
 function toVitePath(value: string): string {
@@ -53,70 +46,33 @@ function getAbsolutePath(value: string): string {
   }
 }
 
-/** @emoji 🎯 True when `STORYBOOK_SCOPE` is unset (full Storybook) or matches `prefix` / `prefix/…`. */
-function storybookScopeMatches(prefix: string): boolean {
-  if (!storybookScope) return true;
-  return storybookScope === prefix || storybookScope.startsWith(`${prefix}/`);
-}
+// #region 🔖ScopeDerivation
+/** @emoji 🗂️ Active scopes for this process — computed once, reused by `stories`, aliases, watch-ignores, defines, and lazy scope `vitePlugins`. */
+const activeScopes: readonly StoryScope[] = resolveActiveScopes(storybookScope);
+const activeScopeIds: readonly string[] = activeScopes.map((s) => s.id);
 
-/** @emoji 🎯 Active storybook slice for ui / puzzle / compose stacks. */
-function storybookSliceActive(prefix: string): boolean {
-  if (storybookScope) return storybookScopeMatches(prefix);
-  if (productionSliceBuild) return productionStorySlices.includes(prefix);
-  return true;
-}
-
-function buildStoryGlobs(): string[] {
-  if (storybookScope) {
-    return [`./stories/${storybookScopePrefix}**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`];
-  }
-  if (productionSliceBuild) {
-    return productionStorySlices.map((slice) => `./stories/${slice}/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`);
-  }
-  return [`./stories/**/*.stories.@(js|jsx|mjs|ts|tsx|mdx)`];
-}
-
-const loadUiStack = storybookSliceActive("ui");
-const loadPuzzleStack = storybookSliceActive("puzzle");
-const loadComposeStack = storybookSliceActive("compose");
-
+/** @emoji 🔗 Irregular per-scope aliases + a fixed baseline of always-present workspace shortcuts (css subpaths, single-file entries) not worth registering per-scope. */
 function buildStorybookAliases(): Record<string, string> {
-  const alias: Record<string, string> = {};
-  if (loadUiStack || loadPuzzleStack) {
-    alias["@semio-tech/puzzle-asset"] = toVitePath(puzzleAssetsDir);
-    alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
-    alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
-    alias["@semio-tech/infinite-cavas-react-renderer"] = toVitePath(resolve(repoRootPath, "infinite/cavas/react-renderer/index.tsx"));
-    alias["@elements/ui/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-    alias["@semio-tech/coda-desktop/renderer"] = toVitePath(resolve(repoRootPath, "coda/client/ui/desktop/js/renderer.tsx"));
+  const baseline: Record<string, string> = {
+    "@semio-tech/ui-react": toVitePath(uiReactDir),
+    "@semio-tech/ui-styling": toVitePath(uiStylingDir),
+    "@semio-tech/puzzle-asset": toVitePath(puzzleAssetsDir),
+    "@semio-tech/compose-js": toVitePath(composeJsDir),
+    "@semio-tech/compose-react": toVitePath(composeJsDir),
+    "@semio-tech/semio-asset": toVitePath(composeAssetsDir),
+    "@semio-tech/compose-fixture": toVitePath(composeFixturesDir),
+  };
+  const scopeAliases = buildScopeAliases(activeScopes, {});
+  const resolved: Record<string, string> = { ...baseline };
+  for (const [key, value] of Object.entries(scopeAliases)) {
+    resolved[key] = value.startsWith("/") ? value : toVitePath(resolve(repoRootPath, value));
   }
-  if (loadComposeStack) {
-    alias["@semio-tech/ui-react/globals.css"] = toVitePath(resolve(uiReactDir, "globals.css"));
-    alias["@semio-tech/compose-react"] = toVitePath(composeJsDir);
-    alias["@semio-tech/compose-js"] = toVitePath(composeJsDir);
-    alias["@semio-tech/compose-rs-wasm"] = toVitePath(composeRsWasmEntryPath);
-    alias["@semio-tech/semio-asset"] = toVitePath(composeAssetsDir);
-    alias["@semio-tech/compose-fixture"] = toVitePath(composeFixturesDir);
-    alias["@semio-tech/compose-algorithm"] = toVitePath(composeAlgorithmsEntryPath);
-    alias["@semio-tech/ui-react"] = toVitePath(uiReactDir);
-    alias["@semio-tech/ui-styling"] = toVitePath(uiStylingDir);
-  }
-  return alias;
+  return resolved;
 }
-
-function buildScopeWatchIgnores(): string[] {
-  if (!storybookScope) return [];
-  if ((loadUiStack || loadPuzzleStack) && !loadComposeStack) {
-    return ["**/compose/**", "**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
-  }
-  if (loadComposeStack && !loadUiStack && !loadPuzzleStack) {
-    return ["**/coda/**", "**/cad/**", "**/reuse/**", "**/mit-bestand/**"];
-  }
-  return [];
-}
+// #endregion 🔖ScopeDerivation
 
 const config: StorybookConfig = {
-  stories: buildStoryGlobs(),
+  stories: buildScopeStoryGlobs(activeScopes),
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -163,7 +119,7 @@ const config: StorybookConfig = {
     const currentWatch = config.server.watch && typeof config.server.watch === "object" ? config.server.watch : {};
     const currentIgnored = currentWatch.ignored;
     const ignoredList = Array.isArray(currentIgnored) ? currentIgnored : currentIgnored ? [currentIgnored] : [];
-    const scopeWatchIgnores = buildScopeWatchIgnores();
+    const scopeWatchIgnores = buildScopeWatchIgnores(activeScopes);
     config.server.watch = {
       ...currentWatch,
       usePolling: true,
@@ -179,6 +135,19 @@ const config: StorybookConfig = {
     if (!hasUiAssetsPlugin) {
       config.plugins.push(...uiAssetsVitePlugin(uiAssetsRootPath));
     }
+    // #region 🔖ScopeAssetsAndPlugins
+    /** @emoji 🌐 Static-dir / tile-proxy / mesh-collection assets declared by active scopes (e.g. `framework/os`'s `/plugin-modules`, `/renderer-modules`). */
+    const scopeAssets = activeScopes.flatMap((s) => s.assets ?? []);
+    if (scopeAssets.length > 0) {
+      config.plugins.push(...playgroundAssetVitePlugins(repoRootPath, scopeAssets));
+    }
+    /** @emoji 🌐 Lazy scope-gated Vite plugins (only imported when the owning scope is active). */
+    for (const scope of activeScopes) {
+      if (scope.vitePlugins) {
+        config.plugins.push(...(await scope.vitePlugins()));
+      }
+    }
+    // #endregion 🔖ScopeAssetsAndPlugins
     const indicesToRemove: number[] = [];
     for (let i = 0; i < config.plugins.length; i++) {
       const plugin: any = config.plugins[i];
@@ -209,12 +178,7 @@ const config: StorybookConfig = {
 
     config.optimizeDeps = config.optimizeDeps || {};
     config.optimizeDeps.include = [...(config.optimizeDeps.include || []), "golden-layout"];
-    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-cavas-react-renderer", ...findWorkspacePackages(repoRootPath)]);
-    if (loadComposeStack) {
-      optimizeExclude.add("@semio-tech/compose-react");
-      optimizeExclude.add("@semio-tech/compose-js");
-      optimizeExclude.add("@semio-tech/semio-asset");
-    }
+    const optimizeExclude = new Set<string>([...(config.optimizeDeps.exclude || []), "@semio-tech/ui-react", "@semio-tech/infinite-cavas-react-renderer", ...findWorkspacePackages(repoRootPath), ...activeScopes.flatMap((s) => s.optimizeDepsExclude ?? [])]);
     config.optimizeDeps.exclude = Array.from(optimizeExclude);
     config.optimizeDeps.esbuildOptions = {
       ...(config.optimizeDeps.esbuildOptions || {}),
@@ -223,25 +187,23 @@ const config: StorybookConfig = {
     };
     config.build = config.build || {};
     config.build.target = "es2022";
+    const scopeDefines = {
+      __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
+      __STORYBOOK_ACTIVE_SCOPES__: JSON.stringify(activeScopeIds),
+    };
     if (configType === "DEVELOPMENT") {
       config.mode = "development";
       config.define = {
         ...config.define,
         "process.env.NODE_ENV": JSON.stringify("development"),
-        __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
-        __STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
-        __STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
-        __STORYBOOK_LOAD_COMPOSE__: JSON.stringify(loadComposeStack),
+        ...scopeDefines,
       };
     } else {
       config.mode = "production";
       config.define = {
         ...config.define,
         "process.env.NODE_ENV": JSON.stringify("production"),
-        __STORYBOOK_SCOPE__: JSON.stringify(storybookScope),
-        __STORYBOOK_LOAD_UI__: JSON.stringify(loadUiStack),
-        __STORYBOOK_LOAD_PUZZLE__: JSON.stringify(loadPuzzleStack),
-        __STORYBOOK_LOAD_COMPOSE__: JSON.stringify(loadComposeStack),
+        ...scopeDefines,
       };
     }
     config.worker = {

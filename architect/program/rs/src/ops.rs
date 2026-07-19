@@ -5,14 +5,16 @@ use crate::kernel::{EntityId, TraceLink};
 use crate::program::Program;
 use crate::registers::*;
 use serde::{Deserialize, Serialize};
-use vcs::{
-    apply_collection_op, invert_collection_op, CollectionOp, Operation, OperationDiff, Patchable,
-};
+use vcs::{apply_collection_op, invert_collection_op, CollectionOp, Operation, OperationDiff, Patchable};
 
 // #region 🔖ProgramOp
 /// @emoji 🧩 Typed program document operation for VCS replay and undo.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
+#[allow(
+    clippy::large_enum_variant,
+    reason = "~65 variants each wrap CollectionOp<EntityId, T, TPatch> for a different program register T (Stakeholder..Benchmark); sizes inherently vary with T and boxing every payload is a much larger, separately-scoped restructuring (all apply_collection_op/invert_collection_op call sites + external construction sites) — SetProgram (the one outsized, genuinely-fixable single-field outlier) is already boxed"
+)]
 pub enum ProgramOp {
     Stakeholders(CollectionOp<EntityId, Stakeholder, StakeholderPatch>),
     Users(CollectionOp<EntityId, UserProfile, UserProfilePatch>),
@@ -85,7 +87,7 @@ pub enum ProgramOp {
     UpdateGovernance { patch: GovernancePatch },
     SetAdjacency { adjacency: Adjacency },
     ClearAdjacency { id: EntityId },
-    SetProgram { program: Program },
+    SetProgram { program: Box<Program> },
 }
 
 /// @emoji 🩹 Inverse patch carrier for trace link collection ops.
@@ -189,7 +191,7 @@ pub fn apply_program_op(program: &mut Program, op: &ProgramOp) {
         ProgramOp::Assumptions(collection_op) => apply_collection_op(&mut program.assumptions, collection_op),
         ProgramOp::Constraints(collection_op) => apply_collection_op(&mut program.constraints, collection_op),
         ProgramOp::ComplianceRecords(collection_op) => {
-            apply_collection_op(&mut program.compliance_records, collection_op)
+            apply_collection_op(&mut program.compliance_records, collection_op);
         }
         ProgramOp::Approvals(collection_op) => apply_collection_op(&mut program.approvals, collection_op),
         ProgramOp::Meetings(collection_op) => apply_collection_op(&mut program.meetings, collection_op),
@@ -205,144 +207,77 @@ pub fn apply_program_op(program: &mut Program, op: &ProgramOp) {
         }
         ProgramOp::SetAdjacency { adjacency } => set_adjacency(program, adjacency.clone()),
         ProgramOp::ClearAdjacency { id } => clear_adjacency(program, id),
-        ProgramOp::SetProgram { program: replacement } => *program = replacement.clone(),
+        ProgramOp::SetProgram { program: replacement } => *program = (**replacement).clone(),
     }
 }
 
 /// @emoji ↩️ Computes the inverse op from pre-state for undo.
 pub fn invert_program_op(program: &Program, op: &ProgramOp) -> ProgramOp {
     match op {
-        ProgramOp::Stakeholders(collection_op) => {
-            ProgramOp::Stakeholders(invert_collection_op(&program.stakeholders, collection_op))
-        }
+        ProgramOp::Stakeholders(collection_op) => ProgramOp::Stakeholders(invert_collection_op(&program.stakeholders, collection_op)),
         ProgramOp::Users(collection_op) => ProgramOp::Users(invert_collection_op(&program.users, collection_op)),
-        ProgramOp::Activities(collection_op) => {
-            ProgramOp::Activities(invert_collection_op(&program.activities, collection_op))
-        }
+        ProgramOp::Activities(collection_op) => ProgramOp::Activities(invert_collection_op(&program.activities, collection_op)),
         ProgramOp::Functions(collection_op) => ProgramOp::Functions(invert_collection_op(&program.functions, collection_op)),
         ProgramOp::Elements(collection_op) => ProgramOp::Elements(invert_collection_op(&program.elements, collection_op)),
-        ProgramOp::Quantities(collection_op) => {
-            ProgramOp::Quantities(invert_collection_op(&program.quantities, collection_op))
-        }
-        ProgramOp::Relationships(collection_op) => {
-            ProgramOp::Relationships(invert_collection_op(&program.relationships, collection_op))
-        }
-        ProgramOp::Adjacencies(collection_op) => {
-            ProgramOp::Adjacencies(invert_collection_op(&program.adjacencies, collection_op))
-        }
+        ProgramOp::Quantities(collection_op) => ProgramOp::Quantities(invert_collection_op(&program.quantities, collection_op)),
+        ProgramOp::Relationships(collection_op) => ProgramOp::Relationships(invert_collection_op(&program.relationships, collection_op)),
+        ProgramOp::Adjacencies(collection_op) => ProgramOp::Adjacencies(invert_collection_op(&program.adjacencies, collection_op)),
         ProgramOp::Processes(collection_op) => ProgramOp::Processes(invert_collection_op(&program.processes, collection_op)),
         ProgramOp::Flows(collection_op) => ProgramOp::Flows(invert_collection_op(&program.flows, collection_op)),
-        ProgramOp::AccessRules(collection_op) => {
-            ProgramOp::AccessRules(invert_collection_op(&program.access_rules, collection_op))
-        }
-        ProgramOp::Operations(collection_op) => {
-            ProgramOp::Operations(invert_collection_op(&program.operations, collection_op))
-        }
+        ProgramOp::AccessRules(collection_op) => ProgramOp::AccessRules(invert_collection_op(&program.access_rules, collection_op)),
+        ProgramOp::Operations(collection_op) => ProgramOp::Operations(invert_collection_op(&program.operations, collection_op)),
         ProgramOp::Equipment(collection_op) => ProgramOp::Equipment(invert_collection_op(&program.equipment, collection_op)),
         ProgramOp::Resources(collection_op) => ProgramOp::Resources(invert_collection_op(&program.resources, collection_op)),
         ProgramOp::Storage(collection_op) => ProgramOp::Storage(invert_collection_op(&program.storage, collection_op)),
-        ProgramOp::Environmental(collection_op) => {
-            ProgramOp::Environmental(invert_collection_op(&program.environmental, collection_op))
-        }
-        ProgramOp::HumanFactors(collection_op) => {
-            ProgramOp::HumanFactors(invert_collection_op(&program.human_factors, collection_op))
-        }
-        ProgramOp::Accessibility(collection_op) => {
-            ProgramOp::Accessibility(invert_collection_op(&program.accessibility, collection_op))
-        }
+        ProgramOp::Environmental(collection_op) => ProgramOp::Environmental(invert_collection_op(&program.environmental, collection_op)),
+        ProgramOp::HumanFactors(collection_op) => ProgramOp::HumanFactors(invert_collection_op(&program.human_factors, collection_op)),
+        ProgramOp::Accessibility(collection_op) => ProgramOp::Accessibility(invert_collection_op(&program.accessibility, collection_op)),
         ProgramOp::Privacy(collection_op) => ProgramOp::Privacy(invert_collection_op(&program.privacy, collection_op)),
         ProgramOp::Safety(collection_op) => ProgramOp::Safety(invert_collection_op(&program.safety, collection_op)),
         ProgramOp::Security(collection_op) => ProgramOp::Security(invert_collection_op(&program.security, collection_op)),
-        ProgramOp::Regulatory(collection_op) => {
-            ProgramOp::Regulatory(invert_collection_op(&program.regulatory, collection_op))
-        }
-        ProgramOp::SiteContext(collection_op) => {
-            ProgramOp::SiteContext(invert_collection_op(&program.site_context, collection_op))
-        }
-        ProgramOp::Organizational(collection_op) => {
-            ProgramOp::Organizational(invert_collection_op(&program.organizational, collection_op))
-        }
+        ProgramOp::Regulatory(collection_op) => ProgramOp::Regulatory(invert_collection_op(&program.regulatory, collection_op)),
+        ProgramOp::SiteContext(collection_op) => ProgramOp::SiteContext(invert_collection_op(&program.site_context, collection_op)),
+        ProgramOp::Organizational(collection_op) => ProgramOp::Organizational(invert_collection_op(&program.organizational, collection_op)),
         ProgramOp::Services(collection_op) => ProgramOp::Services(invert_collection_op(&program.services, collection_op)),
-        ProgramOp::Infrastructure(collection_op) => {
-            ProgramOp::Infrastructure(invert_collection_op(&program.infrastructure, collection_op))
-        }
-        ProgramOp::Information(collection_op) => {
-            ProgramOp::Information(invert_collection_op(&program.information, collection_op))
-        }
-        ProgramOp::Communication(collection_op) => {
-            ProgramOp::Communication(invert_collection_op(&program.communication, collection_op))
-        }
-        ProgramOp::Wayfinding(collection_op) => {
-            ProgramOp::Wayfinding(invert_collection_op(&program.wayfinding, collection_op))
-        }
+        ProgramOp::Infrastructure(collection_op) => ProgramOp::Infrastructure(invert_collection_op(&program.infrastructure, collection_op)),
+        ProgramOp::Information(collection_op) => ProgramOp::Information(invert_collection_op(&program.information, collection_op)),
+        ProgramOp::Communication(collection_op) => ProgramOp::Communication(invert_collection_op(&program.communication, collection_op)),
+        ProgramOp::Wayfinding(collection_op) => ProgramOp::Wayfinding(invert_collection_op(&program.wayfinding, collection_op)),
         ProgramOp::Schedules(collection_op) => ProgramOp::Schedules(invert_collection_op(&program.schedules, collection_op)),
-        ProgramOp::Flexibility(collection_op) => {
-            ProgramOp::Flexibility(invert_collection_op(&program.flexibility, collection_op))
-        }
+        ProgramOp::Flexibility(collection_op) => ProgramOp::Flexibility(invert_collection_op(&program.flexibility, collection_op)),
         ProgramOp::Growth(collection_op) => ProgramOp::Growth(invert_collection_op(&program.growth, collection_op)),
-        ProgramOp::Sustainability(collection_op) => {
-            ProgramOp::Sustainability(invert_collection_op(&program.sustainability, collection_op))
-        }
-        ProgramOp::Resilience(collection_op) => {
-            ProgramOp::Resilience(invert_collection_op(&program.resilience, collection_op))
-        }
+        ProgramOp::Sustainability(collection_op) => ProgramOp::Sustainability(invert_collection_op(&program.sustainability, collection_op)),
+        ProgramOp::Resilience(collection_op) => ProgramOp::Resilience(invert_collection_op(&program.resilience, collection_op)),
         ProgramOp::Costs(collection_op) => ProgramOp::Costs(invert_collection_op(&program.costs, collection_op)),
         ProgramOp::Delivery(collection_op) => ProgramOp::Delivery(invert_collection_op(&program.delivery, collection_op)),
         ProgramOp::Risks(collection_op) => ProgramOp::Risks(invert_collection_op(&program.risks, collection_op)),
         ProgramOp::Conflicts(collection_op) => ProgramOp::Conflicts(invert_collection_op(&program.conflicts, collection_op)),
-        ProgramOp::Requirements(collection_op) => {
-            ProgramOp::Requirements(invert_collection_op(&program.requirements, collection_op))
-        }
-        ProgramOp::Priorities(collection_op) => {
-            ProgramOp::Priorities(invert_collection_op(&program.priorities, collection_op))
-        }
+        ProgramOp::Requirements(collection_op) => ProgramOp::Requirements(invert_collection_op(&program.requirements, collection_op)),
+        ProgramOp::Priorities(collection_op) => ProgramOp::Priorities(invert_collection_op(&program.priorities, collection_op)),
         ProgramOp::Scenarios(collection_op) => ProgramOp::Scenarios(invert_collection_op(&program.scenarios, collection_op)),
         ProgramOp::Options(collection_op) => ProgramOp::Options(invert_collection_op(&program.options, collection_op)),
         ProgramOp::Decisions(collection_op) => ProgramOp::Decisions(invert_collection_op(&program.decisions, collection_op)),
-        ProgramOp::Validations(collection_op) => {
-            ProgramOp::Validations(invert_collection_op(&program.validations, collection_op))
-        }
-        ProgramOp::Performance(collection_op) => {
-            ProgramOp::Performance(invert_collection_op(&program.performance, collection_op))
-        }
+        ProgramOp::Validations(collection_op) => ProgramOp::Validations(invert_collection_op(&program.validations, collection_op)),
+        ProgramOp::Performance(collection_op) => ProgramOp::Performance(invert_collection_op(&program.performance, collection_op)),
         ProgramOp::Quality(collection_op) => ProgramOp::Quality(invert_collection_op(&program.quality, collection_op)),
         ProgramOp::Documents(collection_op) => ProgramOp::Documents(invert_collection_op(&program.documents, collection_op)),
         ProgramOp::Changes(collection_op) => ProgramOp::Changes(invert_collection_op(&program.changes, collection_op)),
-        ProgramOp::Collaboration(collection_op) => {
-            ProgramOp::Collaboration(invert_collection_op(&program.collaboration, collection_op))
-        }
+        ProgramOp::Collaboration(collection_op) => ProgramOp::Collaboration(invert_collection_op(&program.collaboration, collection_op)),
         ProgramOp::Analyses(collection_op) => ProgramOp::Analyses(invert_collection_op(&program.analyses, collection_op)),
         ProgramOp::Reports(collection_op) => ProgramOp::Reports(invert_collection_op(&program.reports, collection_op)),
-        ProgramOp::SearchFilters(collection_op) => {
-            ProgramOp::SearchFilters(invert_collection_op(&program.search_filters, collection_op))
-        }
-        ProgramOp::StatusRecords(collection_op) => {
-            ProgramOp::StatusRecords(invert_collection_op(&program.status_records, collection_op))
-        }
+        ProgramOp::SearchFilters(collection_op) => ProgramOp::SearchFilters(invert_collection_op(&program.search_filters, collection_op)),
+        ProgramOp::StatusRecords(collection_op) => ProgramOp::StatusRecords(invert_collection_op(&program.status_records, collection_op)),
         ProgramOp::Workshops(collection_op) => ProgramOp::Workshops(invert_collection_op(&program.workshops, collection_op)),
         ProgramOp::Surveys(collection_op) => ProgramOp::Surveys(invert_collection_op(&program.surveys, collection_op)),
         ProgramOp::Issues(collection_op) => ProgramOp::Issues(invert_collection_op(&program.issues, collection_op)),
-        ProgramOp::AuditEvents(collection_op) => {
-            ProgramOp::AuditEvents(invert_collection_op(&program.audit_events, collection_op))
-        }
+        ProgramOp::AuditEvents(collection_op) => ProgramOp::AuditEvents(invert_collection_op(&program.audit_events, collection_op)),
         ProgramOp::Templates(collection_op) => ProgramOp::Templates(invert_collection_op(&program.templates, collection_op)),
         ProgramOp::Knowledge(collection_op) => ProgramOp::Knowledge(invert_collection_op(&program.knowledge, collection_op)),
-        ProgramOp::Benchmarks(collection_op) => {
-            ProgramOp::Benchmarks(invert_collection_op(&program.benchmarks, collection_op))
-        }
-        ProgramOp::Assumptions(collection_op) => {
-            ProgramOp::Assumptions(invert_collection_op(&program.assumptions, collection_op))
-        }
-        ProgramOp::Constraints(collection_op) => {
-            ProgramOp::Constraints(invert_collection_op(&program.constraints, collection_op))
-        }
-        ProgramOp::ComplianceRecords(collection_op) => ProgramOp::ComplianceRecords(invert_collection_op(
-            &program.compliance_records,
-            collection_op,
-        )),
-        ProgramOp::Approvals(collection_op) => {
-            ProgramOp::Approvals(invert_collection_op(&program.approvals, collection_op))
-        }
+        ProgramOp::Benchmarks(collection_op) => ProgramOp::Benchmarks(invert_collection_op(&program.benchmarks, collection_op)),
+        ProgramOp::Assumptions(collection_op) => ProgramOp::Assumptions(invert_collection_op(&program.assumptions, collection_op)),
+        ProgramOp::Constraints(collection_op) => ProgramOp::Constraints(invert_collection_op(&program.constraints, collection_op)),
+        ProgramOp::ComplianceRecords(collection_op) => ProgramOp::ComplianceRecords(invert_collection_op(&program.compliance_records, collection_op)),
+        ProgramOp::Approvals(collection_op) => ProgramOp::Approvals(invert_collection_op(&program.approvals, collection_op)),
         ProgramOp::Meetings(collection_op) => ProgramOp::Meetings(invert_collection_op(&program.meetings, collection_op)),
         ProgramOp::Traces(collection_op) => ProgramOp::Traces(invert_collection_op(&program.traces, collection_op)),
         ProgramOp::UpdateMeta { patch } => {
@@ -362,22 +297,16 @@ pub fn invert_program_op(program: &Program, op: &ProgramOp) -> ProgramOp {
         }
         ProgramOp::SetAdjacency { adjacency } => {
             if let Some(existing) = program.adjacencies.iter().find(|row| row.header.id == adjacency.header.id) {
-                ProgramOp::SetAdjacency {
-                    adjacency: existing.clone(),
-                }
+                ProgramOp::SetAdjacency { adjacency: existing.clone() }
             } else {
-                ProgramOp::ClearAdjacency {
-                    id: adjacency.header.id.clone(),
-                }
+                ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() }
             }
         }
         ProgramOp::ClearAdjacency { id } => match program.adjacencies.iter().find(|row| &row.header.id == id).cloned() {
             Some(existing) => ProgramOp::SetAdjacency { adjacency: existing },
             None => ProgramOp::ClearAdjacency { id: id.clone() },
         },
-        ProgramOp::SetProgram { .. } => ProgramOp::SetProgram {
-            program: program.clone(),
-        },
+        ProgramOp::SetProgram { .. } => ProgramOp::SetProgram { program: Box::new(program.clone()) },
     }
 }
 // #endregion
@@ -426,12 +355,7 @@ mod tests {
     #[test]
     fn update_meta_round_trips_undo() {
         let mut program = empty_program();
-        let op = ProgramOp::UpdateMeta {
-            patch: ProgramMetaPatch {
-                title: Some("Clinic".into()),
-                ..Default::default()
-            },
-        };
+        let op = ProgramOp::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } };
         let inverse = invert_program_op(&program, &op);
         apply_program_op(&mut program, &op);
         assert_eq!(program.meta.title, "Clinic");
@@ -471,10 +395,7 @@ mod tests {
             success_metrics: Vec::new(),
         };
         let id = stakeholder.header.id.clone();
-        let op = ProgramOp::Stakeholders(CollectionOp::Add {
-            index: program.stakeholders.len(),
-            item: stakeholder,
-        });
+        let op = ProgramOp::Stakeholders(CollectionOp::Add { index: program.stakeholders.len(), item: stakeholder });
         apply_program_op(&mut program, &op);
         assert_eq!(program.stakeholders.len(), before + 1);
         let undo = invert_program_op(&program, &op);
@@ -486,12 +407,7 @@ mod tests {
     fn set_program_bulk_replace() {
         let mut program = empty_program();
         let sample = sample_program();
-        apply_program_op(
-            &mut program,
-            &ProgramOp::SetProgram {
-                program: sample.clone(),
-            },
-        );
+        apply_program_op(&mut program, &ProgramOp::SetProgram { program: Box::new(sample.clone()) });
         assert_eq!(program.elements.len(), sample.elements.len());
     }
 }

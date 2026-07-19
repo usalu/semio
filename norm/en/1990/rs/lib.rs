@@ -1,9 +1,6 @@
 //! ⚖️ EN 1990 basis of structural design: combinations, partial factors, reliability.
 
-use norm_core::{
-    AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory,
-    LimitState, Quantity,
-};
+use norm_core::{AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory, LimitState, Quantity};
 use serde::{Deserialize, Serialize};
 
 pub use norm_core::NationalAnnex;
@@ -19,151 +16,39 @@ pub struct PsiRow {
 
 fn psi_row_de(category: &str) -> PsiRow {
     match category {
-        "residential" | "A" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "office" | "B" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "congregation" | "C" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "retail" | "D" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "storage" | "E" => PsiRow {
-            psi_0: 1.0,
-            psi_1: 0.9,
-            psi_2: 0.8,
-        },
-        "traffic_light" | "F" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "traffic_heavy" | "G" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "roof" | "H" => PsiRow {
-            psi_0: 0.0,
-            psi_1: 0.0,
-            psi_2: 0.0,
-        },
-        "snow" => PsiRow {
-            psi_0: 0.5,
-            psi_1: 0.2,
-            psi_2: 0.0,
-        },
-        "snow_high" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.2,
-        },
-        "wind" => PsiRow {
-            psi_0: 0.6,
-            psi_1: 0.2,
-            psi_2: 0.0,
-        },
-        "temperature" => PsiRow {
-            psi_0: 0.6,
-            psi_1: 0.5,
-            psi_2: 0.0,
-        },
-        "settlement" => PsiRow {
-            psi_0: 1.0,
-            psi_1: 1.0,
-            psi_2: 1.0,
-        },
-        "other" => PsiRow {
-            psi_0: 0.8,
-            psi_1: 0.7,
-            psi_2: 0.5,
-        },
-        _ => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
+        "residential" | "A" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "office" | "B" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "congregation" | "C" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "retail" | "D" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "storage" | "E" => PsiRow { psi_0: 1.0, psi_1: 0.9, psi_2: 0.8 },
+        "traffic_light" | "F" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "traffic_heavy" | "G" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "roof" | "H" => PsiRow { psi_0: 0.0, psi_1: 0.0, psi_2: 0.0 },
+        "snow" => PsiRow { psi_0: 0.5, psi_1: 0.2, psi_2: 0.0 },
+        "snow_high" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.2 },
+        "wind" => PsiRow { psi_0: 0.6, psi_1: 0.2, psi_2: 0.0 },
+        "temperature" => PsiRow { psi_0: 0.6, psi_1: 0.5, psi_2: 0.0 },
+        "settlement" => PsiRow { psi_0: 1.0, psi_1: 1.0, psi_2: 1.0 },
+        "other" => PsiRow { psi_0: 0.8, psi_1: 0.7, psi_2: 0.5 },
+        _ => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
     }
 }
 
 fn psi_row_en(category: &str) -> PsiRow {
     match category {
-        "residential" | "A" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "office" | "B" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "congregation" | "C" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "retail" | "D" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "storage" | "E" => PsiRow {
-            psi_0: 1.0,
-            psi_1: 0.9,
-            psi_2: 0.8,
-        },
-        "traffic_light" | "F" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.7,
-            psi_2: 0.6,
-        },
-        "traffic_heavy" | "G" => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
-        "roof" | "H" => PsiRow {
-            psi_0: 0.0,
-            psi_1: 0.0,
-            psi_2: 0.0,
-        },
-        "snow" => PsiRow {
-            psi_0: 0.5,
-            psi_1: 0.2,
-            psi_2: 0.0,
-        },
-        "wind" => PsiRow {
-            psi_0: 0.6,
-            psi_1: 0.2,
-            psi_2: 0.0,
-        },
-        "temperature" => PsiRow {
-            psi_0: 0.6,
-            psi_1: 0.5,
-            psi_2: 0.0,
-        },
-        "settlement" => PsiRow {
-            psi_0: 1.0,
-            psi_1: 1.0,
-            psi_2: 1.0,
-        },
-        _ => PsiRow {
-            psi_0: 0.7,
-            psi_1: 0.5,
-            psi_2: 0.3,
-        },
+        "residential" | "A" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "office" | "B" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "congregation" | "C" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "retail" | "D" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "storage" | "E" => PsiRow { psi_0: 1.0, psi_1: 0.9, psi_2: 0.8 },
+        "traffic_light" | "F" => PsiRow { psi_0: 0.7, psi_1: 0.7, psi_2: 0.6 },
+        "traffic_heavy" | "G" => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
+        "roof" | "H" => PsiRow { psi_0: 0.0, psi_1: 0.0, psi_2: 0.0 },
+        "snow" => PsiRow { psi_0: 0.5, psi_1: 0.2, psi_2: 0.0 },
+        "wind" => PsiRow { psi_0: 0.6, psi_1: 0.2, psi_2: 0.0 },
+        "temperature" => PsiRow { psi_0: 0.6, psi_1: 0.5, psi_2: 0.0 },
+        "settlement" => PsiRow { psi_0: 1.0, psi_1: 1.0, psi_2: 1.0 },
+        _ => PsiRow { psi_0: 0.7, psi_1: 0.5, psi_2: 0.3 },
     }
 }
 
@@ -310,9 +195,7 @@ pub enum CombinationRule {
 
 fn gamma_for_situation(annex: &dyn NationalAnnex, situation: DesignSituation) -> (f64, f64) {
     match situation {
-        DesignSituation::Persistent | DesignSituation::Transient => {
-            (annex.gamma_g(), annex.gamma_q())
-        }
+        DesignSituation::Persistent | DesignSituation::Transient => (annex.gamma_g(), annex.gamma_q()),
         DesignSituation::Accidental | DesignSituation::Seismic => (1.0, 1.0),
     }
 }
@@ -334,11 +217,7 @@ pub fn combination_6_10(annex: &dyn NationalAnnex, actions: &ActionSet, leading:
 pub fn combination_6_10a(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
-        let factor = if i == leading {
-            annex.gamma_q()
-        } else {
-            annex.gamma_q() * annex.psi_0(cat)
-        };
+        let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
         sum += factor * q;
     }
     sum
@@ -349,24 +228,14 @@ pub fn combination_6_10b(annex: &dyn NationalAnnex, actions: &ActionSet, leading
     let xi = annex.xi("permanent");
     let mut sum = xi * annex.gamma_g() * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
-        let factor = if i == leading {
-            annex.gamma_q()
-        } else {
-            annex.gamma_q() * annex.psi_0(cat)
-        };
+        let factor = if i == leading { annex.gamma_q() } else { annex.gamma_q() * annex.psi_0(cat) };
         sum += factor * q;
     }
     sum
 }
 
 /// 🧮 ULS combination for a design situation with situation-specific γ factors.
-pub fn combination_uls(
-    annex: &dyn NationalAnnex,
-    situation: DesignSituation,
-    rule: CombinationRule,
-    actions: &ActionSet,
-    leading: usize,
-) -> f64 {
+pub fn combination_uls(annex: &dyn NationalAnnex, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     let (gamma_g, gamma_q) = gamma_for_situation(annex, situation);
     let xi = xi_for_situation(annex, situation);
     let g_factor = match rule {
@@ -375,11 +244,7 @@ pub fn combination_uls(
     };
     let mut sum = g_factor * actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
-        let factor = if i == leading {
-            gamma_q
-        } else {
-            gamma_q * annex.psi_0(cat)
-        };
+        let factor = if i == leading { gamma_q } else { gamma_q * annex.psi_0(cat) };
         sum += factor * q;
     }
     sum
@@ -396,18 +261,10 @@ pub fn combination_sls_char(annex: &dyn NationalAnnex, actions: &ActionSet, lead
 }
 
 /// 🧮 SLS frequent combination: G + ψ_1·Q_leading + ψ_2·ΣQ_accompanying.
-pub fn combination_sls_frequent(
-    annex: &dyn NationalAnnex,
-    actions: &ActionSet,
-    leading: usize,
-) -> f64 {
+pub fn combination_sls_frequent(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize) -> f64 {
     let mut sum = actions.g_k;
     for (i, (cat, q)) in actions.q_k.iter().enumerate() {
-        let factor = if i == leading {
-            annex.psi_1(cat)
-        } else {
-            annex.psi_2(cat)
-        };
+        let factor = if i == leading { annex.psi_1(cat) } else { annex.psi_2(cat) };
         sum += factor * q;
     }
     sum
@@ -422,12 +279,7 @@ pub fn combination_sls_quasi_permanent(annex: &dyn NationalAnnex, actions: &Acti
     sum
 }
 
-pub fn combination_value(
-    annex: &dyn NationalAnnex,
-    rule: CombinationRule,
-    actions: &ActionSet,
-    leading: usize,
-) -> f64 {
+pub fn combination_value(annex: &dyn NationalAnnex, rule: CombinationRule, actions: &ActionSet, leading: usize) -> f64 {
     match rule {
         CombinationRule::Uls610 => combination_6_10(annex, actions, leading),
         CombinationRule::Uls610a => combination_6_10a(annex, actions, leading),
@@ -442,20 +294,12 @@ pub fn combination_value(
 pub fn rules_for_situation(situation: DesignSituation, limit_state: LimitState) -> Vec<CombinationRule> {
     match (situation, limit_state) {
         (DesignSituation::Persistent | DesignSituation::Transient, LimitState::Uls) => {
-            vec![
-                CombinationRule::Uls610,
-                CombinationRule::Uls610a,
-                CombinationRule::Uls610b,
-            ]
+            vec![CombinationRule::Uls610, CombinationRule::Uls610a, CombinationRule::Uls610b]
         }
         (DesignSituation::Accidental | DesignSituation::Seismic, LimitState::Uls) => {
             vec![CombinationRule::Uls610a]
         }
-        (_, LimitState::Sls) => vec![
-            CombinationRule::SlsCharacteristic,
-            CombinationRule::SlsFrequent,
-            CombinationRule::SlsQuasiPermanent,
-        ],
+        (_, LimitState::Sls) => vec![CombinationRule::SlsCharacteristic, CombinationRule::SlsFrequent, CombinationRule::SlsQuasiPermanent],
         (_, LimitState::Als) => vec![CombinationRule::Uls610a],
         (_, LimitState::Fls) => vec![CombinationRule::Uls610a],
     }
@@ -484,38 +328,13 @@ fn message_for_rule(rule: CombinationRule, leading: usize) -> String {
 }
 
 /// ✅ Check one combination against a resistance limit [kN].
-pub fn check_combination(
-    annex: &dyn NationalAnnex,
-    situation: DesignSituation,
-    rule: CombinationRule,
-    actions: &ActionSet,
-    leading: usize,
-    resistance_kn: f64,
-) -> CheckResult {
-    let ed = if matches!(
-        rule,
-        CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b
-    ) {
-        combination_uls(annex, situation, rule, actions, leading)
-    } else {
-        combination_value(annex, rule, actions, leading)
-    };
-    CheckResult::from_utilization(
-        clause_for_rule(rule),
-        Quantity::force_kn(ed),
-        Quantity::force_kn(resistance_kn),
-        message_for_rule(rule, leading),
-        annex.choice(),
-    )
+pub fn check_combination(annex: &dyn NationalAnnex, situation: DesignSituation, rule: CombinationRule, actions: &ActionSet, leading: usize, resistance_kn: f64) -> CheckResult {
+    let ed = if matches!(rule, CombinationRule::Uls610 | CombinationRule::Uls610a | CombinationRule::Uls610b) { combination_uls(annex, situation, rule, actions, leading) } else { combination_value(annex, rule, actions, leading) };
+    CheckResult::from_utilization(clause_for_rule(rule), Quantity::force_kn(ed), Quantity::force_kn(resistance_kn), message_for_rule(rule, leading), annex.choice())
 }
 
 /// ✅ Run all relevant combinations for an action set in a design situation.
-pub fn check_combination_set(
-    annex: &dyn NationalAnnex,
-    situation: DesignSituation,
-    actions: &ActionSet,
-    resistance_kn: f64,
-) -> CheckReport {
+pub fn check_combination_set(annex: &dyn NationalAnnex, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) -> CheckReport {
     let mut report = CheckReport::default();
     let n_leading = actions.q_k.len().max(1);
     for rule in rules_for_situation(situation, LimitState::Uls) {
@@ -523,41 +342,20 @@ pub fn check_combination_set(
             if actions.q_k.is_empty() && leading > 0 {
                 break;
             }
-            report.push(check_combination(
-                annex,
-                situation,
-                rule,
-                actions,
-                leading,
-                resistance_kn,
-            ));
+            report.push(check_combination(annex, situation, rule, actions, leading, resistance_kn));
         }
     }
     for rule in rules_for_situation(situation, LimitState::Sls) {
         match rule {
             CombinationRule::SlsQuasiPermanent => {
-                report.push(check_combination(
-                    annex,
-                    situation,
-                    rule,
-                    actions,
-                    0,
-                    resistance_kn,
-                ));
+                report.push(check_combination(annex, situation, rule, actions, 0, resistance_kn));
             }
             _ => {
                 for leading in 0..n_leading {
                     if actions.q_k.is_empty() && leading > 0 {
                         break;
                     }
-                    report.push(check_combination(
-                        annex,
-                        situation,
-                        rule,
-                        actions,
-                        leading,
-                        resistance_kn,
-                    ));
+                    report.push(check_combination(annex, situation, rule, actions, leading, resistance_kn));
                 }
             }
         }
@@ -566,20 +364,9 @@ pub fn check_combination_set(
 }
 
 /// ✅ Check design action against resistance (ULS).
-pub fn check_uls_action(
-    annex: &dyn NationalAnnex,
-    actions: &ActionSet,
-    leading: usize,
-    resistance: f64,
-) -> CheckResult {
+pub fn check_uls_action(annex: &dyn NationalAnnex, actions: &ActionSet, leading: usize, resistance: f64) -> CheckResult {
     let ed = combination_6_10(annex, actions, leading);
-    CheckResult::from_utilization(
-        ClauseId::new("EN 1990", "§6.4", "6.10"),
-        Quantity::force_kn(ed),
-        Quantity::force_kn(resistance),
-        "ULS design action",
-        annex.choice(),
-    )
+    CheckResult::from_utilization(ClauseId::new("EN 1990", "§6.4", "6.10"), Quantity::force_kn(ed), Quantity::force_kn(resistance), "ULS design action", annex.choice())
 }
 // #endregion 🔖Combinations
 
@@ -599,18 +386,10 @@ pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult 
     let passes = beta >= target;
     CheckResult {
         clause: ClauseId::new("EN 1990", "Annex C", "C.2"),
-        status: if passes {
-            CheckStatus::Pass
-        } else {
-            CheckStatus::Fail
-        },
+        status: if passes { CheckStatus::Pass } else { CheckStatus::Fail },
         computed: Quantity::new(norm_core::QuantityKind::Dimensionless, beta),
         limit: Quantity::new(norm_core::QuantityKind::Dimensionless, target),
-        utilization: if passes {
-            target / beta
-        } else {
-            beta / target
-        },
+        utilization: if passes { target / beta } else { beta / target },
         message: "reliability index β".into(),
         annex: AnnexChoice::En,
     }
@@ -618,12 +397,7 @@ pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult 
 // #endregion 🔖Reliability
 
 /// 📋 Run EN 1990 design basis checks.
-pub fn check_design_basis(
-    annex: &dyn NationalAnnex,
-    actions: &ActionSet,
-    resistance_kn: f64,
-    consequence_class: u8,
-) -> CheckReport {
+pub fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
     let mut report = check_combination_set(annex, DesignSituation::Persistent, actions, resistance_kn);
     report.push(check_reliability_index(3.9, consequence_class));
     let _ = LimitState::Uls;
@@ -645,13 +419,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            g_k: 100.0,
-            q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)],
-            resistance_kn: 300.0,
-            consequence_class: 2,
-            use_de_na: true,
-        }
+        Self { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)], resistance_kn: 300.0, consequence_class: 2, use_de_na: true }
     }
 }
 
@@ -659,21 +427,9 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1990Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    let actions = ActionSet {
-        g_k: document.g_k,
-        q_k: document.q_k.clone(),
-    };
-    let annex: &dyn NationalAnnex = if document.use_de_na {
-        &NaDe
-    } else {
-        &NaEn
-    };
-    check_design_basis(
-        annex,
-        &actions,
-        document.resistance_kn,
-        document.consequence_class,
-    )
+    let actions = ActionSet { g_k: document.g_k, q_k: document.q_k.clone() };
+    let annex: &dyn NationalAnnex = if document.use_de_na { &NaDe } else { &NaEn };
+    check_design_basis(annex, &actions, document.resistance_kn, document.consequence_class)
 }
 
 pub struct En1990Family;
@@ -697,10 +453,7 @@ mod tests {
     use super::*;
 
     fn sample_actions() -> ActionSet {
-        ActionSet {
-            g_k: 100.0,
-            q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)],
-        }
+        ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)] }
     }
 
     #[test]
@@ -733,10 +486,7 @@ mod tests {
     fn en_combination_6_10a_differs_on_other_psi() {
         let de = NaDe;
         let en = NaEn;
-        let actions = ActionSet {
-            g_k: 100.0,
-            q_k: vec![("office".into(), 50.0), ("other".into(), 30.0)],
-        };
+        let actions = ActionSet { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("other".into(), 30.0)] };
         let de_ed = combination_6_10a(&de, &actions, 0);
         let en_ed = combination_6_10a(&en, &actions, 0);
         assert!((de_ed - 246.0).abs() < 1e-9);
@@ -754,10 +504,7 @@ mod tests {
         assert!((en.psi_0("other") - 0.7).abs() < 1e-9);
         assert!((de.psi_0("wind") - 0.6).abs() < 1e-9);
         assert!((en.psi_0("wind") - 0.6).abs() < 1e-9);
-        let actions = ActionSet {
-            g_k: 100.0,
-            q_k: vec![("congregation".into(), 50.0)],
-        };
+        let actions = ActionSet { g_k: 100.0, q_k: vec![("congregation".into(), 50.0)] };
         let de_freq = combination_sls_frequent(&de, &actions, 0);
         let en_freq = combination_sls_frequent(&en, &actions, 0);
         assert!((de_freq - 135.0).abs() < 1e-9);
@@ -783,16 +530,7 @@ mod tests {
     #[test]
     fn imposed_categories_a_to_h_de() {
         let annex = NaDe;
-        for cat in [
-            ImposedCategory::A,
-            ImposedCategory::B,
-            ImposedCategory::C,
-            ImposedCategory::D,
-            ImposedCategory::E,
-            ImposedCategory::F,
-            ImposedCategory::G,
-            ImposedCategory::H,
-        ] {
+        for cat in [ImposedCategory::A, ImposedCategory::B, ImposedCategory::C, ImposedCategory::D, ImposedCategory::E, ImposedCategory::F, ImposedCategory::G, ImposedCategory::H] {
             let row = psi_for_imposed(&annex, cat);
             let label = cat.label();
             assert!((annex.psi_0(label) - row.psi_0).abs() < 1e-9);

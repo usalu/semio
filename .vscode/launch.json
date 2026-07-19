@@ -1789,6 +1789,196 @@
       }
     },
     {
+      "name": "🛠️dev📖storybook🎨styling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:styling",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 460
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧩puzzle🧊3d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:puzzle:3d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 470
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧩puzzle🕐5d",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:puzzle:5d",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 480
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🛠️framework",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:framework",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 490
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🛠️framework🔌hosts",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:framework:hosts",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 400
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🛠️framework🖥️os",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:framework:os",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 410
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook♾️infinite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:infinite",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 420
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook📐cad",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:cad",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 430
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🧠coda",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:coda",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 440
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
+      "name": "🛠️dev📖storybook🎬animate",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:storybook:animate",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "STORYBOOK_PORT": "6010"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 450
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6010)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🔺trinity🃏jack⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -2570,6 +2760,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.7
+      }
+    },
+    {
+      "name": "🧪test🕸️mathematical-graph",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p mathematical_graph -p mathematical_graph_drawing -p mathematical_algebra -p mathematical_random -p mathematical_graph_traversal -p mathematical_graph_components -p mathematical_graph_dag -p mathematical_graph_cycles -p mathematical_graph_paths -p mathematical_graph_operators -p mathematical_graph_coloring -p mathematical_graph_generate -p mathematical_graph_generate_random -p mathematical_graph_io -p mathematical_graph_structure -p mathematical_graph_cliques -p mathematical_graph_clustering -p mathematical_graph_matching -p mathematical_graph_bipartite -p mathematical_graph_trees -p mathematical_graph_planarity -p mathematical_graph_flow -p mathematical_graph_centrality -p mathematical_graph_distance -p mathematical_graph_similarity -p mathematical_graph_isomorphism -p mathematical_graph_connectivity -p mathematical_graph_community -p mathematical_graph_approximation -p mathematical_graph_spectral -p mathematical_graph_normal_undirected -p mathematical_graph_normal_directed -p mathematical_graph_port_undirected -p mathematical_graph_port_directed_normal",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.75
       }
     },
     {

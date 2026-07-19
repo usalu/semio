@@ -42,11 +42,7 @@ pub fn mean_radiant_temp_c(surface_temps_k: &[f64], view_factors: &[f64]) -> f64
     if surface_temps_k.is_empty() || surface_temps_k.len() != view_factors.len() {
         return 293.15 - 273.15;
     }
-    let t4: f64 = surface_temps_k
-        .iter()
-        .zip(view_factors.iter())
-        .map(|(&t, &vf)| vf * (t / 100.0).powi(4))
-        .sum();
+    let t4: f64 = surface_temps_k.iter().zip(view_factors.iter()).map(|(&t, &vf)| vf * (t / 100.0).powi(4)).sum();
     100.0 * t4.powf(0.25) - 273.15
 }
 
@@ -62,31 +58,19 @@ pub fn pmv(input: &ComfortInput) -> f64 {
     let m = input.metabolic_rate_met * 58.15;
     let w = input.external_work_met * 58.15;
     let i_cl = 0.155 * input.clothing_insulation_clo;
-    let f_cl = if i_cl <= 0.078 {
-        1.0 + 1.29 * i_cl
-    } else {
-        1.05 + 0.645 * i_cl
-    };
+    let f_cl = if i_cl <= 0.078 { 1.0 + 1.29 * i_cl } else { 1.05 + 0.645 * i_cl };
     let t_a = input.air_temp_c;
     let t_r = input.mean_radiant_temp_c;
     let v = input.air_speed_m_s.max(0.0);
     let p_a = input.relative_humidity.clamp(0.0, 1.0) * saturation_pressure_pa(t_a);
     let t_cl = solve_clothing_temp_c(t_a, t_r, m, w, i_cl, f_cl, v);
-    let h_c = if v < 0.1 {
-        2.38 * (t_cl - t_a).abs().powf(0.25)
-    } else {
-        12.1 * v.sqrt()
-    };
+    let h_c = if v < 0.1 { 2.38 * (t_cl - t_a).abs().powf(0.25) } else { 12.1 * v.sqrt() };
     let t_cl_k = t_cl + 273.15;
     let t_r_k = t_r + 273.15;
     let e_r = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
     let e_c = f_cl * h_c * (t_cl - t_a);
     let e_sw = 3.05e-3 * (5733.0 - 6.99 * (m - w) - p_a).max(0.0);
-    let e_diff = if m > 58.15 {
-        0.42 * (m - w - 58.15)
-    } else {
-        0.0
-    };
+    let e_diff = if m > 58.15 { 0.42 * (m - w - 58.15) } else { 0.0 };
     let e = e_sw + e_diff;
     let c_res = 1.7e-5 * m * (34.0 - t_a);
     let l = m - w - e - e_r - e_c - c_res;
@@ -96,11 +80,7 @@ pub fn pmv(input: &ComfortInput) -> f64 {
 fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
     let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
     for _ in 0..50 {
-        let h_c = if v < 0.1 {
-            2.38 * (t_cl - t_a).abs().powf(0.25)
-        } else {
-            12.1 * v.sqrt()
-        };
+        let h_c = if v < 0.1 { 2.38 * (t_cl - t_a).abs().powf(0.25) } else { 12.1 * v.sqrt() };
         let t_cl_k = t_cl + 273.15;
         let t_r_k = t_r + 273.15;
         let rad = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
@@ -125,11 +105,7 @@ pub fn ppd(pmv_value: f64) -> f64 {
 
 // #region 🔖Adaptive
 /// 🌿 Adaptive comfort acceptable temperature range [°C] (lower, upper).
-pub fn adaptive_comfort_range_c(
-    standard: AdaptiveStandard,
-    running_mean_outdoor_temp_c: f64,
-    acceptability_class: u8,
-) -> (f64, f64) {
+pub fn adaptive_comfort_range_c(standard: AdaptiveStandard, running_mean_outdoor_temp_c: f64, acceptability_class: u8) -> (f64, f64) {
     let t_rm = running_mean_outdoor_temp_c;
     let (center, band) = match standard {
         AdaptiveStandard::Ashrae55 => (0.31 * t_rm + 17.8, if acceptability_class <= 1 { 2.5 } else { 3.5 }),
@@ -139,12 +115,7 @@ pub fn adaptive_comfort_range_c(
 }
 
 /// ✅ Whether operative temperature is within adaptive comfort band.
-pub fn adaptive_comfort_ok(
-    standard: AdaptiveStandard,
-    operative_temp_c: f64,
-    running_mean_outdoor_temp_c: f64,
-    acceptability_class: u8,
-) -> bool {
+pub fn adaptive_comfort_ok(standard: AdaptiveStandard, operative_temp_c: f64, running_mean_outdoor_temp_c: f64, acceptability_class: u8) -> bool {
     let (lo, hi) = adaptive_comfort_range_c(standard, running_mean_outdoor_temp_c, acceptability_class);
     operative_temp_c >= lo && operative_temp_c <= hi
 }
@@ -162,15 +133,7 @@ mod tests {
     use super::*;
 
     fn neutral_input() -> ComfortInput {
-        ComfortInput {
-            air_temp_c: 22.0,
-            mean_radiant_temp_c: 22.0,
-            air_speed_m_s: 0.1,
-            relative_humidity: 0.5,
-            metabolic_rate_met: 1.0,
-            clothing_insulation_clo: 0.5,
-            external_work_met: 0.0,
-        }
+        ComfortInput { air_temp_c: 22.0, mean_radiant_temp_c: 22.0, air_speed_m_s: 0.1, relative_humidity: 0.5, metabolic_rate_met: 1.0, clothing_insulation_clo: 0.5, external_work_met: 0.0 }
     }
 
     #[test]

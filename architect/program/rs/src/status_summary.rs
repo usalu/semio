@@ -61,12 +61,7 @@ pub fn status_summary(program: &Program) -> StatusSummary {
         for header in headers {
             bump_status(&mut tallies, header.status);
         }
-        registers.push(RegisterStatusCount {
-            register: name.into(),
-            count,
-            draft_count,
-            approved_count,
-        });
+        registers.push(RegisterStatusCount { register: name.into(), count, draft_count, approved_count });
     };
 
     collect("stakeholders", program.stakeholders.iter().map(|e| &e.header).collect());
@@ -161,15 +156,7 @@ pub fn status_summary(program: &Program) -> StatusSummary {
 
     tallies.sort_by_key(|(status, _)| format!("{status:?}"));
 
-    StatusSummary {
-        total_entities: total,
-        by_status: tallies,
-        by_register: registers,
-        compliance_status,
-        validation_status,
-        decision_status,
-        action_status,
-    }
+    StatusSummary { total_entities: total, by_status: tallies, by_register: registers, compliance_status, validation_status, decision_status, action_status }
 }
 // #endregion
 

@@ -8,7 +8,7 @@
         "cwd": "ui/js/react",
         "command": "bun ./script.ts dev",
         "env": {
-          "STORYBOOK_PORT": "6006"
+          "STORYBOOK_PORT": "6010"
         },
         "forwardAllArgs": true
       }

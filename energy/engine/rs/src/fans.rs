@@ -57,17 +57,9 @@ pub fn fan_power_w(fan: &Fan, operating: &FanOperatingPoint) -> f64 {
     let speed = operating.speed_ratio.clamp(0.0, 1.2);
 
     let design_dp = fan.max_pressure_rise_pa * fan.pressure_curve.evaluate(plr);
-    let dp = if operating.pressure_rise_pa > 0.0 {
-        operating.pressure_rise_pa
-    } else {
-        fan_law_pressure(design_dp, speed)
-    };
+    let dp = if operating.pressure_rise_pa > 0.0 { operating.pressure_rise_pa } else { fan_law_pressure(design_dp, speed) };
 
-    let flow = if operating.volume_flow_m3_s > 0.0 {
-        operating.volume_flow_m3_s
-    } else {
-        fan_law_flow(fan.max_flow_m3_s * plr, speed)
-    };
+    let flow = if operating.volume_flow_m3_s > 0.0 { operating.volume_flow_m3_s } else { fan_law_flow(fan.max_flow_m3_s * plr, speed) };
 
     let eta_fan = fan.efficiency_curve.evaluate(plr).clamp(0.1, 0.9);
     let eta_motor = fan.motor_efficiency.clamp(0.5, 1.0);
@@ -83,12 +75,7 @@ pub fn fan_operating_point(fan: &Fan, requested_flow_m3_s: f64, system_pressure_
     let plr = (requested_flow_m3_s / fan.max_flow_m3_s.max(1e-6)).clamp(0.0, 1.2);
     let speed = plr.sqrt().clamp(0.0, 1.0);
     let dp_curve = fan.max_pressure_rise_pa * fan.pressure_curve.evaluate(plr);
-    FanOperatingPoint {
-        volume_flow_m3_s: requested_flow_m3_s,
-        pressure_rise_pa: system_pressure_pa.max(dp_curve),
-        part_load_ratio: plr,
-        speed_ratio: speed,
-    }
+    FanOperatingPoint { volume_flow_m3_s: requested_flow_m3_s, pressure_rise_pa: system_pressure_pa.max(dp_curve), part_load_ratio: plr, speed_ratio: speed }
 }
 
 /// 🌬️ Mass flow from volumetric flow and air density.
@@ -100,6 +87,7 @@ pub fn fan_mass_flow_kg_s(volume_flow_m3_s: f64, density_kg_m3: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::units::RHO_AIR_REF;
 
     fn test_fan() -> Fan {
         Fan {
@@ -121,12 +109,7 @@ mod tests {
     #[test]
     fn zero_flow_zero_power() {
         let fan = test_fan();
-        let op = FanOperatingPoint {
-            volume_flow_m3_s: 0.0,
-            pressure_rise_pa: 0.0,
-            part_load_ratio: 0.0,
-            speed_ratio: 0.0,
-        };
+        let op = FanOperatingPoint { volume_flow_m3_s: 0.0, pressure_rise_pa: 0.0, part_load_ratio: 0.0, speed_ratio: 0.0 };
         assert_eq!(fan_power_w(&fan, &op), 0.0);
     }
 

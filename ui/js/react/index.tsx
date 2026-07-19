@@ -238,6 +238,32 @@ export let sceneHostPort: SceneHostPort = {
   },
   three: THREE,
 };
+
+const defaultReactHostPort = reactHostPort;
+const defaultFlowHostPort = flowHostPort;
+const defaultThreeHostPort = threeHostPort;
+const defaultSceneHostPort = sceneHostPort;
+
+/** @emoji 🔌 Overrides for {@link configureHostPorts}; an omitted/`undefined` key resets that port to its default adapter. */
+export type HostPortOverrides = Partial<{
+  readonly react: ReactHostPort;
+  readonly flow: FlowHostPort;
+  readonly three: ThreeHostPort;
+  readonly scene: SceneHostPort;
+  readonly iconRender: IconRenderPort;
+}>;
+
+/** @emoji 🔌 Swaps one or more host ports; ESM importers cannot assign `export let` bindings directly,
+ * so this is the only way to inject a test double or alternate adapter (e.g. Storybook's `withRenderer`
+ * decorator) before a story renders. Every call is a full reset: a key you don't pass reverts to its
+ * default adapter rather than leaving a previous override in place. */
+export function configureHostPorts(overrides: HostPortOverrides): void {
+  reactHostPort = overrides.react ?? defaultReactHostPort;
+  flowHostPort = overrides.flow ?? defaultFlowHostPort;
+  threeHostPort = overrides.three ?? defaultThreeHostPort;
+  sceneHostPort = overrides.scene ?? defaultSceneHostPort;
+  iconRenderPort = overrides.iconRender ?? defaultIconRenderPort;
+}
 // #endregion 🔌PortWiring
 
 // #region 🔖IconRenderPort
@@ -404,8 +430,8 @@ async function applyIconRenderShape(result: IconRenderResult, shape: IconRenderS
   return { dataUrl };
 }
 
-/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG). */
-export const iconRenderPort: IconRenderPort = {
+/** @emoji 🖼️ Default three.js-backed icon render port (SVGRenderer + WebGL PNG), reassignable via {@link configureHostPorts}. */
+export let iconRenderPort: IconRenderPort = {
   async render(request: IconRenderRequest): Promise<IconRenderResult> {
     const model = await loadGlbGroup(request.assetUrl);
     const scene = buildIconScene(request, model);
@@ -414,6 +440,8 @@ export const iconRenderPort: IconRenderPort = {
     return applyIconRenderShape(result, request.shape, request.width, request.height);
   },
 };
+
+const defaultIconRenderPort = iconRenderPort;
 
 /** @emoji 🖼️ Aspect-ratio style keeping a W×H frame inside its container. */
 export function iconShotFrameStyle(width: number, height: number): React.CSSProperties {

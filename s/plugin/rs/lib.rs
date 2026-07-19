@@ -2286,10 +2286,12 @@ pub mod app_studio {
                     if let Some(example_id) = args
                         .and_then(|value| value.get("exampleId"))
                         .and_then(|value| value.as_str())
+                        .filter(|value| !value.is_empty())
                     {
                         // 🧭 Examples are catalog documents in the new topology — selecting one navigates
                         // the shell to that studio route; the host's `openDocument(ref)` loads it (no
-                        // in-place whole-document swap on the plugin side anymore).
+                        // in-place whole-document swap on the plugin side anymore); an empty id is the
+                        // shell's "no example" reset and keeps the current studio route.
                         return ActionEmit::effect(HostEffect::Navigate { uri: format!("/studios/{example_id}") });
                     }
                     return ActionEmit::default();

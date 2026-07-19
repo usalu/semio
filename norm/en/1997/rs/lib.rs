@@ -56,8 +56,7 @@ pub mod part_1 {
     /// 📐 Bearing capacity factor N_q (Meyerhof).
     pub fn bearing_factor_n_q(phi_deg: f64) -> f64 {
         let phi_rad = phi_deg.to_radians();
-        let n_q = (std::f64::consts::PI * phi_rad.tan()).exp()
-            * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2);
+        let n_q = (std::f64::consts::PI * phi_rad.tan()).exp() * ((45.0 + 0.5 * phi_deg).to_radians().tan()).powi(2);
         n_q
     }
 
@@ -68,11 +67,7 @@ pub mod part_1 {
             return 5.14;
         }
         let n_q = bearing_factor_n_q(phi_deg);
-        let s_c = if b_m > 0.0 {
-            1.0 + 0.2 * (d_f_m / b_m) * (20.0 - phi_deg).max(0.0) / 20.0
-        } else {
-            1.0
-        };
+        let s_c = if b_m > 0.0 { 1.0 + 0.2 * (d_f_m / b_m) * (20.0 - phi_deg).max(0.0) / 20.0 } else { 1.0 };
         (n_q - 1.0) / phi_rad.tan() * s_c
     }
 
@@ -80,36 +75,19 @@ pub mod part_1 {
     pub fn bearing_factor_n_gamma(phi_deg: f64, d_f_m: f64, b_m: f64) -> f64 {
         let phi_rad = phi_deg.to_radians();
         let n_q = bearing_factor_n_q(phi_deg);
-        let s_gamma = if b_m > 0.0 {
-            1.0 + 0.1 * (d_f_m / b_m) * (20.0 - phi_deg).max(0.0) / 20.0
-        } else {
-            1.0
-        };
+        let s_gamma = if b_m > 0.0 { 1.0 + 0.1 * (d_f_m / b_m) * (20.0 - phi_deg).max(0.0) / 20.0 } else { 1.0 };
         2.0 * (n_q + 1.0) * phi_rad.tan() * s_gamma
     }
 
     /// 📐 Ultimate bearing capacity q_ult [kPa] (Meyerhof).
-    pub fn ultimate_bearing_capacity_kpa(
-        phi_deg: f64,
-        c_kpa: f64,
-        gamma_kn_m3: f64,
-        b_m: f64,
-        d_f_m: f64,
-    ) -> f64 {
+    pub fn ultimate_bearing_capacity_kpa(phi_deg: f64, c_kpa: f64, gamma_kn_m3: f64, b_m: f64, d_f_m: f64) -> f64 {
         let n_c = bearing_factor_n_c(phi_deg, d_f_m, b_m);
         let n_q = bearing_factor_n_q(phi_deg);
         let n_gamma = bearing_factor_n_gamma(phi_deg, d_f_m, b_m);
         c_kpa * n_c + gamma_kn_m3 * d_f_m * n_q + 0.5 * gamma_kn_m3 * b_m * n_gamma
     }
 
-    pub fn design_bearing_capacity_kpa(
-        phi_deg: f64,
-        c_kpa: f64,
-        gamma_kn_m3: f64,
-        b_m: f64,
-        d_f_m: f64,
-        approach: DesignApproach,
-    ) -> f64 {
+    pub fn design_bearing_capacity_kpa(phi_deg: f64, c_kpa: f64, gamma_kn_m3: f64, b_m: f64, d_f_m: f64, approach: DesignApproach) -> f64 {
         let (gamma_c, gamma_phi, gamma_gamma) = approach.gamma_set();
         let phi_d = (phi_deg.to_radians() / gamma_phi).atan().to_degrees();
         let c_d = c_kpa / gamma_c;
@@ -122,25 +100,14 @@ pub mod part_1 {
     }
 
     /// 📐 Sliding resistance [kPa]: c_d + σ·tan(φ_d).
-    pub fn sliding_resistance_kpa(
-        phi_deg: f64,
-        c_kpa: f64,
-        sigma_kpa: f64,
-        approach: DesignApproach,
-    ) -> f64 {
+    pub fn sliding_resistance_kpa(phi_deg: f64, c_kpa: f64, sigma_kpa: f64, approach: DesignApproach) -> f64 {
         let (gamma_c, gamma_phi, _) = approach.gamma_set();
         let phi_d = (phi_deg.to_radians() / gamma_phi).atan();
         let c_d = c_kpa / gamma_c;
         c_d + sigma_kpa * phi_d.tan()
     }
 
-    pub fn sliding_resistance_kn(
-        phi_deg: f64,
-        c_kpa: f64,
-        sigma_kpa: f64,
-        area_m2: f64,
-        approach: DesignApproach,
-    ) -> f64 {
+    pub fn sliding_resistance_kn(phi_deg: f64, c_kpa: f64, sigma_kpa: f64, area_m2: f64, approach: DesignApproach) -> f64 {
         sliding_resistance_kpa(phi_deg, c_kpa, sigma_kpa, approach) * area_m2
     }
 
@@ -152,33 +119,15 @@ pub mod part_1 {
     }
 
     pub fn check_bearing(v_ed_kn: f64, r_d_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1997-1", "§6.5", "6.5"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(r_d_kn),
-            "bearing resistance ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1997-1", "§6.5", "6.5"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(r_d_kn), "bearing resistance ULS", annex)
     }
 
     pub fn check_sliding(h_ed_kn: f64, r_d_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1997-1", "§6.5", "6.5.3"),
-            Quantity::force_kn(h_ed_kn),
-            Quantity::force_kn(r_d_kn),
-            "sliding resistance ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1997-1", "§6.5", "6.5.3"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(r_d_kn), "sliding resistance ULS", annex)
     }
 
     pub fn check_settlement(s_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1997-1", "§6.6", "6.6"),
-            Quantity::length_m(s_mm / 1000.0),
-            Quantity::length_m(limit_mm / 1000.0),
-            "settlement SLS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1997-1", "§6.6", "6.6"), Quantity::length_m(s_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "settlement SLS", annex)
     }
 }
 // #endregion 🔖Part1
@@ -187,11 +136,7 @@ pub mod part_1 {
 pub mod part_2 {
     use super::{part_1, AnnexChoice, CheckResult};
 
-    pub fn pile_axial_resistance_kn(
-        r_b_kn: f64,
-        r_s_kn: f64,
-        gamma_r: f64,
-    ) -> f64 {
+    pub fn pile_axial_resistance_kn(r_b_kn: f64, r_s_kn: f64, gamma_r: f64) -> f64 {
         (r_b_kn + r_s_kn) / gamma_r
     }
 
@@ -202,20 +147,7 @@ pub mod part_2 {
 // #endregion 🔖Part2
 
 /// 📋 Shallow foundation check.
-pub fn check_shallow_foundation(
-    v_ed_kn: f64,
-    h_ed_kn: f64,
-    footing_area_m2: f64,
-    phi_deg: f64,
-    c_kpa: f64,
-    gamma_kn_m3: f64,
-    b_m: f64,
-    d_f_m: f64,
-    e_s_mpa: f64,
-    nu: f64,
-    approach: DesignApproach,
-    settlement_limit_mm: f64,
-) -> CheckReport {
+pub fn check_shallow_foundation(v_ed_kn: f64, h_ed_kn: f64, footing_area_m2: f64, phi_deg: f64, c_kpa: f64, gamma_kn_m3: f64, b_m: f64, d_f_m: f64, e_s_mpa: f64, nu: f64, approach: DesignApproach, settlement_limit_mm: f64) -> CheckReport {
     let annex = AnnexChoice::De;
     let q_d = part_1::design_bearing_capacity_kpa(phi_deg, c_kpa, gamma_kn_m3, b_m, d_f_m, approach);
     let r_d = part_1::bearing_resistance_kn(footing_area_m2, q_d, 1.0);
@@ -251,20 +183,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            v_ed_kn: 500.0,
-            h_ed_kn: 80.0,
-            footing_area_m2: 2.0,
-            phi_deg: 30.0,
-            c_kpa: 0.0,
-            gamma_kn_m3: 18.0,
-            b_m: 2.0,
-            d_f_m: 1.5,
-            e_s_mpa: 30_000.0,
-            nu: 0.3,
-            design_approach: "da1str".into(),
-            settlement_limit_mm: 25.0,
-        }
+        Self { v_ed_kn: 500.0, h_ed_kn: 80.0, footing_area_m2: 2.0, phi_deg: 30.0, c_kpa: 0.0, gamma_kn_m3: 18.0, b_m: 2.0, d_f_m: 1.5, e_s_mpa: 30_000.0, nu: 0.3, design_approach: "da1str".into(), settlement_limit_mm: 25.0 }
     }
 }
 
@@ -325,20 +244,7 @@ mod tests {
 
     #[test]
     fn shallow_foundation_e2e() {
-        let report = check_shallow_foundation(
-            500.0,
-            80.0,
-            2.0,
-            30.0,
-            0.0,
-            18.0,
-            2.0,
-            1.5,
-            30_000.0,
-            0.3,
-            DesignApproach::Da1Str,
-            25.0,
-        );
+        let report = check_shallow_foundation(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, 25.0);
         assert!(!report.checks.is_empty());
     }
 }

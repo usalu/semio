@@ -25,31 +25,16 @@ pub struct ZoneAirState {
 
 impl ZoneAirState {
     pub fn new(temp_c: f64, humidity_ratio: f64) -> Self {
-        Self {
-            temp_c,
-            humidity_ratio,
-            temp_history_c: [temp_c; 4],
-            humidity_history: [humidity_ratio; 4],
-        }
+        Self { temp_c, humidity_ratio, temp_history_c: [temp_c; 4], humidity_history: [humidity_ratio; 4] }
     }
 
     pub fn push_temp(&mut self, temp_c: f64) {
-        self.temp_history_c = [
-            temp_c,
-            self.temp_history_c[0],
-            self.temp_history_c[1],
-            self.temp_history_c[2],
-        ];
+        self.temp_history_c = [temp_c, self.temp_history_c[0], self.temp_history_c[1], self.temp_history_c[2]];
         self.temp_c = temp_c;
     }
 
     pub fn push_humidity(&mut self, w: f64) {
-        self.humidity_history = [
-            w,
-            self.humidity_history[0],
-            self.humidity_history[1],
-            self.humidity_history[2],
-        ];
+        self.humidity_history = [w, self.humidity_history[0], self.humidity_history[1], self.humidity_history[2]];
         self.humidity_ratio = w;
     }
 }
@@ -81,11 +66,7 @@ pub struct ZoneAirBalance {
 
 impl ZoneAirBalance {
     pub fn net_sensible_w(&self) -> f64 {
-        self.sensible_gain_w
-            + self.surface_convection_w
-            + self.infiltration_sensible_w
-            + self.ventilation_sensible_w
-            + self.system_sensible_w
+        self.sensible_gain_w + self.surface_convection_w + self.infiltration_sensible_w + self.ventilation_sensible_w + self.system_sensible_w
     }
 
     pub fn net_latent_w(&self) -> f64 {
@@ -124,6 +105,7 @@ fn bdf3_next_value(history: [f64; 4], dt_s: f64, rate: f64) -> f64 {
     (coeff + 18.0 * history[1] - 9.0 * history[2] + 2.0 * history[3]) / 11.0
 }
 
+#[allow(dead_code, reason = "BDF3 rate-recovery counterpart to bdf3_next_value, validated by its own unit test but not yet wired into a production call site — in-flight energy BEM zone-air numerics")]
 fn bdf3_rate(history: [f64; 4], dt_s: f64) -> f64 {
     (11.0 * history[0] - 18.0 * history[1] + 9.0 * history[2] - 2.0 * history[3]) / (6.0 * dt_s)
 }
@@ -139,12 +121,7 @@ pub fn analytical_steady_temp_c(q_sensible_w: f64, temp_ref_c: f64, ua_w_per_k: 
 }
 
 /// 💧 Steady-state humidity ratio [kg/kg] from latent balance.
-pub fn analytical_steady_humidity_ratio(
-    latent_gain_w: f64,
-    mass_flow_kg_s: f64,
-    w_supply: f64,
-    temp_c: f64,
-) -> f64 {
+pub fn analytical_steady_humidity_ratio(latent_gain_w: f64, mass_flow_kg_s: f64, w_supply: f64, temp_c: f64) -> f64 {
     if mass_flow_kg_s.abs() < 1e-12 {
         return w_supply;
     }
@@ -154,11 +131,7 @@ pub fn analytical_steady_humidity_ratio(
 // #endregion 🔖Analytical
 
 // #region 🔖UnmetLoad
-fn compute_unmet_loads(
-    balance: &ZoneAirBalance,
-    temp_c: f64,
-    humidity_ratio: f64,
-) -> (f64, f64, f64, f64) {
+fn compute_unmet_loads(balance: &ZoneAirBalance, temp_c: f64, humidity_ratio: f64) -> (f64, f64, f64, f64) {
     let mut unmet_heating = 0.0;
     let mut unmet_cooling = 0.0;
     let unmet_humid = 0.0;
@@ -167,12 +140,7 @@ fn compute_unmet_loads(
     if balance.conditioned {
         if let Some(t_heat) = balance.heating_setpoint_c {
             if temp_c < t_heat {
-                let deficit = (t_heat - temp_c) * zone_sensible_capacitance_j_per_k(
-                    balance.volume_m3,
-                    temp_c,
-                    humidity_ratio,
-                    P_STD,
-                );
+                let deficit = (t_heat - temp_c) * zone_sensible_capacitance_j_per_k(balance.volume_m3, temp_c, humidity_ratio, P_STD);
                 let delivered = balance.system_sensible_w.max(0.0);
                 let cap = balance.max_heating_w.unwrap_or(f64::INFINITY);
                 unmet_heating = (deficit - delivered).max(0.0).min(cap);
@@ -180,12 +148,7 @@ fn compute_unmet_loads(
         }
         if let Some(t_cool) = balance.cooling_setpoint_c {
             if temp_c > t_cool {
-                let excess = (temp_c - t_cool) * zone_sensible_capacitance_j_per_k(
-                    balance.volume_m3,
-                    temp_c,
-                    humidity_ratio,
-                    P_STD,
-                );
+                let excess = (temp_c - t_cool) * zone_sensible_capacitance_j_per_k(balance.volume_m3, temp_c, humidity_ratio, P_STD);
                 let delivered = (-balance.system_sensible_w).max(0.0);
                 let cap = balance.max_cooling_w.unwrap_or(f64::INFINITY);
                 unmet_cooling = (excess - delivered).max(0.0).min(cap);
@@ -198,13 +161,7 @@ fn compute_unmet_loads(
 
 // #region 🔖Advance
 /// ⏩ Advance zone air state one timestep.
-pub fn advance_zone_air(
-    state: &ZoneAirState,
-    balance: &ZoneAirBalance,
-    dt_s: f64,
-    method: HumiditySolutionMethod,
-    p_atm: f64,
-) -> ZoneAirResult {
+pub fn advance_zone_air(state: &ZoneAirState, balance: &ZoneAirBalance, dt_s: f64, method: HumiditySolutionMethod, p_atm: f64) -> ZoneAirResult {
     let c_sens = zone_sensible_capacitance_j_per_k(balance.volume_m3, state.temp_c, state.humidity_ratio, p_atm);
     let q_sens = balance.net_sensible_w();
 
@@ -222,11 +179,7 @@ pub fn advance_zone_air(
 
     let humidity_ratio = match method {
         HumiditySolutionMethod::AnalyticalSteadyState => {
-            let w_in = if balance.mass_flow_in_kg_s > 0.0 {
-                balance.supply_humidity_ratio
-            } else {
-                balance.outdoor_humidity_ratio
-            };
+            let w_in = if balance.mass_flow_in_kg_s > 0.0 { balance.supply_humidity_ratio } else { balance.outdoor_humidity_ratio };
             analytical_steady_humidity_ratio(balance.net_latent_w(), balance.mass_flow_in_kg_s, w_in, temp_c)
         }
         HumiditySolutionMethod::ThirdOrderBackward => {
@@ -234,11 +187,7 @@ pub fn advance_zone_air(
             let h_fg = latent_heat_vaporization(temp_c);
             let w_in = balance.supply_humidity_ratio;
             let latent_kg_s = balance.net_latent_w() / h_fg;
-            let rate = if c_moist > 0.0 {
-                (balance.mass_flow_in_kg_s * (w_in - state.humidity_ratio) + latent_kg_s) / c_moist
-            } else {
-                0.0
-            };
+            let rate = if c_moist > 0.0 { (balance.mass_flow_in_kg_s * (w_in - state.humidity_ratio) + latent_kg_s) / c_moist } else { 0.0 };
             if dt_s > 0.0 {
                 bdf3_next_value(state.humidity_history, dt_s, rate).max(0.0)
             } else {
@@ -247,17 +196,9 @@ pub fn advance_zone_air(
         }
     };
 
-    let (unmet_heating_w, unmet_cooling_w, unmet_humidifying_w, unmet_dehumidifying_w) =
-        compute_unmet_loads(balance, temp_c, humidity_ratio);
+    let (unmet_heating_w, unmet_cooling_w, unmet_humidifying_w, unmet_dehumidifying_w) = compute_unmet_loads(balance, temp_c, humidity_ratio);
 
-    ZoneAirResult {
-        temp_c,
-        humidity_ratio,
-        unmet_heating_w,
-        unmet_cooling_w,
-        unmet_humidifying_w,
-        unmet_dehumidifying_w,
-    }
+    ZoneAirResult { temp_c, humidity_ratio, unmet_heating_w, unmet_cooling_w, unmet_humidifying_w, unmet_dehumidifying_w }
 }
 
 /// 🔄 Commit zone air result into mutable state history.

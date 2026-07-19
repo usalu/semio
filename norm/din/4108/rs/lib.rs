@@ -1,9 +1,6 @@
 //! 🌡️ DIN 4108 thermal protection: minimum insulation, moisture, design values, U-value proof, airtightness.
 
-use norm_core::{
-    AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity,
-    TableEntry1D, table_lookup_linear,
-};
+use norm_core::{table_lookup_linear, AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity, TableEntry1D};
 use serde::{Deserialize, Serialize};
 
 pub const R_SI_WALL_M2K_W: f64 = 0.13;
@@ -56,14 +53,12 @@ pub mod part_1 {
         match part {
             NormPart::Part1 | NormPart::Part8 => true,
             NormPart::Part7 => !matches!(element, BuildingElement::Window),
-            NormPart::Part2 | NormPart::Part3 | NormPart::Part4 | NormPart::Part5 | NormPart::Part6 => {
-                match element {
-                    BuildingElement::OpaqueWall | BuildingElement::Roof | BuildingElement::Floor => true,
-                    BuildingElement::Window | BuildingElement::Door => {
-                        matches!(part, NormPart::Part4 | NormPart::Part6)
-                    }
+            NormPart::Part2 | NormPart::Part3 | NormPart::Part4 | NormPart::Part5 | NormPart::Part6 => match element {
+                BuildingElement::OpaqueWall | BuildingElement::Roof | BuildingElement::Floor => true,
+                BuildingElement::Window | BuildingElement::Door => {
+                    matches!(part, NormPart::Part4 | NormPart::Part6)
                 }
-            }
+            },
         }
     }
 
@@ -72,11 +67,7 @@ pub mod part_1 {
         let applies = applies_to_element(part, element);
         CheckResult {
             clause: ClauseId::new("DIN 4108-1", "§3", "3.1"),
-            status: if applies {
-                norm_core::CheckStatus::Pass
-            } else {
-                norm_core::CheckStatus::NotApplicable
-            },
+            status: if applies { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::NotApplicable },
             computed: Quantity::new(norm_core::QuantityKind::Dimensionless, if applies { 1.0 } else { 0.0 }),
             limit: Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
             utilization: if applies { 1.0 } else { 0.0 },
@@ -139,36 +130,19 @@ pub mod part_2 {
     pub fn climate_adjusted_u_limit(category: BuildingCategory, climate: ClimateZoneDe) -> f64 {
         let base = base_limit_u_w_m2k(category);
         let hdd = climate.heating_degree_days();
-        let table = [
-            TableEntry1D { x: 2000.0, y: 1.00 },
-            TableEntry1D { x: 2600.0, y: 1.03 },
-            TableEntry1D { x: 3200.0, y: 1.06 },
-            TableEntry1D { x: 3800.0, y: 1.10 },
-        ];
+        let table = [TableEntry1D { x: 2000.0, y: 1.00 }, TableEntry1D { x: 2600.0, y: 1.03 }, TableEntry1D { x: 3200.0, y: 1.06 }, TableEntry1D { x: 3800.0, y: 1.10 }];
         base * table_lookup_linear(&table, hdd)
     }
 
     /// ✅ Check minimum thermal protection per DIN 4108-2 §4.
-    pub fn check_minimum_thermal_protection(
-        category: BuildingCategory,
-        layers: &[Layer],
-        climate: ClimateZoneDe,
-    ) -> Result<CheckResult, NormError> {
+    pub fn check_minimum_thermal_protection(category: BuildingCategory, layers: &[Layer], climate: ClimateZoneDe) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let r = total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W);
         let u = u_value_from_resistance(r);
         let limit = climate_adjusted_u_limit(category, climate);
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108-2", "§4", "4.1"),
-            Quantity::u_value_w_m2k(u),
-            Quantity::u_value_w_m2k(limit),
-            "minimum thermal protection U-value",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-2", "§4", "4.1"), Quantity::u_value_w_m2k(u), Quantity::u_value_w_m2k(limit), "minimum thermal protection U-value", AnnexChoice::De))
     }
 }
 // #endregion 🔖Part2
@@ -199,23 +173,8 @@ pub mod part_3 {
     }
 
     /// 🌡️ Temperature at each layer interface [°C], including interior and exterior surfaces.
-    pub fn interface_temperatures_c(
-        layers: &[MoistureLayer],
-        r_si: f64,
-        r_se: f64,
-        t_int_c: f64,
-        t_ext_c: f64,
-    ) -> Vec<f64> {
-        let mut r_layers: Vec<f64> = layers
-            .iter()
-            .map(|l| {
-                if l.lambda_w_mk > 0.0 {
-                    l.thickness_m / l.lambda_w_mk
-                } else {
-                    0.0
-                }
-            })
-            .collect();
+    pub fn interface_temperatures_c(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64) -> Vec<f64> {
+        let mut r_layers: Vec<f64> = layers.iter().map(|l| if l.lambda_w_mk > 0.0 { l.thickness_m / l.lambda_w_mk } else { 0.0 }).collect();
         let r_total: f64 = r_si + r_se + r_layers.iter().sum::<f64>();
         let mut temps = Vec::with_capacity(layers.len() + 1);
         let mut r_cum = r_si;
@@ -229,11 +188,7 @@ pub mod part_3 {
     }
 
     /// 💧 Vapor pressure at each interface [Pa] assuming linear drop through R_μ.
-    pub fn interface_vapor_pressures_pa(
-        layers: &[MoistureLayer],
-        t_int_c: f64,
-        rh_int: f64,
-    ) -> Vec<f64> {
+    pub fn interface_vapor_pressures_pa(layers: &[MoistureLayer], t_int_c: f64, rh_int: f64) -> Vec<f64> {
         let p_int = rh_int * saturation_vapor_pressure_pa(t_int_c);
         let r_mu: Vec<f64> = layers.iter().map(vapor_resistance).collect();
         let r_mu_total: f64 = r_mu.iter().sum();
@@ -264,21 +219,11 @@ pub mod part_3 {
     pub fn condensation_at_interfaces(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> bool {
         let temps = interface_temperatures_c(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, t_int_c, t_ext_c);
         let pressures = interface_vapor_pressures_pa(layers, t_int_c, rh_int);
-        temps
-            .iter()
-            .zip(pressures.iter())
-            .any(|(&t, &p)| p > saturation_vapor_pressure_pa(t) + 1.0)
+        temps.iter().zip(pressures.iter()).any(|(&t, &p)| p > saturation_vapor_pressure_pa(t) + 1.0)
     }
 
     /// 🌡️ Interior surface temperature factor f_Rsi per layer stack.
-    pub fn interior_surface_temperature_factor(
-        layers: &[MoistureLayer],
-        r_si: f64,
-        r_se: f64,
-        t_int_c: f64,
-        t_ext_c: f64,
-        rh_int: f64,
-    ) -> f64 {
+    pub fn interior_surface_temperature_factor(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64, rh_int: f64) -> f64 {
         let _ = rh_int;
         let mut r_total = r_si + r_se;
         for layer in layers {
@@ -295,16 +240,9 @@ pub mod part_3 {
     }
 
     /// ✅ Check interior surface temperature factor against limit 0.25 (DIN 4108-3).
-    pub fn check_surface_temperature(
-        layers: &[MoistureLayer],
-        t_int_c: f64,
-        t_ext_c: f64,
-        rh_int: f64,
-    ) -> Result<CheckResult, NormError> {
+    pub fn check_surface_temperature(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let f = interior_surface_temperature_factor(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, t_int_c, t_ext_c, rh_int);
         Ok(CheckResult::from_minimum(
@@ -317,23 +255,12 @@ pub mod part_3 {
     }
 
     /// ✅ Glaser dew-point check at every layer interface (DIN 4108-3).
-    pub fn check_glaser_moisture(
-        layers: &[MoistureLayer],
-        t_int_c: f64,
-        t_ext_c: f64,
-        rh_int: f64,
-    ) -> Result<CheckResult, NormError> {
+    pub fn check_glaser_moisture(layers: &[MoistureLayer], t_int_c: f64, t_ext_c: f64, rh_int: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let condenses = condensation_at_interfaces(layers, t_int_c, t_ext_c, rh_int);
-        let margin = if condenses {
-            0.0
-        } else {
-            1.0
-        };
+        let margin = if condenses { 0.0 } else { 1.0 };
         Ok(CheckResult::from_minimum(
             ClauseId::new("DIN 4108-3", "§7", "7.1"),
             Quantity::new(norm_core::QuantityKind::Dimensionless, margin),
@@ -377,10 +304,7 @@ pub mod part_4 {
             "lime_plaster" => MaterialDesign { lambda_dry_w_mk: 0.70, moisture_factor: 1.10 },
             "clay_plaster" => MaterialDesign { lambda_dry_w_mk: 0.91, moisture_factor: 1.10 },
             _ => {
-                return Err(NormError::InvalidValue {
-                    field: "material".into(),
-                    reason: format!("unknown material: {material}"),
-                });
+                return Err(NormError::InvalidValue { field: "material".into(), reason: format!("unknown material: {material}") });
             }
         };
         Ok(props)
@@ -414,16 +338,10 @@ pub mod part_4 {
 // #region 🔖Part5
 pub mod part_5 {
     use super::*;
-    use crate::part_2::{Layer, total_resistance, u_value_from_resistance};
+    use crate::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// ☀️ Peak summer heat flux through opaque element [W/m²].
-    pub fn peak_summer_heat_flux_w_m2(
-        layers: &[Layer],
-        climate: ClimateZoneDe,
-        t_int_c: f64,
-        solar_absorptance: f64,
-        irradiance_w_m2: f64,
-    ) -> f64 {
+    pub fn peak_summer_heat_flux_w_m2(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> f64 {
         let u = u_value_from_resistance(total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let t_summer = climate.summer_design_temperature_c();
         let conductive = u * (t_summer - t_int_c).max(0.0);
@@ -432,37 +350,18 @@ pub mod part_5 {
 
     /// 🌡️ Climate-dependent peak heat flux limit [W/m²] (DIN 4108-5 simplified).
     pub fn summer_heat_flux_limit_w_m2(climate: ClimateZoneDe) -> f64 {
-        let table = [
-            TableEntry1D { x: 26.0, y: 45.0 },
-            TableEntry1D { x: 28.0, y: 50.0 },
-            TableEntry1D { x: 30.0, y: 55.0 },
-            TableEntry1D { x: 32.0, y: 60.0 },
-        ];
+        let table = [TableEntry1D { x: 26.0, y: 45.0 }, TableEntry1D { x: 28.0, y: 50.0 }, TableEntry1D { x: 30.0, y: 55.0 }, TableEntry1D { x: 32.0, y: 60.0 }];
         table_lookup_linear(&table, climate.summer_design_temperature_c())
     }
 
     /// ✅ Check summer heat protection per DIN 4108-5.
-    pub fn check_summer_heat_protection(
-        layers: &[Layer],
-        climate: ClimateZoneDe,
-        t_int_c: f64,
-        solar_absorptance: f64,
-        irradiance_w_m2: f64,
-    ) -> Result<CheckResult, NormError> {
+    pub fn check_summer_heat_protection(layers: &[Layer], climate: ClimateZoneDe, t_int_c: f64, solar_absorptance: f64, irradiance_w_m2: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let flux = peak_summer_heat_flux_w_m2(layers, climate, t_int_c, solar_absorptance, irradiance_w_m2);
         let limit = summer_heat_flux_limit_w_m2(climate);
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108-5", "§4", "4.1"),
-            Quantity::new(norm_core::QuantityKind::Power, flux),
-            Quantity::new(norm_core::QuantityKind::Power, limit),
-            "peak summer heat flux",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-5", "§4", "4.1"), Quantity::new(norm_core::QuantityKind::Power, flux), Quantity::new(norm_core::QuantityKind::Power, limit), "peak summer heat flux", AnnexChoice::De))
     }
 }
 // #endregion 🔖Part5
@@ -470,7 +369,7 @@ pub mod part_5 {
 // #region 🔖Part6
 pub mod part_6 {
     use super::*;
-    use crate::part_2::{Layer, total_resistance, u_value_from_resistance};
+    use crate::part_2::{total_resistance, u_value_from_resistance, Layer};
 
     /// 🔗 U-value including linear thermal bridge correction U' = U + Σ(ψ·l) [W/(m²K)].
     pub fn u_value_with_thermal_bridges(u_element: f64, psi_times_l_sum: f64) -> f64 {
@@ -480,40 +379,20 @@ pub mod part_6 {
     /// ✅ U-value proof per DIN 4108-6.
     pub fn check_u_value(layers: &[Layer], limit_u: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let u = u_value_from_resistance(total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108-6", "§5", "5.1"),
-            Quantity::u_value_w_m2k(u),
-            Quantity::u_value_w_m2k(limit_u),
-            "component U-value",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-6", "§5", "5.1"), Quantity::u_value_w_m2k(u), Quantity::u_value_w_m2k(limit_u), "component U-value", AnnexChoice::De))
     }
 
     /// ✅ U-value proof with thermal bridge correction ψ·l per DIN 4108-6 §5.
-    pub fn check_u_value_with_bridges(
-        layers: &[Layer],
-        psi_times_l_sum: f64,
-        limit_u: f64,
-    ) -> Result<CheckResult, NormError> {
+    pub fn check_u_value_with_bridges(layers: &[Layer], psi_times_l_sum: f64, limit_u: f64) -> Result<CheckResult, NormError> {
         if layers.is_empty() {
-            return Err(NormError::IncompleteInput {
-                field: "layers".into(),
-            });
+            return Err(NormError::IncompleteInput { field: "layers".into() });
         }
         let u_element = u_value_from_resistance(total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let u = u_value_with_thermal_bridges(u_element, psi_times_l_sum);
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108-6", "§5", "5.2"),
-            Quantity::u_value_w_m2k(u),
-            Quantity::u_value_w_m2k(limit_u),
-            "component U-value with thermal bridges",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-6", "§5", "5.2"), Quantity::u_value_w_m2k(u), Quantity::u_value_w_m2k(limit_u), "component U-value with thermal bridges", AnnexChoice::De))
     }
 }
 // #endregion 🔖Part6
@@ -580,52 +459,26 @@ pub mod part_8 {
 
     /// 🔍 Lookup catalog entry by component reference id.
     pub fn catalog_entry(id: &str) -> Result<&'static CatalogEntry, NormError> {
-        CATALOG
-            .iter()
-            .find(|e| e.id == id)
-            .ok_or_else(|| NormError::InvalidValue {
-                field: "catalog_id".into(),
-                reason: format!("unknown catalog reference: {id}"),
-            })
+        CATALOG.iter().find(|e| e.id == id).ok_or_else(|| NormError::InvalidValue { field: "catalog_id".into(), reason: format!("unknown catalog reference: {id}") })
     }
 
     /// ✅ Verify computed U-value against catalog reference (DIN 4108-8).
     pub fn check_against_catalog(id: &str, u_computed: f64) -> Result<CheckResult, NormError> {
         let entry = catalog_entry(id)?;
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108-8", "Table 1", id),
-            Quantity::u_value_w_m2k(u_computed),
-            Quantity::u_value_w_m2k(entry.u_typical_w_m2k),
-            format!("catalog reference {}", entry.description),
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN 4108-8", "Table 1", id), Quantity::u_value_w_m2k(u_computed), Quantity::u_value_w_m2k(entry.u_typical_w_m2k), format!("catalog reference {}", entry.description), AnnexChoice::De))
     }
 }
 // #endregion 🔖Part8
 
 /// 📋 Run all applicable DIN 4108 checks for a typical opaque wall.
-pub fn check_opaque_wall(
-    category: part_2::BuildingCategory,
-    layers: &[part_2::Layer],
-    climate: ClimateZoneDe,
-    airtightness_n50: f64,
-) -> Result<CheckReport, NormError> {
+pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64) -> Result<CheckReport, NormError> {
     check_opaque_wall_with_bridges(category, layers, climate, airtightness_n50, 0.02)
 }
 
 /// 📋 Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
-pub fn check_opaque_wall_with_bridges(
-    category: part_2::BuildingCategory,
-    layers: &[part_2::Layer],
-    climate: ClimateZoneDe,
-    airtightness_n50: f64,
-    psi_times_l_sum: f64,
-) -> Result<CheckReport, NormError> {
+pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
     let mut report = CheckReport::default();
-    report.push(part_1::scope_check(
-        part_1::NormPart::Part2,
-        part_1::BuildingElement::OpaqueWall,
-    ));
+    report.push(part_1::scope_check(part_1::NormPart::Part2, part_1::BuildingElement::OpaqueWall));
     let limit = part_2::climate_adjusted_u_limit(category, climate);
     report.push(part_2::check_minimum_thermal_protection(category, layers, climate)?);
     let moisture_layers: Vec<part_3::MoistureLayer> = layers
@@ -633,38 +486,15 @@ pub fn check_opaque_wall_with_bridges(
         .enumerate()
         .map(|(i, l)| {
             let mu = if i == 0 { 15.0 } else { 1.3 };
-            part_3::MoistureLayer {
-                thickness_m: l.thickness_m,
-                lambda_w_mk: l.lambda_w_mk,
-                mu,
-            }
+            part_3::MoistureLayer { thickness_m: l.thickness_m, lambda_w_mk: l.lambda_w_mk, mu }
         })
         .collect();
     let t_ext = climate.design_external_temperature_c();
-    report.push(part_3::check_surface_temperature(
-        &moisture_layers,
-        20.0,
-        t_ext,
-        0.5,
-    )?);
-    report.push(part_3::check_glaser_moisture(
-        &moisture_layers,
-        20.0,
-        t_ext,
-        0.5,
-    )?);
-    report.push(part_5::check_summer_heat_protection(
-        layers,
-        climate,
-        26.0,
-        0.6,
-        600.0,
-    )?);
+    report.push(part_3::check_surface_temperature(&moisture_layers, 20.0, t_ext, 0.5)?);
+    report.push(part_3::check_glaser_moisture(&moisture_layers, 20.0, t_ext, 0.5)?);
+    report.push(part_5::check_summer_heat_protection(layers, climate, 26.0, 0.6, 600.0)?);
     report.push(part_6::check_u_value_with_bridges(layers, psi_times_l_sum, limit)?);
-    report.push(part_7::check_airtightness(
-        airtightness_n50,
-        part_7::AirtightnessClass::Class2,
-    ));
+    report.push(part_7::check_airtightness(airtightness_n50, part_7::AirtightnessClass::Class2));
     Ok(report)
 }
 
@@ -692,16 +522,7 @@ impl Default for Document {
     fn default() -> Self {
         Self {
             category: "residential".into(),
-            layers: vec![
-                LayerDocument {
-                    thickness_m: 0.24,
-                    lambda_w_mk: 0.81,
-                },
-                LayerDocument {
-                    thickness_m: 0.14,
-                    lambda_w_mk: 0.035,
-                },
-            ],
+            layers: vec![LayerDocument { thickness_m: 0.24, lambda_w_mk: 0.81 }, LayerDocument { thickness_m: 0.14, lambda_w_mk: 0.035 }],
             climate: ClimateZoneDe::Zone2,
             airtightness_n50: 2.5,
             psi_times_l_sum: 0.02,
@@ -722,30 +543,10 @@ fn parse_category(category: &str) -> part_2::BuildingCategory {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    let layers: Vec<part_2::Layer> = document
-        .layers
-        .iter()
-        .map(|layer| part_2::Layer {
-            thickness_m: layer.thickness_m,
-            lambda_w_mk: layer.lambda_w_mk,
-        })
-        .collect();
-    check_opaque_wall_with_bridges(
-        parse_category(&document.category),
-        &layers,
-        document.climate,
-        document.airtightness_n50,
-        document.psi_times_l_sum,
-    )
-    .unwrap_or_else(|err| {
+    let layers: Vec<part_2::Layer> = document.layers.iter().map(|layer| part_2::Layer { thickness_m: layer.thickness_m, lambda_w_mk: layer.lambda_w_mk }).collect();
+    check_opaque_wall_with_bridges(parse_category(&document.category), &layers, document.climate, document.airtightness_n50, document.psi_times_l_sum).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(
-            ClauseId::new("DIN 4108", "input", "1"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
-            err.to_string(),
-            AnnexChoice::De,
-        ));
+        report.push(CheckResult::from_utilization(ClauseId::new("DIN 4108", "input", "1"), Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0), Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
         report
     })
 }
@@ -771,42 +572,16 @@ mod tests {
     use super::*;
 
     fn sample_wall() -> Vec<part_2::Layer> {
-        vec![
-            part_2::Layer {
-                thickness_m: 0.24,
-                lambda_w_mk: 0.81,
-            },
-            part_2::Layer {
-                thickness_m: 0.14,
-                lambda_w_mk: 0.035,
-            },
-        ]
+        vec![part_2::Layer { thickness_m: 0.24, lambda_w_mk: 0.81 }, part_2::Layer { thickness_m: 0.14, lambda_w_mk: 0.035 }]
     }
 
     fn sample_moisture_wall() -> Vec<part_3::MoistureLayer> {
-        vec![
-            part_3::MoistureLayer {
-                thickness_m: 0.24,
-                lambda_w_mk: 0.81,
-                mu: 15.0,
-            },
-            part_3::MoistureLayer {
-                thickness_m: 0.14,
-                lambda_w_mk: 0.035,
-                mu: 1.3,
-            },
-        ]
+        vec![part_3::MoistureLayer { thickness_m: 0.24, lambda_w_mk: 0.81, mu: 15.0 }, part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 }]
     }
 
     #[test]
     fn opaque_wall_passes_din_4108_suite() {
-        let report = check_opaque_wall(
-            part_2::BuildingCategory::Residential,
-            &sample_wall(),
-            ClimateZoneDe::Zone2,
-            2.5,
-        )
-        .expect("inputs complete");
+        let report = check_opaque_wall(part_2::BuildingCategory::Residential, &sample_wall(), ClimateZoneDe::Zone2, 2.5).expect("inputs complete");
         assert!(report.all_pass(), "checks: {:?}", report.checks);
     }
 
@@ -822,14 +597,7 @@ mod tests {
     #[test]
     fn worked_example_f_rsi_above_minimum() {
         let layers = sample_moisture_wall();
-        let f = part_3::interior_surface_temperature_factor(
-            &layers,
-            R_SI_WALL_M2K_W,
-            R_SE_WALL_M2K_W,
-            20.0,
-            -14.0,
-            0.5,
-        );
+        let f = part_3::interior_surface_temperature_factor(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
         assert!(f > F_RSI_MINIMUM, "f_Rsi = {f}, must exceed {F_RSI_MINIMUM}");
         let check = part_3::check_surface_temperature(&layers, 20.0, -14.0, 0.5).unwrap();
         assert_eq!(check.status, norm_core::CheckStatus::Pass);
@@ -851,11 +619,7 @@ mod tests {
 
     #[test]
     fn worked_example_vapor_resistance_formula() {
-        let layer = part_3::MoistureLayer {
-            thickness_m: 0.14,
-            lambda_w_mk: 0.035,
-            mu: 1.3,
-        };
+        let layer = part_3::MoistureLayer { thickness_m: 0.14, lambda_w_mk: 0.035, mu: 1.3 };
         let r_mu = part_3::vapor_resistance(&layer);
         let expected = 0.14 / (1.3 * 0.035);
         assert!((r_mu - expected).abs() < 1e-9);
@@ -863,14 +627,8 @@ mod tests {
 
     #[test]
     fn part_2_colder_zone_allows_higher_u_limit() {
-        let limit_warm = part_2::climate_adjusted_u_limit(
-            part_2::BuildingCategory::Residential,
-            ClimateZoneDe::Zone4,
-        );
-        let limit_cold = part_2::climate_adjusted_u_limit(
-            part_2::BuildingCategory::Residential,
-            ClimateZoneDe::Zone1,
-        );
+        let limit_warm = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone4);
+        let limit_cold = part_2::climate_adjusted_u_limit(part_2::BuildingCategory::Residential, ClimateZoneDe::Zone1);
         assert!(limit_cold > limit_warm, "zone1={limit_cold}, zone4={limit_warm}");
         assert!((limit_cold - 0.308).abs() < 0.01);
     }
@@ -885,12 +643,7 @@ mod tests {
 
     #[test]
     fn part_4_has_fifteen_plus_materials() {
-        let materials = [
-            "mineral_wool", "glass_wool", "eps", "xps", "pur", "pir",
-            "wood_fibre", "cellulose", "concrete", "aerated_concrete",
-            "brick", "sand_lime_brick", "timber", "plywood",
-            "gypsum_plaster", "lime_plaster", "clay_plaster",
-        ];
+        let materials = ["mineral_wool", "glass_wool", "eps", "xps", "pur", "pir", "wood_fibre", "cellulose", "concrete", "aerated_concrete", "brick", "sand_lime_brick", "timber", "plywood", "gypsum_plaster", "lime_plaster", "clay_plaster"];
         assert!(materials.len() >= 15);
         for m in materials {
             assert!(part_4::material_design(m).is_ok(), "missing {m}");
@@ -910,11 +663,7 @@ mod tests {
     #[test]
     fn part_6_thermal_bridge_increases_u() {
         let layers = sample_wall();
-        let u_element = part_2::u_value_from_resistance(part_2::total_resistance(
-            &layers,
-            R_SI_WALL_M2K_W,
-            R_SE_WALL_M2K_W,
-        ));
+        let u_element = part_2::u_value_from_resistance(part_2::total_resistance(&layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let u_bridged = part_6::u_value_with_thermal_bridges(u_element, 0.05);
         assert!((u_bridged - (u_element + 0.05)).abs() < 1e-9);
         let check = part_6::check_u_value_with_bridges(&layers, 0.05, 0.35).unwrap();
@@ -925,11 +674,7 @@ mod tests {
     fn part_8_catalog_lookup() {
         let entry = part_8::catalog_entry("AW-01").unwrap();
         assert!((entry.u_typical_w_m2k - 0.24).abs() < 0.01);
-        let u = part_2::u_value_from_resistance(part_2::total_resistance(
-            &sample_wall(),
-            R_SI_WALL_M2K_W,
-            R_SE_WALL_M2K_W,
-        ));
+        let u = part_2::u_value_from_resistance(part_2::total_resistance(&sample_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
         let check = part_8::check_against_catalog("AW-01", u).unwrap();
         assert_eq!(check.status, norm_core::CheckStatus::Pass);
     }

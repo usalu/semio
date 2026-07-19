@@ -61,9 +61,7 @@ impl Dispatcher {
 
         match self.scheme {
             DispatchScheme::Sequential => self.dispatch_sequential(&sorted, request),
-            DispatchScheme::Uniform | DispatchScheme::UniformPartLoadRatio => {
-                self.dispatch_uniform(&sorted, request)
-            }
+            DispatchScheme::Uniform | DispatchScheme::UniformPartLoadRatio => self.dispatch_uniform(&sorted, request),
             DispatchScheme::Optimal => self.dispatch_optimal(&sorted, request),
             _ => self.dispatch_sequential(&sorted, request),
         }
@@ -75,12 +73,7 @@ impl Dispatcher {
         for eq in equipment {
             let load = remaining.min(eq.capacity_w).max(0.0);
             let plr = if eq.capacity_w > 0.0 { load / eq.capacity_w } else { 0.0 };
-            results.push(DispatchResult {
-                equipment_id: eq.equipment_id,
-                load_w: load,
-                part_load_ratio: plr,
-                runtime_fraction: if load > 0.0 { 1.0 } else { 0.0 },
-            });
+            results.push(DispatchResult { equipment_id: eq.equipment_id, load_w: load, part_load_ratio: plr, runtime_fraction: if load > 0.0 { 1.0 } else { 0.0 } });
             remaining -= load;
         }
         results
@@ -93,15 +86,7 @@ impl Dispatcher {
         }
         let total_cap: f64 = active.iter().map(|e| e.capacity_w).sum();
         let plr = (request.total_load_w / total_cap).clamp(0.0, 1.0);
-        active
-            .iter()
-            .map(|eq| DispatchResult {
-                equipment_id: eq.equipment_id,
-                load_w: eq.capacity_w * plr,
-                part_load_ratio: plr,
-                runtime_fraction: if plr > 0.01 { 1.0 } else { 0.0 },
-            })
-            .collect()
+        active.iter().map(|eq| DispatchResult { equipment_id: eq.equipment_id, load_w: eq.capacity_w * plr, part_load_ratio: plr, runtime_fraction: if plr > 0.01 { 1.0 } else { 0.0 } }).collect()
     }
 
     fn dispatch_optimal(&self, equipment: &[EquipmentPriority], request: &DispatchRequest) -> Vec<DispatchResult> {
@@ -118,10 +103,7 @@ mod tests {
     fn sequential_fills_first_unit() {
         let d = Dispatcher::new(
             DispatchScheme::Sequential,
-            vec![
-                EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 5000.0 },
-                EquipmentPriority { equipment_id: 2, priority: 2, min_runtime_hours: 0.0, capacity_w: 5000.0 },
-            ],
+            vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 5000.0 }, EquipmentPriority { equipment_id: 2, priority: 2, min_runtime_hours: 0.0, capacity_w: 5000.0 }],
         );
         let results = d.dispatch(&DispatchRequest { total_load_w: 7000.0, available_capacity_w: 10000.0, outdoor_temp_c: 20.0 });
         assert!((results[0].load_w - 5000.0).abs() < 1e-6);

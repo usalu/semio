@@ -49,14 +49,8 @@ impl RoomAirModel {
             Self::FullyMixed => fully_mixed(input),
             Self::VerticalGradient { gradient_k_per_m } => vertical_gradient(input, *gradient_k_per_m),
             Self::Displacement1Node { mixing_factor } => displacement_1node(input, *mixing_factor),
-            Self::Displacement3Node {
-                lower_fraction,
-                upper_fraction,
-            } => displacement_3node(input, *lower_fraction, *upper_fraction),
-            Self::Ufad {
-                diffuser_height_m,
-                throw_m,
-            } => ufad(input, *diffuser_height_m, *throw_m),
+            Self::Displacement3Node { lower_fraction, upper_fraction } => displacement_3node(input, *lower_fraction, *upper_fraction),
+            Self::Ufad { diffuser_height_m, throw_m } => ufad(input, *diffuser_height_m, *throw_m),
             Self::SurfaceSpecific => surface_specific(input),
         }
     }
@@ -66,14 +60,7 @@ impl RoomAirModel {
 // #region 🔖FullyMixed
 fn fully_mixed(input: &RoomAirInput) -> RoomAirOutput {
     let t = input.zone_temp_c;
-    RoomAirOutput {
-        occupied_temp_c: t,
-        return_temp_c: t,
-        exhaust_temp_c: t,
-        floor_temp_c: t,
-        ceiling_temp_c: t,
-        surface_air_temps_c: [t; 6],
-    }
+    RoomAirOutput { occupied_temp_c: t, return_temp_c: t, exhaust_temp_c: t, floor_temp_c: t, ceiling_temp_c: t, surface_air_temps_c: [t; 6] }
 }
 // #endregion 🔖FullyMixed
 
@@ -83,21 +70,7 @@ fn vertical_gradient(input: &RoomAirInput, gradient_k_per_m: f64) -> RoomAirOutp
     let t_floor = input.zone_temp_c - gradient_k_per_m * 0.1;
     let t_ceil = input.zone_temp_c + gradient_k_per_m * (h - 0.1);
     let t_occ = input.zone_temp_c;
-    RoomAirOutput {
-        occupied_temp_c: t_occ,
-        return_temp_c: t_ceil,
-        exhaust_temp_c: t_ceil,
-        floor_temp_c: t_floor,
-        ceiling_temp_c: t_ceil,
-        surface_air_temps_c: [
-            t_floor,
-            input.zone_temp_c,
-            t_ceil,
-            input.zone_temp_c,
-            t_floor,
-            t_ceil,
-        ],
-    }
+    RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_ceil, exhaust_temp_c: t_ceil, floor_temp_c: t_floor, ceiling_temp_c: t_ceil, surface_air_temps_c: [t_floor, input.zone_temp_c, t_ceil, input.zone_temp_c, t_floor, t_ceil] }
 }
 // #endregion 🔖VerticalGradient
 
@@ -108,14 +81,7 @@ fn displacement_1node(input: &RoomAirInput, mixing_factor: f64) -> RoomAirOutput
     let t_zone = input.zone_temp_c;
     let t_occ = f * t_zone + (1.0 - f) * t_supply;
     let t_return = t_zone + f * (t_zone - t_supply) * 0.3;
-    RoomAirOutput {
-        occupied_temp_c: t_occ,
-        return_temp_c: t_return,
-        exhaust_temp_c: t_return,
-        floor_temp_c: t_supply + 0.5 * (t_occ - t_supply),
-        ceiling_temp_c: t_return,
-        surface_air_temps_c: [t_occ; 6],
-    }
+    RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_return, exhaust_temp_c: t_return, floor_temp_c: t_supply + 0.5 * (t_occ - t_supply), ceiling_temp_c: t_return, surface_air_temps_c: [t_occ; 6] }
 }
 
 fn displacement_3node(input: &RoomAirInput, lower_fraction: f64, upper_fraction: f64) -> RoomAirOutput {
@@ -131,14 +97,7 @@ fn displacement_3node(input: &RoomAirInput, lower_fraction: f64, upper_fraction:
     let t_lower = t_supply + grad * z_lower * 0.5;
     let t_occ = t_supply + grad * z_occ;
     let t_upper = t_supply + grad * z_upper;
-    RoomAirOutput {
-        occupied_temp_c: t_occ,
-        return_temp_c: t_upper,
-        exhaust_temp_c: t_upper,
-        floor_temp_c: t_lower,
-        ceiling_temp_c: t_upper,
-        surface_air_temps_c: [t_lower, t_occ, t_upper, t_occ, t_lower, t_upper],
-    }
+    RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_upper, exhaust_temp_c: t_upper, floor_temp_c: t_lower, ceiling_temp_c: t_upper, surface_air_temps_c: [t_lower, t_occ, t_upper, t_occ, t_lower, t_upper] }
 }
 // #endregion 🔖Displacement
 
@@ -153,14 +112,7 @@ fn ufad(input: &RoomAirInput, diffuser_height_m: f64, throw_m: f64) -> RoomAirOu
     let t_occ = t_supply + penetration * (t_zone - t_supply);
     let t_return = t_zone + (1.0 - penetration) * 0.2 * (t_zone - t_supply);
     let t_floor = t_supply + 0.3 * (t_occ - t_supply);
-    RoomAirOutput {
-        occupied_temp_c: t_occ,
-        return_temp_c: t_return,
-        exhaust_temp_c: t_return,
-        floor_temp_c: t_floor,
-        ceiling_temp_c: t_return + 0.5 * (t_zone - t_occ),
-        surface_air_temps_c: [t_floor, t_occ, t_return, t_occ, t_floor, t_return],
-    }
+    RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: t_return, exhaust_temp_c: t_return, floor_temp_c: t_floor, ceiling_temp_c: t_return + 0.5 * (t_zone - t_occ), surface_air_temps_c: [t_floor, t_occ, t_return, t_occ, t_floor, t_return] }
 }
 // #endregion 🔖Ufad
 
@@ -171,14 +123,7 @@ fn surface_specific(input: &RoomAirInput) -> RoomAirOutput {
         surface_air[i] = 0.7 * input.zone_temp_c + 0.3 * t_surf;
     }
     let t_occ = surface_air.iter().sum::<f64>() / surface_air.len() as f64;
-    RoomAirOutput {
-        occupied_temp_c: t_occ,
-        return_temp_c: input.zone_temp_c,
-        exhaust_temp_c: input.zone_temp_c,
-        floor_temp_c: surface_air[0],
-        ceiling_temp_c: surface_air[2],
-        surface_air_temps_c: surface_air,
-    }
+    RoomAirOutput { occupied_temp_c: t_occ, return_temp_c: input.zone_temp_c, exhaust_temp_c: input.zone_temp_c, floor_temp_c: surface_air[0], ceiling_temp_c: surface_air[2], surface_air_temps_c: surface_air }
 }
 // #endregion 🔖SurfaceSpecific
 
@@ -187,16 +132,7 @@ mod tests {
     use super::*;
 
     fn sample_input() -> RoomAirInput {
-        RoomAirInput {
-            zone_temp_c: 24.0,
-            supply_temp_c: 18.0,
-            outdoor_temp_c: 5.0,
-            floor_area_m2: 50.0,
-            ceiling_height_m: 3.0,
-            supply_flow_m3_s: 0.2,
-            internal_gain_w: 1500.0,
-            surface_temps_c: [22.0, 23.0, 25.0, 24.0, 21.0, 26.0],
-        }
+        RoomAirInput { zone_temp_c: 24.0, supply_temp_c: 18.0, outdoor_temp_c: 5.0, floor_area_m2: 50.0, ceiling_height_m: 3.0, supply_flow_m3_s: 0.2, internal_gain_w: 1500.0, surface_temps_c: [22.0, 23.0, 25.0, 24.0, 21.0, 26.0] }
     }
 
     #[test]
@@ -220,11 +156,7 @@ mod tests {
 
     #[test]
     fn ufad_occupied_between_supply_and_zone() {
-        let out = RoomAirModel::Ufad {
-            diffuser_height_m: 0.3,
-            throw_m: 1.5,
-        }
-        .apply(&sample_input());
+        let out = RoomAirModel::Ufad { diffuser_height_m: 0.3, throw_m: 1.5 }.apply(&sample_input());
         assert!(out.occupied_temp_c > sample_input().supply_temp_c);
         assert!(out.occupied_temp_c < sample_input().zone_temp_c);
     }

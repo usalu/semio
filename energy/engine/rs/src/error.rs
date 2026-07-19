@@ -24,27 +24,15 @@ pub struct Error {
 
 impl Error {
     pub fn fatal(message: impl Into<String>) -> Self {
-        Self {
-            severity: Severity::Fatal,
-            message: message.into(),
-            context: None,
-        }
+        Self { severity: Severity::Fatal, message: message.into(), context: None }
     }
 
     pub fn severe(message: impl Into<String>) -> Self {
-        Self {
-            severity: Severity::Severe,
-            message: message.into(),
-            context: None,
-        }
+        Self { severity: Severity::Severe, message: message.into(), context: None }
     }
 
     pub fn warning(message: impl Into<String>) -> Self {
-        Self {
-            severity: Severity::Warning,
-            message: message.into(),
-            context: None,
-        }
+        Self { severity: Severity::Warning, message: message.into(), context: None }
     }
 
     pub fn with_context(mut self, context: impl Into<String>) -> Self {

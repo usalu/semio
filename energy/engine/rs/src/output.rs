@@ -99,12 +99,7 @@ pub struct TimeSeriesStore {
 impl TimeSeriesStore {
     pub fn record(&mut self, key: impl Into<String>, t_hours: f64, value: f64, unit: crate::units::Unit) {
         let key = key.into();
-        let entry = self.series.entry(key.clone()).or_insert_with(|| TimeSeries {
-            key,
-            timestamps_hours: Vec::new(),
-            values: Vec::new(),
-            unit,
-        });
+        let entry = self.series.entry(key.clone()).or_insert_with(|| TimeSeries { key, timestamps_hours: Vec::new(), values: Vec::new(), unit });
         entry.push(t_hours, value);
     }
 
@@ -129,12 +124,7 @@ mod tests {
 
     #[test]
     fn time_series_average() {
-        let mut ts = TimeSeries {
-            key: "t".into(),
-            timestamps_hours: Vec::new(),
-            values: Vec::new(),
-            unit: crate::units::Unit::Celsius,
-        };
+        let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Celsius };
         ts.push(0.0, 10.0);
         ts.push(1.0, 20.0);
         assert!((ts.average() - 15.0).abs() < 1e-9);

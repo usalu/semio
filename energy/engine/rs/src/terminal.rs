@@ -12,7 +12,7 @@ pub enum AirTerminal {
     Cav { max_flow_m3_s: f64 },
     Vav { min_flow_m3_s: f64, max_flow_m3_s: f64, reheat: Option<HeatingCoil> },
     VavReheat { min_flow_m3_s: f64, max_flow_m3_s: f64, reheat: HeatingCoil },
-    FanPowered { primary_max_m3_s: f64, fan: Fan, parallel_fan: bool },
+    FanPowered { primary_max_m3_s: f64, fan: Box<Fan>, parallel_fan: bool },
     DualDuct { hot_max_m3_s: f64, cold_max_m3_s: f64, mixing_damper: f64 },
 }
 
@@ -65,20 +65,8 @@ impl AirTerminal {
                 let frac = request.damper_position.clamp(0.0, 1.0);
                 let flow = min_flow_m3_s + frac * (max_flow_m3_s - min_flow_m3_s);
                 let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
-                let inlet = CoilAirState {
-                    temperature_c: request.supply_temperature_c,
-                    humidity_ratio: request.supply_humidity_ratio,
-                    mass_flow_kg_s: m_dot,
-                    pressure_pa: request.pressure_pa,
-                };
-                let reheat_out = reheat.as_ref()
-                    .map(|c| heating_coil_output_w(c, &inlet, request.heating_load_w))
-                    .unwrap_or(crate::coils::HeatingCoilOutput {
-                        outlet: inlet,
-                        total_heating_w: 0.0,
-                        gas_consumption_w: 0.0,
-                        water_heat_removal_w: 0.0,
-                    });
+                let inlet = CoilAirState { temperature_c: request.supply_temperature_c, humidity_ratio: request.supply_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.pressure_pa };
+                let reheat_out = reheat.as_ref().map_or(crate::coils::HeatingCoilOutput { outlet: inlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }, |c| heating_coil_output_w(c, &inlet, request.heating_load_w));
                 TerminalOutput {
                     discharge_temperature_c: reheat_out.outlet.temperature_c,
                     discharge_humidity_ratio: reheat_out.outlet.humidity_ratio,
@@ -93,12 +81,7 @@ impl AirTerminal {
                 let frac = request.damper_position.clamp(0.0, 1.0);
                 let flow = min_flow_m3_s + frac * (max_flow_m3_s - min_flow_m3_s);
                 let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
-                let inlet = CoilAirState {
-                    temperature_c: request.supply_temperature_c,
-                    humidity_ratio: request.supply_humidity_ratio,
-                    mass_flow_kg_s: m_dot,
-                    pressure_pa: request.pressure_pa,
-                };
+                let inlet = CoilAirState { temperature_c: request.supply_temperature_c, humidity_ratio: request.supply_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.pressure_pa };
                 let reheat_out = heating_coil_output_w(reheat, &inlet, request.heating_load_w);
                 TerminalOutput {
                     discharge_temperature_c: reheat_out.outlet.temperature_c,
@@ -116,12 +99,7 @@ impl AirTerminal {
                 let induced_flow = if *parallel_fan { primary_flow * 0.5 } else { primary_flow * 0.3 };
                 let total_flow = primary_flow + induced_flow;
                 let m_dot = fan_mass_flow_kg_s(total_flow, RHO_AIR_REF);
-                let t_mix = if *parallel_fan {
-                    (primary_flow * request.supply_temperature_c + induced_flow * request.zone_temperature_c)
-                        / total_flow.max(1e-6)
-                } else {
-                    request.supply_temperature_c
-                };
+                let t_mix = if *parallel_fan { (primary_flow * request.supply_temperature_c + induced_flow * request.zone_temperature_c) / total_flow.max(1e-6) } else { request.supply_temperature_c };
                 let op = fan_operating_point(fan, induced_flow, 150.0);
                 TerminalOutput {
                     discharge_temperature_c: t_mix,
@@ -139,20 +117,8 @@ impl AirTerminal {
                 let cold_flow = cold_max_m3_s * (1.0 - mix);
                 let total_flow = hot_flow + cold_flow;
                 let m_dot = fan_mass_flow_kg_s(total_flow, RHO_AIR_REF);
-                let t_out = if total_flow > 1e-9 {
-                    (hot_flow * request.hot_duct_temp_c + cold_flow * request.cold_duct_temp_c) / total_flow
-                } else {
-                    request.zone_temperature_c
-                };
-                TerminalOutput {
-                    discharge_temperature_c: t_out,
-                    discharge_humidity_ratio: request.supply_humidity_ratio,
-                    mass_flow_kg_s: m_dot,
-                    primary_mass_flow_kg_s: m_dot,
-                    reheat_w: 0.0,
-                    fan_power_w: 0.0,
-                    damper_position: mix,
-                }
+                let t_out = if total_flow > 1e-9 { (hot_flow * request.hot_duct_temp_c + cold_flow * request.cold_duct_temp_c) / total_flow } else { request.zone_temperature_c };
+                TerminalOutput { discharge_temperature_c: t_out, discharge_humidity_ratio: request.supply_humidity_ratio, mass_flow_kg_s: m_dot, primary_mass_flow_kg_s: m_dot, reheat_w: 0.0, fan_power_w: 0.0, damper_position: mix }
             }
         }
     }
@@ -185,11 +151,7 @@ mod tests {
 
     #[test]
     fn vav_reheat_adds_heat() {
-        let term = AirTerminal::VavReheat {
-            min_flow_m3_s: 0.05,
-            max_flow_m3_s: 0.4,
-            reheat: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 },
-        };
+        let term = AirTerminal::VavReheat { min_flow_m3_s: 0.05, max_flow_m3_s: 0.4, reheat: HeatingCoil::Electric { capacity_w: 5000.0, efficiency: 1.0 } };
         let req = TerminalRequest {
             supply_temperature_c: 13.0,
             supply_humidity_ratio: 0.008,
@@ -209,11 +171,7 @@ mod tests {
 
     #[test]
     fn dual_duct_mixes_temperatures() {
-        let term = AirTerminal::DualDuct {
-            hot_max_m3_s: 0.2,
-            cold_max_m3_s: 0.3,
-            mixing_damper: 0.5,
-        };
+        let term = AirTerminal::DualDuct { hot_max_m3_s: 0.2, cold_max_m3_s: 0.3, mixing_damper: 0.5 };
         let req = TerminalRequest {
             supply_temperature_c: 15.0,
             supply_humidity_ratio: 0.009,

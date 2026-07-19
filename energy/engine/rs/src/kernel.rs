@@ -3,16 +3,12 @@
 use crate::air_exchange::{infiltration_flow_m3_s, ventilation_load_w, InfiltrationMethod, InfiltrationSpec};
 use crate::airflow_network::{AfLink, AfLinkKind, AfNode, AirflowNetwork};
 use crate::calendar::{RunPeriod, SimDate};
-use crate::controls::{
-    evaluate_controls, predict_zone_load, HumidistatSpec, ThermostatSpec,
-};
+use crate::controls::{evaluate_controls, predict_zone_load, HumidistatSpec, ThermostatSpec};
+use crate::curves::PerformanceCurve;
 use crate::daylight::{dimmed_lighting_power_w, lighting_dimming_fraction, reference_point_illuminance_lux, simplified_daylight_factor};
 use crate::dispatch::{DispatchRequest, DispatchScheme, Dispatcher, EquipmentPriority};
 use crate::electrical::{grid_balance, PvSystem, Transformer};
-use crate::envelope::{
-    solve_exterior_surface_temp, solve_interior_surface_temp,
-    ConductionState, ExteriorConvectionModel, InteriorConvectionModel,
-};
+use crate::envelope::{solve_exterior_surface_temp, solve_interior_surface_temp, ConductionState, ExteriorConvectionModel, InteriorConvectionModel};
 use crate::error::Error;
 use crate::faults::SeveritySchedule;
 use crate::gains::{compute_equipment_gain_w, compute_lighting_gain_w, compute_people_gain_w, ActivityLevel, GainDecomposition};
@@ -27,7 +23,6 @@ use crate::solar::{shading_factor, surface_solar_absorption};
 use crate::units::P_STD;
 use crate::zone_air::{advance_zone_air, HumiditySolutionMethod, ZoneAirBalance, ZoneAirState};
 use crate::zone_hvac::{ZoneEquipment, ZoneEquipmentRequest};
-use crate::curves::PerformanceCurve;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -53,13 +48,7 @@ pub struct ConvergenceTolerances {
 
 impl Default for ConvergenceTolerances {
     fn default() -> Self {
-        Self {
-            temperature_k: 0.01,
-            humidity_ratio: 1e-5,
-            mass_flow: 1e-4,
-            energy_w: 1.0,
-            max_iterations: 20,
-        }
+        Self { temperature_k: 0.01, humidity_ratio: 1e-5, mass_flow: 1e-4, energy_w: 1.0, max_iterations: 20 }
     }
 }
 
@@ -118,10 +107,7 @@ pub struct DeliveredEnergy {
 
 impl DeliveredEnergy {
     pub fn total_electric_w(&self) -> f64 {
-        self.heating_w + self.cooling_w + self.fan_w + self.pump_w + self.compressor_w
-            + self.shw_electric_w + self.refrigeration_w + self.water_pump_w
-            - self.pv_generation_w
-            + self.battery_charge_w
+        self.heating_w + self.cooling_w + self.fan_w + self.pump_w + self.compressor_w + self.shw_electric_w + self.refrigeration_w + self.water_pump_w - self.pv_generation_w + self.battery_charge_w
     }
 }
 // #endregion 🔖DeliveredEnergy
@@ -140,14 +126,7 @@ pub struct ZoneState {
 
 impl ZoneState {
     fn empty() -> Self {
-        Self {
-            air: ZoneAirState::new(20.0, 0.01),
-            heating_demand_w: 0.0,
-            cooling_demand_w: 0.0,
-            unmet_heating_w: 0.0,
-            unmet_cooling_w: 0.0,
-            delivered: DeliveredEnergy::default(),
-        }
+        Self { air: ZoneAirState::new(20.0, 0.01), heating_demand_w: 0.0, cooling_demand_w: 0.0, unmet_heating_w: 0.0, unmet_cooling_w: 0.0, delivered: DeliveredEnergy::default() }
     }
 }
 
@@ -175,15 +154,7 @@ pub struct SimulationState {
 
 impl Default for SimulationState {
     fn default() -> Self {
-        Self {
-            zones: HashMap::new(),
-            surfaces: HashMap::new(),
-            warmup_complete: false,
-            hour: 0,
-            delivered_total: DeliveredEnergy::default(),
-            battery_soc: 0.5,
-            plant_supply_c: 55.0,
-        }
+        Self { zones: HashMap::new(), surfaces: HashMap::new(), warmup_complete: false, hour: 0, delivered_total: DeliveredEnergy::default(), battery_soc: 0.5, plant_supply_c: 55.0 }
     }
 }
 // #endregion 🔖State
@@ -197,37 +168,16 @@ impl SimulationKernel {
     pub fn initialize(model: &Model, pre: &PrecomputedModel, weather: &WeatherRecord) -> SimulationState {
         let mut state = SimulationState::default();
         for zone in &model.zones {
-            state.zones.insert(
-                zone.id,
-                ZoneState {
-                    air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()),
-                    ..ZoneState::empty()
-                },
-            );
+            state.zones.insert(zone.id, ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() });
         }
         for (sid, sp) in &pre.surfaces {
-            state.surfaces.insert(
-                *sid,
-                SurfaceState {
-                    inside_temp_c: weather.dry_bulb_c,
-                    outside_temp_c: weather.dry_bulb_c,
-                    heat_flux_w: 0.0,
-                    ctf: sp.ctf.clone(),
-                    convection_to_zone_w: 0.0,
-                },
-            );
+            state.surfaces.insert(*sid, SurfaceState { inside_temp_c: weather.dry_bulb_c, outside_temp_c: weather.dry_bulb_c, heat_flux_w: 0.0, ctf: sp.ctf.clone(), convection_to_zone_w: 0.0 });
         }
         state
     }
 
     /// 🔄 Run warmup until temperature and load convergence.
-    pub fn warmup(
-        model: &Model,
-        config: &SimulationConfig,
-        pre: &PrecomputedModel,
-        state: &mut SimulationState,
-        weather_records: &[WeatherRecord],
-    ) -> Result<(), Error> {
+    pub fn warmup(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationState, weather_records: &[WeatherRecord]) -> Result<(), Error> {
         let warmup_hours = config.warmup_days * 24;
         let dt_s = pre.zone_timestep_s;
         let mut prev_temps: HashMap<EntityId, f64> = HashMap::new();
@@ -239,11 +189,7 @@ impl SimulationKernel {
             let date = SimDate::new(weather.year, weather.month, weather.day);
             Self::advance_timestep(model, config, pre, state, &weather, &date, hour as f64, dt_s)?;
             if hour > 24 && hour % 24 == 0 {
-                let temp_ok = state.zones.iter().all(|(id, zs)| {
-                    prev_temps
-                        .get(id)
-                        .is_some_and(|prev| (zs.air.temp_c - prev).abs() <= config.tolerances.temperature_k)
-                });
+                let temp_ok = state.zones.iter().all(|(id, zs)| prev_temps.get(id).is_some_and(|prev| (zs.air.temp_c - prev).abs() <= config.tolerances.temperature_k));
                 let load_ok = state.zones.iter().all(|(id, zs)| {
                     prev_loads.get(id).is_some_and(|prev| {
                         let load = zs.heating_demand_w + zs.cooling_demand_w;
@@ -265,34 +211,15 @@ impl SimulationKernel {
     }
 
     /// 🔄 Advance one zone timestep with predictor-corrector HVAC coupling.
-    pub fn advance_timestep(
-        model: &Model,
-        config: &SimulationConfig,
-        pre: &PrecomputedModel,
-        state: &mut SimulationState,
-        weather: &WeatherRecord,
-        date: &SimDate,
-        hour: f64,
-        dt_s: f64,
-    ) -> Result<(), Error> {
-        let ctx = ScheduleContext {
-            year: date.year,
-            month: date.month,
-            day: date.day,
-            hour: weather.hour,
-            day_of_week: date.day_of_week(),
-            timestep_index: hour as u32,
-            is_dst: false,
-        };
+    pub fn advance_timestep(model: &Model, config: &SimulationConfig, pre: &PrecomputedModel, state: &mut SimulationState, weather: &WeatherRecord, date: &SimDate, hour: f64, dt_s: f64) -> Result<(), Error> {
+        let ctx = ScheduleContext { year: date.year, month: date.month, day: date.day, hour: weather.hour, day_of_week: date.day_of_week(), timestep_index: hour as u32, is_dst: false };
 
         let day_of_year = date.day_of_year();
         let (sun_alt, sun_az) = pre.solar_at(model, day_of_year, hour);
         let ext_conv = ExteriorConvectionModel::default();
         let int_conv = InteriorConvectionModel::default();
         let sky_temp_k = weather.dry_bulb_c + 273.15 - 20.0;
-        let ground_model = GroundTemperatureModel::Monthly {
-            temperatures_c: model.ground_temperature.building_surface_c,
-        };
+        let ground_model = GroundTemperatureModel::Monthly { temperatures_c: model.ground_temperature.building_surface_c };
 
         let mut zone_envelope_w: HashMap<EntityId, f64> = HashMap::new();
         let mut zone_solar_w: HashMap<EntityId, f64> = HashMap::new();
@@ -304,9 +231,7 @@ impl SimulationKernel {
                 Some(OutsideBoundary::Ground) => ground_model.temperature_c(day_of_year),
                 Some(OutsideBoundary::OutdoorAir) | None => weather.dry_bulb_c,
                 Some(OutsideBoundary::OtherSideTemperature) => weather.dry_bulb_c - 5.0,
-                Some(OutsideBoundary::Adiabatic) | Some(OutsideBoundary::Interzone(_)) => {
-                    state.surfaces.get(sid).map_or(weather.dry_bulb_c, |s| s.outside_temp_c)
-                }
+                Some(OutsideBoundary::Adiabatic) | Some(OutsideBoundary::Interzone(_)) => state.surfaces.get(sid).map_or(weather.dry_bulb_c, |s| s.outside_temp_c),
             };
 
             let zone_t = state.zones.get(&sp.zone_id).map_or(weather.dry_bulb_c, |z| z.air.temp_c);
@@ -315,35 +240,14 @@ impl SimulationKernel {
             if sp.sun_exposed && sun_alt > 0.0 {
                 let incidence = crate::solar::beam_incidence_cosine(sp.normal, sun_alt, sun_az);
                 let shade = shading_factor(1.0, 0.0, 1.0, sun_alt);
-                let abs = surface_solar_absorption(
-                    weather.direct_normal_irradiance_w_m2,
-                    weather.diffuse_horizontal_irradiance_w_m2,
-                    incidence,
-                    shade,
-                    sp.solar_absorptance,
-                    sp.tilt_deg,
-                );
+                let abs = surface_solar_absorption(weather.direct_normal_irradiance_w_m2, weather.diffuse_horizontal_irradiance_w_m2, incidence, shade, sp.solar_absorptance, sp.tilt_deg);
                 solar_w_m2 = abs.total_w_m2;
             }
 
-            let ss = state.surfaces.entry(*sid).or_insert_with(|| SurfaceState {
-                inside_temp_c: zone_t,
-                outside_temp_c: outside_temp,
-                heat_flux_w: 0.0,
-                ctf: sp.ctf.clone(),
-                convection_to_zone_w: 0.0,
-            });
+            let ss = state.surfaces.entry(*sid).or_insert_with(|| SurfaceState { inside_temp_c: zone_t, outside_temp_c: outside_temp, heat_flux_w: 0.0, ctf: sp.ctf.clone(), convection_to_zone_w: 0.0 });
 
             let conduction_w_m2 = ss.ctf.heat_flux_w_m2(outside_temp, zone_t);
-            let exterior_t = solve_exterior_surface_temp(
-                outside_temp,
-                sky_temp_k,
-                weather.wind_speed_m_s,
-                solar_w_m2,
-                -conduction_w_m2,
-                sp.emissivity,
-                &ext_conv,
-            );
+            let exterior_t = solve_exterior_surface_temp(outside_temp, sky_temp_k, weather.wind_speed_m_s, solar_w_m2, -conduction_w_m2, sp.emissivity, &ext_conv);
             let balance = solve_interior_surface_temp(zone_t, conduction_w_m2, solar_w_m2 * 0.3, &int_conv);
             let conv_w = balance.convection_w_m2 * sp.area_m2;
             let cond_w = conduction_w_m2 * sp.area_m2;
@@ -369,10 +273,7 @@ impl SimulationKernel {
                 if sun_alt > 0.0 {
                     let incidence = crate::solar::beam_incidence_cosine(fp.normal, sun_alt, sun_az);
                     let shade = shading_factor(1.0, 0.0, 1.0, sun_alt);
-                    let solar_w = (weather.direct_normal_irradiance_w_m2 * incidence * shade
-                        + weather.diffuse_horizontal_irradiance_w_m2 * 0.5)
-                        * fp.shgc
-                        * fp.area_m2;
+                    let solar_w = (weather.direct_normal_irradiance_w_m2 * incidence * shade + weather.diffuse_horizontal_irradiance_w_m2 * 0.5) * fp.shgc * fp.area_m2;
                     *zone_solar_w.entry(surface.zone_id).or_default() += solar_w;
                 }
                 let _ = fid;
@@ -392,19 +293,8 @@ impl SimulationKernel {
 
             let mut lighting_dim = 1.0_f64;
             if let Some(dz) = model.daylight_zones.iter().find(|d| d.zone_id == zone.id) {
-                let df = simplified_daylight_factor(
-                    model.fenestrations.iter().map(|f| f.area_m2).sum(),
-                    floor_area_m2,
-                    dz.window_transmittance,
-                );
-                let lux = reference_point_illuminance_lux(
-                    weather.diffuse_horizontal_irradiance_w_m2 * 120.0,
-                    weather.direct_normal_irradiance_w_m2 * 120.0,
-                    sun_alt.max(0.0) / 90.0,
-                    dz.window_transmittance,
-                    df,
-                    1.0,
-                );
+                let df = simplified_daylight_factor(model.fenestrations.iter().map(|f| f.area_m2).sum(), floor_area_m2, dz.window_transmittance);
+                let lux = reference_point_illuminance_lux(weather.diffuse_horizontal_irradiance_w_m2 * 120.0, weather.direct_normal_irradiance_w_m2 * 120.0, sun_alt.max(0.0) / 90.0, dz.window_transmittance, df, 1.0);
                 lighting_dim = lighting_dimming_fraction(lux, dz.illuminance_target_lux, 0.1);
             }
 
@@ -412,33 +302,16 @@ impl SimulationKernel {
             for person in model.people.iter().filter(|p| p.zone_id == zone.id) {
                 let occ = config.schedules.lookup(person.schedule_id, &ctx);
                 let count = person.people_per_area * floor_area_m2 * occ;
-                internal_gain = internal_gain.add(&compute_people_gain_w(
-                    count,
-                    ActivityLevel::OfficeWork,
-                    1.0,
-                    person.radiant_fraction,
-                ));
+                internal_gain = internal_gain.add(&compute_people_gain_w(count, ActivityLevel::OfficeWork, 1.0, person.radiant_fraction));
             }
             for light in model.lighting.iter().filter(|l| l.zone_id == zone.id) {
                 let frac = config.schedules.lookup(light.schedule_id, &ctx) * lighting_dim;
                 let power = dimmed_lighting_power_w(light.watts_per_area * floor_area_m2, frac);
-                internal_gain = internal_gain.add(&compute_lighting_gain_w(
-                    power / floor_area_m2.max(1.0),
-                    floor_area_m2,
-                    1.0,
-                    light.radiant_fraction,
-                    light.return_air_fraction,
-                ));
+                internal_gain = internal_gain.add(&compute_lighting_gain_w(power / floor_area_m2.max(1.0), floor_area_m2, 1.0, light.radiant_fraction, light.return_air_fraction));
             }
             for equip in model.equipment.iter().filter(|e| e.zone_id == zone.id) {
                 let frac = config.schedules.lookup(equip.schedule_id, &ctx);
-                internal_gain = internal_gain.add(&compute_equipment_gain_w(
-                    equip.watts_per_area,
-                    floor_area_m2,
-                    frac,
-                    equip.radiant_fraction,
-                    equip.latent_fraction,
-                ));
+                internal_gain = internal_gain.add(&compute_equipment_gain_w(equip.watts_per_area, floor_area_m2, frac, equip.radiant_fraction, equip.latent_fraction));
             }
 
             let mut infil_flow = model.infiltrations.iter().find(|i| i.zone_id == zone.id).map_or(0.0, |inf| {
@@ -456,36 +329,16 @@ impl SimulationKernel {
                     velocity_squared_coefficient: inf.velocity_squared_term_coefficient,
                     stack_height_m: 3.0,
                 };
-                infiltration_flow_m3_s(
-                    &spec,
-                    zone.volume_m3,
-                    exterior_area_m2,
-                    weather.dry_bulb_c,
-                    zone_t,
-                    weather.wind_speed_m_s,
-                    weather.atmospheric_pressure_pa,
-                )
+                infiltration_flow_m3_s(&spec, zone.volume_m3, exterior_area_m2, weather.dry_bulb_c, zone_t, weather.wind_speed_m_s, weather.atmospheric_pressure_pa)
             });
 
             if let Some(afn_def) = &model.airflow_network {
-                let mut nodes = vec![AfNode {
-                    id: afn_def.outdoor_node_id,
-                    elevation_m: 0.0,
-                    temperature_c: weather.dry_bulb_c,
-                    humidity_ratio: weather.humidity_ratio(),
-                    is_reference: true,
-                }];
+                let mut nodes = vec![AfNode { id: afn_def.outdoor_node_id, elevation_m: 0.0, temperature_c: weather.dry_bulb_c, humidity_ratio: weather.humidity_ratio(), is_reference: true }];
                 for (zid, nid) in &afn_def.zone_node_ids {
                     if *zid == zone.id {
                         let zt = state.zones.get(zid).map_or(zone_t, |z| z.air.temp_c);
                         let zw = state.zones.get(zid).map_or(zone_w, |z| z.air.humidity_ratio);
-                        nodes.push(AfNode {
-                            id: *nid,
-                            elevation_m: 3.0,
-                            temperature_c: zt,
-                            humidity_ratio: zw,
-                            is_reference: false,
-                        });
+                        nodes.push(AfNode { id: *nid, elevation_m: 3.0, temperature_c: zt, humidity_ratio: zw, is_reference: false });
                     }
                 }
                 if nodes.len() > 1 {
@@ -514,47 +367,21 @@ impl SimulationKernel {
                 }
             }
 
-            let mech_flow = model
-                .mechanical_ventilations
-                .iter()
-                .filter(|m| m.zone_id == zone.id)
-                .map(|m| m.design_flow_m3_s * config.schedules.lookup(m.schedule_id, &ctx))
-                .sum::<f64>();
+            let mech_flow = model.mechanical_ventilations.iter().filter(|m| m.zone_id == zone.id).map(|m| m.design_flow_m3_s * config.schedules.lookup(m.schedule_id, &ctx)).sum::<f64>();
 
             let total_vent_flow = infil_flow + mech_flow;
-            let (infil_sens, infil_lat) = ventilation_load_w(
-                total_vent_flow,
-                zone_t,
-                zone_w,
-                weather.dry_bulb_c,
-                weather.humidity_ratio(),
-                weather.atmospheric_pressure_pa,
-                0.0,
-            );
+            let (infil_sens, infil_lat) = ventilation_load_w(total_vent_flow, zone_t, zone_w, weather.dry_bulb_c, weather.humidity_ratio(), weather.atmospheric_pressure_pa, 0.0);
 
             let envelope_w = zone_envelope_w.get(&zone.id).copied().unwrap_or(0.0);
             let solar_w = zone_solar_w.get(&zone.id).copied().unwrap_or(0.0);
             let surface_conv_w = zone_surface_conv_w.get(&zone.id).copied().unwrap_or(0.0);
 
             let setpoints = pre.default_setpoints.get(&zone.id).copied().unwrap_or_default();
-            let heat_sp = model
-                .thermostats
-                .iter()
-                .find(|t| t.zone_id == zone.id)
-                .map_or(setpoints.heating_c, |t| config.schedules.lookup(t.heating_setpoint_schedule_id, &ctx) * 24.0 + 20.0);
-            let cool_sp = model
-                .thermostats
-                .iter()
-                .find(|t| t.zone_id == zone.id)
-                .map_or(setpoints.cooling_c, |t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0);
+            let heat_sp = model.thermostats.iter().find(|t| t.zone_id == zone.id).map_or(setpoints.heating_c, |t| config.schedules.lookup(t.heating_setpoint_schedule_id, &ctx) * 24.0 + 20.0);
+            let cool_sp = model.thermostats.iter().find(|t| t.zone_id == zone.id).map_or(setpoints.cooling_c, |t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0);
 
             let humidistat = model.humidistats.iter().find(|h| h.zone_id == zone.id);
-            let hum_spec = humidistat.map(|h| HumidistatSpec {
-                humidifying_setpoint_rh: 0.4,
-                dehumidifying_setpoint_rh: 0.6,
-                humidifying_throttle_range: h.humidifying_throttle_range,
-                dehumidifying_throttle_range: h.dehumidifying_throttle_range,
-            });
+            let hum_spec = humidistat.map(|h| HumidistatSpec { humidifying_setpoint_rh: 0.4, dehumidifying_setpoint_rh: 0.6, humidifying_throttle_range: h.humidifying_throttle_range, dehumidifying_throttle_range: h.dehumidifying_throttle_range });
             let therm_spec = ThermostatSpec {
                 heating_setpoint_c: heat_sp,
                 cooling_setpoint_c: cool_sp,
@@ -568,23 +395,12 @@ impl SimulationKernel {
             let sensible_gain = internal_gain.sensible_w + solar_w + surface_conv_w - envelope_w;
             let mut delivered = DeliveredEnergy::default();
 
-            let zone_state = state.zones.entry(zone.id).or_insert_with(|| ZoneState {
-                air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()),
-                ..ZoneState::empty()
-            });
+            let zone_state = state.zones.entry(zone.id).or_insert_with(|| ZoneState { air: ZoneAirState::new(weather.dry_bulb_c, weather.humidity_ratio()), ..ZoneState::empty() });
 
             for _sub in 0..sub_steps.max(1) {
                 let ctrl = evaluate_controls(&therm_spec, hum_spec.as_ref(), zone_state.air.temp_c, zone_rh);
                 let residual_sens = sensible_gain - zone_state.heating_demand_w + zone_state.cooling_demand_w;
-                let predicted = predict_zone_load(
-                    residual_sens,
-                    internal_gain.latent_w,
-                    &ctrl,
-                    f64::INFINITY,
-                    f64::INFINITY,
-                    5000.0,
-                    5000.0,
-                );
+                let predicted = predict_zone_load(residual_sens, internal_gain.latent_w, &ctrl, f64::INFINITY, f64::INFINITY, 5000.0, 5000.0);
 
                 let mut balance = ZoneAirBalance {
                     volume_m3: zone.volume_m3,
@@ -607,24 +423,14 @@ impl SimulationKernel {
                     max_cooling_w: None,
                 };
 
-                let result = advance_zone_air(
-                    &zone_state.air,
-                    &balance,
-                    system_dt_s,
-                    HumiditySolutionMethod::ThirdOrderBackward,
-                    weather.atmospheric_pressure_pa,
-                );
+                let result = advance_zone_air(&zone_state.air, &balance, system_dt_s, HumiditySolutionMethod::ThirdOrderBackward, weather.atmospheric_pressure_pa);
                 zone_state.air.push_temp(result.temp_c);
                 zone_state.air.push_humidity(result.humidity_ratio);
                 zone_state.heating_demand_w = predicted.heating_w;
                 zone_state.cooling_demand_w = predicted.cooling_w;
 
                 for ils in model.ideal_loads.iter().filter(|i| i.zone_id == zone.id) {
-                    let fault_factor = model
-                        .faults
-                        .iter()
-                        .find(|f| f.target_equipment_id == ils.id)
-                        .map_or(1.0, |f| 1.0 - f.severity * SeveritySchedule::constant(1.0).at_hour(weather.hour));
+                    let fault_factor = model.faults.iter().find(|f| f.target_equipment_id == ils.id).map_or(1.0, |f| 1.0 - f.severity * SeveritySchedule::constant(1.0).at_hour(weather.hour));
 
                     let config_ils = IdealLoadsConfig {
                         max_heating_supply_air_temp_c: ils.max_heating_supply_air_temp_c,
@@ -652,19 +458,16 @@ impl SimulationKernel {
                     balance.system_sensible_w = output.sensible_delivered_w;
                     delivered.heating_w += output.sensible_heating_w;
                     delivered.cooling_w += output.sensible_cooling_w;
-                    let corrected = advance_zone_air(
-                        &zone_state.air,
-                        &balance,
-                        system_dt_s,
-                        HumiditySolutionMethod::ThirdOrderBackward,
-                        weather.atmospheric_pressure_pa,
-                    );
+                    let corrected = advance_zone_air(&zone_state.air, &balance, system_dt_s, HumiditySolutionMethod::ThirdOrderBackward, weather.atmospheric_pressure_pa);
                     zone_state.air.push_temp(corrected.temp_c);
                     zone_state.unmet_heating_w = output.unmet_heating_w;
                     zone_state.unmet_cooling_w = output.unmet_cooling_w;
                 }
 
-                #[allow(unused_assignments, reason = "balance.system_sensible_w accumulation feeds a second advance_zone_air rebalance pass not yet wired for the zone_equipment path (only the ideal_loads path above rebalances today) — in-flight energy BEM zone-equipment coupling")]
+                #[allow(
+                    unused_assignments,
+                    reason = "balance.system_sensible_w accumulation feeds a second advance_zone_air rebalance pass not yet wired for the zone_equipment path (only the ideal_loads path above rebalances today) — in-flight energy BEM zone-equipment coupling"
+                )]
                 for ze in model.zone_equipment.iter().filter(|z| z.zone_id == zone.id) {
                     let equip = match ze.equipment_type {
                         crate::model::ZoneEquipmentType::FanCoil => ZoneEquipment::FanCoil {
@@ -681,12 +484,7 @@ impl SimulationKernel {
                             },
                             max_flow_m3_s: 0.5,
                         },
-                        _ => ZoneEquipment::Baseboard {
-                            heating: crate::coils::HeatingCoil::Electric {
-                                capacity_w: ze.heating_capacity_w,
-                                efficiency: 1.0,
-                            },
-                        },
+                        _ => ZoneEquipment::Baseboard { heating: crate::coils::HeatingCoil::Electric { capacity_w: ze.heating_capacity_w, efficiency: 1.0 } },
                     };
                     let req = ZoneEquipmentRequest {
                         zone_temperature_c: zone_state.air.temp_c,
@@ -720,49 +518,13 @@ impl SimulationKernel {
         Ok(())
     }
 
-    fn simulate_secondary(
-        model: &Model,
-        config: &SimulationConfig,
-        _pre: &PrecomputedModel,
-        state: &mut SimulationState,
-        weather: &WeatherRecord,
-        ctx: &ScheduleContext,
-        sun_alt: f64,
-        sun_az: f64,
-        dt_s: f64,
-    ) {
+    fn simulate_secondary(model: &Model, config: &SimulationConfig, _pre: &PrecomputedModel, state: &mut SimulationState, weather: &WeatherRecord, ctx: &ScheduleContext, sun_alt: f64, sun_az: f64, dt_s: f64) {
         for plant in &model.plant_loops {
             let total_load: f64 = state.zones.values().map(|z| z.heating_demand_w + z.cooling_demand_w).sum();
-            let dispatcher = Dispatcher::new(
-                DispatchScheme::Sequential,
-                plant
-                    .equipment_ids
-                    .iter()
-                    .map(|id| EquipmentPriority {
-                        equipment_id: id.0,
-                        priority: 1,
-                        min_runtime_hours: 0.0,
-                        capacity_w: 100_000.0,
-                    })
-                    .collect(),
-            );
-            let results = dispatcher.dispatch(&DispatchRequest {
-                total_load_w: total_load,
-                available_capacity_w: 500_000.0,
-                outdoor_temp_c: weather.dry_bulb_c,
-            });
-            let pump = Pump {
-                design_head_pa: 200_000.0,
-                design_flow_kg_s: plant.design_flow_kg_s,
-                motor_efficiency: 0.85,
-                part_load_curve: PerformanceCurve::Constant(1.0),
-            };
-            let loop_sim = PlantLoopSimulation {
-                supply: PlantStream::new(plant.supply_temperature_c, plant.design_flow_kg_s),
-                return_stream: PlantStream::new(plant.return_temperature_c, plant.design_flow_kg_s),
-                pump,
-                glycol_fraction: 0.0,
-            };
+            let dispatcher = Dispatcher::new(DispatchScheme::Sequential, plant.equipment_ids.iter().map(|id| EquipmentPriority { equipment_id: id.0, priority: 1, min_runtime_hours: 0.0, capacity_w: 100_000.0 }).collect());
+            let results = dispatcher.dispatch(&DispatchRequest { total_load_w: total_load, available_capacity_w: 500_000.0, outdoor_temp_c: weather.dry_bulb_c });
+            let pump = Pump { design_head_pa: 200_000.0, design_flow_kg_s: plant.design_flow_kg_s, motor_efficiency: 0.85, part_load_curve: PerformanceCurve::Constant(1.0) };
+            let loop_sim = PlantLoopSimulation { supply: PlantStream::new(plant.supply_temperature_c, plant.design_flow_kg_s), return_stream: PlantStream::new(plant.return_temperature_c, plant.design_flow_kg_s), pump, glycol_fraction: 0.0 };
             let plant_out = loop_sim.simulate(results.first().map_or(0.0, |r| r.load_w));
             state.delivered_total.pump_w += plant_out.electrical_power_w;
             state.plant_supply_c = plant_out.outlet.temperature_c;
@@ -788,25 +550,11 @@ impl SimulationKernel {
         state.delivered_total.pv_generation_w += pv_gen;
 
         for battery in &model.battery_storage {
-            let net_load: f64 = state
-                .zones
-                .values()
-                .map(|z| z.delivered.total_electric_w())
-                .sum();
-            let charge_w = if pv_gen > net_load {
-                (pv_gen - net_load).min(battery.max_charge_w)
-            } else {
-                -(net_load - pv_gen).min(battery.max_discharge_w)
-            };
-            state.battery_soc = (state.battery_soc + charge_w * dt_s / (battery.capacity_kwh * 3_600_000.0))
-                .clamp(0.0, 1.0);
+            let net_load: f64 = state.zones.values().map(|z| z.delivered.total_electric_w()).sum();
+            let charge_w = if pv_gen > net_load { (pv_gen - net_load).min(battery.max_charge_w) } else { -(net_load - pv_gen).min(battery.max_discharge_w) };
+            state.battery_soc = (state.battery_soc + charge_w * dt_s / (battery.capacity_kwh * 3_600_000.0)).clamp(0.0, 1.0);
             state.delivered_total.battery_charge_w += charge_w.max(0.0);
-            let transformer = Transformer {
-                rated_kva: 100.0,
-                no_load_loss_w: 50.0,
-                load_loss_w: 200.0,
-                impedance_fraction: 0.02,
-            };
+            let transformer = Transformer { rated_kva: 100.0, no_load_loss_w: 50.0, load_loss_w: 200.0, impedance_fraction: 0.02 };
             let _balance = grid_balance(net_load, pv_gen, 0.0, 0.0, charge_w, &transformer);
         }
 
@@ -835,13 +583,7 @@ impl SimulationKernel {
 
     /// 📅 Build run period from config.
     pub fn run_period(config: &SimulationConfig) -> RunPeriod {
-        RunPeriod {
-            start_month: config.run_period_start_month,
-            start_day: config.run_period_start_day,
-            end_month: config.run_period_end_month,
-            end_day: config.run_period_end_day,
-            year: 2026,
-        }
+        RunPeriod { start_month: config.run_period_start_month, start_day: config.run_period_start_day, end_month: config.run_period_end_month, end_day: config.run_period_end_day, year: 2026 }
     }
 }
 // #endregion 🔖Kernel
@@ -915,13 +657,7 @@ mod tests {
 
     #[test]
     fn run_period_from_config() {
-        let config = SimulationConfig {
-            run_period_start_month: 1,
-            run_period_start_day: 1,
-            run_period_end_month: 1,
-            run_period_end_day: 7,
-            ..Default::default()
-        };
+        let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, ..Default::default() };
         assert_eq!(SimulationKernel::run_period(&config).total_hours(), 168);
     }
 }

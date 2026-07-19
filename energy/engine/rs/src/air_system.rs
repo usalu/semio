@@ -66,10 +66,8 @@ pub fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> Ai
     let oa_m_dot = return_m_dot * effective_oa_frac;
     let ra_m_dot = return_m_dot - oa_m_dot;
 
-    let mixed_t = (oa_m_dot * request.outdoor_temperature_c + ra_m_dot * request.return_temperature_c)
-        / return_m_dot.max(1e-6);
-    let mixed_w = (oa_m_dot * request.outdoor_humidity_ratio + ra_m_dot * request.return_humidity_ratio)
-        / return_m_dot.max(1e-6);
+    let mixed_t = (oa_m_dot * request.outdoor_temperature_c + ra_m_dot * request.return_temperature_c) / return_m_dot.max(1e-6);
+    let mixed_w = (oa_m_dot * request.outdoor_humidity_ratio + ra_m_dot * request.return_humidity_ratio) / return_m_dot.max(1e-6);
 
     match system {
         AirSystem::Cav { supply_fan, return_fan, cooling, heating, design_flow_m3_s } => {
@@ -77,10 +75,10 @@ pub fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> Ai
             let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
             let coil_result = run_coils(cooling, heating.as_ref(), mixed_t, mixed_w, m_dot, request, request.outdoor_pressure_pa);
             let sup_op = fan_operating_point(supply_fan, flow, 500.0);
-            let ret_power = return_fan.as_ref().map(|f| {
+            let ret_power = return_fan.as_ref().map_or(0.0, |f| {
                 let op = fan_operating_point(f, flow * 0.9, 300.0);
                 fan_power_w(f, &op)
-            }).unwrap_or(0.0);
+            });
             let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
             AirSystemOutput {
                 supply_temperature_c: coil_result.outlet.temperature_c,
@@ -104,9 +102,7 @@ pub fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> Ai
             let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
             let coil_result = run_coils(cooling, heating.as_ref(), mixed_t, mixed_w, m_dot, request, request.outdoor_pressure_pa);
             let sup_op = fan_operating_point(supply_fan, flow, 600.0);
-            let ret_power = return_fan.as_ref().map(|f| {
-                fan_power_w(f, &fan_operating_point(f, flow * 0.85, 350.0))
-            }).unwrap_or(0.0);
+            let ret_power = return_fan.as_ref().map_or(0.0, |f| fan_power_w(f, &fan_operating_point(f, flow * 0.85, 350.0)));
             let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
             AirSystemOutput {
                 supply_temperature_c: coil_result.outlet.temperature_c,
@@ -136,8 +132,7 @@ pub fn simulate_air_system(system: &AirSystem, request: &AirSystemRequest) -> Ai
             let total_m = hot_m + cold_m;
             let t_sup = (hot_m * hot_out.outlet.temperature_c + cold_m * cold_out.outlet.temperature_c) / total_m.max(1e-6);
             let w_sup = (hot_m * hot_out.outlet.humidity_ratio + cold_m * cold_out.outlet.humidity_ratio) / total_m.max(1e-6);
-            let sup_power = fan_power_w(hot_fan, &fan_operating_point(hot_fan, hot_flow, 400.0))
-                + fan_power_w(cold_fan, &fan_operating_point(cold_fan, cold_flow, 400.0));
+            let sup_power = fan_power_w(hot_fan, &fan_operating_point(hot_fan, hot_flow, 400.0)) + fan_power_w(cold_fan, &fan_operating_point(cold_fan, cold_flow, 400.0));
             let terminals = simulate_terminals(&request.zone_terminals, t_sup, w_sup);
             AirSystemOutput {
                 supply_temperature_c: t_sup,
@@ -235,48 +230,23 @@ struct CoilRunResult {
     compressor_w: f64,
 }
 
-fn run_coils(
-    cooling: &CoolingCoil,
-    heating: Option<&HeatingCoil>,
-    mixed_t: f64,
-    mixed_w: f64,
-    m_dot: f64,
-    request: &AirSystemRequest,
-    pressure_pa: f64,
-) -> CoilRunResult {
-    let inlet = CoilAirState {
-        temperature_c: mixed_t,
-        humidity_ratio: mixed_w,
-        mass_flow_kg_s: m_dot,
-        pressure_pa,
-    };
+fn run_coils(cooling: &CoolingCoil, heating: Option<&HeatingCoil>, mixed_t: f64, mixed_w: f64, m_dot: f64, request: &AirSystemRequest, pressure_pa: f64) -> CoilRunResult {
+    let inlet = CoilAirState { temperature_c: mixed_t, humidity_ratio: mixed_w, mass_flow_kg_s: m_dot, pressure_pa };
     let cool = cooling_coil_output_w(cooling, &inlet, request.total_cooling_load_w, 0.08);
-    let heat = heating.map(|h| heating_coil_output_w(h, &cool.outlet, request.total_heating_load_w))
-        .unwrap_or(crate::coils::HeatingCoilOutput {
-            outlet: cool.outlet,
-            total_heating_w: 0.0,
-            gas_consumption_w: 0.0,
-            water_heat_removal_w: 0.0,
-        });
-    CoilRunResult {
-        outlet: heat.outlet,
-        cooling_w: cool.total_cooling_w,
-        heating_w: heat.total_heating_w,
-        compressor_w: cool.compressor_power_w,
-    }
+    let heat = heating.map_or(crate::coils::HeatingCoilOutput { outlet: cool.outlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }, |h| heating_coil_output_w(h, &cool.outlet, request.total_heating_load_w));
+    CoilRunResult { outlet: heat.outlet, cooling_w: cool.total_cooling_w, heating_w: heat.total_heating_w, compressor_w: cool.compressor_power_w }
 }
 
-fn simulate_terminals(
-    terminals: &[(AirTerminal, TerminalRequest)],
-    supply_t: f64,
-    supply_w: f64,
-) -> Vec<crate::terminal::TerminalOutput> {
-    terminals.iter().map(|(term, req)| {
-        let mut r = *req;
-        r.supply_temperature_c = supply_t;
-        r.supply_humidity_ratio = supply_w;
-        term.simulate(&r)
-    }).collect()
+fn simulate_terminals(terminals: &[(AirTerminal, TerminalRequest)], supply_t: f64, supply_w: f64) -> Vec<crate::terminal::TerminalOutput> {
+    terminals
+        .iter()
+        .map(|(term, req)| {
+            let mut r = *req;
+            r.supply_temperature_c = supply_t;
+            r.supply_humidity_ratio = supply_w;
+            term.simulate(&r)
+        })
+        .collect()
 }
 
 fn economizer_active(request: &AirSystemRequest) -> bool {
@@ -296,13 +266,13 @@ fn economizer_active(request: &AirSystemRequest) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::curves::PerformanceCurve;
+    use crate::fans::FanType;
+    use crate::props::humidity_ratio_from_rh;
+    use crate::units::P_STD;
 
     fn test_cooling() -> CoolingCoil {
-        CoolingCoil::DxSingleSpeed {
-            rated_capacity_w: 50_000.0,
-            rated_shr: 0.75,
-            cop_curve: PerformanceCurve::Constant(1.0),
-        }
+        CoolingCoil::DxSingleSpeed { rated_capacity_w: 50_000.0, rated_shr: 0.75, cop_curve: PerformanceCurve::Constant(1.0) }
     }
 
     fn test_fan() -> Fan {
@@ -319,14 +289,7 @@ mod tests {
 
     #[test]
     fn vav_system_cools_mixed_air() {
-        let system = AirSystem::Vav {
-            supply_fan: test_fan(),
-            return_fan: None,
-            cooling: test_cooling(),
-            heating: None,
-            min_flow_m3_s: 1.0,
-            max_flow_m3_s: 4.0,
-        };
+        let system = AirSystem::Vav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, min_flow_m3_s: 1.0, max_flow_m3_s: 4.0 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 32.0,
             outdoor_humidity_ratio: humidity_ratio_from_rh(32.0, 0.5, P_STD),
@@ -348,13 +311,7 @@ mod tests {
 
     #[test]
     fn economizer_detected_when_oa_cooler() {
-        let system = AirSystem::Cav {
-            supply_fan: test_fan(),
-            return_fan: None,
-            cooling: test_cooling(),
-            heating: None,
-            design_flow_m3_s: 2.0,
-        };
+        let system = AirSystem::Cav { supply_fan: test_fan(), return_fan: None, cooling: test_cooling(), heating: None, design_flow_m3_s: 2.0 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 15.0,
             outdoor_humidity_ratio: 0.006,
@@ -374,13 +331,7 @@ mod tests {
 
     #[test]
     fn doas_conditions_outdoor_air() {
-        let system = AirSystem::Doas {
-            supply_fan: test_fan(),
-            cooling: test_cooling(),
-            heating: Some(HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 }),
-            erv_effectiveness: 0.7,
-            design_oa_m3_s: 0.5,
-        };
+        let system = AirSystem::Doas { supply_fan: test_fan(), cooling: test_cooling(), heating: Some(HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 }), erv_effectiveness: 0.7, design_oa_m3_s: 0.5 };
         let req = AirSystemRequest {
             outdoor_temperature_c: 30.0,
             outdoor_humidity_ratio: humidity_ratio_from_rh(30.0, 0.6, P_STD),

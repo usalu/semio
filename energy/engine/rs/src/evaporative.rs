@@ -49,20 +49,9 @@ fn relative_humidity_from_w(t_c: f64, w: f64, p_atm: f64) -> f64 {
 
 // #region 🔖Simulate
 /// 💧 Simulate direct or indirect evaporative cooling.
-pub fn evaporative_cool(
-    cooler: &EvaporativeCooler,
-    inlet: &EvaporativeInlet,
-    enabled: bool,
-) -> EvaporativeOutput {
+pub fn evaporative_cool(cooler: &EvaporativeCooler, inlet: &EvaporativeInlet, enabled: bool) -> EvaporativeOutput {
     if !enabled || inlet.mass_flow_kg_s < 1e-9 {
-        return EvaporativeOutput {
-            dry_bulb_c: inlet.dry_bulb_c,
-            humidity_ratio: inlet.humidity_ratio,
-            sensible_cooling_w: 0.0,
-            latent_heat_w: 0.0,
-            water_consumption_kg_s: 0.0,
-            effectiveness_achieved: 0.0,
-        };
+        return EvaporativeOutput { dry_bulb_c: inlet.dry_bulb_c, humidity_ratio: inlet.humidity_ratio, sensible_cooling_w: 0.0, latent_heat_w: 0.0, water_consumption_kg_s: 0.0, effectiveness_achieved: 0.0 };
     }
 
     match cooler {
@@ -75,14 +64,7 @@ pub fn evaporative_cool(
             let sensible = inlet.mass_flow_kg_s * CP_DRY_AIR * (inlet.dry_bulb_c - t_out);
             let water_evap = (w_out - inlet.humidity_ratio).max(0.0) * inlet.mass_flow_kg_s;
             let latent = water_evap * latent_heat_vaporization(t_out);
-            EvaporativeOutput {
-                dry_bulb_c: t_out,
-                humidity_ratio: w_out,
-                sensible_cooling_w: sensible.max(0.0),
-                latent_heat_w: latent,
-                water_consumption_kg_s: water_evap,
-                effectiveness_achieved: eps,
-            }
+            EvaporativeOutput { dry_bulb_c: t_out, humidity_ratio: w_out, sensible_cooling_w: sensible.max(0.0), latent_heat_w: latent, water_consumption_kg_s: water_evap, effectiveness_achieved: eps }
         }
         EvaporativeCooler::Indirect { sensible_effectiveness, .. } => {
             let eps = sensible_effectiveness.clamp(0.0, 1.0);
@@ -90,14 +72,7 @@ pub fn evaporative_cool(
             let t_out = inlet.dry_bulb_c - eps * (inlet.dry_bulb_c - t_wb);
             let sensible = inlet.mass_flow_kg_s * CP_DRY_AIR * (inlet.dry_bulb_c - t_out);
             let water_evap = sensible / H_FG_0C;
-            EvaporativeOutput {
-                dry_bulb_c: t_out,
-                humidity_ratio: inlet.humidity_ratio,
-                sensible_cooling_w: sensible.max(0.0),
-                latent_heat_w: 0.0,
-                water_consumption_kg_s: water_evap * 0.5,
-                effectiveness_achieved: eps,
-            }
+            EvaporativeOutput { dry_bulb_c: t_out, humidity_ratio: inlet.humidity_ratio, sensible_cooling_w: sensible.max(0.0), latent_heat_w: 0.0, water_consumption_kg_s: water_evap * 0.5, effectiveness_achieved: eps }
         }
     }
 }
@@ -106,16 +81,12 @@ pub fn evaporative_cool(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::units::P_STD;
 
     #[test]
     fn direct_cooling_lowers_dry_bulb() {
         let cooler = EvaporativeCooler::Direct { effectiveness: 0.8, pad_area_m2: 10.0 };
-        let inlet = EvaporativeInlet {
-            dry_bulb_c: 35.0,
-            humidity_ratio: humidity_ratio_from_rh(35.0, 0.3, P_STD),
-            mass_flow_kg_s: 1.0,
-            pressure_pa: P_STD,
-        };
+        let inlet = EvaporativeInlet { dry_bulb_c: 35.0, humidity_ratio: humidity_ratio_from_rh(35.0, 0.3, P_STD), mass_flow_kg_s: 1.0, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, true);
         assert!(out.dry_bulb_c < inlet.dry_bulb_c);
         assert!(out.humidity_ratio > inlet.humidity_ratio);
@@ -124,17 +95,8 @@ mod tests {
 
     #[test]
     fn indirect_preserves_humidity_ratio() {
-        let cooler = EvaporativeCooler::Indirect {
-            sensible_effectiveness: 0.65,
-            primary_flow_m3_s: 1.0,
-            secondary_flow_m3_s: 1.0,
-        };
-        let inlet = EvaporativeInlet {
-            dry_bulb_c: 32.0,
-            humidity_ratio: 0.01,
-            mass_flow_kg_s: 1.2,
-            pressure_pa: P_STD,
-        };
+        let cooler = EvaporativeCooler::Indirect { sensible_effectiveness: 0.65, primary_flow_m3_s: 1.0, secondary_flow_m3_s: 1.0 };
+        let inlet = EvaporativeInlet { dry_bulb_c: 32.0, humidity_ratio: 0.01, mass_flow_kg_s: 1.2, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, true);
         assert!((out.humidity_ratio - inlet.humidity_ratio).abs() < 1e-9);
         assert!(out.sensible_cooling_w > 0.0);
@@ -143,12 +105,7 @@ mod tests {
     #[test]
     fn disabled_no_effect() {
         let cooler = EvaporativeCooler::Direct { effectiveness: 0.9, pad_area_m2: 5.0 };
-        let inlet = EvaporativeInlet {
-            dry_bulb_c: 30.0,
-            humidity_ratio: 0.012,
-            mass_flow_kg_s: 0.8,
-            pressure_pa: P_STD,
-        };
+        let inlet = EvaporativeInlet { dry_bulb_c: 30.0, humidity_ratio: 0.012, mass_flow_kg_s: 0.8, pressure_pa: P_STD };
         let out = evaporative_cool(&cooler, &inlet, false);
         assert!((out.dry_bulb_c - inlet.dry_bulb_c).abs() < 1e-9);
     }

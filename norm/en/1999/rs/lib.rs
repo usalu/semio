@@ -73,23 +73,11 @@ pub mod part_1_1 {
     }
 
     pub fn check_cross_section(n_ed: f64, n_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-1", "§6.2", "6.2"),
-            Quantity::force_kn(n_ed),
-            Quantity::force_kn(n_rd),
-            "aluminium cross-section ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§6.2", "6.2"), Quantity::force_kn(n_ed), Quantity::force_kn(n_rd), "aluminium cross-section ULS", annex)
     }
 
     pub fn check_buckling(n_ed: f64, n_b_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-1", "§6.3", "6.3"),
-            Quantity::force_kn(n_ed),
-            Quantity::force_kn(n_b_rd),
-            "aluminium buckling ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§6.3", "6.3"), Quantity::force_kn(n_ed), Quantity::force_kn(n_b_rd), "aluminium buckling ULS", annex)
     }
 
     pub fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
@@ -108,22 +96,11 @@ pub mod part_1_1 {
     }
 
     /// 📐 Torsional buckling resistance N_b,Rd [kN] with torsion constant I_t.
-    pub fn torsional_buckling_resistance_kn(
-        a_mm2: f64,
-        i_t_mm4: f64,
-        l_cr_mm: f64,
-        alloy: Alloy,
-        gamma_m: f64,
-        e_mpa: f64,
-    ) -> f64 {
+    pub fn torsional_buckling_resistance_kn(a_mm2: f64, i_t_mm4: f64, l_cr_mm: f64, alloy: Alloy, gamma_m: f64, e_mpa: f64) -> f64 {
         let g = e_mpa / (2.0 * (1.0 + 0.33));
         let c_t = (g * i_t_mm4 / (l_cr_mm * l_cr_mm)).sqrt();
         let lambda = (a_mm2 * alloy.f_0_2_mpa() / (c_t * gamma_m)).sqrt();
-        let chi = if lambda <= 0.2 {
-            1.0
-        } else {
-            (1.0 / (0.5 * (1.0 + 0.21 * (lambda - 0.2) + lambda * lambda))).min(1.0)
-        };
+        let chi = if lambda <= 0.2 { 1.0 } else { (1.0 / (0.5 * (1.0 + 0.21 * (lambda - 0.2) + lambda * lambda))).min(1.0) };
         chi * a_mm2 * alloy.f_0_2_mpa() / gamma_m / 1000.0
     }
 }
@@ -175,13 +152,7 @@ pub mod part_1_3 {
     }
 
     pub fn check_fatigue(delta_sigma_ed: f64, delta_sigma_rd: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-3", "§7", "7.1"),
-            Quantity::stress_mpa(delta_sigma_ed),
-            Quantity::stress_mpa(delta_sigma_rd),
-            "aluminium fatigue ULS",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-3", "§7", "7.1"), Quantity::stress_mpa(delta_sigma_ed), Quantity::stress_mpa(delta_sigma_rd), "aluminium fatigue ULS", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part1_3
@@ -201,13 +172,7 @@ pub mod part_1_4 {
     }
 
     pub fn check_food_contact_surface(coating_um: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-4", "§5", "5.2"),
-            Quantity::length_m(coating_um / 1_000_000.0),
-            Quantity::length_m(min_coating_thickness_um() / 1_000_000.0),
-            "food contact coating thickness",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-4", "§5", "5.2"), Quantity::length_m(coating_um / 1_000_000.0), Quantity::length_m(min_coating_thickness_um() / 1_000_000.0), "food contact coating thickness", AnnexChoice::De)
     }
 
     pub fn check_lead_content(lead_ppm: f64) -> CheckResult {
@@ -244,13 +209,7 @@ pub mod part_1_5 {
     }
 
     pub fn check_hollow_section(n_ed: f64, n_rd: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1999-1-5", "§6", "6.2"),
-            Quantity::force_kn(n_ed),
-            Quantity::force_kn(n_rd),
-            "extruded hollow section ULS",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-5", "§6", "6.2"), Quantity::force_kn(n_ed), Quantity::force_kn(n_rd), "extruded hollow section ULS", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_5
@@ -266,24 +225,13 @@ pub fn buckling_resistance_kn(a_mm2: f64, f_0_2_mpa: f64, chi: f64, gamma_m: f64
 }
 
 /// 📋 Aluminium member check.
-pub fn check_aluminium_member(
-    n_ed_kn: f64,
-    m_ed_knm: f64,
-    a_mm2: f64,
-    w_el_mm3: f64,
-    alloy: part_1_1::Alloy,
-    chi: f64,
-    i_t_mm4: f64,
-    l_cr_mm: f64,
-) -> CheckReport {
+pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3: f64, alloy: part_1_1::Alloy, chi: f64, i_t_mm4: f64, l_cr_mm: f64) -> CheckReport {
     let gamma_m = na_de::GAMMA_M;
     let annex = AnnexChoice::De;
     let f_0_2 = alloy.f_0_2_mpa();
     let n_rd = a_mm2 * f_0_2 / gamma_m / 1000.0;
     let n_b_rd = buckling_resistance_kn(a_mm2, f_0_2, chi, gamma_m);
-    let n_t_rd = part_1_1::torsional_buckling_resistance_kn(
-        a_mm2, i_t_mm4, l_cr_mm, alloy, gamma_m, 70_000.0,
-    );
+    let n_t_rd = part_1_1::torsional_buckling_resistance_kn(a_mm2, i_t_mm4, l_cr_mm, alloy, gamma_m, 70_000.0);
     let m_rd = part_1_1::m_c_rd_knm(w_el_mm3, alloy, gamma_m);
     let mut report = CheckReport::default();
     report.push(part_1_1::check_cross_section(n_ed_kn, n_rd, annex));
@@ -310,16 +258,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            n_ed_kn: 80.0,
-            m_ed_knm: 4.0,
-            a_mm2: 1200.0,
-            w_el_mm3: 24_000.0,
-            alloy: "aw6060t6".into(),
-            chi: 0.85,
-            i_t_mm4: 5000.0,
-            l_cr_mm: 3000.0,
-        }
+        Self { n_ed_kn: 80.0, m_ed_knm: 4.0, a_mm2: 1200.0, w_el_mm3: 24_000.0, alloy: "aw6060t6".into(), chi: 0.85, i_t_mm4: 5000.0, l_cr_mm: 3000.0 }
     }
 }
 
@@ -334,16 +273,7 @@ fn parse_alloy(value: &str) -> part_1_1::Alloy {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_aluminium_member(
-        document.n_ed_kn,
-        document.m_ed_knm,
-        document.a_mm2,
-        document.w_el_mm3,
-        parse_alloy(&document.alloy),
-        document.chi,
-        document.i_t_mm4,
-        document.l_cr_mm,
-    )
+    check_aluminium_member(document.n_ed_kn, document.m_ed_knm, document.a_mm2, document.w_el_mm3, parse_alloy(&document.alloy), document.chi, document.i_t_mm4, document.l_cr_mm)
 }
 
 pub struct En1999Family;

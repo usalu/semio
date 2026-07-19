@@ -1,6 +1,5 @@
 //! 🚀 Engine orchestration: Model + SimulationConfig → Results.
 
-use crate::calendar::RunPeriod;
 use crate::economics::{compute_lcca, LccaParameters, UtilityTariff};
 use crate::error::Error;
 use crate::kernel::{SimulationConfig, SimulationEnvironment, SimulationKernel};
@@ -10,8 +9,7 @@ use crate::model::Model;
 use crate::output::TimeSeriesStore;
 use crate::precompute::PrecomputedModel;
 use crate::results::{Results, RunMetadata, SummaryTables};
-use crate::schedule::ScheduleSet;
-use crate::site::{EpwWeather, WeatherRecord};
+use crate::site::WeatherRecord;
 use crate::sizing::{SizingConfig, SizingManager};
 use crate::units::Unit;
 use std::time::Instant;
@@ -23,12 +21,7 @@ pub struct Engine;
 impl Engine {
     /// ⚡ Run full building energy simulation.
     pub fn run(model: &Model, config: &SimulationConfig) -> Result<Results, Error> {
-        model.validate().map_err(|d| {
-            d.messages
-                .into_iter()
-                .find(|m| m.severity == crate::error::Severity::Fatal)
-                .unwrap_or_else(|| Error::severe("model validation failed"))
-        })?;
+        model.validate().map_err(|d| d.messages.into_iter().find(|m| m.severity == crate::error::Severity::Fatal).unwrap_or_else(|| Error::severe("model validation failed")))?;
 
         let start = Instant::now();
         let weather_records = Self::resolve_weather(config);
@@ -53,16 +46,7 @@ impl Engine {
             weather.hour = hour;
             weather.year = date.year;
 
-            SimulationKernel::advance_timestep(
-                model,
-                config,
-                &pre,
-                &mut state,
-                &weather,
-                &date,
-                hour_index as f64,
-                dt_s,
-            )?;
+            SimulationKernel::advance_timestep(model, config, &pre, &mut state, &weather, &date, hour_index as f64, dt_s)?;
 
             for zone in &model.zones {
                 if let Some(zs) = state.zones.get(&zone.id) {
@@ -70,25 +54,13 @@ impl Engine {
                     time_series.record(&key, hour_index as f64, zs.air.temp_c, Unit::Celsius);
                     zone_temp_history.push(zs.air.temp_c);
 
-                    let heat_meter = meters.get_or_create(
-                        &format!("{} Heating", zone.name),
-                        FuelType::Electricity,
-                        EndUse::Heating,
-                    );
+                    let heat_meter = meters.get_or_create(&format!("{} Heating", zone.name), FuelType::Electricity, EndUse::Heating);
                     heat_meter.accumulate(zs.delivered.heating_w, dt_s, hour_index as f64);
 
-                    let cool_meter = meters.get_or_create(
-                        &format!("{} Cooling", zone.name),
-                        FuelType::Electricity,
-                        EndUse::Cooling,
-                    );
+                    let cool_meter = meters.get_or_create(&format!("{} Cooling", zone.name), FuelType::Electricity, EndUse::Cooling);
                     cool_meter.accumulate(zs.delivered.cooling_w, dt_s, hour_index as f64);
 
-                    let fan_meter = meters.get_or_create(
-                        &format!("{} Fans", zone.name),
-                        FuelType::Electricity,
-                        EndUse::Fans,
-                    );
+                    let fan_meter = meters.get_or_create(&format!("{} Fans", zone.name), FuelType::Electricity, EndUse::Fans);
                     fan_meter.accumulate(zs.delivered.fan_w, dt_s, hour_index as f64);
                 }
             }
@@ -110,36 +82,14 @@ impl Engine {
         let floor_area: f64 = model.zones.iter().map(|z| z.volume_m3 / 3.0).sum::<f64>().max(1.0);
         summaries.add_annual("Energy Use Intensity", elec_kwh / floor_area, "kWh/m²");
 
-        let environmental = compute_environmental(
-            elec_kwh,
-            gas_kwh,
-            &SourceEnergyFactors::default(),
-            &EmissionFactors::default(),
-        );
+        let environmental = compute_environmental(elec_kwh, gas_kwh, &SourceEnergyFactors::default(), &EmissionFactors::default());
         let heat_sp = 20.0;
         let cool_sp = 26.0;
         let resilience = compute_resilience(&zone_temp_history, heat_sp, cool_sp, true);
 
-        let tariff = UtilityTariff {
-            name: "Default".into(),
-            fuel: FuelType::Electricity,
-            periods: vec![],
-            fixed_monthly_charge: 10.0,
-            ratchet_percent: 0.0,
-        };
+        let tariff = UtilityTariff { name: "Default".into(), fuel: FuelType::Electricity, periods: vec![], fixed_monthly_charge: 10.0, ratchet_percent: 0.0 };
         let annual_cost = tariff.energy_cost(elec_kwh, 12, 6) * 12.0;
-        let lcca = compute_lcca(
-            annual_cost,
-            &LccaParameters {
-                study_period_years: 25,
-                discount_rate: 0.03,
-                inflation_rate: 0.02,
-                initial_cost: 0.0,
-                annual_maintenance: 0.0,
-                replacement_cost: 0.0,
-                replacement_interval_years: 15,
-            },
-        );
+        let lcca = compute_lcca(annual_cost, &LccaParameters { study_period_years: 25, discount_rate: 0.03, inflation_rate: 0.02, initial_cost: 0.0, annual_maintenance: 0.0, replacement_cost: 0.0, replacement_interval_years: 15 });
         summaries.add_annual("Annual Energy Cost", annual_cost, "USD");
         summaries.add_annual("LCCA Present Value", lcca.present_value_total, "USD");
 
@@ -220,16 +170,8 @@ fn design_day_weather(dry_bulb_c: f64) -> Vec<WeatherRecord> {
             atmospheric_pressure_pa: 101_325.0,
             wind_speed_m_s: 3.0,
             wind_direction_deg: 180.0,
-            direct_normal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) {
-                800.0
-            } else {
-                0.0
-            },
-            diffuse_horizontal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) {
-                150.0
-            } else {
-                0.0
-            },
+            direct_normal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 800.0 } else { 0.0 },
+            diffuse_horizontal_irradiance_w_m2: if dry_bulb_c > 20.0 && (8..17).contains(&hour) { 150.0 } else { 0.0 },
             horizontal_infrared_w_m2: 250.0,
             precipitation_mm: 0.0,
             snow_depth_mm: 0.0,
@@ -244,21 +186,8 @@ pub fn test_model_single_zone() -> Model {
     Model {
         name: "BESTEST Single Zone".into(),
         version: "1.0".into(),
-        site: Site {
-            latitude_deg: 45.0,
-            longitude_deg: 0.0,
-            elevation_m: 100.0,
-            time_zone_hours: 0.0,
-            north_axis_deg: 0.0,
-        },
-        zones: vec![Zone {
-            id: EntityId(1),
-            name: "Zone1".into(),
-            volume_m3: 106.0,
-            multiplier: 1,
-            conditioned: true,
-            part_of_total_floor_area: true,
-        }],
+        site: Site { latitude_deg: 45.0, longitude_deg: 0.0, elevation_m: 100.0, time_zone_hours: 0.0, north_axis_deg: 0.0 },
+        zones: vec![Zone { id: EntityId(1), name: "Zone1".into(), volume_m3: 106.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }],
         materials: vec![Material {
             id: EntityId(10),
             name: "Insulation".into(),
@@ -270,11 +199,7 @@ pub fn test_model_single_zone() -> Model {
             solar_absorptance: 0.7,
             visible_absorptance: 0.7,
         }],
-        constructions: vec![Construction {
-            id: EntityId(20),
-            name: "Wall".into(),
-            layer_material_ids: vec![EntityId(10)],
-        }],
+        constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
         surfaces: vec![Surface {
             id: EntityId(30),
             name: "ExtWall".into(),
@@ -306,39 +231,10 @@ pub fn test_model_full_topology() -> Model {
     use crate::model::*;
     let mut model = test_model_single_zone();
     model.name = "Full Topology".into();
-    model.thermostats.push(Thermostat {
-        id: EntityId(50),
-        zone_id: EntityId(1),
-        heating_setpoint_schedule_id: ScheduleId(1),
-        cooling_setpoint_schedule_id: ScheduleId(1),
-        heating_throttle_range_k: 2.0,
-        cooling_throttle_range_k: 2.0,
-    });
-    model.plant_loops.push(PlantLoopConfig {
-        id: EntityId(60),
-        name: "Hot Water".into(),
-        loop_type: PlantLoopType::Heating,
-        supply_temperature_c: 55.0,
-        return_temperature_c: 45.0,
-        design_flow_kg_s: 2.0,
-        equipment_ids: vec![EntityId(61)],
-    });
-    model.pv_systems.push(PvSystemAssignment {
-        id: EntityId(70),
-        dc_capacity_w: 5000.0,
-        area_m2: 25.0,
-        tilt_deg: 30.0,
-        azimuth_deg: 180.0,
-        module_efficiency: 0.2,
-        inverter_efficiency: 0.96,
-    });
-    model.daylight_zones.push(DaylightZoneConfig {
-        id: EntityId(80),
-        zone_id: EntityId(1),
-        illuminance_target_lux: 500.0,
-        glare_limit: 0.4,
-        window_transmittance: 0.6,
-    });
+    model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0 });
+    model.plant_loops.push(PlantLoopConfig { id: EntityId(60), name: "Hot Water".into(), loop_type: PlantLoopType::Heating, supply_temperature_c: 55.0, return_temperature_c: 45.0, design_flow_kg_s: 2.0, equipment_ids: vec![EntityId(61)] });
+    model.pv_systems.push(PvSystemAssignment { id: EntityId(70), dc_capacity_w: 5000.0, area_m2: 25.0, tilt_deg: 30.0, azimuth_deg: 180.0, module_efficiency: 0.2, inverter_efficiency: 0.96 });
+    model.daylight_zones.push(DaylightZoneConfig { id: EntityId(80), zone_id: EntityId(1), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
     model
 }
 // #endregion 🔖Fixtures
@@ -346,17 +242,12 @@ pub fn test_model_full_topology() -> Model {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::calendar::RunPeriod;
 
     #[test]
     fn engine_runs_single_zone() {
         let model = test_model_single_zone();
-        let config = SimulationConfig {
-            warmup_days: 1,
-            run_period_end_month: 1,
-            run_period_end_day: 3,
-            environment: SimulationEnvironment::WeatherRunPeriod,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 3, environment: SimulationEnvironment::WeatherRunPeriod, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
         assert!(results.run_metadata.timesteps > 0);
         assert!(results.meters.facility_total_kwh(FuelType::Electricity) >= 0.0);
@@ -365,31 +256,17 @@ mod tests {
     #[test]
     fn engine_deterministic_repeatability() {
         let model = test_model_single_zone();
-        let config = SimulationConfig {
-            warmup_days: 0,
-            run_period_end_month: 1,
-            run_period_end_day: 2,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let r1 = Engine::run(&model, &config).unwrap();
         let r2 = Engine::run(&model, &config).unwrap();
         assert_eq!(r1.run_metadata.timesteps, r2.run_metadata.timesteps);
-        assert!((r1.meters.facility_total_kwh(FuelType::Electricity)
-            - r2.meters.facility_total_kwh(FuelType::Electricity))
-            .abs()
-            < 1e-3);
+        assert!((r1.meters.facility_total_kwh(FuelType::Electricity) - r2.meters.facility_total_kwh(FuelType::Electricity)).abs() < 1e-3);
     }
 
     #[test]
     fn ashrae_140_case600_base() {
         let model = test_model_single_zone();
-        let config = SimulationConfig {
-            warmup_days: 0,
-            run_period_end_month: 1,
-            run_period_end_day: 1,
-            environment: SimulationEnvironment::HeatingDesignDay,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
         let temps = results.time_series.get("Zone Air Temperature [Zone1]");
         assert!(temps.is_some());
@@ -404,12 +281,7 @@ mod tests {
     #[test]
     fn energy_conservation_order_of_magnitude() {
         let model = test_model_single_zone();
-        let config = SimulationConfig {
-            warmup_days: 0,
-            run_period_end_month: 1,
-            run_period_end_day: 2,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
         let total_kwh = results.meters.facility_total_kwh(FuelType::Electricity);
         assert!(total_kwh < 1_000_000.0);
@@ -418,12 +290,7 @@ mod tests {
     #[test]
     fn full_topology_e2e() {
         let model = test_model_full_topology();
-        let config = SimulationConfig {
-            warmup_days: 0,
-            run_period_end_month: 1,
-            run_period_end_day: 2,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 2, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
         assert!(results.run_metadata.timesteps >= 48);
         assert!(results.summaries.annual_energy.len() >= 3);
@@ -432,13 +299,7 @@ mod tests {
     #[test]
     fn hvac_bestest_heating_day() {
         let model = test_model_single_zone();
-        let config = SimulationConfig {
-            warmup_days: 0,
-            run_period_end_month: 1,
-            run_period_end_day: 1,
-            environment: SimulationEnvironment::HeatingDesignDay,
-            ..Default::default()
-        };
+        let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
         let results = Engine::run(&model, &config).unwrap();
         assert_eq!(results.run_metadata.timesteps, 24);
         assert!(results.time_series.get("Zone Air Temperature [Zone1]").is_some());
@@ -446,22 +307,9 @@ mod tests {
 
     #[test]
     fn run_period_honors_calendar() {
-        let period = RunPeriod {
-            start_month: 1,
-            start_day: 1,
-            end_month: 1,
-            end_day: 7,
-            year: 2026,
-        };
+        let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);
-        let config = SimulationConfig {
-            run_period_start_month: 1,
-            run_period_start_day: 1,
-            run_period_end_month: 1,
-            run_period_end_day: 7,
-            warmup_days: 0,
-            ..Default::default()
-        };
+        let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, warmup_days: 0, ..Default::default() };
         let model = test_model_single_zone();
         let results = Engine::run(&model, &config).unwrap();
         assert_eq!(results.run_metadata.timesteps, 168);

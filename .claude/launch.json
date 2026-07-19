@@ -3,9 +3,10 @@
   "configurations": [
     {
       "name": "storybook",
-      "runtimeExecutable": "bunx",
-      "runtimeArgs": ["storybook", "dev", "-c", ".storybook", "-p", "6006", "--host", "127.0.0.1", "--no-open"],
-      "port": 6006
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["./script.ts", "dev", "storybook"],
+      "env": { "STORYBOOK_PORT": "6010", "STORYBOOK_EXACT_PORT": "1" },
+      "port": 6010
     },
     {
       "name": "puzzle2d-react-dev",

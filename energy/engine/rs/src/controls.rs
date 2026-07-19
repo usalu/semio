@@ -96,12 +96,7 @@ fn proportional_fraction(error: f64, throttle: f64) -> f64 {
 }
 
 /// 🌡️ Evaluate thermostat and humidistat for current zone conditions.
-pub fn evaluate_controls(
-    thermostat: &ThermostatSpec,
-    humidistat: Option<&HumidistatSpec>,
-    zone_temp_c: f64,
-    zone_rh: f64,
-) -> ThermostatOutput {
+pub fn evaluate_controls(thermostat: &ThermostatSpec, humidistat: Option<&HumidistatSpec>, zone_temp_c: f64, zone_rh: f64) -> ThermostatOutput {
     let heat_err = thermostat.heating_setpoint_c - zone_temp_c;
     let cool_err = zone_temp_c - thermostat.cooling_setpoint_c;
     let heating_fraction = proportional_fraction(heat_err, thermostat.heating_throttle_range_k);
@@ -110,12 +105,7 @@ pub fn evaluate_controls(
     let (humid_frac, dehumid_frac, hum_sp, dehum_sp) = if let Some(h) = humidistat {
         let hum_err = h.humidifying_setpoint_rh - zone_rh;
         let dehum_err = zone_rh - h.dehumidifying_setpoint_rh;
-        (
-            proportional_fraction(hum_err, h.humidifying_throttle_range),
-            proportional_fraction(dehum_err, h.dehumidifying_throttle_range),
-            h.humidifying_setpoint_rh,
-            h.dehumidifying_setpoint_rh,
-        )
+        (proportional_fraction(hum_err, h.humidifying_throttle_range), proportional_fraction(dehum_err, h.dehumidifying_throttle_range), h.humidifying_setpoint_rh, h.dehumidifying_setpoint_rh)
     } else {
         (0.0, 0.0, 0.0, 1.0)
     };
@@ -135,20 +125,8 @@ pub fn evaluate_controls(
 
 // #region 🔖LoadPrediction
 /// 📈 Predict zone loads from balance residuals and control fractions.
-pub fn predict_zone_load(
-    sensible_residual_w: f64,
-    latent_residual_w: f64,
-    output: &ThermostatOutput,
-    max_heating_w: f64,
-    max_cooling_w: f64,
-    max_humidifying_w: f64,
-    max_dehumidifying_w: f64,
-) -> ZoneLoad {
-    let mut load = ZoneLoad {
-        sensible_w: sensible_residual_w,
-        latent_w: latent_residual_w,
-        ..Default::default()
-    };
+pub fn predict_zone_load(sensible_residual_w: f64, latent_residual_w: f64, output: &ThermostatOutput, max_heating_w: f64, max_cooling_w: f64, max_humidifying_w: f64, max_dehumidifying_w: f64) -> ZoneLoad {
+    let mut load = ZoneLoad { sensible_w: sensible_residual_w, latent_w: latent_residual_w, ..Default::default() };
 
     if sensible_residual_w < 0.0 {
         load.heating_w = (-sensible_residual_w * output.heating_fraction).min(max_heating_w);
@@ -185,7 +163,7 @@ pub fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec<Contr
     if ventilation_flow_m3_s > 0.0 {
         actions.push(ControlAction::Ventilate { flow_m3_s: ventilation_flow_m3_s });
     }
-  if actions.is_empty() {
+    if actions.is_empty() {
         actions.push(ControlAction::NoAction);
     }
     actions
@@ -194,10 +172,7 @@ pub fn load_to_actions(load: &ZoneLoad, ventilation_flow_m3_s: f64) -> Vec<Contr
 
 // #region 🔖EquipmentAllocation
 /// 🏆 Allocate zone load across equipment by priority until capacity exhausted.
-pub fn allocate_load_by_priority(
-    load: ZoneLoad,
-    capacities_w: &[(ZoneEquipmentPriority, f64)],
-) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
+pub fn allocate_load_by_priority(load: ZoneLoad, capacities_w: &[(ZoneEquipmentPriority, f64)]) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
     let mut sorted: Vec<_> = capacities_w.to_vec();
     sorted.sort_by_key(|(p, _)| *p);
     let mut remaining = load;
@@ -231,14 +206,7 @@ mod tests {
     use super::*;
 
     fn default_thermostat() -> ThermostatSpec {
-        ThermostatSpec {
-            heating_setpoint_c: 21.0,
-            cooling_setpoint_c: 24.0,
-            heating_throttle_range_k: 2.0,
-            cooling_throttle_range_k: 2.0,
-            min_heating_setpoint_c: 10.0,
-            max_cooling_setpoint_c: 30.0,
-        }
+        ThermostatSpec { heating_setpoint_c: 21.0, cooling_setpoint_c: 24.0, heating_throttle_range_k: 2.0, cooling_throttle_range_k: 2.0, min_heating_setpoint_c: 10.0, max_cooling_setpoint_c: 30.0 }
     }
 
     #[test]
@@ -264,10 +232,7 @@ mod tests {
 
     #[test]
     fn equipment_priority_allocates_in_order() {
-        let load = ZoneLoad {
-            heating_w: 8000.0,
-            ..Default::default()
-        };
+        let load = ZoneLoad { heating_w: 8000.0, ..Default::default() };
         let caps = [(ZoneEquipmentPriority(1), 3000.0), (ZoneEquipmentPriority(2), 5000.0)];
         let alloc = allocate_load_by_priority(load, &caps);
         assert_eq!(alloc.len(), 2);

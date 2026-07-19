@@ -14,10 +14,7 @@ pub struct SeveritySchedule {
 impl SeveritySchedule {
     /// 📅 Constant severity at all hours.
     pub fn constant(severity: f64) -> Self {
-        Self {
-            hourly_severity: [severity.clamp(0.0, 1.0); 24],
-            interpolation: false,
-        }
+        Self { hourly_severity: [severity.clamp(0.0, 1.0); 24], interpolation: false }
     }
 
     /// 📅 Lookup severity at hour (0–23).
@@ -128,9 +125,7 @@ impl DamperFault {
         match self.kind {
             DamperFaultKind::StuckClosed => cmd * (1.0 - severity),
             DamperFaultKind::StuckOpen => cmd + (1.0 - cmd) * severity,
-            DamperFaultKind::Leaking { leakage_fraction } => {
-                cmd + leakage_fraction * severity * (1.0 - cmd)
-            }
+            DamperFaultKind::Leaking { leakage_fraction } => cmd + leakage_fraction * severity * (1.0 - cmd),
         }
     }
 
@@ -182,10 +177,7 @@ impl RefrigerantChargeFault {
 
     /// ❄️ Adjusted cooling output and compressor power.
     pub fn apply(&self, cooling_w: f64, compressor_w: f64, hour: u8) -> (f64, f64) {
-        (
-            cooling_w * self.capacity_multiplier(hour),
-            compressor_w * self.power_multiplier(hour),
-        )
+        (cooling_w * self.capacity_multiplier(hour), compressor_w * self.power_multiplier(hour))
     }
 }
 // #endregion 🔖RefrigerantCharge
@@ -203,10 +195,7 @@ pub struct FaultSet {
 impl FaultSet {
     /// 🔧 Apply all sensor offsets to a temperature reading.
     pub fn biased_temperature_c(&self, true_c: f64, hour: u8) -> f64 {
-        self.sensor_offsets
-            .iter()
-            .filter(|f| matches!(f.unit, SensorUnit::Celsius))
-            .fold(true_c, |acc, f| f.biased_reading(acc, hour))
+        self.sensor_offsets.iter().filter(|f| matches!(f.unit, SensorUnit::Celsius)).fold(true_c, |acc, f| f.biased_reading(acc, hour))
     }
 
     /// 🔧 Worst-case fouling UA multiplier across all fouling faults.
@@ -214,10 +203,7 @@ impl FaultSet {
         if self.fouling.is_empty() {
             return 1.0;
         }
-        self.fouling
-            .iter()
-            .map(|f| f.effective_ua_w_per_k(hour) / f.baseline_ua_w_per_k)
-            .fold(1.0, f64::min)
+        self.fouling.iter().map(|f| f.effective_ua_w_per_k(hour) / f.baseline_ua_w_per_k).fold(1.0, f64::min)
     }
 }
 // #endregion 🔖FaultSet
@@ -234,47 +220,27 @@ mod tests {
 
     #[test]
     fn sensor_offset_biases_reading() {
-        let fault = SensorOffsetFault {
-            offset: 2.0,
-            unit: SensorUnit::Celsius,
-            schedule: SeveritySchedule::constant(1.0),
-            diagnostic_severity: Severity::Warning,
-        };
+        let fault = SensorOffsetFault { offset: 2.0, unit: SensorUnit::Celsius, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Warning };
         assert!((fault.biased_reading(20.0, 10) - 22.0).abs() < 1e-9);
         assert!((fault.correct_reading(22.0, 10) - 20.0).abs() < 1e-9);
     }
 
     #[test]
     fn fouling_reduces_ua() {
-        let fault = FoulingFault {
-            baseline_ua_w_per_k: 10_000.0,
-            fouling_factor: 0.5,
-            schedule: SeveritySchedule::constant(1.0),
-            diagnostic_severity: Severity::Severe,
-        };
+        let fault = FoulingFault { baseline_ua_w_per_k: 10_000.0, fouling_factor: 0.5, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Severe };
         assert!(fault.effective_ua_w_per_k(12) < fault.baseline_ua_w_per_k);
     }
 
     #[test]
     fn damper_stuck_open_increases_flow() {
-        let fault = DamperFault {
-            kind: DamperFaultKind::StuckOpen,
-            design_position: 0.5,
-            schedule: SeveritySchedule::constant(1.0),
-            diagnostic_severity: Severity::Warning,
-        };
+        let fault = DamperFault { kind: DamperFaultKind::StuckOpen, design_position: 0.5, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Warning };
         let normal = fault.airflow_fraction(0.0, 12);
         assert!(normal > 0.5);
     }
 
     #[test]
     fn undercharge_reduces_capacity() {
-        let fault = RefrigerantChargeFault {
-            kind: ChargeFaultKind::Undercharge,
-            charge_deviation_fraction: 0.4,
-            schedule: SeveritySchedule::constant(1.0),
-            diagnostic_severity: Severity::Severe,
-        };
+        let fault = RefrigerantChargeFault { kind: ChargeFaultKind::Undercharge, charge_deviation_fraction: 0.4, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Severe };
         assert!(fault.capacity_multiplier(8) < 1.0);
         assert!(fault.power_multiplier(8) > 1.0);
     }
@@ -283,18 +249,8 @@ mod tests {
     fn fault_set_compounds_sensor_offsets() {
         let set = FaultSet {
             sensor_offsets: vec![
-                SensorOffsetFault {
-                    offset: 1.0,
-                    unit: SensorUnit::Celsius,
-                    schedule: SeveritySchedule::constant(1.0),
-                    diagnostic_severity: Severity::Warning,
-                },
-                SensorOffsetFault {
-                    offset: 0.5,
-                    unit: SensorUnit::Celsius,
-                    schedule: SeveritySchedule::constant(1.0),
-                    diagnostic_severity: Severity::Warning,
-                },
+                SensorOffsetFault { offset: 1.0, unit: SensorUnit::Celsius, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Warning },
+                SensorOffsetFault { offset: 0.5, unit: SensorUnit::Celsius, schedule: SeveritySchedule::constant(1.0), diagnostic_severity: Severity::Warning },
             ],
             ..Default::default()
         };

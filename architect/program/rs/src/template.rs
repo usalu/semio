@@ -5,9 +5,8 @@ use crate::kernel::{EntityHeader, EntityId, TextField};
 use crate::ops::ProgramOp;
 use crate::program::Program;
 use crate::registers::{
-    Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process,
-    ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder,
-    TemplateRecord, UserCategory, UserProfile, ValidationStatus,
+    Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile,
+    ValidationStatus,
 };
 use serde::{Deserialize, Serialize};
 use vcs::CollectionOp;
@@ -57,10 +56,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     communication_channels: Vec::new(),
                     success_metrics: Vec::new(),
                 };
-                ops.push(ProgramOp::Stakeholders(CollectionOp::Add {
-                    index: program.stakeholders.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Stakeholders(CollectionOp::Add { index: program.stakeholders.len(), item: item.clone() }));
                 program.stakeholders.push(item);
             }
             "user" => {
@@ -91,10 +87,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     validated: false,
                     stakeholder_ids: Vec::new(),
                 };
-                ops.push(ProgramOp::Users(CollectionOp::Add {
-                    index: program.users.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Users(CollectionOp::Add { index: program.users.len(), item: item.clone() }));
                 program.users.push(item);
             }
             "activity" => {
@@ -125,10 +118,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     temporal_pattern: None,
                     supervision_level: None,
                 };
-                ops.push(ProgramOp::Activities(CollectionOp::Add {
-                    index: program.activities.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Activities(CollectionOp::Add { index: program.activities.len(), item: item.clone() }));
                 program.activities.push(item);
             }
             "function" => {
@@ -157,10 +147,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     hierarchy_parent_id: None,
                     conflict_ids: Vec::new(),
                 };
-                ops.push(ProgramOp::Functions(CollectionOp::Add {
-                    index: program.functions.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Functions(CollectionOp::Add { index: program.functions.len(), item: item.clone() }));
                 program.functions.push(item);
             }
             "element" | "room" => {
@@ -192,10 +179,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     adjacency_preferences: Vec::new(),
                     environmental_zone: None,
                 };
-                ops.push(ProgramOp::Elements(CollectionOp::Add {
-                    index: program.elements.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item: item.clone() }));
                 program.elements.push(item);
                 element_ids.push(id.clone());
             }
@@ -223,10 +207,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     trace_links: Vec::new(),
                     superseded_by: None,
                 };
-                ops.push(ProgramOp::Requirements(CollectionOp::Add {
-                    index: program.requirements.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Requirements(CollectionOp::Add { index: program.requirements.len(), item: item.clone() }));
                 program.requirements.push(item);
             }
             "risk" => {
@@ -252,10 +233,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     escalation_path: Vec::new(),
                     monitoring_plan: None,
                 };
-                ops.push(ProgramOp::Risks(CollectionOp::Add {
-                    index: program.risks.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Risks(CollectionOp::Add { index: program.risks.len(), item: item.clone() }));
                 program.risks.push(item);
             }
             "process" => {
@@ -285,10 +263,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     handoff_points: Vec::new(),
                     quality_gates: Vec::new(),
                 };
-                ops.push(ProgramOp::Processes(CollectionOp::Add {
-                    index: program.processes.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Processes(CollectionOp::Add { index: program.processes.len(), item: item.clone() }));
                 program.processes.push(item);
             }
             "equipment" => {
@@ -319,10 +294,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     commissioning_notes: Vec::new(),
                     spare_parts: Vec::new(),
                 };
-                ops.push(ProgramOp::Equipment(CollectionOp::Add {
-                    index: program.equipment.len(),
-                    item: item.clone(),
-                }));
+                ops.push(ProgramOp::Equipment(CollectionOp::Add { index: program.equipment.len(), item: item.clone() }));
                 program.equipment.push(item);
             }
             "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -350,9 +322,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     source_relationship_id: None,
                     internal_external_access: None,
                 };
-                ops.push(ProgramOp::SetAdjacency {
-                    adjacency: adjacency.clone(),
-                });
+                ops.push(ProgramOp::SetAdjacency { adjacency: adjacency.clone() });
                 set_adjacency(program, adjacency);
             }
             _ => {}

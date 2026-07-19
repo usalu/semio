@@ -58,13 +58,7 @@ pub struct WaterTank {
 
 impl WaterTank {
     /// 🛢️ Update tank level from inflow/outflow over dt.
-    pub fn simulate(
-        &self,
-        inflow_m3_s: f64,
-        outflow_m3_s: f64,
-        dt_s: f64,
-        area_m2: f64,
-    ) -> (f64, f64) {
+    pub fn simulate(&self, inflow_m3_s: f64, outflow_m3_s: f64, dt_s: f64, area_m2: f64) -> (f64, f64) {
         let net_m3 = (inflow_m3_s - outflow_m3_s) * dt_s;
         let delta_level = net_m3 / area_m2.max(0.01);
         let new_level = (self.level_m + delta_level).clamp(self.min_level_m, self.max_level_m);
@@ -94,22 +88,12 @@ impl RainwaterSystem {
     /// 🌧️ Harvested volume [m³] from rainfall depth [mm] over timestep.
     pub fn harvest_m3(&self, rainfall_mm: f64, _dt_s: f64) -> f64 {
         let gross_m3 = self.catchment_area_m2 * rainfall_mm / 1000.0 * self.runoff_coefficient;
-        let first_flush_m3 = if rainfall_mm > 0.0 {
-            (self.first_flush_l / 1000.0).min(gross_m3)
-        } else {
-            0.0
-        };
+        let first_flush_m3 = if rainfall_mm > 0.0 { (self.first_flush_l / 1000.0).min(gross_m3) } else { 0.0 };
         (gross_m3 - first_flush_m3).max(0.0) * self.filter_efficiency
     }
 
     /// 🌧️ Simulate tank level with rainfall and demand.
-    pub fn simulate(
-        &self,
-        rainfall_mm: f64,
-        demand_m3_s: f64,
-        dt_s: f64,
-        tank_area_m2: f64,
-    ) -> (f64, f64) {
+    pub fn simulate(&self, rainfall_mm: f64, demand_m3_s: f64, dt_s: f64, tank_area_m2: f64) -> (f64, f64) {
         let harvest = self.harvest_m3(rainfall_mm, dt_s);
         let inflow = harvest / dt_s.max(1.0);
         let outflow = demand_m3_s.min(self.tank.available_volume_m3(tank_area_m2) / dt_s.max(1.0));
@@ -211,13 +195,7 @@ pub struct WaterBalance {
 }
 
 /// 💧 Net mains water demand [m³/s].
-pub fn water_balance(
-    fixtures: &[WaterFixture],
-    irrigation_m3_s: f64,
-    cooling_makeup_kg_s: f64,
-    rainwater_m3_s: f64,
-    condensate_kg_s: f64,
-) -> WaterBalance {
+pub fn water_balance(fixtures: &[WaterFixture], irrigation_m3_s: f64, cooling_makeup_kg_s: f64, rainwater_m3_s: f64, condensate_kg_s: f64) -> WaterBalance {
     let fixture_demand: f64 = fixtures.iter().map(|f| f.flow_m3_s()).sum();
     let condensate_m3_s = condensate_kg_s / RHO_WATER;
     let cooling_m3_s = cooling_makeup_kg_s / RHO_WATER;
@@ -240,44 +218,21 @@ mod tests {
 
     #[test]
     fn fixture_flow_scales_with_schedule() {
-        let fixture = WaterFixture {
-            name: "Lav".into(),
-            fixture_type: FixtureType::Lavatory,
-            peak_flow_l_s: 0.1,
-            schedule_factor: 0.25,
-            hot_water_fraction: 0.5,
-        };
+        let fixture = WaterFixture { name: "Lav".into(), fixture_type: FixtureType::Lavatory, peak_flow_l_s: 0.1, schedule_factor: 0.25, hot_water_fraction: 0.5 };
         assert!((fixture.flow_m3_s() - 0.000_025).abs() < 1e-9);
     }
 
     #[test]
     fn tank_level_rises_with_inflow() {
-        let tank = WaterTank {
-            volume_m3: 5.0,
-            level_m: 1.0,
-            max_level_m: 3.0,
-            min_level_m: 0.2,
-            inlet_temperature_c: 15.0,
-        };
+        let tank = WaterTank { volume_m3: 5.0, level_m: 1.0, max_level_m: 3.0, min_level_m: 0.2, inlet_temperature_c: 15.0 };
         let (new_level, _) = tank.simulate(0.01, 0.0, 3600.0, 5.0);
         assert!(new_level > tank.level_m);
     }
 
     #[test]
     fn rainwater_harvest_reduces_with_first_flush() {
-        let system = RainwaterSystem {
-            catchment_area_m2: 200.0,
-            runoff_coefficient: 0.85,
-            tank: WaterTank {
-                volume_m3: 10.0,
-                level_m: 1.5,
-                max_level_m: 2.5,
-                min_level_m: 0.1,
-                inlet_temperature_c: 15.0,
-            },
-            first_flush_l: 50.0,
-            filter_efficiency: 0.95,
-        };
+        let system =
+            RainwaterSystem { catchment_area_m2: 200.0, runoff_coefficient: 0.85, tank: WaterTank { volume_m3: 10.0, level_m: 1.5, max_level_m: 2.5, min_level_m: 0.1, inlet_temperature_c: 15.0 }, first_flush_l: 50.0, filter_efficiency: 0.95 };
         let harvest = system.harvest_m3(10.0, 3600.0);
         assert!(harvest > 0.0);
         assert!(harvest < 200.0 * 10.0 / 1000.0);
@@ -285,11 +240,7 @@ mod tests {
 
     #[test]
     fn cooling_makeup_increases_with_load() {
-        let makeup = CoolingTowerMakeup {
-            cycles_of_concentration: 4.0,
-            drift_fraction: 0.001,
-            basin_volume_m3: 2.0,
-        };
+        let makeup = CoolingTowerMakeup { cycles_of_concentration: 4.0, drift_fraction: 0.001, basin_volume_m3: 2.0 };
         let low = makeup.makeup_kg_s(100_000.0);
         let high = makeup.makeup_kg_s(500_000.0);
         assert!(high > low);
@@ -297,25 +248,14 @@ mod tests {
 
     #[test]
     fn water_balance_mains_import() {
-        let fixtures = vec![WaterFixture {
-            name: "Shower".into(),
-            fixture_type: FixtureType::Shower,
-            peak_flow_l_s: 0.12,
-            schedule_factor: 1.0,
-            hot_water_fraction: 0.8,
-        }];
+        let fixtures = vec![WaterFixture { name: "Shower".into(), fixture_type: FixtureType::Shower, peak_flow_l_s: 0.12, schedule_factor: 1.0, hot_water_fraction: 0.8 }];
         let balance = water_balance(&fixtures, 0.0, 0.05, 0.0, 0.0);
         assert!(balance.mains_import_m3_s > 0.0);
     }
 
     #[test]
     fn irrigation_demand_scales_with_et0() {
-        let irrigation = IrrigationSystem {
-            landscaped_area_m2: 500.0,
-            crop_coefficient: 0.8,
-            irrigation_efficiency: 0.75,
-            precipitation_mm_per_day: 2.0,
-        };
+        let irrigation = IrrigationSystem { landscaped_area_m2: 500.0, crop_coefficient: 0.8, irrigation_efficiency: 0.75, precipitation_mm_per_day: 2.0 };
         let low = irrigation.demand_m3_s(3.0, 1.0);
         let high = irrigation.demand_m3_s(8.0, 1.0);
         assert!(high > low);

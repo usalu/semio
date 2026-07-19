@@ -2,7 +2,7 @@
 
 use crate::color::Color;
 use crate::updater::Updater;
-use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Rect, Vec2};
+use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Vec2};
 use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
 use std::sync::atomic::{AtomicU64, Ordering};
 
@@ -148,7 +148,7 @@ pub struct VSobject {
 }
 
 #[derive(Clone, Debug)]
-struct VSobjectSnapshot {
+pub struct VSobjectSnapshot {
     paths: Vec<BezPath>,
     style: Style,
     opacity: f64,
@@ -277,10 +277,10 @@ pub fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
             break;
         }
     }
-    bezpath_from_kurbo(out_k)
+    bezpath_from_kurbo(&out_k)
 }
 
-fn bezpath_from_kurbo(k: kurbo::BezPath) -> BezPath {
+fn bezpath_from_kurbo(k: &kurbo::BezPath) -> BezPath {
     let mut out = BezPath::new();
     for el in k.elements() {
         out.push(PathEl::from(*el));
@@ -508,7 +508,7 @@ pub struct Group {
 }
 
 #[derive(Clone, Debug)]
-struct GroupSnapshot {
+pub struct GroupSnapshot {
     opacity: f64,
     transform: Affine,
 }
@@ -790,12 +790,12 @@ trait PathElPoint {
     fn as_ref_point(&self) -> Option<Point>;
 }
 
-impl PathElPoint for mathematical_geometry::PathEl {
+impl PathElPoint for PathEl {
     fn as_ref_point(&self) -> Option<Point> {
         match self {
-            mathematical_geometry::PathEl::MoveTo(p) | mathematical_geometry::PathEl::LineTo(p) => Some(*p),
-            mathematical_geometry::PathEl::QuadTo(p, _) | mathematical_geometry::PathEl::CurveTo(p, _, _) => Some(*p),
-            mathematical_geometry::PathEl::ClosePath => None,
+            PathEl::MoveTo(p) | PathEl::LineTo(p) => Some(*p),
+            PathEl::QuadTo(p, _) | PathEl::CurveTo(p, _, _) => Some(*p),
+            PathEl::ClosePath => None,
         }
     }
 }

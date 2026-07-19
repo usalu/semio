@@ -510,11 +510,7 @@ pub struct GroundTemperatureConfig {
 
 impl Default for GroundTemperatureConfig {
     fn default() -> Self {
-        Self {
-            building_surface_c: [18.0; 12],
-            shallow_c: [18.0; 12],
-            deep_c: 18.0,
-        }
+        Self { building_surface_c: [18.0; 12], shallow_c: [18.0; 12], deep_c: 18.0 }
     }
 }
 // #endregion 🔖Hvac
@@ -729,14 +725,7 @@ mod tests {
     use super::*;
 
     fn minimal_zone() -> Zone {
-        Zone {
-            id: EntityId(1),
-            name: "Zone1".into(),
-            volume_m3: 100.0,
-            multiplier: 1,
-            conditioned: true,
-            part_of_total_floor_area: true,
-        }
+        Zone { id: EntityId(1), name: "Zone1".into(), volume_m3: 100.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true }
     }
 
     #[test]
@@ -747,10 +736,7 @@ mod tests {
 
     #[test]
     fn zone_only_still_fails_without_construction() {
-        let model = Model {
-            zones: vec![minimal_zone()],
-            ..Default::default()
-        };
+        let model = Model { zones: vec![minimal_zone()], ..Default::default() };
         assert!(model.validate().is_ok() || model.validate().is_err());
     }
 }

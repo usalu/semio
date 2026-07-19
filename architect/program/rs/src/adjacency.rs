@@ -21,11 +21,7 @@ pub fn set_adjacency(program: &mut Program, mut adjacency: Adjacency) {
     adjacency.element_a_id = a;
     adjacency.element_b_id = b;
     adjacency.normalized = true;
-    if let Some(existing) = program
-        .adjacencies
-        .iter()
-        .position(|row| row.element_a_id == adjacency.element_a_id && row.element_b_id == adjacency.element_b_id)
-    {
+    if let Some(existing) = program.adjacencies.iter().position(|row| row.element_a_id == adjacency.element_a_id && row.element_b_id == adjacency.element_b_id) {
         program.adjacencies[existing] = adjacency;
     } else {
         program.adjacencies.push(adjacency);
@@ -75,23 +71,14 @@ pub fn adjacency_matrix(program: &Program) -> AdjacencyMatrix {
             continue;
         };
         let (row, col) = if a > b { (a, b) } else { (b, a) };
-        cells[row][col] = Some(AdjacencyCell {
-            adjacency_id: adjacency.header.id.clone(),
-            kind: adjacency.kind.clone(),
-            weight: adjacency.weight,
-            separations: adjacency.separations.clone(),
-        });
+        cells[row][col] = Some(AdjacencyCell { adjacency_id: adjacency.header.id.clone(), kind: adjacency.kind.clone(), weight: adjacency.weight, separations: adjacency.separations.clone() });
     }
     AdjacencyMatrix { element_ids, cells }
 }
 
 /// @emoji 🕸️ Undirected edge list for graph rendering (`a`, `b`, weight).
 pub fn undirected_edges(program: &Program) -> Vec<(EntityId, EntityId, f64)> {
-    program
-        .adjacencies
-        .iter()
-        .map(|adjacency| (adjacency.element_a_id.clone(), adjacency.element_b_id.clone(), adjacency.weight))
-        .collect()
+    program.adjacencies.iter().map(|adjacency| (adjacency.element_a_id.clone(), adjacency.element_b_id.clone(), adjacency.weight)).collect()
 }
 // #endregion
 
@@ -111,54 +98,29 @@ pub fn detect_adjacency_conflicts(program: &Program) -> Vec<AdjacencyConflict> {
     for (i, left) in program.adjacencies.iter().enumerate() {
         if let (Some(min), Some(max)) = (left.distance_min_m, left.distance_max_m) {
             if min > max {
-                conflicts.push(AdjacencyConflict {
-                    adjacency_a_id: left.header.id.clone(),
-                    adjacency_b_id: left.header.id.clone(),
-                    message: format!("distance_min_m ({min}) exceeds distance_max_m ({max})"),
-                });
+                conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: left.header.id.clone(), message: format!("distance_min_m ({min}) exceeds distance_max_m ({max})") });
             }
         }
         for right in program.adjacencies.iter().skip(i + 1) {
-            let same_pair = (left.element_a_id == right.element_a_id && left.element_b_id == right.element_b_id)
-                || (left.element_a_id == right.element_b_id && left.element_b_id == right.element_a_id);
+            let same_pair = (left.element_a_id == right.element_a_id && left.element_b_id == right.element_b_id) || (left.element_a_id == right.element_b_id && left.element_b_id == right.element_a_id);
             if !same_pair {
                 continue;
             }
-            conflicts.push(AdjacencyConflict {
-                adjacency_a_id: left.header.id.clone(),
-                adjacency_b_id: right.header.id.clone(),
-                message: "duplicate adjacency pair".into(),
-            });
+            conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: right.header.id.clone(), message: "duplicate adjacency pair".into() });
             if left.kind == AdjacencyKind::Required && right.kind == AdjacencyKind::Prohibited {
-                conflicts.push(AdjacencyConflict {
-                    adjacency_a_id: left.header.id.clone(),
-                    adjacency_b_id: right.header.id.clone(),
-                    message: "required adjacency conflicts with prohibited".into(),
-                });
+                conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: right.header.id.clone(), message: "required adjacency conflicts with prohibited".into() });
             }
             if let (Some(a), Some(b)) = (&left.level_constraint, &right.level_constraint) {
                 if a != b {
-                    conflicts.push(AdjacencyConflict {
-                        adjacency_a_id: left.header.id.clone(),
-                        adjacency_b_id: right.header.id.clone(),
-                        message: format!("conflicting level constraints: {a} vs {b}"),
-                    });
+                    conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: right.header.id.clone(), message: format!("conflicting level constraints: {a} vs {b}") });
                 }
             }
             if separation_incompatible(&left.separations, &right.separations) {
-                conflicts.push(AdjacencyConflict {
-                    adjacency_a_id: left.header.id.clone(),
-                    adjacency_b_id: right.header.id.clone(),
-                    message: "incompatible separation requirements on same pair".into(),
-                });
+                conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: right.header.id.clone(), message: "incompatible separation requirements on same pair".into() });
             }
             if let (Some(min_a), Some(max_b)) = (left.distance_min_m, right.distance_max_m) {
                 if min_a > max_b {
-                    conflicts.push(AdjacencyConflict {
-                        adjacency_a_id: left.header.id.clone(),
-                        adjacency_b_id: right.header.id.clone(),
-                        message: format!("distance min {min_a} exceeds paired max {max_b}"),
-                    });
+                    conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: right.header.id.clone(), message: format!("distance min {min_a} exceeds paired max {max_b}") });
                 }
             }
         }
@@ -167,15 +129,8 @@ pub fn detect_adjacency_conflicts(program: &Program) -> Vec<AdjacencyConflict> {
                 if other.header.id == left.header.id {
                     continue;
                 }
-                if other.element_a_id == left.element_a_id
-                    && other.element_b_id == left.element_b_id
-                    && other.kind == AdjacencyKind::Prohibited
-                {
-                    conflicts.push(AdjacencyConflict {
-                        adjacency_a_id: left.header.id.clone(),
-                        adjacency_b_id: other.header.id.clone(),
-                        message: "required adjacency conflicts with prohibited".into(),
-                    });
+                if other.element_a_id == left.element_a_id && other.element_b_id == left.element_b_id && other.kind == AdjacencyKind::Prohibited {
+                    conflicts.push(AdjacencyConflict { adjacency_a_id: left.header.id.clone(), adjacency_b_id: other.header.id.clone(), message: "required adjacency conflicts with prohibited".into() });
                 }
             }
         }
@@ -184,9 +139,7 @@ pub fn detect_adjacency_conflicts(program: &Program) -> Vec<AdjacencyConflict> {
 }
 
 fn separation_incompatible(left: &[SeparationKind], right: &[SeparationKind]) -> bool {
-    let fire_acoustic = |s: &SeparationKind| {
-        matches!(s, SeparationKind::Fire | SeparationKind::Acoustic)
-    };
+    let fire_acoustic = |s: &SeparationKind| matches!(s, SeparationKind::Fire | SeparationKind::Acoustic);
     let has_fire = left.iter().any(fire_acoustic) || right.iter().any(fire_acoustic);
     let has_circulation = left.contains(&SeparationKind::Circulation) || right.contains(&SeparationKind::Circulation);
     has_fire && has_circulation && !(left.contains(&SeparationKind::Fire) && right.contains(&SeparationKind::Fire))
@@ -210,12 +163,7 @@ mod tests {
         let program = sample_program();
         let matrix = adjacency_matrix(&program);
         assert_eq!(matrix.element_ids.len(), 2);
-        let populated: usize = matrix
-            .cells
-            .iter()
-            .flat_map(|row| row.iter())
-            .filter(|cell| cell.is_some())
-            .count();
+        let populated: usize = matrix.cells.iter().flat_map(|row| row.iter()).filter(|cell| cell.is_some()).count();
         assert_eq!(populated, 1);
     }
 

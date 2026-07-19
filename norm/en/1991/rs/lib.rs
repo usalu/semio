@@ -75,13 +75,7 @@ pub mod part_1_1 {
     pub fn check_imposed(area_m2: f64, category: ImposedCategory, annex: &dyn NationalAnnex) -> CheckResult {
         let q = imposed_load_kn_m2(category) * area_m2;
         let psi = annex.psi_0(category.label());
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-1-1", "Table 6.1", "q"),
-            Quantity::force_kn(q * psi),
-            Quantity::force_kn(q),
-            "imposed load",
-            annex.choice(),
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-1", "Table 6.1", "q"), Quantity::force_kn(q * psi), Quantity::force_kn(q), "imposed load", annex.choice())
     }
 }
 // #endregion 🔖Part1_1
@@ -141,13 +135,7 @@ pub mod part_1_3 {
     }
 
     pub fn check_snow(s_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-1-3", "§5", "5.1"),
-            Quantity::new(norm_core::QuantityKind::Pressure, s_kn_m2 * 1000.0),
-            Quantity::new(norm_core::QuantityKind::Pressure, limit * 1000.0),
-            "snow load",
-            annex.choice(),
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-3", "§5", "5.1"), Quantity::new(norm_core::QuantityKind::Pressure, s_kn_m2 * 1000.0), Quantity::new(norm_core::QuantityKind::Pressure, limit * 1000.0), "snow load", annex.choice())
     }
 }
 // #endregion 🔖Part1_3
@@ -215,13 +203,7 @@ pub mod part_1_4 {
     }
 
     pub fn check_wind(w_p_kn_m2: f64, limit: f64, annex: &dyn NationalAnnex) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-1-4", "§5", "5.1"),
-            Quantity::new(norm_core::QuantityKind::Pressure, w_p_kn_m2 * 1000.0),
-            Quantity::new(norm_core::QuantityKind::Pressure, limit * 1000.0),
-            "wind pressure",
-            annex.choice(),
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-4", "§5", "5.1"), Quantity::new(norm_core::QuantityKind::Pressure, w_p_kn_m2 * 1000.0), Quantity::new(norm_core::QuantityKind::Pressure, limit * 1000.0), "wind pressure", annex.choice())
     }
 }
 // #endregion 🔖Part1_4
@@ -239,13 +221,7 @@ pub mod part_1_5 {
     }
 
     pub fn check_temperature_action(delta_t_k: f64, limit_k: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-1-5", "§6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Temperature, delta_t_k),
-            Quantity::new(norm_core::QuantityKind::Temperature, limit_k),
-            "thermal action",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-5", "§6", "6.1"), Quantity::new(norm_core::QuantityKind::Temperature, delta_t_k), Quantity::new(norm_core::QuantityKind::Temperature, limit_k), "thermal action", AnnexChoice::De)
     }
 
     pub fn check_fire_boundary_temperature(t_surface_k: f64, t_limit_k: f64) -> CheckResult {
@@ -274,13 +250,7 @@ pub mod part_1_6 {
     }
 
     pub fn check_construction_load(q_kn_m2: f64, limit: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-1-6", "§4", "4.1"),
-            Quantity::force_kn(q_kn_m2),
-            Quantity::force_kn(limit),
-            "construction load",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-1-6", "§4", "4.1"), Quantity::force_kn(q_kn_m2), Quantity::force_kn(limit), "construction load", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part1_6
@@ -333,13 +303,7 @@ pub mod part_2 {
     }
 
     pub fn check_imposed_bridge(lane_load_kn: f64, design_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-2", "§4", "4.3"),
-            Quantity::force_kn(design_kn),
-            Quantity::force_kn(lane_load_kn),
-            "bridge imposed load",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-2", "§4", "4.3"), Quantity::force_kn(design_kn), Quantity::force_kn(lane_load_kn), "bridge imposed load", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part2
@@ -363,13 +327,7 @@ pub mod part_3 {
     }
 
     pub fn check_crane_load(wheel_load_kn: f64, capacity_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1991-3", "§2", "2.3"),
-            Quantity::force_kn(wheel_load_kn),
-            Quantity::force_kn(capacity_kn),
-            "crane wheel load",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1991-3", "§2", "2.3"), Quantity::force_kn(wheel_load_kn), Quantity::force_kn(capacity_kn), "crane wheel load", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part3
@@ -399,27 +357,13 @@ pub mod part_4 {
 // #endregion 🔖Part4
 
 /// 📋 Aggregate action checks for a typical floor bay.
-pub fn check_floor_actions(
-    area_m2: f64,
-    category: ImposedCategory,
-    wind_zone_vb: f64,
-    snow_zone: u8,
-    use_de_na: bool,
-) -> CheckReport {
-    let annex: &dyn NationalAnnex = if use_de_na {
-        &NaDe
-    } else {
-        &NaEn
-    };
+pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb: f64, snow_zone: u8, use_de_na: bool) -> CheckReport {
+    let annex: &dyn NationalAnnex = if use_de_na { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     report.push(part_1_1::check_imposed(area_m2, category, annex));
     let c_e = part_1_4::exposure_factor(10.0, part_1_4::TerrainCategory::II);
     let q_p = part_1_4::peak_velocity_pressure(1.25, wind_zone_vb, c_e);
-    report.push(part_1_4::check_wind(
-        part_1_4::wind_pressure(q_p, 0.8, 0.2),
-        1.5,
-        annex,
-    ));
+    report.push(part_1_4::check_wind(part_1_4::wind_pressure(q_p, 0.8, 0.2), 1.5, annex));
     let s = part_1_3::roof_snow_load(part_1_3::ground_snow_load_zone(snow_zone), 0.8);
     report.push(part_1_3::check_snow(s, 1.2, annex));
     report
@@ -440,13 +384,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            area_m2: 50.0,
-            category: ImposedCategory::B,
-            wind_zone_vb: 25.0,
-            snow_zone: 2,
-            use_de_na: true,
-        }
+        Self { area_m2: 50.0, category: ImposedCategory::B, wind_zone_vb: 25.0, snow_zone: 2, use_de_na: true }
     }
 }
 
@@ -454,13 +392,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1991Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_floor_actions(
-        document.area_m2,
-        document.category,
-        document.wind_zone_vb,
-        document.snow_zone,
-        document.use_de_na,
-    )
+    check_floor_actions(document.area_m2, document.category, document.wind_zone_vb, document.snow_zone, document.use_de_na)
 }
 
 pub struct En1991Family;

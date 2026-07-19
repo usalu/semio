@@ -33,6 +33,7 @@ import { homedir } from "node:os";
 import { dirname, extname, join, relative, resolve } from "node:path";
 import { createServer } from "node:net";
 import { stat } from "node:fs/promises";
+import { resolveActiveScopes } from "./.storybook/scopes.ts";
 
 const WORKSPACE_ROOT = import.meta.dir;
 const BUN = process.execPath;
@@ -345,16 +346,30 @@ export class DevScript extends Script {
       parsingScope = false;
       if (segment !== "--") args.push(segment);
     }
-    const scope = scopeSegments.join("/");
-    if (scope && !/^[a-z0-9][a-z0-9/-]*$/i.test(scope)) {
-      console.error(`[dev.storybook] invalid scope ${JSON.stringify(scope)}`);
-      process.exit(1);
+    // A single scope arg may itself be a comma-list composing top-level scopes ("ui,compose/algorithms").
+    // Multiple space-separated args keep the old slash-join behavior for hierarchical nx targets ("compose" "algorithms" -> "compose/algorithms").
+    const scope = scopeSegments.length === 1 && scopeSegments[0]!.includes(",") ? scopeSegments[0]! : scopeSegments.join("/");
+    const scopeIds = scope
+      ? scope
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
+    for (const id of scopeIds) {
+      if (!/^[a-z0-9][a-z0-9/-]*$/i.test(id)) {
+        console.error(`[dev.storybook] invalid scope ${JSON.stringify(id)}`);
+        process.exit(1);
+      }
     }
-    if (scope && !existsSync(join(this.root, ".storybook", "stories", ...scopeSegments))) {
-      console.error(`[dev.storybook] unknown scope ${JSON.stringify(scope)}`);
-      process.exit(1);
+    if (scopeIds.length > 0) {
+      try {
+        resolveActiveScopes(scopeIds.join(","));
+      } catch (error) {
+        console.error(error instanceof Error ? `[dev.storybook] ${error.message}` : error);
+        process.exit(1);
+      }
     }
-    return { scope, args };
+    return { scope: scopeIds.join(","), args };
   }
 
   private async runStorybook(extra: string[]): Promise<void> {

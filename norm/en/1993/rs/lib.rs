@@ -64,8 +64,7 @@ pub mod part_1_1 {
 
     /// 🏷️ Overall section class (governing).
     pub fn section_class(flange_c_mm: f64, flange_t_mm: f64, web_c_mm: f64, web_t_mm: f64, f_y_mpa: f64) -> u8 {
-        flange_class(flange_c_mm, flange_t_mm, f_y_mpa)
-            .max(web_class(web_c_mm, web_t_mm, f_y_mpa))
+        flange_class(flange_c_mm, flange_t_mm, f_y_mpa).max(web_class(web_c_mm, web_t_mm, f_y_mpa))
     }
 
     /// 📐 Axial resistance N_Rd [kN] per EN 1993-1-1 §6.2.4.
@@ -123,13 +122,7 @@ pub mod part_1_1 {
     }
 
     pub fn check_cross_section(n_ed_kn: f64, n_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-1", "§6.2.4", "6.2.4"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "cross-section axial ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-1", "§6.2.4", "6.2.4"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "cross-section axial ULS", annex)
     }
 
     pub fn check_bending(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
@@ -143,23 +136,11 @@ pub mod part_1_1 {
     }
 
     pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-1", "§6.2.6", "6.2.6"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "cross-section shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-1", "§6.2.6", "6.2.6"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "cross-section shear ULS", annex)
     }
 
     pub fn check_member_buckling(n_ed_kn: f64, n_b_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-1", "§6.3.1", "6.3.1"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_b_rd_kn),
-            "member buckling ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-1", "§6.3.1", "6.3.1"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_b_rd_kn), "member buckling ULS", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -190,13 +171,7 @@ pub mod part_1_2 {
 
     pub fn check_fire_protection(thickness_mm: f64, rating: FireRating, massivity: f64) -> CheckResult {
         let required = board_thickness_mm(rating, massivity);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-2", "§4.2", "4.2"),
-            Quantity::length_m(required / 1000.0),
-            Quantity::length_m(thickness_mm / 1000.0),
-            "steel fire protection thickness",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-2", "§4.2", "4.2"), Quantity::length_m(required / 1000.0), Quantity::length_m(thickness_mm / 1000.0), "steel fire protection thickness", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_2
@@ -234,13 +209,7 @@ pub mod part_1_3 {
 
     pub fn check_fatigue_range(delta_sigma_mpa: f64, category: u8, annex: AnnexChoice) -> CheckResult {
         let limit = fatigue_strength_mpa(category);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-3", "§8", "8.1"),
-            Quantity::stress_mpa(delta_sigma_mpa),
-            Quantity::stress_mpa(limit),
-            "fatigue stress range",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-3", "§8", "8.1"), Quantity::stress_mpa(delta_sigma_mpa), Quantity::stress_mpa(limit), "fatigue stress range", annex)
     }
 }
 // #endregion 🔖Part1_3
@@ -254,18 +223,11 @@ pub mod part_1_4 {
         let e = 210_000.0;
         let sigma_cr = 0.6 * e * t_mm / r_mm;
         let alpha = (f_y_mpa / sigma_cr).min(1.0);
-        alpha * 2.0 * std::f64::consts::PI * r_mm * t_mm * f_y_mpa / na_de::gamma_m0() / 1000.0
-            * (3000.0 / length_mm).min(1.0)
+        alpha * 2.0 * std::f64::consts::PI * r_mm * t_mm * f_y_mpa / na_de::gamma_m0() / 1000.0 * (3000.0 / length_mm).min(1.0)
     }
 
     pub fn check_silo_shell(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-4", "§9", "9.1"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "silo shell buckling",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-4", "§9", "9.1"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "silo shell buckling", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part1_4
@@ -281,13 +243,7 @@ pub mod part_1_5 {
 
     pub fn check_pile_driving_stress(sigma_mpa: f64, f_y_mpa: f64) -> CheckResult {
         let limit = pile_driving_stress_limit_mpa(f_y_mpa);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-5", "§12", "12.1"),
-            Quantity::stress_mpa(sigma_mpa),
-            Quantity::stress_mpa(limit),
-            "pile driving stress",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-5", "§12", "12.1"), Quantity::stress_mpa(sigma_mpa), Quantity::stress_mpa(limit), "pile driving stress", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_5
@@ -302,13 +258,7 @@ pub mod part_1_6 {
     }
 
     pub fn check_crane_runway(wheel_load_kn: f64, resistance_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-6", "§3", "3.1"),
-            Quantity::force_kn(wheel_load_kn),
-            Quantity::force_kn(resistance_kn),
-            "crane runway wheel load",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-6", "§3", "3.1"), Quantity::force_kn(wheel_load_kn), Quantity::force_kn(resistance_kn), "crane runway wheel load", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_6
@@ -347,35 +297,17 @@ pub mod part_1_8 {
     }
 
     /// 🔩 Bolt bearing resistance F_b,Rd [kN] per EN 1993-1-8 §3.6.1.
-    pub fn bolt_bearing_resistance_kn(
-        t_plate_mm: f64,
-        d_bolt_mm: f64,
-        f_u_mpa: f64,
-        gamma_m2: f64,
-        k1: f64,
-    ) -> f64 {
+    pub fn bolt_bearing_resistance_kn(t_plate_mm: f64, d_bolt_mm: f64, f_u_mpa: f64, gamma_m2: f64, k1: f64) -> f64 {
         let alpha_b = (k1 * f_u_mpa).min(2.5);
         alpha_b * d_bolt_mm * t_plate_mm * f_u_mpa / gamma_m2 / 1000.0
     }
 
     pub fn check_bolt_shear(f_ed_kn: f64, f_v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-8", "§3.6.1", "3.6.1"),
-            Quantity::force_kn(f_ed_kn),
-            Quantity::force_kn(f_v_rd_kn),
-            "bolt shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-8", "§3.6.1", "3.6.1"), Quantity::force_kn(f_ed_kn), Quantity::force_kn(f_v_rd_kn), "bolt shear ULS", annex)
     }
 
     pub fn check_bolt_bearing(f_ed_kn: f64, f_b_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-8", "§3.6.1", "3.6.1b"),
-            Quantity::force_kn(f_ed_kn),
-            Quantity::force_kn(f_b_rd_kn),
-            "bolt bearing ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-8", "§3.6.1", "3.6.1b"), Quantity::force_kn(f_ed_kn), Quantity::force_kn(f_b_rd_kn), "bolt bearing ULS", annex)
     }
 }
 // #endregion 🔖Part1_8
@@ -390,13 +322,7 @@ pub mod part_1_9 {
     }
 
     pub fn check_net_tension(n_ed_kn: f64, n_t_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-9", "§6.2.3", "6.2.3"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_t_rd_kn),
-            "net section tension ULS",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-9", "§6.2.3", "6.2.3"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_t_rd_kn), "net section tension ULS", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_9
@@ -419,13 +345,7 @@ pub mod part_1_10 {
 
     pub fn check_toughness(t_actual_c: f64, steel_grade: &str, thickness_mm: f64) -> CheckResult {
         let required = toughness_temperature_c(steel_grade, thickness_mm);
-        CheckResult::from_minimum(
-            ClauseId::new("EN 1993-1-10", "§2.2", "2.2"),
-            Quantity::new(norm_core::QuantityKind::Temperature, t_actual_c),
-            Quantity::new(norm_core::QuantityKind::Temperature, required),
-            "material toughness",
-            AnnexChoice::De,
-        )
+        CheckResult::from_minimum(ClauseId::new("EN 1993-1-10", "§2.2", "2.2"), Quantity::new(norm_core::QuantityKind::Temperature, t_actual_c), Quantity::new(norm_core::QuantityKind::Temperature, required), "material toughness", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_10
@@ -454,13 +374,7 @@ pub mod part_1_11 {
     }
 
     pub fn check_chs_compression(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-11", "§6.3", "6.3"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "hollow section compression",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-11", "§6.3", "6.3"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "hollow section compression", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part1_11
@@ -506,13 +420,7 @@ pub mod part_2 {
 
     pub fn check_steel_bridge(n_ed_kn: f64, n_rd_kn: f64, m_ed_knm: f64, m_rd_knm: f64) -> CheckResult {
         let eta = bridge_interaction_eta(n_ed_kn, n_rd_kn, m_ed_knm, m_rd_knm);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-2", "§6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, eta),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
-            "steel bridge interaction",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-2", "§6", "6.1"), Quantity::new(norm_core::QuantityKind::Dimensionless, eta), Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0), "steel bridge interaction", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part2
@@ -538,22 +446,12 @@ pub mod part_4 {
 
     /// 📐 Plate effective width b_eff per EN 1993-1-5 §4.
     pub fn effective_width_mm(b_mm: f64, lambda_p: f64) -> f64 {
-        let rho = if lambda_p <= 0.673 {
-            1.0
-        } else {
-            (lambda_p - 0.055 * (3.0_f64).sqrt()) / (lambda_p * lambda_p)
-        };
+        let rho = if lambda_p <= 0.673 { 1.0 } else { (lambda_p - 0.055 * (3.0_f64).sqrt()) / (lambda_p * lambda_p) };
         rho * b_mm
     }
 
     pub fn check_plated_buckling(sigma_ed_mpa: f64, sigma_rd_mpa: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-5", "§4", "4.1"),
-            Quantity::stress_mpa(sigma_ed_mpa),
-            Quantity::stress_mpa(sigma_rd_mpa),
-            "plated structure local buckling",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-5", "§4", "4.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(sigma_rd_mpa), "plated structure local buckling", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part4
@@ -568,13 +466,7 @@ pub mod part_5 {
     }
 
     pub fn check_pile_foundation_steel(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-5", "§6", "6.1"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "steel pile compression",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1993-5", "§6", "6.1"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "steel pile compression", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part5
@@ -603,14 +495,7 @@ pub mod part_6 {
 // #endregion 🔖Part6
 
 /// 📋 I-section member check.
-pub fn check_steel_member(
-    n_ed_kn: f64,
-    m_ed_knm: f64,
-    a_mm2: f64,
-    w_pl_mm3: f64,
-    f_y_mpa: f64,
-    chi: f64,
-) -> CheckReport {
+pub fn check_steel_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_pl_mm3: f64, f_y_mpa: f64, chi: f64) -> CheckReport {
     let annex = AnnexChoice::De;
     let n_rd = part_1_1::axial_resistance_kn(a_mm2, f_y_mpa);
     let n_b_rd = part_1_1::buckling_resistance_kn(a_mm2, f_y_mpa, chi);
@@ -638,14 +523,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            n_ed_kn: 500.0,
-            m_ed_knm: 150.0,
-            a_mm2: 5000.0,
-            w_pl_mm3: 500_000.0,
-            f_y_mpa: 355.0,
-            chi: 0.75,
-        }
+        Self { n_ed_kn: 500.0, m_ed_knm: 150.0, a_mm2: 5000.0, w_pl_mm3: 500_000.0, f_y_mpa: 355.0, chi: 0.75 }
     }
 }
 
@@ -653,14 +531,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1993Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_steel_member(
-        document.n_ed_kn,
-        document.m_ed_knm,
-        document.a_mm2,
-        document.w_pl_mm3,
-        document.f_y_mpa,
-        document.chi,
-    )
+    check_steel_member(document.n_ed_kn, document.m_ed_knm, document.a_mm2, document.w_pl_mm3, document.f_y_mpa, document.chi)
 }
 
 pub struct En1993Family;

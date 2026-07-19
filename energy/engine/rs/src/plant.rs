@@ -15,10 +15,7 @@ pub struct PlantStream {
 
 impl PlantStream {
     pub const fn new(temperature_c: f64, mass_flow_kg_s: f64) -> Self {
-        Self {
-            temperature_c,
-            mass_flow_kg_s,
-        }
+        Self { temperature_c, mass_flow_kg_s }
     }
 }
 
@@ -51,13 +48,7 @@ impl Pump {
         let head = self.design_head_pa * self.part_load_curve.evaluate(plr);
         let hydraulic_w = flow * head / RHO_WATER.max(1.0);
         let motor_eta = self.motor_efficiency.clamp(0.1, 1.0);
-        PlantOutput {
-            thermal_power_w: 0.0,
-            electrical_power_w: hydraulic_w / motor_eta,
-            gas_power_w: 0.0,
-            outlet: PlantStream::new(inlet.temperature_c, flow),
-            heat_rejection_w: hydraulic_w * (1.0 - motor_eta),
-        }
+        PlantOutput { thermal_power_w: 0.0, electrical_power_w: hydraulic_w / motor_eta, gas_power_w: 0.0, outlet: PlantStream::new(inlet.temperature_c, flow), heat_rejection_w: hydraulic_w * (1.0 - motor_eta) }
     }
 }
 // #endregion 🔖Pump
@@ -77,30 +68,15 @@ impl Boiler {
     /// 🔥 Deliver hot-water heating to meet plant load.
     pub fn simulate(&self, inlet: PlantStream, heating_load_w: f64, operating: bool) -> PlantOutput {
         if !operating || heating_load_w <= 0.0 {
-            return PlantOutput {
-                electrical_power_w: 50.0,
-                gas_power_w: self.standby_loss_w,
-                outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s),
-                ..Default::default()
-            };
+            return PlantOutput { electrical_power_w: 50.0, gas_power_w: self.standby_loss_w, outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
         let load = heating_load_w.min(self.rated_capacity_w);
         let plr = self.part_load_curve.part_load(load, self.rated_capacity_w);
         let eta = (self.combustion_efficiency * self.part_load_curve.evaluate(plr)).clamp(0.5, 1.0);
         let gas_w = load / eta + self.standby_loss_w;
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
-        let m_dot = if inlet.mass_flow_kg_s > 1e-6 {
-            inlet.mass_flow_kg_s
-        } else {
-            load / (cp * (self.supply_temperature_c - inlet.temperature_c).max(1.0))
-        };
-        PlantOutput {
-            thermal_power_w: load,
-            electrical_power_w: 200.0 * plr,
-            gas_power_w: gas_w,
-            outlet: PlantStream::new(self.supply_temperature_c, m_dot),
-            heat_rejection_w: gas_w - load,
-        }
+        let m_dot = if inlet.mass_flow_kg_s > 1e-6 { inlet.mass_flow_kg_s } else { load / (cp * (self.supply_temperature_c - inlet.temperature_c).max(1.0)) };
+        PlantOutput { thermal_power_w: load, electrical_power_w: 200.0 * plr, gas_power_w: gas_w, outlet: PlantStream::new(self.supply_temperature_c, m_dot), heat_rejection_w: gas_w - load }
     }
 }
 // #endregion 🔖Boiler
@@ -121,29 +97,17 @@ impl ChillerEir {
     /// ❄️ Electric chiller cooling via Energy Input Ratio curves.
     pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, operating: bool) -> PlantOutput {
         if !operating || cooling_load_w <= 0.0 {
-            return PlantOutput {
-                outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s),
-                ..Default::default()
-            };
+            return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
         let load = cooling_load_w.min(self.rated_capacity_w);
         let plr = self.eir_curve.part_load(load, self.rated_capacity_w);
         let eir_plr = self.eir_curve.evaluate(plr).max(0.05);
-        let eir_ft = self
-            .eir_f_t_curve
-            .evaluate_2d(inlet.temperature_c, self.entering_condenser_c)
-            .max(0.05);
+        let eir_ft = self.eir_f_t_curve.evaluate_2d(inlet.temperature_c, self.entering_condenser_c).max(0.05);
         let cop = (1.0 / (eir_plr * eir_ft)).min(self.reference_cop * 1.5);
         let elec_w = load / cop.max(0.5);
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
         let delta_t = load / (inlet.mass_flow_kg_s.max(0.01) * cp);
-        PlantOutput {
-            thermal_power_w: -load,
-            electrical_power_w: elec_w,
-            outlet: PlantStream::new(inlet.temperature_c - delta_t, inlet.mass_flow_kg_s),
-            heat_rejection_w: load + elec_w,
-            ..Default::default()
-        }
+        PlantOutput { thermal_power_w: -load, electrical_power_w: elec_w, outlet: PlantStream::new(inlet.temperature_c - delta_t, inlet.mass_flow_kg_s), heat_rejection_w: load + elec_w, ..Default::default() }
     }
 }
 
@@ -159,18 +123,9 @@ pub struct ChillerAbsorption {
 
 impl ChillerAbsorption {
     /// 🔥 Absorption chiller with generator heat input.
-    pub fn simulate(
-        &self,
-        inlet: PlantStream,
-        cooling_load_w: f64,
-        generator_inlet_c: f64,
-        operating: bool,
-    ) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, cooling_load_w: f64, generator_inlet_c: f64, operating: bool) -> PlantOutput {
         if !operating || cooling_load_w <= 0.0 || generator_inlet_c < self.min_generator_inlet_c {
-            return PlantOutput {
-                outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s),
-                ..Default::default()
-            };
+            return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
         let load = cooling_load_w.min(self.rated_capacity_w);
         let plr = self.part_load_curve.part_load(load, self.rated_capacity_w);
@@ -178,13 +133,7 @@ impl ChillerAbsorption {
         let heat_in_w = load * hir;
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
         let delta_t = load / (inlet.mass_flow_kg_s.max(0.01) * cp);
-        PlantOutput {
-            thermal_power_w: -load,
-            gas_power_w: heat_in_w,
-            electrical_power_w: 500.0 * plr,
-            outlet: PlantStream::new(inlet.temperature_c - delta_t, inlet.mass_flow_kg_s),
-            heat_rejection_w: load + heat_in_w,
-        }
+        PlantOutput { thermal_power_w: -load, gas_power_w: heat_in_w, electrical_power_w: 500.0 * plr, outlet: PlantStream::new(inlet.temperature_c - delta_t, inlet.mass_flow_kg_s), heat_rejection_w: load + heat_in_w }
     }
 }
 // #endregion 🔖Chiller
@@ -203,18 +152,9 @@ pub struct HeatPump {
 
 impl HeatPump {
     /// 🌡️ Bidirectional heat pump for heating or cooling plant load.
-    pub fn simulate(
-        &self,
-        inlet: PlantStream,
-        load_w: f64,
-        mode: HeatPumpMode,
-        source_temp_c: f64,
-    ) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, source_temp_c: f64) -> PlantOutput {
         if load_w.abs() < 1.0 {
-            return PlantOutput {
-                outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s),
-                ..Default::default()
-            };
+            return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
         let (rated, base_cop, curve) = match mode {
             HeatPumpMode::Heating => (self.rated_heating_w, self.rated_cop_heating, &self.heating_curve),
@@ -229,13 +169,7 @@ impl HeatPump {
         let elec_w = load_w.abs() / cop;
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
         let delta_t = load_w / (inlet.mass_flow_kg_s.max(0.01) * cp);
-        PlantOutput {
-            thermal_power_w: load_w,
-            electrical_power_w: elec_w,
-            gas_power_w: 0.0,
-            outlet: PlantStream::new(inlet.temperature_c + delta_t, inlet.mass_flow_kg_s),
-            heat_rejection_w: load_w.abs() + elec_w,
-        }
+        PlantOutput { thermal_power_w: load_w, electrical_power_w: elec_w, gas_power_w: 0.0, outlet: PlantStream::new(inlet.temperature_c + delta_t, inlet.mass_flow_kg_s), heat_rejection_w: load_w.abs() + elec_w }
     }
 }
 
@@ -260,32 +194,17 @@ pub struct CoolingTower {
 
 impl CoolingTower {
     /// 🌊 Reject condenser heat to outdoor air via evaporative cooling.
-    pub fn simulate(
-        &self,
-        inlet: PlantStream,
-        heat_rejection_w: f64,
-        outdoor_wb_c: f64,
-    ) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, heat_rejection_w: f64, outdoor_wb_c: f64) -> PlantOutput {
         if heat_rejection_w <= 0.0 {
-            return PlantOutput {
-                outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s),
-                ..Default::default()
-            };
+            return PlantOutput { outlet: PlantStream::new(inlet.temperature_c, inlet.mass_flow_kg_s), ..Default::default() };
         }
-        let plr = (heat_rejection_w / (self.design_flow_kg_s * self.design_range_k * 4200.0).max(1.0))
-            .clamp(0.1, 1.2);
+        let plr = (heat_rejection_w / (self.design_flow_kg_s * self.design_range_k * 4200.0).max(1.0)).clamp(0.1, 1.2);
         let approach = self.design_approach_k * (0.8 + 0.2 * plr);
         let outlet_t = outdoor_wb_c + approach;
         let cp = water_cp_j_per_kg_k((inlet.temperature_c + outlet_t) * 0.5);
         let m_dot = heat_rejection_w / (cp * self.design_range_k.max(1.0));
         let fan_w = self.fan_power_at_design_w * self.fan_curve.evaluate(plr);
-        PlantOutput {
-            thermal_power_w: -heat_rejection_w,
-            electrical_power_w: fan_w,
-            gas_power_w: 0.0,
-            outlet: PlantStream::new(outlet_t, m_dot),
-            heat_rejection_w,
-        }
+        PlantOutput { thermal_power_w: -heat_rejection_w, electrical_power_w: fan_w, gas_power_w: 0.0, outlet: PlantStream::new(outlet_t, m_dot), heat_rejection_w }
     }
 }
 // #endregion 🔖CoolingTower
@@ -306,23 +225,10 @@ impl HeatExchanger {
         let c_min = c_hot.min(c_cold).max(1e-6);
         let q_max = c_min * (hot.temperature_c - cold.temperature_c).max(0.0);
         let eps = self.effectiveness.clamp(0.0, 1.0);
-        let q = (self.ua_w_per_k * (hot.temperature_c - cold.temperature_c))
-            .min(q_max * eps)
-            .max(0.0);
+        let q = (self.ua_w_per_k * (hot.temperature_c - cold.temperature_c)).min(q_max * eps).max(0.0);
         let hot_out = hot.temperature_c - q / c_hot.max(1e-6);
         let cold_out = cold.temperature_c + q / c_cold.max(1e-6);
-        (
-            PlantOutput {
-                thermal_power_w: -q,
-                outlet: PlantStream::new(hot_out, hot.mass_flow_kg_s),
-                ..Default::default()
-            },
-            PlantOutput {
-                thermal_power_w: q,
-                outlet: PlantStream::new(cold_out, cold.mass_flow_kg_s),
-                ..Default::default()
-            },
-        )
+        (PlantOutput { thermal_power_w: -q, outlet: PlantStream::new(hot_out, hot.mass_flow_kg_s), ..Default::default() }, PlantOutput { thermal_power_w: q, outlet: PlantStream::new(cold_out, cold.mass_flow_kg_s), ..Default::default() })
     }
 }
 // #endregion 🔖HeatExchanger
@@ -340,13 +246,7 @@ pub struct Gshp {
 
 impl Gshp {
     /// 🌍 Simulate GSHP with ground temperature penalty from sustained extraction.
-    pub fn simulate(
-        &self,
-        inlet: PlantStream,
-        load_w: f64,
-        mode: HeatPumpMode,
-        cumulative_ground_load_j: f64,
-    ) -> PlantOutput {
+    pub fn simulate(&self, inlet: PlantStream, load_w: f64, mode: HeatPumpMode, cumulative_ground_load_j: f64) -> PlantOutput {
         let penalty_k = (cumulative_ground_load_j / 1e9).clamp(0.0, 8.0);
         let source_t = match mode {
             HeatPumpMode::Heating => self.ground_temperature_c - penalty_k,
@@ -382,17 +282,11 @@ pub struct ThermalStorageState {
 
 impl ThermalStorage {
     /// 🧊 Charge or discharge storage and return loop outlet stream.
-    pub fn simulate(
-        &self,
-        inlet: PlantStream,
-        charge_w: f64,
-        dt_s: f64,
-    ) -> (PlantOutput, ThermalStorageState) {
+    pub fn simulate(&self, inlet: PlantStream, charge_w: f64, dt_s: f64) -> (PlantOutput, ThermalStorageState) {
         let rho = water_density(inlet.temperature_c);
         let cp = water_cp_j_per_kg_k(inlet.temperature_c);
         let mut state = self.state.clone();
-        let avg_t = state.node_temperatures_c.iter().sum::<f64>()
-            / state.node_temperatures_c.len().max(1) as f64;
+        let avg_t = state.node_temperatures_c.iter().sum::<f64>() / state.node_temperatures_c.len().max(1) as f64;
         let loss_w = self.loss_coefficient_w_per_k * (avg_t - state.ambient_temperature_c);
         let mut net_w = charge_w - loss_w;
         if net_w > 0.0 {
@@ -405,20 +299,8 @@ impl ThermalStorage {
         for t in &mut state.node_temperatures_c {
             *t += delta_t;
         }
-        let outlet_t = if charge_w >= 0.0 {
-            state.node_temperatures_c.first().copied().unwrap_or(inlet.temperature_c)
-        } else {
-            state.node_temperatures_c.last().copied().unwrap_or(inlet.temperature_c)
-        };
-        (
-            PlantOutput {
-                thermal_power_w: net_w,
-                outlet: PlantStream::new(outlet_t, inlet.mass_flow_kg_s),
-                heat_rejection_w: loss_w.max(0.0),
-                ..Default::default()
-            },
-            state,
-        )
+        let outlet_t = if charge_w >= 0.0 { state.node_temperatures_c.first().copied().unwrap_or(inlet.temperature_c) } else { state.node_temperatures_c.last().copied().unwrap_or(inlet.temperature_c) };
+        (PlantOutput { thermal_power_w: net_w, outlet: PlantStream::new(outlet_t, inlet.mass_flow_kg_s), heat_rejection_w: loss_w.max(0.0), ..Default::default() }, state)
     }
 }
 // #endregion 🔖ThermalStorage
@@ -436,29 +318,13 @@ pub struct PlantLoopSimulation {
 impl PlantLoopSimulation {
     /// 🔄 Solve one plant loop timestep with pump and demand heat exchanger.
     pub fn simulate(&self, demand_load_w: f64) -> PlantOutput {
-        let rho = if self.glycol_fraction > 0.0 {
-            glycol_density(self.supply.temperature_c, self.glycol_fraction)
-        } else {
-            water_density(self.supply.temperature_c)
-        };
-        let cp = if self.glycol_fraction > 0.0 {
-            glycol_cp_j_per_kg_k(self.supply.temperature_c, self.glycol_fraction)
-        } else {
-            water_cp_j_per_kg_k(self.supply.temperature_c)
-        };
+        let rho = if self.glycol_fraction > 0.0 { glycol_density(self.supply.temperature_c, self.glycol_fraction) } else { water_density(self.supply.temperature_c) };
+        let cp = if self.glycol_fraction > 0.0 { glycol_cp_j_per_kg_k(self.supply.temperature_c, self.glycol_fraction) } else { water_cp_j_per_kg_k(self.supply.temperature_c) };
         let delta_t = demand_load_w / (self.supply.mass_flow_kg_s.max(0.01) * cp);
         let return_t = self.supply.temperature_c - delta_t;
-        let pump_out = self.pump.simulate(
-            PlantStream::new(return_t, self.return_stream.mass_flow_kg_s),
-            self.supply.mass_flow_kg_s,
-        );
+        let pump_out = self.pump.simulate(PlantStream::new(return_t, self.return_stream.mass_flow_kg_s), self.supply.mass_flow_kg_s);
         let _ = rho;
-        PlantOutput {
-            thermal_power_w: demand_load_w,
-            electrical_power_w: pump_out.electrical_power_w,
-            outlet: pump_out.outlet,
-            ..Default::default()
-        }
+        PlantOutput { thermal_power_w: demand_load_w, electrical_power_w: pump_out.electrical_power_w, outlet: pump_out.outlet, ..Default::default() }
     }
 }
 // #endregion 🔖PlantLoop
@@ -474,13 +340,7 @@ mod tests {
 
     #[test]
     fn boiler_meets_partial_load() {
-        let boiler = Boiler {
-            rated_capacity_w: 100_000.0,
-            combustion_efficiency: 0.9,
-            part_load_curve: flat_curve(),
-            standby_loss_w: 200.0,
-            supply_temperature_c: 80.0,
-        };
+        let boiler = Boiler { rated_capacity_w: 100_000.0, combustion_efficiency: 0.9, part_load_curve: flat_curve(), standby_loss_w: 200.0, supply_temperature_c: 80.0 };
         let inlet = PlantStream::new(60.0, 2.0);
         let out = boiler.simulate(inlet, 50_000.0, true);
         assert!(out.thermal_power_w > 49_000.0);
@@ -489,14 +349,7 @@ mod tests {
 
     #[test]
     fn chiller_eir_cooling() {
-        let chiller = ChillerEir {
-            rated_capacity_w: 200_000.0,
-            reference_cop: 5.0,
-            eir_curve: PerformanceCurve::Constant(0.2),
-            eir_f_t_curve: PerformanceCurve::Constant(1.0),
-            leaving_water_c: 7.0,
-            entering_condenser_c: 29.0,
-        };
+        let chiller = ChillerEir { rated_capacity_w: 200_000.0, reference_cop: 5.0, eir_curve: PerformanceCurve::Constant(0.2), eir_f_t_curve: PerformanceCurve::Constant(1.0), leaving_water_c: 7.0, entering_condenser_c: 29.0 };
         let inlet = PlantStream::new(12.0, 10.0);
         let out = chiller.simulate(inlet, 100_000.0, true);
         assert!(out.thermal_power_w < 0.0);
@@ -506,13 +359,7 @@ mod tests {
 
     #[test]
     fn cooling_tower_rejects_heat() {
-        let tower = CoolingTower {
-            design_range_k: 5.0,
-            design_approach_k: 3.0,
-            design_flow_kg_s: 20.0,
-            fan_power_at_design_w: 15_000.0,
-            fan_curve: flat_curve(),
-        };
+        let tower = CoolingTower { design_range_k: 5.0, design_approach_k: 3.0, design_flow_kg_s: 20.0, fan_power_at_design_w: 15_000.0, fan_curve: flat_curve() };
         let inlet = PlantStream::new(35.0, 20.0);
         let out = tower.simulate(inlet, 500_000.0, 22.0);
         assert!(out.outlet.temperature_c < inlet.temperature_c);
@@ -521,10 +368,7 @@ mod tests {
 
     #[test]
     fn heat_exchanger_transfers_positive() {
-        let hx = HeatExchanger {
-            ua_w_per_k: 10_000.0,
-            effectiveness: 0.8,
-        };
+        let hx = HeatExchanger { ua_w_per_k: 10_000.0, effectiveness: 0.8 };
         let hot = PlantStream::new(70.0, 5.0);
         let cold = PlantStream::new(10.0, 5.0);
         let (hot_out, cold_out) = hx.simulate(hot, cold);
@@ -542,10 +386,7 @@ mod tests {
             loss_coefficient_w_per_k: 10.0,
             charge_efficiency: 0.95,
             discharge_efficiency: 0.95,
-            state: ThermalStorageState {
-                node_temperatures_c: vec![50.0, 45.0, 40.0],
-                ambient_temperature_c: 20.0,
-            },
+            state: ThermalStorageState { node_temperatures_c: vec![50.0, 45.0, 40.0], ambient_temperature_c: 20.0 },
         };
         let inlet = PlantStream::new(55.0, 1.0);
         let (out, state) = storage.simulate(inlet, 20_000.0, 3600.0);
@@ -555,12 +396,7 @@ mod tests {
 
     #[test]
     fn pump_power_scales_with_flow() {
-        let pump = Pump {
-            design_head_pa: 200_000.0,
-            design_flow_kg_s: 10.0,
-            motor_efficiency: 0.85,
-            part_load_curve: flat_curve(),
-        };
+        let pump = Pump { design_head_pa: 200_000.0, design_flow_kg_s: 10.0, motor_efficiency: 0.85, part_load_curve: flat_curve() };
         let inlet = PlantStream::new(20.0, 0.0);
         let low = pump.simulate(inlet, 2.0);
         let high = pump.simulate(inlet, 8.0);
@@ -570,14 +406,7 @@ mod tests {
     #[test]
     fn gshp_penalty_increases_with_ground_load() {
         let gshp = Gshp {
-            heat_pump: HeatPump {
-                rated_heating_w: 50_000.0,
-                rated_cooling_w: 50_000.0,
-                rated_cop_heating: 4.0,
-                rated_cop_cooling: 4.5,
-                heating_curve: flat_curve(),
-                cooling_curve: flat_curve(),
-            },
+            heat_pump: HeatPump { rated_heating_w: 50_000.0, rated_cooling_w: 50_000.0, rated_cop_heating: 4.0, rated_cop_cooling: 4.5, heating_curve: flat_curve(), cooling_curve: flat_curve() },
             borehole_depth_m: 100.0,
             borehole_count: 4,
             grout_conductivity_w_m_k: 1.5,

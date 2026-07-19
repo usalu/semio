@@ -68,12 +68,7 @@ pub struct DehumidifierOutput {
 pub fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierInlet) -> HumidifierOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || inlet.humidity_ratio >= inlet.target_humidity_ratio {
-        return HumidifierOutput {
-            humidity_ratio: inlet.humidity_ratio,
-            water_added_kg_s: 0.0,
-            power_w: 0.0,
-            gas_consumption_w: 0.0,
-        };
+        return HumidifierOutput { humidity_ratio: inlet.humidity_ratio, water_added_kg_s: 0.0, power_w: 0.0, gas_consumption_w: 0.0 };
     }
 
     let w_needed = inlet.target_humidity_ratio - inlet.humidity_ratio;
@@ -83,43 +78,23 @@ pub fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierInlet) 
         Humidifier::SteamElectric { capacity_kg_s, efficiency } => {
             let m_w = m_w_demand.min(*capacity_kg_s);
             let power = m_w * H_FG_0C / efficiency.max(0.01);
-            HumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio + m_w / m_dot,
-                water_added_kg_s: m_w,
-                power_w: power,
-                gas_consumption_w: 0.0,
-            }
+            HumidifierOutput { humidity_ratio: inlet.humidity_ratio + m_w / m_dot, water_added_kg_s: m_w, power_w: power, gas_consumption_w: 0.0 }
         }
         Humidifier::SteamGas { capacity_kg_s, efficiency } => {
             let m_w = m_w_demand.min(*capacity_kg_s);
             let gas = m_w * H_FG_0C / efficiency.max(0.01);
-            HumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio + m_w / m_dot,
-                water_added_kg_s: m_w,
-                power_w: 0.0,
-                gas_consumption_w: gas,
-            }
+            HumidifierOutput { humidity_ratio: inlet.humidity_ratio + m_w / m_dot, water_added_kg_s: m_w, power_w: 0.0, gas_consumption_w: gas }
         }
         Humidifier::Atomizing { capacity_kg_s, water_temp_c } => {
             let m_w = m_w_demand.min(*capacity_kg_s);
             let evap_energy = m_w * latent_heat_vaporization(*water_temp_c);
-            HumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio + m_w / m_dot,
-                water_added_kg_s: m_w,
-                power_w: evap_energy * 0.1,
-                gas_consumption_w: 0.0,
-            }
+            HumidifierOutput { humidity_ratio: inlet.humidity_ratio + m_w / m_dot, water_added_kg_s: m_w, power_w: evap_energy * 0.1, gas_consumption_w: 0.0 }
         }
         Humidifier::WettedMedia { effectiveness, .. } => {
             let w_sat = saturation_humidity_ratio(inlet.dry_bulb_c, inlet.pressure_pa);
             let w_max = inlet.humidity_ratio + effectiveness * (w_sat - inlet.humidity_ratio);
             let m_w = ((w_max - inlet.humidity_ratio) * m_dot).min(m_w_demand);
-            HumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio + m_w / m_dot,
-                water_added_kg_s: m_w,
-                power_w: 50.0 * m_w,
-                gas_consumption_w: 0.0,
-            }
+            HumidifierOutput { humidity_ratio: inlet.humidity_ratio + m_w / m_dot, water_added_kg_s: m_w, power_w: 50.0 * m_w, gas_consumption_w: 0.0 }
         }
     }
 }
@@ -130,12 +105,7 @@ pub fn humidifier_output_kg_s(humidifier: &Humidifier, inlet: &HumidifierInlet) 
 pub fn dehumidifier_output_kg_s(dehumidifier: &Dehumidifier, inlet: &DehumidifierInlet) -> DehumidifierOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || inlet.humidity_ratio <= inlet.target_humidity_ratio {
-        return DehumidifierOutput {
-            humidity_ratio: inlet.humidity_ratio,
-            moisture_removed_kg_s: 0.0,
-            latent_cooling_w: 0.0,
-            power_w: 0.0,
-        };
+        return DehumidifierOutput { humidity_ratio: inlet.humidity_ratio, moisture_removed_kg_s: 0.0, latent_cooling_w: 0.0, power_w: 0.0 };
     }
 
     let w_remove = inlet.humidity_ratio - inlet.target_humidity_ratio;
@@ -145,33 +115,18 @@ pub fn dehumidifier_output_kg_s(dehumidifier: &Dehumidifier, inlet: &Dehumidifie
         Dehumidifier::Refrigerant { cop, capacity_kg_s } => {
             let m_w = m_w_demand.min(*capacity_kg_s);
             let latent = m_w * H_FG_0C;
-            DehumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio - m_w / m_dot,
-                moisture_removed_kg_s: m_w,
-                latent_cooling_w: latent,
-                power_w: latent / cop.max(0.5),
-            }
+            DehumidifierOutput { humidity_ratio: inlet.humidity_ratio - m_w / m_dot, moisture_removed_kg_s: m_w, latent_cooling_w: latent, power_w: latent / cop.max(0.5) }
         }
         Dehumidifier::Desiccant { moisture_removal_kg_s, regen_power_w, .. } => {
             let m_w = m_w_demand.min(*moisture_removal_kg_s);
             let latent = m_w * H_FG_0C;
             let plr = m_w / moisture_removal_kg_s.max(1e-9);
-            DehumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio - m_w / m_dot,
-                moisture_removed_kg_s: m_w,
-                latent_cooling_w: latent * 0.8,
-                power_w: regen_power_w * plr,
-            }
+            DehumidifierOutput { humidity_ratio: inlet.humidity_ratio - m_w / m_dot, moisture_removed_kg_s: m_w, latent_cooling_w: latent * 0.8, power_w: regen_power_w * plr }
         }
         Dehumidifier::SolidDesiccant { effectiveness, max_removal_kg_s } => {
             let m_w = m_w_demand.min(*max_removal_kg_s) * effectiveness;
             let latent = m_w * H_FG_0C;
-            DehumidifierOutput {
-                humidity_ratio: inlet.humidity_ratio - m_w / m_dot,
-                moisture_removed_kg_s: m_w,
-                latent_cooling_w: latent,
-                power_w: latent * 0.3,
-            }
+            DehumidifierOutput { humidity_ratio: inlet.humidity_ratio - m_w / m_dot, moisture_removed_kg_s: m_w, latent_cooling_w: latent, power_w: latent * 0.3 }
         }
     }
 }
@@ -185,17 +140,12 @@ fn saturation_humidity_ratio(t_c: f64, p_atm: f64) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::units::P_STD;
 
     #[test]
     fn steam_humidifier_adds_moisture() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 0.95 };
-        let inlet = HumidifierInlet {
-            dry_bulb_c: 20.0,
-            humidity_ratio: 0.005,
-            mass_flow_kg_s: 0.5,
-            target_humidity_ratio: 0.009,
-            pressure_pa: P_STD,
-        };
+        let inlet = HumidifierInlet { dry_bulb_c: 20.0, humidity_ratio: 0.005, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = humidifier_output_kg_s(&hum, &inlet);
         assert!(out.water_added_kg_s > 0.0);
         assert!(out.humidity_ratio > inlet.humidity_ratio);
@@ -205,13 +155,7 @@ mod tests {
     #[test]
     fn refrigerant_dehumidifier_removes_moisture() {
         let dehum = Dehumidifier::Refrigerant { cop: 2.5, capacity_kg_s: 0.005 };
-        let inlet = DehumidifierInlet {
-            dry_bulb_c: 26.0,
-            humidity_ratio: 0.014,
-            mass_flow_kg_s: 0.6,
-            target_humidity_ratio: 0.009,
-            pressure_pa: P_STD,
-        };
+        let inlet = DehumidifierInlet { dry_bulb_c: 26.0, humidity_ratio: 0.014, mass_flow_kg_s: 0.6, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = dehumidifier_output_kg_s(&dehum, &inlet);
         assert!(out.moisture_removed_kg_s > 0.0);
         assert!(out.humidity_ratio < inlet.humidity_ratio);
@@ -220,13 +164,7 @@ mod tests {
     #[test]
     fn at_target_no_humidification() {
         let hum = Humidifier::SteamElectric { capacity_kg_s: 0.01, efficiency: 1.0 };
-        let inlet = HumidifierInlet {
-            dry_bulb_c: 22.0,
-            humidity_ratio: 0.01,
-            mass_flow_kg_s: 0.5,
-            target_humidity_ratio: 0.009,
-            pressure_pa: P_STD,
-        };
+        let inlet = HumidifierInlet { dry_bulb_c: 22.0, humidity_ratio: 0.01, mass_flow_kg_s: 0.5, target_humidity_ratio: 0.009, pressure_pa: P_STD };
         let out = humidifier_output_kg_s(&hum, &inlet);
         assert_eq!(out.water_added_kg_s, 0.0);
     }

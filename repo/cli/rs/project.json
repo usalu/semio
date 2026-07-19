@@ -16,6 +16,27 @@
         "command": "bun ./script.ts test"
       }
     },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/cli/rs",
+        "command": "bun ./script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/cli/rs",
+        "command": "bun ./script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "repo/cli/rs",
+        "command": "bun ./script.ts test exhaustive"
+      }
+    },
     "run": {
       "executor": "nx:run-commands",
       "options": {

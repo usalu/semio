@@ -60,11 +60,7 @@ pub fn polygon_normal(vertices_m: &[[f64; 3]]) -> [f64; 3] {
     let len = vertices_m.len();
     for i in 0..len {
         let (x0, y0, z0) = (vertices_m[i][0], vertices_m[i][1], vertices_m[i][2]);
-        let (x1, y1, z1) = (
-            vertices_m[(i + 1) % len][0],
-            vertices_m[(i + 1) % len][1],
-            vertices_m[(i + 1) % len][2],
-        );
+        let (x1, y1, z1) = (vertices_m[(i + 1) % len][0], vertices_m[(i + 1) % len][1], vertices_m[(i + 1) % len][2]);
         n[0] += (y0 - y1) * (z0 + z1);
         n[1] += (z0 - z1) * (x0 + x1);
         n[2] += (x0 - x1) * (y0 + y1);
@@ -162,10 +158,7 @@ pub fn validate_polygon_planar(vertices_m: &[[f64; 3]], tolerance_m: f64) -> Pla
 // #region 🔖Transform
 /// 🔄 Apply 4×4 transform to polygon vertices (building ↔ world).
 pub fn transform_vertices(vertices_m: &[[f64; 3]], transform: mathematical_algebra::Mat4) -> Vec<[f64; 3]> {
-    vertices_m
-        .iter()
-        .map(|v| from_vec3(transform.transform_point(to_vec3(*v))))
-        .collect()
+    vertices_m.iter().map(|v| from_vec3(transform.transform_point(to_vec3(*v)))).collect()
 }
 
 /// 🔄 Rotate direction vector (no translation).

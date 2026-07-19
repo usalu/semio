@@ -33,14 +33,7 @@ pub struct IlluminanceMap {
 
 // #region 🔖Illuminance
 /// 💡 Simplified interior illuminance at a point [lux] (split-flux daylight factor).
-pub fn reference_point_illuminance_lux(
-    diffuse_horizontal_lux: f64,
-    direct_normal_lux: f64,
-    incidence_cosine: f64,
-    window_transmittance: f64,
-    daylight_factor: f64,
-    shading_factor: f64,
-) -> f64 {
+pub fn reference_point_illuminance_lux(diffuse_horizontal_lux: f64, direct_normal_lux: f64, incidence_cosine: f64, window_transmittance: f64, daylight_factor: f64, shading_factor: f64) -> f64 {
     let diffuse_contrib = diffuse_horizontal_lux * window_transmittance * daylight_factor * shading_factor;
     let direct_contrib = direct_normal_lux * incidence_cosine * window_transmittance * shading_factor * 0.5;
     diffuse_contrib + direct_contrib
@@ -48,26 +41,13 @@ pub fn reference_point_illuminance_lux(
 
 /// 🗺️ Build illuminance map from reference points.
 pub fn illuminance_map(points: &[ReferencePoint], lux_per_point: &[f64]) -> IlluminanceMap {
-    let values_lux: Vec<f64> = points
-        .iter()
-        .zip(lux_per_point.iter())
-        .map(|(p, &lux)| lux * p.fraction)
-        .collect();
+    let values_lux: Vec<f64> = points.iter().zip(lux_per_point.iter()).map(|(p, &lux)| lux * p.fraction).collect();
     let empty = values_lux.is_empty();
     let min_lux = values_lux.iter().copied().fold(f64::INFINITY, f64::min);
     let max_lux = values_lux.iter().copied().fold(f64::NEG_INFINITY, f64::max);
     let total_frac: f64 = points.iter().map(|p| p.fraction).sum();
-    let average_lux = if total_frac > 0.0 {
-        values_lux.iter().sum::<f64>() / total_frac
-    } else {
-        0.0
-    };
-    IlluminanceMap {
-        values_lux,
-        min_lux: if empty { 0.0 } else { min_lux },
-        max_lux: if empty { 0.0 } else { max_lux },
-        average_lux,
-    }
+    let average_lux = if total_frac > 0.0 { values_lux.iter().sum::<f64>() / total_frac } else { 0.0 };
+    IlluminanceMap { values_lux, min_lux: if empty { 0.0 } else { min_lux }, max_lux: if empty { 0.0 } else { max_lux }, average_lux }
 }
 
 /// 💡 Zone-averaged daylight illuminance [lux].
@@ -78,11 +58,7 @@ pub fn zone_daylight_illuminance(zone: &DaylightZone, lux_per_point: &[f64]) -> 
 
 // #region 🔖Glare
 /// 😎 Simplified daylight glare index (0–1, higher = more glare).
-pub fn simplified_glare_index(
-    window_luminance_cd_m2: f64,
-    solid_angle_sr: f64,
-    eye_illuminance_lux: f64,
-) -> f64 {
+pub fn simplified_glare_index(window_luminance_cd_m2: f64, solid_angle_sr: f64, eye_illuminance_lux: f64) -> f64 {
     let omega = solid_angle_sr.max(1e-6);
     let l_b = window_luminance_cd_m2.max(1.0);
     let e_i = eye_illuminance_lux.max(1.0);
@@ -132,10 +108,7 @@ mod tests {
             zone_id: 1,
             floor_area_m2: 25.0,
             window_transmittance: 0.6,
-            reference_points: vec![
-                ReferencePoint { x_m: 2.0, y_m: 2.0, z_m: 0.8, fraction: 0.5 },
-                ReferencePoint { x_m: 4.0, y_m: 2.0, z_m: 0.8, fraction: 0.5 },
-            ],
+            reference_points: vec![ReferencePoint { x_m: 2.0, y_m: 2.0, z_m: 0.8, fraction: 0.5 }, ReferencePoint { x_m: 4.0, y_m: 2.0, z_m: 0.8, fraction: 0.5 }],
             illuminance_target_lux: 500.0,
             glare_limit: 0.4,
         }

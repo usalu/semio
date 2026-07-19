@@ -5,7 +5,8 @@
 @source "./stories";
 @source "../compose/client/lib/js";
 @source "../compose/dev/algorithm";
-@source "../framework/product/playground/renderer/react";
-@source "../puzzle/2d/react";
-@source "../puzzle/3d/react";
-@source "../puzzle/5d/react";
+@source "../framework/renderer/react";
+@source "../cad/renderer/js";
+@source "../infinite/world/r3f";
+@source "../infinite/cavas/react-renderer";
+@source "../animate/present/renderer/react";

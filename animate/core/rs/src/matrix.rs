@@ -48,7 +48,7 @@ impl Matrix {
     }
 
     pub fn math(entries: &[&str], cell_size: (f64, f64), color: Color) -> Self {
-        let mut children: Vec<Box<dyn Sobject>> = entries
+        let children: Vec<Box<dyn Sobject>> = entries
             .iter()
             .map(|e| {
                 let m = MathText::new(*e, color);
@@ -85,14 +85,14 @@ pub struct Table {
 }
 
 impl Table {
-    pub fn new(headers: Vec<String>, rows: Vec<Vec<String>>, cell_size: (f64, f64), color: Color) -> Self {
+    pub fn new(headers: Vec<String>, rows: &[Vec<String>], cell_size: (f64, f64), color: Color) -> Self {
         let ncols = headers.len().max(rows.iter().map(|r| r.len()).max().unwrap_or(0));
         let nrows = rows.len() + 1;
         let mut children: Vec<Box<dyn Sobject>> = Vec::new();
         for header in headers {
             children.push(Box::new(Text::new(header, color).inner));
         }
-        for row in &rows {
+        for row in rows {
             for cell in row {
                 children.push(Box::new(Text::new(cell.clone(), color).inner));
             }
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn table_has_header_and_rows() {
-        let t = Table::new(vec!["x".into()], vec![vec!["1".into()]], (1.0, 1.0), Color::WHITE);
+        let t = Table::new(vec!["x".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
         assert_eq!(t.rows, 2);
         assert_eq!(t.cols, 1);
     }

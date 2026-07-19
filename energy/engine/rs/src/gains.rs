@@ -64,127 +64,60 @@ impl ActivityLevel {
 }
 
 /// 👤 People gain [W] from count, activity, and radiant fraction.
-pub fn compute_people_gain_w(
-    count: f64,
-    activity: ActivityLevel,
-    schedule_factor: f64,
-    radiant_fraction: f64,
-) -> GainDecomposition {
+pub fn compute_people_gain_w(count: f64, activity: ActivityLevel, schedule_factor: f64, radiant_fraction: f64) -> GainDecomposition {
     let total = count * activity.metabolic_w_per_person() * schedule_factor.clamp(0.0, 1.0);
     let sensible = total * activity.sensible_fraction();
     let latent = total * activity.latent_fraction();
     let radiant = sensible * radiant_fraction.clamp(0.0, 1.0);
     let convective = sensible - radiant;
-    GainDecomposition {
-        total_w: total,
-        sensible_w: sensible,
-        radiant_w: radiant,
-        latent_w: latent,
-        convective_w: convective,
-        return_air_w: 0.0,
-    }
+    GainDecomposition { total_w: total, sensible_w: sensible, radiant_w: radiant, latent_w: latent, convective_w: convective, return_air_w: 0.0 }
 }
 // #endregion 🔖People
 
 // #region 🔖Lighting
 /// 💡 Lighting gain [W] from power density and fractions.
-pub fn compute_lighting_gain_w(
-    watts_per_area: f64,
-    floor_area_m2: f64,
-    schedule_factor: f64,
-    radiant_fraction: f64,
-    return_air_fraction: f64,
-) -> GainDecomposition {
+pub fn compute_lighting_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, return_air_fraction: f64) -> GainDecomposition {
     let total = watts_per_area * floor_area_m2 * schedule_factor.clamp(0.0, 1.0);
     let radiant = total * radiant_fraction.clamp(0.0, 1.0);
     let return_air = total * return_air_fraction.clamp(0.0, 1.0);
     let convective = total - radiant - return_air;
-    GainDecomposition {
-        total_w: total,
-        sensible_w: total,
-        radiant_w: radiant,
-        latent_w: 0.0,
-        convective_w: convective.max(0.0),
-        return_air_w: return_air,
-    }
+    GainDecomposition { total_w: total, sensible_w: total, radiant_w: radiant, latent_w: 0.0, convective_w: convective.max(0.0), return_air_w: return_air }
 }
 // #endregion 🔖Lighting
 
 // #region 🔖Equipment
 /// 🔌 Electric equipment gain [W].
-pub fn compute_equipment_gain_w(
-    watts_per_area: f64,
-    floor_area_m2: f64,
-    schedule_factor: f64,
-    radiant_fraction: f64,
-    latent_fraction: f64,
-) -> GainDecomposition {
+pub fn compute_equipment_gain_w(watts_per_area: f64, floor_area_m2: f64, schedule_factor: f64, radiant_fraction: f64, latent_fraction: f64) -> GainDecomposition {
     let total = watts_per_area * floor_area_m2 * schedule_factor.clamp(0.0, 1.0);
     let latent = total * latent_fraction.clamp(0.0, 1.0);
     let sensible = total - latent;
     let radiant = sensible * radiant_fraction.clamp(0.0, 1.0);
     let convective = sensible - radiant;
-    GainDecomposition {
-        total_w: total,
-        sensible_w: sensible,
-        radiant_w: radiant,
-        latent_w: latent,
-        convective_w: convective,
-        return_air_w: 0.0,
-    }
+    GainDecomposition { total_w: total, sensible_w: sensible, radiant_w: radiant, latent_w: latent, convective_w: convective, return_air_w: 0.0 }
 }
 // #endregion 🔖Equipment
 
 // #region 🔖Process
 /// 🏭 Process load gain [W] with configurable split.
-pub fn compute_process_gain_w(
-    design_load_w: f64,
-    schedule_factor: f64,
-    sensible_fraction: f64,
-    latent_fraction: f64,
-    radiant_fraction: f64,
-) -> GainDecomposition {
+pub fn compute_process_gain_w(design_load_w: f64, schedule_factor: f64, sensible_fraction: f64, latent_fraction: f64, radiant_fraction: f64) -> GainDecomposition {
     let total = design_load_w * schedule_factor.clamp(0.0, 1.0);
     let latent = total * latent_fraction.clamp(0.0, 1.0);
     let sensible = total * sensible_fraction.clamp(0.0, 1.0);
     let radiant = sensible * radiant_fraction.clamp(0.0, 1.0);
     let convective = sensible - radiant;
-    GainDecomposition {
-        total_w: total,
-        sensible_w: sensible,
-        radiant_w: radiant,
-        latent_w: latent,
-        convective_w: convective,
-        return_air_w: 0.0,
-    }
+    GainDecomposition { total_w: total, sensible_w: sensible, radiant_w: radiant, latent_w: latent, convective_w: convective, return_air_w: 0.0 }
 }
 // #endregion 🔖Process
 
 // #region 🔖DataCenter
 /// 🖥️ Data center IT load [W] with air-side heat capture fraction.
-pub fn compute_datacenter_gain_w(
-    it_load_w: f64,
-    schedule_factor: f64,
-    air_cooled_fraction: f64,
-    supply_return_delta_t_k: f64,
-) -> GainDecomposition {
+pub fn compute_datacenter_gain_w(it_load_w: f64, schedule_factor: f64, air_cooled_fraction: f64, supply_return_delta_t_k: f64) -> GainDecomposition {
     let total = it_load_w * schedule_factor.clamp(0.0, 1.0);
     let air_frac = air_cooled_fraction.clamp(0.0, 1.0);
     let air_w = total * air_frac;
     let liquid_w = total - air_w;
-    let return_air = if supply_return_delta_t_k > 0.1 {
-        air_w * 0.9
-    } else {
-        air_w * 0.5
-    };
-    GainDecomposition {
-        total_w: total,
-        sensible_w: total,
-        radiant_w: liquid_w * 0.1,
-        latent_w: 0.0,
-        convective_w: air_w - return_air,
-        return_air_w: return_air,
-    }
+    let return_air = if supply_return_delta_t_k > 0.1 { air_w * 0.9 } else { air_w * 0.5 };
+    GainDecomposition { total_w: total, sensible_w: total, radiant_w: liquid_w * 0.1, latent_w: 0.0, convective_w: air_w - return_air, return_air_w: return_air }
 }
 // #endregion 🔖DataCenter
 

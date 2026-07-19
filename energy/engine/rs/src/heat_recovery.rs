@@ -79,11 +79,7 @@ pub fn ntu_from_ua(ua_w_per_k: f64, c_min: f64) -> f64 {
 
 // #region 🔖Exchange
 /// ♻️ Sensible and latent heat recovery exchange [W].
-pub fn heat_recovery_exchange_w(
-    unit: &HeatRecoveryUnit,
-    supply_in: &HxAirstream,
-    exhaust_in: &HxAirstream,
-) -> HeatRecoveryOutput {
+pub fn heat_recovery_exchange_w(unit: &HeatRecoveryUnit, supply_in: &HxAirstream, exhaust_in: &HxAirstream) -> HeatRecoveryOutput {
     let m_sup = supply_in.mass_flow_kg_s.max(0.0);
     let m_exh = exhaust_in.mass_flow_kg_s.max(0.0);
     if m_sup < 1e-9 || m_exh < 1e-9 {
@@ -133,18 +129,8 @@ pub fn heat_recovery_exchange_w(
     let _ = (q_sensible, q_latent, cr);
 
     HeatRecoveryOutput {
-        supply_out: HxAirstream {
-            temperature_c: supply_t,
-            humidity_ratio: supply_w.max(0.0),
-            mass_flow_kg_s: m_sup,
-            pressure_pa: supply_in.pressure_pa,
-        },
-        exhaust_out: HxAirstream {
-            temperature_c: exhaust_t,
-            humidity_ratio: exhaust_w.max(0.0),
-            mass_flow_kg_s: m_exh,
-            pressure_pa: exhaust_in.pressure_pa,
-        },
+        supply_out: HxAirstream { temperature_c: supply_t, humidity_ratio: supply_w.max(0.0), mass_flow_kg_s: m_sup, pressure_pa: supply_in.pressure_pa },
+        exhaust_out: HxAirstream { temperature_c: exhaust_t, humidity_ratio: exhaust_w.max(0.0), mass_flow_kg_s: m_exh, pressure_pa: exhaust_in.pressure_pa },
         sensible_recovery_w: q_sensible_adj,
         latent_recovery_w: q_latent_adj,
         total_recovery_w: q_total,
@@ -175,30 +161,14 @@ mod tests {
     use super::*;
 
     fn erv() -> HeatRecoveryUnit {
-        HeatRecoveryUnit {
-            hx_type: HeatExchangerType::CounterFlow,
-            sensible_effectiveness: 0.75,
-            latent_effectiveness: 0.6,
-            frost_control_temp_c: -5.0,
-            defrost_power_w: 200.0,
-        }
+        HeatRecoveryUnit { hx_type: HeatExchangerType::CounterFlow, sensible_effectiveness: 0.75, latent_effectiveness: 0.6, frost_control_temp_c: -5.0, defrost_power_w: 200.0 }
     }
 
     #[test]
     fn winter_recovery_heats_supply() {
         let unit = erv();
-        let supply = HxAirstream {
-            temperature_c: 5.0,
-            humidity_ratio: 0.004,
-            mass_flow_kg_s: 0.3,
-            pressure_pa: 101_325.0,
-        };
-        let exhaust = HxAirstream {
-            temperature_c: 22.0,
-            humidity_ratio: 0.009,
-            mass_flow_kg_s: 0.3,
-            pressure_pa: 101_325.0,
-        };
+        let supply = HxAirstream { temperature_c: 5.0, humidity_ratio: 0.004, mass_flow_kg_s: 0.3, pressure_pa: 101_325.0 };
+        let exhaust = HxAirstream { temperature_c: 22.0, humidity_ratio: 0.009, mass_flow_kg_s: 0.3, pressure_pa: 101_325.0 };
         let out = heat_recovery_exchange_w(&unit, &supply, &exhaust);
         assert!(out.supply_out.temperature_c > supply.temperature_c);
         assert!(out.sensible_recovery_w > 0.0);
@@ -213,18 +183,8 @@ mod tests {
     #[test]
     fn frost_reduces_effectiveness() {
         let unit = erv();
-        let supply = HxAirstream {
-            temperature_c: -10.0,
-            humidity_ratio: 0.002,
-            mass_flow_kg_s: 0.2,
-            pressure_pa: 101_325.0,
-        };
-        let exhaust = HxAirstream {
-            temperature_c: 20.0,
-            humidity_ratio: 0.008,
-            mass_flow_kg_s: 0.2,
-            pressure_pa: 101_325.0,
-        };
+        let supply = HxAirstream { temperature_c: -10.0, humidity_ratio: 0.002, mass_flow_kg_s: 0.2, pressure_pa: 101_325.0 };
+        let exhaust = HxAirstream { temperature_c: 20.0, humidity_ratio: 0.008, mass_flow_kg_s: 0.2, pressure_pa: 101_325.0 };
         let out = heat_recovery_exchange_w(&unit, &supply, &exhaust);
         assert!(out.defrost_active);
         assert!(out.defrost_power_w > 0.0);

@@ -26,11 +26,7 @@ pub struct SurfaceSolarAbsorption {
 pub fn beam_incidence_cosine(surface_normal: [f64; 3], sun_altitude_deg: f64, sun_azimuth_deg: f64) -> f64 {
     let alt = deg_to_rad(sun_altitude_deg);
     let az = deg_to_rad(sun_azimuth_deg);
-    let sun_dir = [
-        alt.cos() * az.sin(),
-        alt.cos() * az.cos(),
-        alt.sin(),
-    ];
+    let sun_dir = [alt.cos() * az.sin(), alt.cos() * az.cos(), alt.sin()];
     let mut n = surface_normal;
     let len = (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt();
     if len > 1e-9 {
@@ -63,23 +59,12 @@ pub fn shading_factor(unshaded_fraction: f64, overhang_depth_m: f64, window_heig
 
 // #region 🔖Absorption
 /// ☀️ Absorbed solar on opaque surface [W/m²].
-pub fn surface_solar_absorption(
-    direct_normal_irradiance_w_m2: f64,
-    diffuse_horizontal_irradiance_w_m2: f64,
-    incidence_cosine: f64,
-    shading: f64,
-    solar_absorptance: f64,
-    tilt_deg: f64,
-) -> SurfaceSolarAbsorption {
+pub fn surface_solar_absorption(direct_normal_irradiance_w_m2: f64, diffuse_horizontal_irradiance_w_m2: f64, incidence_cosine: f64, shading: f64, solar_absorptance: f64, tilt_deg: f64) -> SurfaceSolarAbsorption {
     let tilt_rad = deg_to_rad(tilt_deg);
     let view_factor_sky = (1.0 + tilt_rad.cos()) * 0.5;
     let beam = direct_normal_irradiance_w_m2 * incidence_cosine * shading * solar_absorptance;
     let diffuse = diffuse_horizontal_irradiance_w_m2 * view_factor_sky * solar_absorptance;
-    SurfaceSolarAbsorption {
-        beam_w_m2: beam,
-        diffuse_w_m2: diffuse,
-        total_w_m2: beam + diffuse,
-    }
+    SurfaceSolarAbsorption { beam_w_m2: beam, diffuse_w_m2: diffuse, total_w_m2: beam + diffuse }
 }
 
 /// ☀️ Absorbed solar from polygon vertices and sun position.
@@ -96,25 +81,13 @@ pub fn surface_solar_from_vertices(
     let normal = polygon_normal(vertices_m);
     let tilt = surface_tilt_azimuth(normal, north_axis_deg);
     let cos_inc = beam_incidence_cosine(normal, sun_altitude_deg, sun_azimuth_deg);
-    surface_solar_absorption(
-        direct_normal_irradiance_w_m2,
-        diffuse_horizontal_irradiance_w_m2,
-        cos_inc,
-        shading,
-        solar_absorptance,
-        tilt.tilt_deg,
-    )
+    surface_solar_absorption(direct_normal_irradiance_w_m2, diffuse_horizontal_irradiance_w_m2, cos_inc, shading, solar_absorptance, tilt.tilt_deg)
 }
 // #endregion 🔖Absorption
 
 // #region 🔖Distribution
 /// 💡 Distribute transmitted solar to interior surfaces [W] per mode.
-pub fn distribute_interior_solar(
-    transmitted_solar_w: f64,
-    mode: InteriorSolarDistribution,
-    floor_area_m2: f64,
-    surface_areas_m2: &[f64],
-) -> Vec<f64> {
+pub fn distribute_interior_solar(transmitted_solar_w: f64, mode: InteriorSolarDistribution, floor_area_m2: f64, surface_areas_m2: &[f64]) -> Vec<f64> {
     match mode {
         InteriorSolarDistribution::DirectToFloor => {
             let mut out = vec![0.0; surface_areas_m2.len()];
@@ -128,10 +101,7 @@ pub fn distribute_interior_solar(
             if total <= 0.0 {
                 return vec![0.0; surface_areas_m2.len()];
             }
-            surface_areas_m2
-                .iter()
-                .map(|&a| transmitted_solar_w * a / total)
-                .collect()
+            surface_areas_m2.iter().map(|&a| transmitted_solar_w * a / total).collect()
         }
         InteriorSolarDistribution::SplitFlux => {
             let total: f64 = surface_areas_m2.iter().sum();

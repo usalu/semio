@@ -115,14 +115,7 @@ impl EpwWeather {
             return Err(Error::fatal("EPW: no data records"));
         }
 
-        Ok(Self {
-            location,
-            latitude_deg,
-            longitude_deg,
-            elevation_m,
-            time_zone_hours,
-            records,
-        })
+        Ok(Self { location, latitude_deg, longitude_deg, elevation_m, time_zone_hours, records })
     }
 
     pub fn record_at_index(&self, idx: usize) -> Option<&WeatherRecord> {
@@ -210,11 +203,7 @@ pub fn solar_position(latitude_deg: f64, longitude_deg: f64, day_of_year: u16, h
     let cos_az = (decl.sin() - lat.sin() * sin_alt) / (lat.cos() * sin_alt.clamp(0.001, 1.0).acos().cos().max(1e-6));
     let azimuth_deg = rad_to_deg(cos_az.clamp(-1.0, 1.0).acos());
     let equation_of_time_min = 4.0 * (longitude_deg - 15.0 * (hour_solar / 24.0 * 24.0).round());
-    SolarPosition {
-        altitude_deg,
-        azimuth_deg,
-        equation_of_time_min,
-    }
+    SolarPosition { altitude_deg, azimuth_deg, equation_of_time_min }
 }
 
 /// 🌡️ Sky temperature [K] from dry-bulb and dew-point (Brunt-type).

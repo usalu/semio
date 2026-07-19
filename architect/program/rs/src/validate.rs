@@ -207,28 +207,12 @@ fn build_entity_index(program: &Program) -> EntityIndex {
     for link in &program.traces {
         register("traces", &link.id, &format!("{}→{}", link.from_id, link.to_id));
     }
-    EntityIndex {
-        locations,
-        duplicates,
-    }
+    EntityIndex { locations, duplicates }
 }
 
-fn check_ref(
-    diagnostics: &mut Vec<ProgramDiagnostic>,
-    index: &EntityIndex,
-    target: &EntityId,
-    source_id: &EntityId,
-    register: &str,
-    code: &str,
-) {
+fn check_ref(diagnostics: &mut Vec<ProgramDiagnostic>, index: &EntityIndex, target: &EntityId, source_id: &EntityId, register: &str, code: &str) {
     if !index.locations.contains_key(target) {
-        diagnostics.push(ProgramDiagnostic {
-            severity: DiagnosticSeverity::Error,
-            code: code.into(),
-            message: format!("{register} references missing entity {target}"),
-            entity_id: Some(source_id.clone()),
-            register: Some(register.into()),
-        });
+        diagnostics.push(ProgramDiagnostic { severity: DiagnosticSeverity::Error, code: code.into(), message: format!("{register} references missing entity {target}"), entity_id: Some(source_id.clone()), register: Some(register.into()) });
     }
 }
 // #endregion
@@ -247,24 +231,12 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
         });
     }
     if program.meta.title.trim().is_empty() {
-        diagnostics.push(ProgramDiagnostic {
-            severity: DiagnosticSeverity::Warning,
-            code: "meta.empty_title".into(),
-            message: "program title is empty".into(),
-            entity_id: None,
-            register: Some("meta".into()),
-        });
+        diagnostics.push(ProgramDiagnostic { severity: DiagnosticSeverity::Warning, code: "meta.empty_title".into(), message: "program title is empty".into(), entity_id: None, register: Some("meta".into()) });
     }
 
     let index = build_entity_index(program);
     for (id, first, second) in &index.duplicates {
-        diagnostics.push(ProgramDiagnostic {
-            severity: DiagnosticSeverity::Error,
-            code: "entity.duplicate_id".into(),
-            message: format!("entity id {id} appears in both {first} and {second}"),
-            entity_id: Some(id.clone()),
-            register: None,
-        });
+        diagnostics.push(ProgramDiagnostic { severity: DiagnosticSeverity::Error, code: "entity.duplicate_id".into(), message: format!("entity id {id} appears in both {first} and {second}"), entity_id: Some(id.clone()), register: None });
     }
 
     let element_ids: HashSet<EntityId> = program.elements.iter().map(|e| e.header.id.clone()).collect();
@@ -313,14 +285,7 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
             check_ref(&mut diagnostics, &index, id, &activity.header.id, "activities", "activity.missing_function");
         }
         for id in &activity.adjacent_activities {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &activity.header.id,
-                "activities",
-                "activity.missing_adjacent_activity",
-            );
+            check_ref(&mut diagnostics, &index, id, &activity.header.id, "activities", "activity.missing_adjacent_activity");
         }
         for id in &activity.user_profile_ids {
             check_ref(&mut diagnostics, &index, id, &activity.header.id, "activities", "activity.missing_user");
@@ -341,104 +306,34 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
             });
         }
         if let Some(parent) = &requirement.parent_requirement_id {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                parent,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_parent",
-            );
+            check_ref(&mut diagnostics, &index, parent, &requirement.header.id, "requirements", "requirement.missing_parent");
         }
         for id in &requirement.child_requirement_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_child",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_child");
         }
         for id in &requirement.stakeholder_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_stakeholder",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_stakeholder");
         }
         for id in &requirement.element_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_element",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_element");
         }
         for id in &requirement.function_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_function",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_function");
         }
         for id in &requirement.conflict_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_conflict",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_conflict");
         }
         for id in &requirement.risk_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_risk",
-            );
+            check_ref(&mut diagnostics, &index, id, &requirement.header.id, "requirements", "requirement.missing_risk");
         }
         if let Some(superseded) = &requirement.superseded_by {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                superseded,
-                &requirement.header.id,
-                "requirements",
-                "requirement.missing_superseded_by",
-            );
+            check_ref(&mut diagnostics, &index, superseded, &requirement.header.id, "requirements", "requirement.missing_superseded_by");
         }
     }
 
     for relationship in &program.relationships {
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &relationship.source_id,
-            &relationship.header.id,
-            "relationships",
-            "relationship.missing_source",
-        );
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &relationship.target_id,
-            &relationship.header.id,
-            "relationships",
-            "relationship.missing_target",
-        );
+        check_ref(&mut diagnostics, &index, &relationship.source_id, &relationship.header.id, "relationships", "relationship.missing_source");
+        check_ref(&mut diagnostics, &index, &relationship.target_id, &relationship.header.id, "relationships", "relationship.missing_target");
     }
 
     for adjacency in &program.adjacencies {
@@ -454,14 +349,7 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
             }
         }
         if let Some(rel_id) = &adjacency.source_relationship_id {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                rel_id,
-                &adjacency.header.id,
-                "adjacencies",
-                "adjacency.missing_relationship",
-            );
+            check_ref(&mut diagnostics, &index, rel_id, &adjacency.header.id, "adjacencies", "adjacency.missing_relationship");
         }
     }
 
@@ -470,91 +358,35 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
             check_ref(&mut diagnostics, &index, id, &process.header.id, "processes", "process.missing_actor");
         }
         for id in &process.equipment_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &process.header.id,
-                "processes",
-                "process.missing_equipment",
-            );
+            check_ref(&mut diagnostics, &index, id, &process.header.id, "processes", "process.missing_equipment");
         }
         for id in &process.element_ids {
             check_ref(&mut diagnostics, &index, id, &process.header.id, "processes", "process.missing_element");
         }
         for id in &process.dependencies {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &process.header.id,
-                "processes",
-                "process.missing_dependency",
-            );
+            check_ref(&mut diagnostics, &index, id, &process.header.id, "processes", "process.missing_dependency");
         }
     }
 
     for equipment in &program.equipment {
         for id in &equipment.element_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &equipment.header.id,
-                "equipment",
-                "equipment.missing_element",
-            );
+            check_ref(&mut diagnostics, &index, id, &equipment.header.id, "equipment", "equipment.missing_element");
         }
         for id in &equipment.activity_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &equipment.header.id,
-                "equipment",
-                "equipment.missing_activity",
-            );
+            check_ref(&mut diagnostics, &index, id, &equipment.header.id, "equipment", "equipment.missing_activity");
         }
     }
 
     for quantity in &program.quantities {
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &quantity.target_element_id,
-            &quantity.header.id,
-            "quantities",
-            "quantity.missing_element",
-        );
+        check_ref(&mut diagnostics, &index, &quantity.target_element_id, &quantity.header.id, "quantities", "quantity.missing_element");
         for id in &quantity.related_requirement_ids {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                id,
-                &quantity.header.id,
-                "quantities",
-                "quantity.missing_requirement",
-            );
+            check_ref(&mut diagnostics, &index, id, &quantity.header.id, "quantities", "quantity.missing_requirement");
         }
     }
 
     for conflict in &program.conflicts {
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &conflict.entity_a_id,
-            &conflict.header.id,
-            "conflicts",
-            "conflict.missing_entity_a",
-        );
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &conflict.entity_b_id,
-            &conflict.header.id,
-            "conflicts",
-            "conflict.missing_entity_b",
-        );
+        check_ref(&mut diagnostics, &index, &conflict.entity_a_id, &conflict.header.id, "conflicts", "conflict.missing_entity_a");
+        check_ref(&mut diagnostics, &index, &conflict.entity_b_id, &conflict.header.id, "conflicts", "conflict.missing_entity_b");
         if conflict.entity_a_id == conflict.entity_b_id {
             diagnostics.push(ProgramDiagnostic {
                 severity: DiagnosticSeverity::Error,
@@ -565,37 +397,16 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
             });
         }
         if let Some(decision_id) = &conflict.decision_id {
-            check_ref(
-                &mut diagnostics,
-                &index,
-                decision_id,
-                &conflict.header.id,
-                "conflicts",
-                "conflict.missing_decision",
-            );
+            check_ref(&mut diagnostics, &index, decision_id, &conflict.header.id, "conflicts", "conflict.missing_decision");
         }
     }
 
     for status in &program.status_records {
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &status.subject_id,
-            &status.header.id,
-            "status_records",
-            "status.missing_subject",
-        );
+        check_ref(&mut diagnostics, &index, &status.subject_id, &status.header.id, "status_records", "status.missing_subject");
     }
 
     for validation in &program.validations {
-        check_ref(
-            &mut diagnostics,
-            &index,
-            &validation.subject_id,
-            &validation.header.id,
-            "validations",
-            "validation.missing_subject",
-        );
+        check_ref(&mut diagnostics, &index, &validation.subject_id, &validation.header.id, "validations", "validation.missing_subject");
         if validation.result == ValidationStatus::Failed && validation.corrective_actions.is_empty() {
             diagnostics.push(ProgramDiagnostic {
                 severity: DiagnosticSeverity::Warning,
@@ -608,13 +419,7 @@ pub fn validate_program(program: &Program) -> Vec<ProgramDiagnostic> {
     }
 
     for conflict in detect_adjacency_conflicts(program) {
-        diagnostics.push(ProgramDiagnostic {
-            severity: DiagnosticSeverity::Error,
-            code: "adjacency.conflict".into(),
-            message: conflict.message,
-            entity_id: Some(conflict.adjacency_a_id),
-            register: Some("adjacencies".into()),
-        });
+        diagnostics.push(ProgramDiagnostic { severity: DiagnosticSeverity::Error, code: "adjacency.conflict".into(), message: conflict.message, entity_id: Some(conflict.adjacency_a_id), register: Some("adjacencies".into()) });
     }
 
     diagnostics

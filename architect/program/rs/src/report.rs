@@ -60,7 +60,7 @@ pub fn build_report(program: &Program, kind: ReportKind) -> ProgramReport {
 
 /// @emoji 📝 Builds a report and appends a `ReportRecord` to the program.
 pub fn build_report_and_record(program: &mut Program, kind: ReportKind) -> ProgramReport {
-    let report = build_report(program, kind.clone());
+    let report = build_report(program, kind);
     let record = ReportRecord {
         header: EntityHeader::new(EntityId::new_serial("report"), report.title.clone()),
         kind,
@@ -100,21 +100,9 @@ fn executive_summary(program: &Program) -> ProgramReport {
             ReportSection {
                 heading: "Overview".into(),
                 body: program.meta.purpose.text.clone(),
-                bullets: vec![
-                    format!("{} elements", program.elements.len()),
-                    format!("{} requirements", program.requirements.len()),
-                    format!("{} stakeholders", program.stakeholders.len()),
-                ],
+                bullets: vec![format!("{} elements", program.elements.len()), format!("{} requirements", program.requirements.len()), format!("{} stakeholders", program.stakeholders.len())],
             },
-            ReportSection {
-                heading: "Status".into(),
-                body: format!("{} total entities tracked", summary.total_entities),
-                bullets: summary
-                    .by_status
-                    .iter()
-                    .map(|(status, count)| format!("{status:?}: {count}"))
-                    .collect(),
-            },
+            ReportSection { heading: "Status".into(), body: format!("{} total entities tracked", summary.total_entities), bullets: summary.by_status.iter().map(|(status, count)| format!("{status:?}: {count}")).collect() },
         ],
         entity_ids: Vec::new(),
     }
@@ -126,16 +114,8 @@ fn program_overview(program: &Program) -> ProgramReport {
         title: format!("{} — Overview", program.meta.title),
         generated_at: timestamp(program),
         sections: vec![
-            ReportSection {
-                heading: "Project".into(),
-                body: program.project.brief_summary.text.clone(),
-                bullets: program.project.objectives.clone(),
-            },
-            ReportSection {
-                heading: "Scope".into(),
-                body: format!("{} inclusions, {} exclusions", program.project.scope_inclusions.len(), program.project.scope_exclusions.len()),
-                bullets: program.project.deliverables.clone(),
-            },
+            ReportSection { heading: "Project".into(), body: program.project.brief_summary.text.clone(), bullets: program.project.objectives.clone() },
+            ReportSection { heading: "Scope".into(), body: format!("{} inclusions, {} exclusions", program.project.scope_inclusions.len(), program.project.scope_exclusions.len()), bullets: program.project.deliverables.clone() },
         ],
         entity_ids: vec![program.project.id.clone()],
     }
@@ -149,11 +129,7 @@ fn stakeholder_summary(program: &Program) -> ProgramReport {
         sections: vec![ReportSection {
             heading: "Stakeholders".into(),
             body: format!("{} stakeholder(s)", program.stakeholders.len()),
-            bullets: program
-                .stakeholders
-                .iter()
-                .map(|s| format!("{} — {} ({:?}/{:?})", s.header.name, s.role, s.influence, s.engagement))
-                .collect(),
+            bullets: program.stakeholders.iter().map(|s| format!("{} — {} ({:?}/{:?})", s.header.name, s.role, s.influence, s.engagement)).collect(),
         }],
         entity_ids: program.stakeholders.iter().map(|s| s.header.id.clone()).collect(),
     }
@@ -164,71 +140,31 @@ fn requirements_matrix(program: &Program) -> ProgramReport {
     let header = format!("{}\t{}", "Requirement", element_names.join("\t"));
     let mut rows = vec![header];
     for requirement in &program.requirements {
-        let cells: Vec<String> = program
-            .elements
-            .iter()
-            .map(|element| {
-                if requirement.element_ids.contains(&element.header.id) {
-                    "X".into()
-                } else {
-                    "-".into()
-                }
-            })
-            .collect();
+        let cells: Vec<String> = program.elements.iter().map(|element| if requirement.element_ids.contains(&element.header.id) { "X".into() } else { "-".into() }).collect();
         rows.push(format!("{}\t{}", requirement.header.name, cells.join("\t")));
     }
     ProgramReport {
         kind: ReportKind::RequirementsMatrix,
         title: "Requirements Matrix".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "Requirement × Element Grid".into(),
-            body: format!("{}×{} matrix", program.requirements.len(), program.elements.len()),
-            bullets: rows,
-        }],
+        sections: vec![ReportSection { heading: "Requirement × Element Grid".into(), body: format!("{}×{} matrix", program.requirements.len(), program.elements.len()), bullets: rows }],
         entity_ids: program.requirements.iter().map(|r| r.header.id.clone()).collect(),
     }
 }
 
 fn adjacency_matrix_report(program: &Program) -> ProgramReport {
     let matrix = crate::adjacency::adjacency_matrix(program);
-    let header: String = format!(
-        "{}\t{}",
-        "",
-        matrix
-            .element_ids
-            .iter()
-            .map(|id| program
-                .elements
-                .iter()
-                .find(|e| &e.header.id == id)
-                .map(|e| e.header.name.as_str())
-                .unwrap_or(&id.0))
-            .collect::<Vec<_>>()
-            .join("\t")
-    );
+    let header: String = format!("{}\t{}", "", matrix.element_ids.iter().map(|id| program.elements.iter().find(|e| &e.header.id == id).map_or(id.0.as_str(), |e| e.header.name.as_str())).collect::<Vec<_>>().join("\t"));
     let mut rows = vec![header];
     for (row_idx, row_id) in matrix.element_ids.iter().enumerate() {
-        let name = program
-            .elements
-            .iter()
-            .find(|e| &e.header.id == row_id)
-            .map(|e| e.header.name.as_str())
-            .unwrap_or(&row_id.0);
+        let name = program.elements.iter().find(|e| &e.header.id == row_id).map_or(row_id.0.as_str(), |e| e.header.name.as_str());
         let cells: Vec<String> = (0..matrix.element_ids.len())
             .map(|col_idx| {
                 if row_idx == col_idx {
                     return ".".into();
                 }
-                let (r, c) = if row_idx > col_idx {
-                    (row_idx, col_idx)
-                } else {
-                    (col_idx, row_idx)
-                };
-                matrix.cells[r][c]
-                    .as_ref()
-                    .map(|cell| format!("{:?}/{:.1}", cell.kind, cell.weight))
-                    .unwrap_or_else(|| "-".into())
+                let (r, c) = if row_idx > col_idx { (row_idx, col_idx) } else { (col_idx, row_idx) };
+                matrix.cells[r][c].as_ref().map_or_else(|| "-".into(), |cell| format!("{:?}/{:.1}", cell.kind, cell.weight))
             })
             .collect();
         rows.push(format!("{name}\t{}", cells.join("\t")));
@@ -237,11 +173,7 @@ fn adjacency_matrix_report(program: &Program) -> ProgramReport {
         kind: ReportKind::AdjacencyMatrix,
         title: "Adjacency Matrix".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "Adjacency Cells".into(),
-            body: format!("{}×{} element matrix", matrix.element_ids.len(), matrix.element_ids.len()),
-            bullets: rows,
-        }],
+        sections: vec![ReportSection { heading: "Adjacency Cells".into(), body: format!("{}×{} element matrix", matrix.element_ids.len(), matrix.element_ids.len()), bullets: rows }],
         entity_ids: matrix.element_ids,
     }
 }
@@ -252,11 +184,7 @@ fn gap_report(program: &Program) -> ProgramReport {
         kind: ReportKind::GapAnalysis,
         title: "Gap Analysis".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: analysis.title,
-            body: analysis.summary,
-            bullets: analysis.findings,
-        }],
+        sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }],
         entity_ids: analysis.entity_ids,
     }
 }
@@ -266,15 +194,7 @@ fn risk_register(program: &Program) -> ProgramReport {
         kind: ReportKind::RiskRegister,
         title: "Risk Register".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "Risks".into(),
-            body: format!("{} risk(s)", program.risks.len()),
-            bullets: program
-                .risks
-                .iter()
-                .map(|r| format!("{} — {:?}/{:?}", r.header.name, r.probability, r.impact))
-                .collect(),
-        }],
+        sections: vec![ReportSection { heading: "Risks".into(), body: format!("{} risk(s)", program.risks.len()), bullets: program.risks.iter().map(|r| format!("{} — {:?}/{:?}", r.header.name, r.probability, r.impact)).collect() }],
         entity_ids: program.risks.iter().map(|r| r.header.id.clone()).collect(),
     }
 }
@@ -287,11 +207,7 @@ fn decision_log(program: &Program) -> ProgramReport {
         sections: vec![ReportSection {
             heading: "Decisions".into(),
             body: format!("{} decision(s)", program.decisions.len()),
-            bullets: program
-                .decisions
-                .iter()
-                .map(|d| format!("{} — {:?} ({})", d.header.name, d.approval_status, d.decision_statement.text))
-                .collect(),
+            bullets: program.decisions.iter().map(|d| format!("{} — {:?} ({})", d.header.name, d.approval_status, d.decision_statement.text)).collect(),
         }],
         entity_ids: program.decisions.iter().map(|d| d.header.id.clone()).collect(),
     }
@@ -303,11 +219,7 @@ fn validation_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::ValidationSummary,
         title: "Validation Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "Diagnostics".into(),
-            body: format!("{} diagnostic(s)", diagnostics.len()),
-            bullets: diagnostics.iter().map(|d| format!("[{:?}] {}: {}", d.severity, d.code, d.message)).collect(),
-        }],
+        sections: vec![ReportSection { heading: "Diagnostics".into(), body: format!("{} diagnostic(s)", diagnostics.len()), bullets: diagnostics.iter().map(|d| format!("[{:?}] {}: {}", d.severity, d.code, d.message)).collect() }],
         entity_ids: Vec::new(),
     }
 }
@@ -319,18 +231,7 @@ fn recommendation(program: &Program) -> ProgramReport {
         kind: ReportKind::Recommendation,
         title: "Recommendations".into(),
         generated_at: timestamp(program),
-        sections: vec![
-            ReportSection {
-                heading: "Gaps".into(),
-                body: gap.summary,
-                bullets: gap.findings,
-            },
-            ReportSection {
-                heading: "Conflicts".into(),
-                body: conflict.summary,
-                bullets: conflict.findings,
-            },
-        ],
+        sections: vec![ReportSection { heading: "Gaps".into(), body: gap.summary, bullets: gap.findings }, ReportSection { heading: "Conflicts".into(), body: conflict.summary, bullets: conflict.findings }],
         entity_ids: Vec::new(),
     }
 }
@@ -340,15 +241,7 @@ fn user_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::UserSummary,
         title: "User Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "User Profiles".into(),
-            body: format!("{} user profile(s)", program.users.len()),
-            bullets: program
-                .users
-                .iter()
-                .map(|u| format!("{} — {:?}", u.header.name, u.category))
-                .collect(),
-        }],
+        sections: vec![ReportSection { heading: "User Profiles".into(), body: format!("{} user profile(s)", program.users.len()), bullets: program.users.iter().map(|u| format!("{} — {:?}", u.header.name, u.category)).collect() }],
         entity_ids: program.users.iter().map(|u| u.header.id.clone()).collect(),
     }
 }
@@ -361,11 +254,7 @@ fn functional_summary(program: &Program) -> ProgramReport {
         sections: vec![ReportSection {
             heading: "Functions".into(),
             body: format!("{} function(s), {} activit(ies)", program.functions.len(), program.activities.len()),
-            bullets: program
-                .functions
-                .iter()
-                .map(|f| format!("{} — {:?} ({})", f.header.name, f.kind, f.purpose.text))
-                .collect(),
+            bullets: program.functions.iter().map(|f| format!("{} — {:?} ({})", f.header.name, f.kind, f.purpose.text)).collect(),
         }],
         entity_ids: program.functions.iter().map(|f| f.header.id.clone()).collect(),
     }
@@ -377,11 +266,7 @@ fn capacity_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::CapacitySummary,
         title: "Capacity Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: analysis.title,
-            body: analysis.summary,
-            bullets: analysis.findings,
-        }],
+        sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }],
         entity_ids: Vec::new(),
     }
 }
@@ -392,11 +277,7 @@ fn workflow_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::WorkflowSummary,
         title: "Workflow Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: analysis.title,
-            body: analysis.summary,
-            bullets: analysis.findings,
-        }],
+        sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }],
         entity_ids: analysis.entity_ids,
     }
 }
@@ -407,20 +288,8 @@ fn compliance_summary(program: &Program) -> ProgramReport {
         title: "Compliance Summary".into(),
         generated_at: timestamp(program),
         sections: vec![
-            ReportSection {
-                heading: "Regulatory".into(),
-                body: format!("{} regulatory requirement(s)", program.regulatory.len()),
-                bullets: program.regulatory.iter().map(|r| r.header.name.clone()).collect(),
-            },
-            ReportSection {
-                heading: "Validations".into(),
-                body: format!("{} validation record(s)", program.validations.len()),
-                bullets: program
-                    .validations
-                    .iter()
-                    .map(|v| format!("{} — {:?}", v.header.name, v.result))
-                    .collect(),
-            },
+            ReportSection { heading: "Regulatory".into(), body: format!("{} regulatory requirement(s)", program.regulatory.len()), bullets: program.regulatory.iter().map(|r| r.header.name.clone()).collect() },
+            ReportSection { heading: "Validations".into(), body: format!("{} validation record(s)", program.validations.len()), bullets: program.validations.iter().map(|v| format!("{} — {:?}", v.header.name, v.result)).collect() },
         ],
         entity_ids: program.regulatory.iter().map(|r| r.header.id.clone()).collect(),
     }
@@ -428,17 +297,7 @@ fn compliance_summary(program: &Program) -> ProgramReport {
 
 fn cost_summary(program: &Program) -> ProgramReport {
     let analysis = run_analysis(program, AnalysisKind::Cost);
-    ProgramReport {
-        kind: ReportKind::CostSummary,
-        title: "Cost Summary".into(),
-        generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: analysis.title,
-            body: analysis.summary,
-            bullets: analysis.findings,
-        }],
-        entity_ids: Vec::new(),
-    }
+    ProgramReport { kind: ReportKind::CostSummary, title: "Cost Summary".into(), generated_at: timestamp(program), sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }], entity_ids: Vec::new() }
 }
 
 fn schedule_summary(program: &Program) -> ProgramReport {
@@ -460,25 +319,13 @@ fn change_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::ChangeSummary,
         title: "Change Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: "Changes".into(),
-            body: format!("{} change record(s)", program.changes.len()),
-            bullets: program
-                .changes
-                .iter()
-                .map(|c| format!("{} — {}", c.header.name, c.header.timestamps.updated))
-                .collect(),
-        }],
+        sections: vec![ReportSection { heading: "Changes".into(), body: format!("{} change record(s)", program.changes.len()), bullets: program.changes.iter().map(|c| format!("{} — {}", c.header.name, c.header.timestamps.updated)).collect() }],
         entity_ids: program.changes.iter().map(|c| c.header.id.clone()).collect(),
     }
 }
 
 fn open_issue_summary(program: &Program) -> ProgramReport {
-    let open: Vec<_> = program
-        .issues
-        .iter()
-        .filter(|i| !matches!(i.header.status, crate::kernel::LifecycleStatus::Closed | crate::kernel::LifecycleStatus::Complete))
-        .collect();
+    let open: Vec<_> = program.issues.iter().filter(|i| !matches!(i.header.status, crate::kernel::LifecycleStatus::Closed | crate::kernel::LifecycleStatus::Complete)).collect();
     ProgramReport {
         kind: ReportKind::OpenIssueSummary,
         title: "Open Issue Summary".into(),
@@ -486,10 +333,7 @@ fn open_issue_summary(program: &Program) -> ProgramReport {
         sections: vec![ReportSection {
             heading: "Open Issues".into(),
             body: format!("{} open of {} total issues", open.len(), program.issues.len()),
-            bullets: open
-                .iter()
-                .map(|i| format!("{} — {:?}/{:?}", i.header.name, i.severity, i.issue_priority))
-                .collect(),
+            bullets: open.iter().map(|i| format!("{} — {:?}/{:?}", i.header.name, i.severity, i.issue_priority)).collect(),
         }],
         entity_ids: open.iter().map(|i| i.header.id.clone()).collect(),
     }
@@ -503,11 +347,7 @@ fn priority_summary(program: &Program) -> ProgramReport {
         sections: vec![ReportSection {
             heading: "Priorities".into(),
             body: format!("{} priority record(s)", program.priorities.len()),
-            bullets: program
-                .priorities
-                .iter()
-                .map(|p| format!("{} — {:?} weight {:?}", p.header.name, p.ranked_priority, p.weight))
-                .collect(),
+            bullets: program.priorities.iter().map(|p| format!("{} — {:?} weight {:?}", p.header.name, p.ranked_priority, p.weight)).collect(),
         }],
         entity_ids: program.priorities.iter().map(|p| p.header.id.clone()).collect(),
     }
@@ -519,11 +359,7 @@ fn scenario_summary(program: &Program) -> ProgramReport {
         kind: ReportKind::ScenarioSummary,
         title: "Scenario Summary".into(),
         generated_at: timestamp(program),
-        sections: vec![ReportSection {
-            heading: analysis.title,
-            body: analysis.summary,
-            bullets: analysis.findings,
-        }],
+        sections: vec![ReportSection { heading: analysis.title, body: analysis.summary, bullets: analysis.findings }],
         entity_ids: analysis.entity_ids,
     }
 }
@@ -544,7 +380,7 @@ mod tests {
     #[test]
     fn requirements_matrix_has_grid_rows() {
         let report = build_report(&sample_program(), ReportKind::RequirementsMatrix);
-        assert!(report.sections[0].bullets.len() >= 1);
+        assert!(!report.sections[0].bullets.is_empty());
         assert!(report.sections[0].bullets[0].contains('\t'));
     }
 

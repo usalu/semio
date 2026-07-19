@@ -59,43 +59,19 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-1", "§6.2", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0),
-            "masonry flexure ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2", "6.2"), Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0), "masonry flexure ULS", annex)
     }
 
     pub fn check_compression(sigma_ed_mpa: f64, f_d_mpa: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-1", "§6.1.2", "6.1"),
-            Quantity::stress_mpa(sigma_ed_mpa),
-            Quantity::stress_mpa(f_d_mpa),
-            "masonry compression ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.1.2", "6.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(f_d_mpa), "masonry compression ULS", annex)
     }
 
     pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-1", "§6.2.3", "6.2"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "masonry shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.3", "6.2"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "masonry shear ULS", annex)
     }
 
     pub fn check_sliding(h_ed_kn: f64, h_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-1", "§6.2.4", "6.2"),
-            Quantity::force_kn(h_ed_kn),
-            Quantity::force_kn(h_rd_kn),
-            "masonry sliding ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-1", "§6.2.4", "6.2"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(h_rd_kn), "masonry sliding ULS", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -123,13 +99,7 @@ pub mod part_1_2 {
     }
 
     pub fn check_fire_wall(thickness_mm: f64, required_mm: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1996-1-2", "§4", "4.1"),
-            Quantity::length_m(thickness_mm / 1000.0),
-            Quantity::length_m(required_mm / 1000.0),
-            "masonry fire wall thickness",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1996-1-2", "§4", "4.1"), Quantity::length_m(thickness_mm / 1000.0), Quantity::length_m(required_mm / 1000.0), "masonry fire wall thickness", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_2
@@ -166,11 +136,7 @@ pub mod part_3 {
     }
 
     /// 🌍 Overturning moment [kNm/m] at wall base from active earth pressure.
-    pub fn retaining_wall_overturning_moment_knm(
-        gamma_soil_kn_m3: f64,
-        h_m: f64,
-        phi_deg: f64,
-    ) -> f64 {
+    pub fn retaining_wall_overturning_moment_knm(gamma_soil_kn_m3: f64, h_m: f64, phi_deg: f64) -> f64 {
         let ka = active_earth_pressure_coefficient(phi_deg);
         gamma_soil_kn_m3 * h_m.powi(3) * ka / 6.0
     }
@@ -182,12 +148,7 @@ pub mod part_3 {
 // #endregion 🔖Part3
 
 /// 📋 Masonry wall under vertical load.
-pub fn check_masonry_wall(
-    n_ed_kn: f64,
-    area_mm2: f64,
-    f_k_mpa: f64,
-    gamma_m: f64,
-) -> CheckReport {
+pub fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f64) -> CheckReport {
     let sigma = n_ed_kn * 1000.0 / area_mm2;
     let f_d = part_1_1::design_strength_mpa(f_k_mpa, gamma_m);
     let mut report = CheckReport::default();
@@ -209,12 +170,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            n_ed_kn: 200.0,
-            area_mm2: 500_000.0,
-            f_k_mpa: 5.0,
-            gamma_m: 2.0,
-        }
+        Self { n_ed_kn: 200.0, area_mm2: 500_000.0, f_k_mpa: 5.0, gamma_m: 2.0 }
     }
 }
 
@@ -222,12 +178,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1996Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_masonry_wall(
-        document.n_ed_kn,
-        document.area_mm2,
-        document.f_k_mpa,
-        document.gamma_m,
-    )
+    check_masonry_wall(document.n_ed_kn, document.area_mm2, document.f_k_mpa, document.gamma_m)
 }
 
 pub struct En1996Family;

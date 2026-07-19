@@ -1,9 +1,13 @@
 //! 📐 FEM 2D document model and element library on `vcs`.
 
-use fem_core::{Bar2, BeamEb2, Dof, Element, ElementResult, MemberUdl, Model, NodalLoad, Node, Support};
+#[cfg(test)]
+use fem_core::ElementResult;
+use fem_core::{Bar2, BeamEb2, Dof, Element, MemberUdl, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+#[cfg(target_arch = "wasm32")]
+use vcs::create_document_vcs_envelope;
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const FEM_2D_SCHEMA: &str = "fem.2d";
 
@@ -413,58 +417,42 @@ impl Operation<Fem2dDocument> for Fem2dOp {
                 Some(index) => vec![Fem2dOp::SetNode { index, node: projection.nodes[index].clone() }],
                 None => vec![Fem2dOp::RemoveNode { id: node.id.clone() }],
             },
-            Fem2dOp::RemoveNode { id } => index_of(&projection.nodes, id)
-                .map(|index| vec![Fem2dOp::SetNode { index, node: projection.nodes[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveNode { id } => index_of(&projection.nodes, id).map(|index| vec![Fem2dOp::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetElement { element, .. } => match index_of(&projection.elements, element_id(element)) {
                 Some(index) => vec![Fem2dOp::SetElement { index, element: projection.elements[index].clone() }],
                 None => vec![Fem2dOp::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem2dOp::RemoveElement { id } => index_of(&projection.elements, id)
-                .map(|index| vec![Fem2dOp::SetElement { index, element: projection.elements[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveElement { id } => index_of(&projection.elements, id).map(|index| vec![Fem2dOp::SetElement { index, element: projection.elements[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetMaterial { material, .. } => match index_of(&projection.materials, &material.id) {
                 Some(index) => vec![Fem2dOp::SetMaterial { index, material: projection.materials[index].clone() }],
                 None => vec![Fem2dOp::RemoveMaterial { id: material.id.clone() }],
             },
-            Fem2dOp::RemoveMaterial { id } => index_of(&projection.materials, id)
-                .map(|index| vec![Fem2dOp::SetMaterial { index, material: projection.materials[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveMaterial { id } => index_of(&projection.materials, id).map(|index| vec![Fem2dOp::SetMaterial { index, material: projection.materials[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetSection { section, .. } => match index_of(&projection.sections, &section.id) {
                 Some(index) => vec![Fem2dOp::SetSection { index, section: projection.sections[index].clone() }],
                 None => vec![Fem2dOp::RemoveSection { id: section.id.clone() }],
             },
-            Fem2dOp::RemoveSection { id } => index_of(&projection.sections, id)
-                .map(|index| vec![Fem2dOp::SetSection { index, section: projection.sections[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveSection { id } => index_of(&projection.sections, id).map(|index| vec![Fem2dOp::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetSupport { support, .. } => match index_of(&projection.supports, &support.id) {
                 Some(index) => vec![Fem2dOp::SetSupport { index, support: projection.supports[index].clone() }],
                 None => vec![Fem2dOp::RemoveSupport { id: support.id.clone() }],
             },
-            Fem2dOp::RemoveSupport { id } => index_of(&projection.supports, id)
-                .map(|index| vec![Fem2dOp::SetSupport { index, support: projection.supports[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveSupport { id } => index_of(&projection.supports, id).map(|index| vec![Fem2dOp::SetSupport { index, support: projection.supports[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetLoadCase { load_case, .. } => match index_of(&projection.load_cases, &load_case.id) {
                 Some(index) => vec![Fem2dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }],
                 None => vec![Fem2dOp::RemoveLoadCase { id: load_case.id.clone() }],
             },
-            Fem2dOp::RemoveLoadCase { id } => index_of(&projection.load_cases, id)
-                .map(|index| vec![Fem2dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveLoadCase { id } => index_of(&projection.load_cases, id).map(|index| vec![Fem2dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetRegion { region, .. } => match index_of(&projection.regions, &region.id) {
                 Some(index) => vec![Fem2dOp::SetRegion { index, region: projection.regions[index].clone() }],
                 None => vec![Fem2dOp::RemoveRegion { id: region.id.clone() }],
             },
-            Fem2dOp::RemoveRegion { id } => index_of(&projection.regions, id)
-                .map(|index| vec![Fem2dOp::SetRegion { index, region: projection.regions[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveRegion { id } => index_of(&projection.regions, id).map(|index| vec![Fem2dOp::SetRegion { index, region: projection.regions[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetCombination { combination, .. } => match index_of(&projection.combinations, &combination.id) {
                 Some(index) => vec![Fem2dOp::SetCombination { index, combination: projection.combinations[index].clone() }],
                 None => vec![Fem2dOp::RemoveCombination { id: combination.id.clone() }],
             },
-            Fem2dOp::RemoveCombination { id } => index_of(&projection.combinations, id)
-                .map(|index| vec![Fem2dOp::SetCombination { index, combination: projection.combinations[index].clone() }])
-                .unwrap_or_default(),
+            Fem2dOp::RemoveCombination { id } => index_of(&projection.combinations, id).map(|index| vec![Fem2dOp::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetAnalysisSettings { .. } => vec![Fem2dOp::SetAnalysisSettings { settings: projection.analysis.clone() }],
             Fem2dOp::SetCamera { .. } => vec![Fem2dOp::SetCamera { camera: projection.camera.clone() }],
         }
@@ -522,6 +510,9 @@ struct MeshedRegion {
     tris: Vec<[u32; 3]>,
 }
 
+/// 🧩 `build_nodes_and_elements`'s resolved `(nodes, elements, meshed regions)` triple.
+type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedRegion>);
+
 /// 📐 Unsigned area of triangle `(p0, p1, p2)` via the shoelace formula.
 fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
     (0.5 * ((p1[0] - p0[0]) * (p2[1] - p0[1]) - (p2[0] - p0[0]) * (p1[1] - p0[1]))).abs()
@@ -533,7 +524,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// (within `1e-9`, both x and y) with an existing document node reuses that node's id, so supports and
 /// loads placed on that node reach the mesh; otherwise a node is synthesized once per unique mesh
 /// point as `{region_id}_m{point_index}`.
-fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedRegion>), Fem2dError> {
+fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<ResolvedGeometry, Fem2dError> {
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
@@ -556,15 +547,7 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<d
                 elements.push(Box::new(Bar2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, density: material.rho }));
             }
             FemElement::Beam { .. } => {
-                elements.push(Box::new(BeamEb2 {
-                    id: id.clone(),
-                    start: start.clone(),
-                    end: end.clone(),
-                    e: material.e,
-                    area: section.area,
-                    iy: section.iy,
-                    density: material.rho,
-                }));
+                elements.push(Box::new(BeamEb2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, iy: section.iy, density: material.rho }));
             }
         }
     }
@@ -573,8 +556,7 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<d
     for region in &doc.regions {
         let domain = fem_core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = fem_core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts)
-            .map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         let material = doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
 
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
@@ -592,24 +574,10 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<d
 
         for (tri_index, tri) in tri_mesh.tris.iter().enumerate() {
             let tri_nodes = [node_ids[tri[0] as usize].clone(), node_ids[tri[1] as usize].clone(), node_ids[tri[2] as usize].clone()];
-            elements.push(Box::new(fem_core::elements2d::Tri3Cst {
-                id: format!("{}_t{}", region.id, tri_index),
-                nodes: tri_nodes,
-                e: material.e,
-                nu: material.nu,
-                thickness: region.thickness,
-                kind: fem_core::elements2d::PlaneKind::Stress,
-            }));
+            elements.push(Box::new(fem_core::elements2d::Tri3Cst { id: format!("{}_t{}", region.id, tri_index), nodes: tri_nodes, e: material.e, nu: material.nu, thickness: region.thickness, kind: fem_core::elements2d::PlaneKind::Stress }));
         }
 
-        meshed_regions.push(MeshedRegion {
-            region_id: region.id.clone(),
-            material_id: region.material_id.clone(),
-            thickness: region.thickness,
-            node_ids,
-            points: tri_mesh.points,
-            tris: tri_mesh.tris,
-        });
+        meshed_regions.push(MeshedRegion { region_id: region.id.clone(), material_id: region.material_id.clone(), thickness: region.thickness, node_ids, points: tri_mesh.points, tris: tri_mesh.tris });
     }
 
     Ok((nodes, elements, meshed_regions))
@@ -629,12 +597,9 @@ fn self_weight_nodal_loads(doc: &Fem2dDocument, regions: &[MeshedRegion]) -> Vec
             FemElement::Bar { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
             FemElement::Beam { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
         };
-        let (Some(material), Some(section), Some(n0), Some(n1)) = (
-            doc.materials.iter().find(|m| &m.id == material_id),
-            doc.sections.iter().find(|s| &s.id == section_id),
-            doc.nodes.iter().find(|n| &n.id == start),
-            doc.nodes.iter().find(|n| &n.id == end),
-        ) else {
+        let (Some(material), Some(section), Some(n0), Some(n1)) =
+            (doc.materials.iter().find(|m| &m.id == material_id), doc.sections.iter().find(|s| &s.id == section_id), doc.nodes.iter().find(|n| &n.id == start), doc.nodes.iter().find(|n| &n.id == end))
+        else {
             continue;
         };
         let length = ((n1.x - n0.x).powi(2) + (n1.y - n0.y).powi(2)).sqrt();
@@ -686,7 +651,7 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, Fem2dErr
         match load {
             FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
             FemLoad::MemberUdl { element_id, wx, wy, .. } => {
-                member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }))
+                member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }));
             }
             FemLoad::Area { region_id, pressure, .. } => {
                 let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
@@ -727,7 +692,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::
             match load {
                 FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
                 FemLoad::MemberUdl { element_id, wx, wy, .. } => {
-                    member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }))
+                    member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }));
                 }
                 FemLoad::Area { region_id, pressure, .. } => {
                     let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
@@ -738,8 +703,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::
         cases.push(fem_core::analyses::LoadCase { id: load_case.id.clone(), nodal_loads, member_loads, self_weight: load_case.self_weight });
     }
 
-    let combinations: Vec<fem_core::analyses::Combination> =
-        doc.combinations.iter().map(|c| fem_core::analyses::Combination { id: c.id.clone(), terms: c.terms.clone() }).collect();
+    let combinations: Vec<fem_core::analyses::Combination> = doc.combinations.iter().map(|c| fem_core::analyses::Combination { id: c.id.clone(), terms: c.terms.clone() }).collect();
 
     fem_core::analyses::solve_multi_case(&model, &cases, &combinations, [0.0, -GRAVITY_G, 0.0]).map_err(Fem2dError::from)
 }
@@ -798,11 +762,14 @@ pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result
     Ok((freq, values))
 }
 
+/// 🧩 `buckling_inputs`'s resolved `(nodes, elements, supports, load case)` quadruple.
+type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core::analyses::LoadCase);
+
 /// 🌉 Shared buckling-case resolution for `fem2d_buckling`/`fem2d_buckling_mode_values`: builds the
 /// geometry plus the ONE named `case_id`'s `analyses::LoadCase`, mirroring `fem2d_solve_all`'s
 /// per-case load translation (nodal/member-UDL/area loads), erroring `"load case not found: {case_id}"`
 /// if `case_id` isn't in `doc.load_cases`.
-fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core::analyses::LoadCase), Fem2dError> {
+fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
     let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
@@ -867,8 +834,7 @@ pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dE
     for region in &doc.regions {
         let domain = fem_core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = fem_core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts)
-            .map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         out.push(RegionMesh { region_id: region.id.clone(), points: tri_mesh.points, tris: tri_mesh.tris });
     }
     Ok(out)
@@ -935,26 +901,12 @@ mod tests {
     fn simply_supported_beam_doc() -> Fem2dDocument {
         Fem2dDocument {
             nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 6.0, y: 0.0 }],
-            elements: vec![FemElement::Beam {
-                id: "e1".into(),
-                start: "n1".into(),
-                end: "n2".into(),
-                material_id: "steel".into(),
-                section_id: "ipe300".into(),
-            }],
+            elements: vec![FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() }],
             regions: vec![],
             materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "ipe300".into(), name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 }],
-            supports: vec![
-                FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Ty] },
-            ],
-            load_cases: vec![FemLoadCase {
-                id: "dead".into(),
-                name: "dead".into(),
-                loads: vec![FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }],
-                self_weight: false,
-            }],
+            supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] }, FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Ty] }],
+            load_cases: vec![FemLoadCase { id: "dead".into(), name: "dead".into(), loads: vec![FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -963,11 +915,7 @@ mod tests {
 
     fn simply_supported_beam_two_span_doc() -> Fem2dDocument {
         Fem2dDocument {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: 0.0, y: 0.0 },
-                FemNode { id: "n2".into(), x: 3.0, y: 0.0 },
-                FemNode { id: "n3".into(), x: 6.0, y: 0.0 },
-            ],
+            nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 3.0, y: 0.0 }, FemNode { id: "n3".into(), x: 6.0, y: 0.0 }],
             elements: vec![
                 FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() },
                 FemElement::Beam { id: "e2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "ipe300".into() },
@@ -975,17 +923,11 @@ mod tests {
             regions: vec![],
             materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "ipe300".into(), name: "ipe300".into(), area: 0.005381, iy: 8.356e-5 }],
-            supports: vec![
-                FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-                FemSupport { id: "s2".into(), node_id: "n3".into(), fixed: vec![Dof::Ty] },
-            ],
+            supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] }, FemSupport { id: "s2".into(), node_id: "n3".into(), fixed: vec![Dof::Ty] }],
             load_cases: vec![FemLoadCase {
                 id: "dead".into(),
                 name: "dead".into(),
-                loads: vec![
-                    FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 },
-                    FemLoad::MemberUdl { id: "l2".into(), element_id: "e2".into(), wx: 0.0, wy: -10000.0 },
-                ],
+                loads: vec![FemLoad::MemberUdl { id: "l1".into(), element_id: "e1".into(), wx: 0.0, wy: -10000.0 }, FemLoad::MemberUdl { id: "l2".into(), element_id: "e2".into(), wx: 0.0, wy: -10000.0 }],
                 self_weight: false,
             }],
             combinations: vec![],
@@ -996,11 +938,7 @@ mod tests {
 
     fn truss_doc() -> Fem2dDocument {
         Fem2dDocument {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: 0.0, y: 0.0 },
-                FemNode { id: "n2".into(), x: 4.0, y: 0.0 },
-                FemNode { id: "n3".into(), x: 4.0, y: 3.0 },
-            ],
+            nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0 }, FemNode { id: "n2".into(), x: 4.0, y: 0.0 }, FemNode { id: "n3".into(), x: 4.0, y: 3.0 }],
             elements: vec![
                 FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
                 FemElement::Bar { id: "e2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -1008,17 +946,11 @@ mod tests {
             regions: vec![],
             materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "rod".into(), name: "rod".into(), area: 0.001, iy: 0.0 }],
-            supports: vec![
-                FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-            ],
+            supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] }, FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: vec![Dof::Tx, Dof::Ty] }],
             load_cases: vec![FemLoadCase {
                 id: "dead".into(),
                 name: "dead".into(),
-                loads: vec![
-                    FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Ty, value: -1000.0 },
-                    FemLoad::Nodal { id: "l2".into(), node_id: "n3".into(), dof: Dof::Tx, value: -500.0 },
-                ],
+                loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Ty, value: -1000.0 }, FemLoad::Nodal { id: "l2".into(), node_id: "n3".into(), dof: Dof::Tx, value: -500.0 }],
                 self_weight: false,
             }],
             combinations: vec![],
@@ -1032,28 +964,12 @@ mod tests {
     /// to them) — 2 adjacent corners fully pinned, enough to remove all 3 in-plane rigid-body modes.
     fn rectangle_region_doc() -> Fem2dDocument {
         Fem2dDocument {
-            nodes: vec![
-                FemNode { id: "c0".into(), x: 0.0, y: 0.0 },
-                FemNode { id: "c1".into(), x: 4.0, y: 0.0 },
-                FemNode { id: "c2".into(), x: 4.0, y: 2.0 },
-                FemNode { id: "c3".into(), x: 0.0, y: 2.0 },
-            ],
+            nodes: vec![FemNode { id: "c0".into(), x: 0.0, y: 0.0 }, FemNode { id: "c1".into(), x: 4.0, y: 0.0 }, FemNode { id: "c2".into(), x: 4.0, y: 2.0 }, FemNode { id: "c3".into(), x: 0.0, y: 2.0 }],
             elements: vec![],
-            regions: vec![FemRegion {
-                id: "r1".into(),
-                name: "slab".into(),
-                outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]],
-                holes: vec![],
-                thickness: 0.02,
-                material_id: "steel".into(),
-                mesh_size: 1.0,
-            }],
+            regions: vec![FemRegion { id: "r1".into(), name: "slab".into(), outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 1.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "steel".into(), e: 210e9, nu: 0.3, rho: 7850.0 }],
             sections: vec![],
-            supports: vec![
-                FemSupport { id: "s1".into(), node_id: "c0".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-                FemSupport { id: "s2".into(), node_id: "c1".into(), fixed: vec![Dof::Tx, Dof::Ty] },
-            ],
+            supports: vec![FemSupport { id: "s1".into(), node_id: "c0".into(), fixed: vec![Dof::Tx, Dof::Ty] }, FemSupport { id: "s2".into(), node_id: "c1".into(), fixed: vec![Dof::Tx, Dof::Ty] }],
             load_cases: vec![FemLoadCase { id: "self".into(), name: "self weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
@@ -1134,15 +1050,7 @@ mod tests {
     #[test]
     fn region_op_round_trips() {
         let base = rectangle_region_doc();
-        let updated = FemRegion {
-            id: "r1".into(),
-            name: "slab v2".into(),
-            outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]],
-            holes: vec![],
-            thickness: 0.03,
-            material_id: "steel".into(),
-            mesh_size: 0.5,
-        };
+        let updated = FemRegion { id: "r1".into(), name: "slab v2".into(), outline: vec![[0.0, 0.0], [5.0, 0.0], [5.0, 2.0], [0.0, 2.0]], holes: vec![], thickness: 0.03, material_id: "steel".into(), mesh_size: 0.5 };
         let after = round_trip(&base, &Fem2dOp::SetRegion { index: 0, region: updated });
         assert_eq!(after.regions[0].thickness, 0.03);
         round_trip(&base, &Fem2dOp::RemoveRegion { id: "r1".into() });
@@ -1210,12 +1118,7 @@ mod tests {
     #[test]
     fn area_load_on_region_produces_reactions() {
         let mut doc = rectangle_region_doc();
-        doc.load_cases = vec![FemLoadCase {
-            id: "pressure".into(),
-            name: "pressure".into(),
-            loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }],
-            self_weight: false,
-        }];
+        doc.load_cases = vec![FemLoadCase { id: "pressure".into(), name: "pressure".into(), loads: vec![FemLoad::Area { id: "a1".into(), region_id: "r1".into(), pressure: 5000.0 }], self_weight: false }];
         let result = fem2d_solve(&doc, "pressure").expect("area load solves");
         assert!(result.checks.residual_norm < 1e-6, "residual {}", result.checks.residual_norm);
 
@@ -1245,12 +1148,7 @@ mod tests {
     #[test]
     fn fem2d_solve_all_returns_case_and_combination_results() {
         let mut doc = simply_supported_beam_doc();
-        doc.load_cases.push(FemLoadCase {
-            id: "live".into(),
-            name: "live".into(),
-            loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n1".into(), dof: Dof::Ty, value: -2000.0 }],
-            self_weight: false,
-        });
+        doc.load_cases.push(FemLoadCase { id: "live".into(), name: "live".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n1".into(), dof: Dof::Ty, value: -2000.0 }], self_weight: false });
         doc.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("dead".into(), 1.35), ("live".into(), 1.5)] });
 
         let results = fem2d_solve_all(&doc).expect("solves all");

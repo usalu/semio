@@ -3,7 +3,7 @@
 import type { FileLinter } from "../../repo/lib/js/index.ts";
 import { dependencyBoundaryBreachesForFile } from "../../repo/lib/js/index.ts";
 import { getWorkspaceRoot } from "../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../repo/lib/js/index.ts";
 import { defineLint } from "../../repo/lib/js/index.ts";
 
 export const policyFile = "index.tsx";
@@ -16,7 +16,8 @@ export const policy = defineLint("@semio-tech/cad-js-renderer-index", (l: FileLi
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments, "js/vitest.config.ts");
+    const { rest } = resolveTestLevel(segments);
+    runVitest(this.root, rest, "js/vitest.config.ts");
   }
 }
 

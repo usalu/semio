@@ -11,9 +11,7 @@ pub mod part_1 {
     pub fn operative_temperature_band(occupancy: OccupancyType) -> (f64, f64) {
         match occupancy {
             OccupancyType::Residential => (20.0, 24.0),
-            OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => {
-                (20.0, 26.0)
-            }
+            OccupancyType::Office | OccupancyType::Meeting | OccupancyType::Classroom => (20.0, 26.0),
             OccupancyType::Retail | OccupancyType::Corridor => (18.0, 26.0),
             OccupancyType::Kitchen => (18.0, 28.0),
         }
@@ -43,11 +41,7 @@ pub mod part_1 {
     pub fn check_operative_temperature(occupancy: OccupancyType, t_op_c: f64) -> CheckResult {
         let (t_min, t_max) = operative_temperature_band(occupancy);
         let within = t_op_c >= t_min && t_op_c <= t_max;
-        let status = if within {
-            norm_core::CheckStatus::Pass
-        } else {
-            norm_core::CheckStatus::Fail
-        };
+        let status = if within { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-1", "§7", "7.2.2"),
             status,
@@ -76,13 +70,7 @@ pub mod part_2 {
     /// ✅ Check indoor CO₂ concentration.
     pub fn check_co2_level(occupancy: OccupancyType, co2_ppm: f64) -> CheckResult {
         let limit = design_co2_limit_ppm(occupancy);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-2", "§6", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, co2_ppm),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, limit),
-            "indoor CO₂ concentration",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-2", "§6", "6.2"), Quantity::new(norm_core::QuantityKind::Dimensionless, co2_ppm), Quantity::new(norm_core::QuantityKind::Dimensionless, limit), "indoor CO₂ concentration", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part2
@@ -103,11 +91,7 @@ pub mod part_3 {
     }
 
     /// ✅ Check ventilation rate for non-residential spaces.
-    pub fn check_ventilation_rate(
-        occupancy: OccupancyType,
-        persons: u32,
-        supplied_m3_h: f64,
-    ) -> CheckResult {
+    pub fn check_ventilation_rate(occupancy: OccupancyType, persons: u32, supplied_m3_h: f64) -> CheckResult {
         let required = outdoor_air_per_person(occupancy) * persons as f64;
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-3", "Table 1", "q"),
@@ -132,11 +116,7 @@ pub mod part_4 {
     }
 
     /// ✅ Check dwelling ventilation adequacy.
-    pub fn check_dwelling_ventilation(
-        floor_area_m2: f64,
-        bedrooms: u32,
-        supplied_m3_h: f64,
-    ) -> CheckResult {
+    pub fn check_dwelling_ventilation(floor_area_m2: f64, bedrooms: u32, supplied_m3_h: f64) -> CheckResult {
         let required = dwelling_ventilation_rate(floor_area_m2, bedrooms);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-4", "§7", "7.1"),
@@ -201,11 +181,7 @@ pub mod part_7 {
     }
 
     /// ✅ Check residential ventilation adequacy.
-    pub fn check_residential_ventilation(
-        floor_area_m2: f64,
-        occupants: u32,
-        supplied_m3_h: f64,
-    ) -> CheckResult {
+    pub fn check_residential_ventilation(floor_area_m2: f64, occupants: u32, supplied_m3_h: f64) -> CheckResult {
         let required = residential_ventilation_rate(floor_area_m2, occupants);
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-7", "§7", "7.1"),
@@ -258,13 +234,7 @@ pub mod part_9 {
 
     /// 💧 Humidification capacity check (EN 16798-9).
     pub fn check_humidification_capacity(required_kg_h: f64, provided_kg_h: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-9", "§5", "5.2"),
-            Quantity::new(norm_core::QuantityKind::Mass, provided_kg_h),
-            Quantity::new(norm_core::QuantityKind::Mass, required_kg_h),
-            "humidification capacity",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-9", "§5", "5.2"), Quantity::new(norm_core::QuantityKind::Mass, provided_kg_h), Quantity::new(norm_core::QuantityKind::Mass, required_kg_h), "humidification capacity", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part9
@@ -314,13 +284,7 @@ pub mod part_11 {
     /// ✅ Check specific fan power of ventilation unit.
     pub fn check_specific_fan_power(occupancy: OccupancyType, sfp_w_m3_s: f64) -> CheckResult {
         let limit = specific_fan_power_limit_w_m3_s(occupancy);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 16798-11", "§6", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Power, sfp_w_m3_s),
-            Quantity::new(norm_core::QuantityKind::Power, limit),
-            "specific fan power",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 16798-11", "§6", "6.2"), Quantity::new(norm_core::QuantityKind::Power, sfp_w_m3_s), Quantity::new(norm_core::QuantityKind::Power, limit), "specific fan power", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part11
@@ -341,13 +305,7 @@ pub mod part_12 {
     /// ✅ Check control setback is configured.
     pub fn check_night_setback(occupancy: OccupancyType, configured_k: f64) -> CheckResult {
         let required = night_setback_k(occupancy);
-        CheckResult::from_minimum(
-            ClauseId::new("EN 16798-12", "§5", "5.3"),
-            Quantity::new(norm_core::QuantityKind::Temperature, configured_k),
-            Quantity::new(norm_core::QuantityKind::Temperature, required),
-            "night setback depth",
-            AnnexChoice::De,
-        )
+        CheckResult::from_minimum(ClauseId::new("EN 16798-12", "§5", "5.3"), Quantity::new(norm_core::QuantityKind::Temperature, configured_k), Quantity::new(norm_core::QuantityKind::Temperature, required), "night setback depth", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part12
@@ -388,11 +346,7 @@ pub mod part_14 {
     pub fn check_dhw_temperature(t_delivery_c: f64) -> CheckResult {
         let (t_min, t_max) = dhw_delivery_temperature_band_c();
         let within = t_delivery_c >= t_min && t_delivery_c <= t_max;
-        let status = if within {
-            norm_core::CheckStatus::Pass
-        } else {
-            norm_core::CheckStatus::Fail
-        };
+        let status = if within { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-14", "§6", "6.1"),
             status,
@@ -445,11 +399,7 @@ pub mod part_16 {
     pub fn check_supply_air_temperature(t_supply_c: f64) -> CheckResult {
         let (t_min, t_max) = supply_air_temperature_band_c();
         let within = t_supply_c >= t_min && t_supply_c <= t_max;
-        let status = if within {
-            norm_core::CheckStatus::Pass
-        } else {
-            norm_core::CheckStatus::Fail
-        };
+        let status = if within { norm_core::CheckStatus::Pass } else { norm_core::CheckStatus::Fail };
         CheckResult {
             clause: ClauseId::new("EN 16798-16", "§7", "7.2"),
             status,
@@ -526,23 +476,10 @@ pub mod na_de {
 // #endregion 🔖NaDe
 
 /// 📋 End-to-end residential indoor environment check.
-pub fn check_residential_environment(
-    floor_area_m2: f64,
-    occupants: u32,
-    ventilation_m3_h: f64,
-    t_op_c: f64,
-    l_aeq_db: f64,
-) -> CheckReport {
+pub fn check_residential_environment(floor_area_m2: f64, occupants: u32, ventilation_m3_h: f64, t_op_c: f64, l_aeq_db: f64) -> CheckReport {
     let mut report = CheckReport::default();
-    report.push(part_1::check_operative_temperature(
-        OccupancyType::Residential,
-        t_op_c,
-    ));
-    report.push(part_7::check_residential_ventilation(
-        floor_area_m2,
-        occupants,
-        ventilation_m3_h,
-    ));
+    report.push(part_1::check_operative_temperature(OccupancyType::Residential, t_op_c));
+    report.push(part_7::check_residential_ventilation(floor_area_m2, occupants, ventilation_m3_h));
     report.push(na_de::check_acoustic_level(l_aeq_db));
     report
 }
@@ -562,13 +499,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            floor_area_m2: 90.0,
-            occupants: 3,
-            ventilation_m3_h: 120.0,
-            t_op_c: 21.0,
-            l_aeq_db: 30.0,
-        }
+        Self { floor_area_m2: 90.0, occupants: 3, ventilation_m3_h: 120.0, t_op_c: 21.0, l_aeq_db: 30.0 }
     }
 }
 
@@ -576,13 +507,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<DinEn16798Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_residential_environment(
-        document.floor_area_m2,
-        document.occupants,
-        document.ventilation_m3_h,
-        document.t_op_c,
-        document.l_aeq_db,
-    )
+    check_residential_environment(document.floor_area_m2, document.occupants, document.ventilation_m3_h, document.t_op_c, document.l_aeq_db)
 }
 
 pub struct DinEn16798Family;

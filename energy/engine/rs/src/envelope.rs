@@ -14,10 +14,7 @@ pub struct ExteriorConvectionModel {
 
 impl Default for ExteriorConvectionModel {
     fn default() -> Self {
-        Self {
-            base_h_w_m2k: 5.7,
-            wind_coefficient: 3.8,
-        }
+        Self { base_h_w_m2k: 5.7, wind_coefficient: 3.8 }
     }
 }
 
@@ -38,11 +35,7 @@ pub struct InteriorConvectionModel {
 
 impl Default for InteriorConvectionModel {
     fn default() -> Self {
-        Self {
-            h_min_w_m2k: 3.0,
-            delta_t_coefficient: 5.1,
-            delta_t_exponent: 0.25,
-        }
+        Self { h_min_w_m2k: 3.0, delta_t_coefficient: 5.1, delta_t_exponent: 0.25 }
     }
 }
 
@@ -69,17 +62,12 @@ impl ConductionState {
     pub fn from_u_and_capacitance(u_value_w_m2k: f64, capacitance_j_m2k: f64, time_step_s: f64) -> Self {
         let tau = capacitance_j_m2k / u_value_w_m2k.max(0.01);
         let alpha = (-time_step_s / tau.max(1.0)).exp();
-        Self {
-            ctf_c0_w_m2k: u_value_w_m2k * (1.0 - alpha),
-            ctf_c1_w_m2k: u_value_w_m2k * alpha,
-            previous_outside_temp_c: 20.0,
-        }
+        Self { ctf_c0_w_m2k: u_value_w_m2k * (1.0 - alpha), ctf_c1_w_m2k: u_value_w_m2k * alpha, previous_outside_temp_c: 20.0 }
     }
 
     /// 🔥 Conduction heat flux to zone [W/m²] (positive = heat into zone).
     pub fn heat_flux_w_m2(&self, outside_temp_c: f64, inside_temp_c: f64) -> f64 {
-        self.ctf_c0_w_m2k * (outside_temp_c - inside_temp_c)
-            + self.ctf_c1_w_m2k * (self.previous_outside_temp_c - inside_temp_c)
+        self.ctf_c0_w_m2k * (outside_temp_c - inside_temp_c) + self.ctf_c1_w_m2k * (self.previous_outside_temp_c - inside_temp_c)
     }
 
     /// 🔄 Advance history after a timestep.
@@ -118,15 +106,7 @@ pub fn longwave_net_w_m2(surface_temp_c: f64, exterior_temp_k: f64, emissivity: 
 
 // #region 🔖Solve
 /// 🌡️ Solve exterior surface temperature [°C] for heat balance.
-pub fn solve_exterior_surface_temp(
-    outside_air_c: f64,
-    sky_temp_k: f64,
-    wind_speed_m_s: f64,
-    solar_absorbed_w_m2: f64,
-    conduction_from_inside_w_m2: f64,
-    emissivity: f64,
-    ext_conv: &ExteriorConvectionModel,
-) -> f64 {
+pub fn solve_exterior_surface_temp(outside_air_c: f64, sky_temp_k: f64, wind_speed_m_s: f64, solar_absorbed_w_m2: f64, conduction_from_inside_w_m2: f64, emissivity: f64, ext_conv: &ExteriorConvectionModel) -> f64 {
     let h = ext_conv.h_w_m2k(wind_speed_m_s);
     let f = |t_s: f64| {
         let conv = h * (outside_air_c - t_s);
@@ -141,25 +121,14 @@ pub fn solve_exterior_surface_temp(
 }
 
 /// 🌡️ Solve interior surface temperature [°C] for heat balance.
-pub fn solve_interior_surface_temp(
-    zone_air_c: f64,
-    conduction_from_outside_w_m2: f64,
-    solar_absorbed_w_m2: f64,
-    int_conv: &InteriorConvectionModel,
-) -> SurfaceHeatBalance {
+pub fn solve_interior_surface_temp(zone_air_c: f64, conduction_from_outside_w_m2: f64, solar_absorbed_w_m2: f64, int_conv: &InteriorConvectionModel) -> SurfaceHeatBalance {
     let mut t_s = zone_air_c;
     for _ in 0..20 {
         let h = int_conv.h_w_m2k(t_s, zone_air_c);
         t_s = zone_air_c - (solar_absorbed_w_m2 + conduction_from_outside_w_m2) / h.max(0.1);
     }
     let h = int_conv.h_w_m2k(t_s, zone_air_c);
-    SurfaceHeatBalance {
-        convection_w_m2: h * (zone_air_c - t_s),
-        conduction_w_m2: conduction_from_outside_w_m2,
-        solar_absorbed_w_m2,
-        longwave_net_w_m2: 0.0,
-        surface_temp_c: t_s,
-    }
+    SurfaceHeatBalance { convection_w_m2: h * (zone_air_c - t_s), conduction_w_m2: conduction_from_outside_w_m2, solar_absorbed_w_m2, longwave_net_w_m2: 0.0, surface_temp_c: t_s }
 }
 
 /// 🔥 Steady-state opaque conduction flux [W/m²] through construction.

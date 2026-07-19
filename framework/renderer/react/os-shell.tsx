@@ -3082,6 +3082,7 @@ export function FrameworkOsShell({
           continue;
         }
         if ("navigate" in effect) {
+          console.warn("[DEBUG] navigate effect", effect.navigate.uri, new Error().stack?.split("\n").slice(1, 6).join(" | "));
           navigateHistory(effect.navigate.uri);
           continue;
         }
@@ -3476,6 +3477,7 @@ export function FrameworkOsShell({
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
       const dispatchViewState = injectActiveUtility(targetSession.viewState);
+      console.warn("[DEBUG] dispatch action", JSON.stringify(action));
       return plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
@@ -4775,6 +4777,26 @@ export function FrameworkOsShell({
     }),
     [buildPanelSelectionProps, panels, treeOpenStates],
   );
+
+  // #region 🔖ReadinessBeacon
+  /** 🚦 Deterministic DOM beacon for headless smoke tests (e.g. Storybook's OS-shell plugin-boot matrix)
+   * to wait on instead of screenshots/timeouts — set once a session resolves or errors, cleared on unmount. */
+  useEffect(() => {
+    const root = document.documentElement;
+    const beaconId = pluginFilter ?? "unknown";
+    if (error) {
+      root.dataset.semioOsError = beaconId;
+      delete root.dataset.semioOsReady;
+    } else if (session) {
+      root.dataset.semioOsReady = beaconId;
+      delete root.dataset.semioOsError;
+    }
+    return () => {
+      delete root.dataset.semioOsReady;
+      delete root.dataset.semioOsError;
+    };
+  }, [session, error, pluginFilter]);
+  // #endregion 🔖ReadinessBeacon
 
   return (
     <UIFindProvider>

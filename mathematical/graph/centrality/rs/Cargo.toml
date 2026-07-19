@@ -1,0 +1,18 @@
+[package]
+name = "mathematical_graph_centrality"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+mathematical_graph = { path = "../../rs" }
+mathematical_graph_paths = { path = "../../paths/rs" }
+mathematical_algebra = { path = "../../../algebra/rs" }
+mathematical_random = { path = "../../../random/rs" }

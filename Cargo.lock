@@ -5233,6 +5233,118 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_approximation"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_cliques",
+ "mathematical_graph_matching",
+ "mathematical_graph_paths",
+ "mathematical_graph_trees",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_bipartite"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_matching",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_centrality"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_paths",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_cliques"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_components",
+ "mathematical_graph_traversal",
+]
+
+[[package]]
+name = "mathematical_graph_clustering"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_coloring"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_community"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_centrality",
+ "mathematical_graph_cliques",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_components"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+]
+
+[[package]]
+name = "mathematical_graph_connectivity"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_components",
+ "mathematical_graph_flow",
+]
+
+[[package]]
+name = "mathematical_graph_cycles"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_components",
+ "mathematical_graph_traversal",
+]
+
+[[package]]
+name = "mathematical_graph_dag"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+]
+
+[[package]]
+name = "mathematical_graph_distance"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_paths",
+ "mathematical_graph_structure",
+ "mathematical_random",
+]
+
+[[package]]
 name = "mathematical_graph_drawing"
 version = "0.1.0"
 dependencies = [
@@ -5254,6 +5366,47 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_graph_flow"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_components",
+ "mathematical_graph_paths",
+]
+
+[[package]]
+name = "mathematical_graph_generate"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_generate_random"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_generate",
+ "mathematical_graph_structure",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_io"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_isomorphism"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
 name = "mathematical_graph_manifest"
 version = "0.1.0"
 dependencies = [
@@ -5262,6 +5415,224 @@ dependencies = [
  "serde_json",
  "thiserror 2.0.18",
 ]
+
+[[package]]
+name = "mathematical_graph_matching"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_normal_directed"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_approximation",
+ "mathematical_graph_bipartite",
+ "mathematical_graph_centrality",
+ "mathematical_graph_cliques",
+ "mathematical_graph_clustering",
+ "mathematical_graph_coloring",
+ "mathematical_graph_community",
+ "mathematical_graph_components",
+ "mathematical_graph_connectivity",
+ "mathematical_graph_cycles",
+ "mathematical_graph_dag",
+ "mathematical_graph_distance",
+ "mathematical_graph_flow",
+ "mathematical_graph_generate",
+ "mathematical_graph_generate_random",
+ "mathematical_graph_io",
+ "mathematical_graph_isomorphism",
+ "mathematical_graph_matching",
+ "mathematical_graph_operators",
+ "mathematical_graph_paths",
+ "mathematical_graph_planarity",
+ "mathematical_graph_similarity",
+ "mathematical_graph_spectral",
+ "mathematical_graph_structure",
+ "mathematical_graph_traversal",
+ "mathematical_graph_trees",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_normal_undirected"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_approximation",
+ "mathematical_graph_bipartite",
+ "mathematical_graph_centrality",
+ "mathematical_graph_cliques",
+ "mathematical_graph_clustering",
+ "mathematical_graph_coloring",
+ "mathematical_graph_community",
+ "mathematical_graph_components",
+ "mathematical_graph_connectivity",
+ "mathematical_graph_cycles",
+ "mathematical_graph_dag",
+ "mathematical_graph_distance",
+ "mathematical_graph_flow",
+ "mathematical_graph_generate",
+ "mathematical_graph_generate_random",
+ "mathematical_graph_io",
+ "mathematical_graph_isomorphism",
+ "mathematical_graph_matching",
+ "mathematical_graph_operators",
+ "mathematical_graph_paths",
+ "mathematical_graph_planarity",
+ "mathematical_graph_similarity",
+ "mathematical_graph_spectral",
+ "mathematical_graph_structure",
+ "mathematical_graph_traversal",
+ "mathematical_graph_trees",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_operators"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_paths"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_planarity"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+]
+
+[[package]]
+name = "mathematical_graph_port_directed_normal"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_approximation",
+ "mathematical_graph_bipartite",
+ "mathematical_graph_centrality",
+ "mathematical_graph_cliques",
+ "mathematical_graph_clustering",
+ "mathematical_graph_coloring",
+ "mathematical_graph_community",
+ "mathematical_graph_components",
+ "mathematical_graph_connectivity",
+ "mathematical_graph_cycles",
+ "mathematical_graph_dag",
+ "mathematical_graph_distance",
+ "mathematical_graph_flow",
+ "mathematical_graph_generate",
+ "mathematical_graph_generate_random",
+ "mathematical_graph_io",
+ "mathematical_graph_isomorphism",
+ "mathematical_graph_matching",
+ "mathematical_graph_operators",
+ "mathematical_graph_paths",
+ "mathematical_graph_planarity",
+ "mathematical_graph_similarity",
+ "mathematical_graph_spectral",
+ "mathematical_graph_structure",
+ "mathematical_graph_traversal",
+ "mathematical_graph_trees",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_port_undirected"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_approximation",
+ "mathematical_graph_bipartite",
+ "mathematical_graph_centrality",
+ "mathematical_graph_cliques",
+ "mathematical_graph_clustering",
+ "mathematical_graph_coloring",
+ "mathematical_graph_community",
+ "mathematical_graph_components",
+ "mathematical_graph_connectivity",
+ "mathematical_graph_cycles",
+ "mathematical_graph_dag",
+ "mathematical_graph_distance",
+ "mathematical_graph_flow",
+ "mathematical_graph_generate",
+ "mathematical_graph_generate_random",
+ "mathematical_graph_io",
+ "mathematical_graph_isomorphism",
+ "mathematical_graph_matching",
+ "mathematical_graph_operators",
+ "mathematical_graph_paths",
+ "mathematical_graph_planarity",
+ "mathematical_graph_similarity",
+ "mathematical_graph_spectral",
+ "mathematical_graph_structure",
+ "mathematical_graph_traversal",
+ "mathematical_graph_trees",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_similarity"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_paths",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_spectral"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_structure"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_traversal",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_graph_traversal"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+]
+
+[[package]]
+name = "mathematical_graph_trees"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_graph_components",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_random"
+version = "0.1.0"
 
 [[package]]
 name = "matrixmultiply"

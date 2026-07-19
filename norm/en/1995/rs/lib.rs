@@ -99,42 +99,20 @@ pub mod part_1_1 {
         k_mod * a_mm2 * f_c_0_k_mpa / na_de::gamma_m() / 1000.0
     }
 
-    pub fn connection_bearing_resistance_kn(
-        a_ef_mm2: f64,
-        f_v_k_mpa: f64,
-        k_mod: f64,
-    ) -> f64 {
+    pub fn connection_bearing_resistance_kn(a_ef_mm2: f64, f_v_k_mpa: f64, k_mod: f64) -> f64 {
         k_mod * a_ef_mm2 * f_v_k_mpa / na_de::gamma_m() / 1000.0
     }
 
     pub fn check_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1995-1-1", "§6.1.6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0),
-            "timber bending ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1995-1-1", "§6.1.6", "6.1"), Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0), "timber bending ULS", annex)
     }
 
     pub fn check_compression(n_ed_kn: f64, n_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1995-1-1", "§6.1.4", "6.1"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "timber compression ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1995-1-1", "§6.1.4", "6.1"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "timber compression ULS", annex)
     }
 
     pub fn check_connection_bearing(f_ed_kn: f64, f_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1995-1-1", "§8.1.2", "8.1"),
-            Quantity::force_kn(f_ed_kn),
-            Quantity::force_kn(f_rd_kn),
-            "timber connection bearing ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1995-1-1", "§8.1.2", "8.1"), Quantity::force_kn(f_ed_kn), Quantity::force_kn(f_rd_kn), "timber connection bearing ULS", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -155,28 +133,16 @@ pub mod part_1_2 {
     }
 
     pub fn check_fire(charred_depth_mm: f64, remaining_mm: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1995-1-2", "§4", "4.2"),
-            Quantity::length_m(remaining_mm / 1000.0),
-            Quantity::length_m(charred_depth_mm / 1000.0),
-            "timber fire residual section",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1995-1-2", "§4", "4.2"), Quantity::length_m(remaining_mm / 1000.0), Quantity::length_m(charred_depth_mm / 1000.0), "timber fire residual section", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_2
 
 // #region 🔖Part2
 pub mod part_2 {
-    use super::{part_1_1, AnnexChoice, CheckResult, LoadDuration, ServiceClass, k_mod};
+    use super::{k_mod, part_1_1, AnnexChoice, CheckResult, LoadDuration, ServiceClass};
 
-    pub fn bridge_bending_resistance_knm(
-        w_mm3: f64,
-        f_m_k_mpa: f64,
-        service: ServiceClass,
-        duration: LoadDuration,
-        k_crit: f64,
-    ) -> f64 {
+    pub fn bridge_bending_resistance_knm(w_mm3: f64, f_m_k_mpa: f64, service: ServiceClass, duration: LoadDuration, k_crit: f64) -> f64 {
         part_1_1::bending_resistance_knm(w_mm3, f_m_k_mpa, k_mod(service, duration), k_crit)
     }
 
@@ -187,17 +153,7 @@ pub mod part_2 {
 // #endregion 🔖Part2
 
 /// 📋 Glulam beam check with LTB.
-pub fn check_glulam_beam(
-    m_ed_knm: f64,
-    n_ed_kn: f64,
-    w_mm3: f64,
-    a_mm2: f64,
-    f_m_k: f64,
-    f_c_0_k: f64,
-    service: ServiceClass,
-    duration: LoadDuration,
-    m_crit_knm: f64,
-) -> CheckReport {
+pub fn check_glulam_beam(m_ed_knm: f64, n_ed_kn: f64, w_mm3: f64, a_mm2: f64, f_m_k: f64, f_c_0_k: f64, service: ServiceClass, duration: LoadDuration, m_crit_knm: f64) -> CheckReport {
     let km = k_mod(service, duration);
     let lambda = lambda_rel_m(w_mm3, f_m_k, m_crit_knm);
     let kc = k_crit(lambda);
@@ -229,17 +185,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            m_ed_knm: 25.0,
-            n_ed_kn: 50.0,
-            w_mm3: 1_000_000.0,
-            a_mm2: 20_000.0,
-            f_m_k: 24.0,
-            f_c_0_k: 21.0,
-            service_class: "sc1".into(),
-            load_duration: "medium".into(),
-            m_crit_knm: 80.0,
-        }
+        Self { m_ed_knm: 25.0, n_ed_kn: 50.0, w_mm3: 1_000_000.0, a_mm2: 20_000.0, f_m_k: 24.0, f_c_0_k: 21.0, service_class: "sc1".into(), load_duration: "medium".into(), m_crit_knm: 80.0 }
     }
 }
 
@@ -265,17 +211,7 @@ fn parse_load_duration(value: &str) -> LoadDuration {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_glulam_beam(
-        document.m_ed_knm,
-        document.n_ed_kn,
-        document.w_mm3,
-        document.a_mm2,
-        document.f_m_k,
-        document.f_c_0_k,
-        parse_service_class(&document.service_class),
-        parse_load_duration(&document.load_duration),
-        document.m_crit_knm,
-    )
+    check_glulam_beam(document.m_ed_knm, document.n_ed_kn, document.w_mm3, document.a_mm2, document.f_m_k, document.f_c_0_k, parse_service_class(&document.service_class), parse_load_duration(&document.load_duration), document.m_crit_knm)
 }
 
 pub struct En1995Family;
@@ -319,17 +255,7 @@ mod tests {
 
     #[test]
     fn glulam_beam_e2e() {
-        let report = check_glulam_beam(
-            25.0,
-            50.0,
-            1_000_000.0,
-            20_000.0,
-            24.0,
-            21.0,
-            ServiceClass::Sc1,
-            LoadDuration::Medium,
-            80.0,
-        );
+        let report = check_glulam_beam(25.0, 50.0, 1_000_000.0, 20_000.0, 24.0, 21.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0);
         assert!(!report.checks.is_empty());
     }
 }

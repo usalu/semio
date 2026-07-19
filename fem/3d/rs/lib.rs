@@ -1,9 +1,13 @@
 //! 🏙️ FEM 3D document model and element library on `vcs`.
 
-use fem_core::{analyses, Bar3, Dof, Element, ElementResult, Frame3, Model, NodalLoad, Node, Support};
+#[cfg(test)]
+use fem_core::ElementResult;
+use fem_core::{analyses, Bar3, Dof, Element, Frame3, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+#[cfg(target_arch = "wasm32")]
+use vcs::create_document_vcs_envelope;
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
@@ -431,51 +435,37 @@ impl Operation<Fem3dDocument> for Fem3dOp {
                 Some(index) => vec![Fem3dOp::SetNode { index, node: projection.nodes[index].clone() }],
                 None => vec![Fem3dOp::RemoveNode { id: node.id.clone() }],
             },
-            Fem3dOp::RemoveNode { id } => node_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetNode { index, node: projection.nodes[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveNode { id } => node_index(projection, id).map(|index| vec![Fem3dOp::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetElement { element, .. } => match element_index(projection, element_id(element)) {
                 Some(index) => vec![Fem3dOp::SetElement { index, element: projection.elements[index].clone() }],
                 None => vec![Fem3dOp::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem3dOp::RemoveElement { id } => element_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetElement { index, element: projection.elements[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveElement { id } => element_index(projection, id).map(|index| vec![Fem3dOp::SetElement { index, element: projection.elements[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetMaterial { material, .. } => match material_index(projection, &material.id) {
                 Some(index) => vec![Fem3dOp::SetMaterial { index, material: projection.materials[index].clone() }],
                 None => vec![Fem3dOp::RemoveMaterial { id: material.id.clone() }],
             },
-            Fem3dOp::RemoveMaterial { id } => material_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetMaterial { index, material: projection.materials[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveMaterial { id } => material_index(projection, id).map(|index| vec![Fem3dOp::SetMaterial { index, material: projection.materials[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetSection { section, .. } => match section_index(projection, &section.id) {
                 Some(index) => vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }],
                 None => vec![Fem3dOp::RemoveSection { id: section.id.clone() }],
             },
-            Fem3dOp::RemoveSection { id } => section_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveSection { id } => section_index(projection, id).map(|index| vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetSupport { support, .. } => match support_index(projection, &support.id) {
                 Some(index) => vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }],
                 None => vec![Fem3dOp::RemoveSupport { id: support.id.clone() }],
             },
-            Fem3dOp::RemoveSupport { id } => support_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveSupport { id } => support_index(projection, id).map(|index| vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetLoadCase { load_case, .. } => match load_case_index(projection, &load_case.id) {
                 Some(index) => vec![Fem3dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }],
                 None => vec![Fem3dOp::RemoveLoadCase { id: load_case.id.clone() }],
             },
-            Fem3dOp::RemoveLoadCase { id } => load_case_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveLoadCase { id } => load_case_index(projection, id).map(|index| vec![Fem3dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetCombination { combination, .. } => match combination_index(projection, &combination.id) {
                 Some(index) => vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }],
                 None => vec![Fem3dOp::RemoveCombination { id: combination.id.clone() }],
             },
-            Fem3dOp::RemoveCombination { id } => combination_index(projection, id)
-                .map(|index| vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }])
-                .unwrap_or_default(),
+            Fem3dOp::RemoveCombination { id } => combination_index(projection, id).map(|index| vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetCamera { .. } => vec![Fem3dOp::SetCamera { camera: projection.camera.clone() }],
             Fem3dOp::SetAnalysisSettings { .. } => vec![Fem3dOp::SetAnalysisSettings { settings: projection.analysis.clone() }],
         }
@@ -511,59 +501,39 @@ pub enum Fem3dError {
 }
 // #endregion 🔖Errors
 
+/// 🧩 `resolve_geometry`'s resolved `(nodes, elements, supports)` triple.
+type ResolvedGeometry = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>);
+
 /// 🌉 Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) into
 /// their `fem_core` equivalents — the geometry shared by both `build_model` (single frozen-signature
 /// solve) and `fem3d_solve_all` (multi-case/combination solve).
-fn resolve_geometry(doc: &Fem3dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>), Fem3dError> {
+fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dError> {
     let nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
         match element {
             FemElement::Bar { id, start, end, material_id, section_id } => {
-                let material =
-                    doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
-                let section =
-                    doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
+                let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
                     return Err(Fem3dError::NodeNotFound(start.clone()));
                 }
                 if !node_exists(end) {
                     return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
-                elements.push(Box::new(Bar3 {
-                    id: id.clone(),
-                    node_a: start.clone(),
-                    node_b: end.clone(),
-                    e: material.e,
-                    a: section.area,
-                    density: material.rho,
-                }));
+                elements.push(Box::new(Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }));
             }
             FemElement::Frame { id, start, end, material_id, section_id, roll } => {
-                let material =
-                    doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
-                let section =
-                    doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
+                let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
                     return Err(Fem3dError::NodeNotFound(start.clone()));
                 }
                 if !node_exists(end) {
                     return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
-                elements.push(Box::new(Frame3 {
-                    id: id.clone(),
-                    node_a: start.clone(),
-                    node_b: end.clone(),
-                    e: material.e,
-                    g: material.g,
-                    a: section.area,
-                    iy: section.iy,
-                    iz: section.iz,
-                    j: section.j,
-                    roll: *roll,
-                    density: material.rho,
-                }));
+                elements.push(Box::new(Frame3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, g: material.g, a: section.area, iy: section.iy, iz: section.iz, j: section.j, roll: *roll, density: material.rho }));
             }
         }
     }
@@ -608,8 +578,7 @@ pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::
             self_weight: case.self_weight,
         })
         .collect();
-    let combinations: Vec<analyses::Combination> =
-        doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.clone() }).collect();
+    let combinations: Vec<analyses::Combination> = doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.clone() }).collect();
     analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
 }
 
@@ -665,12 +634,7 @@ pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result
 /// 🌉 Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`.
 fn buckling_case(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::LoadCase, Fem3dError> {
     let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
-    Ok(analyses::LoadCase {
-        id: case.id.clone(),
-        nodal_loads: case.loads.iter().map(|load| NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value }).collect(),
-        member_loads: Vec::new(),
-        self_weight: case.self_weight,
-    })
+    Ok(analyses::LoadCase { id: case.id.clone(), nodal_loads: case.loads.iter().map(|load| NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value }).collect(), member_loads: Vec::new(), self_weight: case.self_weight })
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
@@ -722,9 +686,7 @@ mod wasm_bridge {
                     let envelope: Fem3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Fem3dStore::new(envelope)
                 }
-                None => {
-                    Fem3dStore::new(create_document_vcs_envelope(FEM_3D_SCHEMA, "fem3d", empty_fem3d_projection(), None))
-                }
+                None => Fem3dStore::new(create_document_vcs_envelope(FEM_3D_SCHEMA, "fem3d", empty_fem3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -769,27 +731,12 @@ mod tests {
         let l = 3.0;
         let p = 5000.0;
         let doc = Fem3dDocument {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 },
-            ],
-            elements: vec![FemElement::Frame {
-                id: "e1".into(),
-                start: "n1".into(),
-                end: "n2".into(),
-                material_id: "steel".into(),
-                section_id: "hea200".into(),
-                roll: 0.0,
-            }],
+            nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: l, y: 0.0, z: 0.0 }],
+            elements: vec![FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.0 }],
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, rho: 7850.0 }],
             sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
             supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() }],
-            load_cases: vec![FemLoadCase {
-                id: "point".into(),
-                name: "Point Load".into(),
-                loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -p }],
-                self_weight: false,
-            }],
+            load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -p }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -801,12 +748,7 @@ mod tests {
     /// bars only span a plane, leaving one direction with zero stiffness (a mechanism). Hence n4/b3.
     fn truss_fixture() -> Fem3dDocument {
         Fem3dDocument {
-            nodes: vec![
-                FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 },
-                FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 },
-                FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 },
-                FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 },
-            ],
+            nodes: vec![FemNode { id: "n1".into(), x: 0.0, y: 0.0, z: 0.0 }, FemNode { id: "n2".into(), x: 2.0, y: 0.0, z: 0.0 }, FemNode { id: "n3".into(), x: 1.0, y: 1.0, z: 2.0 }, FemNode { id: "n4".into(), x: 1.0, y: -1.0, z: 0.0 }],
             elements: vec![
                 FemElement::Bar { id: "b1".into(), start: "n1".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
                 FemElement::Bar { id: "b2".into(), start: "n2".into(), end: "n3".into(), material_id: "steel".into(), section_id: "rod".into() },
@@ -819,12 +761,7 @@ mod tests {
                 FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: Dof::ALL.to_vec() },
                 FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: Dof::ALL.to_vec() },
             ],
-            load_cases: vec![FemLoadCase {
-                id: "drop".into(),
-                name: "Drop".into(),
-                loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n3".into(), dof: Dof::Tz, value: -1000.0 }],
-                self_weight: false,
-            }],
+            load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n3".into(), dof: Dof::Tz, value: -1000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -849,20 +786,13 @@ mod tests {
         let node = FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 };
         let after_set = round_trip(&base, &Fem3dOp::SetNode { index: 0, node: node.clone() });
         assert_eq!(after_set.nodes, vec![node.clone()]);
-        round_trip(&after_set, &Fem3dOp::RemoveNode { id: node.id.clone() });
+        round_trip(&after_set, &Fem3dOp::RemoveNode { id: node.id });
     }
 
     #[test]
     fn element_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let updated = FemElement::Frame {
-            id: "e1".into(),
-            start: "n1".into(),
-            end: "n2".into(),
-            material_id: "steel".into(),
-            section_id: "hea200".into(),
-            roll: 0.5,
-        };
+        let updated = FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 };
         let after_set = round_trip(&base, &Fem3dOp::SetElement { index: 0, element: updated });
         round_trip(&after_set, &Fem3dOp::RemoveElement { id: "e1".into() });
     }
@@ -894,12 +824,7 @@ mod tests {
     #[test]
     fn load_case_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let load_case = FemLoadCase {
-            id: "point".into(),
-            name: "Point Load Updated".into(),
-            loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }],
-            self_weight: false,
-        };
+        let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemNodalLoad { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }], self_weight: false };
         let after_set = round_trip(&base, &Fem3dOp::SetLoadCase { index: 0, load_case });
         round_trip(&after_set, &Fem3dOp::RemoveLoadCase { id: "point".into() });
     }
@@ -1024,12 +949,7 @@ mod tests {
     #[test]
     fn fem3d_solve_all_returns_case_and_combination_results() {
         let (mut doc, ..) = cantilever_fixture();
-        doc.load_cases.push(FemLoadCase {
-            id: "point2".into(),
-            name: "Point Load 2".into(),
-            loads: vec![FemNodalLoad { id: "l2".into(), node_id: "n2".into(), dof: Dof::Tz, value: -2000.0 }],
-            self_weight: false,
-        });
+        doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![FemNodalLoad { id: "l2".into(), node_id: "n2".into(), dof: Dof::Tz, value: -2000.0 }], self_weight: false });
         doc.combinations = vec![FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35), ("point2".into(), 1.0)] }];
 
         let results = fem3d_solve_all(&doc).expect("solves");

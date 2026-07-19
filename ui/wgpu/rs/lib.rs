@@ -3763,13 +3763,17 @@ pub struct WidgetState {
 /// as it already walks parent/child links for painting). `cached_text_measure` mirrors the last
 /// `(text, wrap width bucket)` this node was measured at, so `flex::LayoutEngine` can skip
 /// re-shaping an unchanged text node against an unchanged constraint.
+/// 📏 `(text, wrap width bucket)` key paired with its measured `(width, height)` — see
+/// `LayoutBucket::cached_text_measure`.
+pub type TextMeasureCache = Option<((String, Option<u32>), (f32, f32))>;
+
 #[derive(Clone, Debug, Default)]
 pub struct LayoutBucket {
     pub x: f32,
     pub y: f32,
     pub width: f32,
     pub height: f32,
-    pub cached_text_measure: Option<((String, Option<u32>), (f32, f32))>,
+    pub cached_text_measure: TextMeasureCache,
 }
 
 /// 🎨 M4 decision: stays an empty marker. Every `paint::paint_*` function recomputes its `DrawList`
@@ -4666,6 +4670,7 @@ pub fn push_chrome_group_border(draw: &mut DrawList, rect: Rect, theme: &Theme) 
     push_chrome_border(draw, rect, hair, theme.border_normal, true, true, true, true);
 }
 
+#[allow(clippy::too_many_arguments, reason = "one arg per border edge/style flag; grouping into a struct is a T2 restructure, out of scope")]
 pub fn push_chrome_border(
     draw: &mut DrawList,
     rect: Rect,
@@ -4789,7 +4794,7 @@ pub enum SemioCursor {
     NotAllowed,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct CursorDragState {
     pub tree_drag: bool,
     pub dock_drag: bool,
@@ -5161,7 +5166,6 @@ use kernel_3d_scene::ScenePass3d;
 use crate::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
 use crate::theme::{GlassTier, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
-use std::mem;
 use wgpu::util::DeviceExt;
 
 pub const KIND_SOLID: f32 = 3.0;
@@ -5464,6 +5468,7 @@ impl ScissorRect {
     }
 }
 
+#[derive(Default)]
 pub struct DrawLayer {
     pub scissor: Option<ScissorRect>,
     pub foreground_of: Option<usize>,
@@ -5472,20 +5477,6 @@ pub struct DrawLayer {
     pub vector_vertices: Vec<VectorVertex>,
     pub overlay_ui_instances: Vec<UiInstance>,
     pub overlay_vector_vertices: Vec<VectorVertex>,
-}
-
-impl Default for DrawLayer {
-    fn default() -> Self {
-        Self {
-            scissor: None,
-            foreground_of: None,
-            ui_instances: Vec::new(),
-            raster_instances: Vec::new(),
-            vector_vertices: Vec::new(),
-            overlay_ui_instances: Vec::new(),
-            overlay_vector_vertices: Vec::new(),
-        }
-    }
 }
 
 pub struct DrawList {
@@ -5724,6 +5715,7 @@ impl DrawList {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
     pub fn push_dashed_line(
         &mut self,
         x0: f32,
@@ -5740,6 +5732,7 @@ impl DrawList {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
     pub fn push_dashed_line_overlay(
         &mut self,
         x0: f32,
@@ -5824,6 +5817,7 @@ mod selection_marquee_tests {
     }
 }
 
+#[allow(clippy::too_many_arguments, reason = "one arg per line endpoint/style attribute; grouping into a struct is a T2 restructure, out of scope")]
 fn push_marquee_segment(
     draw: &mut DrawList,
     overlay: bool,
@@ -6343,6 +6337,7 @@ impl RasterTextureStore {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     pub fn ensure_raster(
         &mut self,
         device: &wgpu::Device,
@@ -6350,8 +6345,8 @@ impl RasterTextureStore {
         globals_buffer: &wgpu::Buffer,
         glyph_view: &wgpu::TextureView,
         glyph_sampler: &wgpu::Sampler,
-        icon_view: &wgpu::TextureView,
-        icon_sampler: &wgpu::Sampler,
+        _icon_view: &wgpu::TextureView,
+        _icon_sampler: &wgpu::Sampler,
         key: &str,
         pixels: &[u8],
         width: u32,
@@ -6427,6 +6422,7 @@ impl RasterTextureStore {
         self.textures.get(key)
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     pub fn replace_gpu_bind_group(
         &mut self,
         device: &wgpu::Device,
@@ -7402,6 +7398,7 @@ impl UiPipelines {
         Some((prepared, pass_index_map))
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     fn draw_world_pass_at<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -7503,6 +7500,7 @@ impl UiPipelines {
         pass.draw(0..6, start..start + count);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     fn draw_raster_layers(
         &self,
         pass: &mut wgpu::RenderPass<'_>,
@@ -7584,6 +7582,7 @@ impl UiPipelines {
         pass.draw(start..start + count, 0..1);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     fn render_interleaved_layers<'a>(
         &'a self,
         pass: &mut wgpu::RenderPass<'a>,
@@ -7740,6 +7739,7 @@ impl UiPipelines {
         );
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     pub fn render_scene_content<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -7956,6 +7956,7 @@ impl UiPipelines {
         layer_content || scene_content
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     fn render_glass_foreground<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -8161,6 +8162,7 @@ impl UiPipelines {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     pub fn composite_to_swapchain<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -8267,6 +8269,8 @@ impl UiPipelines {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
+    #[allow(dead_code, reason = "top-level UiPipelines render entrypoint; not yet called internally, likely wired externally by framework/renderer/wgpu")]
     pub fn render<'a>(
         &'a mut self,
         device: &wgpu::Device,
@@ -8426,6 +8430,7 @@ impl UiPipelines {
         pass.draw(0..6, 0..1);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     fn composite_glass_regions(
         &self,
         device: &wgpu::Device,
@@ -8508,6 +8513,7 @@ impl UiPipelines {
         let _ = (width, height);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "one arg per GPU resource/dimension; grouping into a struct is a T2 restructure, out of scope")]
     pub fn render_overlay<'a>(
         &'a self,
         device: &wgpu::Device,
@@ -8618,7 +8624,7 @@ mod tests {
 
     #[test]
     fn world_globals_slot_size_is_aligned() {
-        assert!(WORLD_GLOBALS_SLOT_SIZE >= 80);
+        const { assert!(WORLD_GLOBALS_SLOT_SIZE >= 80) };
         assert_eq!(WORLD_GLOBALS_SLOT_SIZE % 256, 0);
     }
 
@@ -10972,6 +10978,41 @@ impl FontAtlas {
     }
 }
 
+pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
+    #[cfg(target_arch = "wasm32")]
+    {
+        use js_sys::Uint8Array;
+        use wasm_bindgen::JsCast;
+        use wasm_bindgen_futures::JsFuture;
+        use web_sys::{Request, RequestInit, RequestMode, Response};
+
+        let opts = RequestInit::new();
+        opts.set_method("GET");
+        opts.set_mode(RequestMode::Cors);
+        let request = Request::new_with_str_and_init(url, &opts).map_err(|_| "request failed")?;
+        let window = web_sys::window().ok_or("no window")?;
+        let resp_value = JsFuture::from(window.fetch_with_request(&request))
+            .await
+            .map_err(|_| "fetch failed")?;
+        let resp: Response = resp_value.dyn_into().map_err(|_| "response cast failed")?;
+        if !resp.ok() {
+            return Ok(Vec::new());
+        }
+        let buffer = JsFuture::from(resp.array_buffer().map_err(|_| "array_buffer failed")?)
+            .await
+            .map_err(|_| "buffer failed")?;
+        let array = Uint8Array::new(&buffer);
+        let mut bytes = vec![0u8; array.length() as usize];
+        array.copy_to(&mut bytes);
+        Ok(bytes)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        let _ = url;
+        Ok(Vec::new())
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::FontAtlas;
@@ -11041,41 +11082,6 @@ mod tests {
         assert_eq!((glyph.width, glyph.height), (4, 4));
         assert!(atlas.take_color_dirty(), "packing a color glyph must mark the color page dirty");
         assert!(!atlas.take_color_dirty(), "take_color_dirty must reset after being read");
-    }
-}
-
-pub async fn fetch_font_bytes(url: &str) -> Result<Vec<u8>, String> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        use js_sys::Uint8Array;
-        use wasm_bindgen::JsCast;
-        use wasm_bindgen_futures::JsFuture;
-        use web_sys::{Request, RequestInit, RequestMode, Response};
-
-        let opts = RequestInit::new();
-        opts.set_method("GET");
-        opts.set_mode(RequestMode::Cors);
-        let request = Request::new_with_str_and_init(url, &opts).map_err(|_| "request failed")?;
-        let window = web_sys::window().ok_or("no window")?;
-        let resp_value = JsFuture::from(window.fetch_with_request(&request))
-            .await
-            .map_err(|_| "fetch failed")?;
-        let resp: Response = resp_value.dyn_into().map_err(|_| "response cast failed")?;
-        if !resp.ok() {
-            return Ok(Vec::new());
-        }
-        let buffer = JsFuture::from(resp.array_buffer().map_err(|_| "array_buffer failed")?)
-            .await
-            .map_err(|_| "buffer failed")?;
-        let array = Uint8Array::new(&buffer);
-        let mut bytes = vec![0u8; array.length() as usize];
-        array.copy_to(&mut bytes);
-        Ok(bytes)
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let _ = url;
-        Ok(Vec::new())
     }
 }
 // #endregion text
@@ -11415,7 +11421,7 @@ fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
     }
 
     if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Tree(_))) {
-        sync_tree_row_layout(tree, id, theme);
+        sync_tree_row_layout(tree, id);
     }
 
     let children: Vec<NodeId> = tree.children(id).collect();
@@ -11452,7 +11458,7 @@ fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelec
 /// arm, keyed by `section.id`) real `LayoutBucket` geometry, cumulative down the tree exactly like
 /// `paint_tree_widget`'s own procedural walk (header height, then each item's row height including
 /// any expanded nested rows).
-fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId, theme: &Theme) {
+fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
     let Some(tree_node) = tree.node(tree_id).and_then(|node| match &node.spec.0 {
         UiNode::Tree(tree_node) => Some(tree_node.clone()),
         _ => None,
@@ -11515,6 +11521,7 @@ fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNod
 /// 🎯 Per-variant paint dispatcher for one retained node, given `(origin_x, origin_y)` — the
 /// absolute position of *this node's parent's* content-box origin (so `origin + node.layout.{x,y}`
 /// is this node's own absolute top-left, matching taffy's parent-relative `Layout::location`).
+#[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
     let abs_x = origin_x + node.layout.x;
@@ -11608,6 +11615,7 @@ fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme:
 /// whose single/`children` nested `UiNode`s reconcile already expands into retained children (see
 /// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
 /// `activate`/`selected`).
+#[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let children: Vec<NodeId> = tree.children(id).collect();
     for child in children {
@@ -11678,6 +11686,7 @@ fn paint_input(node: &UiInputNode, bounds: Rect, flags: NodeFlags, theme: &Theme
 /// data source, closing the gap this function's own doc comment used to describe — when `true`, the
 /// popup paints below the trigger with the exact geometry `select_popup_row_rect` also writes into
 /// the rows' `LayoutBucket` (see `sync_select_popup_rows`), so clicking a row actually hit-tests.
+#[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
@@ -11740,11 +11749,11 @@ fn paint_vec3(node: &UiVec3Node, bounds: Rect, theme: &Theme, atlas: &mut FontAt
     let gap = theme.gap_standard;
     let seg_w = (bounds.w - gap * 2.0) / 3.0;
     let border = if mixed { theme.border_normal.with_alpha(theme.border_normal.a * 0.5) } else { theme.border_normal };
-    for index in 0..3 {
+    for (index, value) in values.iter().enumerate() {
         let x = bounds.x + index as f32 * (seg_w + gap);
         let row = Rect::new(x, bounds.y, seg_w, bounds.h);
         push_control_border(draw, row, theme, border, theme.input_bg);
-        let text = if mixed { "—".to_string() } else { format!("{:.3}", values[index]) };
+        let text = if mixed { "—".to_string() } else { format!("{value:.3}") };
         let color = if mixed { theme.text_muted } else { theme.text };
         draw_text_on(draw, atlas, &text, row.x + 8.0, row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, color);
     }
@@ -11923,6 +11932,7 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
 /// no per-tree-row `NodeId`/`NodeFlags` yet (`reconcile::children_of` doesn't expand `Tree` into
 /// retained item children — see `paint_select`'s neighboring doc comment for the same root cause), so
 /// there is nowhere to read a live per-row hover/drag flag from until that reconcile expansion lands.
+#[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 fn paint_tree_item(
     item: &UiTreeItemNode,
     x: f32,
@@ -13005,7 +13015,7 @@ impl OverlayKind {
 }
 
 /// 🪟 One currently-open overlay's lifecycle state.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct OpenOverlay {
     /// 🌳 The overlay's content subtree root — `EventRouter::open_overlay` flags this
     /// `NodeFlags::OVERLAY` for hit-test priority and clears it again on close.
@@ -13233,6 +13243,9 @@ pub enum UiCommand {
 /// an edited `Input`'s value via its `on_change` `ActionDescriptor`) are a documented gap for a later
 /// milestone, same as this struct's own precedent (`Button` was the only concretely-wired variant
 /// before M5).
+/// 🎯 A `set_drop_accept` predicate — see `EventRouter::drop_accept`.
+type DropAcceptPredicate = Box<dyn Fn(&DragPayload) -> bool>;
+
 pub(crate) struct EventRouter {
     window_id: String,
     capture: CaptureState,
@@ -13253,7 +13266,7 @@ pub(crate) struct EventRouter {
     drag_payloads: HashMap<NodeId, DragPayload>,
     /// 🎯 Per-node accept predicate refining plain `NodeFlags::DROP_TARGET` membership, set via
     /// `set_drop_accept`. Absent from this map but flagged `DROP_TARGET` still accepts everything.
-    drop_accept: HashMap<NodeId, Box<dyn Fn(&DragPayload) -> bool>>,
+    drop_accept: HashMap<NodeId, DropAcceptPredicate>,
     /// 🖱️ Scrollbar-thumb node id → (its owning `NodeFlags::SCROLLABLE` node, drag axis), set via
     /// `register_scroll_thumb`.
     scroll_thumbs: HashMap<NodeId, (NodeId, ScrollAxis)>,
@@ -13360,6 +13373,7 @@ impl EventRouter {
         }
     }
 
+    #[allow(dead_code, reason = "overlay-stack accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn topmost_overlay(&self) -> Option<&OpenOverlay> {
         self.overlays.topmost()
     }
@@ -13449,14 +13463,17 @@ impl EventRouter {
         self.drag_payloads.insert(node, payload);
     }
 
+    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn clear_drag_payload(&mut self, node: NodeId) {
         self.drag_payloads.remove(&node);
     }
 
+    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn set_drop_accept(&mut self, node: NodeId, predicate: impl Fn(&DragPayload) -> bool + 'static) {
         self.drop_accept.insert(node, Box::new(predicate));
     }
 
+    #[allow(dead_code, reason = "drag-drop registry accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn drag_session(&self) -> Option<&DragSession> {
         self.drag.as_ref()
     }
@@ -13511,6 +13528,7 @@ impl EventRouter {
     //#endregion 🔖DragDropApi
 
     //#region 🔖ScrollApi
+    #[allow(dead_code, reason = "scroll-thumb registry accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn register_scroll_thumb(&mut self, thumb: NodeId, scrollable: NodeId, axis: ScrollAxis) {
         self.scroll_thumbs.insert(thumb, (scrollable, axis));
     }
@@ -13651,10 +13669,12 @@ impl EventRouter {
     //#endregion 🔖EditApi
 
     //#region 🔖CursorApi
+    #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn hovered(&self) -> Option<NodeId> {
         self.hovered
     }
 
+    #[allow(dead_code, reason = "cursor-state accessor, not yet called; likely wired by a later events-integration milestone")]
     pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
         self.capture.target
     }
@@ -14181,7 +14201,7 @@ mod tests {
     #[test]
     fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
         let mut tree = UiTree::new();
-        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0,200.0 as f32, 200.0));
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0_f32, 200.0));
         let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
         let mut router = EventRouter::new("main");
         router.set_drag_payload(source, DragPayload::new());
@@ -15137,6 +15157,7 @@ impl Ui {
     /// 🕹️ Routes `event` through `window_id`'s `events::EventRouter` (hit-test, capture, focus, hover
     /// updates), returning the `UiCommand`s it produced and also queuing them for a later
     /// `drain_commands` call — callers may use either.
+    #[allow(clippy::needless_pass_by_value, reason = "changing to &UiEvent is a breaking public API change across ~30 downstream plugins, out of T1 scope")]
     pub fn dispatch_event(&mut self, window_id: &str, event: UiEvent) -> Vec<UiCommand> {
         let Some(window) = self.windows.get_mut(window_id) else { return Vec::new() };
         let Some(root) = window.tree.root else { return Vec::new() };
@@ -16094,7 +16115,7 @@ pub fn render_widget<E: Clone>(
             ctx.draw.push_line(bounds.x, y, bounds.x + bounds.w, y, ctx.theme.separator, 1.0);
         }
         WidgetNode::Button { id, icon_id, label, event } => {
-            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
+            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx);
         }
         WidgetNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -16111,16 +16132,16 @@ pub fn render_widget<E: Clone>(
         WidgetNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         WidgetNode::Slider { id, value, min, max, step, on_change } => {
-            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx)
+            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
         }
         WidgetNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
-            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx)
+            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);
         }
         WidgetNode::Ring { id, t, disabled, on_change } => {
-            render_ring(id, *t, *disabled, on_change.clone(), bounds, ctx)
+            render_ring(id, *t, *disabled, on_change.clone(), bounds, ctx);
         }
         WidgetNode::IconSelect { id, value, uniform, classifier_kind, on_change } => {
-            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx)
+            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx);
         }
         WidgetNode::Field { label, child, .. } => {
             let label_h = ctx.theme.font_size_small;
@@ -16190,7 +16211,7 @@ pub fn render_widget<E: Clone>(
 fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {
         ControlNode::Button { id, icon_id, label, event } => {
-            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
+            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx);
         }
         ControlNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -16207,14 +16228,14 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
         ControlNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         ControlNode::Slider { id, value, min, max, step, on_change } => {
-            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx)
+            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
         }
         ControlNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
-            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx)
+            render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);
         }
         ControlNode::Ring { id, t, disabled, on_change } => render_ring(id, *t, *disabled, on_change.clone(), bounds, ctx),
         ControlNode::IconSelect { id, value, uniform, classifier_kind, on_change } => {
-            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx)
+            render_icon_select(id, value, *uniform, classifier_kind, on_change.clone(), bounds, ctx);
         }
     }
 }
@@ -16470,7 +16491,7 @@ fn render_toggle<E: Clone>(
 
 fn render_vec3<E: Clone>(id: &str, value: Option<[f64; 3]>, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     let values = value.unwrap_or([0.0, 0.0, 0.0]);
-    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change.clone()) {
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
         maps.vec3_metas.insert(id.to_string(), Vec3Meta { on_change, value: values });
     }
     let gap = ctx.theme.gap_standard;
@@ -16514,6 +16535,7 @@ fn quantize_step(value: f64, step: f64, min: f64) -> f64 {
     min + ((value - min) / step).round() * step
 }
 
+#[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 fn render_slider<E: Clone>(
     id: &str,
     value: f64,
@@ -16534,7 +16556,7 @@ fn render_slider<E: Clone>(
     }
     let live = quantize_step(min + t * range, step, min).clamp(min, max);
     if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
-        if let Some(on_change) = on_change.clone() {
+        if let Some(on_change) = on_change {
             maps.slider_metas.insert(
                 id.to_string(),
                 SliderMeta {
@@ -16562,11 +16584,12 @@ fn render_slider<E: Clone>(
     });
 }
 
+#[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]
 fn render_number_stepper<E: Clone>(
     id: &str,
     value: f64,
     step: f64,
-    uniform: bool,
+    _uniform: bool,
     on_absolute: Option<E>,
     on_delta: Option<E>,
     bounds: Rect,
@@ -16589,17 +16612,13 @@ fn render_number_stepper<E: Clone>(
         ctx.draw.push_solid([plus.x, plus.y, plus.w, plus.h], ctx.theme.button_hover);
     }
     draw_text(ctx, "−", minus.x + seg * 0.5 - 4.0, minus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
-    let text = if uniform {
-        format!("{value:.3}")
-    } else {
-        format!("{value:.3}")
-    };
+    let text = format!("{value:.3}");
     let input_id = format!("{id}.input");
     register_input_meta(ctx, &input_id, &text, None, on_absolute.clone());
     render_input(&input_id, &text, None, center, ctx);
     draw_text(ctx, "+", plus.x + seg * 0.5 - 4.0, plus.y + 18.0, ctx.theme.font_size_body, ctx.theme.text);
     if let (Some(maps), Some(on_absolute), Some(on_delta)) =
-        (ctx.interaction_maps.as_deref_mut(), on_absolute.clone(), on_delta.clone())
+        (ctx.interaction_maps.as_deref_mut(), on_absolute, on_delta)
     {
         maps.stepper_metas.insert(
             id.to_string(),
@@ -16658,7 +16677,7 @@ fn render_ring<E: Clone>(
         let dy = ctx.input.drag.current_y - cy;
         knob_t = (dy.atan2(dx) as f64 / std::f64::consts::TAU).rem_euclid(1.0);
     }
-    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change.clone()) {
+    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
         maps.ring_metas.insert(
             id.to_string(),
             RingMeta {
@@ -16704,7 +16723,7 @@ fn render_icon_select<E: Clone>(
         ctx.theme.border_normal,
         chrome_item_bg(ctx.theme, false, ctx.input.hovered_id.as_deref() == Some(id)),
     );
-    let mut content_x = bounds.x + ctx.theme.padding_standard;
+    let content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(value).is_some() {
             push_icon(
@@ -16716,7 +16735,6 @@ fn render_icon_select<E: Clone>(
                 ICON_TINY,
                 ctx.theme.text_element,
             );
-            content_x += ICON_TINY + ctx.theme.gap_standard;
         } else {
             draw_text(
                 ctx,
@@ -16829,7 +16847,7 @@ fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashM
         let section_collapsed = collapsed.get(&section_key).copied().unwrap_or(!section.default_open);
         if !section_collapsed {
             for item in &section.items {
-                height += measure_tree_item_height(item, collapsed, 0);
+                height += measure_tree_item_height(item, collapsed);
             }
             height += TREE_SECTION_GAP;
         }
@@ -16837,7 +16855,7 @@ fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashM
     height
 }
 
-fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>, depth: u32) -> f32 {
+fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
     if item.is_hidden {
         return 0.0;
     }
@@ -16846,7 +16864,7 @@ fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, b
     let item_collapsed = collapsed.get(&key).copied().unwrap_or(!item.default_open);
     if !item_collapsed {
         for child in &item.children {
-            height += measure_tree_item_height(child, collapsed, depth + 1);
+            height += measure_tree_item_height(child, collapsed);
         }
     }
     height

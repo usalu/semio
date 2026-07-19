@@ -115,14 +115,7 @@ pub mod part_1 {
     }
 
     /// 📈 Elastic response spectrum Type 1 horizontal [g] per EN 1998-1 §3.2.2.
-    pub fn elastic_response_spectrum_type1(
-        a_g: f64,
-        s: f64,
-        tb: f64,
-        tc: f64,
-        td: f64,
-        t: f64,
-    ) -> f64 {
+    pub fn elastic_response_spectrum_type1(a_g: f64, s: f64, tb: f64, tc: f64, td: f64, t: f64) -> f64 {
         let eta = 1.0;
         if t <= tb {
             a_g * s * (1.0 + t / tb * (2.5 * eta - 1.0))
@@ -177,23 +170,11 @@ pub mod part_1 {
     }
 
     pub fn check_drift(drift_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-1", "§4.3", "4.3.3"),
-            Quantity::length_m(drift_mm / 1000.0),
-            Quantity::length_m(limit_mm / 1000.0),
-            "interstorey drift SLS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-1", "§4.3", "4.3.3"), Quantity::length_m(drift_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "interstorey drift SLS", annex)
     }
 
     pub fn check_base_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-1", "§4.3", "4.3.4"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "seismic base shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-1", "§4.3", "4.3.4"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "seismic base shear ULS", annex)
     }
 }
 // #endregion 🔖Part1
@@ -218,23 +199,11 @@ pub mod part_2 {
     }
 
     pub fn check_bridge_seismic(v_ed: f64, v_rd: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-2", "§5", "5.3"),
-            Quantity::force_kn(v_ed),
-            Quantity::force_kn(v_rd),
-            "bridge seismic shear",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-2", "§5", "5.3"), Quantity::force_kn(v_ed), Quantity::force_kn(v_rd), "bridge seismic shear", AnnexChoice::En)
     }
 
     pub fn check_isolation_bearing(d_ed_mm: f64, d_rd_mm: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-2", "§6", "6.5"),
-            Quantity::length_m(d_ed_mm / 1000.0),
-            Quantity::length_m(d_rd_mm / 1000.0),
-            "isolation bearing displacement",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-2", "§6", "6.5"), Quantity::length_m(d_ed_mm / 1000.0), Quantity::length_m(d_rd_mm / 1000.0), "isolation bearing displacement", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part2
@@ -269,23 +238,11 @@ pub mod part_3 {
     }
 
     pub fn check_silo_wall(n_ed_kn: f64, n_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-4", "§7", "7.2"),
-            Quantity::force_kn(n_ed_kn),
-            Quantity::force_kn(n_rd_kn),
-            "silo wall seismic",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-4", "§7", "7.2"), Quantity::force_kn(n_ed_kn), Quantity::force_kn(n_rd_kn), "silo wall seismic", AnnexChoice::En)
     }
 
     pub fn check_silo_anchor(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-4", "§7", "7.4"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "silo anchorage",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-4", "§7", "7.4"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "silo anchorage", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part3
@@ -295,13 +252,7 @@ pub mod part_4 {
     use super::*;
 
     /// 🗼 Along-wind base overturning moment [kNm] per EN 1998-4 §7.6.
-    pub fn along_wind_overturning_knm(
-        rho_air: f64,
-        v_crit_m_s: f64,
-        height_m: f64,
-        diameter_m: f64,
-        c_d: f64,
-    ) -> f64 {
+    pub fn along_wind_overturning_knm(rho_air: f64, v_crit_m_s: f64, height_m: f64, diameter_m: f64, c_d: f64) -> f64 {
         let q_z = 0.5 * rho_air * v_crit_m_s * v_crit_m_s / 1000.0;
         q_z * c_d * diameter_m * height_m * height_m / 2.0
     }
@@ -345,25 +296,14 @@ pub mod part_5 {
     }
 
     /// 🏔️ Mononobe-Okabe active thrust increment [kN/m].
-    pub fn mononobe_okabe_thrust_kn_m(
-        gamma_soil_kn_m3: f64,
-        height_m: f64,
-        phi_deg: f64,
-        k_h: f64,
-    ) -> f64 {
+    pub fn mononobe_okabe_thrust_kn_m(gamma_soil_kn_m3: f64, height_m: f64, phi_deg: f64, k_h: f64) -> f64 {
         let phi = phi_deg.to_radians();
         let ka = ((1.0 - k_h) / (1.0 + k_h) * (1.0 - phi.sin()) / (1.0 + phi.sin())).tan().powi(2);
         0.5 * gamma_soil_kn_m3 * height_m * height_m * ka
     }
 
     pub fn check_dam_stability(s_ed: f64, s_rd: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-5", "§6", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, s_ed),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, s_rd),
-            "dam seismic stability",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-5", "§6", "6.2"), Quantity::new(norm_core::QuantityKind::Dimensionless, s_ed), Quantity::new(norm_core::QuantityKind::Dimensionless, s_rd), "dam seismic stability", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part5
@@ -403,13 +343,7 @@ pub mod part_6 {
     }
 
     pub fn check_foundation_sliding(h_ed_kn: f64, h_rd_kn: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1998-5", "§6.5", "6.5.3"),
-            Quantity::force_kn(h_ed_kn),
-            Quantity::force_kn(h_rd_kn),
-            "foundation seismic sliding",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1998-5", "§6.5", "6.5.3"), Quantity::force_kn(h_ed_kn), Quantity::force_kn(h_rd_kn), "foundation seismic sliding", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part6
@@ -464,18 +398,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            seismic_zone: 2,
-            ground_type: "b".into(),
-            importance_class: "cc2".into(),
-            structural_system: "moment_frame_dch".into(),
-            t1_s: 0.3,
-            mass_t: 500.0,
-            v_rd_kn: 800.0,
-            drift_mm: 20.0,
-            height_m: 12.0,
-            multiple_resisting_systems: true,
-        }
+        Self { seismic_zone: 2, ground_type: "b".into(), importance_class: "cc2".into(), structural_system: "moment_frame_dch".into(), t1_s: 0.3, mass_t: 500.0, v_rd_kn: 800.0, drift_mm: 20.0, height_m: 12.0, multiple_resisting_systems: true }
     }
 }
 
@@ -592,18 +515,7 @@ mod tests {
 
     #[test]
     fn building_seismic_e2e() {
-        let report = check_building_seismic(
-            na_de::SeismicZone::Zone2,
-            na_de::GroundType::B,
-            part_1::ImportanceClass::Cc2,
-            part_1::StructuralSystem::MomentFrameDch,
-            0.3,
-            500.0,
-            800.0,
-            20.0,
-            12.0,
-            true,
-        );
+        let report = check_building_seismic(na_de::SeismicZone::Zone2, na_de::GroundType::B, part_1::ImportanceClass::Cc2, part_1::StructuralSystem::MomentFrameDch, 0.3, 500.0, 800.0, 20.0, 12.0, true);
         assert_eq!(report.checks.len(), 2);
     }
 

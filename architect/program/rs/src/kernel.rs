@@ -45,13 +45,13 @@ impl PartialOrd for EntityId {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Priority {
-  Mandatory,
-  Essential,
-  #[default]
-  Preferred,
-  Optional,
-  Deferred,
-  Prohibited,
+    Mandatory,
+    Essential,
+    #[default]
+    Preferred,
+    Optional,
+    Deferred,
+    Prohibited,
 }
 // #endregion
 
@@ -60,22 +60,22 @@ pub enum Priority {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum LifecycleStatus {
-  #[default]
-  Draft,
-  Proposed,
-  UnderReview,
-  Validated,
-  Approved,
-  Rejected,
-  Deferred,
-  Superseded,
-  Archived,
-  Open,
-  Closed,
-  AtRisk,
-  Blocked,
-  InProgress,
-  Complete,
+    #[default]
+    Draft,
+    Proposed,
+    UnderReview,
+    Validated,
+    Approved,
+    Rejected,
+    Deferred,
+    Superseded,
+    Archived,
+    Open,
+    Closed,
+    AtRisk,
+    Blocked,
+    InProgress,
+    Complete,
 }
 // #endregion
 
@@ -103,10 +103,7 @@ pub struct TextField {
 
 impl TextField {
     pub fn plain(text: impl Into<String>) -> Self {
-        Self {
-            text: text.into(),
-            format: None,
-        }
+        Self { text: text.into(), format: None }
     }
 }
 
@@ -133,12 +130,7 @@ pub struct TimestampMeta {
 impl Default for TimestampMeta {
     fn default() -> Self {
         let stamp: String = "1970-01-01T00:00:00Z".into();
-        Self {
-            created: stamp.clone(),
-            updated: stamp,
-            created_by: None,
-            updated_by: None,
-        }
+        Self { created: stamp.clone(), updated: stamp, created_by: None, updated_by: None }
     }
 }
 // #endregion
@@ -164,17 +156,7 @@ pub struct EntityHeader {
 
 impl EntityHeader {
     pub fn new(id: EntityId, name: impl Into<String>) -> Self {
-        Self {
-            id,
-            name: name.into(),
-            description: None,
-            status: LifecycleStatus::Draft,
-            priority: Priority::Preferred,
-            ownership: Ownership::default(),
-            tags: Vec::new(),
-            notes: Vec::new(),
-            timestamps: TimestampMeta::default(),
-        }
+        Self { id, name: name.into(), description: None, status: LifecycleStatus::Draft, priority: Priority::Preferred, ownership: Ownership::default(), tags: Vec::new(), notes: Vec::new(), timestamps: TimestampMeta::default() }
     }
 }
 // #endregion
@@ -203,11 +185,7 @@ pub struct QuantitySpec {
 
 impl QuantitySpec {
     pub fn target_unit(target: f64, unit: impl Into<String>) -> Self {
-        Self {
-            target: Some(target),
-            unit: unit.into(),
-            ..Default::default()
-        }
+        Self { target: Some(target), unit: unit.into(), ..Default::default() }
     }
 }
 // #endregion
@@ -253,13 +231,7 @@ pub struct TraceLink {
 
 impl TraceLink {
     pub fn new(from_id: EntityId, to_id: EntityId, kind: TraceKind) -> Self {
-        Self {
-            id: EntityId::new_serial("trace"),
-            from_id,
-            to_id,
-            kind,
-            label: None,
-        }
+        Self { id: EntityId::new_serial("trace"), from_id, to_id, kind, label: None }
     }
 }
 

@@ -8,7 +8,7 @@
         "cwd": "compose/dev/algorithm",
         "command": "bun ./script.ts dev",
         "env": {
-          "STORYBOOK_PORT": "6007"
+          "STORYBOOK_PORT": "6010"
         },
         "forwardAllArgs": true
       }
@@ -17,7 +17,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/dev/algorithm",
-        "command": "bunx storybook build",
+        "command": "bun ./script.ts build",
         "forwardAllArgs": true
       }
     },

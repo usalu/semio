@@ -16,13 +16,7 @@ pub struct FluidNode {
 
 impl FluidNode {
     pub fn new(id: usize) -> Self {
-        Self {
-            id,
-            temperature_c: 20.0,
-            humidity_ratio: 0.008,
-            pressure_pa: 101_325.0,
-            mass_flow_kg_s: 0.0,
-        }
+        Self { id, temperature_c: 20.0, humidity_ratio: 0.008, pressure_pa: 101_325.0, mass_flow_kg_s: 0.0 }
     }
 }
 // #endregion 🔖FluidNode
@@ -93,16 +87,7 @@ pub struct Splitter {
 
 impl Splitter {
     pub fn distribute(&self, inlet: &FluidNode) -> Vec<FluidNode> {
-        self.outlets
-            .iter()
-            .map(|(id, frac)| FluidNode {
-                id: *id,
-                temperature_c: inlet.temperature_c,
-                humidity_ratio: inlet.humidity_ratio,
-                pressure_pa: inlet.pressure_pa,
-                mass_flow_kg_s: inlet.mass_flow_kg_s * frac,
-            })
-            .collect()
+        self.outlets.iter().map(|(id, frac)| FluidNode { id: *id, temperature_c: inlet.temperature_c, humidity_ratio: inlet.humidity_ratio, pressure_pa: inlet.pressure_pa, mass_flow_kg_s: inlet.mass_flow_kg_s * frac }).collect()
     }
 }
 
@@ -124,13 +109,7 @@ impl Mixer {
         let t = inlets.iter().map(|n| n.temperature_c * n.mass_flow_kg_s).sum::<f64>() / m_total;
         let w = inlets.iter().map(|n| n.humidity_ratio * n.mass_flow_kg_s).sum::<f64>() / m_total;
         let p = inlets.iter().map(|n| n.pressure_pa * n.mass_flow_kg_s).sum::<f64>() / m_total;
-        FluidNode {
-            id: self.outlet,
-            temperature_c: t,
-            humidity_ratio: w,
-            pressure_pa: p,
-            mass_flow_kg_s: m_total,
-        }
+        FluidNode { id: self.outlet, temperature_c: t, humidity_ratio: w, pressure_pa: p, mass_flow_kg_s: m_total }
     }
 }
 // #endregion 🔖SplitterMixer
@@ -189,63 +168,37 @@ pub struct CondenserLoop {
 
 // #region 🔖Validation
 /// ✅ Validate HVAC topology mass balance and connectivity.
-pub fn validate_topology(
-    nodes: &[FluidNode],
-    branches: &[Branch],
-    splitters: &[Splitter],
-    mixers: &[Mixer],
-) -> Diagnostics {
+pub fn validate_topology(nodes: &[FluidNode], branches: &[Branch], splitters: &[Splitter], mixers: &[Mixer]) -> Diagnostics {
     let mut diag = Diagnostics::default();
     let n = nodes.len();
 
     for branch in branches {
         if branch.inlet >= n || branch.outlet >= n {
-            diag.push(
-                Error::fatal(format!("branch {} references invalid node", branch.id))
-                    .with_context("hvac_topo"),
-            );
+            diag.push(Error::fatal(format!("branch {} references invalid node", branch.id)).with_context("hvac_topo"));
         }
         if branch.inlet == branch.outlet {
-            diag.push(
-                Error::severe(format!("branch {} has identical inlet/outlet", branch.id))
-                    .with_context("hvac_topo"),
-            );
+            diag.push(Error::severe(format!("branch {} has identical inlet/outlet", branch.id)).with_context("hvac_topo"));
         }
     }
 
     for splitter in splitters {
         let frac_sum: f64 = splitter.outlets.iter().map(|(_, f)| f).sum();
         if (frac_sum - 1.0).abs() > 0.01 {
-            diag.push(
-                Error::warning(format!(
-                    "splitter {} outlet fractions sum to {:.3}, expected 1.0",
-                    splitter.id, frac_sum
-                ))
-                .with_context("hvac_topo"),
-            );
+            diag.push(Error::warning(format!("splitter {} outlet fractions sum to {:.3}, expected 1.0", splitter.id, frac_sum)).with_context("hvac_topo"));
         }
         if splitter.inlet >= n {
-            diag.push(
-                Error::fatal(format!("splitter {} invalid inlet", splitter.id))
-                    .with_context("hvac_topo"),
-            );
+            diag.push(Error::fatal(format!("splitter {} invalid inlet", splitter.id)).with_context("hvac_topo"));
         }
     }
 
     for mixer in mixers {
         for &inlet in &mixer.inlets {
             if inlet >= n {
-                diag.push(
-                    Error::fatal(format!("mixer {} invalid inlet {}", mixer.id, inlet))
-                        .with_context("hvac_topo"),
-                );
+                diag.push(Error::fatal(format!("mixer {} invalid inlet {}", mixer.id, inlet)).with_context("hvac_topo"));
             }
         }
         if mixer.outlet >= n {
-            diag.push(
-                Error::fatal(format!("mixer {} invalid outlet", mixer.id))
-                    .with_context("hvac_topo"),
-            );
+            diag.push(Error::fatal(format!("mixer {} invalid outlet", mixer.id)).with_context("hvac_topo"));
         }
     }
 
@@ -260,10 +213,7 @@ pub fn validate_topology(
 
     for (i, &nf) in net_flow.iter().enumerate() {
         if nf.abs() > 0.1 && i < n {
-            diag.push(
-                Error::warning(format!("node {} mass imbalance {:.4} kg/s", i, nf))
-                    .with_context("hvac_topo"),
-            );
+            diag.push(Error::warning(format!("node {} mass imbalance {:.4} kg/s", i, nf)).with_context("hvac_topo"));
         }
     }
 
@@ -275,10 +225,7 @@ impl AirLoop {
         let mut diag = validate_topology(&self.nodes, &self.branches, &self.splitters, &self.mixers);
         for &z in &self.zone_outlets {
             if z >= self.nodes.len() {
-                diag.push(
-                    Error::severe(format!("air loop {} zone outlet {} invalid", self.id, z))
-                        .with_context("air_loop"),
-                );
+                diag.push(Error::severe(format!("air loop {} zone outlet {} invalid", self.id, z)).with_context("air_loop"));
             }
         }
         diag
@@ -298,10 +245,7 @@ mod tests {
 
     #[test]
     fn mixer_blends_by_mass_flow() {
-        let nodes = vec![
-            FluidNode { id: 0, temperature_c: 10.0, humidity_ratio: 0.005, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 },
-            FluidNode { id: 1, temperature_c: 30.0, humidity_ratio: 0.015, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 },
-        ];
+        let nodes = vec![FluidNode { id: 0, temperature_c: 10.0, humidity_ratio: 0.005, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 }, FluidNode { id: 1, temperature_c: 30.0, humidity_ratio: 0.015, pressure_pa: 101_325.0, mass_flow_kg_s: 1.0 }];
         let mixer = Mixer { id: 0, inlets: vec![0, 1], outlet: 2 };
         let out = mixer.blend(&nodes);
         assert!((out.temperature_c - 20.0).abs() < 1e-9);
@@ -311,11 +255,7 @@ mod tests {
     #[test]
     fn splitter_preserves_mass() {
         let inlet = FluidNode { id: 0, temperature_c: 20.0, humidity_ratio: 0.01, pressure_pa: 101_325.0, mass_flow_kg_s: 2.0 };
-        let splitter = Splitter {
-            id: 0,
-            inlet: 0,
-            outlets: vec![(1, 0.6), (2, 0.4)],
-        };
+        let splitter = Splitter { id: 0, inlet: 0, outlets: vec![(1, 0.6), (2, 0.4)] };
         let outs = splitter.distribute(&inlet);
         let m_sum: f64 = outs.iter().map(|n| n.mass_flow_kg_s).sum();
         assert!((m_sum - 2.0).abs() < 1e-9);
@@ -323,16 +263,8 @@ mod tests {
 
     #[test]
     fn valid_topology_passes() {
-        let nodes = vec![
-            FluidNode::new(0),
-            FluidNode::new(1),
-        ];
-        let branches = vec![Branch {
-            id: 0,
-            inlet: 0,
-            outlet: 1,
-            component: BranchComponent::Bypass,
-        }];
+        let nodes = vec![FluidNode::new(0), FluidNode::new(1)];
+        let branches = vec![Branch { id: 0, inlet: 0, outlet: 1, component: BranchComponent::Bypass }];
         let diag = validate_topology(&nodes, &branches, &[], &[]);
         assert!(!diag.has_fatal());
     }

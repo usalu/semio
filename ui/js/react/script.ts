@@ -3,7 +3,7 @@
 import type { BundleLinter } from "../../../repo/lib/js/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../repo/lib/js/index.ts";
 import { getWorkspaceRoot } from "../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runBunx, runVitest, spawnBunx } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runBunx, runCmd, runVitest } from "../../../repo/lib/js/index.ts";
 import { defineLint } from "../../../repo/lib/js/index.ts";
 
 export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
@@ -18,17 +18,16 @@ const storybookEnv = (extra: Record<string, string | undefined> = {}) =>
     ...extra,
   });
 
+/** This bundle has no local `.storybook` config — its stories live in the root Storybook's `ui` scope, so `dev`/`build` delegate there instead of running a broken standalone instance. */
 class DevScript extends BundleScript {
   run(segments: string[]): void {
-    const host = process.env.DEVCONTAINER === "true" ? "0.0.0.0" : "127.0.0.1";
-    const port = process.env.STORYBOOK_PORT ?? "6006";
-    spawnBunx(["storybook", "dev", "-c", ".storybook", "-p", port, "--exact-port", "--host", host, "--no-open", "--debug", ...segments], this.repoRoot, storybookEnv());
+    runCmd("bun", ["./script.ts", "dev", "storybook", "ui", ...segments], { cwd: this.repoRoot, env: storybookEnv() });
   }
 }
 
 class BuildScript extends BundleScript {
   run(segments: string[]): void {
-    spawnBunx(["storybook", "build", "-c", ".storybook", ...segments], this.repoRoot, storybookEnv({ STORYBOOK_PRODUCTION_SLICES: "ui,puzzle" }));
+    runCmd("bun", ["./script.ts", "build", "storybook", ...segments], { cwd: this.repoRoot, env: storybookEnv({ STORYBOOK_SCOPE: "ui" }) });
   }
 }
 

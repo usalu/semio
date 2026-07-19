@@ -644,10 +644,8 @@ where
     }
     fn begin(&mut self) {}
     fn finish(&mut self) {
-        for slot in &mut self.cache {
-            if let Some(a) = slot {
-                a.finish();
-            }
+        for a in self.cache.iter_mut().flatten() {
+            a.finish();
         }
     }
     fn interpolate_mobject(&mut self, parent_alpha: f64) {

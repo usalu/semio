@@ -87,63 +87,27 @@ pub mod part_1_1 {
     }
 
     pub fn check_flexure(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§6.1", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
-            "flexural ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.1", "6.1"), Quantity::new(norm_core::QuantityKind::Moment, m_ed_knm * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, m_rd_knm * 1_000_000.0), "flexural ULS", annex)
     }
 
     pub fn check_shear(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§6.2", "6.2"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.2", "6.2"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "shear ULS", annex)
     }
 
     pub fn check_punching(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§6.4", "6.4"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_rd_kn),
-            "punching shear ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.4", "6.4"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "punching shear ULS", annex)
     }
 
     pub fn check_torsion(t_ed_knm: f64, t_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§6.3", "6.3"),
-            Quantity::new(norm_core::QuantityKind::Moment, t_ed_knm * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, t_rd_knm * 1_000_000.0),
-            "torsion ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§6.3", "6.3"), Quantity::new(norm_core::QuantityKind::Moment, t_ed_knm * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, t_rd_knm * 1_000_000.0), "torsion ULS", annex)
     }
 
     pub fn check_crack_width(w_k_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§7.3", "7.3"),
-            Quantity::length_m(w_k_mm / 1000.0),
-            Quantity::length_m(limit_mm / 1000.0),
-            "crack width SLS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§7.3", "7.3"), Quantity::length_m(w_k_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "crack width SLS", annex)
     }
 
     pub fn check_deflection(delta_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-1", "§7.4", "7.4"),
-            Quantity::length_m(delta_mm / 1000.0),
-            Quantity::length_m(limit_mm / 1000.0),
-            "deflection SLS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§7.4", "7.4"), Quantity::length_m(delta_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "deflection SLS", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -185,13 +149,7 @@ pub mod part_1_2 {
 
     pub fn check_fire_cover(cover_mm: f64, element: ElementType, rating: FireRating) -> CheckResult {
         let required = min_axis_distance_mm(element, rating);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-2", "§4.2", "4.2"),
-            Quantity::length_m(required / 1000.0),
-            Quantity::length_m(cover_mm / 1000.0),
-            "fire axis distance",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-2", "§4.2", "4.2"), Quantity::length_m(required / 1000.0), Quantity::length_m(cover_mm / 1000.0), "fire axis distance", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_2
@@ -230,24 +188,12 @@ pub mod part_3 {
     }
 
     pub fn check_liquid_crack_width(w_k: f64, limit: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-3", "§7", "7.1"),
-            Quantity::length_m(w_k / 1000.0),
-            Quantity::length_m(limit / 1000.0),
-            "liquid retaining crack width SLS",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-3", "§7", "7.1"), Quantity::length_m(w_k / 1000.0), Quantity::length_m(limit / 1000.0), "liquid retaining crack width SLS", AnnexChoice::En)
     }
 
     pub fn check_steel_stress(sigma_s_mpa: f64, exposure: &str) -> CheckResult {
         let limit = steel_stress_limit_mpa(exposure);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1992-3", "§7", "7.2"),
-            Quantity::stress_mpa(sigma_s_mpa),
-            Quantity::stress_mpa(limit),
-            "liquid retaining steel stress SLS",
-            AnnexChoice::En,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1992-3", "§7", "7.2"), Quantity::stress_mpa(sigma_s_mpa), Quantity::stress_mpa(limit), "liquid retaining steel stress SLS", AnnexChoice::En)
     }
 }
 // #endregion 🔖Part3
@@ -263,17 +209,7 @@ pub mod part_4 {
 // #endregion 🔖Part4
 
 /// 📋 RC beam ULS check end-to-end.
-pub fn check_rc_beam(
-    m_ed_knm: f64,
-    v_ed_kn: f64,
-    f_ck: f64,
-    b_mm: f64,
-    d_mm: f64,
-    a_s_mm2: f64,
-    f_yk: f64,
-    rho_l: f64,
-    n_ed_kn: f64,
-) -> CheckReport {
+pub fn check_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64) -> CheckReport {
     let annex = AnnexChoice::De;
     let m_rd = part_1_1::flexural_resistance_knm(f_ck, b_mm, d_mm, a_s_mm2, f_yk);
     let v_rd = part_1_1::shear_resistance_vrdc_kn(b_mm, d_mm, f_ck, rho_l, n_ed_kn);
@@ -302,17 +238,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            m_ed_knm: 120.0,
-            v_ed_kn: 80.0,
-            f_ck: 30.0,
-            b_mm: 300.0,
-            d_mm: 450.0,
-            a_s_mm2: 1200.0,
-            f_yk: 500.0,
-            rho_l: 0.01,
-            n_ed_kn: 0.0,
-        }
+        Self { m_ed_knm: 120.0, v_ed_kn: 80.0, f_ck: 30.0, b_mm: 300.0, d_mm: 450.0, a_s_mm2: 1200.0, f_yk: 500.0, rho_l: 0.01, n_ed_kn: 0.0 }
     }
 }
 
@@ -320,17 +246,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1992Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_rc_beam(
-        document.m_ed_knm,
-        document.v_ed_kn,
-        document.f_ck,
-        document.b_mm,
-        document.d_mm,
-        document.a_s_mm2,
-        document.f_yk,
-        document.rho_l,
-        document.n_ed_kn,
-    )
+    check_rc_beam(document.m_ed_knm, document.v_ed_kn, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.n_ed_kn)
 }
 
 pub struct En1992Family;
@@ -353,98 +269,34 @@ impl NormFamily for En1992Family {
 use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};
 
 fn max_beam_moment_knm(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result
-        .elements
-        .iter()
-        .find(|(id, _)| id == element_id)
-        .expect("beam element result")
-    else {
+    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
-    stations
-        .iter()
-        .map(|s| s.m.abs())
-        .fold(0.0_f64, f64::max)
-        / 1000.0
+    stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
 fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
-    let (_, fem_core::ElementResult::Beam { stations }) = result
-        .elements
-        .iter()
-        .find(|(id, _)| id == element_id)
-        .expect("beam element result")
-    else {
+    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
         panic!("expected beam element result");
     };
-    stations
-        .iter()
-        .map(|s| s.v.abs())
-        .fold(0.0_f64, f64::max)
-        / 1000.0
+    stations.iter().map(|s| s.v.abs()).fold(0.0_f64, f64::max) / 1000.0
 }
 
 /// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
-pub fn check_rc_beam_from_fem(
-    span_m: f64,
-    udl_kn_m: f64,
-    f_ck: f64,
-    b_mm: f64,
-    d_mm: f64,
-    a_s_mm2: f64,
-    f_yk: f64,
-    rho_l: f64,
-) -> Result<CheckReport, fem_core::FemError> {
+pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64) -> Result<CheckReport, fem_core::FemError> {
     let mut model = Model::default();
-    model.nodes.push(Node {
-        id: "n0".into(),
-        pos: [0.0, 0.0, 0.0],
-    });
-    model.nodes.push(Node {
-        id: "n1".into(),
-        pos: [span_m, 0.0, 0.0],
-    });
-    model.supports.push(Support {
-        node_id: "n0".into(),
-        fixed: vec![Dof::Tx, Dof::Ty],
-    });
-    model.supports.push(Support {
-        node_id: "n1".into(),
-        fixed: vec![Dof::Ty],
-    });
-    model.elements.push(Box::new(BeamEb2 {
-        id: "b1".into(),
-        start: "n0".into(),
-        end: "n1".into(),
-        e: 30e9,
-        area: b_mm * d_mm / 1e6,
-        iy: b_mm * d_mm.powi(3) / 12e12,
-        density: 2500.0,
-    }));
-    model.member_loads.push((
-        "b1".into(),
-        MemberUdl {
-            wx: 0.0,
-            wy: -udl_kn_m * 1000.0,
-            wz: 0.0,
-        },
-    ));
+    model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
+    model.nodes.push(Node { id: "n1".into(), pos: [span_m, 0.0, 0.0] });
+    model.supports.push(Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty] });
+    model.supports.push(Support { node_id: "n1".into(), fixed: vec![Dof::Ty] });
+    model.elements.push(Box::new(BeamEb2 { id: "b1".into(), start: "n0".into(), end: "n1".into(), e: 30e9, area: b_mm * d_mm / 1e6, iy: b_mm * d_mm.powi(3) / 12e12, density: 2500.0 }));
+    model.member_loads.push(("b1".into(), MemberUdl { wx: 0.0, wy: -udl_kn_m * 1000.0, wz: 0.0 }));
 
     let result = fem_core::solve_linear_static(&model)?;
     let m_ed_knm = max_beam_moment_knm(&result, "b1");
     let v_ed_kn = max_beam_shear_kn(&result, "b1");
 
-    Ok(check_rc_beam(
-        m_ed_knm,
-        v_ed_kn,
-        f_ck,
-        b_mm,
-        d_mm,
-        a_s_mm2,
-        f_yk,
-        rho_l,
-        0.0,
-    ))
+    Ok(check_rc_beam(m_ed_knm, v_ed_kn, f_ck, b_mm, d_mm, a_s_mm2, f_yk, rho_l, 0.0))
 }
 // #endregion 🔖Fem
 
@@ -505,8 +357,7 @@ mod tests {
 
     #[test]
     fn rc_beam_from_fem_e2e() {
-        let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01)
-            .expect("fem solve");
+        let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01).expect("fem solve");
         assert!(!report.checks.is_empty());
         let m_ed = report.checks[0].computed.value / 1_000_000.0;
         assert!((m_ed - 90.0).abs() < 1.0);

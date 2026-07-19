@@ -78,11 +78,7 @@ pub struct ClauseId {
 
 impl ClauseId {
     pub fn new(family: impl Into<String>, part: impl Into<String>, section: impl Into<String>) -> Self {
-        Self {
-            family: family.into(),
-            part: part.into(),
-            section: section.into(),
-        }
+        Self { family: family.into(), part: part.into(), section: section.into() }
     }
 }
 
@@ -115,56 +111,16 @@ pub struct CheckResult {
 }
 
 impl CheckResult {
-    pub fn pass(
-        clause: ClauseId,
-        computed: Quantity,
-        limit: Quantity,
-        utilization: f64,
-        message: impl Into<String>,
-        annex: AnnexChoice,
-    ) -> Self {
-        Self {
-            clause,
-            status: CheckStatus::Pass,
-            computed,
-            limit,
-            utilization,
-            message: message.into(),
-            annex,
-        }
+    pub fn pass(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
+        Self { clause, status: CheckStatus::Pass, computed, limit, utilization, message: message.into(), annex }
     }
 
-    pub fn fail(
-        clause: ClauseId,
-        computed: Quantity,
-        limit: Quantity,
-        utilization: f64,
-        message: impl Into<String>,
-        annex: AnnexChoice,
-    ) -> Self {
-        Self {
-            clause,
-            status: CheckStatus::Fail,
-            computed,
-            limit,
-            utilization,
-            message: message.into(),
-            annex,
-        }
+    pub fn fail(clause: ClauseId, computed: Quantity, limit: Quantity, utilization: f64, message: impl Into<String>, annex: AnnexChoice) -> Self {
+        Self { clause, status: CheckStatus::Fail, computed, limit, utilization, message: message.into(), annex }
     }
 
-    pub fn from_utilization(
-        clause: ClauseId,
-        computed: Quantity,
-        limit: Quantity,
-        message: impl Into<String>,
-        annex: AnnexChoice,
-    ) -> Self {
-        let utilization = if limit.value.abs() < f64::EPSILON {
-            0.0
-        } else {
-            computed.value / limit.value
-        };
+    pub fn from_utilization(clause: ClauseId, computed: Quantity, limit: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
+        let utilization = if limit.value.abs() < f64::EPSILON { 0.0 } else { computed.value / limit.value };
         if utilization <= 1.0 {
             Self::pass(clause, computed, limit, utilization, message, annex)
         } else {
@@ -172,19 +128,9 @@ impl CheckResult {
         }
     }
 
-    pub fn from_minimum(
-        clause: ClauseId,
-        computed: Quantity,
-        minimum: Quantity,
-        message: impl Into<String>,
-        annex: AnnexChoice,
-    ) -> Self {
+    pub fn from_minimum(clause: ClauseId, computed: Quantity, minimum: Quantity, message: impl Into<String>, annex: AnnexChoice) -> Self {
         let passes = computed.value >= minimum.value;
-        let utilization = if passes {
-            minimum.value / computed.value.max(minimum.value)
-        } else {
-            computed.value / minimum.value.max(f64::EPSILON)
-        };
+        let utilization = if passes { minimum.value / computed.value.max(minimum.value) } else { computed.value / minimum.value.max(f64::EPSILON) };
         if passes {
             Self::pass(clause, computed, minimum, utilization, message, annex)
         } else {
@@ -205,16 +151,11 @@ impl CheckReport {
     }
 
     pub fn all_pass(&self) -> bool {
-        self.checks
-            .iter()
-            .all(|c| c.status != CheckStatus::Fail)
+        self.checks.iter().all(|c| c.status != CheckStatus::Fail)
     }
 
     pub fn worst_utilization(&self) -> f64 {
-        self.checks
-            .iter()
-            .map(|c| c.utilization)
-            .fold(0.0_f64, f64::max)
+        self.checks.iter().map(|c| c.utilization).fold(0.0_f64, f64::max)
     }
 }
 // #endregion 🔖Check
@@ -285,13 +226,7 @@ pub fn table_lookup_linear(table: &[TableEntry1D], x: f64) -> f64 {
 }
 
 /// 🔍 Bilinear interpolation on a regular grid.
-pub fn table_lookup_bilinear(
-    x: f64,
-    y: f64,
-    x_vals: &[f64],
-    y_vals: &[f64],
-    z: &[f64],
-) -> f64 {
+pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: &[f64]) -> f64 {
     let nx = x_vals.len();
     let ny = y_vals.len();
     if nx == 0 || ny == 0 || z.len() < nx * ny {
@@ -303,16 +238,8 @@ pub fn table_lookup_bilinear(
     let x1 = x_vals[xi.min(nx - 1)];
     let y0 = y_vals[yi - 1];
     let y1 = y_vals[yi.min(ny - 1)];
-    let tx = if (x1 - x0).abs() < f64::EPSILON {
-        0.0
-    } else {
-        ((x - x0) / (x1 - x0)).clamp(0.0, 1.0)
-    };
-    let ty = if (y1 - y0).abs() < f64::EPSILON {
-        0.0
-    } else {
-        ((y - y0) / (y1 - y0)).clamp(0.0, 1.0)
-    };
+    let tx = if (x1 - x0).abs() < f64::EPSILON { 0.0 } else { ((x - x0) / (x1 - x0)).clamp(0.0, 1.0) };
+    let ty = if (y1 - y0).abs() < f64::EPSILON { 0.0 } else { ((y - y0) / (y1 - y0)).clamp(0.0, 1.0) };
     let z00 = z[(yi - 1) * nx + (xi - 1)];
     let z10 = z[(yi - 1) * nx + xi.min(nx - 1)];
     let z01 = z[yi.min(ny - 1) * nx + (xi - 1)];
@@ -557,16 +484,12 @@ impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D>
 
     fn diff(&self, _projection: &D) -> DocumentDiff<D> {
         match self {
-            Self::SetDocument { document } => DocumentDiff {
-                document: Some(document.clone()),
-            },
+            Self::SetDocument { document } => DocumentDiff { document: Some(document.clone()) },
         }
     }
 
     fn backwards(&self, projection: &D) -> Vec<Self> {
-        vec![Self::SetDocument {
-            document: projection.clone(),
-        }]
+        vec![Self::SetDocument { document: projection.clone() }]
     }
 }
 
@@ -621,35 +544,20 @@ mod tests {
     #[test]
     fn check_result_passes_when_utilization_below_one() {
         let clause = ClauseId::new("EN 1990", "§6.4", "6.10");
-        let result = CheckResult::from_utilization(
-            clause,
-            Quantity::stress_mpa(250.0),
-            Quantity::stress_mpa(300.0),
-            "ULS stress check",
-            AnnexChoice::De,
-        );
+        let result = CheckResult::from_utilization(clause, Quantity::stress_mpa(250.0), Quantity::stress_mpa(300.0), "ULS stress check", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
         assert!(result.utilization < 1.0);
     }
 
     #[test]
     fn table_lookup_linear_interpolates() {
-        let table = [
-            TableEntry1D { x: 0.0, y: 1.0 },
-            TableEntry1D { x: 10.0, y: 2.0 },
-        ];
+        let table = [TableEntry1D { x: 0.0, y: 1.0 }, TableEntry1D { x: 10.0, y: 2.0 }];
         assert!((table_lookup_linear(&table, 5.0) - 1.5).abs() < 1e-9);
     }
 
     #[test]
     fn check_minimum_passes_when_above_threshold() {
-        let result = CheckResult::from_minimum(
-            ClauseId::new("DIN 4108-3", "§6", "6.1"),
-            Quantity::new(QuantityKind::Dimensionless, 0.8),
-            Quantity::new(QuantityKind::Dimensionless, 0.25),
-            "f_Rsi",
-            AnnexChoice::De,
-        );
+        let result = CheckResult::from_minimum(ClauseId::new("DIN 4108-3", "§6", "6.1"), Quantity::new(QuantityKind::Dimensionless, 0.8), Quantity::new(QuantityKind::Dimensionless, 0.25), "f_Rsi", AnnexChoice::De);
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
@@ -670,13 +578,7 @@ mod tests {
 
         fn evaluate(document: &DemoDocument) -> CheckReport {
             let mut report = CheckReport::default();
-            report.push(CheckResult::from_utilization(
-                ClauseId::new("demo", "§1", "1.1"),
-                Quantity::new(QuantityKind::Dimensionless, document.value),
-                Quantity::new(QuantityKind::Dimensionless, 1.0),
-                "demo check",
-                AnnexChoice::De,
-            ));
+            report.push(CheckResult::from_utilization(ClauseId::new("demo", "§1", "1.1"), Quantity::new(QuantityKind::Dimensionless, document.value), Quantity::new(QuantityKind::Dimensionless, 1.0), "demo check", AnnexChoice::De));
             report
         }
     }
@@ -685,9 +587,7 @@ mod tests {
     fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
-        host.apply(&SetDocumentOp::SetDocument {
-            document: DemoDocument { value: 2.0 },
-        });
+        host.apply(&SetDocumentOp::SetDocument { document: DemoDocument { value: 2.0 } });
         assert!(host.report().checks[0].utilization > 1.0);
     }
 }

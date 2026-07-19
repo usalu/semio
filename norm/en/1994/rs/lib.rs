@@ -57,23 +57,11 @@ pub mod part_1_1 {
     }
 
     pub fn check_composite_bending(m_ed: f64, m_rd: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1994-1-1", "§6.2", "6.2"),
-            Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0),
-            "composite bending ULS",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.2", "6.2"), Quantity::new(norm_core::QuantityKind::Moment, m_ed * 1_000_000.0), Quantity::new(norm_core::QuantityKind::Moment, m_rd * 1_000_000.0), "composite bending ULS", annex)
     }
 
     pub fn check_longitudinal_shear(v_ed_kn: f64, v_l_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1994-1-1", "§6.6", "6.6"),
-            Quantity::force_kn(v_ed_kn),
-            Quantity::force_kn(v_l_rd_kn),
-            "longitudinal shear",
-            annex,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1994-1-1", "§6.6", "6.6"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_l_rd_kn), "longitudinal shear", annex)
     }
 }
 // #endregion 🔖Part1_1
@@ -108,13 +96,7 @@ pub mod part_1_2 {
 
     pub fn check_fire_composite(thickness_mm: f64, rating: FireRating, deck_type: &str) -> CheckResult {
         let required = insulation_thickness_mm(rating, deck_type);
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1994-1-2", "§4.2", "4.2"),
-            Quantity::length_m(required / 1000.0),
-            Quantity::length_m(thickness_mm / 1000.0),
-            "composite fire insulation",
-            AnnexChoice::De,
-        )
+        CheckResult::from_utilization(ClauseId::new("EN 1994-1-2", "§4.2", "4.2"), Quantity::length_m(required / 1000.0), Quantity::length_m(thickness_mm / 1000.0), "composite fire insulation", AnnexChoice::De)
     }
 }
 // #endregion 🔖Part1_2
@@ -139,27 +121,14 @@ pub mod part_2 {
         report.push(part_1_1::check_composite_bending(m_ed_knm, m_rd_knm, AnnexChoice::En));
         let category = bridge_fatigue_category(detail);
         let limit = category as f64;
-        report.push(CheckResult::from_utilization(
-            ClauseId::new("EN 1994-2", "§8", "8.1"),
-            Quantity::stress_mpa(delta_sigma_mpa),
-            Quantity::stress_mpa(limit),
-            "bridge composite fatigue",
-            AnnexChoice::En,
-        ));
+        report.push(CheckResult::from_utilization(ClauseId::new("EN 1994-2", "§8", "8.1"), Quantity::stress_mpa(delta_sigma_mpa), Quantity::stress_mpa(limit), "bridge composite fatigue", AnnexChoice::En));
         report
     }
 }
 // #endregion 🔖Part2
 
 /// 📋 Composite slab beam check.
-pub fn check_composite_beam(
-    m_ed_knm: f64,
-    v_ed_kn: f64,
-    m_pla: f64,
-    m_pl_rd: f64,
-    eta: f64,
-    v_l_rd: f64,
-) -> CheckReport {
+pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f64, eta: f64, v_l_rd: f64) -> CheckReport {
     let annex = AnnexChoice::De;
     let m_rd = part_1_1::plastic_moment_partial_knm(m_pla, m_pl_rd, eta);
     let mut report = CheckReport::default();
@@ -184,14 +153,7 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self {
-            m_ed_knm: 200.0,
-            v_ed_kn: 120.0,
-            m_pla: 80.0,
-            m_pl_rd: 250.0,
-            eta: 0.75,
-            v_l_rd: 150.0,
-        }
+        Self { m_ed_knm: 200.0, v_ed_kn: 120.0, m_pla: 80.0, m_pl_rd: 250.0, eta: 0.75, v_l_rd: 150.0 }
     }
 }
 
@@ -199,14 +161,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1994Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_composite_beam(
-        document.m_ed_knm,
-        document.v_ed_kn,
-        document.m_pla,
-        document.m_pl_rd,
-        document.eta,
-        document.v_l_rd,
-    )
+    check_composite_beam(document.m_ed_knm, document.v_ed_kn, document.m_pla, document.m_pl_rd, document.eta, document.v_l_rd)
 }
 
 pub struct En1994Family;

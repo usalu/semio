@@ -27,11 +27,7 @@ pub struct SummaryTables {
 
 impl SummaryTables {
     pub fn add_annual(&mut self, key: impl Into<String>, value: f64, unit: impl Into<String>) {
-        self.annual_energy.push(SummaryRow {
-            key: key.into(),
-            value,
-            unit: unit.into(),
-        });
+        self.annual_energy.push(SummaryRow { key: key.into(), value, unit: unit.into() });
     }
 }
 // #endregion 🔖Summary

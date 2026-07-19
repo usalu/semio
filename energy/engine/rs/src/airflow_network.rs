@@ -114,12 +114,7 @@ impl AirflowNetwork {
     /// 📊 Flow rates [m³/s] for all links after pressure solve.
     pub fn solve_flows(&self, p_atm: f64) -> Option<Vec<f64>> {
         let pressures = self.solve_pressures(p_atm, 200, 1e-4)?;
-        Some(
-            self.links
-                .iter()
-                .map(|link| self.link_flow_m3_s(link, &pressures, p_atm))
-                .collect(),
-        )
+        Some(self.links.iter().map(|link| self.link_flow_m3_s(link, &pressures, p_atm)).collect())
     }
 }
 // #endregion 🔖AirflowNetwork
@@ -187,37 +182,12 @@ fn node_mass_balance(network: &AirflowNetwork, node_i: usize, pressures: &[f64],
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::units::P_STD;
 
     fn two_zone_network() -> AirflowNetwork {
         AirflowNetwork {
-            nodes: vec![
-                AfNode {
-                    id: 0,
-                    elevation_m: 0.0,
-                    temperature_c: 5.0,
-                    humidity_ratio: 0.004,
-                    is_reference: true,
-                },
-                AfNode {
-                    id: 1,
-                    elevation_m: 0.0,
-                    temperature_c: 22.0,
-                    humidity_ratio: 0.009,
-                    is_reference: false,
-                },
-            ],
-            links: vec![AfLink {
-                id: 1,
-                node_a: 1,
-                node_b: 0,
-                kind: AfLinkKind::Crack,
-                flow_coefficient: 0.01,
-                flow_exponent: 0.65,
-                area_m2: 0.05,
-                discharge_coefficient: 0.6,
-                orientation_deg: 0.0,
-                wind_exposure_factor: 1.0,
-            }],
+            nodes: vec![AfNode { id: 0, elevation_m: 0.0, temperature_c: 5.0, humidity_ratio: 0.004, is_reference: true }, AfNode { id: 1, elevation_m: 0.0, temperature_c: 22.0, humidity_ratio: 0.009, is_reference: false }],
+            links: vec![AfLink { id: 1, node_a: 1, node_b: 0, kind: AfLinkKind::Crack, flow_coefficient: 0.01, flow_exponent: 0.65, area_m2: 0.05, discharge_coefficient: 0.6, orientation_deg: 0.0, wind_exposure_factor: 1.0 }],
             wind_speed_m_s: 3.0,
             wind_direction_deg: 0.0,
             outdoor_temp_c: 5.0,
@@ -227,20 +197,8 @@ mod tests {
 
     #[test]
     fn stack_pressure_positive_when_outdoor_colder() {
-        let outdoor = AfNode {
-            id: 0,
-            elevation_m: 0.0,
-            temperature_c: 5.0,
-            humidity_ratio: 0.004,
-            is_reference: true,
-        };
-        let zone = AfNode {
-            id: 1,
-            elevation_m: 3.0,
-            temperature_c: 22.0,
-            humidity_ratio: 0.009,
-            is_reference: false,
-        };
+        let outdoor = AfNode { id: 0, elevation_m: 0.0, temperature_c: 5.0, humidity_ratio: 0.004, is_reference: true };
+        let zone = AfNode { id: 1, elevation_m: 3.0, temperature_c: 22.0, humidity_ratio: 0.009, is_reference: false };
         let dp = stack_pressure_pa(&zone, &outdoor, P_STD);
         assert!(dp.abs() > 0.0);
     }

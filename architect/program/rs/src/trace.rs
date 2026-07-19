@@ -56,21 +56,13 @@ pub fn trace_chain(program: &mut Program, root_id: &EntityId) -> TraceChain {
             }
         }
     }
-    TraceChain {
-        root_id: root_id.clone(),
-        links,
-    }
+    TraceChain { root_id: root_id.clone(), links }
 }
 
 /// @emoji 🔍 Finds trace links touching `entity_id` (from or to).
 pub fn trace_links_for(program: &mut Program, entity_id: &EntityId) -> Vec<TraceLink> {
     embed_requirement_traces(program);
-    program
-        .traces
-        .iter()
-        .filter(|link| &link.from_id == entity_id || &link.to_id == entity_id)
-        .cloned()
-        .collect()
+    program.traces.iter().filter(|link| &link.from_id == entity_id || &link.to_id == entity_id).cloned().collect()
 }
 
 /// @emoji ↩️ Reverse impact trace — entities that depend on or satisfy `target_id`.
@@ -82,18 +74,10 @@ pub fn trace_impact(program: &mut Program, target_id: &EntityId) -> ImpactTrace 
     queue.push_back(target_id.clone());
     while let Some(current) = queue.pop_front() {
         for link in &program.traces {
-            if &link.to_id != &current {
+            if link.to_id != current {
                 continue;
             }
-            if matches!(
-                link.kind,
-                TraceKind::ObjectiveToRequirement
-                    | TraceKind::StakeholderToRequirement
-                    | TraceKind::FunctionToProgramElement
-                    | TraceKind::RequirementToDecision
-                    | TraceKind::RequirementToRisk
-                    | TraceKind::ConstraintToImpact
-            ) {
+            if matches!(link.kind, TraceKind::ObjectiveToRequirement | TraceKind::StakeholderToRequirement | TraceKind::FunctionToProgramElement | TraceKind::RequirementToDecision | TraceKind::RequirementToRisk | TraceKind::ConstraintToImpact) {
                 links.push(link.clone());
                 if upstream.insert(link.from_id.clone()) {
                     queue.push_back(link.from_id.clone());
@@ -101,26 +85,14 @@ pub fn trace_impact(program: &mut Program, target_id: &EntityId) -> ImpactTrace 
             }
         }
     }
-    ImpactTrace {
-        target_id: target_id.clone(),
-        upstream_ids: upstream.into_iter().collect(),
-        links,
-    }
+    ImpactTrace { target_id: target_id.clone(), upstream_ids: upstream.into_iter().collect(), links }
 }
 
 /// @emoji 📋 Returns audit events for an optional subject, newest first.
 pub fn audit_trail(program: &Program, subject_id: Option<&EntityId>) -> AuditTrail {
-    let mut events: Vec<AuditEvent> = program
-        .audit_events
-        .iter()
-        .filter(|event| subject_id.is_none_or(|id| &event.subject_id == id))
-        .cloned()
-        .collect();
+    let mut events: Vec<AuditEvent> = program.audit_events.iter().filter(|event| subject_id.is_none_or(|id| &event.subject_id == id)).cloned().collect();
     events.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-    AuditTrail {
-        subject_id: subject_id.cloned(),
-        events,
-    }
+    AuditTrail { subject_id: subject_id.cloned(), events }
 }
 
 /// @emoji ➕ Appends a trace link to the program trace register.
@@ -136,12 +108,7 @@ pub fn resolve_supersedes(program: &Program, requirement_id: &EntityId) -> Entit
         if !visited.insert(current.clone()) {
             break;
         }
-        let Some(next) = program
-            .requirements
-            .iter()
-            .find(|r| &r.header.id == &current)
-            .and_then(|r| r.superseded_by.clone())
-        else {
+        let Some(next) = program.requirements.iter().find(|r| r.header.id == current).and_then(|r| r.superseded_by.clone()) else {
             break;
         };
         current = next;

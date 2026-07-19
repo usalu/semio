@@ -1,21 +1,24 @@
 // #region 🧲Header
 // 💻 .storybook/preview.ts
 // Specs: Reuse the shared UI appearance and level decorators for the root monorepo Storybook.
-// Summary: Defines global Storybook preview parameters; loads CSS stacks only for the active `STORYBOOK_SCOPE` slice in dev.
+// Summary: Defines global Storybook preview parameters; loads CSS stacks only when any scope is active; provides the decorator toolkit (level, appearance, locale, terminology, theme, renderer-port swap, wasm gate).
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Preview } from "@storybook/react-vite";
 
 import { Expertise } from "@semio-tech/ui-react";
+import { scopeActive } from "./scopes.ts";
 
-declare const __STORYBOOK_LOAD_UI__: boolean;
-declare const __STORYBOOK_LOAD_COMPOSE__: boolean;
-declare const __STORYBOOK_LOAD_PUZZLE__: boolean;
+declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
 
 //#region 🔖ScopeStyles
-if (__STORYBOOK_LOAD_UI__ || __STORYBOOK_LOAD_COMPOSE__ || __STORYBOOK_LOAD_PUZZLE__) {
+if (__STORYBOOK_ACTIVE_SCOPES__.length > 0) {
   await import("./globals.css");
+}
+/** @emoji 🎯 True when `prefix` is (a prefix of) an active `STORYBOOK_SCOPE` — for stories/decorators that gate behavior by scope. */
+export function storybookScopeActive(prefix: string): boolean {
+  return scopeActive(__STORYBOOK_ACTIVE_SCOPES__, prefix);
 }
 //#endregion 🔖ScopeStyles
 
@@ -38,6 +41,21 @@ enum Device {
   DESKTOP = "desktop",
   TABLET = "tablet",
   MOBILE = "mobile",
+}
+
+enum Locale {
+  EN = "en",
+  DE = "de",
+}
+
+enum Terminology {
+  NATIVE = "native",
+  REUSE = "reuse",
+}
+
+enum IconRenderer {
+  WEBGL = "webgl",
+  SVG = "svg",
 }
 
 const preview: Preview = {
@@ -105,14 +123,64 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
+    locale: {
+      description: "i18n locale (react-i18next)",
+      toolbar: {
+        title: "Locale",
+        icon: "globe",
+        items: [
+          { value: Locale.EN, title: "English" },
+          { value: Locale.DE, title: "Deutsch" },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    terminology: {
+      description: "Chrome terminology variant (native / reuse)",
+      toolbar: {
+        title: "Terminology",
+        icon: "book",
+        items: [
+          { value: Terminology.NATIVE, title: "Native" },
+          { value: Terminology.REUSE, title: "Reuse" },
+        ],
+        dynamicTitle: true,
+      },
+    },
+    theme: {
+      description: "Active UiTheme (only affects stories rendered under withAppearance)",
+      toolbar: {
+        title: "Theme",
+        icon: "paintbrush",
+        items: [], // populated lazily in withTheme — builtinUiThemes() needs the ui-styling module graph, avoided at globalTypes-declaration time
+        dynamicTitle: true,
+      },
+    },
+    iconRenderer: {
+      description: "IconRenderRequest.format for IconRenderHost-family stories — read directly from context.globals.iconRenderer, not applied by a decorator",
+      toolbar: {
+        title: "Icon Format",
+        icon: "image",
+        items: [
+          { value: IconRenderer.WEBGL, title: "WebGL" },
+          { value: IconRenderer.SVG, title: "SVG" },
+        ],
+        dynamicTitle: true,
+      },
+    },
   },
   initialGlobals: {
     appearance: Appearance.SYSTEM,
     level: Level.BASE,
     device: Device.DESKTOP,
     expertise: Expertise.NORMAL,
+    locale: Locale.EN,
+    terminology: Terminology.NATIVE,
+    iconRenderer: IconRenderer.WEBGL,
   },
-  decorators: [withLevel, withAppearance],
+  // Storybook composes decorators left-to-right with the LAST entry outermost, so this list reads
+  // innermost → outermost: appearance/level closest to the story, async wasm gate wrapping everything.
+  decorators: [withAppearance, withLevel, withTerminology, withLocale, withTheme, withRenderer, withWasm],
   tags: ["autodocs"],
 };
 
@@ -180,3 +248,133 @@ export const withAppearance: Decorator = (Story, context) => (
 );
 // #endregion 🌈WithAppearance
 //#endregion 🔖withAppearance
+
+//#region 🔖withLocale
+import { setUiLocale, writeStoredUiChromeLocale, type UiLocale } from "@semio-tech/ui-react";
+
+const LocaleHost: React.FC<{ children: React.ReactNode; locale: UiLocale }> = ({ children, locale }) => {
+  React.useEffect(() => {
+    writeStoredUiChromeLocale(locale);
+    void setUiLocale(locale);
+  }, [locale]);
+  return <>{children}</>;
+};
+
+/** @emoji 🌐 Drives the story's `changeLanguage` from the `locale` toolbar so `t(...)`-consuming components re-render translated. */
+export const withLocale: Decorator = (Story, context) => (
+  <LocaleHost locale={(context.globals.locale as UiLocale | undefined) ?? "en"}>
+    <Story />
+  </LocaleHost>
+);
+//#endregion 🔖withLocale
+
+//#region 🔖withTerminology
+import { writeStoredUiChromeTerminology, type UiChromeTerminologyId } from "@semio-tech/ui-react";
+
+const TerminologyHost: React.FC<{ children: React.ReactNode; terminology: UiChromeTerminologyId }> = ({ children, terminology }) => {
+  React.useEffect(() => {
+    writeStoredUiChromeTerminology(terminology);
+  }, [terminology]);
+  return <>{children}</>;
+};
+
+/** @emoji 📚 Persists the `terminology` toolbar choice (native / reuse) before render, mirroring `useUiTerminology`'s storage-event contract. */
+export const withTerminology: Decorator = (Story, context) => (
+  <TerminologyHost terminology={(context.globals.terminology as UiChromeTerminologyId | undefined) ?? "native"}>
+    <Story />
+  </TerminologyHost>
+);
+//#endregion 🔖withTerminology
+
+//#region 🔖withTheme
+import { builtinUiThemes, setActiveUiTheme } from "@semio-tech/ui-react";
+
+const ThemeHost: React.FC<{ children: React.ReactNode; themeId: string }> = ({ children, themeId }) => {
+  React.useEffect(() => {
+    const theme = builtinUiThemes().find((t) => t.id === themeId);
+    if (theme) setActiveUiTheme(theme);
+  }, [themeId]);
+  return <>{children}</>;
+};
+
+/** @emoji 🎨 Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-op until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
+export const withTheme: Decorator = (Story, context) => {
+  const themeId = context.globals.theme as string | undefined;
+  if (!themeId) return <Story />;
+  return (
+    <ThemeHost themeId={themeId}>
+      <Story />
+    </ThemeHost>
+  );
+};
+
+/** @emoji 🎨 Populates the `theme` toolbar's `items` from `builtinUiThemes()` — deferred to module-init time (not the `globalTypes` literal above) since it needs the ui-styling module graph loaded. */
+if (preview.globalTypes?.theme?.toolbar) {
+  preview.globalTypes.theme.toolbar.items = builtinUiThemes().map((t) => ({ value: t.id, title: t.name ?? t.id }));
+}
+//#endregion 🔖withTheme
+
+//#region 🔖withRenderer
+import { configureHostPorts, type HostPortOverrides } from "@semio-tech/ui-react";
+
+/** @emoji 🔌 A story requests an alternate host-port adapter (stub renderer, test double, …) by setting
+ * `parameters.hostPortOverrides` to a {@link HostPortOverrides} object (or a thunk returning one, for
+ * overrides that need `context.globals`, e.g. the `iconRenderer` toggle). Applied via `configureHostPorts`
+ * before render and reset to defaults on cleanup, since ports are module-global. Most stories set nothing
+ * here and render with the library's real default adapters. */
+export const withRenderer: Decorator = (Story, context) => {
+  const overridesParam = context.parameters.hostPortOverrides as HostPortOverrides | ((context: typeof context) => HostPortOverrides) | undefined;
+  if (!overridesParam) return <Story />;
+  const overrides = typeof overridesParam === "function" ? overridesParam(context) : overridesParam;
+  React.useLayoutEffect(() => {
+    configureHostPorts(overrides);
+    return () => configureHostPorts({});
+  }, [JSON.stringify(Object.keys(overrides))]);
+  return <Story />;
+};
+//#endregion 🔖withRenderer
+
+//#region 🔖withWasm
+/** @emoji 🧱 Single-flight dynamic-import loader registry, generalizing `ensureComposeWasm`
+ * (`.storybook/compose/algorithm/kit-store/index.tsx`). Dynamic imports code-split per loader, so a
+ * scoped Storybook boot never pulls in another scope's wasm graph until a story actually requests it
+ * via `parameters.wasm`. */
+const WASM_LOADERS: Record<string, () => Promise<void>> = {
+  compose: () => import("./compose/algorithm/kit-store/index.tsx").then((m) => m.ensureComposeWasm()),
+};
+
+type WasmGateState = "idle" | "loading" | "ready" | "error";
+
+const WasmGateHost: React.FC<{ children: React.ReactNode; ids: string[] }> = ({ children, ids }) => {
+  const [state, setState] = React.useState<WasmGateState>("idle");
+  const [message, setMessage] = React.useState("");
+  React.useEffect(() => {
+    let cancelled = false;
+    setState("loading");
+    Promise.all(ids.map((id) => WASM_LOADERS[id]?.() ?? Promise.reject(new Error(`no wasm loader registered for ${JSON.stringify(id)}`))))
+      .then(() => !cancelled && setState("ready"))
+      .catch((error) => {
+        if (cancelled) return;
+        setMessage(error instanceof Error ? error.message : String(error));
+        setState("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [ids.join(",")]);
+  if (state === "error") return <div className="p-4 text-sm text-red-600">wasm load failed: {message}</div>;
+  if (state !== "ready") return <div className="p-4 text-sm opacity-60">loading wasm…</div>;
+  return <>{children}</>;
+};
+
+/** @emoji 🧱 Gates a story behind `parameters.wasm: string[]` loader ids until every referenced wasm module resolves. */
+export const withWasm: Decorator = (Story, context) => {
+  const ids = (context.parameters.wasm as string[] | undefined) ?? [];
+  if (ids.length === 0) return <Story />;
+  return (
+    <WasmGateHost ids={ids}>
+      <Story />
+    </WasmGateHost>
+  );
+};
+//#endregion 🔖withWasm

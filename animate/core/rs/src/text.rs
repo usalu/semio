@@ -3,7 +3,7 @@
 use crate::color::Color;
 use crate::sobject::{Sobject, VSobject};
 use ecow::EcoString;
-use mathematical_geometry::{append_shape_to_path, BezPath, PathEl, Point, Rect};
+use mathematical_geometry::{append_shape_to_path, BezPath, Point, Rect};
 use std::path::PathBuf;
 use std::sync::OnceLock;
 use typst::foundations::{Bytes, Datetime};
@@ -273,13 +273,9 @@ fn typst_asset_font_list() -> Vec<Font> {
     for bytes in typst_assets::fonts() {
         let blob = Bytes::new(bytes);
         let mut idx = 0u32;
-        loop {
-            if let Some(f) = Font::new(blob.clone(), idx) {
-                out.push(f);
-                idx = idx.saturating_add(1);
-            } else {
-                break;
-            }
+        while let Some(f) = Font::new(blob.clone(), idx) {
+            out.push(f);
+            idx = idx.saturating_add(1);
         }
     }
     out

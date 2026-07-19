@@ -56,7 +56,7 @@ pub fn biquadratic(c: [f64; 6], x: f64, y: f64) -> f64 {
 /// ∫f(x)dx from a to b via Simpson's rule (n = even number of subintervals).
 pub fn simpson_integrate(f: impl Fn(f64) -> f64, a: f64, b: f64, n: usize) -> f64 {
     let mut n = n.max(2);
-    if n % 2 != 0 {
+    if !n.is_multiple_of(2) {
         n += 1;
     }
     let h = (b - a) / n as f64;
@@ -95,7 +95,11 @@ pub fn newton_raphson(mut x: f64, f: impl Fn(f64) -> f64, df: impl Fn(f64) -> f6
         }
         x -= fx / dfx;
     }
-    if f(x).abs() < tol * 10.0 { Some(x) } else { None }
+    if f(x).abs() < tol * 10.0 {
+        Some(x)
+    } else {
+        None
+    }
 }
 
 /// 🔍 Gauss-Seidel iterative solver for Ax = b (dense).

@@ -143,8 +143,8 @@ impl NumberPlane {
             Box::new(arrow(origin, Point::new(origin.x(), origin.y() + y_len), color, 3.0, 0.2)),
         ];
         let grid_color = color.with_alpha(0.25);
-        let x_steps = ((x_range.1 - x_range.0) as i32).abs().max(1) as i32;
-        let y_steps = ((y_range.1 - y_range.0) as i32).abs().max(1) as i32;
+        let x_steps = ((x_range.1 - x_range.0) as i32).abs().max(1);
+        let y_steps = ((y_range.1 - y_range.0) as i32).abs().max(1);
         for i in 0..=x_steps {
             let x = origin.x() + i as f64 * unit_size;
             children.push(Box::new(line(

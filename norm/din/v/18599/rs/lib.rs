@@ -33,19 +33,12 @@ impl MonthlyClimate {
             let month = i as f64 + 1.0;
             *t = mean + amplitude * (2.0 * std::f64::consts::PI * (month - 7.0) / 12.0).cos();
         }
-        Self {
-            theta_e_c: theta_e,
-            g_h_w_m2: g_h,
-        }
+        Self { theta_e_c: theta_e, g_h_w_m2: g_h }
     }
 }
 
 /// 🧱 Transmission loss coefficient H_T [W/K].
-pub fn transmission_loss_coefficient(
-    envelope_u_a: f64,
-    thermal_bridge_psi_l: f64,
-    ground_floor_u_a: f64,
-) -> f64 {
+pub fn transmission_loss_coefficient(envelope_u_a: f64, thermal_bridge_psi_l: f64, ground_floor_u_a: f64) -> f64 {
     envelope_u_a + thermal_bridge_psi_l + ground_floor_u_a
 }
 
@@ -63,22 +56,12 @@ pub fn envelope_area_m2(floor_area_m2: f64) -> f64 {
 
 fn heating_degree_hours(climate: &MonthlyClimate, theta_int: f64) -> f64 {
     let hours_per_month = [744.0, 672.0, 744.0, 720.0, 744.0, 720.0, 744.0, 744.0, 720.0, 744.0, 720.0, 744.0];
-    let mut dh = 0.0;
-    for m in 0..12 {
-        let delta = (theta_int - climate.theta_e_c[m]).max(0.0);
-        dh += delta * hours_per_month[m];
-    }
-    dh
+    climate.theta_e_c.iter().zip(hours_per_month).map(|(&theta_e, hours)| (theta_int - theta_e).max(0.0) * hours).sum()
 }
 
 fn cooling_degree_hours(climate: &MonthlyClimate, theta_int_cool: f64) -> f64 {
     let hours_per_month = [744.0, 672.0, 744.0, 720.0, 744.0, 720.0, 744.0, 744.0, 720.0, 744.0, 720.0, 744.0];
-    let mut cdh = 0.0;
-    for m in 0..12 {
-        let delta = (climate.theta_e_c[m] - theta_int_cool).max(0.0);
-        cdh += delta * hours_per_month[m];
-    }
-    cdh
+    climate.theta_e_c.iter().zip(hours_per_month).map(|(&theta_e, hours)| (theta_e - theta_int_cool).max(0.0) * hours).sum()
 }
 // #endregion 🔖Shared
 
@@ -107,29 +90,14 @@ impl BalancingInputs {
 }
 
 /// 🧱 Build balancing inputs from envelope layers and occupancy (DIN V 18599-2/-7).
-pub fn from_building(
-    wall_layers: &[Layer],
-    floor_area_m2: f64,
-    occupants: u32,
-    climate: ClimateZoneDe,
-    heat_recovery_eta: f64,
-) -> Result<BalancingInputs, NormError> {
+pub fn from_building(wall_layers: &[Layer], floor_area_m2: f64, occupants: u32, climate: ClimateZoneDe, heat_recovery_eta: f64) -> Result<BalancingInputs, NormError> {
     if wall_layers.is_empty() {
-        return Err(NormError::IncompleteInput {
-            field: "wall_layers".into(),
-        });
+        return Err(NormError::IncompleteInput { field: "wall_layers".into() });
     }
     if floor_area_m2 <= 0.0 {
-        return Err(NormError::InvalidValue {
-            field: "floor_area_m2".into(),
-            reason: "must be positive".into(),
-        });
+        return Err(NormError::InvalidValue { field: "floor_area_m2".into(), reason: "must be positive".into() });
     }
-    let r = norm_din_4108::part_2::total_resistance(
-        wall_layers,
-        norm_din_4108::R_SI_WALL_M2K_W,
-        norm_din_4108::R_SE_WALL_M2K_W,
-    );
+    let r = norm_din_4108::part_2::total_resistance(wall_layers, norm_din_4108::R_SI_WALL_M2K_W, norm_din_4108::R_SE_WALL_M2K_W);
     let u = norm_din_4108::part_2::u_value_from_resistance(r);
     let a_env = envelope_area_m2(floor_area_m2);
     let side = floor_area_m2.sqrt();
@@ -137,13 +105,7 @@ pub fn from_building(
     let h_t = transmission_loss_coefficient(u * a_env, 0.10 * psi_l, 0.15 * floor_area_m2);
     let airflow = ventilation_16798::residential_ventilation_rate(floor_area_m2, occupants);
     let h_v = ventilation_loss_coefficient(airflow, heat_recovery_eta);
-    let solar = floor_area_m2
-        * MonthlyClimate::german_reference(climate)
-            .g_h_w_m2
-            .iter()
-            .sum::<f64>()
-        / 1000.0
-        * 0.6;
+    let solar = floor_area_m2 * MonthlyClimate::german_reference(climate).g_h_w_m2.iter().sum::<f64>() / 1000.0 * 0.6;
     Ok(BalancingInputs {
         use_class: UseClass::Residential,
         heated_area_m2: floor_area_m2,
@@ -160,16 +122,7 @@ pub fn from_building(
 }
 
 fn reference_wall_layers() -> Vec<Layer> {
-    vec![
-        Layer {
-            thickness_m: 0.12,
-            lambda_w_mk: 0.035,
-        },
-        Layer {
-            thickness_m: 0.24,
-            lambda_w_mk: 0.77,
-        },
-    ]
+    vec![Layer { thickness_m: 0.12, lambda_w_mk: 0.035 }, Layer { thickness_m: 0.24, lambda_w_mk: 0.77 }]
 }
 
 fn transmission_losses_kwh(inputs: &BalancingInputs) -> f64 {
@@ -235,13 +188,7 @@ pub mod part_1 {
     /// 📜 General balancing scope check (DIN V 18599-1).
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
         let scope = inputs.heated_area_m2;
-        Ok(CheckResult::from_minimum(
-            ClauseId::new("DIN V 18599-1", "§5", "5.1"),
-            Quantity::new(norm_core::QuantityKind::Area, scope),
-            Quantity::new(norm_core::QuantityKind::Area, 1.0),
-            "general balancing scope",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_minimum(ClauseId::new("DIN V 18599-1", "§5", "5.1"), Quantity::new(norm_core::QuantityKind::Area, scope), Quantity::new(norm_core::QuantityKind::Area, 1.0), "general balancing scope", AnnexChoice::De))
     }
 }
 // #endregion 🔖Part1
@@ -345,13 +292,7 @@ pub mod part_6 {
 
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
         let value = system_losses_kwh(inputs);
-        Ok(CheckResult::from_utilization(
-            ClauseId::new("DIN V 18599-6", "§8", "8.1"),
-            Quantity::new(norm_core::QuantityKind::Energy, value),
-            Quantity::new(norm_core::QuantityKind::Energy, inputs.annual_limit_kwh),
-            "system losses",
-            AnnexChoice::De,
-        ))
+        Ok(CheckResult::from_utilization(ClauseId::new("DIN V 18599-6", "§8", "8.1"), Quantity::new(norm_core::QuantityKind::Energy, value), Quantity::new(norm_core::QuantityKind::Energy, inputs.annual_limit_kwh), "system losses", AnnexChoice::De))
     }
 }
 // #endregion 🔖Part6
@@ -476,7 +417,7 @@ pub mod part_12 {
 
     /// 📊 Tabular method primary energy reference [kWh/a] (DIN V 18599-12).
     pub fn tabular_primary_energy_kwh(inputs: &BalancingInputs) -> f64 {
-        super::primary_energy_kwh(inputs)
+        primary_energy_kwh(inputs)
     }
 
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
@@ -526,13 +467,7 @@ impl Default for Document {
 pub fn evaluate(document: &Document) -> CheckReport {
     balance_annual(document).unwrap_or_else(|err| {
         let mut report = CheckReport::default();
-        report.push(CheckResult::from_utilization(
-            ClauseId::new("DIN V 18599", "input", "1"),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0),
-            Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
-            err.to_string(),
-            AnnexChoice::De,
-        ));
+        report.push(CheckResult::from_utilization(ClauseId::new("DIN V 18599", "input", "1"), Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0), Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
         report
     })
 }
@@ -558,24 +493,13 @@ mod tests {
     use super::*;
 
     fn reference_100m2_inputs() -> BalancingInputs {
-        from_building(
-            &reference_wall_layers(),
-            100.0,
-            4,
-            ClimateZoneDe::Zone2,
-            0.0,
-        )
-        .unwrap()
+        from_building(&reference_wall_layers(), 100.0, 4, ClimateZoneDe::Zone2, 0.0).unwrap()
     }
 
     #[test]
     fn from_building_computes_h_t_from_u_value() {
         let inputs = reference_100m2_inputs();
-        let r = norm_din_4108::part_2::total_resistance(
-            &reference_wall_layers(),
-            norm_din_4108::R_SI_WALL_M2K_W,
-            norm_din_4108::R_SE_WALL_M2K_W,
-        );
+        let r = norm_din_4108::part_2::total_resistance(&reference_wall_layers(), norm_din_4108::R_SI_WALL_M2K_W, norm_din_4108::R_SE_WALL_M2K_W);
         let u = norm_din_4108::part_2::u_value_from_resistance(r);
         let a_env = envelope_area_m2(100.0);
         let side = 10.0;

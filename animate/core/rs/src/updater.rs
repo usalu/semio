@@ -77,7 +77,7 @@ where
 }
 
 /// 🎯 Attach an updater driven by a ValueTracker.
-pub fn f_always<F>(target: &mut dyn Sobject, tracker: ValueTracker, name: impl Into<String>, f: F)
+pub fn f_always<F>(target: &mut dyn Sobject, tracker: &ValueTracker, name: impl Into<String>, f: F)
 where
     F: Fn(&mut dyn Sobject, f64) + Send + Sync + 'static,
 {

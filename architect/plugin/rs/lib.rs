@@ -2125,7 +2125,7 @@ impl DocumentApp for ArchitectApp {
                 if import_registers_csv(&mut next, csv, strategy).is_err() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![ProgramOp::SetProgram { program: next }])
+                ActionEmit::ops(vec![ProgramOp::SetProgram { program: Box::new(next) }])
             }
             "exportProgram" => {
                 let json_text = export_json(program).unwrap_or_else(|error| json!({ "error": error.to_string() }).to_string());
@@ -2144,7 +2144,7 @@ impl DocumentApp for ArchitectApp {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(vec![ProgramOp::SetProgram { program: next }])
+                ActionEmit::ops(vec![ProgramOp::SetProgram { program: Box::new(next) }])
             }
             "nodeGraphEdit" => {
                 let edit_ops = args

@@ -27,10 +27,7 @@ pub fn export_json(program: &Program) -> Result<String, ProgramError> {
 pub fn import_json(json: &str) -> Result<Program, ProgramError> {
     let program: Program = serde_json::from_str(json).map_err(|e| ProgramError::Deserialize(e.to_string()))?;
     if program.schema != ARCHITECT_PROGRAM_SCHEMA {
-        return Err(ProgramError::InvalidSchema {
-            expected: ARCHITECT_PROGRAM_SCHEMA.into(),
-            actual: program.schema.clone(),
-        });
+        return Err(ProgramError::InvalidSchema { expected: ARCHITECT_PROGRAM_SCHEMA.into(), actual: program.schema });
     }
     Ok(program)
 }
@@ -52,29 +49,21 @@ pub struct RegisterCsvRow {
 
 /// @emoji 📤 Flattens all registers into CSV rows.
 pub fn export_registers_csv(program: &Program) -> Result<String, ProgramError> {
-    write_delimited(&collect_rows(program), ',')
+    Ok(write_delimited(&collect_rows(program), ','))
 }
 
 /// @emoji 📥 Merges CSV rows into matching register collections.
-pub fn import_registers_csv(
-    program: &mut Program,
-    csv: &str,
-    strategy: MergeStrategy,
-) -> Result<Vec<EntityId>, ProgramError> {
+pub fn import_registers_csv(program: &mut Program, csv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
     import_delimited(program, csv, ',', strategy)
 }
 
 /// @emoji 📤 Flattens all registers into TSV rows.
 pub fn export_registers_tsv(program: &Program) -> Result<String, ProgramError> {
-    write_delimited(&collect_rows(program), '\t')
+    Ok(write_delimited(&collect_rows(program), '\t'))
 }
 
 /// @emoji 📥 Merges TSV rows into matching register collections.
-pub fn import_registers_tsv(
-    program: &mut Program,
-    tsv: &str,
-    strategy: MergeStrategy,
-) -> Result<Vec<EntityId>, ProgramError> {
+pub fn import_registers_tsv(program: &mut Program, tsv: &str, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
     import_delimited(program, tsv, '\t', strategy)
 }
 
@@ -82,14 +71,7 @@ pub fn import_registers_tsv(
 pub fn export_relationships_csv(program: &Program) -> Result<String, ProgramError> {
     let mut out = String::from("id,source_id,target_id,kind,name\n");
     for rel in &program.relationships {
-        out.push_str(&format!(
-            "{},{},{},{:?},{}\n",
-            escape_field(&rel.header.id.to_string(), ','),
-            escape_field(&rel.source_id.to_string(), ','),
-            escape_field(&rel.target_id.to_string(), ','),
-            rel.kind,
-            escape_field(&rel.header.name, ','),
-        ));
+        out.push_str(&format!("{},{},{},{:?},{}\n", escape_field(&rel.header.id.to_string(), ','), escape_field(&rel.source_id.to_string(), ','), escape_field(&rel.target_id.to_string(), ','), rel.kind, escape_field(&rel.header.name, ','),));
     }
     Ok(out)
 }
@@ -167,22 +149,11 @@ fn collect_rows(program: &Program) -> Vec<RegisterCsvRow> {
 }
 
 fn header_row(register: &str, header: &EntityHeader, source: Option<String>) -> RegisterCsvRow {
-    RegisterCsvRow {
-        register: register.into(),
-        id: header.id.clone(),
-        name: header.name.clone(),
-        status: format!("{:?}", header.status),
-        priority: format!("{:?}", header.priority),
-        tags: header.tags.join(";"),
-        source: source.unwrap_or_default(),
-    }
+    RegisterCsvRow { register: register.into(), id: header.id.clone(), name: header.name.clone(), status: format!("{:?}", header.status), priority: format!("{:?}", header.priority), tags: header.tags.join(";"), source: source.unwrap_or_default() }
 }
 
-fn write_delimited(rows: &[RegisterCsvRow], delimiter: char) -> Result<String, ProgramError> {
-    let header = format!(
-        "register{}id{}name{}status{}priority{}tags{}source\n",
-        delimiter, delimiter, delimiter, delimiter, delimiter, delimiter
-    );
+fn write_delimited(rows: &[RegisterCsvRow], delimiter: char) -> String {
+    let header = format!("register{}id{}name{}status{}priority{}tags{}source\n", delimiter, delimiter, delimiter, delimiter, delimiter, delimiter);
     let mut out = header;
     for row in rows {
         out.push_str(&format!(
@@ -202,7 +173,7 @@ fn write_delimited(rows: &[RegisterCsvRow], delimiter: char) -> Result<String, P
             escape_field(&row.source, delimiter),
         ));
     }
-    Ok(out)
+    out
 }
 
 fn escape_field(value: &str, delimiter: char) -> String {
@@ -216,10 +187,7 @@ fn escape_field(value: &str, delimiter: char) -> String {
 fn parse_delimited(input: &str, delimiter: char) -> Result<Vec<RegisterCsvRow>, ProgramError> {
     let mut lines = input.lines();
     let header = lines.next().ok_or_else(|| ProgramError::Csv("empty delimited file".into()))?;
-    let expected = format!(
-        "register{}id{}name{}status{}priority{}tags{}source",
-        delimiter, delimiter, delimiter, delimiter, delimiter, delimiter
-    );
+    let expected = format!("register{}id{}name{}status{}priority{}tags{}source", delimiter, delimiter, delimiter, delimiter, delimiter, delimiter);
     if header != expected {
         return Err(ProgramError::Csv(format!("unexpected header: {header}")));
     }
@@ -228,24 +196,16 @@ fn parse_delimited(input: &str, delimiter: char) -> Result<Vec<RegisterCsvRow>, 
         if line.trim().is_empty() {
             continue;
         }
-        let fields = parse_record(line, delimiter)?;
+        let fields = parse_record(line, delimiter);
         if fields.len() < 7 {
             return Err(ProgramError::Csv(format!("malformed row: {line}")));
         }
-        rows.push(RegisterCsvRow {
-            register: fields[0].clone(),
-            id: EntityId(fields[1].clone()),
-            name: fields[2].clone(),
-            status: fields[3].clone(),
-            priority: fields[4].clone(),
-            tags: fields[5].clone(),
-            source: fields[6].clone(),
-        });
+        rows.push(RegisterCsvRow { register: fields[0].clone(), id: EntityId(fields[1].clone()), name: fields[2].clone(), status: fields[3].clone(), priority: fields[4].clone(), tags: fields[5].clone(), source: fields[6].clone() });
     }
     Ok(rows)
 }
 
-fn parse_record(line: &str, delimiter: char) -> Result<Vec<String>, ProgramError> {
+fn parse_record(line: &str, delimiter: char) -> Vec<String> {
     let mut fields = Vec::new();
     let mut current = String::new();
     let mut in_quotes = false;
@@ -269,25 +229,17 @@ fn parse_record(line: &str, delimiter: char) -> Result<Vec<String>, ProgramError
         }
     }
     fields.push(current);
-    Ok(fields)
+    fields
 }
 
-fn import_delimited(
-    program: &mut Program,
-    input: &str,
-    delimiter: char,
-    strategy: MergeStrategy,
-) -> Result<Vec<EntityId>, ProgramError> {
+fn import_delimited(program: &mut Program, input: &str, delimiter: char, strategy: MergeStrategy) -> Result<Vec<EntityId>, ProgramError> {
     let rows = parse_delimited(input, delimiter)?;
     let mut touched = Vec::new();
     let mut seen: HashSet<(String, EntityId)> = HashSet::new();
     for row in rows {
         let key = (row.register.clone(), row.id.clone());
         if !seen.insert(key.clone()) {
-            return Err(ProgramError::Csv(format!(
-                "duplicate import id {} in register {}",
-                row.id, row.register
-            )));
+            return Err(ProgramError::Csv(format!("duplicate import id {} in register {}", row.id, row.register)));
         }
         if strategy == MergeStrategy::SkipDuplicates && register_contains(program, &row.register, &row.id) {
             continue;

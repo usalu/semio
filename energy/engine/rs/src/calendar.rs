@@ -67,13 +67,7 @@ pub struct RunPeriod {
 
 impl Default for RunPeriod {
     fn default() -> Self {
-        Self {
-            start_month: 1,
-            start_day: 1,
-            end_month: 12,
-            end_day: 31,
-            year: 2026,
-        }
+        Self { start_month: 1, start_day: 1, end_month: 12, end_day: 31, year: 2026 }
     }
 }
 
@@ -98,13 +92,7 @@ impl RunPeriod {
 
     /// 📅 Iterator over (date, hour) pairs.
     pub fn hours(&self) -> RunPeriodHours {
-        RunPeriodHours {
-            current: SimDate::new(self.year, self.start_month, self.start_day),
-            end: SimDate::new(self.year, self.end_month, self.end_day),
-            hour: 0u8,
-            index: 0u32,
-            finished: false,
-        }
+        RunPeriodHours { current: SimDate::new(self.year, self.start_month, self.start_day), end: SimDate::new(self.year, self.end_month, self.end_day), hour: 0u8, index: 0u32, finished: false }
     }
 }
 
@@ -130,9 +118,7 @@ impl Iterator for RunPeriodHours {
         if self.finished {
             return None;
         }
-        if self.current.month > self.end.month
-            || (self.current.month == self.end.month && self.current.day > self.end.day)
-        {
+        if self.current.month > self.end.month || (self.current.month == self.end.month && self.current.day > self.end.day) {
             return None;
         }
         let item = (self.current, self.hour, self.index);
@@ -185,7 +171,7 @@ impl DstRule {
 // #region 🔖Helpers
 fn is_leap_year(year: u16) -> bool {
     let y = year as u32;
-    (y % 4 == 0 && y % 100 != 0) || y % 400 == 0
+    (y.is_multiple_of(4) && !y.is_multiple_of(100)) || y.is_multiple_of(400)
 }
 
 fn days_in_month(month: u8, leap: bool) -> u8 {
@@ -212,8 +198,8 @@ fn days_before_month(month: u8, leap: bool) -> u16 {
 fn nth_weekday_doy(year: u16, month: u8, nth: u8, weekday: u8) -> u16 {
     let first = SimDate::new(year, month, 1);
     let first_dow = first.day_of_week();
-    let offset = (7 + weekday as u8 - first_dow) % 7;
-    let day = 1 + offset as u8 + (nth.saturating_sub(1)) * 7;
+    let offset = (7 + weekday - first_dow) % 7;
+    let day = 1 + offset + (nth.saturating_sub(1)) * 7;
     days_before_month(month, is_leap_year(year)) + day as u16
 }
 // #endregion 🔖Helpers
@@ -230,13 +216,7 @@ mod tests {
 
     #[test]
     fn run_period_jan_week_is_168_hours() {
-        let period = RunPeriod {
-            start_month: 1,
-            start_day: 1,
-            end_month: 1,
-            end_day: 7,
-            year: 2026,
-        };
+        let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 7, year: 2026 };
         assert_eq!(period.total_hours(), 168);
     }
 
@@ -248,13 +228,7 @@ mod tests {
 
     #[test]
     fn hours_iterator_count() {
-        let period = RunPeriod {
-            start_month: 1,
-            start_day: 1,
-            end_month: 1,
-            end_day: 2,
-            year: 2026,
-        };
+        let period = RunPeriod { start_month: 1, start_day: 1, end_month: 1, end_day: 2, year: 2026 };
         assert_eq!(period.hours().count(), 48);
     }
 }

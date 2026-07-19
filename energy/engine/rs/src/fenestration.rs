@@ -35,13 +35,7 @@ pub struct ShadeState {
 }
 
 impl ShadeState {
-    pub const OPEN: Self = Self {
-        deployed: false,
-        solar_transmittance: 1.0,
-        solar_reflectance: 0.0,
-        visible_transmittance: 1.0,
-        ir_transmittance: 1.0,
-    };
+    pub const OPEN: Self = Self { deployed: false, solar_transmittance: 1.0, solar_reflectance: 0.0, visible_transmittance: 1.0, ir_transmittance: 1.0 };
 
     /// 🌤️ Effective solar transmittance with shade deployed.
     pub fn effective_solar_transmittance(&self) -> f64 {
@@ -104,13 +98,7 @@ impl WindowModel {
     }
 
     /// 🌡️ Interior glazing surface temperature [°C] (simplified steady state).
-    pub fn interior_glazing_temp_c(
-        &self,
-        outside_temp_c: f64,
-        inside_temp_c: f64,
-        h_interior_w_m2k: f64,
-        h_exterior_w_m2k: f64,
-    ) -> f64 {
+    pub fn interior_glazing_temp_c(&self, outside_temp_c: f64, inside_temp_c: f64, h_interior_w_m2k: f64, h_exterior_w_m2k: f64) -> f64 {
         let r_int = 1.0 / h_interior_w_m2k.max(0.1);
         let r_ext = 1.0 / h_exterior_w_m2k.max(0.1);
         let mut r_glazing = 0.0_f64;
@@ -133,12 +121,7 @@ pub fn window_conduction_w(outside_temp_c: f64, inside_temp_c: f64, u_value_w_m2
 }
 
 /// ☀️ Solar gain through window [W].
-pub fn window_solar_gain_w(
-    beam_normal_irradiance_w_m2: f64,
-    incidence_cosine: f64,
-    shgc: f64,
-    area_m2: f64,
-) -> f64 {
+pub fn window_solar_gain_w(beam_normal_irradiance_w_m2: f64, incidence_cosine: f64, shgc: f64, area_m2: f64) -> f64 {
     beam_normal_irradiance_w_m2 * incidence_cosine.max(0.0) * shgc * area_m2
 }
 // #endregion 🔖HeatTransfer
@@ -153,12 +136,7 @@ pub enum CondensationRisk {
 }
 
 /// 💧 Assess interior surface condensation vs zone dew point.
-pub fn condensation_risk(
-    interior_surface_temp_c: f64,
-    _zone_air_temp_c: f64,
-    humidity_ratio: f64,
-    atmospheric_pressure_pa: f64,
-) -> CondensationRisk {
+pub fn condensation_risk(interior_surface_temp_c: f64, _zone_air_temp_c: f64, humidity_ratio: f64, atmospheric_pressure_pa: f64) -> CondensationRisk {
     let dew = dew_point_c(humidity_ratio, atmospheric_pressure_pa);
     let margin = interior_surface_temp_c - dew;
     if margin <= 0.0 {
@@ -186,22 +164,8 @@ mod tests {
     fn double_glazing() -> WindowModel {
         WindowModel {
             glazing_layers: vec![
-                GlazingLayer {
-                    thickness_m: 0.004,
-                    conductivity_w_m_k: 0.9,
-                    solar_transmittance: 0.82,
-                    solar_reflectance: 0.08,
-                    visible_transmittance: 0.88,
-                    ir_emissivity: 0.84,
-                },
-                GlazingLayer {
-                    thickness_m: 0.004,
-                    conductivity_w_m_k: 0.9,
-                    solar_transmittance: 0.74,
-                    solar_reflectance: 0.12,
-                    visible_transmittance: 0.80,
-                    ir_emissivity: 0.84,
-                },
+                GlazingLayer { thickness_m: 0.004, conductivity_w_m_k: 0.9, solar_transmittance: 0.82, solar_reflectance: 0.08, visible_transmittance: 0.88, ir_emissivity: 0.84 },
+                GlazingLayer { thickness_m: 0.004, conductivity_w_m_k: 0.9, solar_transmittance: 0.74, solar_reflectance: 0.12, visible_transmittance: 0.80, ir_emissivity: 0.84 },
             ],
             gap_resistance_m2k_w: vec![0.15],
             frame_fraction: 0.15,
@@ -217,24 +181,14 @@ mod tests {
     fn double_glazing_u_below_single() {
         let win = double_glazing();
         let u_double = win.center_u_value_w_m2k();
-        let single = WindowModel {
-            glazing_layers: vec![win.glazing_layers[0]],
-            gap_resistance_m2k_w: vec![],
-            ..win.clone()
-        };
+        let single = WindowModel { glazing_layers: vec![win.glazing_layers[0]], gap_resistance_m2k_w: vec![], ..win.clone() };
         assert!(u_double < single.center_u_value_w_m2k());
     }
 
     #[test]
     fn shade_reduces_shgc() {
         let mut win = double_glazing();
-        win.interior_shade = ShadeState {
-            deployed: true,
-            solar_transmittance: 0.1,
-            solar_reflectance: 0.5,
-            visible_transmittance: 0.1,
-            ir_transmittance: 0.2,
-        };
+        win.interior_shade = ShadeState { deployed: true, solar_transmittance: 0.1, solar_reflectance: 0.5, visible_transmittance: 0.1, ir_transmittance: 0.2 };
         assert!(win.center_shgc() < 0.2);
     }
 

@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/math-graph-port-directed-normal",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run @semio-tech/math-graph-port-directed-normal:test"
+  }
+}

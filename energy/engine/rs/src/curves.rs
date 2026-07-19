@@ -84,16 +84,7 @@ impl PerformanceCurve {
 // #region 🔖Triquadratic
 /// 📐 Triquadratic f(x,y) = Σ cᵢⱼ xⁱ yʲ for i+j ≤ 2 plus x²y² cross term.
 pub fn triquadratic(c: [f64; 10], x: f64, y: f64) -> f64 {
-    c[0]
-        + c[1] * x
-        + c[2] * x * x
-        + c[3] * y
-        + c[4] * y * y
-        + c[5] * x * y
-        + c[6] * x * x * y
-        + c[7] * x * y * y
-        + c[8] * x * x * y * y
-        + c[9] * x * x * x
+    c[0] + c[1] * x + c[2] * x * x + c[3] * y + c[4] * y * y + c[5] * x * y + c[6] * x * x * y + c[7] * x * y * y + c[8] * x * x * y * y + c[9] * x * x * x
 }
 // #endregion 🔖Triquadratic
 
@@ -107,10 +98,7 @@ pub struct CurveLookupTable2D {
 
 impl CurveLookupTable2D {
     pub fn new(name: impl Into<String>, inner: LookupTable2D) -> Self {
-        Self {
-            name: name.into(),
-            inner,
-        }
+        Self { name: name.into(), inner }
     }
 
     pub fn evaluate(&self, x: f64, y: f64) -> f64 {
@@ -216,14 +204,7 @@ mod tests {
 
     #[test]
     fn lookup_wrapper_evaluates() {
-        let table = CurveLookupTable2D::new(
-            "test",
-            LookupTable2D {
-                x: vec![0.0, 1.0],
-                y: vec![0.0, 1.0],
-                values: vec![vec![0.0, 10.0], vec![0.0, 20.0]],
-            },
-        );
+        let table = CurveLookupTable2D::new("test", LookupTable2D { x: vec![0.0, 1.0], y: vec![0.0, 1.0], values: vec![vec![0.0, 10.0], vec![0.0, 20.0]] });
         let curve = PerformanceCurve::Table(table);
         assert!((curve.evaluate_2d(1.0, 1.0) - 20.0).abs() < 1e-9);
     }

@@ -22,6 +22,7 @@ class WasmScript extends BundleScript {
   }
 }
 
+/** ⏱️Level-budgeted; unmarked `mod tests` cases are `fundamental`. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const { rest } = resolveTestLevel(segments);

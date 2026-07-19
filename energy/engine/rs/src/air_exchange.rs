@@ -68,58 +68,27 @@ pub struct HybridVentilationControl {
 
 // #region 🔖InfiltrationFlow
 /// 💨 Infiltration volumetric flow [m³/s].
-pub fn infiltration_flow_m3_s(
-    spec: &InfiltrationSpec,
-    zone_volume_m3: f64,
-    exterior_area_m2: f64,
-    outdoor_temp_c: f64,
-    zone_temp_c: f64,
-    wind_speed_m_s: f64,
-    p_atm: f64,
-) -> f64 {
+pub fn infiltration_flow_m3_s(spec: &InfiltrationSpec, zone_volume_m3: f64, exterior_area_m2: f64, outdoor_temp_c: f64, zone_temp_c: f64, wind_speed_m_s: f64, p_atm: f64) -> f64 {
     let sf = spec.schedule_factor.clamp(0.0, 1.0);
     match spec.method {
         InfiltrationMethod::ScheduledAch => sf * spec.ach * zone_volume_m3 / 3600.0,
         InfiltrationMethod::PerExteriorArea => sf * spec.flow_per_exterior_area_m3_s_m2 * exterior_area_m2,
         InfiltrationMethod::EffectiveLeakageArea => {
             let rho = moist_air_density(outdoor_temp_c, 0.008, p_atm);
-            let delta_p = wind_stack_pressure_pa(
-                spec.stack_height_m,
-                outdoor_temp_c,
-                zone_temp_c,
-                wind_speed_m_s,
-                spec.constant_coefficient,
-                spec.temperature_coefficient,
-                spec.velocity_coefficient,
-                spec.velocity_squared_coefficient,
-            );
-            sf
-                * spec.discharge_coefficient
-                * spec.effective_leakage_area_m2
-                * (2.0 * delta_p.max(0.0) / rho).sqrt()
+            let delta_p = wind_stack_pressure_pa(spec.stack_height_m, outdoor_temp_c, zone_temp_c, wind_speed_m_s, spec.constant_coefficient, spec.temperature_coefficient, spec.velocity_coefficient, spec.velocity_squared_coefficient);
+            sf * spec.discharge_coefficient * spec.effective_leakage_area_m2 * (2.0 * delta_p.max(0.0) / rho).sqrt()
         }
         InfiltrationMethod::WindAndStack => {
             let base = sf * spec.flow_per_exterior_area_m3_s_m2 * exterior_area_m2;
             let delta_t = (outdoor_temp_c - zone_temp_c).abs();
-            let wind_factor = 1.0
-                + spec.velocity_coefficient * wind_speed_m_s
-                + spec.velocity_squared_coefficient * wind_speed_m_s * wind_speed_m_s;
+            let wind_factor = 1.0 + spec.velocity_coefficient * wind_speed_m_s + spec.velocity_squared_coefficient * wind_speed_m_s * wind_speed_m_s;
             let temp_factor = 1.0 + spec.temperature_coefficient * delta_t;
             base * wind_factor * temp_factor + sf * spec.constant_coefficient
         }
     }
 }
 
-fn wind_stack_pressure_pa(
-    height_m: f64,
-    t_out_c: f64,
-    t_zone_c: f64,
-    wind_m_s: f64,
-    c_const: f64,
-    c_temp: f64,
-    c_vel: f64,
-    c_vel2: f64,
-) -> f64 {
+fn wind_stack_pressure_pa(height_m: f64, t_out_c: f64, t_zone_c: f64, wind_m_s: f64, c_const: f64, c_temp: f64, c_vel: f64, c_vel2: f64) -> f64 {
     let t_out_k = t_out_c + 273.15;
     let t_zone_k = t_zone_c + 273.15;
     let stack = RHO_AIR_REF * GRAVITY * height_m * (t_out_k - t_zone_k).abs() / t_zone_k.max(250.0);
@@ -130,15 +99,7 @@ fn wind_stack_pressure_pa(
 
 // #region 🔖VentilationLoad
 /// 🔥 Ventilation sensible and latent loads [W].
-pub fn ventilation_load_w(
-    flow_m3_s: f64,
-    t_zone_c: f64,
-    w_zone: f64,
-    t_out_c: f64,
-    w_out: f64,
-    p_atm: f64,
-    heat_recovery_effectiveness: f64,
-) -> (f64, f64) {
+pub fn ventilation_load_w(flow_m3_s: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, p_atm: f64, heat_recovery_effectiveness: f64) -> (f64, f64) {
     if flow_m3_s <= 0.0 {
         return (0.0, 0.0);
     }
@@ -156,14 +117,7 @@ pub fn ventilation_load_w(
 
 // #region 🔖Interzone
 /// ↔️ Sensible and latent exchange [W] from interzone mixing flow.
-pub fn interzone_exchange_w(
-    mixing: &InterzoneMixing,
-    t_zone_c: f64,
-    w_zone: f64,
-    t_adjacent_c: f64,
-    w_adjacent: f64,
-    p_atm: f64,
-) -> (f64, f64) {
+pub fn interzone_exchange_w(mixing: &InterzoneMixing, t_zone_c: f64, w_zone: f64, t_adjacent_c: f64, w_adjacent: f64, p_atm: f64) -> (f64, f64) {
     let flow = mixing.flow_m3_s * mixing.schedule_factor.clamp(0.0, 1.0);
     ventilation_load_w(flow, t_zone_c, w_zone, t_adjacent_c, w_adjacent, p_atm, 0.0)
 }
@@ -171,16 +125,8 @@ pub fn interzone_exchange_w(
 
 // #region 🔖Hybrid
 /// 🎛️ Hybrid ventilation flow [m³/s]: natural when outdoor conditions favorable.
-pub fn hybrid_ventilation_flow_m3_s(
-    control: &HybridVentilationControl,
-    zone_volume_m3: f64,
-    outdoor_temp_c: f64,
-    wind_speed_m_s: f64,
-    mechanical_flow_m3_s: f64,
-) -> f64 {
-    let natural_ok = outdoor_temp_c >= control.outdoor_temp_min_c
-        && outdoor_temp_c <= control.outdoor_temp_max_c
-        && wind_speed_m_s <= control.max_wind_speed_m_s;
+pub fn hybrid_ventilation_flow_m3_s(control: &HybridVentilationControl, zone_volume_m3: f64, outdoor_temp_c: f64, wind_speed_m_s: f64, mechanical_flow_m3_s: f64) -> f64 {
+    let natural_ok = outdoor_temp_c >= control.outdoor_temp_min_c && outdoor_temp_c <= control.outdoor_temp_max_c && wind_speed_m_s <= control.max_wind_speed_m_s;
     if natural_ok {
         control.natural_ach * zone_volume_m3 / 3600.0
     } else if control.mechanical_backup {
@@ -204,31 +150,11 @@ pub struct AirExchangeResult {
 }
 
 /// 💨 Compute combined infiltration and ventilation for a zone timestep.
-pub fn compute_air_exchange(
-    infiltration: &InfiltrationSpec,
-    ventilation: &VentilationSpec,
-    zone_volume_m3: f64,
-    exterior_area_m2: f64,
-    t_zone_c: f64,
-    w_zone: f64,
-    t_out_c: f64,
-    w_out: f64,
-    wind_speed_m_s: f64,
-    p_atm: f64,
-) -> AirExchangeResult {
-    let inf_flow = infiltration_flow_m3_s(
-        infiltration,
-        zone_volume_m3,
-        exterior_area_m2,
-        t_out_c,
-        t_zone_c,
-        wind_speed_m_s,
-        p_atm,
-    );
+pub fn compute_air_exchange(infiltration: &InfiltrationSpec, ventilation: &VentilationSpec, zone_volume_m3: f64, exterior_area_m2: f64, t_zone_c: f64, w_zone: f64, t_out_c: f64, w_out: f64, wind_speed_m_s: f64, p_atm: f64) -> AirExchangeResult {
+    let inf_flow = infiltration_flow_m3_s(infiltration, zone_volume_m3, exterior_area_m2, t_out_c, t_zone_c, wind_speed_m_s, p_atm);
     let vent_flow = ventilation.design_flow_m3_s * ventilation.schedule_factor.clamp(0.0, 1.0);
     let (inf_sens, inf_lat) = ventilation_load_w(inf_flow, t_zone_c, w_zone, t_out_c, w_out, p_atm, 0.0);
-    let (vent_sens, vent_lat) =
-        ventilation_load_w(vent_flow, t_zone_c, w_zone, t_out_c, w_out, p_atm, ventilation.heat_recovery_effectiveness);
+    let (vent_sens, vent_lat) = ventilation_load_w(vent_flow, t_zone_c, w_zone, t_out_c, w_out, p_atm, ventilation.heat_recovery_effectiveness);
     AirExchangeResult {
         infiltration_flow_m3_s: inf_flow,
         ventilation_flow_m3_s: vent_flow,
@@ -243,6 +169,7 @@ pub fn compute_air_exchange(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::units::P_STD;
 
     #[test]
     fn ach_infiltration_scales_with_volume() {
@@ -278,13 +205,7 @@ mod tests {
 
     #[test]
     fn hybrid_uses_natural_when_favorable() {
-        let ctrl = HybridVentilationControl {
-            outdoor_temp_min_c: 10.0,
-            outdoor_temp_max_c: 28.0,
-            max_wind_speed_m_s: 5.0,
-            natural_ach: 2.0,
-            mechanical_backup: true,
-        };
+        let ctrl = HybridVentilationControl { outdoor_temp_min_c: 10.0, outdoor_temp_max_c: 28.0, max_wind_speed_m_s: 5.0, natural_ach: 2.0, mechanical_backup: true };
         let flow = hybrid_ventilation_flow_m3_s(&ctrl, 300.0, 20.0, 2.0, 0.05);
         assert!((flow - 300.0 * 2.0 / 3600.0).abs() < 1e-9);
     }

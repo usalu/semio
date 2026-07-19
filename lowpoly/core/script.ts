@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/lowpoly-core` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(_segments: string[]): void {
-    runCargoTestBudgeted(["lowpoly_core"], this.repoRoot);
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["lowpoly_core"], this.repoRoot, rest);
   }
 }
 

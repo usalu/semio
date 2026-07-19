@@ -69,70 +69,32 @@ pub struct CoolingCoilOutput {
 pub fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, load_w: f64) -> HeatingCoilOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     if m_dot < 1e-9 || load_w <= 0.0 {
-        return HeatingCoilOutput {
-            outlet: *inlet,
-            total_heating_w: 0.0,
-            gas_consumption_w: 0.0,
-            water_heat_removal_w: 0.0,
-        };
+        return HeatingCoilOutput { outlet: *inlet, total_heating_w: 0.0, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 };
     }
 
     match coil {
         HeatingCoil::Electric { capacity_w, efficiency } => {
             let q = load_w.min(*capacity_w);
             let delta_t = q / (m_dot * CP_DRY_AIR);
-            HeatingCoilOutput {
-                outlet: CoilAirState {
-                    temperature_c: inlet.temperature_c + delta_t,
-                    ..*inlet
-                },
-                total_heating_w: q,
-                gas_consumption_w: q / efficiency.max(0.01),
-                water_heat_removal_w: 0.0,
-            }
+            HeatingCoilOutput { outlet: CoilAirState { temperature_c: inlet.temperature_c + delta_t, ..*inlet }, total_heating_w: q, gas_consumption_w: q / efficiency.max(0.01), water_heat_removal_w: 0.0 }
         }
         HeatingCoil::Gas { capacity_w, efficiency } => {
             let q = load_w.min(*capacity_w);
             let delta_t = q / (m_dot * CP_DRY_AIR);
-            HeatingCoilOutput {
-                outlet: CoilAirState {
-                    temperature_c: inlet.temperature_c + delta_t,
-                    ..*inlet
-                },
-                total_heating_w: q,
-                gas_consumption_w: q / efficiency.max(0.01),
-                water_heat_removal_w: 0.0,
-            }
+            HeatingCoilOutput { outlet: CoilAirState { temperature_c: inlet.temperature_c + delta_t, ..*inlet }, total_heating_w: q, gas_consumption_w: q / efficiency.max(0.01), water_heat_removal_w: 0.0 }
         }
         HeatingCoil::HotWater { ua_w_per_k, water_inlet_c, water_flow_kg_s: _, water_cp: _ } => {
             let q_max = ua_w_per_k * (water_inlet_c - inlet.temperature_c).max(0.0);
             let q = load_w.min(q_max);
             let delta_t = q / (m_dot * CP_DRY_AIR);
             let water_q = q;
-            HeatingCoilOutput {
-                outlet: CoilAirState {
-                    temperature_c: inlet.temperature_c + delta_t,
-                    ..*inlet
-                },
-                total_heating_w: q,
-                gas_consumption_w: 0.0,
-                water_heat_removal_w: water_q,
-            }
+            HeatingCoilOutput { outlet: CoilAirState { temperature_c: inlet.temperature_c + delta_t, ..*inlet }, total_heating_w: q, gas_consumption_w: 0.0, water_heat_removal_w: water_q }
         }
         HeatingCoil::Steam { capacity_w, latent_fraction } => {
             let q = load_w.min(*capacity_w);
             let delta_t = q / (m_dot * CP_DRY_AIR);
             let humid_add = *latent_fraction * q / H_FG_0C * m_dot / m_dot.max(1.0);
-            HeatingCoilOutput {
-                outlet: CoilAirState {
-                    temperature_c: inlet.temperature_c + delta_t,
-                    humidity_ratio: inlet.humidity_ratio + humid_add * 0.001,
-                    ..*inlet
-                },
-                total_heating_w: q,
-                gas_consumption_w: 0.0,
-                water_heat_removal_w: 0.0,
-            }
+            HeatingCoilOutput { outlet: CoilAirState { temperature_c: inlet.temperature_c + delta_t, humidity_ratio: inlet.humidity_ratio + humid_add * 0.001, ..*inlet }, total_heating_w: q, gas_consumption_w: 0.0, water_heat_removal_w: 0.0 }
         }
     }
 }
@@ -140,23 +102,11 @@ pub fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, load_w: f
 
 // #region 🔖CoolingOutput
 /// ❄️ Compute cooling coil capacity with bypass factor and wet/dry behavior [W].
-pub fn cooling_coil_output_w(
-    coil: &CoolingCoil,
-    inlet: &CoilAirState,
-    load_w: f64,
-    bypass_factor: f64,
-) -> CoolingCoilOutput {
+pub fn cooling_coil_output_w(coil: &CoolingCoil, inlet: &CoilAirState, load_w: f64, bypass_factor: f64) -> CoolingCoilOutput {
     let m_dot = inlet.mass_flow_kg_s.max(0.0);
     let bf = bypass_factor.clamp(0.0, 0.95);
     if m_dot < 1e-9 || load_w <= 0.0 {
-        return CoolingCoilOutput {
-            outlet: *inlet,
-            total_cooling_w: 0.0,
-            sensible_cooling_w: 0.0,
-            latent_cooling_w: 0.0,
-            compressor_power_w: 0.0,
-            condensate_kg_s: 0.0,
-        };
+        return CoolingCoilOutput { outlet: *inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 };
     }
 
     let h_in = moist_air_enthalpy_j_per_kg(inlet.temperature_c, inlet.humidity_ratio);
@@ -221,11 +171,7 @@ pub fn cooling_coil_output_w(
     let _ = h_sat;
 
     CoolingCoilOutput {
-        outlet: CoilAirState {
-            temperature_c: t_out,
-            humidity_ratio: w_out,
-            ..*inlet
-        },
+        outlet: CoilAirState { temperature_c: t_out, humidity_ratio: w_out, ..*inlet },
         total_cooling_w: q_total,
         sensible_cooling_w: q_sensible,
         latent_cooling_w: q_latent,
@@ -254,12 +200,7 @@ mod tests {
     #[test]
     fn electric_heating_raises_temperature() {
         let coil = HeatingCoil::Electric { capacity_w: 10_000.0, efficiency: 1.0 };
-        let inlet = CoilAirState {
-            temperature_c: 15.0,
-            humidity_ratio: 0.008,
-            mass_flow_kg_s: 0.5,
-            pressure_pa: 101_325.0,
-        };
+        let inlet = CoilAirState { temperature_c: 15.0, humidity_ratio: 0.008, mass_flow_kg_s: 0.5, pressure_pa: 101_325.0 };
         let out = heating_coil_output_w(&coil, &inlet, 5000.0);
         assert!(out.outlet.temperature_c > inlet.temperature_c);
         assert!((out.total_heating_w - 5000.0).abs() < 1.0);
@@ -267,17 +208,8 @@ mod tests {
 
     #[test]
     fn dx_cooling_removes_sensible_and_latent() {
-        let coil = CoolingCoil::DxSingleSpeed {
-            rated_capacity_w: 15_000.0,
-            rated_shr: 0.75,
-            cop_curve: PerformanceCurve::Constant(1.0),
-        };
-        let inlet = CoilAirState {
-            temperature_c: 28.0,
-            humidity_ratio: 0.012,
-            mass_flow_kg_s: 0.6,
-            pressure_pa: 101_325.0,
-        };
+        let coil = CoolingCoil::DxSingleSpeed { rated_capacity_w: 15_000.0, rated_shr: 0.75, cop_curve: PerformanceCurve::Constant(1.0) };
+        let inlet = CoilAirState { temperature_c: 28.0, humidity_ratio: 0.012, mass_flow_kg_s: 0.6, pressure_pa: 101_325.0 };
         let out = cooling_coil_output_w(&coil, &inlet, 10_000.0, 0.1);
         assert!(out.outlet.temperature_c < inlet.temperature_c);
         assert!(out.sensible_cooling_w > 0.0);
@@ -287,17 +219,8 @@ mod tests {
 
     #[test]
     fn bypass_factor_reduces_effect() {
-        let coil = CoolingCoil::DxSingleSpeed {
-            rated_capacity_w: 15_000.0,
-            rated_shr: 0.8,
-            cop_curve: PerformanceCurve::Constant(1.0),
-        };
-        let inlet = CoilAirState {
-            temperature_c: 30.0,
-            humidity_ratio: 0.014,
-            mass_flow_kg_s: 0.5,
-            pressure_pa: 101_325.0,
-        };
+        let coil = CoolingCoil::DxSingleSpeed { rated_capacity_w: 15_000.0, rated_shr: 0.8, cop_curve: PerformanceCurve::Constant(1.0) };
+        let inlet = CoilAirState { temperature_c: 30.0, humidity_ratio: 0.014, mass_flow_kg_s: 0.5, pressure_pa: 101_325.0 };
         let out_low_bf = cooling_coil_output_w(&coil, &inlet, 8000.0, 0.05);
         let out_high_bf = cooling_coil_output_w(&coil, &inlet, 8000.0, 0.4);
         assert!(out_low_bf.outlet.temperature_c < out_high_bf.outlet.temperature_c);

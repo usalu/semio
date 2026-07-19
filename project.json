@@ -103,6 +103,116 @@
         }
       }
     },
+    "dev-storybook-styling": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook styling",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-puzzle-3d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook puzzle 3d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-puzzle-5d": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook puzzle 5d",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-framework": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook framework",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-framework-hosts": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook framework hosts",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-framework-os": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook framework os",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-infinite": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook infinite",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-cad": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook cad",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-coda": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook coda",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "dev-storybook-animate": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./script.ts dev storybook animate",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "dev-mcp": {
       "executor": "nx:run-commands",
       "cache": false,
