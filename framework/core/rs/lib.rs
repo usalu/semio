@@ -899,6 +899,11 @@ pub enum OsMediaFormat {
     Stl,
     Step,
     Dwg,
+    /// ☁️ Point-cloud/mesh interchange (Stanford PLY) — registered for `remodel` photogrammetry
+    /// export; no encoder lives here yet, this is the format-identifier registration only.
+    Ply,
+    /// ☁️ LiDAR/point-cloud binary interchange (ASPRS LAS) — same status as `Ply` above.
+    Las,
 }
 
 impl OsMediaFormat {
@@ -911,6 +916,8 @@ impl OsMediaFormat {
             Self::Stl => "stl",
             Self::Step => "step",
             Self::Dwg => "dwg",
+            Self::Ply => "ply",
+            Self::Las => "las",
         }
     }
 
@@ -923,12 +930,18 @@ impl OsMediaFormat {
             Self::Stl => "model/stl",
             Self::Step => "model/step",
             Self::Dwg => "image/vnd.dwg",
+            Self::Ply => "model/ply",
+            Self::Las => "application/vnd.las",
         }
     }
 
     /// @emoji 🔢 Whether this format's payload is base64-encoded binary rather than plain text.
+    /// PLY supports both an ASCII and a binary variant; this crate treats format-by-name as a single
+    /// binary/text choice, so `Ply` is treated as the ASCII/text variant (matching `Obj`/`Step`) —
+    /// downstream `remodel` encoders that want binary PLY still tag their payload accordingly, this
+    /// flag only governs the default wire encoding. `Las` is always binary.
     pub fn is_binary(&self) -> bool {
-        matches!(self, Self::Png | Self::Glb | Self::Stl | Self::Dwg)
+        matches!(self, Self::Png | Self::Glb | Self::Stl | Self::Dwg | Self::Las)
     }
 
     pub fn parse(value: &str) -> Option<Self> {
@@ -940,6 +953,8 @@ impl OsMediaFormat {
             "stl" => Some(Self::Stl),
             "step" => Some(Self::Step),
             "dwg" => Some(Self::Dwg),
+            "ply" => Some(Self::Ply),
+            "las" => Some(Self::Las),
             _ => None,
         }
     }
@@ -4430,12 +4445,16 @@ pub enum HostEffect {
     /// @emoji 🖼️ Renders one or more icon-scene requests to images and downloads each.
     IconRenderExport { items: Vec<IconRenderExportItem> },
     /// @emoji 📤 Asks the shell to open a file picker and re-dispatch `import_action` with the
-    /// picked file's contents as `{ payload, name }` args.
+    /// picked file's contents as `{ payload, name }` args. When `multiple` is set, the picker allows
+    /// selecting several files and `import_action` is re-dispatched once per file, sequentially, each
+    /// call extending the args with `{ index, total }`.
     RequestFileOpen {
         accept: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         read_as: Option<String>,
         import_action: String,
+        #[serde(default)]
+        multiple: bool,
     },
     /// @emoji ✨ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
     SpawnPluginInstance {
@@ -4464,6 +4483,17 @@ pub enum HostEffect {
         dialog_id: String,
         #[serde(default, skip_serializing_if = "Option::is_none")]
         args: Option<Value>,
+    },
+    /// @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delay_ms` — lets a
+    /// plugin's `handle_action` advance staged/progressive work (e.g. a multi-pass reconstruction)
+    /// over several ticks without blocking the host. The host feeds the follow-up response's own
+    /// `requestedEffects` back through the same effect-application pass, so a `DispatchAction` can
+    /// itself emit another one, chaining as many ticks as the plugin needs.
+    DispatchAction {
+        action: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        args: Option<Value>,
+        delay_ms: u64,
     },
 }
 

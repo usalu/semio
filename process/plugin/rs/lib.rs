@@ -1462,7 +1462,7 @@ impl DocumentApp for Process3dPlayApp {
                     None => ActionEmit::default(),
                 }
             }
-            "loadModelRequest" => ActionEmit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into() }),
+            "loadModelRequest" => ActionEmit::effect(HostEffect::RequestFileOpen { accept: ".stp,.step,.obj,.stl,.glb".into(), read_as: Some("dataUrl".into()), import_action: "importModelFile".into(), multiple: false }),
             "importModelFile" => {
                 let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("").to_ascii_lowercase();
                 let payload = args.and_then(|value| value.get("payload")).cloned().or_else(|| args.cloned());

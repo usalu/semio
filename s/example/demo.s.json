@@ -214,7 +214,12 @@
             "sourceNodeId": "node-app-draw-1",
             "sourcePortId": "app-draw-1:out:out",
             "targetNodeId": "node-app-draw-2",
-            "targetPortId": "app-draw-2:out:in"
+            "targetPortId": "app-draw-2:out:in",
+            "contract": {
+              "kindId": "2d.drawing",
+              "mediaType": { "class": "data", "form": "value" },
+              "wire": { "kind": "document", "schema": "2d.drawing" }
+            }
           }
         ]
       }

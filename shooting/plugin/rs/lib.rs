@@ -1145,11 +1145,13 @@ impl DocumentApp for ShootingPlayApp {
                 accept: ".json,application/json".into(),
                 read_as: None,
                 import_action: "setFixtureJson".into(),
+                multiple: false,
             }),
             "importAssetRequest" => ActionEmit::effect(HostEffect::RequestFileOpen {
                 accept: ".glb,model/gltf-binary".into(),
                 read_as: Some("dataUrl".into()),
                 import_action: "importAsset".into(),
+                multiple: false,
             }),
             "importAsset" => {
                 if let Some(payload) = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str()) {

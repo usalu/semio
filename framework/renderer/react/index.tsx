@@ -1742,26 +1742,38 @@ function downloadDataUrl(filename: string, dataUrl: string): void {
   anchor.click();
 }
 
-function requestFileOpen(accept: string, readAs?: string): Promise<{ contents: string; name: string } | null> {
-  if (typeof document === "undefined") return Promise.resolve(null);
+/** 📤 Opens the native file picker. Resolves with one entry per selected file, in selection order —
+ * always an array (empty on cancel) so single-file callers just read `[0]` and `multiple` callers can
+ * fan out over the whole list; single-file behavior (one `<input>`, one resolved entry) is unchanged
+ * when `multiple` is false/absent. */
+function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): Promise<readonly { contents: string; name: string }[]> {
+  if (typeof document === "undefined") return Promise.resolve([]);
   return new Promise((resolve) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = accept;
+    if (multiple) input.multiple = true;
     input.onchange = async () => {
-      const file = input.files?.[0];
-      if (!file) {
-        resolve(null);
+      const files = input.files ? Array.from(input.files) : [];
+      if (files.length === 0) {
+        resolve([]);
         return;
       }
-      if (readAs === "dataUrl") {
-        const reader = new FileReader();
-        reader.onload = () => resolve(typeof reader.result === "string" ? { contents: reader.result, name: file.name } : null);
-        reader.onerror = () => resolve(null);
-        reader.readAsDataURL(file);
-        return;
+      const opened: { contents: string; name: string }[] = [];
+      for (const file of files) {
+        if (readAs === "dataUrl") {
+          const contents = await new Promise<string | null>((resolveFile) => {
+            const reader = new FileReader();
+            reader.onload = () => resolveFile(typeof reader.result === "string" ? reader.result : null);
+            reader.onerror = () => resolveFile(null);
+            reader.readAsDataURL(file);
+          });
+          if (contents !== null) opened.push({ contents, name: file.name });
+          continue;
+        }
+        opened.push({ contents: await file.text(), name: file.name });
       }
-      resolve({ contents: await file.text(), name: file.name });
+      resolve(opened);
     };
     input.click();
   });
@@ -3834,22 +3846,56 @@ export function FrameworkOsShell({
           continue;
         }
         if ("requestFileOpen" in effect) {
-          const { accept, readAs, importAction } = effect.requestFileOpen;
-          const opened = await requestFileOpen(accept || ".json,.spatial.json", readAs);
-          if (opened) {
+          const { accept, readAs, importAction, multiple } = effect.requestFileOpen;
+          const opened = await requestFileOpen(accept || ".json,.spatial.json", readAs, multiple);
+          if (opened.length > 0) {
             const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
             if (pluginEntry) {
-              const importResponse = await pluginEntry.handle.handleAction(
-                baseSession.instanceId,
-                JSON.stringify({
-                  controllerId: baseSession.app.controllerId,
-                  action: importAction,
-                  args: { payload: opened.contents, name: opened.name },
-                }),
-                baseSession.viewState,
-              );
-              await applyHostEffects(importResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(importResponse.uiScope));
+              // 📤 Single-file (multiple absent/false): identical to the pre-multi-select shape, one
+              // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
+              // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
+              const total = opened.length;
+              for (let index = 0; index < opened.length; index += 1) {
+                const file = opened[index]!;
+                const importResponse = await pluginEntry.handle.handleAction(
+                  baseSession.instanceId,
+                  JSON.stringify({
+                    controllerId: baseSession.app.controllerId,
+                    action: importAction,
+                    args: multiple ? { payload: file.contents, name: file.name, index, total } : { payload: file.contents, name: file.name },
+                  }),
+                  baseSession.viewState,
+                );
+                await applyHostEffects(importResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(importResponse.uiScope));
+              }
             }
+          }
+          continue;
+        }
+        if ("dispatchAction" in effect) {
+          // 🔁 Self re-dispatch (D2): re-invokes the same plugin instance with `action` after `delayMs`,
+          // without blocking the current `applyHostEffects` pass — `setTimeout` (0 is "next tick") fires
+          // the follow-up call and feeds its own `requestedEffects` back through `applyHostEffects`
+          // recursively, so a plugin can chain several ticks of staged/progressive work (e.g. a
+          // multi-pass reconstruction) purely by re-emitting `dispatchAction` from its own handler.
+          const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (pluginEntry) {
+            const entry = pluginEntry;
+            setTimeout(() => {
+              void (async () => {
+                const dispatchResponse = await entry.handle.handleAction(
+                  baseSession.instanceId,
+                  JSON.stringify({
+                    controllerId: baseSession.app.controllerId,
+                    action: dispatchActionId,
+                    args: dispatchArgs as Record<string, unknown> | undefined,
+                  }),
+                  baseSession.viewState,
+                );
+                await applyHostEffects(dispatchResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(dispatchResponse.uiScope));
+              })();
+            }, delayMs);
           }
           continue;
         }
@@ -4515,7 +4561,7 @@ export function FrameworkOsShell({
   }, [uiThemeBase]);
 
   const importTheme = useCallback(async () => {
-    const opened = await requestFileOpen(".theme.json,application/json");
+    const opened = (await requestFileOpen(".theme.json,application/json"))[0];
     if (!opened) return;
     try {
       const parsed = parseUiTheme(JSON.parse(opened.contents));
@@ -8346,6 +8392,17 @@ type WorldBrushPreviewRecord = {
   readonly scale?: readonly [number, number, number] | number;
 };
 
+/** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
+ * 10^5-10^6 points, distinct from per-point meshes. `positionsB64` is base64 of little-endian f32 xyz
+ * interleaved; `colorsB64` (optional) is base64 of u8 rgb interleaved, one triplet per point. */
+type WorldPointCloudLayerRecord = {
+  readonly id: string;
+  readonly positionsB64: string;
+  readonly colorsB64?: string;
+  readonly size: number;
+  readonly sizeAttenuation: boolean;
+};
+
 type WorldEngagementPreviewPoint = {
   readonly kind: "point";
   readonly role?: string;
@@ -9529,6 +9586,54 @@ function WorldInstancesLayer({
   );
 }
 //#endregion WorldInstancesLayer
+
+//#region WorldPointCloudLayer
+/** ☁️ Renders `World3dScene.pointsJson` layers as GPU point sprites — decodes each layer's base64
+ * position/color buffers into a `BufferGeometry` and draws it with a `PointsMaterial`, mounted
+ * alongside `WorldTerrainLayer` in the `World3dHost` scene tree. */
+type WorldPointCloudLayerVisual = { readonly geometry: BufferGeometry; readonly material: PointsMaterial };
+
+function pointCloudLayerVisual(layer: WorldPointCloudLayerRecord): WorldPointCloudLayerVisual {
+  const geometry = new BufferGeometry();
+  const positionBytes = base64ToBytes(layer.positionsB64);
+  const positions = new Float32Array(positionBytes.buffer, positionBytes.byteOffset, positionBytes.byteLength / Float32Array.BYTES_PER_ELEMENT);
+  geometry.setAttribute("position", new BufferAttribute(positions, 3));
+  const hasColors = Boolean(layer.colorsB64);
+  if (layer.colorsB64) geometry.setAttribute("color", new BufferAttribute(base64ToBytes(layer.colorsB64), 3, true));
+  const material = new PointsMaterial({ size: layer.size, sizeAttenuation: layer.sizeAttenuation, vertexColors: hasColors });
+  return { geometry, material };
+}
+
+function WorldPointCloudLayer({ pointsJson }: { readonly pointsJson: string | undefined }) {
+  const layers = useMemo(() => parseJsonArray<WorldPointCloudLayerRecord>(pointsJson), [pointsJson]);
+  const visuals = useMemo(() => {
+    const map = new Map<string, WorldPointCloudLayerVisual>();
+    for (const layer of layers) map.set(layer.id, pointCloudLayerVisual(layer));
+    return map;
+  }, [layers]);
+
+  useEffect(() => {
+    return () => {
+      for (const visual of visuals.values()) {
+        visual.geometry.dispose();
+        visual.material.dispose();
+      }
+    };
+  }, [visuals]);
+
+  if (layers.length === 0) return null;
+
+  return (
+    <group>
+      {layers.map((layer) => {
+        const visual = visuals.get(layer.id);
+        if (!visual) return null;
+        return <points key={layer.id} geometry={visual.geometry} material={visual.material} />;
+      })}
+    </group>
+  );
+}
+//#endregion WorldPointCloudLayer
 
 function WorldVortexMarkers({
   vortices,
@@ -10955,6 +11060,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
               </Suspense>
             ))}
             <WorldTerrainLayer terrainJson={scene?.terrainJson} cameraPosition={cameraState.position} cameraTarget={cameraState.target} />
+            <WorldPointCloudLayer pointsJson={scene?.pointsJson} />
             <group ref={instancesGroupRef}>
               <WorldInstancesLayer
                 instances={instances}

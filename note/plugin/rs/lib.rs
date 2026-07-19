@@ -1961,6 +1961,7 @@ impl DocumentApp for NotePlayApp {
                 accept: ".json,.note.json,application/json".into(),
                 read_as: None,
                 import_action: "setFixtureJson".into(),
+                multiple: false,
             }),
             "inkApplyEvents" => {
                 let events: Vec<NoteCanvasEvent> = args

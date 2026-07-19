@@ -16,6 +16,9 @@ remodel_sfm = { path = "../../sfm/rs" }
 remodel_dense = { path = "../../dense/rs" }
 remodel_mesh = { path = "../../mesh/rs" }
 remodel_image = { path = "../../image/rs" }
+remodel_camera = { path = "../../camera/rs" }
 mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
 mathematical_lie = { path = "../../../mathematical/lie/rs" }
 mathematical_spatial = { path = "../../../mathematical/spatial/rs" }
+mathematical_optimize = { path = "../../../mathematical/optimize/rs" }
+mathematical_random = { path = "../../../mathematical/random/rs" }

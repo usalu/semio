@@ -8,8 +8,8 @@
       { "id": "node-3", "instanceId": "app-3", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-3:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-3:out", "resourceKind": "2d.drawing", "direction": "out" }] }
     ],
     "edges": [
-      { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-1:out", "targetNodeId": "node-2", "targetPortId": "app-2:in" },
-      { "id": "edge-bc", "sourceNodeId": "node-2", "sourcePortId": "app-2:out", "targetNodeId": "node-3", "targetPortId": "app-3:in" }
+      { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-1:out", "targetNodeId": "node-2", "targetPortId": "app-2:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },
+      { "id": "edge-bc", "sourceNodeId": "node-2", "sourcePortId": "app-2:out", "targetNodeId": "node-3", "targetPortId": "app-3:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } }
     ]
   },
   "dirtyInstanceIds": ["app-1"],

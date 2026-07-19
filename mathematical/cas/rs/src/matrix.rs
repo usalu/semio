@@ -195,6 +195,13 @@ impl SymMatrix {
         Some(m.nullspace().into_iter().map(|v| (0..v.len()).map(|i| Expr::from(v.get(i).clone())).collect()).collect())
     }
 
+    /// 🔢 Reduced row-echelon form (`(rref, pivot_columns, rank)`), only when every entry is numeric.
+    pub fn rref(&self) -> Option<(Self, Vec<usize>, usize)> {
+        let m = self.to_numeric()?;
+        let (r, pivots, rank) = m.rref();
+        Some((Self::from_numeric(&r), pivots, rank))
+    }
+
     /// 🔁 Solves `A x = b` when `A` is numeric; falls back to `None` for symbolic matrices (use
     /// `crate::solve::solve_linear_system` directly for those).
     pub fn solve_numeric(&self, b: &[Expr]) -> Option<Vec<Expr>> {
@@ -293,6 +300,14 @@ mod tests {
     fn rank_of_numeric_matrix() {
         let m = SymMatrix::from_rows(vec![vec![e(1), e(2)], vec![e(2), e(4)]]);
         assert_eq!(m.rank(), Some(1));
+    }
+
+    #[test]
+    fn rref_of_numeric_matrix() {
+        let m = SymMatrix::from_rows(vec![vec![e(2), e(4)], vec![e(1), e(1)]]);
+        let (rref, _pivots, rank) = m.rref().unwrap();
+        assert_eq!(rank, 2);
+        assert_eq!(rref, SymMatrix::identity(2));
     }
 
     #[test]

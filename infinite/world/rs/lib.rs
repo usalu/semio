@@ -3165,6 +3165,7 @@ mod tests {
                 frame_json: None,
                 fit_json: None,
                 terrain_json: None,
+                points_json: None,
             }),
             node_graph: None,
             text_editor: None,

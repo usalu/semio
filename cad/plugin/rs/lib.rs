@@ -4827,6 +4827,7 @@ impl DocumentApp for CadPlayApp {
                 accept: ".json,.spatial.json,.stp,.step,.obj,.stl,.glb".into(),
                 read_as: Some("dataUrl".into()),
                 import_action: "importCadFile".into(),
+                multiple: false,
             }),
             "importCadFile" => {
                 let name = args

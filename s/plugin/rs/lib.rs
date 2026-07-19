@@ -468,6 +468,7 @@ pub mod app_home {
                             accept: ".json".into(),
                             read_as: None,
                             import_action: "importStudio".into(),
+                            multiple: false,
                         }),
                     }
                 }
@@ -2372,6 +2373,7 @@ pub mod app_studio {
                             accept: format!(".{format}"),
                             read_as: Some("dataUrl".into()),
                             import_action: "importMediaPayload".into(),
+                            multiple: false,
                         });
                     }
                     return ActionEmit::default();

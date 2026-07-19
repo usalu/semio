@@ -476,6 +476,9 @@ export type World3dScene = {
   readonly fitJson?: string;
   /** 🌐⛰️ GIS 3D terrain style/source descriptor, consumed by `WorldTerrainLayer`. */
   readonly terrainJson?: string;
+  /** ☁️ Point-cloud rendering layers (10^5-10^6 points) — an array of `{ id, positionsB64 (base64 le
+   * f32 xyz), colorsB64? (base64 u8 rgb), size, sizeAttenuation }`, consumed by `WorldPointCloudLayer`. */
+  readonly pointsJson?: string;
 };
 
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
@@ -1674,11 +1677,15 @@ export type HostEffect =
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
-  | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string } }
+  | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowKindId: string; readonly utilityId: string } }
-  | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } };
+  | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } }
+  /** @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a plugin
+   * advance staged/progressive work over several ticks without blocking the host; the response's own
+   * `requestedEffects` are fed back through `applyHostEffects` recursively. */
+  | { readonly dispatchAction: { readonly action: string; readonly args?: unknown; readonly delayMs: number } };
 
 /**
  * @emoji 🐢 Mirrors the Rust `UiDirtyScope` — which rendered UI sections an action actually

@@ -477,8 +477,8 @@ mod tests {
 
     #[test]
     fn log_sum_exp_matches_naive_for_moderate_values() {
-        let values = [0.1, 0.5, -0.3, 0.2];
-        let naive = values.iter().map(|v| v.exp()).sum::<f64>().ln();
+        let values: [f64; 4] = [0.1, 0.5, -0.3, 0.2];
+        let naive = values.iter().map(|v: &f64| v.exp()).sum::<f64>().ln();
         assert!((log_sum_exp(&values) - naive).abs() < 1e-9);
     }
 

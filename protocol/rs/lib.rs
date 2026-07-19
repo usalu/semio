@@ -1091,6 +1091,8 @@ pub mod builder_kit {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: Some(build_protocol_list_scene(spec, palette, selected_id)),
         })
     }

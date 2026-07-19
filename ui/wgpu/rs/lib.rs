@@ -2048,6 +2048,39 @@ pub struct World3dScene {
     /// 🌐⛰️ GIS 3D terrain style/source descriptor (`{tileUrlTemplate, projectOriginLon, projectOriginLat, exaggeration, colorRamp, minZoom, maxZoom}`), consumed by `WorldTerrainLayer`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub terrain_json: Option<String>,
+    /// ☁️ Point-cloud rendering layers, distinct from `meshes_json`'s per-point-mesh path — cheap for
+    /// 10^5-10^6 points. An array of `{id, positionsB64, colorsB64?, size, sizeAttenuation}` where
+    /// `positionsB64` is base64 of little-endian f32 xyz interleaved and `colorsB64` (optional) is
+    /// base64 of u8 rgb interleaved, one per point. Consumed by `WorldPointCloudLayer`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub points_json: Option<String>,
+}
+
+impl World3dScene {
+    /** @emoji 🌐 Builds a world-3d scene with optional extensions unset. */
+    pub fn base(camera_json: String, meshes_json: String, instances_json: String, selection_json: String) -> Self {
+        Self {
+            camera_json,
+            meshes_json,
+            instances_json,
+            selection_json,
+            vortices_json: None,
+            attractions_json: None,
+            target_volumes_json: None,
+            references_json: None,
+            brush_preview_json: None,
+            interaction_json: None,
+            engagement_preview_json: None,
+            lod_json: None,
+            chunking_json: None,
+            context_menu_json: None,
+            environment_json: None,
+            frame_json: None,
+            fit_json: None,
+            terrain_json: None,
+            points_json: None,
+        }
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3624,6 +3657,7 @@ mod ui_node_wire_format_tests {
                         frame_json: None,
                         fit_json: None,
                         terrain_json: None,
+                        points_json: None,
                     }),
                     node_graph: None,
                     text_editor: None,
@@ -3675,6 +3709,24 @@ mod ui_node_wire_format_tests {
         assert!(json.contains("\"loading\":true"));
         let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, loading);
+    }
+
+    /// ☁️ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
+    /// absent when unset, round-trips (camelCase `pointsJson`) when set.
+    #[test]
+    fn world_3d_scene_points_json_skips_when_none_and_roundtrips_when_set() {
+        let bare = World3dScene::base("{}".into(), "[]".into(), "[]".into(), "{}".into());
+        assert!(!serde_json::to_string(&bare).unwrap().contains("pointsJson"));
+
+        let mut with_points = bare;
+        with_points.points_json = Some(
+            r#"[{"id":"cloud-1","positionsB64":"AACAPwAAAEAAAEBA","colorsB64":"/wAA","size":2.0,"sizeAttenuation":true}]"#
+                .into(),
+        );
+        let json = serde_json::to_string(&with_points).unwrap();
+        assert!(json.contains("\"pointsJson\":"));
+        let roundtripped: World3dScene = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, with_points);
     }
 
     const GOLDEN_SURFACE_KIND_JSON: &str = "[\"canvas-2d\",\"world-3d\",\"node-graph\",\"text-editor\",\"table\",\"paint-2d\",\"virtualFileSystem\",\"tiled-map\",\"board-2d\",\"icon-render\",\"ink-canvas\",\"graph-timeline\",\"diff-view\",\"event-feed\"]";

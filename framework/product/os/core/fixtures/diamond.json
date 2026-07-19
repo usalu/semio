@@ -9,10 +9,10 @@
       { "id": "node-4", "instanceId": "app-d", "x": 400, "y": 0, "width": 160, "height": 72, "inputs": [{ "id": "app-d:in", "resourceKind": "2d.drawing", "direction": "in" }], "outputs": [{ "id": "app-d:out", "resourceKind": "2d.drawing", "direction": "out" }] }
     ],
     "edges": [
-      { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-2", "targetPortId": "app-b:in" },
-      { "id": "edge-ac", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-3", "targetPortId": "app-c:in" },
-      { "id": "edge-bd", "sourceNodeId": "node-2", "sourcePortId": "app-b:out", "targetNodeId": "node-4", "targetPortId": "app-d:in" },
-      { "id": "edge-cd", "sourceNodeId": "node-3", "sourcePortId": "app-c:out", "targetNodeId": "node-4", "targetPortId": "app-d:in" }
+      { "id": "edge-ab", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-2", "targetPortId": "app-b:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },
+      { "id": "edge-ac", "sourceNodeId": "node-1", "sourcePortId": "app-a:out", "targetNodeId": "node-3", "targetPortId": "app-c:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },
+      { "id": "edge-bd", "sourceNodeId": "node-2", "sourcePortId": "app-b:out", "targetNodeId": "node-4", "targetPortId": "app-d:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } },
+      { "id": "edge-cd", "sourceNodeId": "node-3", "sourcePortId": "app-c:out", "targetNodeId": "node-4", "targetPortId": "app-d:in", "contract": { "kindId": "2d.drawing", "mediaType": { "class": "data", "form": "value" }, "wire": { "kind": "document", "schema": "2d.drawing" } } }
     ]
   },
   "dirtyInstanceIds": ["app-a"],

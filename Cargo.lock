@@ -8158,7 +8158,10 @@ version = "0.1.0"
 dependencies = [
  "mathematical_algebra",
  "mathematical_lie",
+ "mathematical_optimize",
+ "mathematical_random",
  "mathematical_spatial",
+ "remodel_camera",
  "remodel_dense",
  "remodel_image",
  "remodel_mesh",
@@ -8176,7 +8179,10 @@ dependencies = [
 name = "remodel_mesh"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "mathematical_algebra",
+ "mathematical_graph",
+ "mathematical_lie",
  "mathematical_spatial",
  "remodel_camera",
  "remodel_dense",
@@ -8188,8 +8194,7 @@ dependencies = [
 name = "remodel_motion"
 version = "0.1.0"
 dependencies = [
- "mathematical_graph",
- "mathematical_graph_matching",
+ "mathematical_algebra",
  "mathematical_lie",
  "mathematical_optimize",
  "mathematical_signal",

@@ -5029,6 +5029,15 @@ pub fn validate_component_scene(scene: &UiComponentSceneNode, limits: &RenderPla
         )?;
         check_optional_json_payload(&format!("{scene_label} world3d.lod"), &world.lod_json, limits)?;
         check_optional_json_payload(&format!("{scene_label} world3d.chunking"), &world.chunking_json, limits)?;
+        // ☁️ `points_json` payload-size validation only — the point-sprite GPU pipeline itself lives in
+        // `infinite_world::World3dState` (see `render_world_3d`, imported below), a separate crate this
+        // file delegates all actual mesh/instance drawing to and does not construct wgpu render
+        // pipelines/shaders directly for (confirmed: no `create_render_pipeline`/`RenderPipelineDescriptor`
+        // call anywhere in this file). Threading the base64 point buffers through `infinite_world`'s own
+        // draw path is out of scope here (that crate isn't in this ticket's touched-file list); this
+        // validator still guards the native shell against an oversized/malformed payload same as every
+        // other optional world3d field above.
+        check_optional_json_payload(&format!("{scene_label} world3d.points"), &world.points_json, limits)?;
     }
     if let Some(graph) = &scene.node_graph {
         check_json_payload(&format!("{scene_label} nodeGraph.nodes"), &graph.nodes_json, limits)?;
@@ -6301,6 +6310,7 @@ mod render_plan_validator_tests {
             selected: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             children,
             loading: None,
         })
@@ -6335,6 +6345,7 @@ mod render_plan_validator_tests {
                 frame_json: None,
                 fit_json: None,
                 terrain_json: None,
+                points_json: None,
             },
         );
         let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");
@@ -7968,6 +7979,8 @@ mod render_entry_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: None,
         }
     }
@@ -8759,6 +8772,8 @@ mod table_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: None,
         }
     }
@@ -9149,6 +9164,8 @@ mod block_list_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: Some(block_list),
         }
     }
@@ -9212,6 +9229,8 @@ mod block_list_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: None,
         };
         render(&node);
@@ -13000,6 +13019,8 @@ fn render_icon_render(
         icon_render: None,
         ink_canvas: None,
         graph_timeline: None,
+        diff_view: None,
+        event_feed: None,
         block_list: None,
     };
 
@@ -14166,6 +14187,8 @@ mod text_editor_tests {
             icon_render: None,
             ink_canvas: None,
             graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
             block_list: None,
         }
     }
@@ -15624,6 +15647,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             loading: None,
         })
     }
@@ -15665,6 +15689,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             loading: None,
         })
     }
@@ -15767,6 +15792,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             loading: None,
         })
     }
@@ -16432,9 +16458,25 @@ impl ShellState {
         // 🧰 A plugin may programmatically switch the active utility via `HostEffect::SetActiveUtility`
         // (Architecture Decision 4/9) — apply it to the host-owned map just like a user click.
         for effect in &result.requested_effects {
-            if let semio_framework_core::kernel::HostEffect::SetActiveUtility { window_kind_id, utility_id } = effect {
-                self.active_utility_by_window
-                    .insert(window_kind_id.clone(), utility_id.clone());
+            match effect {
+                semio_framework_core::kernel::HostEffect::SetActiveUtility { window_kind_id, utility_id } => {
+                    self.active_utility_by_window
+                        .insert(window_kind_id.clone(), utility_id.clone());
+                }
+                // 🔁 Self re-dispatch (D2): queues `action` onto the same `deferred_actions` mechanism
+                // tree-hover/selection follow-ups already use, which `flush_deferred_actions` drains every
+                // event-loop tick — so, natively, any `delay_ms` collapses to "next tick" (no timer wheel
+                // exists in this shell yet; the real wall-clock delay is honored by the React shell's own
+                // `setTimeout` handling of the same effect). The dispatched action reuses the originating
+                // `action.controller_id`, i.e. re-invokes the same plugin instance that emitted the effect.
+                semio_framework_core::kernel::HostEffect::DispatchAction { action: dispatch_action_id, args, .. } => {
+                    self.deferred_actions.push(ActionDescriptor {
+                        controller_id: action.controller_id.clone(),
+                        action: dispatch_action_id.clone(),
+                        args: args.clone(),
+                    });
+                }
+                _ => {}
             }
         }
         let ops: Vec<String> = result
@@ -16490,26 +16532,39 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                         .unwrap_or(".json");
                     let read_as = op.get("readAs").and_then(|v| v.as_str());
-                    if let (Some(session), Some(contents)) = (self.session.clone(), request_file_open(accept, read_as)) {
-                        let payload = serde_json::from_str::<serde_json::Value>(&contents)
-                            .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
-                        let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
-                        if let Some(obj) = args.as_object_mut() {
-                            obj.insert("json".into(), serde_json::Value::String(contents));
-                            obj.insert("payload".into(), payload);
-                        }
-                        let action = ActionDescriptor {
-                            controller_id: session.app.controller_id.clone(),
-                            action: import_action.to_string(),
-                            args: Some(args),
-                        };
-                        if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
-                            if let Ok(action_json) = serde_json::to_string(&action) {
-                                if let Ok(import_result) = plugin
-                                    .handle_action(session.instance_id, &action_json, &session.view_state)
-                                    .await
-                                {
-                                    follow_up_ops.extend(patch_ops_from_action_result(&import_result));
+                    // 📤 D3: `multiple` opens a multi-select native dialog (`rfd::FileDialog::pick_files`);
+                    // single-file behavior (one dialog call, one `handleAction` with `{json, payload}`) is
+                    // byte-for-byte unchanged when absent/false since `request_file_open` then returns at
+                    // most one entry and this loop runs exactly once with the same args shape as before.
+                    let multiple = op.get("multiple").and_then(|v| v.as_bool()).unwrap_or(false);
+                    if let Some(session) = self.session.clone() {
+                        let opened = request_file_open(accept, read_as, multiple);
+                        let total = opened.len();
+                        for (index, contents) in opened.into_iter().enumerate() {
+                            let payload = serde_json::from_str::<serde_json::Value>(&contents)
+                                .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
+                            let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                            if let Some(obj) = args.as_object_mut() {
+                                obj.insert("json".into(), serde_json::Value::String(contents));
+                                obj.insert("payload".into(), payload);
+                                if multiple {
+                                    obj.insert("index".into(), serde_json::json!(index));
+                                    obj.insert("total".into(), serde_json::json!(total));
+                                }
+                            }
+                            let action = ActionDescriptor {
+                                controller_id: session.app.controller_id.clone(),
+                                action: import_action.to_string(),
+                                args: Some(args),
+                            };
+                            if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
+                                if let Ok(action_json) = serde_json::to_string(&action) {
+                                    if let Ok(import_result) = plugin
+                                        .handle_action(session.instance_id, &action_json, &session.view_state)
+                                        .await
+                                    {
+                                        follow_up_ops.extend(patch_ops_from_action_result(&import_result));
+                                    }
                                 }
                             }
                         }
@@ -20017,6 +20072,7 @@ impl ShellState {
                 selected: None,
                 activate: None,
                 drop_action: None,
+                drop_overlay: None,
                 loading: None,
             }));
         }
@@ -20029,6 +20085,7 @@ impl ShellState {
             selected: None,
             activate: None,
             drop_action: None,
+            drop_overlay: None,
             loading: None,
         })
     }
@@ -25133,8 +25190,12 @@ fn pick_folder() -> Option<String> {
     None
 }
 
+/// 📤 Opens the native file picker; one entry per selected file, in selection order. `multiple`
+/// switches to `rfd::FileDialog::pick_files` (native multi-select); single-file behavior (`pick_file`,
+/// at most one entry) is unchanged when false — rfd's own OS-native dialog handles the multi-select UI,
+/// no bespoke picker needed.
 #[cfg(not(target_arch = "wasm32"))]
-fn request_file_open(accept: &str, read_as: Option<&str>) -> Option<String> {
+fn request_file_open(accept: &str, read_as: Option<&str>, multiple: bool) -> Vec<String> {
     let extensions: Vec<&str> = accept
         .split(',')
         .filter_map(|entry| entry.trim().strip_prefix('.'))
@@ -25143,19 +25204,30 @@ fn request_file_open(accept: &str, read_as: Option<&str>) -> Option<String> {
     if !extensions.is_empty() {
         dialog = dialog.add_filter("import", &extensions);
     }
-    let path = dialog.pick_file()?;
-    if read_as == Some("dataUrl") {
-        use base64::Engine;
-        let bytes = std::fs::read(&path).ok()?;
-        let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
-        return Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)));
-    }
-    std::fs::read_to_string(path).ok()
+    let paths: Vec<std::path::PathBuf> = if multiple {
+        dialog.pick_files().unwrap_or_default()
+    } else {
+        dialog.pick_file().into_iter().collect()
+    };
+    paths
+        .into_iter()
+        .filter_map(|path| {
+            if read_as == Some("dataUrl") {
+                use base64::Engine;
+                let bytes = std::fs::read(&path).ok()?;
+                let mime = extensions.first().map(|ext| format!("application/{ext}")).unwrap_or_else(|| "application/octet-stream".into());
+                return Some(format!("data:{mime};base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)));
+            }
+            std::fs::read_to_string(path).ok()
+        })
+        .collect()
 }
 
+/// 🕸️ wasm32 has no native file-dialog surface — the browser shell handles `RequestFileOpen` itself
+/// (see `framework/renderer/react/index.tsx`'s `requestFileOpen`); this native fallback stays empty.
 #[cfg(target_arch = "wasm32")]
-fn request_file_open(_accept: &str, _read_as: Option<&str>) -> Option<String> {
-    None
+fn request_file_open(_accept: &str, _read_as: Option<&str>, _multiple: bool) -> Vec<String> {
+    Vec::new()
 }
 
 #[cfg(target_arch = "wasm32")]

@@ -4669,6 +4669,7 @@ pub fn world3d_scene_extended(
         frame_json: None,
         fit_json: None,
         terrain_json: None,
+        points_json: None,
     }
 }
 
