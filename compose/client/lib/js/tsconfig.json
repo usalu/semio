@@ -25,7 +25,8 @@
     "skipLibCheck": true, // Must be present for Nextjs (value optional), true recommended by XState
     "strictNullChecks": true, // true recommended by XState
     "allowJs": false, // Must be present for Nextjs, value optional
-    "incremental": false, // Must be present for Nextjs, value optional
+    "incremental": true, // Must be present for Nextjs, value optional
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
     "noEmit": true, // Must be present for Nextjs, value optional
     "allowImportingTsExtensions": true,
     // "verbatimModuleSyntax": true, // Recommended for astro to avoid bundling issues, value optional

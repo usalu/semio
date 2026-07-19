@@ -137,6 +137,42 @@ pub fn check_composite_beam(m_ed_knm: f64, v_ed_kn: f64, m_pla: f64, m_pl_rd: f6
     report
 }
 
+fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
+    match value.to_ascii_lowercase().as_str() {
+        "r30" => part_1_2::FireRating::R30,
+        "r90" => part_1_2::FireRating::R90,
+        "r120" => part_1_2::FireRating::R120,
+        _ => part_1_2::FireRating::R60,
+    }
+}
+
+/// 📋 Full EN 1994 check across composite, fire, and bridge fatigue parts.
+pub fn check_full_composite(
+    m_ed_knm: f64,
+    v_ed_kn: f64,
+    m_pla: f64,
+    m_pl_rd: f64,
+    eta: f64,
+    v_l_rd: f64,
+    insulation_thickness_mm: f64,
+    fire_rating: &str,
+    deck_type: &str,
+    delta_sigma_mpa: f64,
+    fatigue_detail: &str,
+) -> CheckReport {
+    let mut report = check_composite_beam(m_ed_knm, v_ed_kn, m_pla, m_pl_rd, eta, v_l_rd);
+    report.push(part_1_2::check_fire_composite(insulation_thickness_mm, parse_fire_rating(fire_rating), deck_type));
+    let category = part_2::bridge_fatigue_category(fatigue_detail);
+    report.push(CheckResult::from_utilization(
+        ClauseId::new("EN 1994-2", "§8", "8.1"),
+        Quantity::stress_mpa(delta_sigma_mpa),
+        Quantity::stress_mpa(category as f64),
+        "bridge composite fatigue",
+        AnnexChoice::En,
+    ));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -149,11 +185,28 @@ pub struct Document {
     pub m_pl_rd: f64,
     pub eta: f64,
     pub v_l_rd: f64,
+    pub insulation_thickness_mm: f64,
+    pub fire_rating: String,
+    pub deck_type: String,
+    pub delta_sigma_mpa: f64,
+    pub fatigue_detail: String,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { m_ed_knm: 200.0, v_ed_kn: 120.0, m_pla: 80.0, m_pl_rd: 250.0, eta: 0.75, v_l_rd: 150.0 }
+        Self {
+            m_ed_knm: 200.0,
+            v_ed_kn: 120.0,
+            m_pla: 80.0,
+            m_pl_rd: 250.0,
+            eta: 0.75,
+            v_l_rd: 150.0,
+            insulation_thickness_mm: 20.0,
+            fire_rating: "r60".into(),
+            deck_type: "trapezoidal".into(),
+            delta_sigma_mpa: 65.0,
+            fatigue_detail: "stud_welded".into(),
+        }
     }
 }
 
@@ -161,7 +214,19 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1994Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_composite_beam(document.m_ed_knm, document.v_ed_kn, document.m_pla, document.m_pl_rd, document.eta, document.v_l_rd)
+    check_full_composite(
+        document.m_ed_knm,
+        document.v_ed_kn,
+        document.m_pla,
+        document.m_pl_rd,
+        document.eta,
+        document.v_l_rd,
+        document.insulation_thickness_mm,
+        &document.fire_rating,
+        &document.deck_type,
+        document.delta_sigma_mpa,
+        &document.fatigue_detail,
+    )
 }
 
 pub struct En1994Family;
@@ -233,5 +298,21 @@ mod tests {
     #[test]
     fn na_de_gamma_v() {
         assert!((na_de::gamma_v() - 1.25).abs() < 1e-9);
+    }
+
+    #[test]
+    fn full_composite_worked_example() {
+        let report = check_full_composite(180.0, 110.0, 80.0, 250.0, 0.75, 150.0, 20.0, "r60", "trapezoidal", 55.0, "stud_welded");
+        assert_eq!(report.checks.len(), 4);
+        let m_rd = part_1_1::plastic_moment_partial_knm(80.0, 250.0, 0.75);
+        assert!((m_rd - 207.5).abs() < 0.1);
+        assert!(report.checks[0].utilization < 1.0);
+        assert!(report.checks[2].utilization < 1.0);
+    }
+
+    #[test]
+    fn evaluate_runs_all_parts() {
+        let report = evaluate(&Document::default());
+        assert_eq!(report.checks.len(), 4);
     }
 }

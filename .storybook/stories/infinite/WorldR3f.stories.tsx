@@ -41,11 +41,11 @@ function useStoryChunkOrigins(): readonly Vec3[] {
   }, []);
 }
 
+/** @emoji 🧊 `origin` is this component's own (fully-typed) prop, not a Three.js one — `WorldChunks` reads `child.props.origin` straight off the `<StoryChunkBox>` element it buckets (see header docstring), never off the `<mesh>` it renders internally. */
 function StoryChunkBox({ origin }: { readonly origin: Vec3 }): ReactElement {
   const colorIndex = (Math.round(origin[0] / STORY_CHUNK_SIZE) + Math.round(origin[1] / STORY_CHUNK_SIZE) + STORY_CHUNK_COLORS.length * 2) % STORY_CHUNK_COLORS.length;
   return (
-    // eslint-disable-next-line react/no-unknown-property -- `origin` isn't a Three.js prop; `WorldChunks` reads it straight off `child.props` to bucket this element into a chunk group (see header docstring).
-    <mesh origin={origin} position={origin}>
+    <mesh position={origin}>
       <boxGeometry args={[4, 4, 4]} />
       <meshStandardMaterial color={STORY_CHUNK_COLORS[colorIndex]} />
     </mesh>

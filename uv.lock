@@ -1081,7 +1081,6 @@ source = { virtual = "." }
 [package.dev-dependencies]
 dev = [
     { name = "black" },
-    { name = "debugpy" },
     { name = "ipykernel" },
     { name = "jupyter" },
     { name = "matplotlib" },
@@ -1104,7 +1103,6 @@ test = [
 [package.metadata.requires-dev]
 dev = [
     { name = "black", specifier = ">=26.5.1" },
-    { name = "debugpy", specifier = ">=1.8.21" },
     { name = "ipykernel", specifier = ">=7.3.0" },
     { name = "jupyter", specifier = ">=1.1.1" },
     { name = "matplotlib", specifier = ">=3.11.0" },

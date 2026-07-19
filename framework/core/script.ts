@@ -1,14 +1,15 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/framework-core` task router: `bun ./script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runVitest } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runVitest, resolveTestLevel } from "../../repo/lib/js/index.ts";
 import { spawnSync } from "node:child_process";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargoTestBudgeted(["semio-framework-core"], this.repoRoot, segments);
-    await runVitest(this.root, segments, "js/vitest.config.ts");
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-framework-core"], this.repoRoot, rest);
+    await runVitest(this.root, rest, "js/vitest.config.ts");
   }
 }
 

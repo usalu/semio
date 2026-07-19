@@ -8,6 +8,8 @@
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;UnitTest</Configurations>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)' == 'UnitTest'">

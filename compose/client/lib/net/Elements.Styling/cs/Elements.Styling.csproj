@@ -5,6 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
     <RootNamespace>Elements.Styling</RootNamespace>
     <AssemblyName>Elements.Styling</AssemblyName>
     <Description>Generated from elements/core/styling (adapters.manifest.json); Palette hex strings from tokens.json colors.</Description>

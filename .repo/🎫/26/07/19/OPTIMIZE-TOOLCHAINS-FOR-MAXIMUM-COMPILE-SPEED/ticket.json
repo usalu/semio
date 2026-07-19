@@ -1,0 +1,13 @@
+{
+  "title": "Optimize Toolchains for Maximum Compile Speed",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "No dev or agent uses a step-through debugger anymore; debugging is console-log only. Reconfigure Rust (Cargo profiles, release incremental, codegen-units), TypeScript (incremental type-check), VS Code extension Vite builds (drop sourcemaps), Python (drop debugpy), .vscode/launch.json (zero debug adapters), and C# (no PDBs) for maximum compile/build speed, given a 193-crate Rust workspace where the hot path is wasm-pack/wasip2/native --release builds.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2158"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪52d0d9ac33384ac3801f8c575a6f3b55"
+  ]
+}

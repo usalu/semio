@@ -808,7 +808,9 @@ pub struct DistributionHealth {
 
 impl DistributionHealth {
     pub fn assess(live_count: usize, prob_sum: f64) -> Self {
-        Self { live_count, prob_sum, is_degenerate: live_count == 0 || !(prob_sum > 0.0) }
+        // 📐 `is_nan() || <= 0.0` (not `!(prob_sum > 0.0)`) so NaN is explicitly, intentionally
+        // flagged degenerate rather than relying on `>` being false for NaN — same result, clearer.
+        Self { live_count, prob_sum, is_degenerate: live_count == 0 || prob_sum.is_nan() || prob_sum <= 0.0 }
     }
 }
 
@@ -914,7 +916,7 @@ impl TokenBitset {
         self.len
     }
 
-    pub fn is_empty_capacity(&self) -> bool {
+    pub fn is_empty(&self) -> bool {
         self.len == 0
     }
 
@@ -1338,6 +1340,11 @@ pub struct ScheduleInput {
 
 /// 📅 A parameter value that may vary over the course of generation. Every warper/penalty knob
 /// that the feature tree calls out as schedulable is `Schedule`-typed in [`ProcessorSpec`].
+///
+/// `PartialEq` compares `Callback` variants by function-pointer identity — good enough to
+/// distinguish "the same fn item" from "a different one" in tests/config diffing, even though two
+/// pointers to the same fn aren't guaranteed unique across monomorphizations; hence the allow.
+#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Clone, PartialEq, Debug)]
 pub enum Schedule {
     Constant(f64),
@@ -1376,7 +1383,7 @@ impl Schedule {
                 from + (to - from) * cos_t
             }
             Self::Piecewise(pieces) => {
-                let mut value = pieces.first().map(|(_, v)| *v).unwrap_or(0.0);
+                let mut value = pieces.first().map_or(0.0, |(_, v)| *v);
                 for (step, v) in pieces {
                     if step.get() <= input.step.get() {
                         value = *v;
@@ -1563,7 +1570,9 @@ pub enum ProcessorSpec {
     PresencePenalty { penalty: f32, scope: PenaltyScope },
     FrequencyPenalty { penalty: f32, scope: PenaltyScope },
     DecayingPenalty { penalty: f32, window: usize, half_life: f64, scope: PenaltyScope },
-    TokenClassPenalty { classes: Vec<u16>, factors: Vec<f32> },
+    /// ⚙️ `class_tokens[c]` lists the token ids in class `c`; `factors[c]` is that class's
+    /// multiplicative penalty factor (same lengths, index-aligned).
+    TokenClassPenalty { class_tokens: Vec<Vec<TokenId>>, factors: Vec<f32> },
     NoRepeatNgram { n: usize },
     PhrasePenalty { phrases: Vec<Vec<TokenId>>, penalty: f32 },
     LogitBiasSparse { entries: Vec<(TokenId, f32)> },
@@ -1813,20 +1822,14 @@ impl SamplingConfig {
 
 fn validate_processor_spec(spec: &ProcessorSpec, limits: &SamplingLimits) -> Result<(), SamplingError> {
     match spec {
-        ProcessorSpec::NoRepeatNgram { n } => {
-            if *n == 0 || *n > limits.max_ngram_order {
-                return Err(SamplingError::LimitExceeded { limit: "max_ngram_order" });
-            }
+        ProcessorSpec::NoRepeatNgram { n } if *n == 0 || *n > limits.max_ngram_order => {
+            return Err(SamplingError::LimitExceeded { limit: "max_ngram_order" });
         }
-        ProcessorSpec::TokenClassPenalty { classes, factors } => {
-            if classes.len() != factors.len() {
-                return Err(SamplingError::InvalidConfig { field: "token_class_penalty", reason: "classes and factors must have equal length" });
-            }
+        ProcessorSpec::TokenClassPenalty { class_tokens, factors } if class_tokens.len() != factors.len() => {
+            return Err(SamplingError::InvalidConfig { field: "token_class_penalty", reason: "class_tokens and factors must have equal length" });
         }
-        ProcessorSpec::RankTruncation { max_rank } => {
-            if *max_rank == 0 {
-                return Err(SamplingError::InvalidConfig { field: "rank_truncation.max_rank", reason: "must be >= 1" });
-            }
+        ProcessorSpec::RankTruncation { max_rank } if *max_rank == 0 => {
+            return Err(SamplingError::InvalidConfig { field: "rank_truncation.max_rank", reason: "must be >= 1" });
         }
         _ => {}
     }
@@ -1952,9 +1955,9 @@ fn processor_spec_to_json(spec: &ProcessorSpec) -> JsonValue {
             ("half_life", JsonValue::Num(*half_life)),
             ("scope", penalty_scope_to_json(*scope)),
         ]),
-        ProcessorSpec::TokenClassPenalty { classes, factors } => obj(vec![
+        ProcessorSpec::TokenClassPenalty { class_tokens, factors } => obj(vec![
             ("kind", JsonValue::Str("token_class_penalty".into())),
-            ("classes", JsonValue::Array(classes.iter().map(|c| JsonValue::Num(*c as f64)).collect())),
+            ("class_tokens", phrases_json(class_tokens)),
             ("factors", JsonValue::Array(factors.iter().map(|f| JsonValue::Num(*f as f64)).collect())),
         ]),
         ProcessorSpec::NoRepeatNgram { n } => obj(vec![("kind", JsonValue::Str("no_repeat_ngram".into())), ("n", JsonValue::Num(*n as f64))]),
@@ -2039,7 +2042,7 @@ fn processor_spec_from_json(value: &JsonValue) -> Result<ProcessorSpec, Sampling
             scope: penalty_scope_from_json(value.get("scope"))?,
         }),
         "token_class_penalty" => Ok(ProcessorSpec::TokenClassPenalty {
-            classes: value.get("classes").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as u16).collect()).unwrap_or_default(),
+            class_tokens: phrases("class_tokens"),
             factors: value.get("factors").and_then(JsonValue::as_array).map(|a| a.iter().filter_map(JsonValue::as_f64).map(|n| n as f32).collect()).unwrap_or_default(),
         }),
         "no_repeat_ngram" => Ok(ProcessorSpec::NoRepeatNgram { n: num("n", 3.0) as usize }),
@@ -2386,6 +2389,26 @@ impl LogitsWorkspace {
     pub fn add_bias_over_live(&mut self, mut bias: impl FnMut(TokenId) -> f32) {
         for &idx in &self.live {
             self.processed[idx as usize] += bias(TokenId::new(idx));
+        }
+    }
+
+    /// 🧰 Replaces each live token's processed logit with `f(token, current_logit)` — the general
+    /// form multiplicative penalties (sign-aware repetition penalty, per-class factors) need,
+    /// since those aren't expressible as a pure additive bias.
+    pub fn transform_processed_over_live(&mut self, mut f: impl FnMut(TokenId, f32) -> f32) {
+        for &idx in &self.live {
+            let token = TokenId::new(idx);
+            let current = self.processed[idx as usize];
+            self.processed[idx as usize] = f(token, current);
+        }
+    }
+
+    /// 🧰 Adds `delta` to one token's processed logit directly by index, regardless of current
+    /// `live` membership (harmless if the token is already masked out — later phases only ever
+    /// read `processed` through `live`).
+    pub fn bias_processed(&mut self, token: TokenId, delta: f32) {
+        if let Some(v) = self.processed.get_mut(token.get() as usize) {
+            *v += delta;
         }
     }
 
@@ -3047,9 +3070,9 @@ impl LogitsProcessor for AdaptiveTruncation {
     }
 }
 
-/// 🌡️ Builds a [`LogitsProcessor`] from a [`ProcessorSpec`]. Grows across implementation waves;
-/// variants without a struct yet (penalties, biases, adaptive controllers — see later regions)
-/// fall through to an error until their region lands.
+/// 🌡️ Builds a [`LogitsProcessor`] from a [`ProcessorSpec`]; exhaustive over every variant once
+/// the warpers (`🔖Warpers`), penalties (`🔖Penalties`), biases (`🔖Biases`), and adaptive
+/// samplers (`🔖Adaptive`) regions have all landed.
 pub fn build_processor(spec: &ProcessorSpec) -> Result<Box<dyn LogitsProcessor>, SamplingError> {
     match spec {
         ProcessorSpec::Temperature { value } => Ok(Box::new(Temperature { value: value.clone() })),
@@ -3065,10 +3088,808 @@ pub fn build_processor(spec: &ProcessorSpec) -> Result<Box<dyn LogitsProcessor>,
         ProcessorSpec::TopA { power, min_keep } => Ok(Box::new(TopA { power: power.clone(), min_keep: *min_keep })),
         ProcessorSpec::RankTruncation { max_rank } => Ok(Box::new(RankTruncation { max_rank: *max_rank })),
         ProcessorSpec::AdaptiveTruncation { target_entropy, target_effective_count } => Ok(Box::new(AdaptiveTruncation { target_entropy: *target_entropy, target_effective_count: *target_effective_count })),
-        _ => Err(SamplingError::InvalidConfig { field: "processors", reason: "processor kind not yet implemented" }),
+        ProcessorSpec::RepetitionPenalty { penalty, scope } => Ok(Box::new(RepetitionPenalty::new(*penalty, *scope))),
+        ProcessorSpec::PresencePenalty { penalty, scope } => Ok(Box::new(PresencePenalty::new(*penalty, *scope))),
+        ProcessorSpec::FrequencyPenalty { penalty, scope } => Ok(Box::new(FrequencyPenalty::new(*penalty, *scope))),
+        ProcessorSpec::DecayingPenalty { penalty, window, half_life, scope } => Ok(Box::new(DecayingPenalty::new(*penalty, *window, *half_life, *scope))),
+        ProcessorSpec::TokenClassPenalty { class_tokens, factors } => Ok(Box::new(TokenClassPenalty::new(class_tokens.clone(), factors.clone()))),
+        ProcessorSpec::NoRepeatNgram { n } => Ok(Box::new(NoRepeatNgram::new(*n))),
+        ProcessorSpec::PhrasePenalty { phrases, penalty } => Ok(Box::new(PhrasePenalty { phrases: phrases.clone(), penalty: *penalty })),
+        ProcessorSpec::LogitBiasSparse { entries } => Ok(Box::new(LogitBiasSparse { entries: entries.clone() })),
+        ProcessorSpec::LogitBiasDense { values } => Ok(Box::new(LogitBiasDense { values: values.clone() })),
+        ProcessorSpec::AllowTokens { tokens } => Ok(Box::new(AllowTokens { tokens: tokens.clone() })),
+        ProcessorSpec::ForbidTokens { tokens } => Ok(Box::new(ForbidTokens { tokens: tokens.clone() })),
+        ProcessorSpec::SuppressSpecial => Ok(Box::new(SuppressSpecial)),
+        ProcessorSpec::BadWords { phrases } => Ok(Box::new(BadWords { phrases: phrases.clone() })),
+        ProcessorSpec::SequenceEncouragement { phrases, bonus } => Ok(Box::new(SequenceEncouragement { phrases: phrases.clone(), bonus: *bonus })),
+        ProcessorSpec::Mirostat { version, target_surprise, learning_rate } => Ok(Box::new(Mirostat::new(*version, *target_surprise, *learning_rate))),
+        ProcessorSpec::EntropyPid { target, kp, ki, kd } => Ok(Box::new(EntropyPid::new(*target, *kp, *ki, *kd))),
+        ProcessorSpec::RepetitionController { window, threshold, boost } => Ok(Box::new(RepetitionController::new(*window, *threshold, *boost))),
+        ProcessorSpec::ConfidenceController { low_entropy, high_entropy, low_temp, high_temp } => Ok(Box::new(ConfidenceController { low_entropy: *low_entropy, high_entropy: *high_entropy, low_temp: *low_temp, high_temp: *high_temp })),
     }
 }
 // #endregion 🔖Warpers
+
+// #region 🔖Penalties
+/// ⚖️ Dense-enough token→count map for repetition-style penalties. Backed by a `HashMap` (not a
+/// vocab-sized `Vec`) so processor construction never needs to know the vocabulary size.
+#[derive(Clone, Default)]
+pub struct FreqTable {
+    counts: std::collections::HashMap<TokenId, u32>,
+}
+
+impl FreqTable {
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    pub fn count(&self, token: TokenId) -> u32 {
+        self.counts.get(&token).copied().unwrap_or(0)
+    }
+
+    pub fn increment(&mut self, token: TokenId) {
+        *self.counts.entry(token).or_insert(0) += 1;
+    }
+
+    /// ⚖️ Exact inverse of [`FreqTable::increment`] — removes the map entry entirely once its
+    /// count reaches zero, so `count()` and `HashMap` iteration agree on "seen at all".
+    pub fn decrement(&mut self, token: TokenId) {
+        if let Some(c) = self.counts.get_mut(&token) {
+            if *c <= 1 {
+                self.counts.remove(&token);
+            } else {
+                *c -= 1;
+            }
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.counts.clear();
+    }
+}
+
+/// ⚖️ Open-addressed (via `HashMap`) rolling-context index: maps a hash of the last `order - 1`
+/// tokens to every token observed to follow that context, for [`NoRepeatNgram`]. `undo` records
+/// exactly the key touched by each [`NgramIndex::record`] call (or `None` for a no-op call), so
+/// [`NgramIndex::rollback_last_n`] can undo precisely `n` prior commits.
+#[derive(Clone, Default)]
+pub struct NgramIndex {
+    order: usize,
+    table: std::collections::HashMap<u64, Vec<TokenId>>,
+    undo: Vec<Option<u64>>,
+}
+
+impl NgramIndex {
+    pub fn new(order: usize) -> Self {
+        Self { order, table: std::collections::HashMap::new(), undo: Vec::new() }
+    }
+
+    fn context_hash(context: &[TokenId]) -> u64 {
+        let mut hash = 0xcbf2_9ce4_8422_2325u64;
+        for token in context {
+            hash = (hash ^ token.get() as u64).wrapping_mul(0x0000_0100_0000_01b3);
+        }
+        hash
+    }
+
+    /// ⚖️ Records that `next` followed the last `order - 1` tokens of `history` (the history as it
+    /// existed *before* `next`).
+    pub fn record(&mut self, history: &[TokenId], next: TokenId) {
+        if self.order < 2 || history.len() + 1 < self.order {
+            self.undo.push(None);
+            return;
+        }
+        let ctx_len = self.order - 1;
+        let context = &history[history.len() - ctx_len..];
+        let key = Self::context_hash(context);
+        self.table.entry(key).or_default().push(next);
+        self.undo.push(Some(key));
+    }
+
+    /// ⚖️ Tokens that would recreate an already-seen `order`-gram if selected next.
+    pub fn forbidden_next(&self, history: &[TokenId]) -> &[TokenId] {
+        if self.order < 2 || history.len() + 1 < self.order {
+            return &[];
+        }
+        let ctx_len = self.order - 1;
+        let context = &history[history.len() - ctx_len..];
+        let key = Self::context_hash(context);
+        self.table.get(&key).map_or(&[][..], Vec::as_slice)
+    }
+
+    pub fn commit_count(&self) -> u64 {
+        self.undo.len() as u64
+    }
+
+    pub fn rollback_last_n(&mut self, n: usize) {
+        for _ in 0..n {
+            let Some(entry) = self.undo.pop() else { break };
+            if let Some(key) = entry {
+                if let Some(list) = self.table.get_mut(&key) {
+                    list.pop();
+                    if list.is_empty() {
+                        self.table.remove(&key);
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.table.clear();
+        self.undo.clear();
+    }
+}
+
+/// ⚖️ Sign-aware multiplicative repetition penalty: positive logits are divided by `penalty`,
+/// negative logits multiplied by it — so `penalty > 1` always pushes a seen token's logit down
+/// regardless of its sign.
+pub struct RepetitionPenalty {
+    pub penalty: f32,
+    pub scope: PenaltyScope,
+    counts: FreqTable,
+    prompt_included: bool,
+    commit_log: Vec<TokenId>,
+}
+
+impl RepetitionPenalty {
+    pub fn new(penalty: f32, scope: PenaltyScope) -> Self {
+        Self { penalty, scope, counts: FreqTable::new(), prompt_included: false, commit_log: Vec::new() }
+    }
+
+    fn include_prompt_if_needed(&mut self, prompt: &[TokenId]) {
+        if !self.prompt_included && matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::PromptOnly) {
+            for &t in prompt {
+                self.counts.increment(t);
+            }
+            self.prompt_included = true;
+        }
+    }
+}
+
+impl LogitsProcessor for RepetitionPenalty {
+    fn name(&self) -> &'static str {
+        "repetition_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        self.include_prompt_if_needed(view.prompt);
+        let penalty = self.penalty;
+        let counts = &self.counts;
+        ws.transform_processed_over_live(|token, logit| {
+            if counts.count(token) > 0 {
+                if logit > 0.0 {
+                    logit / penalty
+                } else {
+                    logit * penalty
+                }
+            } else {
+                logit
+            }
+        });
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+            self.counts.increment(token);
+        }
+        self.commit_log.push(token);
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.commit_log.len() as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        while self.commit_log.len() as u64 > mark.0 {
+            if let Some(token) = self.commit_log.pop() {
+                if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+                    self.counts.decrement(token);
+                }
+            }
+        }
+    }
+    fn reset(&mut self) {
+        self.counts.reset();
+        self.prompt_included = false;
+        self.commit_log.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { penalty: self.penalty, scope: self.scope, counts: self.counts.clone(), prompt_included: self.prompt_included, commit_log: self.commit_log.clone() })
+    }
+}
+
+/// ⚖️ Fixed additive penalty applied once per distinct token that has appeared.
+pub struct PresencePenalty {
+    pub penalty: f32,
+    pub scope: PenaltyScope,
+    counts: FreqTable,
+    prompt_included: bool,
+    commit_log: Vec<TokenId>,
+}
+
+impl PresencePenalty {
+    pub fn new(penalty: f32, scope: PenaltyScope) -> Self {
+        Self { penalty, scope, counts: FreqTable::new(), prompt_included: false, commit_log: Vec::new() }
+    }
+
+    fn include_prompt_if_needed(&mut self, prompt: &[TokenId]) {
+        if !self.prompt_included && matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::PromptOnly) {
+            for &t in prompt {
+                self.counts.increment(t);
+            }
+            self.prompt_included = true;
+        }
+    }
+}
+
+impl LogitsProcessor for PresencePenalty {
+    fn name(&self) -> &'static str {
+        "presence_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        self.include_prompt_if_needed(view.prompt);
+        let penalty = self.penalty;
+        let counts = &self.counts;
+        ws.add_bias_over_live(|token| if counts.count(token) > 0 { -penalty } else { 0.0 });
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+            self.counts.increment(token);
+        }
+        self.commit_log.push(token);
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.commit_log.len() as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        while self.commit_log.len() as u64 > mark.0 {
+            if let Some(token) = self.commit_log.pop() {
+                if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+                    self.counts.decrement(token);
+                }
+            }
+        }
+    }
+    fn reset(&mut self) {
+        self.counts.reset();
+        self.prompt_included = false;
+        self.commit_log.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { penalty: self.penalty, scope: self.scope, counts: self.counts.clone(), prompt_included: self.prompt_included, commit_log: self.commit_log.clone() })
+    }
+}
+
+/// ⚖️ Additive penalty proportional to a token's occurrence count.
+pub struct FrequencyPenalty {
+    pub penalty: f32,
+    pub scope: PenaltyScope,
+    counts: FreqTable,
+    prompt_included: bool,
+    commit_log: Vec<TokenId>,
+}
+
+impl FrequencyPenalty {
+    pub fn new(penalty: f32, scope: PenaltyScope) -> Self {
+        Self { penalty, scope, counts: FreqTable::new(), prompt_included: false, commit_log: Vec::new() }
+    }
+
+    fn include_prompt_if_needed(&mut self, prompt: &[TokenId]) {
+        if !self.prompt_included && matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::PromptOnly) {
+            for &t in prompt {
+                self.counts.increment(t);
+            }
+            self.prompt_included = true;
+        }
+    }
+}
+
+impl LogitsProcessor for FrequencyPenalty {
+    fn name(&self) -> &'static str {
+        "frequency_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        self.include_prompt_if_needed(view.prompt);
+        let penalty = self.penalty;
+        let counts = &self.counts;
+        ws.add_bias_over_live(|token| -penalty * counts.count(token) as f32);
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+            self.counts.increment(token);
+        }
+        self.commit_log.push(token);
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.commit_log.len() as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        while self.commit_log.len() as u64 > mark.0 {
+            if let Some(token) = self.commit_log.pop() {
+                if matches!(self.scope, PenaltyScope::PromptAndGenerated | PenaltyScope::GeneratedOnly) {
+                    self.counts.decrement(token);
+                }
+            }
+        }
+    }
+    fn reset(&mut self) {
+        self.counts.reset();
+        self.prompt_included = false;
+        self.commit_log.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { penalty: self.penalty, scope: self.scope, counts: self.counts.clone(), prompt_included: self.prompt_included, commit_log: self.commit_log.clone() })
+    }
+}
+
+/// ⚖️ Repetition penalty that decays exponentially with distance from the most recent occurrence,
+/// over a bounded trailing `window` of generated tokens.
+pub struct DecayingPenalty {
+    pub penalty: f32,
+    pub window: usize,
+    pub half_life: f64,
+    pub scope: PenaltyScope,
+    history: std::collections::VecDeque<TokenId>,
+    snapshots: Vec<std::collections::VecDeque<TokenId>>,
+}
+
+impl DecayingPenalty {
+    pub fn new(penalty: f32, window: usize, half_life: f64, scope: PenaltyScope) -> Self {
+        Self { penalty, window, half_life, scope, history: std::collections::VecDeque::new(), snapshots: Vec::new() }
+    }
+}
+
+impl LogitsProcessor for DecayingPenalty {
+    fn name(&self) -> &'static str {
+        "decaying_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let half_life = self.half_life.max(1e-6);
+        let penalty = self.penalty as f64;
+        let mut bias: std::collections::HashMap<TokenId, f32> = std::collections::HashMap::new();
+        for (i, &token) in self.history.iter().rev().enumerate() {
+            let distance = (i + 1) as f64;
+            let decay = 0.5f64.powf(distance / half_life);
+            *bias.entry(token).or_insert(0.0) += (penalty * decay) as f32;
+        }
+        ws.add_bias_over_live(|token| -bias.get(&token).copied().unwrap_or(0.0));
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        self.history.push_back(token);
+        if self.history.len() > self.window {
+            self.history.pop_front();
+        }
+    }
+    fn save(&mut self) -> StateMark {
+        self.snapshots.push(self.history.clone());
+        StateMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        if let Some(history) = self.snapshots.get(mark.0 as usize) {
+            self.history = history.clone();
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.history.clear();
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { penalty: self.penalty, window: self.window, half_life: self.half_life, scope: self.scope, history: self.history.clone(), snapshots: self.snapshots.clone() })
+    }
+}
+
+/// ⚖️ Static multiplicative factor applied per token class (`class_tokens[c]` lists the tokens in
+/// class `c`, `factors[c]` its factor). No per-sequence state, so `commit`/`save`/`rollback_to`
+/// use their trait defaults.
+pub struct TokenClassPenalty {
+    class_of: std::collections::HashMap<TokenId, u16>,
+    factors: Vec<f32>,
+}
+
+impl TokenClassPenalty {
+    pub fn new(class_tokens: Vec<Vec<TokenId>>, factors: Vec<f32>) -> Self {
+        let mut class_of = std::collections::HashMap::new();
+        for (class, tokens) in class_tokens.into_iter().enumerate() {
+            for token in tokens {
+                class_of.insert(token, class as u16);
+            }
+        }
+        Self { class_of, factors }
+    }
+}
+
+impl LogitsProcessor for TokenClassPenalty {
+    fn name(&self) -> &'static str {
+        "token_class_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let class_of = &self.class_of;
+        let factors = &self.factors;
+        ws.transform_processed_over_live(|token, logit| match class_of.get(&token).and_then(|&c| factors.get(c as usize)) {
+            Some(&factor) => logit * factor,
+            None => logit,
+        });
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { class_of: self.class_of.clone(), factors: self.factors.clone() })
+    }
+}
+
+/// ⚖️ Hard-masks any token that would recreate an `n`-gram already present in the sequence's
+/// history (prompt + generated).
+pub struct NoRepeatNgram {
+    pub n: usize,
+    index: NgramIndex,
+}
+
+impl NoRepeatNgram {
+    pub fn new(n: usize) -> Self {
+        Self { n, index: NgramIndex::new(n) }
+    }
+
+    fn full_history(view: &StepView<'_>) -> Vec<TokenId> {
+        let mut history = Vec::with_capacity(view.prompt.len() + view.generated.len());
+        history.extend_from_slice(view.prompt);
+        history.extend_from_slice(view.generated);
+        history
+    }
+}
+
+impl LogitsProcessor for NoRepeatNgram {
+    fn name(&self) -> &'static str {
+        "no_repeat_ngram"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let history = Self::full_history(view);
+        for &token in self.index.forbidden_next(&history) {
+            ws.mask_mut().set(token, false);
+        }
+        Ok(())
+    }
+    fn commit(&mut self, view: &StepView<'_>, token: TokenId) {
+        let history = Self::full_history(view);
+        self.index.record(&history, token);
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.index.commit_count())
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        let current = self.index.commit_count();
+        if current > mark.0 {
+            self.index.rollback_last_n((current - mark.0) as usize);
+        }
+    }
+    fn reset(&mut self) {
+        self.index.reset();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { n: self.n, index: self.index.clone() })
+    }
+}
+
+/// ⚖️ Penalizes the final token of any phrase whose proper prefix the generated text currently
+/// ends with (discourages completing that exact phrase). Stateless: reads `view.generated`
+/// directly each step.
+pub struct PhrasePenalty {
+    pub phrases: Vec<Vec<TokenId>>,
+    pub penalty: f32,
+}
+
+impl LogitsProcessor for PhrasePenalty {
+    fn name(&self) -> &'static str {
+        "phrase_penalty"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let generated = view.generated;
+        let penalty = self.penalty;
+        let mut biased: std::collections::HashMap<TokenId, f32> = std::collections::HashMap::new();
+        for phrase in &self.phrases {
+            let Some((&last, prefix)) = phrase.split_last() else { continue };
+            if generated.len() >= prefix.len() && &generated[generated.len() - prefix.len()..] == prefix {
+                *biased.entry(last).or_insert(0.0) += penalty;
+            }
+        }
+        ws.add_bias_over_live(|token| -biased.get(&token).copied().unwrap_or(0.0));
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { phrases: self.phrases.clone(), penalty: self.penalty })
+    }
+}
+// #endregion 🔖Penalties
+
+// #region 🔖Biases
+/// 🧲 Sparse per-token additive logit bias.
+pub struct LogitBiasSparse {
+    pub entries: Vec<(TokenId, f32)>,
+}
+
+impl LogitsProcessor for LogitBiasSparse {
+    fn name(&self) -> &'static str {
+        "logit_bias_sparse"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        for &(token, bias) in &self.entries {
+            ws.bias_processed(token, bias);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { entries: self.entries.clone() })
+    }
+}
+
+/// 🧲 Dense per-token additive logit bias (`values[i]` biases token `i`).
+pub struct LogitBiasDense {
+    pub values: Vec<f32>,
+}
+
+impl LogitsProcessor for LogitBiasDense {
+    fn name(&self) -> &'static str {
+        "logit_bias_dense"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        for (i, &delta) in self.values.iter().enumerate() {
+            ws.bias_processed(TokenId::new(i as u32), delta);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { values: self.values.clone() })
+    }
+}
+
+/// 🧲 Hard-restricts the live set to exactly `tokens` (intersected with whatever survives earlier
+/// hard-mask processors).
+pub struct AllowTokens {
+    pub tokens: Vec<TokenId>,
+}
+
+impl LogitsProcessor for AllowTokens {
+    fn name(&self) -> &'static str {
+        "allow_tokens"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let mut allow = TokenBitset::new_empty(ws.vocab_size());
+        for &token in &self.tokens {
+            allow.set(token, true);
+        }
+        ws.mask_mut().and_with(&allow);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { tokens: self.tokens.clone() })
+    }
+}
+
+/// 🧲 Hard-excludes `tokens` from the live set.
+pub struct ForbidTokens {
+    pub tokens: Vec<TokenId>,
+}
+
+impl LogitsProcessor for ForbidTokens {
+    fn name(&self) -> &'static str {
+        "forbid_tokens"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        for &token in &self.tokens {
+            ws.mask_mut().set(token, false);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { tokens: self.tokens.clone() })
+    }
+}
+
+/// 🧲 Hard-excludes every token in the vocabulary's [`Vocabulary::special`] set.
+pub struct SuppressSpecial;
+
+impl LogitsProcessor for SuppressSpecial {
+    fn name(&self) -> &'static str {
+        "suppress_special"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.mask_mut().and_not_with(&view.vocab.special);
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self)
+    }
+}
+
+/// 🧲 Hard-excludes the final token of any bad-word phrase whose proper prefix the generated text
+/// currently ends with (prefix-sensitive multi-token bad-word suppression).
+pub struct BadWords {
+    pub phrases: Vec<Vec<TokenId>>,
+}
+
+impl LogitsProcessor for BadWords {
+    fn name(&self) -> &'static str {
+        "bad_words"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let generated = view.generated;
+        for phrase in &self.phrases {
+            let Some((&last, prefix)) = phrase.split_last() else { continue };
+            if generated.len() >= prefix.len() && &generated[generated.len() - prefix.len()..] == prefix {
+                ws.mask_mut().set(last, false);
+            }
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { phrases: self.phrases.clone() })
+    }
+}
+
+/// 🧲 Positive bias toward completing a configured phrase once the generated text ends with its
+/// proper prefix (the encouragement counterpart to [`BadWords`]/[`PhrasePenalty`]).
+pub struct SequenceEncouragement {
+    pub phrases: Vec<Vec<TokenId>>,
+    pub bonus: f32,
+}
+
+impl LogitsProcessor for SequenceEncouragement {
+    fn name(&self) -> &'static str {
+        "sequence_encouragement"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        let generated = view.generated;
+        let bonus = self.bonus;
+        for phrase in &self.phrases {
+            let Some((&last, prefix)) = phrase.split_last() else { continue };
+            if generated.len() >= prefix.len() && &generated[generated.len() - prefix.len()..] == prefix {
+                ws.bias_processed(last, bonus);
+            }
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { phrases: self.phrases.clone(), bonus: self.bonus })
+    }
+}
+// #endregion 🔖Biases
+
+// #region 🔖Length
+/// 📏 Hard-suppresses every EOS token until `min_tokens` generated tokens have been produced.
+pub struct MinLengthEosSuppression {
+    pub min_tokens: usize,
+}
+
+impl LogitsProcessor for MinLengthEosSuppression {
+    fn name(&self) -> &'static str {
+        "min_length_eos_suppression"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        if view.generated.len() < self.min_tokens {
+            for &eos in &view.vocab.eos {
+                ws.mask_mut().set(eos, false);
+            }
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { min_tokens: self.min_tokens })
+    }
+}
+
+/// 📏 Hard-restricts the live set to (the first configured) EOS token once the *next* token would
+/// reach `max_tokens`, guaranteeing generation stops cleanly at the length cap.
+pub struct MaxLengthForceEos {
+    pub max_tokens: usize,
+}
+
+impl LogitsProcessor for MaxLengthForceEos {
+    fn name(&self) -> &'static str {
+        "max_length_force_eos"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        if view.generated.len() + 1 >= self.max_tokens {
+            if let Some(&eos) = view.vocab.eos.first() {
+                let mut only_eos = TokenBitset::new_empty(ws.vocab_size());
+                only_eos.set(eos, true);
+                ws.mask_mut().and_with(&only_eos);
+            }
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { max_tokens: self.max_tokens })
+    }
+}
+
+/// 📏 Hard-forces an exact token at step 0 (`bos`), steps `1..=prefix.len()` (`prefix`), or any
+/// explicitly listed `(step, token)` pair thereafter.
+pub struct ForcedTokens {
+    pub spec: ForcedSpec,
+}
+
+impl ForcedTokens {
+    fn forced_token_at(&self, step: u32) -> Option<TokenId> {
+        if step == 0 {
+            if let Some(bos) = self.spec.bos {
+                return Some(bos);
+            }
+        }
+        if step >= 1 && (step as usize) <= self.spec.prefix.len() {
+            return self.spec.prefix.get(step as usize - 1).copied();
+        }
+        self.spec.at_position.iter().find(|(s, _)| s.get() == step).map(|(_, t)| *t)
+    }
+}
+
+impl LogitsProcessor for ForcedTokens {
+    fn name(&self) -> &'static str {
+        "forced_tokens"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::HardMask
+    }
+    fn process(&mut self, view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        if let Some(token) = self.forced_token_at(view.step.get()) {
+            let mut only = TokenBitset::new_empty(ws.vocab_size());
+            only.set(token, true);
+            ws.mask_mut().and_with(&only);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { spec: self.spec.clone() })
+    }
+}
+// #endregion 🔖Length
 
 // #region 🔖Selection
 fn candidate_from(dist: &Distribution<'_>, index: usize) -> Candidate {
@@ -3107,7 +3928,14 @@ impl AliasTable {
         }
         let mut prob = vec![0.0f32; n];
         let mut alias = vec![0u32; n];
-        while let (Some(s), Some(l)) = (small.pop(), large.pop()) {
+        // ⚖️ `while let (Some(s), Some(l)) = (small.pop(), large.pop())` looks equivalent but isn't:
+        // both `.pop()` calls run unconditionally as call arguments before the pattern is tested, so
+        // the moment either vec empties, the other's last element is silently discarded (popped and
+        // dropped) instead of falling through to the `prob[x] = 1.0` cleanup loops below — leaving
+        // that bucket's `prob`/`alias` at their zeroed defaults. Explicit `is_empty()` checks avoid it.
+        while !small.is_empty() && !large.is_empty() {
+            let s = small.pop().expect("checked non-empty above");
+            let l = large.pop().expect("checked non-empty above");
             prob[s] = scaled[s];
             alias[s] = l as u32;
             scaled[l] = scaled[l] + scaled[s] - 1.0;
@@ -3276,6 +4104,1973 @@ pub fn build_sampler(method: &SamplingMethod) -> Box<dyn TokenSampler> {
 }
 // #endregion 🔖Selection
 
+// #region 🔖Adaptive
+/// 🌀 Mirostat v1/v2: adapts the truncation cutoff step by step so the *observed* surprise of
+/// selected tokens tracks `target_surprise`. `last_probs` caches the just-processed live
+/// distribution so [`Mirostat::commit`] can look up the selected token's probability without the
+/// engine needing to pass it explicitly (the [`LogitsProcessor::commit`] signature only carries
+/// the token id).
+pub struct Mirostat {
+    pub version: MirostatVersion,
+    pub target_surprise: f64,
+    pub learning_rate: f64,
+    mu: f64,
+    last_probs: std::collections::HashMap<TokenId, f32>,
+    mu_snapshots: Vec<f64>,
+}
+
+impl Mirostat {
+    pub fn new(version: MirostatVersion, target_surprise: f64, learning_rate: f64) -> Self {
+        Self { version, target_surprise, learning_rate, mu: target_surprise * 2.0, last_probs: std::collections::HashMap::new(), mu_snapshots: Vec::new() }
+    }
+}
+
+impl LogitsProcessor for Mirostat {
+    fn name(&self) -> &'static str {
+        "mirostat"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::Truncation
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.sort_live_by_prob_desc();
+        let keep = match self.version {
+            // 🌀 v1: candidate-set size grows/shrinks as `2^mu` (a power-law-fit proxy).
+            MirostatVersion::V1 => (2.0f64).powf(self.mu).round().max(1.0) as usize,
+            // 🌀 v2: keep every token whose surprise (`-log2 p`) stays within `mu` of the target.
+            MirostatVersion::V2 => {
+                let probs = ws.probs();
+                probs.iter().take_while(|&&p| -(p as f64).log2() <= self.mu).count().max(1)
+            }
+        };
+        ws.truncate_live_to(keep, 1);
+        self.last_probs.clear();
+        for (&token_idx, &p) in ws.live().iter().zip(ws.probs().iter()) {
+            self.last_probs.insert(TokenId::new(token_idx), p);
+        }
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        self.mu_snapshots.push(self.mu);
+        if let Some(&p) = self.last_probs.get(&token) {
+            let surprise = -(p as f64).log2();
+            self.mu -= self.learning_rate * (surprise - self.target_surprise);
+        }
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.mu_snapshots.len() as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        self.mu_snapshots.truncate(mark.0 as usize);
+        self.mu = self.mu_snapshots.last().copied().unwrap_or(self.target_surprise * 2.0);
+    }
+    fn reset(&mut self) {
+        self.mu = self.target_surprise * 2.0;
+        self.mu_snapshots.clear();
+        self.last_probs.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { version: self.version, target_surprise: self.target_surprise, learning_rate: self.learning_rate, mu: self.mu, last_probs: self.last_probs.clone(), mu_snapshots: self.mu_snapshots.clone() })
+    }
+}
+
+/// 🌀 PID controller driving temperature toward a target entropy.
+pub struct EntropyPid {
+    pub target: f64,
+    pub kp: f64,
+    pub ki: f64,
+    pub kd: f64,
+    integral: f64,
+    last_error: f64,
+    pending_error: f64,
+    history: Vec<(f64, f64)>,
+}
+
+impl EntropyPid {
+    pub fn new(target: f64, kp: f64, ki: f64, kd: f64) -> Self {
+        Self { target, kp, ki, kd, integral: 0.0, last_error: 0.0, pending_error: 0.0, history: Vec::new() }
+    }
+}
+
+impl LogitsProcessor for EntropyPid {
+    fn name(&self) -> &'static str {
+        "entropy_pid"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.softmax_over_live();
+        let entropy = entropy_nats(ws.probs());
+        self.pending_error = self.target - entropy;
+        let temp = (1.0 + self.kp * self.pending_error + self.ki * self.integral + self.kd * (self.pending_error - self.last_error)).max(0.05);
+        ws.scale_processed_over_live(1.0 / temp as f32);
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, _token: TokenId) {
+        self.history.push((self.integral, self.last_error));
+        self.integral += self.pending_error;
+        self.last_error = self.pending_error;
+    }
+    fn save(&mut self) -> StateMark {
+        StateMark(self.history.len() as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        self.history.truncate(mark.0 as usize);
+        let (integral, last_error) = self.history.last().copied().unwrap_or((0.0, 0.0));
+        self.integral = integral;
+        self.last_error = last_error;
+    }
+    fn reset(&mut self) {
+        self.integral = 0.0;
+        self.last_error = 0.0;
+        self.pending_error = 0.0;
+        self.history.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { target: self.target, kp: self.kp, ki: self.ki, kd: self.kd, integral: self.integral, last_error: self.last_error, pending_error: self.pending_error, history: self.history.clone() })
+    }
+}
+
+/// 🌀 Flattens the distribution (raises effective temperature) once the fraction of repeated
+/// tokens in the trailing `window` exceeds `threshold`.
+pub struct RepetitionController {
+    pub window: usize,
+    pub threshold: f64,
+    pub boost: f64,
+    recent: std::collections::VecDeque<TokenId>,
+    snapshots: Vec<std::collections::VecDeque<TokenId>>,
+}
+
+impl RepetitionController {
+    pub fn new(window: usize, threshold: f64, boost: f64) -> Self {
+        Self { window, threshold, boost, recent: std::collections::VecDeque::new(), snapshots: Vec::new() }
+    }
+
+    fn repetition_ratio(&self) -> f64 {
+        if self.recent.is_empty() {
+            return 0.0;
+        }
+        let unique: std::collections::HashSet<&TokenId> = self.recent.iter().collect();
+        1.0 - (unique.len() as f64 / self.recent.len() as f64)
+    }
+}
+
+impl LogitsProcessor for RepetitionController {
+    fn name(&self) -> &'static str {
+        "repetition_controller"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        if self.repetition_ratio() > self.threshold {
+            ws.scale_processed_over_live(1.0 / (1.0 + self.boost as f32));
+        }
+        Ok(())
+    }
+    fn commit(&mut self, _view: &StepView<'_>, token: TokenId) {
+        self.recent.push_back(token);
+        if self.recent.len() > self.window {
+            self.recent.pop_front();
+        }
+    }
+    fn save(&mut self) -> StateMark {
+        self.snapshots.push(self.recent.clone());
+        StateMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: StateMark) {
+        if let Some(recent) = self.snapshots.get(mark.0 as usize) {
+            self.recent = recent.clone();
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.recent.clear();
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { window: self.window, threshold: self.threshold, boost: self.boost, recent: self.recent.clone(), snapshots: self.snapshots.clone() })
+    }
+}
+
+/// 🌀 Interpolates temperature between `low_temp` (near-greedy, at or below `low_entropy`) and
+/// `high_temp` (broad, at or above `high_entropy`) based on the live set's current entropy.
+pub struct ConfidenceController {
+    pub low_entropy: f64,
+    pub high_entropy: f64,
+    pub low_temp: f64,
+    pub high_temp: f64,
+}
+
+impl LogitsProcessor for ConfidenceController {
+    fn name(&self) -> &'static str {
+        "confidence_controller"
+    }
+    fn kind(&self) -> ProcessorKind {
+        ProcessorKind::SoftPenalty
+    }
+    fn process(&mut self, _view: &StepView<'_>, ws: &mut LogitsWorkspace) -> Result<(), SamplingError> {
+        ws.softmax_over_live();
+        let entropy = entropy_nats(ws.probs());
+        let span = (self.high_entropy - self.low_entropy).max(1e-9);
+        let t = ((entropy - self.low_entropy) / span).clamp(0.0, 1.0);
+        let temp = self.low_temp + (self.high_temp - self.low_temp) * t;
+        if temp <= 0.0 {
+            ws.collapse_live_to_argmax();
+        } else {
+            ws.scale_processed_over_live(1.0 / temp as f32);
+        }
+        Ok(())
+    }
+    fn fork(&self) -> Box<dyn LogitsProcessor> {
+        Box::new(Self { low_entropy: self.low_entropy, high_entropy: self.high_entropy, low_temp: self.low_temp, high_temp: self.high_temp })
+    }
+}
+// #endregion 🔖Adaptive
+
+// #region 🔖Stops
+#[derive(Clone, Default)]
+struct AcNode {
+    children: std::collections::HashMap<u8, u32>,
+    fail: u32,
+    depth: usize,
+    pattern_end: Option<usize>,
+    longest_suffix_pattern: Option<usize>,
+}
+
+/// 🛑 Flat Aho-Corasick automaton over byte patterns, built once per [`StopSpec`] and shared
+/// (read-only) across a sequence's forks via `Rc`.
+pub struct AhoCorasick {
+    nodes: Vec<AcNode>,
+    pattern_lens: Vec<usize>,
+}
+
+impl AhoCorasick {
+    pub fn build(patterns: &[Vec<u8>]) -> Self {
+        let mut nodes = vec![AcNode::default()];
+        for (pi, pattern) in patterns.iter().enumerate() {
+            let mut state = 0u32;
+            for &byte in pattern {
+                state = match nodes[state as usize].children.get(&byte) {
+                    Some(&next) => next,
+                    None => {
+                        let parent_depth = nodes[state as usize].depth;
+                        nodes.push(AcNode { depth: parent_depth + 1, ..AcNode::default() });
+                        let next = (nodes.len() - 1) as u32;
+                        nodes[state as usize].children.insert(byte, next);
+                        next
+                    }
+                };
+            }
+            nodes[state as usize].pattern_end = Some(pi);
+        }
+        let mut queue: std::collections::VecDeque<u32> = std::collections::VecDeque::new();
+        for &child in nodes[0].children.values() {
+            queue.push_back(child);
+        }
+        while let Some(u) = queue.pop_front() {
+            let children: Vec<(u8, u32)> = nodes[u as usize].children.iter().map(|(&b, &c)| (b, c)).collect();
+            for (byte, v) in children {
+                let mut f = nodes[u as usize].fail;
+                while f != 0 && !nodes[f as usize].children.contains_key(&byte) {
+                    f = nodes[f as usize].fail;
+                }
+                let candidate = nodes[f as usize].children.get(&byte).copied().unwrap_or(0);
+                let final_fail = if candidate == v { 0 } else { candidate };
+                nodes[v as usize].fail = final_fail;
+                nodes[v as usize].longest_suffix_pattern = nodes[final_fail as usize].pattern_end.or(nodes[final_fail as usize].longest_suffix_pattern);
+                queue.push_back(v);
+            }
+        }
+        let pattern_lens = patterns.iter().map(Vec::len).collect();
+        Self { nodes, pattern_lens }
+    }
+
+    /// 🛑 Advances by one byte via the automaton's goto function (following fail links on miss).
+    fn step(&self, state: u32, byte: u8) -> u32 {
+        let mut s = state;
+        loop {
+            if let Some(&next) = self.nodes[s as usize].children.get(&byte) {
+                return next;
+            }
+            if s == 0 {
+                return 0;
+            }
+            s = self.nodes[s as usize].fail;
+        }
+    }
+
+    /// 🛑 A pattern index and byte length if `state` completes (directly or via a fail-link
+    /// suffix) a pattern.
+    fn matched_at(&self, state: u32) -> Option<(usize, usize)> {
+        let node = &self.nodes[state as usize];
+        node.pattern_end.or(node.longest_suffix_pattern).map(|pi| (pi, self.pattern_lens[pi]))
+    }
+
+    /// 🛑 Bytes of unresolved trailing context at `state` — the "hold back" count.
+    fn depth(&self, state: u32) -> usize {
+        self.nodes[state as usize].depth
+    }
+}
+
+/// 🛑 Token-level stop: fires on any token in a fixed set (e.g. explicit stop tokens beyond EOS).
+pub struct TokenStopCondition {
+    pub tokens: Vec<TokenId>,
+}
+
+impl StopCondition for TokenStopCondition {
+    fn name(&self) -> &'static str {
+        "token_stop"
+    }
+    fn on_token(&mut self, _view: &StepView<'_>, token: TokenId) -> StopPoll {
+        if self.tokens.contains(&token) {
+            StopPoll::Finished { reason: FinishReason::StopToken, matched_bytes: 0 }
+        } else {
+            StopPoll::Continue
+        }
+    }
+    fn save(&mut self) -> StopMark {
+        StopMark(0)
+    }
+    fn rollback_to(&mut self, _mark: StopMark) {}
+    fn reset(&mut self) {}
+    fn fork(&self) -> Box<dyn StopCondition> {
+        Box::new(Self { tokens: self.tokens.clone() })
+    }
+}
+
+/// 🛑 Text-sequence stop: feeds each token's byte representation (via the [`TokenTextAdapter`] in
+/// [`StepView::adapter`]) through an [`AhoCorasick`] automaton; a no-op (never matches) when no
+/// adapter is supplied, since stop text can't be evaluated without token→byte mapping.
+pub struct TextStopCondition {
+    ac: std::rc::Rc<AhoCorasick>,
+    #[allow(dead_code)]
+    mode: StopTextMode,
+    state: u32,
+    snapshots: Vec<u32>,
+}
+
+impl TextStopCondition {
+    pub fn new(sequences: &[Vec<u8>], mode: StopTextMode) -> Self {
+        Self { ac: std::rc::Rc::new(AhoCorasick::build(sequences)), mode, state: 0, snapshots: Vec::new() }
+    }
+}
+
+impl StopCondition for TextStopCondition {
+    fn name(&self) -> &'static str {
+        "text_stop"
+    }
+    fn on_token(&mut self, view: &StepView<'_>, token: TokenId) -> StopPoll {
+        let Some(adapter) = view.adapter else { return StopPoll::Continue };
+        let Some(bytes) = adapter.token_bytes(token) else { return StopPoll::Continue };
+        for &byte in bytes {
+            self.state = self.ac.step(self.state, byte);
+            if let Some((pattern_index, pattern_len)) = self.ac.matched_at(self.state) {
+                return StopPoll::Finished { reason: FinishReason::StopSequence { index: pattern_index }, matched_bytes: pattern_len };
+            }
+        }
+        let hold = self.ac.depth(self.state);
+        if hold > 0 {
+            StopPoll::Hold { ambiguous_bytes: hold }
+        } else {
+            StopPoll::Continue
+        }
+    }
+    fn save(&mut self) -> StopMark {
+        self.snapshots.push(self.state);
+        StopMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: StopMark) {
+        if let Some(&state) = self.snapshots.get(mark.0 as usize) {
+            self.state = state;
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.state = 0;
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn StopCondition> {
+        Box::new(Self { ac: self.ac.clone(), mode: self.mode, state: self.state, snapshots: self.snapshots.clone() })
+    }
+}
+// #endregion 🔖Stops
+
+// #region 🔖Automata
+/// 🤖 Parsed regex AST. Byte-level throughout (classes/literals match raw bytes, so multi-byte
+/// UTF-8 sequences work as literal byte runs but aren't given first-class Unicode class support).
+#[derive(Clone, PartialEq, Debug)]
+enum RegexNode {
+    Literal(u8),
+    AnyByte,
+    Class { ranges: Vec<(u8, u8)>, negate: bool },
+    Concat(Vec<RegexNode>),
+    Alt(Vec<RegexNode>),
+    Star(Box<RegexNode>),
+    Plus(Box<RegexNode>),
+    Opt(Box<RegexNode>),
+    Repeat(Box<RegexNode>, usize, Option<usize>),
+}
+
+fn unescape_byte(b: u8) -> u8 {
+    match b {
+        b'n' => b'\n',
+        b't' => b'\t',
+        b'r' => b'\r',
+        other => other,
+    }
+}
+
+/// 🤖 Recursive-descent regex parser: alternation (lowest) → concatenation → postfix quantifiers
+/// (`* + ? {m,n}`) → atoms (literals, `.`, `[...]` classes, `(...)` groups, `\`-escapes). No
+/// backtracking at parse OR match time — this only builds the AST; matching happens via the NFA
+/// → DFA pipeline below.
+fn parse_regex(pattern: &str) -> Result<RegexNode, SamplingError> {
+    let bytes = pattern.as_bytes();
+    let mut pos = 0usize;
+    let node = parse_alt(bytes, &mut pos)?;
+    if pos != bytes.len() {
+        return Err(SamplingError::RegexParse { offset: pos, reason: "unexpected trailing characters" });
+    }
+    Ok(node)
+}
+
+fn parse_alt(bytes: &[u8], pos: &mut usize) -> Result<RegexNode, SamplingError> {
+    let mut branches = vec![parse_concat(bytes, pos)?];
+    while bytes.get(*pos) == Some(&b'|') {
+        *pos += 1;
+        branches.push(parse_concat(bytes, pos)?);
+    }
+    Ok(if branches.len() == 1 { branches.pop().expect("non-empty branches") } else { RegexNode::Alt(branches) })
+}
+
+fn parse_concat(bytes: &[u8], pos: &mut usize) -> Result<RegexNode, SamplingError> {
+    let mut parts = Vec::new();
+    while let Some(&b) = bytes.get(*pos) {
+        if b == b'|' || b == b')' {
+            break;
+        }
+        parts.push(parse_quantified(bytes, pos)?);
+    }
+    Ok(RegexNode::Concat(parts))
+}
+
+fn parse_quantified(bytes: &[u8], pos: &mut usize) -> Result<RegexNode, SamplingError> {
+    let atom = parse_atom(bytes, pos)?;
+    match bytes.get(*pos) {
+        Some(b'*') => {
+            *pos += 1;
+            Ok(RegexNode::Star(Box::new(atom)))
+        }
+        Some(b'+') => {
+            *pos += 1;
+            Ok(RegexNode::Plus(Box::new(atom)))
+        }
+        Some(b'?') => {
+            *pos += 1;
+            Ok(RegexNode::Opt(Box::new(atom)))
+        }
+        Some(b'{') => {
+            *pos += 1;
+            let (min, max) = parse_repeat_bounds(bytes, pos)?;
+            Ok(RegexNode::Repeat(Box::new(atom), min, max))
+        }
+        _ => Ok(atom),
+    }
+}
+
+fn parse_repeat_bounds(bytes: &[u8], pos: &mut usize) -> Result<(usize, Option<usize>), SamplingError> {
+    let parse_uint = |bytes: &[u8], pos: &mut usize| -> Result<usize, SamplingError> {
+        let start = *pos;
+        while bytes.get(*pos).is_some_and(u8::is_ascii_digit) {
+            *pos += 1;
+        }
+        core::str::from_utf8(&bytes[start..*pos]).ok().and_then(|s| s.parse().ok()).ok_or(SamplingError::RegexParse { offset: start, reason: "invalid repeat bound" })
+    };
+    let min = parse_uint(bytes, pos)?;
+    let max = if bytes.get(*pos) == Some(&b',') {
+        *pos += 1;
+        if bytes.get(*pos) == Some(&b'}') {
+            None
+        } else {
+            Some(parse_uint(bytes, pos)?)
+        }
+    } else {
+        Some(min)
+    };
+    if bytes.get(*pos) != Some(&b'}') {
+        return Err(SamplingError::RegexParse { offset: *pos, reason: "expected '}'" });
+    }
+    *pos += 1;
+    Ok((min, max))
+}
+
+fn parse_atom(bytes: &[u8], pos: &mut usize) -> Result<RegexNode, SamplingError> {
+    match bytes.get(*pos) {
+        Some(b'(') => {
+            *pos += 1;
+            let inner = parse_alt(bytes, pos)?;
+            if bytes.get(*pos) != Some(&b')') {
+                return Err(SamplingError::RegexParse { offset: *pos, reason: "expected ')'" });
+            }
+            *pos += 1;
+            Ok(inner)
+        }
+        Some(b'.') => {
+            *pos += 1;
+            Ok(RegexNode::AnyByte)
+        }
+        Some(b'[') => parse_class(bytes, pos),
+        Some(b'\\') => {
+            *pos += 1;
+            let &b = bytes.get(*pos).ok_or(SamplingError::RegexParse { offset: *pos, reason: "dangling escape" })?;
+            *pos += 1;
+            Ok(RegexNode::Literal(unescape_byte(b)))
+        }
+        Some(&b) => {
+            *pos += 1;
+            Ok(RegexNode::Literal(b))
+        }
+        None => Err(SamplingError::RegexParse { offset: *pos, reason: "unexpected end of pattern" }),
+    }
+}
+
+fn parse_class(bytes: &[u8], pos: &mut usize) -> Result<RegexNode, SamplingError> {
+    debug_assert_eq!(bytes[*pos], b'[');
+    *pos += 1;
+    let negate = bytes.get(*pos) == Some(&b'^');
+    if negate {
+        *pos += 1;
+    }
+    let mut ranges = Vec::new();
+    while let Some(&b) = bytes.get(*pos) {
+        if b == b']' {
+            break;
+        }
+        let lo = if b == b'\\' {
+            *pos += 1;
+            let e = *bytes.get(*pos).ok_or(SamplingError::RegexParse { offset: *pos, reason: "dangling escape in class" })?;
+            unescape_byte(e)
+        } else {
+            b
+        };
+        *pos += 1;
+        if bytes.get(*pos) == Some(&b'-') && bytes.get(*pos + 1) != Some(&b']') {
+            *pos += 1;
+            let &hi = bytes.get(*pos).ok_or(SamplingError::RegexParse { offset: *pos, reason: "dangling range in class" })?;
+            *pos += 1;
+            ranges.push((lo, hi));
+        } else {
+            ranges.push((lo, lo));
+        }
+    }
+    if bytes.get(*pos) != Some(&b']') {
+        return Err(SamplingError::RegexParse { offset: *pos, reason: "expected ']'" });
+    }
+    *pos += 1;
+    Ok(RegexNode::Class { ranges, negate })
+}
+
+struct NfaNode {
+    eps: Vec<usize>,
+    byte_ranges: Vec<((u8, u8), usize)>,
+    accept: bool,
+}
+
+struct Frag {
+    start: usize,
+    accept: usize,
+}
+
+struct NfaBuilder {
+    nodes: Vec<NfaNode>,
+}
+
+impl NfaBuilder {
+    fn new_state(&mut self) -> usize {
+        self.nodes.push(NfaNode { eps: Vec::new(), byte_ranges: Vec::new(), accept: false });
+        self.nodes.len() - 1
+    }
+
+    fn build(&mut self, node: &RegexNode, limits: &SamplingLimits) -> Result<Frag, SamplingError> {
+        if self.nodes.len() > limits.max_automaton_states {
+            return Err(SamplingError::AutomatonBudget { budget: "max_automaton_states" });
+        }
+        match node {
+            RegexNode::Literal(b) => {
+                let s = self.new_state();
+                let a = self.new_state();
+                self.nodes[s].byte_ranges.push(((*b, *b), a));
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::AnyByte => {
+                let s = self.new_state();
+                let a = self.new_state();
+                self.nodes[s].byte_ranges.push(((0, 255), a));
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::Class { ranges, negate } => {
+                let s = self.new_state();
+                let a = self.new_state();
+                if *negate {
+                    let mut covered = [false; 256];
+                    for &(lo, hi) in ranges {
+                        for b in lo..=hi {
+                            covered[b as usize] = true;
+                        }
+                    }
+                    let mut b = 0u16;
+                    while b <= 255 {
+                        if !covered[b as usize] {
+                            let start = b;
+                            while b <= 255 && !covered[b as usize] {
+                                b += 1;
+                            }
+                            self.nodes[s].byte_ranges.push(((start as u8, (b - 1) as u8), a));
+                        } else {
+                            b += 1;
+                        }
+                    }
+                } else {
+                    for &(lo, hi) in ranges {
+                        self.nodes[s].byte_ranges.push(((lo, hi), a));
+                    }
+                }
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::Concat(parts) => {
+                if parts.is_empty() {
+                    let s = self.new_state();
+                    return Ok(Frag { start: s, accept: s });
+                }
+                let mut frags = Vec::with_capacity(parts.len());
+                for p in parts {
+                    frags.push(self.build(p, limits)?);
+                }
+                for w in frags.windows(2) {
+                    self.nodes[w[0].accept].eps.push(w[1].start);
+                }
+                Ok(Frag { start: frags[0].start, accept: frags[frags.len() - 1].accept })
+            }
+            RegexNode::Alt(branches) => {
+                let s = self.new_state();
+                let a = self.new_state();
+                for b in branches {
+                    let f = self.build(b, limits)?;
+                    self.nodes[s].eps.push(f.start);
+                    self.nodes[f.accept].eps.push(a);
+                }
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::Star(inner) => {
+                let s = self.new_state();
+                let a = self.new_state();
+                let f = self.build(inner, limits)?;
+                self.nodes[s].eps.push(f.start);
+                self.nodes[s].eps.push(a);
+                self.nodes[f.accept].eps.push(f.start);
+                self.nodes[f.accept].eps.push(a);
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::Plus(inner) => {
+                let first = self.build(inner, limits)?;
+                let star = self.build(&RegexNode::Star(inner.clone()), limits)?;
+                self.nodes[first.accept].eps.push(star.start);
+                Ok(Frag { start: first.start, accept: star.accept })
+            }
+            RegexNode::Opt(inner) => {
+                let s = self.new_state();
+                let a = self.new_state();
+                let f = self.build(inner, limits)?;
+                self.nodes[s].eps.push(f.start);
+                self.nodes[s].eps.push(a);
+                self.nodes[f.accept].eps.push(a);
+                Ok(Frag { start: s, accept: a })
+            }
+            RegexNode::Repeat(inner, min, max) => {
+                let mut parts = Vec::new();
+                for _ in 0..*min {
+                    parts.push((**inner).clone());
+                }
+                match max {
+                    Some(max) if *max > *min => {
+                        for _ in 0..(*max - *min) {
+                            parts.push(RegexNode::Opt(inner.clone()));
+                        }
+                    }
+                    None => parts.push(RegexNode::Star(inner.clone())),
+                    _ => {}
+                }
+                self.build(&RegexNode::Concat(parts), limits)
+            }
+        }
+    }
+}
+
+fn eps_closure(nodes: &[NfaNode], start: &[usize]) -> Vec<usize> {
+    let mut stack: Vec<usize> = start.to_vec();
+    let mut seen: std::collections::BTreeSet<usize> = start.iter().copied().collect();
+    while let Some(s) = stack.pop() {
+        for &e in &nodes[s].eps {
+            if seen.insert(e) {
+                stack.push(e);
+            }
+        }
+    }
+    seen.into_iter().collect()
+}
+
+fn nfa_set_has_accept(nodes: &[NfaNode], states: &[usize]) -> bool {
+    states.iter().any(|&s| nodes[s].accept)
+}
+
+/// 🤖 A byte-level DFA over 256-wide dense transition rows. State `0` is a permanent, unreachable,
+/// non-accepting dead state (the "no transition" sentinel); the real start state is always `>= 1`
+/// once the pattern accepts at least one string. `alive[s]` is precomputed once via reverse
+/// reachability from every accept state, so `Constraint::is_dead` is an O(1) lookup rather than a
+/// live search.
+pub struct Dfa {
+    transitions: Vec<u32>,
+    accept: Vec<bool>,
+    alive: Vec<bool>,
+    start: u32,
+    num_states: usize,
+}
+
+const DFA_DEAD: u32 = 0;
+
+/// 🤖 Subset construction: an NFA (with accept flags already set) plus a designated start state
+/// becomes a byte-level DFA, budget-checked against `limits.max_automaton_states`. Shared by
+/// [`Dfa::from_pattern`] and [`EbnfConstraint::new`] (which compiles a grammar into an NFA via a
+/// different front end but needs the exact same back end).
+fn subset_construct(nodes: &[NfaNode], start_nfa_state: usize, limits: &SamplingLimits) -> Result<Dfa, SamplingError> {
+    let mut dfa_states: Vec<Vec<usize>> = vec![Vec::new()];
+    let mut state_index: std::collections::HashMap<Vec<usize>, u32> = std::collections::HashMap::new();
+    state_index.insert(Vec::new(), DFA_DEAD);
+    let mut accept = vec![false];
+    let mut transitions: Vec<u32> = vec![DFA_DEAD; 256];
+
+    let start_set = eps_closure(nodes, &[start_nfa_state]);
+    let start = if let Some(&id) = state_index.get(&start_set) {
+        id
+    } else {
+        let id = dfa_states.len() as u32;
+        dfa_states.push(start_set.clone());
+        state_index.insert(start_set.clone(), id);
+        accept.push(nfa_set_has_accept(nodes, &start_set));
+        transitions.resize(dfa_states.len() * 256, DFA_DEAD);
+        id
+    };
+
+    let mut queue: std::collections::VecDeque<u32> = std::collections::VecDeque::new();
+    queue.push_back(start);
+    let mut queued: std::collections::HashSet<u32> = std::collections::HashSet::new();
+    queued.insert(start);
+    while let Some(state_id) = queue.pop_front() {
+        if dfa_states.len() > limits.max_automaton_states {
+            return Err(SamplingError::AutomatonBudget { budget: "max_automaton_states" });
+        }
+        let nfa_set = dfa_states[state_id as usize].clone();
+        for byte in 0..=255u16 {
+            let byte = byte as u8;
+            let mut targets: Vec<usize> = Vec::new();
+            for &s in &nfa_set {
+                for &((lo, hi), to) in &nodes[s].byte_ranges {
+                    if byte >= lo && byte <= hi {
+                        targets.push(to);
+                    }
+                }
+            }
+            if targets.is_empty() {
+                continue;
+            }
+            let closure = eps_closure(nodes, &targets);
+            if closure.is_empty() {
+                continue;
+            }
+            let next_id = if let Some(&id) = state_index.get(&closure) {
+                id
+            } else {
+                let id = dfa_states.len() as u32;
+                dfa_states.push(closure.clone());
+                state_index.insert(closure.clone(), id);
+                accept.push(nfa_set_has_accept(nodes, &closure));
+                transitions.resize(dfa_states.len() * 256, DFA_DEAD);
+                id
+            };
+            transitions[state_id as usize * 256 + byte as usize] = next_id;
+            if queued.insert(next_id) {
+                queue.push_back(next_id);
+            }
+        }
+    }
+
+    let num_states = dfa_states.len();
+    let mut incoming: Vec<Vec<u32>> = vec![Vec::new(); num_states];
+    for s in 0..num_states {
+        for b in 0..256usize {
+            let t = transitions[s * 256 + b];
+            if t != DFA_DEAD {
+                incoming[t as usize].push(s as u32);
+            }
+        }
+    }
+    let mut alive = vec![false; num_states];
+    let mut stack: Vec<u32> = (0..num_states as u32).filter(|&s| accept[s as usize]).collect();
+    for &s in &stack {
+        alive[s as usize] = true;
+    }
+    while let Some(s) = stack.pop() {
+        for &p in &incoming[s as usize] {
+            if !alive[p as usize] {
+                alive[p as usize] = true;
+                stack.push(p);
+            }
+        }
+    }
+
+    Ok(Dfa { transitions, accept, alive, start, num_states })
+}
+
+impl Dfa {
+    /// 🤖 Parses `pattern`, builds its Thompson NFA, then performs subset construction into a DFA,
+    /// erroring if either the NFA or the DFA would exceed `limits.max_automaton_states`.
+    pub fn from_pattern(pattern: &str, limits: &SamplingLimits) -> Result<Self, SamplingError> {
+        let ast = parse_regex(pattern)?;
+        let mut builder = NfaBuilder { nodes: Vec::new() };
+        let frag = builder.build(&ast, limits)?;
+        builder.nodes[frag.accept].accept = true;
+        subset_construct(&builder.nodes, frag.start, limits)
+    }
+
+    pub fn start(&self) -> u32 {
+        self.start
+    }
+
+    #[inline]
+    pub fn step(&self, state: u32, byte: u8) -> u32 {
+        self.transitions[state as usize * 256 + byte as usize]
+    }
+
+    pub fn is_accept(&self, state: u32) -> bool {
+        self.accept.get(state as usize).copied().unwrap_or(false)
+    }
+
+    pub fn is_alive(&self, state: u32) -> bool {
+        self.alive.get(state as usize).copied().unwrap_or(false)
+    }
+
+    pub fn is_dead(&self, state: u32) -> bool {
+        state == DFA_DEAD
+    }
+
+    pub fn num_states(&self) -> usize {
+        self.num_states
+    }
+}
+
+/// 🤖 Per-DFA-state lazily computed `(allowed token mask, next state per token)`, so a constraint
+/// doesn't re-walk every token's bytes through the DFA on every step at the same automaton state.
+/// Bounded by `max_entries`; a full-clear eviction policy (not LRU) once the bound is hit — simple
+/// and correct, if not optimal; a proper clock/LRU is a hardening-wave follow-up.
+pub struct DfaTokenCache {
+    entries: std::collections::HashMap<u32, (TokenBitset, Vec<u32>)>,
+    max_entries: usize,
+}
+
+impl DfaTokenCache {
+    pub fn new(max_entries: usize) -> Self {
+        Self { entries: std::collections::HashMap::new(), max_entries }
+    }
+
+    pub fn get_or_compute(&mut self, dfa: &Dfa, state: u32, adapter: &dyn TokenTextAdapter) -> &(TokenBitset, Vec<u32>) {
+        if !self.entries.contains_key(&state) {
+            if self.entries.len() >= self.max_entries {
+                self.entries.clear();
+            }
+            let vocab_size = adapter.vocab_size();
+            let mut allowed = TokenBitset::new_empty(vocab_size);
+            let mut next_state = vec![DFA_DEAD; vocab_size];
+            for (i, next_state_i) in next_state.iter_mut().enumerate() {
+                let token = TokenId::new(i as u32);
+                if let Some(bytes) = adapter.token_bytes(token) {
+                    let mut s = state;
+                    let mut ok = true;
+                    for &b in bytes {
+                        s = dfa.step(s, b);
+                        if dfa.is_dead(s) {
+                            ok = false;
+                            break;
+                        }
+                    }
+                    if ok && dfa.is_alive(s) {
+                        allowed.set(token, true);
+                        *next_state_i = s;
+                    }
+                }
+            }
+            self.entries.insert(state, (allowed, next_state));
+        }
+        self.entries.get(&state).expect("just inserted or already present")
+    }
+}
+// #endregion 🔖Automata
+
+// #region 🔖Constraints
+/// 🧱 Constrains generation to text matching a regex (interpreted as a whole-string match: the
+/// final generated text must end in an accept state).
+pub struct RegexConstraint {
+    dfa: std::rc::Rc<Dfa>,
+    cache: DfaTokenCache,
+    max_cache_entries: usize,
+    state: u32,
+    snapshots: Vec<u32>,
+}
+
+impl RegexConstraint {
+    pub fn new(pattern: &str, limits: &SamplingLimits) -> Result<Self, SamplingError> {
+        let dfa = Dfa::from_pattern(pattern, limits)?;
+        let start = dfa.start();
+        Ok(Self { dfa: std::rc::Rc::new(dfa), cache: DfaTokenCache::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() })
+    }
+}
+
+impl Constraint for RegexConstraint {
+    fn name(&self) -> &'static str {
+        "regex"
+    }
+    fn fill_mask(&mut self, view: &StepView<'_>, mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        let Some(adapter) = view.adapter else { return Ok(()) };
+        let (allowed, _) = self.cache.get_or_compute(&self.dfa, self.state, adapter);
+        mask.and_with(allowed);
+        Ok(())
+    }
+    fn accept(&mut self, view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        let Some(adapter) = view.adapter else { return Ok(()) };
+        let (_, next_state) = self.cache.get_or_compute(&self.dfa, self.state, adapter);
+        if let Some(&next) = next_state.get(token.get() as usize) {
+            self.state = next;
+        }
+        Ok(())
+    }
+    fn is_satisfied(&self) -> bool {
+        self.dfa.is_accept(self.state)
+    }
+    fn is_finished(&self) -> bool {
+        self.is_satisfied()
+    }
+    fn is_dead(&self) -> bool {
+        self.dfa.is_dead(self.state) || !self.dfa.is_alive(self.state)
+    }
+    fn save(&mut self) -> ConstraintMark {
+        self.snapshots.push(self.state);
+        ConstraintMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        if let Some(&s) = self.snapshots.get(mark.0 as usize) {
+            self.state = s;
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.state = self.dfa.start();
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self { dfa: self.dfa.clone(), cache: DfaTokenCache::new(self.max_cache_entries), max_cache_entries: self.max_cache_entries, state: self.state, snapshots: self.snapshots.clone() })
+    }
+}
+
+/// 🧱 Constrains generation to one of a fixed set of allowed token-id phrases (a trie over
+/// `TokenId` sequences rather than bytes).
+pub struct TrieConstraint {
+    nodes: Vec<std::collections::HashMap<TokenId, usize>>,
+    accept: Vec<bool>,
+    state: usize,
+    snapshots: Vec<usize>,
+}
+
+impl TrieConstraint {
+    pub fn new(phrases: &[Vec<TokenId>]) -> Self {
+        let mut nodes = vec![std::collections::HashMap::new()];
+        let mut accept = vec![false];
+        for phrase in phrases {
+            let mut state = 0usize;
+            for &token in phrase {
+                if !nodes[state].contains_key(&token) {
+                    nodes.push(std::collections::HashMap::new());
+                    accept.push(false);
+                    let new_id = nodes.len() - 1;
+                    nodes[state].insert(token, new_id);
+                }
+                state = nodes[state][&token];
+            }
+            accept[state] = true;
+        }
+        Self { nodes, accept, state: 0, snapshots: Vec::new() }
+    }
+}
+
+impl Constraint for TrieConstraint {
+    fn name(&self) -> &'static str {
+        "trie"
+    }
+    fn fill_mask(&mut self, _view: &StepView<'_>, mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        let mut allow = TokenBitset::new_empty(mask.len());
+        for &token in self.nodes[self.state].keys() {
+            allow.set(token, true);
+        }
+        mask.and_with(&allow);
+        Ok(())
+    }
+    fn accept(&mut self, _view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        if let Some(&next) = self.nodes[self.state].get(&token) {
+            self.state = next;
+        }
+        Ok(())
+    }
+    fn is_satisfied(&self) -> bool {
+        self.accept[self.state]
+    }
+    fn is_finished(&self) -> bool {
+        self.accept[self.state] && self.nodes[self.state].is_empty()
+    }
+    fn is_dead(&self) -> bool {
+        self.nodes[self.state].is_empty() && !self.accept[self.state]
+    }
+    fn save(&mut self) -> ConstraintMark {
+        self.snapshots.push(self.state);
+        ConstraintMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        if let Some(&s) = self.snapshots.get(mark.0 as usize) {
+            self.state = s;
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.state = 0;
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self { nodes: self.nodes.clone(), accept: self.accept.clone(), state: self.state, snapshots: self.snapshots.clone() })
+    }
+}
+
+/// 🧱 Requires at least one of several token-sequence alternatives to appear somewhere in the
+/// generated continuation; does not restrict candidates, only tracks completion (EOS/finish are
+/// gated on [`Constraint::is_satisfied`] by the engine's constraint composition).
+pub struct MustIncludeConstraint {
+    alternatives: Vec<Vec<TokenId>>,
+    satisfied: bool,
+    history: Vec<TokenId>,
+    snapshots: Vec<(bool, usize)>,
+}
+
+impl MustIncludeConstraint {
+    pub fn new(alternatives: Vec<Vec<TokenId>>) -> Self {
+        Self { alternatives, satisfied: false, history: Vec::new(), snapshots: Vec::new() }
+    }
+}
+
+impl Constraint for MustIncludeConstraint {
+    fn name(&self) -> &'static str {
+        "must_include"
+    }
+    fn fill_mask(&mut self, _view: &StepView<'_>, _mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        Ok(())
+    }
+    fn accept(&mut self, _view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        self.history.push(token);
+        if !self.satisfied {
+            for phrase in &self.alternatives {
+                if self.history.len() >= phrase.len() && self.history[self.history.len() - phrase.len()..] == phrase[..] {
+                    self.satisfied = true;
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
+    fn is_satisfied(&self) -> bool {
+        self.satisfied || self.alternatives.is_empty()
+    }
+    fn is_finished(&self) -> bool {
+        self.satisfied
+    }
+    fn is_dead(&self) -> bool {
+        false
+    }
+    fn save(&mut self) -> ConstraintMark {
+        self.snapshots.push((self.satisfied, self.history.len()));
+        ConstraintMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        if let Some(&(satisfied, len)) = self.snapshots.get(mark.0 as usize) {
+            self.satisfied = satisfied;
+            self.history.truncate(len);
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.satisfied = false;
+        self.history.clear();
+        self.snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self { alternatives: self.alternatives.clone(), satisfied: self.satisfied, history: self.history.clone(), snapshots: self.snapshots.clone() })
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum JsonFrame {
+    Object,
+    Array,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+enum JsonExpect {
+    Value,
+    ObjectKeyOrClose,
+    ObjectKey,
+    ObjectColon,
+    ObjectCommaOrClose,
+    ArrayValueOrClose,
+    ArrayCommaOrClose,
+    Done,
+}
+
+/// 🧱 Byte-level incremental JSON structural constraint: a small explicit push-down automaton
+/// (object/array frame stack + an "expected next token class" state) that validates JSON syntax
+/// reactively as token bytes are accepted. Numbers, booleans, and `null` are treated as atomic
+/// (their internal digits/characters aren't byte-validated) — a deliberate simplification, not a
+/// full JSON-number grammar. Does not proactively mask (`fill_mask` is a no-op): building a
+/// per-state token-feasibility cache for this hand-written automaton (mirroring [`DfaTokenCache`])
+/// is a hardening-wave follow-up.
+pub struct JsonModeConstraint {
+    stack: Vec<JsonFrame>,
+    expect: JsonExpect,
+    in_string: bool,
+    string_escaped: bool,
+    string_is_key: bool,
+    dead: bool,
+    snapshots: Vec<(Vec<JsonFrame>, JsonExpect, bool, bool, bool, bool)>,
+}
+
+impl JsonModeConstraint {
+    pub fn new() -> Self {
+        Self { stack: Vec::new(), expect: JsonExpect::Value, in_string: false, string_escaped: false, string_is_key: false, dead: false, snapshots: Vec::new() }
+    }
+
+    fn after_value(&mut self) {
+        self.expect = match self.stack.last() {
+            None => JsonExpect::Done,
+            Some(JsonFrame::Object) => JsonExpect::ObjectCommaOrClose,
+            Some(JsonFrame::Array) => JsonExpect::ArrayCommaOrClose,
+        };
+    }
+
+    /// 🧱 Consumes one byte, returning `false` if it is structurally invalid in the current state.
+    fn feed_byte(&mut self, b: u8) -> bool {
+        if self.in_string {
+            if self.string_escaped {
+                self.string_escaped = false;
+                return true;
+            }
+            match b {
+                b'\\' => {
+                    self.string_escaped = true;
+                    true
+                }
+                b'"' => {
+                    self.in_string = false;
+                    if self.string_is_key {
+                        self.expect = JsonExpect::ObjectColon;
+                    } else {
+                        self.after_value();
+                    }
+                    true
+                }
+                _ => true,
+            }
+        } else {
+            match b {
+                b' ' | b'\t' | b'\n' | b'\r' => true,
+                b'"' if matches!(self.expect, JsonExpect::Value | JsonExpect::ArrayValueOrClose) => {
+                    self.in_string = true;
+                    self.string_is_key = false;
+                    true
+                }
+                b'"' if matches!(self.expect, JsonExpect::ObjectKey | JsonExpect::ObjectKeyOrClose) => {
+                    self.in_string = true;
+                    self.string_is_key = true;
+                    true
+                }
+                b'{' if matches!(self.expect, JsonExpect::Value | JsonExpect::ArrayValueOrClose) => {
+                    self.stack.push(JsonFrame::Object);
+                    self.expect = JsonExpect::ObjectKeyOrClose;
+                    true
+                }
+                b'[' if matches!(self.expect, JsonExpect::Value | JsonExpect::ArrayValueOrClose) => {
+                    self.stack.push(JsonFrame::Array);
+                    self.expect = JsonExpect::ArrayValueOrClose;
+                    true
+                }
+                b'}' if matches!(self.expect, JsonExpect::ObjectKeyOrClose | JsonExpect::ObjectCommaOrClose) && self.stack.last() == Some(&JsonFrame::Object) => {
+                    self.stack.pop();
+                    self.after_value();
+                    true
+                }
+                b']' if matches!(self.expect, JsonExpect::ArrayValueOrClose | JsonExpect::ArrayCommaOrClose) && self.stack.last() == Some(&JsonFrame::Array) => {
+                    self.stack.pop();
+                    self.after_value();
+                    true
+                }
+                b':' if self.expect == JsonExpect::ObjectColon => {
+                    self.expect = JsonExpect::Value;
+                    true
+                }
+                b',' if self.expect == JsonExpect::ObjectCommaOrClose => {
+                    self.expect = JsonExpect::ObjectKey;
+                    true
+                }
+                b',' if self.expect == JsonExpect::ArrayCommaOrClose => {
+                    self.expect = JsonExpect::ArrayValueOrClose;
+                    true
+                }
+                b't' | b'f' | b'n' | b'-' | b'0'..=b'9' if matches!(self.expect, JsonExpect::Value | JsonExpect::ArrayValueOrClose) => {
+                    self.after_value();
+                    true
+                }
+                _ => false,
+            }
+        }
+    }
+}
+
+impl Default for JsonModeConstraint {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl Constraint for JsonModeConstraint {
+    fn name(&self) -> &'static str {
+        "json_mode"
+    }
+    fn fill_mask(&mut self, _view: &StepView<'_>, _mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        Ok(())
+    }
+    fn accept(&mut self, view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        let Some(adapter) = view.adapter else { return Ok(()) };
+        let Some(bytes) = adapter.token_bytes(token) else { return Ok(()) };
+        for &b in bytes {
+            if !self.feed_byte(b) {
+                self.dead = true;
+                break;
+            }
+        }
+        Ok(())
+    }
+    fn is_satisfied(&self) -> bool {
+        self.expect == JsonExpect::Done && !self.in_string
+    }
+    fn is_finished(&self) -> bool {
+        self.is_satisfied()
+    }
+    fn is_dead(&self) -> bool {
+        self.dead
+    }
+    fn save(&mut self) -> ConstraintMark {
+        self.snapshots.push((self.stack.clone(), self.expect, self.in_string, self.string_escaped, self.string_is_key, self.dead));
+        ConstraintMark((self.snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        if let Some((stack, expect, in_string, string_escaped, string_is_key, dead)) = self.snapshots.get(mark.0 as usize).cloned() {
+            self.stack = stack;
+            self.expect = expect;
+            self.in_string = in_string;
+            self.string_escaped = string_escaped;
+            self.string_is_key = string_is_key;
+            self.dead = dead;
+        }
+        self.snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        *self = Self::new();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self {
+            stack: self.stack.clone(),
+            expect: self.expect,
+            in_string: self.in_string,
+            string_escaped: self.string_escaped,
+            string_is_key: self.string_is_key,
+            dead: self.dead,
+            snapshots: self.snapshots.clone(),
+        })
+    }
+}
+
+/// 🧱 EBNF grammar rules: `name ::= expr ;` where `expr` reuses [`RegexNode`]'s alternation,
+/// concatenation, and quantifier operators over quoted terminals and rule references. Compiled by
+/// inlining rule references into a single [`RegexNode`] (bounded by `max_expansions`), so it
+/// supports non-recursive and boundedly-recursive grammars — not general (potentially
+/// left-recursive or unbounded) context-free grammars, which would need a real Earley/GLR parser.
+/// That is a deliberate, documented scope cut: [`ConstraintSpec::Ebnf`] compiles through this path
+/// and therefore shares the same limitation.
+struct EbnfGrammar {
+    rules: std::collections::HashMap<String, GrammarExpr>,
+    start: String,
+}
+
+#[derive(Clone)]
+enum GrammarExpr {
+    Terminal(String),
+    Rule(String),
+    Concat(Vec<GrammarExpr>),
+    Alt(Vec<GrammarExpr>),
+    Star(Box<GrammarExpr>),
+    Plus(Box<GrammarExpr>),
+    Opt(Box<GrammarExpr>),
+}
+
+fn parse_ebnf(text: &str) -> Result<EbnfGrammar, SamplingError> {
+    let mut rules = std::collections::HashMap::new();
+    let mut start = None;
+    for (line_no, raw_line) in text.lines().enumerate() {
+        let line = raw_line.trim();
+        if line.is_empty() || line.starts_with('#') {
+            continue;
+        }
+        let Some(sep) = line.find("::=") else {
+            return Err(SamplingError::GrammarParse { offset: line_no, reason: "expected '::=' rule separator" });
+        };
+        let name = line[..sep].trim().to_string();
+        let body = line[sep + 3..].trim().trim_end_matches(';').trim();
+        let expr = parse_grammar_alt(body.as_bytes(), &mut 0)?;
+        if start.is_none() {
+            start = Some(name.clone());
+        }
+        rules.insert(name, expr);
+    }
+    let start = start.ok_or(SamplingError::GrammarParse { offset: 0, reason: "grammar defines no rules" })?;
+    Ok(EbnfGrammar { rules, start })
+}
+
+fn parse_grammar_alt(bytes: &[u8], pos: &mut usize) -> Result<GrammarExpr, SamplingError> {
+    skip_grammar_ws(bytes, pos);
+    let mut branches = vec![parse_grammar_concat(bytes, pos)?];
+    loop {
+        skip_grammar_ws(bytes, pos);
+        if bytes.get(*pos) == Some(&b'|') {
+            *pos += 1;
+            branches.push(parse_grammar_concat(bytes, pos)?);
+        } else {
+            break;
+        }
+    }
+    Ok(if branches.len() == 1 { branches.pop().expect("non-empty branches") } else { GrammarExpr::Alt(branches) })
+}
+
+fn parse_grammar_concat(bytes: &[u8], pos: &mut usize) -> Result<GrammarExpr, SamplingError> {
+    let mut parts = Vec::new();
+    loop {
+        skip_grammar_ws(bytes, pos);
+        match bytes.get(*pos) {
+            Some(b'|') | Some(b')') | None => break,
+            _ => parts.push(parse_grammar_quantified(bytes, pos)?),
+        }
+    }
+    Ok(GrammarExpr::Concat(parts))
+}
+
+fn parse_grammar_quantified(bytes: &[u8], pos: &mut usize) -> Result<GrammarExpr, SamplingError> {
+    let atom = parse_grammar_atom(bytes, pos)?;
+    match bytes.get(*pos) {
+        Some(b'*') => {
+            *pos += 1;
+            Ok(GrammarExpr::Star(Box::new(atom)))
+        }
+        Some(b'+') => {
+            *pos += 1;
+            Ok(GrammarExpr::Plus(Box::new(atom)))
+        }
+        Some(b'?') => {
+            *pos += 1;
+            Ok(GrammarExpr::Opt(Box::new(atom)))
+        }
+        _ => Ok(atom),
+    }
+}
+
+fn skip_grammar_ws(bytes: &[u8], pos: &mut usize) {
+    while bytes.get(*pos).is_some_and(u8::is_ascii_whitespace) {
+        *pos += 1;
+    }
+}
+
+fn parse_grammar_atom(bytes: &[u8], pos: &mut usize) -> Result<GrammarExpr, SamplingError> {
+    skip_grammar_ws(bytes, pos);
+    match bytes.get(*pos) {
+        Some(b'(') => {
+            *pos += 1;
+            let inner = parse_grammar_alt(bytes, pos)?;
+            skip_grammar_ws(bytes, pos);
+            if bytes.get(*pos) != Some(&b')') {
+                return Err(SamplingError::GrammarParse { offset: *pos, reason: "expected ')'" });
+            }
+            *pos += 1;
+            Ok(inner)
+        }
+        Some(b'"') => {
+            *pos += 1;
+            let start = *pos;
+            while bytes.get(*pos).is_some_and(|&b| b != b'"') {
+                *pos += 1;
+            }
+            let text = core::str::from_utf8(&bytes[start..*pos]).map_err(|_| SamplingError::GrammarParse { offset: start, reason: "invalid utf-8 in terminal" })?.to_string();
+            if bytes.get(*pos) != Some(&b'"') {
+                return Err(SamplingError::GrammarParse { offset: *pos, reason: "unterminated terminal" });
+            }
+            *pos += 1;
+            Ok(GrammarExpr::Terminal(text))
+        }
+        Some(&b) if b.is_ascii_alphabetic() || b == b'_' => {
+            let start = *pos;
+            while bytes.get(*pos).is_some_and(|&b| b.is_ascii_alphanumeric() || b == b'_') {
+                *pos += 1;
+            }
+            let name = core::str::from_utf8(&bytes[start..*pos]).expect("ASCII rule name").to_string();
+            Ok(GrammarExpr::Rule(name))
+        }
+        _ => Err(SamplingError::GrammarParse { offset: *pos, reason: "expected '(', '\"', or a rule name" }),
+    }
+}
+
+/// 🧱 Inlines `expr` into a [`RegexNode`], expanding rule references by substitution up to
+/// `budget` total expansions (shared, decremented across the whole compilation) — the bound that
+/// turns unsupported unbounded recursion into a clean [`SamplingError::AutomatonBudget`] instead
+/// of an infinite expansion.
+fn compile_grammar_expr(expr: &GrammarExpr, grammar: &EbnfGrammar, budget: &mut usize) -> Result<RegexNode, SamplingError> {
+    if *budget == 0 {
+        return Err(SamplingError::AutomatonBudget { budget: "grammar expansion (possible unbounded recursion)" });
+    }
+    *budget -= 1;
+    match expr {
+        GrammarExpr::Terminal(text) => Ok(RegexNode::Concat(text.bytes().map(RegexNode::Literal).collect())),
+        GrammarExpr::Rule(name) => {
+            let inner = grammar.rules.get(name).ok_or(SamplingError::GrammarParse { offset: 0, reason: "reference to undefined rule" })?;
+            compile_grammar_expr(inner, grammar, budget)
+        }
+        GrammarExpr::Concat(parts) => Ok(RegexNode::Concat(parts.iter().map(|p| compile_grammar_expr(p, grammar, budget)).collect::<Result<_, _>>()?)),
+        GrammarExpr::Alt(branches) => Ok(RegexNode::Alt(branches.iter().map(|p| compile_grammar_expr(p, grammar, budget)).collect::<Result<_, _>>()?)),
+        GrammarExpr::Star(inner) => Ok(RegexNode::Star(Box::new(compile_grammar_expr(inner, grammar, budget)?))),
+        GrammarExpr::Plus(inner) => Ok(RegexNode::Plus(Box::new(compile_grammar_expr(inner, grammar, budget)?))),
+        GrammarExpr::Opt(inner) => Ok(RegexNode::Opt(Box::new(compile_grammar_expr(inner, grammar, budget)?))),
+    }
+}
+
+/// 🧱 An EBNF-grammar constraint, compiled through [`compile_grammar_expr`] into the same
+/// DFA/[`DfaTokenCache`] machinery as [`RegexConstraint`] — see [`EbnfGrammar`]'s doc for the
+/// supported (non-recursive/boundedly-recursive) grammar subset.
+pub struct EbnfConstraint(RegexConstraint);
+
+impl EbnfConstraint {
+    pub fn new(grammar_text: &str, limits: &SamplingLimits) -> Result<Self, SamplingError> {
+        let grammar = parse_ebnf(grammar_text)?;
+        let start_expr = grammar.rules.get(&grammar.start).ok_or(SamplingError::GrammarParse { offset: 0, reason: "start rule missing" })?.clone();
+        let mut budget = limits.max_grammar_bytes;
+        let ast = compile_grammar_expr(&start_expr, &grammar, &mut budget)?;
+        let mut builder = NfaBuilder { nodes: Vec::new() };
+        let frag = builder.build(&ast, limits)?;
+        builder.nodes[frag.accept].accept = true;
+        let dfa = subset_construct(&builder.nodes, frag.start, limits)?;
+        let start = dfa.start();
+        Ok(Self(RegexConstraint { dfa: std::rc::Rc::new(dfa), cache: DfaTokenCache::new(limits.max_dfa_cache_entries), max_cache_entries: limits.max_dfa_cache_entries, state: start, snapshots: Vec::new() }))
+    }
+}
+
+impl Constraint for EbnfConstraint {
+    fn name(&self) -> &'static str {
+        "ebnf"
+    }
+    fn fill_mask(&mut self, view: &StepView<'_>, mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        self.0.fill_mask(view, mask)
+    }
+    fn accept(&mut self, view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        self.0.accept(view, token)
+    }
+    fn is_satisfied(&self) -> bool {
+        self.0.is_satisfied()
+    }
+    fn is_finished(&self) -> bool {
+        self.0.is_finished()
+    }
+    fn is_dead(&self) -> bool {
+        self.0.is_dead()
+    }
+    fn save(&mut self) -> ConstraintMark {
+        self.0.save()
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        self.0.rollback_to(mark);
+    }
+    fn reset(&mut self) {
+        self.0.reset();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self(RegexConstraint {
+            dfa: self.0.dfa.clone(),
+            cache: DfaTokenCache::new(self.0.max_cache_entries),
+            max_cache_entries: self.0.max_cache_entries,
+            state: self.0.state,
+            snapshots: self.0.snapshots.clone(),
+        }))
+    }
+}
+
+/// 🧱 Recursive JSON-Schema subset validator: `type`, `enum`, numeric `minimum`/`maximum`, string
+/// `minLength`/`maxLength`, array `minItems`/`maxItems`/`items`, and object `required`/`properties`.
+/// Unrecognized schema keywords (`oneOf`, `pattern`, ...) are silently ignored rather than
+/// rejected — a documented subset, not full JSON Schema.
+fn validates_json_schema(value: &JsonValue, schema: &JsonValue) -> bool {
+    if let Some(type_name) = schema.get("type").and_then(JsonValue::as_str) {
+        let matches_type = match type_name {
+            "object" => matches!(value, JsonValue::Object(_)),
+            "array" => matches!(value, JsonValue::Array(_)),
+            "string" => matches!(value, JsonValue::Str(_)),
+            "number" => matches!(value, JsonValue::Num(_)),
+            "integer" => matches!(value, JsonValue::Num(n) if n.fract() == 0.0),
+            "boolean" => matches!(value, JsonValue::Bool(_)),
+            "null" => matches!(value, JsonValue::Null),
+            _ => true,
+        };
+        if !matches_type {
+            return false;
+        }
+    }
+    if let Some(enum_values) = schema.get("enum").and_then(JsonValue::as_array) {
+        if !enum_values.contains(value) {
+            return false;
+        }
+    }
+    match value {
+        JsonValue::Num(n) => {
+            if let Some(min) = schema.get("minimum").and_then(JsonValue::as_f64) {
+                if *n < min {
+                    return false;
+                }
+            }
+            if let Some(max) = schema.get("maximum").and_then(JsonValue::as_f64) {
+                if *n > max {
+                    return false;
+                }
+            }
+        }
+        JsonValue::Str(s) => {
+            if let Some(min_len) = schema.get("minLength").and_then(JsonValue::as_f64) {
+                if (s.len() as f64) < min_len {
+                    return false;
+                }
+            }
+            if let Some(max_len) = schema.get("maxLength").and_then(JsonValue::as_f64) {
+                if (s.len() as f64) > max_len {
+                    return false;
+                }
+            }
+        }
+        JsonValue::Array(items) => {
+            if let Some(min_items) = schema.get("minItems").and_then(JsonValue::as_f64) {
+                if (items.len() as f64) < min_items {
+                    return false;
+                }
+            }
+            if let Some(max_items) = schema.get("maxItems").and_then(JsonValue::as_f64) {
+                if (items.len() as f64) > max_items {
+                    return false;
+                }
+            }
+            if let Some(item_schema) = schema.get("items") {
+                if !items.iter().all(|item| validates_json_schema(item, item_schema)) {
+                    return false;
+                }
+            }
+        }
+        JsonValue::Object(entries) => {
+            if let Some(required) = schema.get("required").and_then(JsonValue::as_array) {
+                for req in required {
+                    if let Some(key) = req.as_str() {
+                        if !entries.iter().any(|(k, _)| k == key) {
+                            return false;
+                        }
+                    }
+                }
+            }
+            if let Some(JsonValue::Object(props)) = schema.get("properties") {
+                for (key, val) in entries {
+                    if let Some((_, prop_schema)) = props.iter().find(|(k, _)| k == key) {
+                        if !validates_json_schema(val, prop_schema) {
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        _ => {}
+    }
+    true
+}
+
+/// 🧱 JSON syntax (via [`JsonModeConstraint`]) plus a schema check run once the accumulated text
+/// is syntactically complete — schema compliance is a completion gate, not a proactive per-token
+/// mask (that would need compiling the schema into the DFA machinery, a hardening-wave follow-up).
+pub struct JsonSchemaConstraint {
+    mode: JsonModeConstraint,
+    schema: JsonValue,
+    text: Vec<u8>,
+    schema_violated: bool,
+    text_snapshots: Vec<(Vec<u8>, bool)>,
+}
+
+impl JsonSchemaConstraint {
+    pub fn new(schema: JsonValue) -> Self {
+        Self { mode: JsonModeConstraint::new(), schema, text: Vec::new(), schema_violated: false, text_snapshots: Vec::new() }
+    }
+}
+
+impl Constraint for JsonSchemaConstraint {
+    fn name(&self) -> &'static str {
+        "json_schema"
+    }
+    fn fill_mask(&mut self, view: &StepView<'_>, mask: &mut TokenBitset) -> Result<(), SamplingError> {
+        self.mode.fill_mask(view, mask)
+    }
+    fn accept(&mut self, view: &StepView<'_>, token: TokenId) -> Result<(), SamplingError> {
+        if let Some(adapter) = view.adapter {
+            if let Some(bytes) = adapter.token_bytes(token) {
+                self.text.extend_from_slice(bytes);
+            }
+        }
+        self.mode.accept(view, token)?;
+        if self.mode.is_satisfied() {
+            let text = String::from_utf8_lossy(&self.text);
+            match parse_json(&text, 64) {
+                Ok(value) => {
+                    if !validates_json_schema(&value, &self.schema) {
+                        self.schema_violated = true;
+                    }
+                }
+                Err(_) => self.schema_violated = true,
+            }
+        }
+        Ok(())
+    }
+    fn is_satisfied(&self) -> bool {
+        self.mode.is_satisfied() && !self.schema_violated
+    }
+    fn is_finished(&self) -> bool {
+        self.is_satisfied()
+    }
+    fn is_dead(&self) -> bool {
+        self.mode.is_dead() || self.schema_violated
+    }
+    fn save(&mut self) -> ConstraintMark {
+        let inner_mark = self.mode.save();
+        self.text_snapshots.push((self.text.clone(), self.schema_violated));
+        debug_assert_eq!(inner_mark.0, (self.text_snapshots.len() - 1) as u64, "mode and text snapshot stacks must grow in lockstep");
+        ConstraintMark((self.text_snapshots.len() - 1) as u64)
+    }
+    fn rollback_to(&mut self, mark: ConstraintMark) {
+        self.mode.rollback_to(mark);
+        if let Some((text, violated)) = self.text_snapshots.get(mark.0 as usize).cloned() {
+            self.text = text;
+            self.schema_violated = violated;
+        }
+        self.text_snapshots.truncate(mark.0 as usize + 1);
+    }
+    fn reset(&mut self) {
+        self.mode.reset();
+        self.text.clear();
+        self.schema_violated = false;
+        self.text_snapshots.clear();
+    }
+    fn fork(&self) -> Box<dyn Constraint> {
+        Box::new(Self {
+            mode: JsonModeConstraint {
+                stack: self.mode.stack.clone(),
+                expect: self.mode.expect,
+                in_string: self.mode.in_string,
+                string_escaped: self.mode.string_escaped,
+                string_is_key: self.mode.string_is_key,
+                dead: self.mode.dead,
+                snapshots: self.mode.snapshots.clone(),
+            },
+            schema: self.schema.clone(),
+            text: self.text.clone(),
+            schema_violated: self.schema_violated,
+            text_snapshots: self.text_snapshots.clone(),
+        })
+    }
+}
+
+/// 🧱 Builds a [`Constraint`] from a [`ConstraintSpec`]; exhaustive over every variant.
+pub fn build_constraint(spec: &ConstraintSpec, limits: &SamplingLimits) -> Result<Box<dyn Constraint>, SamplingError> {
+    match spec {
+        ConstraintSpec::Regex(pattern) => Ok(Box::new(RegexConstraint::new(pattern, limits)?)),
+        ConstraintSpec::Trie(phrases) => Ok(Box::new(TrieConstraint::new(phrases))),
+        ConstraintSpec::MustInclude(alternatives) => Ok(Box::new(MustIncludeConstraint::new(alternatives.clone()))),
+        ConstraintSpec::JsonMode => Ok(Box::new(JsonModeConstraint::new())),
+        ConstraintSpec::Ebnf(text) => Ok(Box::new(EbnfConstraint::new(text, limits)?)),
+        ConstraintSpec::JsonSchema(schema) => Ok(Box::new(JsonSchemaConstraint::new(schema.clone()))),
+    }
+}
+// #endregion 🔖Constraints
+
+// #region 🔖SequenceState
+/// 🧬 A restorable point-in-time snapshot of every stateful component's undo-log position, plus
+/// the observable state (generated length, cumulative log-probability) they correspond to.
+#[derive(Clone, Debug)]
+pub struct SequenceCheckpoint {
+    pub generated_len: usize,
+    pub cumulative_logprob: f64,
+    pub processor_marks: Vec<StateMark>,
+    pub constraint_marks: Vec<ConstraintMark>,
+    pub stop_marks: Vec<StopMark>,
+    pub rng_snapshot: RngSnapshot,
+}
+
+/// 🧬 Everything mutable about one in-flight sequence: history, the pipeline's per-sequence
+/// component instances (owned here, not shared), and a checkpoint stack enabling `rollback`.
+pub struct SequenceState {
+    id: SequenceId,
+    prompt: Vec<TokenId>,
+    generated: Vec<TokenId>,
+    cumulative_logprob: f64,
+    processors: Vec<Box<dyn LogitsProcessor>>,
+    sampler: Box<dyn TokenSampler>,
+    constraints: Vec<Box<dyn Constraint>>,
+    stops: Vec<Box<dyn StopCondition>>,
+    rng: Box<dyn RandomSource>,
+    finish: Option<FinishReason>,
+    config_fingerprint: u64,
+    checkpoints: Vec<SequenceCheckpoint>,
+}
+
+impl SequenceState {
+    /// 🧬 Builds every per-sequence processor/constraint/sampler/stop instance from `config`.
+    pub fn new(id: SequenceId, prompt: Vec<TokenId>, config: &SamplingConfig, rng: Box<dyn RandomSource>) -> Result<Self, SamplingError> {
+        let mut processors: Vec<Box<dyn LogitsProcessor>> = vec![Box::new(MinLengthEosSuppression { min_tokens: config.min_tokens }), Box::new(MaxLengthForceEos { max_tokens: config.max_tokens })];
+        if config.forced.bos.is_some() || !config.forced.prefix.is_empty() || !config.forced.at_position.is_empty() {
+            processors.push(Box::new(ForcedTokens { spec: config.forced.clone() }));
+        }
+        for spec in &config.processors {
+            processors.push(build_processor(spec)?);
+        }
+        let sampler = build_sampler(&config.method);
+        let mut constraints: Vec<Box<dyn Constraint>> = Vec::new();
+        for spec in &config.constraints {
+            constraints.push(build_constraint(spec, &config.limits)?);
+        }
+        let mut stops: Vec<Box<dyn StopCondition>> = Vec::new();
+        if !config.stops.tokens.is_empty() {
+            stops.push(Box::new(TokenStopCondition { tokens: config.stops.tokens.clone() }));
+        }
+        if !config.stops.sequences.is_empty() {
+            stops.push(Box::new(TextStopCondition::new(&config.stops.sequences, config.stops.mode)));
+        }
+        Ok(Self {
+            id,
+            prompt,
+            generated: Vec::new(),
+            cumulative_logprob: 0.0,
+            processors,
+            sampler,
+            constraints,
+            stops,
+            rng,
+            finish: None,
+            config_fingerprint: config.fingerprint(),
+            checkpoints: Vec::new(),
+        })
+    }
+
+    pub fn id(&self) -> SequenceId {
+        self.id
+    }
+
+    pub fn prompt(&self) -> &[TokenId] {
+        &self.prompt
+    }
+
+    pub fn generated(&self) -> &[TokenId] {
+        &self.generated
+    }
+
+    pub fn cumulative_logprob(&self) -> f64 {
+        self.cumulative_logprob
+    }
+
+    pub fn finish(&self) -> Option<FinishReason> {
+        self.finish
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.finish.is_some()
+    }
+
+    pub fn config_fingerprint(&self) -> u64 {
+        self.config_fingerprint
+    }
+
+    fn reset_state_only(&mut self) {
+        self.generated.clear();
+        self.cumulative_logprob = 0.0;
+        self.finish = None;
+        for p in self.processors.iter_mut() {
+            p.reset();
+        }
+        for c in self.constraints.iter_mut() {
+            c.reset();
+        }
+        for s in self.stops.iter_mut() {
+            s.reset();
+        }
+    }
+
+    pub fn reset(&mut self) {
+        self.reset_state_only();
+        self.checkpoints.clear();
+    }
+
+    /// 🧬 Captures the current position of every component's undo log.
+    pub fn checkpoint(&mut self) -> SequenceCheckpoint {
+        SequenceCheckpoint {
+            generated_len: self.generated.len(),
+            cumulative_logprob: self.cumulative_logprob,
+            processor_marks: self.processors.iter_mut().map(|p| p.save()).collect(),
+            constraint_marks: self.constraints.iter_mut().map(|c| c.save()).collect(),
+            stop_marks: self.stops.iter_mut().map(|s| s.save()).collect(),
+            rng_snapshot: self.rng.snapshot(),
+        }
+    }
+
+    /// 🧬 Restores every component to a previously captured [`SequenceCheckpoint`].
+    pub fn restore(&mut self, checkpoint: &SequenceCheckpoint) {
+        self.generated.truncate(checkpoint.generated_len);
+        self.cumulative_logprob = checkpoint.cumulative_logprob;
+        self.finish = None;
+        for (p, mark) in self.processors.iter_mut().zip(checkpoint.processor_marks.iter()) {
+            p.rollback_to(*mark);
+        }
+        for (c, mark) in self.constraints.iter_mut().zip(checkpoint.constraint_marks.iter()) {
+            c.rollback_to(*mark);
+        }
+        for (s, mark) in self.stops.iter_mut().zip(checkpoint.stop_marks.iter()) {
+            s.rollback_to(*mark);
+        }
+        let _ = self.rng.restore(&checkpoint.rng_snapshot);
+    }
+
+    /// 🧬 Removes the last `n` generated tokens (and their effects on every component) by
+    /// discarding the `n` most recent checkpoints and restoring the one before them — or the
+    /// pristine pre-generation state if fewer than `n` checkpoints exist.
+    pub fn rollback(&mut self, n: usize) {
+        let keep = self.checkpoints.len().saturating_sub(n);
+        self.checkpoints.truncate(keep);
+        match self.checkpoints.last().cloned() {
+            Some(checkpoint) => self.restore(&checkpoint),
+            None => self.reset_state_only(),
+        }
+    }
+
+    /// 🧬 Independent copy sharing no mutable state, with its own RNG stream split from `self`'s
+    /// via `rng_split_key` — the basis for beam search and speculative decoding forks.
+    pub fn fork(&self, new_id: SequenceId, rng_split_key: StreamKey) -> Self {
+        Self {
+            id: new_id,
+            prompt: self.prompt.clone(),
+            generated: self.generated.clone(),
+            cumulative_logprob: self.cumulative_logprob,
+            processors: self.processors.iter().map(|p| p.fork()).collect(),
+            sampler: self.sampler.fork(),
+            constraints: self.constraints.iter().map(|c| c.fork()).collect(),
+            stops: self.stops.iter().map(|s| s.fork()).collect(),
+            rng: self.rng.split(rng_split_key),
+            finish: self.finish,
+            config_fingerprint: self.config_fingerprint,
+            checkpoints: self.checkpoints.clone(),
+        }
+    }
+
+    /// 🧬 Versioned, config-fingerprinted text form: `v1|fingerprint_hex|token,token,...`.
+    pub fn to_text(&self) -> String {
+        let tokens: Vec<String> = self.generated.iter().map(|t| t.get().to_string()).collect();
+        format!("v1|{:016x}|{}", self.config_fingerprint, tokens.join(","))
+    }
+
+    /// 🧬 Decodes a [`SequenceState::to_text`] string, validating its fingerprint against `self`'s
+    /// config. Returns the generated token list without mutating `self`; the caller re-drives a
+    /// fresh [`SequenceState`] through those tokens (via the normal stateful step path) to rebuild
+    /// processor/constraint/stop state exactly rather than trying to deserialize it directly.
+    pub fn decode_text(&self, text: &str) -> Result<Vec<TokenId>, SamplingError> {
+        let mut parts = text.splitn(3, '|');
+        let version = parts.next().ok_or(SamplingError::Corrupted { reason: "missing state version" })?;
+        if version != "v1" {
+            return Err(SamplingError::SerializationVersion { expected: 1, actual: version.trim_start_matches('v').parse().unwrap_or(0) });
+        }
+        let fingerprint_hex = parts.next().ok_or(SamplingError::Corrupted { reason: "missing state fingerprint" })?;
+        let fingerprint = u64::from_str_radix(fingerprint_hex, 16).map_err(|_| SamplingError::Corrupted { reason: "invalid state fingerprint" })?;
+        if fingerprint != self.config_fingerprint {
+            return Err(SamplingError::FingerprintMismatch);
+        }
+        let tokens_part = parts.next().unwrap_or("");
+        if tokens_part.is_empty() {
+            return Ok(Vec::new());
+        }
+        tokens_part.split(',').map(|s| s.parse::<u32>().map(TokenId::new).map_err(|_| SamplingError::Corrupted { reason: "invalid token in serialized state" })).collect()
+    }
+}
+// #endregion 🔖SequenceState
+
+// #region 🔖Observability
+/// 🔭 An observer that discards every event — the default when nobody wants diagnostics.
+#[derive(Default)]
+pub struct NullObserver;
+
+impl SamplingObserver for NullObserver {}
+
+/// 🔭 An observer that records a bounded number of human-readable event lines. Never logs token
+/// text, only ids and reasons, matching the "no token text by default" security default.
+#[derive(Default)]
+pub struct CollectingObserver {
+    pub events: Vec<String>,
+    max_events: usize,
+}
+
+impl CollectingObserver {
+    pub fn new(max_events: usize) -> Self {
+        Self { events: Vec::new(), max_events }
+    }
+
+    fn push(&mut self, event: String) {
+        if self.events.len() < self.max_events {
+            self.events.push(event);
+        }
+    }
+}
+
+impl SamplingObserver for CollectingObserver {
+    fn on_finish(&mut self, sequence: SequenceId, reason: FinishReason) {
+        self.push(format!("finish seq={} reason={:?}", sequence.get(), reason));
+    }
+    fn on_fallback(&mut self, sequence: SequenceId, _error: &SamplingError, action: FallbackAction) {
+        self.push(format!("fallback seq={} action={:?}", sequence.get(), action));
+    }
+}
+// #endregion 🔖Observability
+
 // #region 🔖Engine
 fn cumulative_from_probs(probs: &[f32]) -> Vec<f64> {
     let mut out = Vec::with_capacity(probs.len());
@@ -3290,7 +6085,10 @@ fn cumulative_from_probs(probs: &[f32]) -> Vec<f64> {
     out
 }
 
-/// 🚂 Everything [`sample_step_stateless`] needs about the sequence beyond the raw logits.
+/// 🚂 Everything [`sample_step_stateless`] needs about the sequence beyond the raw logits. Every
+/// field is `Copy` (ids/indices) or a borrowed reference, so the whole struct is `Copy` and cheap
+/// to pass by value.
+#[derive(Clone, Copy)]
 pub struct StatelessStepInput<'a> {
     pub sequence: SequenceId,
     pub step: StepIndex,
@@ -3355,10 +6153,12 @@ pub fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorkspace, 
     let chosen = *selection.chosen.first().ok_or(SamplingError::EmptyDistribution)?;
 
     let next_len = input.generated.len() + 1;
-    let finish = if input.vocab.is_eos(chosen.token) {
-        Some(FinishReason::EosToken)
-    } else if next_len >= config.max_tokens {
+    // 🚂 Check the length cap before EOS: when `max_tokens` is what forced EOS to be selected (see
+    // `MaxLengthForceEos` in the stateful engine), `MaxTokens` is the more informative reason.
+    let finish = if next_len >= config.max_tokens {
         Some(FinishReason::MaxTokens)
+    } else if input.vocab.is_eos(chosen.token) {
+        Some(FinishReason::EosToken)
     } else {
         None
     };
@@ -3383,7 +6183,586 @@ pub fn sample_step_stateless(config: &SamplingConfig, ws: &mut LogitsWorkspace, 
         diagnostics,
     })
 }
+
+/// 🚂 Runs one sampling step against a stateful [`SequenceState`] — the "Stateful multi-step
+/// generation" operating mode. Phase-separates processors by [`ProcessorKind`] (hard masks, then
+/// soft penalties, then truncation), applies the fallback ladder if truncation empties the live
+/// set, samples, then commits every component's per-sequence effects and pushes a checkpoint —
+/// but only after a token has been definitively selected (the "state update only after successful
+/// token selection" pipeline guarantee). `view` is scoped to short-lived blocks throughout so its
+/// borrow of `state.prompt`/`state.generated` never overlaps a later `&mut state` access.
+pub fn sample_step(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, raw_logits: &[f32], observer: &mut dyn SamplingObserver) -> Result<SamplingResult, SamplingError> {
+    if state.finish.is_some() {
+        return Err(SamplingError::InvalidConfig { field: "state", reason: "sequence already finished" });
+    }
+    vocab.validate_logits_len(raw_logits.len())?;
+    ws.set_accum(config.accum);
+    ws.reset_for_step(raw_logits, config.sanitize)?;
+
+    let step = StepIndex::new(state.generated.len() as u32);
+    let sequence_id = state.id;
+    observer.on_step_start(sequence_id, step);
+
+    {
+        let view = StepView { sequence: sequence_id, step, prompt: &state.prompt, generated: &state.generated, vocab, adapter, last_entropy: None };
+        for constraint in state.constraints.iter_mut() {
+            constraint.fill_mask(&view, ws.mask_mut())?;
+        }
+        for processor in state.processors.iter_mut() {
+            if processor.kind() == ProcessorKind::HardMask {
+                processor.process(&view, ws)?;
+            }
+        }
+        ws.sync_live_with_mask();
+        for processor in state.processors.iter_mut() {
+            if ws.live().is_empty() {
+                break;
+            }
+            if processor.kind() == ProcessorKind::SoftPenalty {
+                processor.process(&view, ws)?;
+            }
+        }
+        for processor in state.processors.iter_mut() {
+            if ws.live().is_empty() {
+                break;
+            }
+            if processor.kind() == ProcessorKind::Truncation {
+                processor.process(&view, ws)?;
+            }
+        }
+    }
+
+    let fallback = if ws.live().is_empty() {
+        let (action, token) = resolve_fallback(None, vocab.eos.first().copied(), Some(ws.saved_argmax()));
+        match token {
+            Some(t) => {
+                observer.on_fallback(sequence_id, &SamplingError::EmptyDistribution, action);
+                ws.set_live(vec![t.get()]);
+                Some(action)
+            }
+            None => {
+                let err = SamplingError::EmptyDistribution;
+                observer.on_fallback(sequence_id, &err, FallbackAction::Error);
+                return Err(err);
+            }
+        }
+    } else {
+        None
+    };
+
+    ws.sort_live_by_prob_desc();
+    let cdf = cumulative_from_probs(ws.probs());
+    let logprobs: Vec<f32> = ws.probs().iter().map(|&p| (p as f64).ln() as f32).collect();
+    let entropy = entropy_nats(ws.probs());
+    let tokens = cast_u32_slice_to_token_ids(ws.live());
+    let dist = Distribution { tokens, probs: ws.probs(), logprobs: &logprobs, cdf: &cdf, entropy };
+
+    // 🎲 `state.rng` is this sequence's own persistent stream (established once at construction or
+    // fork time via `StreamKey`/`split`); every step draws from it directly so its counter advances
+    // step over step. Re-deriving via `split(stream_key)` here would be wrong — `stream_key` is
+    // invariant across steps within one sequence, so every step would draw the same first value.
+    let stream_key = StreamKey { request: 0, sequence: sequence_id.get(), beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+    let mut selection = SelectionBuffer::default();
+    {
+        let view = StepView { sequence: sequence_id, step, prompt: &state.prompt, generated: &state.generated, vocab, adapter, last_entropy: Some(entropy) };
+        state.sampler.sample(&view, &dist, &mut *state.rng, &mut selection)?;
+    }
+    let chosen = *selection.chosen.first().ok_or(SamplingError::EmptyDistribution)?;
+
+    // 🚂 Transactional commit: every phase above only read `state`; only now — because a token was
+    // definitively selected — do processors/constraints/stops/history actually change.
+    let mut stop_reason = None;
+    {
+        let view = StepView { sequence: sequence_id, step, prompt: &state.prompt, generated: &state.generated, vocab, adapter, last_entropy: Some(entropy) };
+        for processor in state.processors.iter_mut() {
+            processor.commit(&view, chosen.token);
+        }
+        for constraint in state.constraints.iter_mut() {
+            constraint.accept(&view, chosen.token)?;
+        }
+        for stop in state.stops.iter_mut() {
+            if let StopPoll::Finished { reason, .. } = stop.on_token(&view, chosen.token) {
+                stop_reason.get_or_insert(reason);
+            }
+        }
+    }
+    state.generated.push(chosen.token);
+    state.cumulative_logprob += chosen.logprob as f64;
+    let checkpoint = state.checkpoint();
+    state.checkpoints.push(checkpoint);
+
+    let next_len = state.generated.len();
+    // 🚂 Same MaxTokens-before-EosToken priority as `sample_step_stateless` — see its comment.
+    let finish = stop_reason.or_else(|| {
+        if next_len >= config.max_tokens {
+            Some(FinishReason::MaxTokens)
+        } else if vocab.is_eos(chosen.token) {
+            Some(FinishReason::EosToken)
+        } else {
+            None
+        }
+    });
+    state.finish = finish;
+    if let Some(reason) = finish {
+        observer.on_finish(sequence_id, reason);
+    }
+
+    let diagnostics = config.diagnostics.enabled.then(|| StepDiagnostics {
+        entropy,
+        effective_count: entropy.exp(),
+        truncation_mass: 0.0,
+        masked_by: Vec::new(),
+        timings_ns: Vec::new(),
+        fallback,
+        health: Some(DistributionHealth::assess(ws.live().len(), ws.probs().iter().map(|&p| p as f64).sum())),
+    });
+
+    let result = SamplingResult { token: chosen.token, logprob: chosen.logprob, finish, alternatives: selection.chosen, top_logprobs: None, rng_stream: stream_key, diagnostics };
+    observer.on_token(sequence_id, &result);
+    Ok(result)
+}
+
+/// 🚂 Commits `token` onto `state` outside the normal `sample_step` selection path — shared by
+/// [`beam_search`] and [`speculative_decode`], which each pick the next token through their own
+/// mechanism (beam expansion, speculative accept/resample) rather than a [`TokenSampler`].
+fn commit_token_to_state(state: &mut SequenceState, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, token: TokenId, logprob_nats: f64) -> Option<FinishReason> {
+    let step = StepIndex::new(state.generated.len() as u32);
+    let view = StepView { sequence: state.id, step, prompt: &state.prompt, generated: &state.generated, vocab, adapter, last_entropy: None };
+    for processor in state.processors.iter_mut() {
+        processor.commit(&view, token);
+    }
+    for constraint in state.constraints.iter_mut() {
+        let _ = constraint.accept(&view, token);
+    }
+    let mut stop_reason = None;
+    for stop in state.stops.iter_mut() {
+        if let StopPoll::Finished { reason, .. } = stop.on_token(&view, token) {
+            stop_reason.get_or_insert(reason);
+        }
+    }
+    state.generated.push(token);
+    state.cumulative_logprob += logprob_nats;
+    let checkpoint = state.checkpoint();
+    state.checkpoints.push(checkpoint);
+    let finish = stop_reason.or_else(|| vocab.is_eos(token).then_some(FinishReason::EosToken));
+    state.finish = finish;
+    finish
+}
 // #endregion 🔖Engine
+
+// #region 🔖Batch
+/// 📦 One sequence's raw logits for a batch step.
+pub struct BatchEntry<'a> {
+    pub id: SequenceId,
+    pub logits: &'a [f32],
+}
+
+/// 📦 A batch of per-sequence logits to step together.
+pub struct BatchSamplingRequest<'a> {
+    pub entries: Vec<BatchEntry<'a>>,
+}
+
+/// 📦 Per-sequence results from one [`ContinuousBatcher::step`] call, in the same order as the
+/// request's entries.
+pub struct BatchSamplingResult {
+    pub results: Vec<(SequenceId, Result<SamplingResult, SamplingError>)>,
+}
+
+/// 📦 Owns a dynamic set of [`SequenceState`]s addressed by [`SequenceId`] (never by slot index),
+/// so sequences can be added/removed between steps and the batch's *processing* order can vary
+/// freely — every sequence's own [`SequenceState::rng`] stream is keyed by its id, not by
+/// position, so outputs never depend on batch order. Reuses [`LogitsWorkspace`]s via
+/// [`WorkspacePool`] so steady-state stepping doesn't reallocate.
+pub struct ContinuousBatcher {
+    sequences: std::collections::HashMap<SequenceId, SequenceState>,
+    pool: WorkspacePool,
+    vocab_size: usize,
+}
+
+impl ContinuousBatcher {
+    pub fn new(vocab_size: usize) -> Self {
+        Self { sequences: std::collections::HashMap::new(), pool: WorkspacePool::new(), vocab_size }
+    }
+
+    pub fn add_sequence(&mut self, state: SequenceState) {
+        self.sequences.insert(state.id(), state);
+    }
+
+    pub fn remove_sequence(&mut self, id: SequenceId) -> Option<SequenceState> {
+        self.sequences.remove(&id)
+    }
+
+    pub fn contains(&self, id: SequenceId) -> bool {
+        self.sequences.contains_key(&id)
+    }
+
+    pub fn len(&self) -> usize {
+        self.sequences.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.sequences.is_empty()
+    }
+
+    pub fn get(&self, id: SequenceId) -> Option<&SequenceState> {
+        self.sequences.get(&id)
+    }
+
+    /// 📦 Steps every sequence named in `request.entries`, in that (arbitrary) order.
+    pub fn step(&mut self, config: &SamplingConfig, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, request: &BatchSamplingRequest<'_>, observer: &mut dyn SamplingObserver) -> BatchSamplingResult {
+        let mut results = Vec::with_capacity(request.entries.len());
+        for entry in &request.entries {
+            let Some(state) = self.sequences.get_mut(&entry.id) else {
+                results.push((entry.id, Err(SamplingError::InvalidConfig { field: "batch", reason: "unknown sequence id" })));
+                continue;
+            };
+            let mut ws = self.pool.acquire(self.vocab_size);
+            let result = sample_step(config, state, &mut ws, vocab, adapter, entry.logits, observer);
+            self.pool.release(ws);
+            results.push((entry.id, result));
+        }
+        BatchSamplingResult { results }
+    }
+}
+// #endregion 🔖Batch
+
+// #region 🔖Search
+/// 🌳 One beam search hypothesis: its own independent [`SequenceState`] plus cumulative
+/// log-probability score (unnormalized — apply [`gnmt_length_penalty`] for ranking).
+pub struct BeamHypothesis {
+    pub state: SequenceState,
+    pub score: f64,
+}
+
+/// 🌳 GNMT-style length penalty: `((5 + len) / 6) ^ alpha`, dividing the raw score to avoid
+/// favoring short hypotheses.
+pub fn gnmt_length_penalty(len: usize, alpha: f64) -> f64 {
+    ((5.0 + len as f64) / 6.0).powf(alpha)
+}
+
+pub struct BeamSearchConfig {
+    pub width: usize,
+    pub length_penalty: f64,
+    pub max_steps: usize,
+}
+
+/// 🌳 Beam search: `next_logits` supplies raw model logits for a hypothesis's current state (the
+/// caller owns model inference, per § 1's non-responsibilities). At each step, every active
+/// hypothesis contributes its top-`width` next-token candidates (by probability); all
+/// `hypotheses × candidates` are pooled, ranked by cumulative log-probability (ties by ascending
+/// token id), and the top `width` become the next round's hypotheses — each an independent
+/// [`SequenceState::fork`] so per-sequence state (penalties, constraints, RNG) never aliases
+/// across beams. Finished hypotheses are set aside and never re-expanded. Returns every
+/// hypothesis (finished or step-exhausted), sorted best-first by length-normalized score.
+pub fn beam_search(config: &SamplingConfig, beam_config: &BeamSearchConfig, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, initial: SequenceState, mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>) -> Result<Vec<BeamHypothesis>, SamplingError> {
+    let mut ws = LogitsWorkspace::new(vocab.size);
+    let mut beams = vec![BeamHypothesis { state: initial, score: 0.0 }];
+    let mut finished: Vec<BeamHypothesis> = Vec::new();
+
+    for _ in 0..beam_config.max_steps {
+        if beams.is_empty() {
+            break;
+        }
+        let mut candidates: Vec<(usize, TokenId, f64)> = Vec::new();
+        for (bi, beam) in beams.iter().enumerate() {
+            let raw_logits = next_logits(&beam.state);
+            vocab.validate_logits_len(raw_logits.len())?;
+            ws.set_accum(config.accum);
+            ws.reset_for_step(&raw_logits, config.sanitize)?;
+            ws.sort_live_by_prob_desc();
+            let k = beam_config.width.min(ws.live().len());
+            for i in 0..k {
+                candidates.push((bi, TokenId::new(ws.live()[i]), (ws.probs()[i] as f64).ln()));
+            }
+        }
+        if candidates.is_empty() {
+            break;
+        }
+        candidates.sort_by(|a, b| {
+            let score_a = beams[a.0].score + a.2;
+            let score_b = beams[b.0].score + b.2;
+            score_b.partial_cmp(&score_a).unwrap_or(core::cmp::Ordering::Equal).then_with(|| a.1.cmp(&b.1))
+        });
+
+        let mut next_round = Vec::with_capacity(beam_config.width);
+        for (rank, &(bi, token, logprob)) in candidates.iter().take(beam_config.width).enumerate() {
+            let key = StreamKey { request: 0, sequence: beams[bi].state.id().get(), beam: rank as u32, candidate: 0, purpose: StreamPurpose::Beam };
+            let mut child = beams[bi].state.fork(beams[bi].state.id(), key);
+            commit_token_to_state(&mut child, vocab, adapter, token, logprob);
+            let hyp = BeamHypothesis { state: child, score: beams[bi].score + logprob };
+            if hyp.state.is_finished() {
+                finished.push(hyp);
+            } else {
+                next_round.push(hyp);
+            }
+        }
+        beams = next_round;
+    }
+
+    finished.extend(beams);
+    finished.sort_by(|a, b| {
+        let na = a.score / gnmt_length_penalty(a.state.generated().len(), beam_config.length_penalty);
+        let nb = b.score / gnmt_length_penalty(b.state.generated().len(), beam_config.length_penalty);
+        nb.partial_cmp(&na).unwrap_or(core::cmp::Ordering::Equal)
+    });
+    Ok(finished)
+}
+
+/// 🌳 Generates `n` complete candidates by running ordinary [`sample_step`] to completion for
+/// each, then ranks them by mean log-probability (best first). `make_initial` builds a fresh
+/// [`SequenceState`] per candidate index (so each gets its own RNG stream, e.g. via a distinct
+/// [`StreamKey::candidate`]).
+pub struct BestOfN {
+    pub n: usize,
+}
+
+impl BestOfN {
+    #[allow(clippy::too_many_arguments)]
+    pub fn run(&self, config: &SamplingConfig, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, max_steps: usize, observer: &mut dyn SamplingObserver, make_initial: impl Fn(usize) -> Result<SequenceState, SamplingError>, mut next_logits: impl FnMut(&SequenceState) -> Vec<f32>) -> Result<Vec<(SequenceState, f64)>, SamplingError> {
+        let mut candidates = Vec::with_capacity(self.n);
+        for i in 0..self.n {
+            let mut state = make_initial(i)?;
+            let mut ws = LogitsWorkspace::new(vocab.size);
+            for _ in 0..max_steps {
+                if state.is_finished() {
+                    break;
+                }
+                let raw_logits = next_logits(&state);
+                sample_step(config, &mut state, &mut ws, vocab, adapter, &raw_logits, observer)?;
+            }
+            let mean_logprob = if state.generated().is_empty() { 0.0 } else { state.cumulative_logprob() / state.generated().len() as f64 };
+            candidates.push((state, mean_logprob));
+        }
+        candidates.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(core::cmp::Ordering::Equal));
+        Ok(candidates)
+    }
+}
+
+/// 🌳 Retries [`sample_step_stateless`] up to `max_attempts` times, keeping the first result
+/// `accept` approves.
+pub struct RejectionSampler {
+    pub max_attempts: usize,
+}
+
+impl RejectionSampler {
+    pub fn sample(&self, config: &SamplingConfig, ws: &mut LogitsWorkspace, rng: &mut dyn RandomSource, raw_logits: &[f32], input: StatelessStepInput<'_>, mut accept: impl FnMut(&SamplingResult) -> bool) -> Result<SamplingResult, SamplingError> {
+        let mut last_err = None;
+        for _ in 0..self.max_attempts {
+            match sample_step_stateless(config, ws, rng, raw_logits, input) {
+                Ok(result) if accept(&result) => return Ok(result),
+                Ok(_) => continue,
+                Err(e) => last_err = Some(e),
+            }
+        }
+        Err(last_err.unwrap_or(SamplingError::LimitExceeded { limit: "rejection_sampler.max_attempts" }))
+    }
+}
+// #endregion 🔖Search
+
+// #region 🔖Speculative
+/// ⚡ Outcome counters for one [`speculative_decode`] call.
+#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+pub struct SpecMetrics {
+    pub proposed: usize,
+    pub accepted: usize,
+    pub bonus_taken: bool,
+}
+
+/// ⚡ Exact speculative decoding: verifies `draft_tokens` (with the draft model's per-position
+/// probability `draft_probs`) against `target_logits` (the target model's logits for the state as
+/// it would be after accepting the prefix so far), accepting position `i` with probability
+/// `min(1, p_target(draft_i) / p_draft(draft_i))`. On the first rejection, resamples from the
+/// clamped residual `max(0, p_target - p_draft)` (renormalized) and stops — this is what makes
+/// the scheme *exact*: the resulting token distribution is identical to sampling from
+/// `target_logits` directly at every position, never worse than plain target-only sampling. If
+/// every draft is accepted, draws one bonus token from the final target row. All verification
+/// draws come from a dedicated [`StreamPurpose::Speculative`] sub-stream (split from `state.rng`
+/// once, up front), so speculation never perturbs the sequence's ordinary selection stream.
+/// Accepted/resampled/bonus tokens are committed through [`commit_token_to_state`] one at a time
+/// (not as a single all-or-nothing transaction), so constraint/penalty/stop state stays exactly
+/// what non-speculative decoding would have produced for the same accepted prefix.
+pub fn speculative_decode(config: &SamplingConfig, state: &mut SequenceState, ws: &mut LogitsWorkspace, vocab: &Vocabulary, adapter: Option<&dyn TokenTextAdapter>, draft_tokens: &[TokenId], draft_probs: &[f32], mut target_logits: impl FnMut(&SequenceState) -> Vec<f32>, observer: &mut dyn SamplingObserver) -> Result<(Vec<SamplingResult>, SpecMetrics), SamplingError> {
+    let mut results = Vec::new();
+    let mut metrics = SpecMetrics { proposed: draft_tokens.len(), accepted: 0, bonus_taken: false };
+    let stream_key = StreamKey { request: 0, sequence: state.id().get(), beam: 0, candidate: 0, purpose: StreamPurpose::Speculative };
+    let mut spec_rng = state.rng.split(stream_key);
+
+    for i in 0..draft_tokens.len() {
+        if state.is_finished() {
+            break;
+        }
+        let raw_logits = target_logits(&*state);
+        vocab.validate_logits_len(raw_logits.len())?;
+        ws.set_accum(config.accum);
+        ws.reset_for_step(&raw_logits, config.sanitize)?;
+        ws.sort_live_by_prob_desc();
+        let target_prob = ws.live().iter().position(|&t| t == draft_tokens[i].get()).map(|idx| ws.probs()[idx]).unwrap_or(0.0);
+        let accept_prob = (target_prob as f64 / (draft_probs[i] as f64).max(1e-12)).min(1.0);
+
+        if spec_rng.next_f64() < accept_prob {
+            let logprob = (target_prob.max(f32::MIN_POSITIVE) as f64).ln();
+            let finish = commit_token_to_state(state, vocab, adapter, draft_tokens[i], logprob);
+            metrics.accepted += 1;
+            let result = SamplingResult { token: draft_tokens[i], logprob: logprob as f32, finish, alternatives: Vec::new(), top_logprobs: None, rng_stream: stream_key, diagnostics: None };
+            observer.on_token(state.id(), &result);
+            results.push(result);
+        } else {
+            let residual: Vec<f32> = ws.probs().iter().enumerate().map(|(idx, &p)| (p - if ws.live()[idx] == draft_tokens[i].get() { draft_probs[i] } else { 0.0 }).max(0.0)).collect();
+            let sum: f32 = residual.iter().sum();
+            let normalized: Vec<f32> = if sum > 0.0 { residual.iter().map(|&r| r / sum).collect() } else { ws.probs().to_vec() };
+            let cdf = cumulative_from_probs(&normalized);
+            let idx = cdf_binary_search(&cdf, spec_rng.next_f64());
+            let token = TokenId::new(ws.live()[idx]);
+            let logprob = (normalized[idx].max(f32::MIN_POSITIVE) as f64).ln();
+            let finish = commit_token_to_state(state, vocab, adapter, token, logprob);
+            let result = SamplingResult { token, logprob: logprob as f32, finish, alternatives: Vec::new(), top_logprobs: None, rng_stream: stream_key, diagnostics: None };
+            observer.on_token(state.id(), &result);
+            results.push(result);
+            return Ok((results, metrics));
+        }
+    }
+
+    if !state.is_finished() {
+        let raw_logits = target_logits(&*state);
+        vocab.validate_logits_len(raw_logits.len())?;
+        ws.set_accum(config.accum);
+        ws.reset_for_step(&raw_logits, config.sanitize)?;
+        ws.sort_live_by_prob_desc();
+        let cdf = cumulative_from_probs(ws.probs());
+        let idx = cdf_binary_search(&cdf, spec_rng.next_f64());
+        let token = TokenId::new(ws.live()[idx]);
+        let logprob = (ws.probs()[idx].max(f32::MIN_POSITIVE) as f64).ln();
+        let finish = commit_token_to_state(state, vocab, adapter, token, logprob);
+        metrics.bonus_taken = true;
+        let result = SamplingResult { token, logprob: logprob as f32, finish, alternatives: Vec::new(), top_logprobs: None, rng_stream: stream_key, diagnostics: None };
+        observer.on_token(state.id(), &result);
+        results.push(result);
+    }
+    Ok((results, metrics))
+}
+// #endregion 🔖Speculative
+
+// #region 🔖Sharded
+struct LocalCollectiveMailbox {
+    f32_slots: Vec<Vec<f32>>,
+    f64_slots: Vec<Vec<f64>>,
+    candidate_slots: Vec<Vec<ShardCandidate>>,
+}
+
+/// 🗂️ Same-process reference [`Collective`]: every rank's handle shares one mailbox. This is
+/// **not** a real network protocol — each call stages this rank's contribution and returns the
+/// reduction over whatever has been staged *so far*, so callers must call every rank once (any
+/// order) per logical collective op, then call once more (or read the last call's result) to see
+/// every rank's contribution reflected. Good enough for testing the sharded sampling math against
+/// its unsharded equivalent in a single process; not a substitute for a real collective library.
+pub struct LocalCollective {
+    rank: usize,
+    world_size: usize,
+    mailbox: std::rc::Rc<std::cell::RefCell<LocalCollectiveMailbox>>,
+}
+
+impl LocalCollective {
+    /// 🗂️ Builds `world_size` linked rank handles sharing one mailbox.
+    pub fn new_group(world_size: usize) -> Vec<Self> {
+        let mailbox = std::rc::Rc::new(std::cell::RefCell::new(LocalCollectiveMailbox { f32_slots: vec![Vec::new(); world_size], f64_slots: vec![Vec::new(); world_size], candidate_slots: vec![Vec::new(); world_size] }));
+        (0..world_size).map(|rank| Self { rank, world_size, mailbox: mailbox.clone() }).collect()
+    }
+}
+
+impl Collective for LocalCollective {
+    fn rank(&self) -> usize {
+        self.rank
+    }
+    fn world_size(&self) -> usize {
+        self.world_size
+    }
+    fn all_reduce_max_f32(&mut self, values: &mut [f32]) -> Result<(), SamplingError> {
+        let mut mailbox = self.mailbox.borrow_mut();
+        mailbox.f32_slots[self.rank] = values.to_vec();
+        let len = values.len();
+        for slot in values.iter_mut() {
+            *slot = f32::NEG_INFINITY;
+        }
+        for staged in &mailbox.f32_slots {
+            for (i, &v) in staged.iter().enumerate().take(len) {
+                if v > values[i] {
+                    values[i] = v;
+                }
+            }
+        }
+        Ok(())
+    }
+    fn all_reduce_sum_f64(&mut self, values: &mut [f64]) -> Result<(), SamplingError> {
+        let mut mailbox = self.mailbox.borrow_mut();
+        mailbox.f64_slots[self.rank] = values.to_vec();
+        let len = values.len();
+        for slot in values.iter_mut() {
+            *slot = 0.0;
+        }
+        for staged in &mailbox.f64_slots {
+            for (i, &v) in staged.iter().enumerate().take(len) {
+                values[i] += v;
+            }
+        }
+        Ok(())
+    }
+    fn all_gather_candidates(&mut self, local: &[ShardCandidate], out: &mut Vec<ShardCandidate>) -> Result<(), SamplingError> {
+        let mut mailbox = self.mailbox.borrow_mut();
+        mailbox.candidate_slots[self.rank] = local.to_vec();
+        out.clear();
+        for slot in &mailbox.candidate_slots {
+            out.extend_from_slice(slot);
+        }
+        Ok(())
+    }
+}
+
+/// 🗂️ Sharded softmax: each rank supplies its local shard's raw logits; returns this rank's
+/// locally-normalized probabilities under the *global* normalization constant (global max via
+/// `all_reduce_max_f32`, then global `sum(exp(l - max))` via `all_reduce_sum_f64`) — matching
+/// softmax over the concatenation of every shard's logits.
+pub fn sharded_softmax(collective: &mut dyn Collective, local_logits: &[f32]) -> Vec<f32> {
+    let local_max = local_logits.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+    let mut max_buf = [local_max];
+    let _ = collective.all_reduce_max_f32(&mut max_buf);
+    let global_max = max_buf[0];
+    let local_sum: f64 = local_logits.iter().map(|&l| ((l - global_max) as f64).exp()).sum();
+    let mut sum_buf = [local_sum];
+    let _ = collective.all_reduce_sum_f64(&mut sum_buf);
+    let global_sum = sum_buf[0];
+    local_logits.iter().map(|&l| (((l - global_max) as f64).exp() / global_sum) as f32).collect()
+}
+
+/// 🗂️ Sharded top-k: each rank contributes its local top-`k` (by logit), merged via
+/// `all_gather_candidates` and re-truncated to the global top-`k`.
+pub fn sharded_top_k(collective: &mut dyn Collective, local_logits: &[f32], local_token_offset: u32, k: usize) -> Vec<ShardCandidate> {
+    let mut indexed: Vec<(u32, f32)> = local_logits.iter().enumerate().map(|(i, &l)| (local_token_offset + i as u32, l)).collect();
+    indexed.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(core::cmp::Ordering::Equal));
+    let local: Vec<ShardCandidate> = indexed.into_iter().take(k).map(|(t, l)| ShardCandidate { token: TokenId::new(t), logit: l }).collect();
+    let mut gathered = Vec::new();
+    let _ = collective.all_gather_candidates(&local, &mut gathered);
+    gathered.sort_by(|a, b| b.logit.partial_cmp(&a.logit).unwrap_or(core::cmp::Ordering::Equal).then_with(|| a.token.cmp(&b.token)));
+    gathered.truncate(k);
+    gathered
+}
+
+/// 🗂️ Sharded categorical sample: gathers every token across all shards (via [`sharded_top_k`]
+/// with `k = usize::MAX`), builds the global CDF, and draws one token — exactly matching a plain
+/// (unsharded) multinomial draw over the concatenated vocabulary given the same `u`.
+pub fn sharded_sample(collective: &mut dyn Collective, local_logits: &[f32], local_token_offset: u32, rng: &mut dyn RandomSource) -> Option<TokenId> {
+    let candidates = sharded_top_k(collective, local_logits, local_token_offset, usize::MAX);
+    if candidates.is_empty() {
+        return None;
+    }
+    let max_logit = candidates.iter().map(|c| c.logit).fold(f32::NEG_INFINITY, f32::max);
+    let weights: Vec<f64> = candidates.iter().map(|c| ((c.logit - max_logit) as f64).exp()).collect();
+    let total: f64 = weights.iter().sum();
+    let probs: Vec<f32> = weights.iter().map(|&w| (w / total) as f32).collect();
+    let cdf = cumulative_from_probs(&probs);
+    let idx = cdf_binary_search(&cdf, rng.next_f64());
+    Some(candidates[idx].token)
+}
+// #endregion 🔖Sharded
 
 // #region 🔖Tests
 #[cfg(test)]
@@ -3451,8 +6830,7 @@ mod tests {
 
     #[test]
     fn zero_limit_fails_validation() {
-        let mut limits = SamplingLimits::default();
-        limits.max_beam_width = 0;
+        let limits = SamplingLimits { max_beam_width: 0, ..SamplingLimits::default() };
         assert!(limits.validate().is_err());
     }
     // #endregion 🔖LimitsTests
@@ -3543,7 +6921,7 @@ mod tests {
 
     #[test]
     fn logsumexp_matches_naive_for_moderate_values() {
-        let values = [0.1, 0.2, 0.3, -0.5];
+        let values: [f64; 4] = [0.1, 0.2, 0.3, -0.5];
         let naive = values.iter().map(|v| v.exp()).sum::<f64>().ln();
         assert!((logsumexp_f64(&values) - naive).abs() < 1e-9);
     }
@@ -3974,16 +7352,14 @@ mod tests {
 
     #[test]
     fn validate_rejects_candidate_count_above_limit() {
-        let mut limits = SamplingLimits::default();
-        limits.max_candidates = 4;
+        let limits = SamplingLimits { max_candidates: 4, ..SamplingLimits::default() };
         let config = SamplingConfig { candidate_count: 5, limits, ..SamplingConfig::default() };
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn validate_rejects_too_many_stop_sequences() {
-        let mut limits = SamplingLimits::default();
-        limits.max_stop_sequences = 1;
+        let limits = SamplingLimits { max_stop_sequences: 1, ..SamplingLimits::default() };
         let config = SamplingConfig {
             limits,
             stops: StopSpec { sequences: vec![b"a".to_vec(), b"b".to_vec()], ..StopSpec::default() },
@@ -4001,7 +7377,7 @@ mod tests {
     #[test]
     fn validate_rejects_mismatched_token_class_penalty_lengths() {
         let config = SamplingConfig {
-            processors: vec![ProcessorSpec::TokenClassPenalty { classes: vec![0, 1], factors: vec![0.5] }],
+            processors: vec![ProcessorSpec::TokenClassPenalty { class_tokens: vec![vec![TokenId::new(0)], vec![TokenId::new(1)]], factors: vec![0.5] }],
             ..SamplingConfig::default()
         };
         assert!(config.validate().is_err());
@@ -4064,7 +7440,7 @@ mod tests {
             ProcessorSpec::PresencePenalty { penalty: 0.5, scope: PenaltyScope::PromptAndGenerated },
             ProcessorSpec::FrequencyPenalty { penalty: 0.3, scope: PenaltyScope::PromptOnly },
             ProcessorSpec::DecayingPenalty { penalty: 0.5, window: 32, half_life: 4.0, scope: PenaltyScope::GeneratedOnly },
-            ProcessorSpec::TokenClassPenalty { classes: vec![0, 1], factors: vec![0.5, 0.9] },
+            ProcessorSpec::TokenClassPenalty { class_tokens: vec![vec![TokenId::new(0)], vec![TokenId::new(1), TokenId::new(2)]], factors: vec![0.5, 0.9] },
             ProcessorSpec::NoRepeatNgram { n: 3 },
             ProcessorSpec::PhrasePenalty { phrases: vec![vec![TokenId::new(1), TokenId::new(2)]], penalty: 0.4 },
             ProcessorSpec::LogitBiasSparse { entries: vec![(TokenId::new(5), 2.0)] },
@@ -4303,14 +7679,18 @@ mod tests {
     }
 
     #[test]
-    fn adaptive_truncation_targeting_effective_count_shrinks_a_peaked_distribution() {
+    fn adaptive_truncation_targeting_effective_count_shrinks_a_near_uniform_distribution() {
+        // 📐 A peaked distribution's *natural* effective count is already low — "targeting" a
+        // higher count than that can never shrink it (there's nothing to cut). Truncation only
+        // makes sense the other way: start near-uniform (effective count 6) and target lower (2).
         let mut ws = LogitsWorkspace::new(6);
-        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        ws.reset_for_step(&[1.0; 6], SanitizePolicy::NegInfNan).unwrap();
         let vocab = Vocabulary::new(6);
         let view = step_view(&vocab, &[], &[]);
-        let mut adaptive = AdaptiveTruncation { target_entropy: None, target_effective_count: Some(1.5) };
+        let mut adaptive = AdaptiveTruncation { target_entropy: None, target_effective_count: Some(2.0) };
         adaptive.process(&view, &mut ws).unwrap();
         assert!(ws.live().len() < 6);
+        assert!(ws.live().len() >= 2);
     }
 
     #[test]
@@ -4553,5 +7933,1153 @@ mod tests {
         assert!((sum - 1.0).abs() < 1e-4, "sum = {sum}");
     }
     // #endregion 🔖EngineTests
+
+    // #region 🔖PenaltiesTests
+    #[test]
+    fn repetition_penalty_pushes_down_a_seen_positive_logit() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[4.0, 2.0, 2.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mut penalty = RepetitionPenalty::new(2.0, PenaltyScope::GeneratedOnly);
+        penalty.commit(&view, TokenId::new(0));
+        penalty.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.processed()[0], 2.0);
+        assert_eq!(ws.processed()[1], 2.0);
+    }
+
+    #[test]
+    fn repetition_penalty_rollback_restores_exact_prior_state() {
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut penalty = RepetitionPenalty::new(2.0, PenaltyScope::GeneratedOnly);
+        let mark_before = penalty.save();
+        penalty.commit(&view, TokenId::new(0));
+        penalty.commit(&view, TokenId::new(1));
+        assert_eq!(penalty.counts.count(TokenId::new(0)), 1);
+        penalty.rollback_to(mark_before);
+        assert_eq!(penalty.counts.count(TokenId::new(0)), 0);
+        assert_eq!(penalty.counts.count(TokenId::new(1)), 0);
+    }
+
+    #[test]
+    fn presence_penalty_applies_flat_penalty_regardless_of_count() {
+        let mut ws = LogitsWorkspace::new(2);
+        ws.reset_for_step(&[1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(2);
+        let view = step_view(&vocab, &[], &[]);
+        let mut penalty = PresencePenalty::new(0.5, PenaltyScope::GeneratedOnly);
+        penalty.commit(&view, TokenId::new(0));
+        penalty.commit(&view, TokenId::new(0));
+        penalty.process(&view, &mut ws).unwrap();
+        assert!((ws.processed()[0] - 0.5).abs() < 1e-6);
+        assert!((ws.processed()[1] - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn frequency_penalty_scales_with_occurrence_count() {
+        let mut ws = LogitsWorkspace::new(2);
+        ws.reset_for_step(&[1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(2);
+        let view = step_view(&vocab, &[], &[]);
+        let mut penalty = FrequencyPenalty::new(0.5, PenaltyScope::GeneratedOnly);
+        penalty.commit(&view, TokenId::new(0));
+        penalty.commit(&view, TokenId::new(0));
+        penalty.process(&view, &mut ws).unwrap();
+        assert!((ws.processed()[0] - 0.0).abs() < 1e-6);
+        assert!((ws.processed()[1] - 1.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn decaying_penalty_weighs_recent_occurrences_more_than_distant_ones() {
+        let mut ws_recent = LogitsWorkspace::new(2);
+        ws_recent.reset_for_step(&[1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(2);
+        let view = step_view(&vocab, &[], &[]);
+        let mut recent_penalty = DecayingPenalty::new(1.0, 8, 1.0, PenaltyScope::GeneratedOnly);
+        recent_penalty.commit(&view, TokenId::new(0));
+        recent_penalty.process(&view, &mut ws_recent).unwrap();
+
+        let mut ws_distant = LogitsWorkspace::new(2);
+        ws_distant.reset_for_step(&[1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let mut distant_penalty = DecayingPenalty::new(1.0, 8, 1.0, PenaltyScope::GeneratedOnly);
+        distant_penalty.commit(&view, TokenId::new(0));
+        for _ in 0..5 {
+            distant_penalty.commit(&view, TokenId::new(1));
+        }
+        distant_penalty.process(&view, &mut ws_distant).unwrap();
+
+        assert!(ws_recent.processed()[0] < ws_distant.processed()[0], "a more recent occurrence must be penalized harder");
+    }
+
+    #[test]
+    fn token_class_penalty_scales_only_classified_tokens() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[10.0, 10.0, 10.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut penalty = TokenClassPenalty::new(vec![vec![TokenId::new(0), TokenId::new(1)]], vec![0.5]);
+        penalty.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.processed()[0], 5.0);
+        assert_eq!(ws.processed()[1], 5.0);
+        assert_eq!(ws.processed()[2], 10.0);
+    }
+
+    #[test]
+    fn no_repeat_ngram_forbids_recreating_a_seen_bigram() {
+        let mut ngram = NoRepeatNgram::new(2);
+        let vocab = Vocabulary::new(5);
+        // History: [0, 1, 0]. The bigram (0 -> 1) was already seen, so after another `0` the
+        // engine must forbid token `1` (it would recreate that exact bigram).
+        let generated_first = [TokenId::new(0)];
+        let view_after_first = step_view(&vocab, &[], &generated_first);
+        ngram.commit(&view_after_first, TokenId::new(1));
+        let mut ws = LogitsWorkspace::new(5);
+        ws.reset_for_step(&[0.0; 5], SanitizePolicy::NegInfNan).unwrap();
+        let generated_third = [TokenId::new(0), TokenId::new(1), TokenId::new(0)];
+        let view_after_third = step_view(&vocab, &[], &generated_third);
+        ngram.process(&view_after_third, &mut ws).unwrap();
+        assert!(!ws.mask().get(TokenId::new(1)));
+        assert!(ws.mask().get(TokenId::new(2)));
+    }
+
+    #[test]
+    fn no_repeat_ngram_rollback_un_forbids() {
+        let mut ngram = NoRepeatNgram::new(2);
+        let vocab = Vocabulary::new(5);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mark = ngram.save();
+        ngram.commit(&view, TokenId::new(1));
+        ngram.rollback_to(mark);
+        let mut ws = LogitsWorkspace::new(5);
+        ws.reset_for_step(&[0.0; 5], SanitizePolicy::NegInfNan).unwrap();
+        ngram.process(&view, &mut ws).unwrap();
+        assert!(ws.mask().get(TokenId::new(1)), "rollback must undo the forbidden-next entry");
+    }
+
+    #[test]
+    fn phrase_penalty_penalizes_only_after_the_proper_prefix() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mut penalty = PhrasePenalty { phrases: vec![vec![TokenId::new(0), TokenId::new(1)]], penalty: 0.5 };
+        penalty.process(&view, &mut ws).unwrap();
+        assert!((ws.processed()[1] - 0.5).abs() < 1e-6);
+        assert_eq!(ws.processed()[2], 1.0);
+    }
+    // #endregion 🔖PenaltiesTests
+
+    // #region 🔖BiasesTests
+    #[test]
+    fn logit_bias_sparse_and_dense_add_expected_deltas() {
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let mut sparse = LogitBiasSparse { entries: vec![(TokenId::new(1), 5.0)] };
+        sparse.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.processed(), &[1.0, 6.0, 1.0]);
+
+        let mut ws2 = LogitsWorkspace::new(3);
+        ws2.reset_for_step(&[1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let mut dense = LogitBiasDense { values: vec![0.0, -2.0, 3.0] };
+        dense.process(&view, &mut ws2).unwrap();
+        assert_eq!(ws2.processed(), &[1.0, -1.0, 4.0]);
+    }
+
+    #[test]
+    fn allow_tokens_restricts_mask_to_exactly_the_allowed_set() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[0.0; 4], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut allow = AllowTokens { tokens: vec![TokenId::new(1), TokenId::new(3)] };
+        allow.process(&view, &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[1, 3]);
+    }
+
+    #[test]
+    fn forbid_tokens_removes_exactly_the_forbidden_set() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[0.0; 4], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut forbid = ForbidTokens { tokens: vec![TokenId::new(2)] };
+        forbid.process(&view, &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[0, 1, 3]);
+    }
+
+    #[test]
+    fn suppress_special_removes_flagged_tokens() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[0.0; 4], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4).with_special(&[TokenId::new(0), TokenId::new(3)]);
+        let view = step_view(&vocab, &[], &[]);
+        let mut suppress = SuppressSpecial;
+        suppress.process(&view, &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[1, 2]);
+    }
+
+    #[test]
+    fn bad_words_masks_the_completion_token_after_its_prefix() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[0.0; 3], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mut bad = BadWords { phrases: vec![vec![TokenId::new(0), TokenId::new(1)]] };
+        bad.process(&view, &mut ws).unwrap();
+        assert!(!ws.mask().get(TokenId::new(1)));
+        assert!(ws.mask().get(TokenId::new(2)));
+    }
+
+    #[test]
+    fn sequence_encouragement_biases_the_completion_token_after_its_prefix() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mut encourage = SequenceEncouragement { phrases: vec![vec![TokenId::new(0), TokenId::new(1)]], bonus: 3.0 };
+        encourage.process(&view, &mut ws).unwrap();
+        assert_eq!(ws.processed()[1], 4.0);
+        assert_eq!(ws.processed()[2], 1.0);
+    }
+    // #endregion 🔖BiasesTests
+
+    // #region 🔖LengthTests
+    #[test]
+    fn min_length_eos_suppression_masks_eos_before_the_floor() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[0.0; 3], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3).with_eos(vec![TokenId::new(2)]);
+        let generated = [TokenId::new(0)];
+        let view = step_view(&vocab, &[], &generated);
+        let mut min_len = MinLengthEosSuppression { min_tokens: 5 };
+        min_len.process(&view, &mut ws).unwrap();
+        assert!(!ws.mask().get(TokenId::new(2)));
+    }
+
+    #[test]
+    fn min_length_eos_suppression_allows_eos_once_floor_reached() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[0.0; 3], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3).with_eos(vec![TokenId::new(2)]);
+        let generated = vec![TokenId::new(0); 5];
+        let view = step_view(&vocab, &[], &generated);
+        let mut min_len = MinLengthEosSuppression { min_tokens: 5 };
+        min_len.process(&view, &mut ws).unwrap();
+        assert!(ws.mask().get(TokenId::new(2)));
+    }
+
+    #[test]
+    fn max_length_force_eos_restricts_to_eos_at_the_cap() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[0.0; 3], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3).with_eos(vec![TokenId::new(2)]);
+        let generated = vec![TokenId::new(0); 4];
+        let view = step_view(&vocab, &[], &generated);
+        let mut force = MaxLengthForceEos { max_tokens: 5 };
+        force.process(&view, &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[2]);
+    }
+
+    #[test]
+    fn forced_tokens_forces_bos_then_prefix_then_at_position() {
+        let vocab = Vocabulary::new(6);
+        let spec = ForcedSpec { bos: Some(TokenId::new(0)), prefix: vec![TokenId::new(1), TokenId::new(2)], at_position: vec![(StepIndex::new(5), TokenId::new(4))] };
+        let mut forced = ForcedTokens { spec };
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&[0.0; 6], SanitizePolicy::NegInfNan).unwrap();
+        forced.process(&step_view(&vocab, &[], &[]), &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[0]);
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&[0.0; 6], SanitizePolicy::NegInfNan).unwrap();
+        forced.process(&step_view(&vocab, &[], &[TokenId::new(0)]), &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[1]);
+
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&[0.0; 6], SanitizePolicy::NegInfNan).unwrap();
+        let generated5 = vec![TokenId::new(0); 5];
+        forced.process(&step_view(&vocab, &[], &generated5), &mut ws).unwrap();
+        ws.sync_live_with_mask();
+        assert_eq!(ws.live(), &[4]);
+    }
+    // #endregion 🔖LengthTests
+
+    // #region 🔖AdaptiveTests
+    #[test]
+    fn mirostat_v2_truncates_to_tokens_within_the_surprise_budget() {
+        let mut ws = LogitsWorkspace::new(6);
+        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(6);
+        let view = step_view(&vocab, &[], &[]);
+        let mut mirostat = Mirostat::new(MirostatVersion::V2, 3.0, 0.1);
+        mirostat.process(&view, &mut ws).unwrap();
+        assert!(ws.live().len() < 6);
+    }
+
+    #[test]
+    fn mirostat_commit_updates_mu_toward_target() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut mirostat = Mirostat::new(MirostatVersion::V2, 3.0, 0.5);
+        mirostat.process(&view, &mut ws).unwrap();
+        let mu_before = mirostat.mu;
+        mirostat.commit(&view, TokenId::new(0));
+        assert_ne!(mirostat.mu, mu_before);
+    }
+
+    #[test]
+    fn mirostat_rollback_restores_mu() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[10.0, 0.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut mirostat = Mirostat::new(MirostatVersion::V2, 3.0, 0.5);
+        let mark = mirostat.save();
+        mirostat.process(&view, &mut ws).unwrap();
+        mirostat.commit(&view, TokenId::new(0));
+        mirostat.rollback_to(mark);
+        assert_eq!(mirostat.mu, 6.0);
+    }
+
+    #[test]
+    fn entropy_pid_sharpens_the_distribution_when_entropy_exceeds_target() {
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&[1.0, 1.0, 1.0, 1.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(4);
+        let view = step_view(&vocab, &[], &[]);
+        let mut pid = EntropyPid::new(0.1, 1.0, 0.0, 0.0);
+        pid.process(&view, &mut ws).unwrap();
+        // 📐 Uniform entropy (ln 4 ≈ 1.39) is far above the 0.1 target, so `error = target - entropy`
+        // is very negative, driving `temp` toward (and clamped at) `0.05` — a *low* temperature that
+        // sharpens the distribution (reduces entropy) by scaling logits *up* (dividing by a small
+        // temp), the correct control direction for "entropy is too high, pull it down".
+        assert!(ws.processed()[0] > 1.0);
+    }
+
+    #[test]
+    fn repetition_controller_flattens_after_crossing_the_threshold() {
+        let vocab = Vocabulary::new(2);
+        let view = step_view(&vocab, &[], &[]);
+        let mut controller = RepetitionController::new(4, 0.5, 1.0);
+        for _ in 0..4 {
+            controller.commit(&view, TokenId::new(0));
+        }
+        let mut ws = LogitsWorkspace::new(2);
+        ws.reset_for_step(&[2.0, 2.0], SanitizePolicy::NegInfNan).unwrap();
+        controller.process(&view, &mut ws).unwrap();
+        assert!(ws.processed()[0] < 2.0);
+    }
+
+    #[test]
+    fn confidence_controller_uses_low_temp_under_low_entropy() {
+        let mut ws = LogitsWorkspace::new(3);
+        ws.reset_for_step(&[10.0, 0.0, 0.0], SanitizePolicy::NegInfNan).unwrap();
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut controller = ConfidenceController { low_entropy: 0.0, high_entropy: 2.0, low_temp: 0.2, high_temp: 1.5 };
+        controller.process(&view, &mut ws).unwrap();
+        // 📐 Near-zero entropy selects a temperature near `low_temp` (0.2), scaling logits up ~5x.
+        assert!(ws.processed()[0] > 40.0);
+    }
+    // #endregion 🔖AdaptiveTests
+
+    // #region 🔖StopsTests
+    struct MockAdapter {
+        table: Vec<Vec<u8>>,
+    }
+    impl TokenTextAdapter for MockAdapter {
+        fn vocab_size(&self) -> usize {
+            self.table.len()
+        }
+        fn token_bytes(&self, token: TokenId) -> Option<&[u8]> {
+            self.table.get(token.get() as usize).map(Vec::as_slice)
+        }
+        fn fingerprint(&self) -> u64 {
+            0
+        }
+    }
+
+    #[test]
+    fn aho_corasick_matches_and_reports_hold_back_on_partial_prefix() {
+        let ac = AhoCorasick::build(&[b"ab".to_vec()]);
+        let s1 = ac.step(0, b'a');
+        assert_eq!(ac.depth(s1), 1);
+        assert!(ac.matched_at(s1).is_none());
+        let s2 = ac.step(s1, b'b');
+        assert!(ac.matched_at(s2).is_some());
+    }
+
+    #[test]
+    fn aho_corasick_handles_overlapping_patterns_via_fail_links() {
+        let ac = AhoCorasick::build(&[b"abc".to_vec(), b"bcd".to_vec()]);
+        let mut state = 0u32;
+        for &byte in b"abcd" {
+            state = ac.step(state, byte);
+        }
+        // 🛑 After consuming "abcd", the automaton must have matched "bcd" via the fail link.
+        let (index, len) = ac.matched_at(state).expect("bcd must match via fail link");
+        assert_eq!(len, 3);
+        let _ = index;
+    }
+
+    #[test]
+    fn token_stop_condition_fires_on_configured_token() {
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        let mut stop = TokenStopCondition { tokens: vec![TokenId::new(9)] };
+        assert_eq!(stop.on_token(&view, TokenId::new(9)), StopPoll::Finished { reason: FinishReason::StopToken, matched_bytes: 0 });
+        assert_eq!(stop.on_token(&view, TokenId::new(1)), StopPoll::Continue);
+    }
+
+    #[test]
+    fn text_stop_condition_matches_a_multi_token_stop_sequence() {
+        let adapter = MockAdapter { table: vec![b"He".to_vec(), b"llo".to_vec(), b"!".to_vec()] };
+        let vocab = Vocabulary::new(3);
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+        let mut stop = TextStopCondition::new(&[b"Hello".to_vec()], StopTextMode::Include);
+        assert_eq!(stop.on_token(&view, TokenId::new(0)), StopPoll::Hold { ambiguous_bytes: 2 });
+        let result = stop.on_token(&view, TokenId::new(1));
+        assert_eq!(result, StopPoll::Finished { reason: FinishReason::StopSequence { index: 0 }, matched_bytes: 5 });
+    }
+
+    #[test]
+    fn text_stop_condition_without_adapter_never_matches() {
+        let vocab = Vocabulary::new(3);
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let mut stop = TextStopCondition::new(&[b"Hello".to_vec()], StopTextMode::Include);
+        assert_eq!(stop.on_token(&view, TokenId::new(0)), StopPoll::Continue);
+    }
+    // #endregion 🔖StopsTests
+
+    // #region 🔖SequenceStateTests
+    fn make_state(config: &SamplingConfig) -> SequenceState {
+        SequenceState::new(SequenceId::new(1), Vec::new(), config, Box::new(CounterRng::from_seed(config.seed))).unwrap_or_else(|e| panic!("sequence state should build: {e}"))
+    }
+
+    #[test]
+    fn sequence_state_new_builds_configured_constraints() {
+        let config = SamplingConfig { constraints: vec![ConstraintSpec::JsonMode], ..SamplingConfig::default() };
+        let state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).expect("json mode constraint should build");
+        assert_eq!(state.constraints.len(), 1);
+    }
+
+    #[test]
+    fn sequence_state_new_rejects_an_invalid_regex_constraint() {
+        let config = SamplingConfig { constraints: vec![ConstraintSpec::Regex("(unclosed".to_string())], ..SamplingConfig::default() };
+        assert!(SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).is_err());
+    }
+
+    #[test]
+    fn sequence_state_checkpoint_restore_round_trips() {
+        let config = SamplingConfig::precise();
+        let mut state = make_state(&config);
+        let vocab = small_vocab();
+        let view = step_view(&vocab, &[], &[]);
+        state.generated.push(TokenId::new(3));
+        state.cumulative_logprob = -1.5;
+        let checkpoint = state.checkpoint();
+        state.generated.push(TokenId::new(4));
+        state.cumulative_logprob = -3.0;
+        state.restore(&checkpoint);
+        assert_eq!(state.generated(), &[TokenId::new(3)]);
+        assert!((state.cumulative_logprob() - (-1.5)).abs() < 1e-9);
+        let _ = view;
+    }
+
+    #[test]
+    fn sequence_state_rollback_then_readvance_matches_direct_run() {
+        let config = SamplingConfig::balanced();
+        let vocab = small_vocab();
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+
+        let mut direct = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        for _ in 0..3 {
+            sample_step(&config, &mut direct, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+        }
+        let direct_text = direct.to_text();
+
+        let mut replayed = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap();
+        let mut ws2 = LogitsWorkspace::new(8);
+        for _ in 0..3 {
+            sample_step(&config, &mut replayed, &mut ws2, &vocab, None, &logits, &mut observer).unwrap();
+        }
+        replayed.rollback(2);
+        assert_eq!(replayed.generated().len(), 1);
+        for _ in 0..2 {
+            sample_step(&config, &mut replayed, &mut ws2, &vocab, None, &logits, &mut observer).unwrap();
+        }
+        assert_eq!(replayed.to_text(), direct_text);
+    }
+
+    #[test]
+    fn sequence_state_fork_diverges_independently() {
+        let config = SamplingConfig::balanced();
+        let vocab = small_vocab();
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+        let mut base = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        sample_step(&config, &mut base, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+
+        let key_a = StreamKey { request: 0, sequence: 2, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+        let key_b = StreamKey { request: 0, sequence: 3, beam: 0, candidate: 0, purpose: StreamPurpose::Selection };
+        let mut fork_a = base.fork(SequenceId::new(2), key_a);
+        let mut fork_b = base.fork(SequenceId::new(3), key_b);
+        assert_eq!(fork_a.generated(), fork_b.generated());
+
+        let mut ws_a = LogitsWorkspace::new(8);
+        let mut ws_b = LogitsWorkspace::new(8);
+        for _ in 0..5 {
+            sample_step(&config, &mut fork_a, &mut ws_a, &vocab, None, &logits, &mut observer).unwrap();
+            sample_step(&config, &mut fork_b, &mut ws_b, &vocab, None, &logits, &mut observer).unwrap();
+        }
+        assert_ne!(fork_a.generated(), fork_b.generated(), "independently split RNG streams should diverge over several draws");
+    }
+
+    #[test]
+    fn sequence_state_to_text_round_trips_and_rejects_fingerprint_mismatch() {
+        let config = SamplingConfig::precise();
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let vocab = small_vocab();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+        sample_step(&config, &mut state, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+        let text = state.to_text();
+        let decoded = state.decode_text(&text).unwrap();
+        assert_eq!(decoded, state.generated());
+
+        let other_config = SamplingConfig::balanced();
+        let other_state = SequenceState::new(SequenceId::new(1), Vec::new(), &other_config, Box::new(CounterRng::from_seed(0))).unwrap();
+        assert!(other_state.decode_text(&text).is_err());
+    }
+
+    #[test]
+    fn sample_step_errors_when_sequence_already_finished() {
+        let config = SamplingConfig { max_tokens: 1, ..SamplingConfig::precise() };
+        let vocab = small_vocab();
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        let logits = [1.0f32, 5.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let result = sample_step(&config, &mut state, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+        assert_eq!(result.finish, Some(FinishReason::MaxTokens));
+        assert!(sample_step(&config, &mut state, &mut ws, &vocab, None, &logits, &mut observer).is_err());
+    }
+
+    #[test]
+    fn sample_step_with_no_repeat_ngram_avoids_recreating_a_bigram() {
+        let config = SamplingConfig {
+            method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId },
+            processors: vec![ProcessorSpec::NoRepeatNgram { n: 2 }],
+            max_tokens: 6,
+            ..SamplingConfig::default()
+        };
+        let vocab = small_vocab();
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        // 📐 Token 1 always dominates except when masked, so the no-repeat-ngram guard should force
+        // deviation the moment the same bigram would otherwise recur.
+        let mut logits = [0.0f32; 8];
+        logits[1] = 10.0;
+        logits[0] = 5.0;
+        let mut tokens = Vec::new();
+        for _ in 0..4 {
+            let result = sample_step(&config, &mut state, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+            tokens.push(result.token);
+            if result.finish.is_some() {
+                break;
+            }
+        }
+        // 🌡️ Token 1 (the argmax) can never appear twice consecutively after the same predecessor.
+        for pair in tokens.windows(3) {
+            assert!(!(pair[0] == pair[2] && pair[1] == TokenId::new(1) && pair[0] == TokenId::new(1)), "must not recreate the (1, 1) bigram twice");
+        }
+    }
+
+    #[test]
+    fn sample_step_honors_forced_bos_at_step_zero() {
+        let config = SamplingConfig { forced: ForcedSpec { bos: Some(TokenId::new(3)), ..ForcedSpec::default() }, ..SamplingConfig::precise() };
+        let vocab = small_vocab();
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut observer = NullObserver;
+        let logits = [10.0f32, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0];
+        let result = sample_step(&config, &mut state, &mut ws, &vocab, None, &logits, &mut observer).unwrap();
+        assert_eq!(result.token, TokenId::new(3));
+    }
+    // #endregion 🔖SequenceStateTests
+
+    // #region 🔖AutomataTests
+    #[test]
+    fn dfa_matches_a_star_b_pattern() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern("a*b", &limits).unwrap();
+        for accepted in ["b", "ab", "aaab"] {
+            let mut state = dfa.start();
+            for &byte in accepted.as_bytes() {
+                state = dfa.step(state, byte);
+            }
+            assert!(dfa.is_accept(state), "{accepted:?} should be accepted");
+        }
+        for rejected in ["a", "ba", "abc", ""] {
+            let mut state = dfa.start();
+            let mut dead = false;
+            for &byte in rejected.as_bytes() {
+                state = dfa.step(state, byte);
+                if dfa.is_dead(state) {
+                    dead = true;
+                    break;
+                }
+            }
+            assert!(dead || !dfa.is_accept(state), "{rejected:?} should not be accepted");
+        }
+    }
+
+    #[test]
+    fn dfa_handles_alternation_class_and_bounded_repeat() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern("[a-c]{2,3}", &limits).unwrap();
+        let matches = |s: &str| {
+            let mut state = dfa.start();
+            for &byte in s.as_bytes() {
+                state = dfa.step(state, byte);
+                if dfa.is_dead(state) {
+                    return false;
+                }
+            }
+            dfa.is_accept(state)
+        };
+        assert!(matches("ab"));
+        assert!(matches("abc"));
+        assert!(!matches("a"));
+        assert!(!matches("abca"));
+        assert!(!matches("ad"));
+    }
+
+    #[test]
+    fn dfa_alive_flag_marks_dead_ends_as_unreachable_to_accept() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern("ab", &limits).unwrap();
+        let mut state = dfa.start();
+        state = dfa.step(state, b'z');
+        assert!(dfa.is_dead(state));
+        assert!(!dfa.is_alive(state));
+    }
+
+    #[test]
+    fn dfa_rejects_unbalanced_parens_with_parse_error() {
+        let limits = SamplingLimits::default();
+        assert!(Dfa::from_pattern("(ab", &limits).is_err());
+    }
+
+    #[test]
+    fn dfa_budget_is_enforced_for_pathologically_wide_patterns() {
+        let limits = SamplingLimits { max_automaton_states: 4, ..SamplingLimits::default() };
+        assert!(Dfa::from_pattern("(a|b|c|d|e|f|g|h){5}", &limits).is_err());
+    }
+
+    #[test]
+    fn dfa_token_cache_computes_allowed_tokens_and_next_states() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern("ab", &limits).unwrap();
+        let tokens: Vec<&[u8]> = vec![b"a", b"b", b"x"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let mut cache = DfaTokenCache::new(16);
+        let (allowed, next) = cache.get_or_compute(&dfa, dfa.start(), &adapter);
+        assert!(allowed.get(TokenId::new(0)));
+        assert!(!allowed.get(TokenId::new(1)));
+        assert!(!allowed.get(TokenId::new(2)));
+        let after_a = next[0];
+        let (allowed2, _) = cache.get_or_compute(&dfa, after_a, &adapter);
+        assert!(allowed2.get(TokenId::new(1)));
+    }
+    // #endregion 🔖AutomataTests
+
+    // #region 🔖ConstraintsTests
+    #[test]
+    fn regex_constraint_masks_to_only_valid_continuations() {
+        let limits = SamplingLimits::default();
+        let mut constraint = RegexConstraint::new("ab", &limits).unwrap();
+        let tokens: Vec<&[u8]> = vec![b"a", b"b", b"x"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(3);
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+        let mut mask = TokenBitset::new_full(3);
+        constraint.fill_mask(&view, &mut mask).unwrap();
+        assert!(mask.get(TokenId::new(0)));
+        assert!(!mask.get(TokenId::new(1)));
+        assert!(!mask.get(TokenId::new(2)));
+        assert!(!constraint.is_satisfied());
+        constraint.accept(&view, TokenId::new(0)).unwrap();
+        let mut mask2 = TokenBitset::new_full(3);
+        constraint.fill_mask(&view, &mut mask2).unwrap();
+        assert!(mask2.get(TokenId::new(1)));
+        constraint.accept(&view, TokenId::new(1)).unwrap();
+        assert!(constraint.is_satisfied());
+    }
+
+    #[test]
+    fn regex_constraint_rollback_restores_dfa_state() {
+        let limits = SamplingLimits::default();
+        let mut constraint = RegexConstraint::new("ab", &limits).unwrap();
+        let tokens: Vec<&[u8]> = vec![b"a", b"b"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(2);
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+        let mark = constraint.save();
+        constraint.accept(&view, TokenId::new(0)).unwrap();
+        assert!(!constraint.is_satisfied());
+        constraint.rollback_to(mark);
+        let mut mask = TokenBitset::new_full(2);
+        constraint.fill_mask(&view, &mut mask).unwrap();
+        assert!(mask.get(TokenId::new(0)), "rollback must restore the pre-'a' DFA state");
+    }
+
+    #[test]
+    fn trie_constraint_only_allows_configured_phrase_tokens() {
+        let mut constraint = TrieConstraint::new(&[vec![TokenId::new(0), TokenId::new(1)], vec![TokenId::new(2)]]);
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut mask = TokenBitset::new_full(3);
+        constraint.fill_mask(&view, &mut mask).unwrap();
+        assert!(mask.get(TokenId::new(0)));
+        assert!(mask.get(TokenId::new(2)));
+        assert!(!mask.get(TokenId::new(1)));
+        assert!(!constraint.is_satisfied());
+        constraint.accept(&view, TokenId::new(2)).unwrap();
+        assert!(constraint.is_satisfied());
+        assert!(constraint.is_finished());
+    }
+
+    #[test]
+    fn must_include_constraint_is_satisfied_once_an_alternative_appears() {
+        let mut constraint = MustIncludeConstraint::new(vec![vec![TokenId::new(1), TokenId::new(2)]]);
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        assert!(!constraint.is_satisfied());
+        constraint.accept(&view, TokenId::new(0)).unwrap();
+        assert!(!constraint.is_satisfied());
+        constraint.accept(&view, TokenId::new(1)).unwrap();
+        constraint.accept(&view, TokenId::new(2)).unwrap();
+        assert!(constraint.is_satisfied());
+    }
+
+    #[test]
+    fn json_mode_constraint_accepts_valid_json_and_rejects_invalid() {
+        let tokens: Vec<&[u8]> = vec![b"{", b"\"a\"", b":", b"1", b"}", b"]"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(tokens.len());
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+
+        let mut good = JsonModeConstraint::new();
+        for &tok in &[0u32, 1, 2, 3, 4] {
+            good.accept(&view, TokenId::new(tok)).unwrap();
+        }
+        assert!(good.is_satisfied());
+        assert!(!good.is_dead());
+
+        let mut bad = JsonModeConstraint::new();
+        bad.accept(&view, TokenId::new(0)).unwrap();
+        bad.accept(&view, TokenId::new(5)).unwrap(); // ']' can't close an object
+        assert!(bad.is_dead());
+    }
+
+    #[test]
+    fn json_schema_constraint_flags_a_schema_violation_once_json_completes() {
+        let tokens: Vec<&[u8]> = vec![b"{", b"\"a\"", b":", b"1", b"}"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(tokens.len());
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+
+        let schema = parse_json(r#"{"type":"object","required":["b"]}"#, 16).unwrap();
+        let mut constraint = JsonSchemaConstraint::new(schema);
+        for &tok in &[0u32, 1, 2, 3, 4] {
+            constraint.accept(&view, TokenId::new(tok)).unwrap();
+        }
+        assert!(constraint.mode.is_satisfied());
+        assert!(constraint.is_dead(), "missing required property 'b' should be flagged");
+    }
+
+    #[test]
+    fn json_schema_validator_checks_type_enum_and_bounds() {
+        let schema = parse_json(r#"{"type":"number","minimum":0,"maximum":10}"#, 16).unwrap();
+        assert!(validates_json_schema(&JsonValue::Num(5.0), &schema));
+        assert!(!validates_json_schema(&JsonValue::Num(-1.0), &schema));
+        assert!(!validates_json_schema(&JsonValue::Str("x".into()), &schema));
+
+        let enum_schema = parse_json(r#"{"enum":["a","b"]}"#, 16).unwrap();
+        assert!(validates_json_schema(&JsonValue::Str("a".into()), &enum_schema));
+        assert!(!validates_json_schema(&JsonValue::Str("c".into()), &enum_schema));
+    }
+
+    #[test]
+    fn ebnf_constraint_compiles_a_simple_recursive_ish_grammar_and_masks_correctly() {
+        let grammar = "greeting ::= \"hi\" | \"hello\" ;";
+        let limits = SamplingLimits::default();
+        let mut constraint = EbnfConstraint::new(grammar, &limits).unwrap();
+        let tokens: Vec<&[u8]> = vec![b"hi", b"hello", b"bye"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(3);
+        let view = StepView { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: Some(&adapter), last_entropy: None };
+        let mut mask = TokenBitset::new_full(3);
+        constraint.fill_mask(&view, &mut mask).unwrap();
+        assert!(mask.get(TokenId::new(0)));
+        assert!(mask.get(TokenId::new(1)));
+        assert!(!mask.get(TokenId::new(2)));
+    }
+
+    #[test]
+    fn ebnf_constraint_rejects_unbounded_left_recursion() {
+        let grammar = "a ::= a \"x\" ;";
+        let limits = SamplingLimits { max_grammar_bytes: 50, ..SamplingLimits::default() };
+        assert!(EbnfConstraint::new(grammar, &limits).is_err());
+    }
+
+    #[test]
+    fn build_constraint_covers_every_constraint_spec_variant() {
+        let limits = SamplingLimits::default();
+        assert!(build_constraint(&ConstraintSpec::Regex("a".into()), &limits).is_ok());
+        assert!(build_constraint(&ConstraintSpec::Trie(vec![vec![TokenId::new(0)]]), &limits).is_ok());
+        assert!(build_constraint(&ConstraintSpec::MustInclude(vec![vec![TokenId::new(0)]]), &limits).is_ok());
+        assert!(build_constraint(&ConstraintSpec::JsonMode, &limits).is_ok());
+        assert!(build_constraint(&ConstraintSpec::Ebnf("a ::= \"x\" ;".into()), &limits).is_ok());
+        assert!(build_constraint(&ConstraintSpec::JsonSchema(JsonValue::Object(Vec::new())), &limits).is_ok());
+    }
+
+    #[test]
+    fn sample_step_with_regex_constraint_only_ever_emits_matching_text() {
+        let config = SamplingConfig {
+            method: SamplingMethod::Greedy { tie_break: TieBreak::LowestTokenId },
+            constraints: vec![ConstraintSpec::Regex("(a|b)".into())],
+            max_tokens: 1,
+            ..SamplingConfig::default()
+        };
+        let tokens: Vec<&[u8]> = vec![b"z", b"a", b"b"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let vocab = Vocabulary::new(3);
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(3);
+        let mut observer = NullObserver;
+        // 🧱 Token 0 ("z") has the highest raw logit but must be masked out by the regex constraint.
+        let logits = [10.0f32, 1.0, 1.0];
+        let result = sample_step(&config, &mut state, &mut ws, &vocab, Some(&adapter), &logits, &mut observer).unwrap();
+        assert_ne!(result.token, TokenId::new(0));
+    }
+    // #endregion 🔖ConstraintsTests
+
+    // #region 🔖BatchTests
+    #[test]
+    fn continuous_batcher_add_remove_and_step() {
+        let config = SamplingConfig::precise();
+        let vocab = small_vocab();
+        let mut batcher = ContinuousBatcher::new(8);
+        let state_a = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(1))).unwrap();
+        let state_b = SequenceState::new(SequenceId::new(2), Vec::new(), &config, Box::new(CounterRng::from_seed(2))).unwrap();
+        batcher.add_sequence(state_a);
+        batcher.add_sequence(state_b);
+        assert_eq!(batcher.len(), 2);
+        assert!(batcher.contains(SequenceId::new(1)));
+
+        let logits_a = [1.0f32, 9.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let logits_b = [9.0f32, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let request = BatchSamplingRequest { entries: vec![BatchEntry { id: SequenceId::new(1), logits: &logits_a }, BatchEntry { id: SequenceId::new(2), logits: &logits_b }] };
+        let mut observer = NullObserver;
+        let batch_result = batcher.step(&config, &vocab, None, &request, &mut observer);
+        assert_eq!(batch_result.results.len(), 2);
+        assert_eq!(batch_result.results[0].1.as_ref().unwrap().token, TokenId::new(1));
+        assert_eq!(batch_result.results[1].1.as_ref().unwrap().token, TokenId::new(0));
+
+        let removed = batcher.remove_sequence(SequenceId::new(1));
+        assert!(removed.is_some());
+        assert_eq!(batcher.len(), 1);
+    }
+
+    #[test]
+    fn continuous_batcher_step_reports_error_for_unknown_sequence() {
+        let config = SamplingConfig::precise();
+        let vocab = small_vocab();
+        let mut batcher = ContinuousBatcher::new(8);
+        let logits = [0.0f32; 8];
+        let request = BatchSamplingRequest { entries: vec![BatchEntry { id: SequenceId::new(99), logits: &logits }] };
+        let mut observer = NullObserver;
+        let result = batcher.step(&config, &vocab, None, &request, &mut observer);
+        assert!(result.results[0].1.is_err());
+    }
+
+    #[test]
+    fn continuous_batcher_per_sequence_output_is_independent_of_processing_order() {
+        let config = SamplingConfig::balanced();
+        let vocab = small_vocab();
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+        let mut observer = NullObserver;
+
+        let mut forward = ContinuousBatcher::new(8);
+        forward.add_sequence(SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap());
+        forward.add_sequence(SequenceState::new(SequenceId::new(2), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap());
+        let request_forward = BatchSamplingRequest { entries: vec![BatchEntry { id: SequenceId::new(1), logits: &logits }, BatchEntry { id: SequenceId::new(2), logits: &logits }] };
+        forward.step(&config, &vocab, None, &request_forward, &mut observer);
+
+        let mut backward = ContinuousBatcher::new(8);
+        backward.add_sequence(SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap());
+        backward.add_sequence(SequenceState::new(SequenceId::new(2), Vec::new(), &config, Box::new(CounterRng::from_seed(config.seed))).unwrap());
+        let request_backward = BatchSamplingRequest { entries: vec![BatchEntry { id: SequenceId::new(2), logits: &logits }, BatchEntry { id: SequenceId::new(1), logits: &logits }] };
+        backward.step(&config, &vocab, None, &request_backward, &mut observer);
+
+        assert_eq!(forward.get(SequenceId::new(1)).unwrap().generated(), backward.get(SequenceId::new(1)).unwrap().generated());
+        assert_eq!(forward.get(SequenceId::new(2)).unwrap().generated(), backward.get(SequenceId::new(2)).unwrap().generated());
+    }
+    // #endregion 🔖BatchTests
+
+    // #region 🔖SearchTests
+    #[test]
+    fn beam_search_finds_the_highest_probability_short_sequence() {
+        let config = SamplingConfig::precise();
+        let vocab = Vocabulary::new(4).with_eos(vec![TokenId::new(3)]);
+        let beam_config = BeamSearchConfig { width: 4, length_penalty: 1.0, max_steps: 3 };
+        let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        // 🌳 Fixed per-step logits regardless of history: token 1 (logit 3) always dominates, token 3
+        // (EOS) is next-best — so the true best sequence is "1, 1, 3".
+        let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, |_state| vec![0.0, 3.0, 1.0, 2.0]).unwrap();
+        assert!(!hypotheses.is_empty());
+        let best = &hypotheses[0];
+        assert_eq!(best.state.generated(), &[TokenId::new(1), TokenId::new(1), TokenId::new(3)]);
+    }
+
+    #[test]
+    fn beam_search_hypotheses_have_independent_state() {
+        let config = SamplingConfig::precise();
+        let vocab = Vocabulary::new(4);
+        let beam_config = BeamSearchConfig { width: 3, length_penalty: 1.0, max_steps: 2 };
+        let initial = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let hypotheses = beam_search(&config, &beam_config, &vocab, None, initial, |_state| vec![1.0, 2.0, 3.0, 0.5]).unwrap();
+        assert!(hypotheses.len() >= 2);
+        // 🌳 Every surviving hypothesis's fork is a distinct SequenceState with its own id-derived RNG.
+        let ids: std::collections::HashSet<u64> = hypotheses.iter().map(|h| h.state.id().get()).collect();
+        assert_eq!(ids.len(), 1, "all forks share the parent's sequence id in this driver; independence is in per-beam state, not id");
+    }
+
+    #[test]
+    fn best_of_n_selects_the_candidate_with_highest_mean_logprob() {
+        let config = SamplingConfig::precise();
+        let vocab = Vocabulary::new(4).with_eos(vec![TokenId::new(3)]);
+        let best_of = BestOfN { n: 3 };
+        let mut observer = NullObserver;
+        let results = best_of
+            .run(&config, &vocab, None, 2, &mut observer, |i| SequenceState::new(SequenceId::new(i as u64), Vec::new(), &config, Box::new(CounterRng::from_seed(i as u64))), |_state| vec![0.0, 9.0, 0.0, 1.0])
+            .unwrap();
+        assert_eq!(results.len(), 3);
+        for i in 1..results.len() {
+            assert!(results[i - 1].1 >= results[i].1, "results must be sorted best-first by mean logprob");
+        }
+    }
+
+    #[test]
+    fn rejection_sampler_retries_until_accept_returns_true() {
+        let config = SamplingConfig::balanced();
+        let vocab = small_vocab();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(7);
+        let logits = [1.0f32, 2.0, 0.5, 3.0, 1.5, 0.2, 0.1, -5.0];
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let sampler = RejectionSampler { max_attempts: 100 };
+        let result = sampler.sample(&config, &mut ws, &mut rng, &logits, input, |r| r.token == TokenId::new(3)).unwrap();
+        assert_eq!(result.token, TokenId::new(3));
+    }
+
+    #[test]
+    fn rejection_sampler_errors_after_max_attempts_when_never_accepted() {
+        let config = SamplingConfig::precise();
+        let vocab = small_vocab();
+        let mut ws = LogitsWorkspace::new(8);
+        let mut rng = CounterRng::from_seed(0);
+        let logits = [0.0f32, 9.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0];
+        let input = StatelessStepInput { sequence: SequenceId::new(1), step: StepIndex::new(0), prompt: &[], generated: &[], vocab: &vocab, adapter: None, last_entropy: None };
+        let sampler = RejectionSampler { max_attempts: 5 };
+        assert!(sampler.sample(&config, &mut ws, &mut rng, &logits, input, |r| r.token == TokenId::new(2)).is_err());
+    }
+    // #endregion 🔖SearchTests
+
+    // #region 🔖SpeculativeTests
+    #[test]
+    fn speculative_decode_accepts_when_draft_matches_target_distribution() {
+        let config = SamplingConfig::precise();
+        let vocab = Vocabulary::new(4);
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(4);
+        let mut observer = NullObserver;
+        let draft_tokens = [TokenId::new(1), TokenId::new(1)];
+        let draft_probs = [0.9f32, 0.9];
+        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_probs, |_state| vec![0.0, 9.0, 0.0, 0.0], &mut observer).unwrap();
+        assert_eq!(metrics.proposed, 2);
+        assert_eq!(metrics.accepted, 2);
+        assert!(metrics.bonus_taken);
+        assert_eq!(results.len(), 3);
+        assert_eq!(state.generated().len(), 3);
+    }
+
+    #[test]
+    fn speculative_decode_rejects_and_resamples_when_draft_disagrees_with_target() {
+        let config = SamplingConfig::precise();
+        let vocab = Vocabulary::new(4);
+        let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(0))).unwrap();
+        let mut ws = LogitsWorkspace::new(4);
+        let mut observer = NullObserver;
+        // 🎲 Draft proposes token 0 with high confidence, but the target model overwhelmingly
+        // prefers token 1 — acceptance probability is near zero, so this should almost always reject.
+        let draft_tokens = [TokenId::new(0)];
+        let draft_probs = [0.99f32];
+        let (results, metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &draft_tokens, &draft_probs, |_state| vec![-10.0, 10.0, -10.0, -10.0], &mut observer).unwrap();
+        assert_eq!(metrics.accepted, 0);
+        assert!(!metrics.bonus_taken);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].token, TokenId::new(1));
+    }
+
+    #[test]
+    fn speculative_decode_matches_direct_target_sampling_distribution() {
+        // ⚡ Statistical check: over many trials, the *marginal* distribution of the first token
+        // speculative decoding produces should match sampling directly from the target logits —
+        // the defining correctness property of exact speculative decoding.
+        let config = SamplingConfig { method: SamplingMethod::Multinomial { strategy: MultinomialStrategy::CdfBinarySearch }, ..SamplingConfig::default() };
+        let vocab = Vocabulary::new(3);
+        let target = [0.0f32, 1.0, 2.0];
+        let draft_probs_dist = [0.5f32, 0.3, 0.2]; // a plausible, imperfect draft distribution
+
+        let trials = 4_000;
+        let mut counts_spec = [0u32; 3];
+        for seed in 0..trials {
+            let mut state = SequenceState::new(SequenceId::new(1), Vec::new(), &config, Box::new(CounterRng::from_seed(seed))).unwrap();
+            let mut ws = LogitsWorkspace::new(3);
+            let mut observer = NullObserver;
+            // Draft token drawn from the (imperfect) draft distribution using a simple counter rng.
+            let mut draft_rng = CounterRng::from_seed(seed ^ 0xD3AF);
+            let cdf = cumulative_from_probs(&draft_probs_dist);
+            let draft_token = TokenId::new(cdf_binary_search(&cdf, draft_rng.next_f64()) as u32);
+            let draft_prob = draft_probs_dist[draft_token.get() as usize];
+            let (results, _metrics) = speculative_decode(&config, &mut state, &mut ws, &vocab, None, &[draft_token], &[draft_prob], |_state| target.to_vec(), &mut observer).unwrap();
+            counts_spec[results[0].token.get() as usize] += 1;
+        }
+
+        let mut ws = LogitsWorkspace::new(3);
+        let target_probs = {
+            ws.reset_for_step(&target, SanitizePolicy::NegInfNan).unwrap();
+            ws.sort_live_by_prob_desc();
+            let mut probs = vec![0.0f32; 3];
+            for (&tok, &p) in ws.live().iter().zip(ws.probs().iter()) {
+                probs[tok as usize] = p;
+            }
+            probs
+        };
+
+        for i in 0..3 {
+            let observed = counts_spec[i] as f64 / trials as f64;
+            let expected = target_probs[i] as f64;
+            assert!((observed - expected).abs() < 0.03, "token {i}: observed {observed} vs expected {expected}");
+        }
+    }
+    // #endregion 🔖SpeculativeTests
+
+    // #region 🔖ShardedTests
+    #[test]
+    fn sharded_softmax_matches_unsharded_softmax() {
+        let full_logits = [1.0f32, 2.0, 0.5, 3.0, -1.0, 0.2, 4.0, 0.1];
+        let mut ws = LogitsWorkspace::new(8);
+        ws.reset_for_step(&full_logits, SanitizePolicy::NegInfNan).unwrap();
+        let unsharded_sum = ws.softmax_over_live();
+        let mut unsharded_probs = vec![0.0f32; 8];
+        for (&tok, &p) in ws.live().iter().zip(ws.probs().iter()) {
+            unsharded_probs[tok as usize] = p;
+        }
+        assert!((unsharded_sum - 1.0).abs() < 1e-4);
+
+        let shard0 = &full_logits[..4];
+        let shard1 = &full_logits[4..];
+        let mut ranks = LocalCollective::new_group(2);
+        let mut rank1 = ranks.pop().unwrap();
+        let mut rank0 = ranks.pop().unwrap();
+        // 🗂️ Two-phase mailbox convention: call every rank once, then again to read the merged result.
+        let _ = sharded_softmax(&mut rank0, shard0);
+        let _ = sharded_softmax(&mut rank1, shard1);
+        let sharded0 = sharded_softmax(&mut rank0, shard0);
+        let sharded1 = sharded_softmax(&mut rank1, shard1);
+
+        for i in 0..4 {
+            assert!((sharded0[i] - unsharded_probs[i]).abs() < 1e-5, "shard0[{i}]: {} vs {}", sharded0[i], unsharded_probs[i]);
+        }
+        for i in 0..4 {
+            assert!((sharded1[i] - unsharded_probs[4 + i]).abs() < 1e-5, "shard1[{i}]: {} vs {}", sharded1[i], unsharded_probs[4 + i]);
+        }
+    }
+
+    #[test]
+    fn sharded_top_k_matches_unsharded_top_k() {
+        let full_logits = [1.0f32, 5.0, 0.5, 3.0, -1.0, 0.2, 4.0, 0.1];
+        let shard0 = &full_logits[..4];
+        let shard1 = &full_logits[4..];
+        let mut ranks = LocalCollective::new_group(2);
+        let mut rank1 = ranks.pop().unwrap();
+        let mut rank0 = ranks.pop().unwrap();
+        let _ = sharded_top_k(&mut rank0, shard0, 0, 3);
+        let top_k = sharded_top_k(&mut rank1, shard1, 4, 3);
+
+        let mut expected: Vec<(u32, f32)> = full_logits.iter().enumerate().map(|(i, &l)| (i as u32, l)).collect();
+        expected.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        let expected_tokens: Vec<u32> = expected.iter().take(3).map(|&(t, _)| t).collect();
+        let actual_tokens: Vec<u32> = top_k.iter().map(|c| c.token.get()).collect();
+        assert_eq!(actual_tokens, expected_tokens);
+    }
+
+    #[test]
+    fn sharded_sample_marginal_distribution_matches_unsharded() {
+        let full_logits = [2.0f32, 0.0, 1.0, -1.0];
+        let shard0 = &full_logits[..2];
+        let shard1 = &full_logits[2..];
+        let trials = 5_000;
+        let mut counts = [0u32; 4];
+        for seed in 0..trials {
+            let mut ranks = LocalCollective::new_group(2);
+            let mut rank1 = ranks.pop().unwrap();
+            let mut rank0 = ranks.pop().unwrap();
+            let mut rng = CounterRng::from_seed(seed);
+            let _ = sharded_top_k(&mut rank0, shard0, 0, usize::MAX);
+            if let Some(token) = sharded_sample(&mut rank1, shard1, 2, &mut rng) {
+                counts[token.get() as usize] += 1;
+            }
+        }
+        let mut ws = LogitsWorkspace::new(4);
+        ws.reset_for_step(&full_logits, SanitizePolicy::NegInfNan).unwrap();
+        ws.sort_live_by_prob_desc();
+        let mut expected = vec![0.0f32; 4];
+        for (&tok, &p) in ws.live().iter().zip(ws.probs().iter()) {
+            expected[tok as usize] = p;
+        }
+        for i in 0..4 {
+            let observed = counts[i] as f64 / trials as f64;
+            assert!((observed - expected[i] as f64).abs() < 0.03, "token {i}: observed {observed} vs expected {}", expected[i]);
+        }
+    }
+    // #endregion 🔖ShardedTests
 }
 // #endregion 🔖Tests

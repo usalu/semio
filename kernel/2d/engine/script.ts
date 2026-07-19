@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/2d/engine` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted(["kernel_2d_engine"], this.repoRoot, segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["kernel_2d_engine"], this.repoRoot, rest);
   }
 }
 

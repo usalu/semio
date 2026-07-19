@@ -1,10 +1,12 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/framework-os-core` task router. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 
+/** ⏱️Level-budgeted; unmarked `import.meta.vitest` cases are `fundamental`. */
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runVitest(this.root, segments, "js/vitest.config.ts");
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "js/vitest.config.ts");
   }
 }
 

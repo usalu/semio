@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 📏 `@semio-tech/procedural-2d-rs` router: `bun ./script.ts <wasm|test>`. */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, resolveTestLevel, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -23,7 +22,8 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", "-p", "procedural_2d", ...segments], { stdio: "inherit", cwd: this.repoRoot });
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["procedural_2d"], this.repoRoot, rest);
   }
 }
 

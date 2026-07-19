@@ -5,6 +5,8 @@
     <TargetExt>.rhp</TargetExt>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
     <Configurations>Debug;Release;UnitTest</Configurations>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
     <PlatformTarget>x64</PlatformTarget>

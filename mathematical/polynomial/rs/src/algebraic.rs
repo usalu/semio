@@ -100,6 +100,47 @@ impl AlgebraicReal {
         }
     }
 
+    /// 〽️ Sign of this value: `None` only for the exact rational zero (an irrational value's isolating
+    /// interval always separates from zero after finitely many refinements, since the true root isn't
+    /// zero — even though the interval can legitimately straddle zero before separation, e.g. for a
+    /// root very close to `0`).
+    pub fn sign(&self) -> Option<std::cmp::Ordering> {
+        if self.is_rational() {
+            return Some(self.lo.cmp(&Rational::zero()));
+        }
+        let mut probe = self.clone();
+        let mut width = probe.hi.sub(&probe.lo);
+        for _ in 0..200 {
+            if probe.lo > Rational::zero() {
+                return Some(std::cmp::Ordering::Greater);
+            }
+            if probe.hi < Rational::zero() {
+                return Some(std::cmp::Ordering::Less);
+            }
+            width = width.div(&Rational::from_i64(2, 1).unwrap()).unwrap();
+            probe.refine(&width);
+        }
+        None
+    }
+
+    /// 🎯 Refines until the interval no longer straddles zero (a no-op for the exact rational `0`,
+    /// which has no sign to separate); used before sign-dependent transforms like `inv`.
+    fn with_definite_sign(&self) -> Self {
+        let mut probe = self.clone();
+        if probe.lo.is_zero() && probe.hi.is_zero() {
+            return probe;
+        }
+        let mut width = probe.hi.sub(&probe.lo);
+        for _ in 0..200 {
+            if probe.lo > Rational::zero() || probe.hi < Rational::zero() {
+                break;
+            }
+            width = width.div(&Rational::from_i64(2, 1).unwrap()).unwrap();
+            probe.refine(&width);
+        }
+        probe
+    }
+
     // #region 🔖CheapTransforms
     pub fn neg(&self) -> Self {
         // Root of f(x) negated is a root of f(-x); reverse the sign of odd-degree coefficients.
@@ -110,14 +151,15 @@ impl AlgebraicReal {
     /// ➗ Reciprocal (`self` must be nonzero): if `alpha` is a root of `f`, `1/alpha` is a root of the
     /// coefficient-reversed polynomial.
     pub fn inv(&self) -> Option<Self> {
-        if self.lo.is_zero() && self.hi.is_zero() {
+        if self.is_rational() && self.lo.is_zero() {
             return None;
         }
-        let mut coeffs = self.poly.coeffs().to_vec();
+        let definite = self.with_definite_sign();
+        let mut coeffs = definite.poly.coeffs().to_vec();
         coeffs.reverse();
         let poly = PolyU::from_coeffs(coeffs);
-        let new_lo = if self.hi.is_zero() { None } else { self.hi.inv() };
-        let new_hi = if self.lo.is_zero() { None } else { self.lo.inv() };
+        let new_lo = if definite.hi.is_zero() { None } else { definite.hi.inv() };
+        let new_hi = if definite.lo.is_zero() { None } else { definite.lo.inv() };
         match (new_lo, new_hi) {
             (Some(a), Some(b)) if a <= b => Some(Self { poly, lo: a, hi: b }),
             (Some(a), Some(b)) => Some(Self { poly, lo: b, hi: a }),

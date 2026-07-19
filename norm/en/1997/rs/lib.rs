@@ -136,6 +136,16 @@ pub mod part_1 {
 pub mod part_2 {
     use super::{part_1, AnnexChoice, CheckResult};
 
+    /// 📐 Shaft resistance R_s = α_s · π · D · q_s · L [kN] per EN 1997-2 §7.6.3.
+    pub fn shaft_resistance_kn(alpha_s: f64, d_m: f64, q_s_kpa: f64, l_m: f64) -> f64 {
+        alpha_s * std::f64::consts::PI * d_m * q_s_kpa * l_m
+    }
+
+    /// 📐 Base resistance R_b = q_b · A_b [kN] per EN 1997-2 §7.6.3.
+    pub fn base_resistance_kn(q_b_kpa: f64, a_base_m2: f64) -> f64 {
+        q_b_kpa * a_base_m2
+    }
+
     pub fn pile_axial_resistance_kn(r_b_kn: f64, r_s_kn: f64, gamma_r: f64) -> f64 {
         (r_b_kn + r_s_kn) / gamma_r
     }
@@ -161,6 +171,37 @@ pub fn check_shallow_foundation(v_ed_kn: f64, h_ed_kn: f64, footing_area_m2: f64
     report
 }
 
+/// 📋 Full EN 1997 check across bearing, sliding, settlement, and pile axial parts.
+pub fn check_full_geotechnical(
+    v_ed_kn: f64,
+    h_ed_kn: f64,
+    footing_area_m2: f64,
+    phi_deg: f64,
+    c_kpa: f64,
+    gamma_kn_m3: f64,
+    b_m: f64,
+    d_f_m: f64,
+    e_s_mpa: f64,
+    nu: f64,
+    approach: DesignApproach,
+    settlement_limit_mm: f64,
+    n_pile_ed_kn: f64,
+    alpha_s: f64,
+    pile_d_m: f64,
+    q_s_kpa: f64,
+    pile_l_m: f64,
+    q_b_kpa: f64,
+    pile_base_area_m2: f64,
+    gamma_r: f64,
+) -> CheckReport {
+    let mut report = check_shallow_foundation(v_ed_kn, h_ed_kn, footing_area_m2, phi_deg, c_kpa, gamma_kn_m3, b_m, d_f_m, e_s_mpa, nu, approach, settlement_limit_mm);
+    let r_s = part_2::shaft_resistance_kn(alpha_s, pile_d_m, q_s_kpa, pile_l_m);
+    let r_b = part_2::base_resistance_kn(q_b_kpa, pile_base_area_m2);
+    let r_c_d = part_2::pile_axial_resistance_kn(r_b, r_s, gamma_r);
+    report.push(part_2::check_pile_axial(n_pile_ed_kn, r_c_d));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -179,11 +220,40 @@ pub struct Document {
     pub nu: f64,
     pub design_approach: String,
     pub settlement_limit_mm: f64,
+    pub n_pile_ed_kn: f64,
+    pub alpha_s: f64,
+    pub pile_d_m: f64,
+    pub q_s_kpa: f64,
+    pub pile_l_m: f64,
+    pub q_b_kpa: f64,
+    pub pile_base_area_m2: f64,
+    pub gamma_r: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { v_ed_kn: 500.0, h_ed_kn: 80.0, footing_area_m2: 2.0, phi_deg: 30.0, c_kpa: 0.0, gamma_kn_m3: 18.0, b_m: 2.0, d_f_m: 1.5, e_s_mpa: 30_000.0, nu: 0.3, design_approach: "da1str".into(), settlement_limit_mm: 25.0 }
+        Self {
+            v_ed_kn: 500.0,
+            h_ed_kn: 80.0,
+            footing_area_m2: 2.0,
+            phi_deg: 30.0,
+            c_kpa: 0.0,
+            gamma_kn_m3: 18.0,
+            b_m: 2.0,
+            d_f_m: 1.5,
+            e_s_mpa: 30_000.0,
+            nu: 0.3,
+            design_approach: "da1str".into(),
+            settlement_limit_mm: 25.0,
+            n_pile_ed_kn: 800.0,
+            alpha_s: 0.7,
+            pile_d_m: 0.6,
+            q_s_kpa: 80.0,
+            pile_l_m: 12.0,
+            q_b_kpa: 2500.0,
+            pile_base_area_m2: 0.28,
+            gamma_r: 1.4,
+        }
     }
 }
 
@@ -200,7 +270,7 @@ fn parse_design_approach(value: &str) -> DesignApproach {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_shallow_foundation(
+    check_full_geotechnical(
         document.v_ed_kn,
         document.h_ed_kn,
         document.footing_area_m2,
@@ -213,6 +283,14 @@ pub fn evaluate(document: &Document) -> CheckReport {
         document.nu,
         parse_design_approach(&document.design_approach),
         document.settlement_limit_mm,
+        document.n_pile_ed_kn,
+        document.alpha_s,
+        document.pile_d_m,
+        document.q_s_kpa,
+        document.pile_l_m,
+        document.q_b_kpa,
+        document.pile_base_area_m2,
+        document.gamma_r,
     )
 }
 
@@ -246,5 +324,28 @@ mod tests {
     fn shallow_foundation_e2e() {
         let report = check_shallow_foundation(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, 25.0);
         assert!(!report.checks.is_empty());
+    }
+
+    #[test]
+    fn pile_shaft_resistance_worked() {
+        let r_s = part_2::shaft_resistance_kn(0.7, 0.6, 80.0, 12.0);
+        assert!((r_s - 1266.69).abs() < 1.0);
+        let r_b = part_2::base_resistance_kn(2500.0, 0.28);
+        assert!((r_b - 700.0).abs() < 0.1);
+        let r_c_d = part_2::pile_axial_resistance_kn(r_b, r_s, 1.4);
+        assert!((r_c_d - 1404.78).abs() < 2.0);
+    }
+
+    #[test]
+    fn full_geotechnical_worked_example() {
+        let report = check_full_geotechnical(500.0, 80.0, 2.0, 30.0, 0.0, 18.0, 2.0, 1.5, 30_000.0, 0.3, DesignApproach::Da1Str, 25.0, 800.0, 0.7, 0.6, 80.0, 12.0, 2500.0, 0.28, 1.4);
+        assert_eq!(report.checks.len(), 4);
+        assert!(report.checks[3].utilization < 1.0);
+    }
+
+    #[test]
+    fn evaluate_runs_all_parts() {
+        let report = evaluate(&Document::default());
+        assert_eq!(report.checks.len(), 4);
     }
 }

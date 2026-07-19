@@ -25,13 +25,13 @@ pub fn is_prime_u64(n: u64) -> bool {
         if n == p {
             return true;
         }
-        if n % p == 0 {
+        if n.is_multiple_of(p) {
             return false;
         }
     }
     let mut d = n - 1;
     let mut r = 0u32;
-    while d % 2 == 0 {
+    while d.is_multiple_of(2) {
         d /= 2;
         r += 1;
     }
@@ -188,7 +188,7 @@ impl Sieve {
 
     pub fn is_prime(&self, n: usize) -> bool {
         if n > self.limit {
-            return crate::primes::is_prime_u64(n as u64);
+            return is_prime_u64(n as u64);
         }
         self.is_composite[n / 64] & (1 << (n % 64)) == 0
     }
@@ -207,7 +207,7 @@ impl Sieve {
 /// 🔍 Pollard's rho with Brent's cycle-detection improvement and batched GCDs; returns a nontrivial
 /// factor of composite `n` (never called on primes or `n <= 3` by [`factor_u64`]'s driver).
 fn pollard_rho_u64(n: u64) -> u64 {
-    if n % 2 == 0 {
+    if n.is_multiple_of(2) {
         return 2;
     }
     let mut rng = InlineSplitMix64(n ^ 0xA5A5_A5A5_A5A5_A5A5);
@@ -216,7 +216,7 @@ fn pollard_rho_u64(n: u64) -> u64 {
         let f = |x: u128| -> u64 { ((x * x + c as u128) % n as u128) as u64 };
         let (mut x, mut y, mut d) = (2u64, 2u64, 1u64);
         let mut q = 1u128;
-        let (mut xs, mut ys) = (x, y);
+        let (mut xs, ys) = (x, y);
         let m = 128u64;
         'outer: while d == 1 {
             xs = x;
@@ -234,7 +234,7 @@ fn pollard_rho_u64(n: u64) -> u64 {
             // fallback: brute retry within the cycle
             d = 1;
             let mut xr = xs;
-            let mut yr = ys;
+            let yr = ys;
             while d == 1 {
                 xr = f(xr as u128);
                 d = gcd_u64((xr as i64 - yr as i64).unsigned_abs(), n);
@@ -254,9 +254,9 @@ pub fn factor_u64(n: u64) -> Vec<(u64, u32)> {
         if p * p > n {
             break;
         }
-        if n % p == 0 {
+        if n.is_multiple_of(p) {
             let mut count = 0u32;
-            while n % p == 0 {
+            while n.is_multiple_of(p) {
                 n /= p;
                 count += 1;
             }
@@ -419,7 +419,7 @@ pub fn moebius(n: u64) -> i8 {
     if factors.iter().any(|&(_, e)| e > 1) {
         return 0;
     }
-    if factors.len() % 2 == 0 {
+    if factors.len().is_multiple_of(2) {
         1
     } else {
         -1

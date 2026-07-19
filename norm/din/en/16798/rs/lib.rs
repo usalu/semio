@@ -24,15 +24,71 @@ pub mod part_1 {
         0.28 * (t_op_c - t_ref) + 0.001 * (rh_percent - 50.0) * (t_op_c - t_ref) - 0.15 * (v - 0.1)
     }
 
+    fn saturation_pressure_pa(t_c: f64) -> f64 {
+        611.2 * (17.67 * t_c / (t_c + 243.5)).exp()
+    }
+
+    fn solve_clothing_temp_c(t_a: f64, t_r: f64, m: f64, w: f64, i_cl: f64, f_cl: f64, v: f64) -> f64 {
+        let mut t_cl = t_a + (35.5 - t_a) / (3.5 * i_cl + 1.0);
+        for _ in 0..50 {
+            let h_c = if v < 0.1 { 2.38 * (t_cl - t_a).abs().powf(0.25) } else { 12.1 * v.sqrt() };
+            let t_cl_k = t_cl + 273.15;
+            let t_r_k = t_r + 273.15;
+            let rad = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
+            let conv = f_cl * h_c * (t_cl - t_a);
+            let t_new = 35.7 - 0.028 * (m - w) - i_cl * (rad + conv);
+            if (t_new - t_cl).abs() < 0.001 {
+                return t_new;
+            }
+            t_cl = t_new;
+        }
+        t_cl
+    }
+
+    /// 😌 ISO 7730 PMV with default activity 1.2 met and clothing 0.5 clo.
+    pub fn pmv_iso7730(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> f64 {
+        pmv_iso7730_with_activity(t_op_c, rh_percent, air_speed_m_s, 1.2, 0.5)
+    }
+
+    /// 😌 ISO 7730 PMV with explicit metabolic rate [met] and clothing [clo].
+    pub fn pmv_iso7730_with_activity(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64, metabolic_rate_met: f64, clothing_clo: f64) -> f64 {
+        let m = metabolic_rate_met * 58.15;
+        let w = 0.0;
+        let i_cl = 0.155 * clothing_clo;
+        let f_cl = if i_cl <= 0.078 { 1.0 + 1.29 * i_cl } else { 1.05 + 0.645 * i_cl };
+        let t_a = t_op_c;
+        let t_r = t_op_c;
+        let v = air_speed_m_s.max(0.0);
+        let p_a = (rh_percent / 100.0).clamp(0.0, 1.0) * saturation_pressure_pa(t_a);
+        let t_cl = solve_clothing_temp_c(t_a, t_r, m, w, i_cl, f_cl, v);
+        let h_c = if v < 0.1 { 2.38 * (t_cl - t_a).abs().powf(0.25) } else { 12.1 * v.sqrt() };
+        let t_cl_k = t_cl + 273.15;
+        let t_r_k = t_r + 273.15;
+        let e_r = 3.96e-8 * f_cl * (t_cl_k.powi(4) - t_r_k.powi(4));
+        let e_c = f_cl * h_c * (t_cl - t_a);
+        let e_sw = 3.05e-3 * (5733.0 - 6.99 * m - p_a).max(0.0);
+        let e_diff = if m > 58.15 { 0.42 * (m - 58.15) } else { 0.0 };
+        let e = e_sw + e_diff;
+        let c_res = 1.7e-5 * m * (34.0 - t_a);
+        let l = m - w - e - e_r - e_c - c_res;
+        ((0.303 * (-0.035 * m).exp() + 0.028) * l).clamp(-3.0, 3.0)
+    }
+
+    /// 📊 PPD [%] from PMV per ISO 7730.
+    pub fn ppd_from_pmv(pmv: f64) -> f64 {
+        let pmv_c = pmv.clamp(-3.0, 3.0);
+        100.0 - 95.0 * (-0.03353 * pmv_c.powi(4) - 0.2179 * pmv_c.powi(2)).exp()
+    }
+
     /// ✅ Category II comfort band: PMV within ±0.5 (EN 16798-1).
     pub fn check_pmv_comfort(t_op_c: f64, rh_percent: f64, air_speed_m_s: f64) -> CheckResult {
-        let pmv = pmv_simplified(t_op_c, rh_percent, air_speed_m_s);
+        let pmv = pmv_iso7730(t_op_c, rh_percent, air_speed_m_s);
         let limit = 0.5;
         CheckResult::from_utilization(
             ClauseId::new("EN 16798-1", "§7", "7.2.2"),
             Quantity::new(norm_core::QuantityKind::Dimensionless, pmv.abs()),
             Quantity::new(norm_core::QuantityKind::Dimensionless, limit),
-            "simplified PMV comfort",
+            "ISO 7730 PMV comfort",
             AnnexChoice::De,
         )
     }
@@ -484,6 +540,82 @@ pub fn check_residential_environment(floor_area_m2: f64, occupants: u32, ventila
     report
 }
 
+fn parse_occupancy(occupancy: &str) -> OccupancyType {
+    match occupancy.to_ascii_lowercase().as_str() {
+        "office" => OccupancyType::Office,
+        "meeting" => OccupancyType::Meeting,
+        "classroom" => OccupancyType::Classroom,
+        "retail" => OccupancyType::Retail,
+        "kitchen" => OccupancyType::Kitchen,
+        "corridor" => OccupancyType::Corridor,
+        _ => OccupancyType::Residential,
+    }
+}
+
+fn parse_duct_class(class: &str) -> part_8::DuctLeakageClass {
+    match class.to_ascii_uppercase().as_str() {
+        "A" => part_8::DuctLeakageClass::A,
+        "C" => part_8::DuctLeakageClass::C,
+        _ => part_8::DuctLeakageClass::B,
+    }
+}
+
+/// 📋 Full EN 16798 parts 1–17 plus German national annex checks.
+pub fn check_full_environment(
+    occupancy: OccupancyType,
+    floor_area_m2: f64,
+    occupants: u32,
+    persons: u32,
+    bedrooms: u32,
+    ventilation_m3_h: f64,
+    dwelling_ventilation_m3_h: f64,
+    cellar_area_m2: f64,
+    cellar_ventilation_m3_h: f64,
+    t_op_c: f64,
+    rh_percent: f64,
+    air_speed_m_s: f64,
+    co2_ppm: f64,
+    heating_eta: f64,
+    heating_eta_min: f64,
+    duct_class: part_8::DuctLeakageClass,
+    duct_leakage_m3_s_m2: f64,
+    humidification_required_kg_h: f64,
+    humidification_provided_kg_h: f64,
+    system_type: &str,
+    years_since_inspection: u32,
+    sfp_w_m3_s: f64,
+    night_setback_k: f64,
+    l_aeq_db: f64,
+    dhw_delivery_c: f64,
+    stove_type: &str,
+    kitchen_extract_m3_h: f64,
+    data_center_supply_c: f64,
+    capture_velocity_m_s: f64,
+) -> CheckReport {
+    let mut report = CheckReport::default();
+    report.push(part_1::check_operative_temperature(occupancy, t_op_c));
+    report.push(part_1::check_pmv_comfort(t_op_c, rh_percent, air_speed_m_s));
+    report.push(part_2::check_co2_level(occupancy, co2_ppm));
+    report.push(part_3::check_ventilation_rate(occupancy, persons, ventilation_m3_h));
+    report.push(part_4::check_dwelling_ventilation(floor_area_m2, bedrooms, dwelling_ventilation_m3_h));
+    report.push(part_5::check_heating_efficiency(heating_eta, heating_eta_min));
+    report.push(part_6::check_cellar_ventilation(cellar_area_m2, cellar_ventilation_m3_h));
+    report.push(part_7::check_residential_ventilation(floor_area_m2, occupants, ventilation_m3_h));
+    report.push(part_8::check_duct_leakage(duct_class, duct_leakage_m3_s_m2));
+    report.push(part_9::check_humidification_capacity(humidification_required_kg_h, humidification_provided_kg_h));
+    report.push(part_10::check_inspection_due(system_type, years_since_inspection));
+    report.push(part_11::check_specific_fan_power(occupancy, sfp_w_m3_s));
+    report.push(part_12::check_night_setback(occupancy, night_setback_k));
+    report.push(part_13::check_acoustic_level(l_aeq_db));
+    report.push(part_14::check_dhw_temperature(dhw_delivery_c));
+    report.push(part_15::check_kitchen_extract(stove_type, kitchen_extract_m3_h));
+    report.push(part_16::check_supply_air_temperature(data_center_supply_c));
+    report.push(part_17::check_capture_velocity(capture_velocity_m_s));
+    report.push(na_de::check_co2_level(occupancy, co2_ppm));
+    report.push(na_de::check_acoustic_level(l_aeq_db));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -495,11 +627,65 @@ pub struct Document {
     pub ventilation_m3_h: f64,
     pub t_op_c: f64,
     pub l_aeq_db: f64,
+    pub occupancy: String,
+    pub rh_percent: f64,
+    pub air_speed_m_s: f64,
+    pub co2_ppm: f64,
+    pub persons: u32,
+    pub bedrooms: u32,
+    pub duct_class: String,
+    pub duct_leakage_m3_s_m2: f64,
+    pub cellar_area_m2: f64,
+    pub cellar_ventilation_m3_h: f64,
+    pub dwelling_ventilation_m3_h: f64,
+    pub heating_eta: f64,
+    pub heating_eta_min: f64,
+    pub humidification_required_kg_h: f64,
+    pub humidification_provided_kg_h: f64,
+    pub system_type: String,
+    pub years_since_inspection: u32,
+    pub sfp_w_m3_s: f64,
+    pub night_setback_k: f64,
+    pub dhw_delivery_c: f64,
+    pub stove_type: String,
+    pub kitchen_extract_m3_h: f64,
+    pub data_center_supply_c: f64,
+    pub capture_velocity_m_s: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { floor_area_m2: 90.0, occupants: 3, ventilation_m3_h: 120.0, t_op_c: 21.0, l_aeq_db: 30.0 }
+        Self {
+            floor_area_m2: 90.0,
+            occupants: 3,
+            ventilation_m3_h: 90.0,
+            t_op_c: 22.0,
+            l_aeq_db: 24.0,
+            occupancy: "residential".into(),
+            rh_percent: 50.0,
+            air_speed_m_s: 0.1,
+            co2_ppm: 800.0,
+            persons: 3,
+            bedrooms: 3,
+            duct_class: "B".into(),
+            duct_leakage_m3_s_m2: 0.008,
+            cellar_area_m2: 50.0,
+            cellar_ventilation_m3_h: 15.0,
+            dwelling_ventilation_m3_h: 63.0,
+            heating_eta: 0.90,
+            heating_eta_min: 0.90,
+            humidification_required_kg_h: 2.0,
+            humidification_provided_kg_h: 2.0,
+            system_type: "central_mech".into(),
+            years_since_inspection: 1,
+            sfp_w_m3_s: 1.5,
+            night_setback_k: 3.5,
+            dhw_delivery_c: 58.0,
+            stove_type: "domestic".into(),
+            kitchen_extract_m3_h: 140.0,
+            data_center_supply_c: 22.0,
+            capture_velocity_m_s: 0.5,
+        }
     }
 }
 
@@ -507,7 +693,37 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<DinEn16798Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_residential_environment(document.floor_area_m2, document.occupants, document.ventilation_m3_h, document.t_op_c, document.l_aeq_db)
+    check_full_environment(
+        parse_occupancy(&document.occupancy),
+        document.floor_area_m2,
+        document.occupants,
+        document.persons,
+        document.bedrooms,
+        document.ventilation_m3_h,
+        document.dwelling_ventilation_m3_h,
+        document.cellar_area_m2,
+        document.cellar_ventilation_m3_h,
+        document.t_op_c,
+        document.rh_percent,
+        document.air_speed_m_s,
+        document.co2_ppm,
+        document.heating_eta,
+        document.heating_eta_min,
+        parse_duct_class(&document.duct_class),
+        document.duct_leakage_m3_s_m2,
+        document.humidification_required_kg_h,
+        document.humidification_provided_kg_h,
+        &document.system_type,
+        document.years_since_inspection,
+        document.sfp_w_m3_s,
+        document.night_setback_k,
+        document.l_aeq_db,
+        document.dhw_delivery_c,
+        &document.stove_type,
+        document.kitchen_extract_m3_h,
+        document.data_center_supply_c,
+        document.capture_velocity_m_s,
+    )
 }
 
 pub struct DinEn16798Family;
@@ -605,5 +821,23 @@ mod tests {
         let report = check_residential_environment(85.0, 3, 40.0, 21.0, 24.0);
         assert!(report.all_pass());
         assert_eq!(report.checks.len(), 3);
+    }
+
+    #[test]
+    fn pmv_iso7730_neutral_at_comfort_conditions() {
+        let pmv = part_1::pmv_iso7730(22.0, 50.0, 0.1);
+        assert!(pmv.abs() < 0.5, "pmv={pmv}");
+        let ppd = part_1::ppd_from_pmv(pmv);
+        assert!(ppd < 10.0, "ppd={ppd}");
+    }
+
+    #[test]
+    fn full_environment_evaluate_covers_all_parts() {
+        let document = Document::default();
+        let report = evaluate(&document);
+        assert!(report.checks.len() >= 19, "expected parts 1–17 + na_de, got {}", report.checks.len());
+        assert!(report.all_pass(), "checks: {:?}", report.checks);
+        let pmv = part_1::pmv_iso7730(document.t_op_c, document.rh_percent, document.air_speed_m_s);
+        assert!(pmv.abs() < 0.5);
     }
 }

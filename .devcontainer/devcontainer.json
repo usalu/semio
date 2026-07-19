@@ -38,7 +38,7 @@
   "postCreateCommand": "bash .devcontainer/post-create.sh",
   "postStartCommand": "bash .devcontainer/post-start.sh",
   "postAttachCommand": "bash .devcontainer/post-attach.sh",
-  "forwardPorts": [2507, 3000, 4000, 4321, 5678, 6006, 6274, 6277, 7474, 7687],
+  "forwardPorts": [2507, 3000, 4000, 4321, 6006, 6274, 6277, 7474, 7687],
   "portsAttributes": {
     "2507": {
       "label": "Engine API",
@@ -55,10 +55,6 @@
     "4321": {
       "label": "Docs Dev",
       "onAutoForward": "notify"
-    },
-    "5678": {
-      "label": "Python Debugger",
-      "onAutoForward": "silent"
     },
     "6006": {
       "label": "Storybook",

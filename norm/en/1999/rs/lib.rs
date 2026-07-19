@@ -214,6 +214,26 @@ pub mod part_1_5 {
 }
 // #endregion 🔖Part1_5
 
+// #region 🔖Part1_6
+pub mod part_1_6 {
+    use super::*;
+
+    /// 🔗 Directional weld throat resistance F_w,Rd [kN] per EN 1999-1-1 §8.5.
+    pub fn weld_resistance_kn(a_w_mm2: f64, f_u_mpa: f64, beta_w: f64, gamma_m: f64) -> f64 {
+        a_w_mm2 * f_u_mpa / (beta_w * gamma_m * 1000.0)
+    }
+
+    /// 🔗 Weld throat area A_w = a · l [mm²].
+    pub fn weld_throat_area_mm2(throat_mm: f64, length_mm: f64) -> f64 {
+        throat_mm * length_mm
+    }
+
+    pub fn check_welded_joint(v_ed_kn: f64, v_rd_kn: f64) -> CheckResult {
+        CheckResult::from_utilization(ClauseId::new("EN 1999-1-1", "§8.5", "8.5"), Quantity::force_kn(v_ed_kn), Quantity::force_kn(v_rd_kn), "aluminium welded joint ULS", AnnexChoice::De)
+    }
+}
+// #endregion 🔖Part1_6
+
 /// 📐 Aluminium bending resistance M_c,Rd [kNm].
 pub fn bending_resistance_knm(w_el_mm3: f64, f_0_2_mpa: f64, gamma_m: f64) -> f64 {
     w_el_mm3 * f_0_2_mpa / gamma_m / 1_000_000.0
@@ -240,6 +260,37 @@ pub fn check_aluminium_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_el_mm3:
     report
 }
 
+/// 📋 Full EN 1999 check across cross-section, buckling, bending, fire, fatigue, and welded joint parts.
+pub fn check_full_aluminium(
+    n_ed_kn: f64,
+    m_ed_knm: f64,
+    a_mm2: f64,
+    w_el_mm3: f64,
+    alloy: part_1_1::Alloy,
+    chi: f64,
+    i_t_mm4: f64,
+    l_cr_mm: f64,
+    theta_c: f64,
+    delta_sigma_ed: f64,
+    delta_sigma_c: f64,
+    fatigue_m: f64,
+    n_cycles: f64,
+    v_weld_ed_kn: f64,
+    weld_throat_mm: f64,
+    weld_length_mm: f64,
+    beta_w: f64,
+) -> CheckReport {
+    let mut report = check_aluminium_member(n_ed_kn, m_ed_knm, a_mm2, w_el_mm3, alloy, chi, i_t_mm4, l_cr_mm);
+    let theta_cr = part_1_2::critical_temperature_c(alloy.f_0_2_mpa());
+    report.push(part_1_2::check_fire_protection(theta_c, theta_cr));
+    let delta_sigma_rd = part_1_3::fatigue_strength_mpa(delta_sigma_c, fatigue_m, n_cycles);
+    report.push(part_1_3::check_fatigue(delta_sigma_ed, delta_sigma_rd));
+    let a_w = part_1_6::weld_throat_area_mm2(weld_throat_mm, weld_length_mm);
+    let v_weld_rd = part_1_6::weld_resistance_kn(a_w, alloy.f_u_mpa(), beta_w, na_de::GAMMA_M);
+    report.push(part_1_6::check_welded_joint(v_weld_ed_kn, v_weld_rd));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -254,11 +305,38 @@ pub struct Document {
     pub chi: f64,
     pub i_t_mm4: f64,
     pub l_cr_mm: f64,
+    pub theta_c: f64,
+    pub delta_sigma_ed: f64,
+    pub delta_sigma_c: f64,
+    pub fatigue_m: f64,
+    pub n_cycles: f64,
+    pub v_weld_ed_kn: f64,
+    pub weld_throat_mm: f64,
+    pub weld_length_mm: f64,
+    pub beta_w: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { n_ed_kn: 80.0, m_ed_knm: 4.0, a_mm2: 1200.0, w_el_mm3: 24_000.0, alloy: "aw6060t6".into(), chi: 0.85, i_t_mm4: 5000.0, l_cr_mm: 3000.0 }
+        Self {
+            n_ed_kn: 80.0,
+            m_ed_knm: 4.0,
+            a_mm2: 1200.0,
+            w_el_mm3: 24_000.0,
+            alloy: "aw6060t6".into(),
+            chi: 0.85,
+            i_t_mm4: 5000.0,
+            l_cr_mm: 3000.0,
+            theta_c: 200.0,
+            delta_sigma_ed: 45.0,
+            delta_sigma_c: 71.0,
+            fatigue_m: 8.0,
+            n_cycles: 500_000.0,
+            v_weld_ed_kn: 25.0,
+            weld_throat_mm: 4.0,
+            weld_length_mm: 120.0,
+            beta_w: 0.63,
+        }
     }
 }
 
@@ -273,7 +351,25 @@ fn parse_alloy(value: &str) -> part_1_1::Alloy {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_aluminium_member(document.n_ed_kn, document.m_ed_knm, document.a_mm2, document.w_el_mm3, parse_alloy(&document.alloy), document.chi, document.i_t_mm4, document.l_cr_mm)
+    check_full_aluminium(
+        document.n_ed_kn,
+        document.m_ed_knm,
+        document.a_mm2,
+        document.w_el_mm3,
+        parse_alloy(&document.alloy),
+        document.chi,
+        document.i_t_mm4,
+        document.l_cr_mm,
+        document.theta_c,
+        document.delta_sigma_ed,
+        document.delta_sigma_c,
+        document.fatigue_m,
+        document.n_cycles,
+        document.v_weld_ed_kn,
+        document.weld_throat_mm,
+        document.weld_length_mm,
+        document.beta_w,
+    )
 }
 
 pub struct En1999Family;
@@ -339,5 +435,36 @@ mod tests {
         let i_t = part_1_5::rectangular_rhs_i_t_mm4(100.0, 50.0, 3.0);
         let report = check_aluminium_member(80.0, 12.0, 1200.0, 15_000.0, alloy, 0.8, i_t, 3000.0);
         assert_eq!(report.checks.len(), 3);
+    }
+
+    #[test]
+    fn weld_resistance_worked() {
+        let a_w = part_1_6::weld_throat_area_mm2(4.0, 120.0);
+        assert!((a_w - 480.0).abs() < 1e-9);
+        let v_rd = part_1_6::weld_resistance_kn(a_w, 215.0, 0.63, na_de::GAMMA_M);
+        assert!((v_rd - 148.92).abs() < 1.0);
+    }
+
+    #[test]
+    fn fire_critical_temperature_6060() {
+        let theta_cr = part_1_2::critical_temperature_c(190.0);
+        assert!((theta_cr - 246.0).abs() < 0.1);
+        let k_theta = part_1_2::strength_reduction_factor(300.0, theta_cr);
+        assert!(k_theta < 1.0);
+    }
+
+    #[test]
+    fn full_aluminium_worked_example() {
+        let alloy = part_1_1::Alloy::Aw6060T6;
+        let i_t = part_1_5::rectangular_rhs_i_t_mm4(100.0, 50.0, 3.0);
+        let report = check_full_aluminium(80.0, 4.0, 1200.0, 24_000.0, alloy, 0.85, i_t, 3000.0, 200.0, 45.0, 71.0, 8.0, 500_000.0, 25.0, 4.0, 120.0, 0.63);
+        assert_eq!(report.checks.len(), 6);
+        assert!(report.checks[4].utilization < 1.0);
+    }
+
+    #[test]
+    fn evaluate_runs_all_parts() {
+        let report = evaluate(&Document::default());
+        assert_eq!(report.checks.len(), 6);
     }
 }

@@ -79,6 +79,7 @@ pub struct BalancingInputs {
     pub system_losses_kwh: f64,
     pub renewable_kwh: f64,
     pub annual_limit_kwh: f64,
+    pub energy_carrier: String,
 }
 
 impl BalancingInputs {
@@ -118,6 +119,7 @@ pub fn from_building(wall_layers: &[Layer], floor_area_m2: f64, occupants: u32, 
         system_losses_kwh: 8.0 * floor_area_m2,
         renewable_kwh: 15.0 * floor_area_m2,
         annual_limit_kwh: 75.0 * floor_area_m2,
+        energy_carrier: "natural_gas".into(),
     })
 }
 
@@ -169,7 +171,7 @@ fn primary_energy_kwh(inputs: &BalancingInputs) -> f64 {
     let q_h = net_heating_demand_kwh(inputs);
     let q_c = cooling_demand_kwh(inputs);
     let q_w = dhw_demand_kwh(inputs);
-    let f_p = 1.1;
+    let f_p = primary_energy_factor(&inputs.energy_carrier);
     (q_h + q_c + q_w) * f_p + inputs.system_losses_kwh - inputs.renewable_kwh
 }
 
@@ -178,6 +180,41 @@ fn automation_factor(inputs: &BalancingInputs) -> f64 {
         UseClass::Residential => 0.95,
         UseClass::Office => 0.90,
         UseClass::School => 0.92,
+    }
+}
+
+/// ⚡ Primary energy factor f_p per energy carrier (DIN V 18599-10 Table 12).
+pub fn primary_energy_factor(carrier: &str) -> f64 {
+    match carrier {
+        "natural_gas" => 1.1,
+        "heating_oil" => 1.1,
+        "lpg" => 1.1,
+        "coal" => 1.1,
+        "district_heat" => 0.7,
+        "district_heat_chp" => 0.6,
+        "electricity_grid" => 1.8,
+        "electricity_renewable" => 0.0,
+        "biomass" => 0.5,
+        "heat_pump_electricity" => 1.8,
+        _ => 1.1,
+    }
+}
+
+/// 📐 Reference area factor f_ref by use class (DIN V 18599-12 Table 2).
+pub fn reference_area_factor(use_class: UseClass) -> f64 {
+    match use_class {
+        UseClass::Residential => 1.00,
+        UseClass::Office => 1.20,
+        UseClass::School => 1.10,
+    }
+}
+
+/// 📊 Tabular specific primary energy q_P,tab [kWh/(m²a)] (DIN V 18599-12 Table 3).
+pub fn tabular_specific_primary_energy_kwh_m2(use_class: UseClass) -> f64 {
+    match use_class {
+        UseClass::Residential => 100.0,
+        UseClass::Office => 95.0,
+        UseClass::School => 85.0,
     }
 }
 
@@ -415,9 +452,10 @@ pub mod part_11 {
 pub mod part_12 {
     use super::*;
 
-    /// 📊 Tabular method primary energy reference [kWh/a] (DIN V 18599-12).
+    /// 📊 Tabular method primary energy Q_P,tab [kWh/a] (DIN V 18599-12).
     pub fn tabular_primary_energy_kwh(inputs: &BalancingInputs) -> f64 {
-        primary_energy_kwh(inputs)
+        let a_ref = inputs.heated_area_m2 * reference_area_factor(inputs.use_class);
+        tabular_specific_primary_energy_kwh_m2(inputs.use_class) * a_ref * automation_factor(inputs)
     }
 
     pub fn check(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
@@ -439,10 +477,15 @@ pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError
     report.push(part_1::check(inputs)?);
     report.push(part_2::check(inputs)?);
     report.push(part_3::check(inputs)?);
+    report.push(part_4::check(inputs)?);
+    report.push(part_5::check(inputs)?);
+    report.push(part_6::check(inputs)?);
     report.push(part_7::check(inputs)?);
     report.push(part_8::check(inputs)?);
     report.push(part_9::check(inputs)?);
     report.push(part_10::check(inputs)?);
+    report.push(part_11::check(inputs)?);
+    report.push(part_12::check(inputs)?);
     Ok(report)
 }
 
@@ -561,12 +604,50 @@ mod tests {
     fn balance_annual_includes_all_parts() {
         let inputs = reference_100m2_inputs();
         let report = balance_annual(&inputs).unwrap();
-        assert!(report.checks.len() >= 7);
+        assert_eq!(report.checks.len(), 12);
+    }
+
+    #[test]
+    fn part_4_internal_gains_positive() {
+        let inputs = reference_100m2_inputs();
+        let q_i = part_4::internal_gains_kwh(&inputs);
+        assert!(q_i > 1000.0);
+    }
+
+    #[test]
+    fn part_5_solar_gains_positive() {
+        let inputs = reference_100m2_inputs();
+        let q_s = part_5::solar_gains_kwh(&inputs);
+        assert!(q_s > 0.0, "q_s={q_s}");
+    }
+
+    #[test]
+    fn part_6_system_losses_scale_with_area() {
+        let inputs = reference_100m2_inputs();
+        let q_sys = part_6::system_losses_kwh(&inputs);
+        assert!((q_sys - 800.0).abs() < 1e-9);
     }
 
     #[test]
     fn part_11_automation_factor_residential() {
         let inputs = reference_100m2_inputs();
         assert!((part_11::automation_factor(&inputs) - 0.95).abs() < 1e-9);
+    }
+
+    #[test]
+    fn part_12_tabular_distinct_from_part_10() {
+        let inputs = reference_100m2_inputs();
+        let q_p = part_10::primary_energy_kwh(&inputs);
+        let q_tab = part_12::tabular_primary_energy_kwh(&inputs);
+        assert!((q_tab - 9500.0).abs() < 1.0, "q_tab={q_tab}");
+        assert!((q_p - q_tab).abs() > 100.0, "tabular must differ from detailed: q_p={q_p}, q_tab={q_tab}");
+    }
+
+    #[test]
+    fn primary_energy_factor_table_cited() {
+        assert!((primary_energy_factor("natural_gas") - 1.1).abs() < 1e-9);
+        assert!((primary_energy_factor("district_heat") - 0.7).abs() < 1e-9);
+        assert!((primary_energy_factor("electricity_grid") - 1.8).abs() < 1e-9);
+        assert!((reference_area_factor(UseClass::Office) - 1.20).abs() < 1e-9);
     }
 }

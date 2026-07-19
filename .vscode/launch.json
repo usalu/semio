@@ -193,16 +193,14 @@
     },
     {
       "name": "🛠️dev🔬coda🤖mcp",
-      "type": "node",
+      "type": "node-terminal",
       "request": "launch",
-      "runtimeExecutable": "uv",
-      "runtimeArgs": ["--directory", "coda/assistant", "run", "main.py", "--mcp-stdio"],
+      "command": "uv --directory coda/assistant run main.py --mcp-stdio",
       "env": {
         "MCP_AUTO_OPEN_ENABLED": "false",
         "MCP_PROXY_AUTH_TOKEN": "repo-mcp-token"
       },
       "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
       "presentation": {
         "group": "3_dev",
         "order": 40
@@ -2392,6 +2390,17 @@
       }
     },
     {
+      "name": "🛠️dev🕸️os-run",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts os run",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 387.1
+      }
+    },
+    {
       "name": "🛠️dev✏️draw⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -2826,6 +2835,17 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.78
+      }
+    },
+    {
+      "name": "🧪test🌀mathematical-entropy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/math-entropy:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.79
       }
     },
     {

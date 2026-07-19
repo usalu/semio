@@ -1,0 +1,13 @@
+{
+  "title": "Norm EN 1994-1999 Feature Completeness",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Implement Norm feature completeness for EN 1994, 1995, 1996, 1997, 1999, and polish EN 1992. Expand evaluate(), Document fields, check_full_* aggregators, and numeric worked-example tests in each crate lib.rs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2154"
+  },
+  "goal": "🎯norm",
+  "sessions": [
+    "⚪73ca99c1cf6047b6951c2512eac68c75"
+  ]
+}

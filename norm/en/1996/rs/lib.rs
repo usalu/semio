@@ -156,21 +156,102 @@ pub fn check_masonry_wall(n_ed_kn: f64, area_mm2: f64, f_k_mpa: f64, gamma_m: f6
     report
 }
 
+fn parse_masonry_unit(value: &str) -> MasonryUnit {
+    match value.to_ascii_lowercase().as_str() {
+        "calcium_silicate" | "calcium silicate" => MasonryUnit::CalciumSilicate,
+        "aac" => MasonryUnit::Aac,
+        _ => MasonryUnit::Clay,
+    }
+}
+
+/// 📋 Full EN 1996 check across flexure, compression, shear, sliding, fire wall, and retaining parts.
+pub fn check_full_masonry(
+    m_ed_knm: f64,
+    n_ed_kn: f64,
+    v_ed_kn: f64,
+    h_ed_kn: f64,
+    z_mm3: f64,
+    area_mm2: f64,
+    shear_area_mm2: f64,
+    f_k_mpa: f64,
+    f_vk_mpa: f64,
+    gamma_m: f64,
+    mu: f64,
+    wall_thickness_mm: f64,
+    fire_resistance_min: u32,
+    unit: MasonryUnit,
+    gamma_soil_kn_m3: f64,
+    wall_height_m: f64,
+    phi_deg: f64,
+    m_rd_knm: f64,
+) -> CheckReport {
+    let f_d = part_1_1::design_strength_mpa(f_k_mpa, gamma_m);
+    let f_vd = part_1_1::shear_design_strength_mpa(f_vk_mpa, gamma_m);
+    let sigma = n_ed_kn * 1000.0 / area_mm2;
+    let m_rd_flex = part_1_1::flexural_resistance_knm(z_mm3, f_d);
+    let v_rd = part_1_1::shear_resistance_kn(shear_area_mm2, f_vd);
+    let h_rd = part_1_1::sliding_resistance_kn(mu, n_ed_kn, f_vd, shear_area_mm2);
+    let annex = AnnexChoice::De;
+    let mut report = CheckReport::default();
+    report.push(part_1_1::check_flexure(m_ed_knm, m_rd_flex, annex));
+    report.push(part_1_1::check_compression(sigma, f_d, annex));
+    report.push(part_1_1::check_shear(v_ed_kn, v_rd, annex));
+    report.push(part_1_1::check_sliding(h_ed_kn, h_rd, annex));
+    let required_fire = part_1_2::required_wall_thickness_mm(fire_resistance_min, unit);
+    report.push(part_1_2::check_fire_wall(wall_thickness_mm, required_fire));
+    let m_overturn = part_3::retaining_wall_overturning_moment_knm(gamma_soil_kn_m3, wall_height_m, phi_deg);
+    report.push(part_3::check_retaining_wall(m_overturn, m_rd_knm));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Document {
+    pub m_ed_knm: f64,
     pub n_ed_kn: f64,
+    pub v_ed_kn: f64,
+    pub h_ed_kn: f64,
+    pub z_mm3: f64,
     pub area_mm2: f64,
+    pub shear_area_mm2: f64,
     pub f_k_mpa: f64,
+    pub f_vk_mpa: f64,
     pub gamma_m: f64,
+    pub mu: f64,
+    pub wall_thickness_mm: f64,
+    pub fire_resistance_min: u32,
+    pub unit: String,
+    pub gamma_soil_kn_m3: f64,
+    pub wall_height_m: f64,
+    pub phi_deg: f64,
+    pub m_rd_knm: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { n_ed_kn: 200.0, area_mm2: 500_000.0, f_k_mpa: 5.0, gamma_m: 2.0 }
+        Self {
+            m_ed_knm: 8.0,
+            n_ed_kn: 200.0,
+            v_ed_kn: 35.0,
+            h_ed_kn: 20.0,
+            z_mm3: 8_000_000.0,
+            area_mm2: 500_000.0,
+            shear_area_mm2: 300_000.0,
+            f_k_mpa: 5.0,
+            f_vk_mpa: 0.15,
+            gamma_m: 2.0,
+            mu: 0.4,
+            wall_thickness_mm: 100.0,
+            fire_resistance_min: 60,
+            unit: "clay".into(),
+            gamma_soil_kn_m3: 18.0,
+            wall_height_m: 3.0,
+            phi_deg: 30.0,
+            m_rd_knm: 25.0,
+        }
     }
 }
 
@@ -178,7 +259,26 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1996Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_masonry_wall(document.n_ed_kn, document.area_mm2, document.f_k_mpa, document.gamma_m)
+    check_full_masonry(
+        document.m_ed_knm,
+        document.n_ed_kn,
+        document.v_ed_kn,
+        document.h_ed_kn,
+        document.z_mm3,
+        document.area_mm2,
+        document.shear_area_mm2,
+        document.f_k_mpa,
+        document.f_vk_mpa,
+        document.gamma_m,
+        document.mu,
+        document.wall_thickness_mm,
+        document.fire_resistance_min,
+        parse_masonry_unit(&document.unit),
+        document.gamma_soil_kn_m3,
+        document.wall_height_m,
+        document.phi_deg,
+        document.m_rd_knm,
+    )
 }
 
 pub struct En1996Family;
@@ -216,5 +316,33 @@ mod tests {
     fn masonry_wall_e2e() {
         let report = check_masonry_wall(200.0, 500_000.0, 5.0, 2.0);
         assert!(!report.checks.is_empty());
+    }
+
+    #[test]
+    fn active_earth_pressure_rankine() {
+        let ka = part_3::active_earth_pressure_coefficient(30.0);
+        assert!((ka - 0.111).abs() < 0.01);
+        let p_a = part_3::active_earth_pressure_kn_m(18.0, 3.0, 30.0);
+        assert!((p_a - 9.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn fire_wall_r60_clay() {
+        let required = part_1_2::required_wall_thickness_mm(60, MasonryUnit::Clay);
+        assert!((required - 90.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn full_masonry_worked_example() {
+        let report = check_full_masonry(8.0, 200.0, 35.0, 20.0, 8_000_000.0, 500_000.0, 300_000.0, 5.0, 0.15, 2.0, 0.4, 100.0, 60, MasonryUnit::Clay, 18.0, 3.0, 30.0, 25.0);
+        assert_eq!(report.checks.len(), 6);
+        let m_overturn = part_3::retaining_wall_overturning_moment_knm(18.0, 3.0, 30.0);
+        assert!((m_overturn - 9.0).abs() < 0.5);
+    }
+
+    #[test]
+    fn evaluate_runs_all_parts() {
+        let report = evaluate(&Document::default());
+        assert_eq!(report.checks.len(), 6);
     }
 }

@@ -369,6 +369,38 @@ pub fn check_floor_actions(area_m2: f64, category: ImposedCategory, wind_zone_vb
     report
 }
 
+/// 📋 Full EN 1991 action checks across parts 1-1 through 1-7 and parts 2–4.
+pub fn check_full_actions(document: &Document) -> CheckReport {
+    let annex: &dyn NationalAnnex = if document.use_de_na { &NaDe } else { &NaEn };
+    let mut report = CheckReport::default();
+    report.push(part_1_1::check_imposed(document.area_m2, document.category, annex));
+    let s = part_1_3::roof_snow_load(part_1_3::ground_snow_load_zone(document.snow_zone), 0.8);
+    report.push(part_1_3::check_snow(s, 1.2, annex));
+    let c_e = part_1_4::exposure_factor(10.0, part_1_4::TerrainCategory::II);
+    let q_p = part_1_4::peak_velocity_pressure(1.25, document.wind_zone_vb, c_e);
+    let c_sc_d = part_1_4::structural_factor(document.c_s, document.c_d);
+    let w_p = part_1_4::wind_pressure(q_p, 0.8, 0.2) * c_sc_d;
+    report.push(part_1_4::check_wind(w_p, 1.5, annex));
+    report.push(part_1_5::check_temperature_action(document.delta_t_k, 50.0));
+    let q_const = part_1_6::construction_load_kn_m2(&document.construction_activity);
+    report.push(part_1_6::check_construction_load(q_const, 5.0));
+    let impact = part_1_7::impact_force_kn(document.accidental_mass_t, document.accidental_speed_km_h);
+    report.push(CheckResult::from_utilization(
+        ClauseId::new("EN 1991-1-7", "Annex B", "B.2"),
+        Quantity::force_kn(impact),
+        Quantity::force_kn(500.0),
+        "accidental impact",
+        annex.choice(),
+    ));
+    let lane_load = part_2::lm1_tandem_kn(document.bridge_lane);
+    report.push(part_2::check_imposed_bridge(lane_load, lane_load * 0.9));
+    let wheel = part_3::crane_vertical_wheel_load(&document.crane_class);
+    report.push(part_3::check_crane_load(wheel, wheel * 1.1));
+    let silo_p = part_4::silo_wall_pressure_kpa(document.silo_bulk_density_kn_m3, document.silo_height_m, document.silo_k);
+    report.push(part_4::check_silo_pressure(silo_p, 100.0));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -380,11 +412,39 @@ pub struct Document {
     pub wind_zone_vb: f64,
     pub snow_zone: u8,
     pub use_de_na: bool,
+    pub delta_t_k: f64,
+    pub construction_activity: String,
+    pub accidental_mass_t: f64,
+    pub accidental_speed_km_h: f64,
+    pub bridge_lane: u8,
+    pub crane_class: String,
+    pub silo_bulk_density_kn_m3: f64,
+    pub silo_height_m: f64,
+    pub silo_k: f64,
+    pub c_s: f64,
+    pub c_d: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { area_m2: 50.0, category: ImposedCategory::B, wind_zone_vb: 25.0, snow_zone: 2, use_de_na: true }
+        Self {
+            area_m2: 50.0,
+            category: ImposedCategory::B,
+            wind_zone_vb: 25.0,
+            snow_zone: 2,
+            use_de_na: true,
+            delta_t_k: 30.0,
+            construction_activity: "scaffolding".into(),
+            accidental_mass_t: 30.0,
+            accidental_speed_km_h: 80.0,
+            bridge_lane: 1,
+            crane_class: "HC2".into(),
+            silo_bulk_density_kn_m3: 8.0,
+            silo_height_m: 12.0,
+            silo_k: 0.6,
+            c_s: 1.0,
+            c_d: 1.0,
+        }
     }
 }
 
@@ -392,7 +452,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1991Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_floor_actions(document.area_m2, document.category, document.wind_zone_vb, document.snow_zone, document.use_de_na)
+    check_full_actions(document)
 }
 
 pub struct En1991Family;
@@ -438,9 +498,29 @@ mod tests {
     }
 
     #[test]
-    fn floor_actions_de_na_e2e() {
-        let report = check_floor_actions(50.0, ImposedCategory::B, 25.0, 2, true);
-        assert!(!report.checks.is_empty());
+    fn full_actions_de_na_numeric() {
+        let doc = Document::default();
+        let annex = NaDe;
+        let report = check_full_actions(&doc);
+        assert_eq!(report.checks.len(), 9);
+        let imposed_q = part_1_1::imposed_load_kn_m2(ImposedCategory::B) * doc.area_m2 * annex.psi_0("office");
+        assert!((report.checks[0].computed.value / 1000.0 - imposed_q).abs() < 1e-6);
+        let snow = part_1_3::roof_snow_load(part_1_3::ground_snow_load_zone(2), 0.8);
+        assert!((report.checks[1].computed.value - snow * 1000.0).abs() < 1e-6);
+        let c_e = part_1_4::exposure_factor(10.0, part_1_4::TerrainCategory::II);
+        let q_p = part_1_4::peak_velocity_pressure(1.25, 25.0, c_e);
+        let w_p = part_1_4::wind_pressure(q_p, 0.8, 0.2) * part_1_4::structural_factor(1.0, 1.0);
+        assert!((report.checks[2].computed.value - w_p * 1000.0).abs() < 1e-3);
+        assert!((report.checks[3].computed.value - doc.delta_t_k).abs() < 1e-6);
+        assert!((report.checks[4].computed.value / 1000.0 - 1.0).abs() < 1e-6);
+        let impact = part_1_7::impact_force_kn(30.0, 80.0);
+        assert!((report.checks[5].computed.value / 1000.0 - impact).abs() < 1e-6);
+        assert!((impact - 7.407407407407407).abs() < 1e-6);
+        assert!((report.checks[6].computed.value / 1000.0 - 270.0).abs() < 1e-6);
+        assert!((report.checks[7].computed.value / 1000.0 - 100.0).abs() < 1e-6);
+        let silo_p = part_4::silo_wall_pressure_kpa(8.0, 12.0, 0.6);
+        assert!((report.checks[8].computed.value - silo_p * 1000.0).abs() < 1e-6);
+        assert!(report.all_pass());
     }
 
     #[test]

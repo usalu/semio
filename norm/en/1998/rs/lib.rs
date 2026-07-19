@@ -368,13 +368,63 @@ pub fn check_building_seismic(
     let q = system.q();
     let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, t1_s);
     let s_d = part_1::design_spectrum_sd(s_e, gamma_i, q);
-    let v_b = part_1::base_shear_kn(s_e, mass_t, gamma_i, q);
-    let _ = s_d;
+    let v_b = part_1::base_shear_from_design_kn(s_d, mass_t);
     let rho = part_1::redundancy_factor(multiple_resisting_systems);
     let drift_limit = part_1::drift_limit_mm(height_m, rho, part_1::DuctilityClass::Dcm, 1.0);
     let mut report = CheckReport::default();
     report.push(part_1::check_base_shear(v_b, v_rd_kn, annex));
     report.push(part_1::check_drift(drift_mm, drift_limit, annex));
+    report
+}
+
+/// 📋 Full seismic check across EN 1998 parts 1 through 6.
+pub fn check_full_seismic(document: &Document) -> CheckReport {
+    let zone = parse_seismic_zone(document.seismic_zone);
+    let ground = parse_ground_type(&document.ground_type);
+    let importance = parse_importance(&document.importance_class);
+    let system = parse_structural_system(&document.structural_system);
+    let (tb, tc, td, s) = ground.spectrum_params();
+    let a_g = zone.a_g();
+    let gamma_i = importance.gamma_i();
+    let q = system.q();
+
+    let mut report = check_building_seismic(zone, ground, importance, system, document.t1_s, document.mass_t, document.v_rd_kn, document.drift_mm, document.height_m, document.multiple_resisting_systems);
+
+    let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, document.t1_s);
+    let q_isol = part_2::isolation_reduction_factor(document.period_ratio);
+    let s_d_isol = part_2::isolated_spectrum_sd(s_e, gamma_i, q_isol);
+    let v_bridge = part_1::base_shear_from_design_kn(s_d_isol, document.mass_t);
+    report.push(part_2::check_bridge_seismic(v_bridge, document.bridge_v_rd_kn));
+    report.push(part_2::check_isolation_bearing(document.bearing_d_ed_mm, document.bearing_d_rd_mm));
+
+    let h_over_r = document.silo_height_m / document.silo_radius_m;
+    let mu_i = part_3::impulsive_mass_ratio(h_over_r);
+    let mu_c = part_3::convective_mass_ratio(h_over_r);
+    let s_d = part_1::design_spectrum_sd(s_e, gamma_i, q);
+    let v_i = part_1::base_shear_from_design_kn(s_d, document.mass_t * mu_i);
+    let t_c = part_3::convective_period_s(document.silo_radius_m);
+    let s_e_c = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, t_c);
+    let s_d_c = part_1::design_spectrum_sd(s_e_c, gamma_i, q);
+    let v_c = part_1::base_shear_from_design_kn(s_d_c, document.mass_t * mu_c);
+    let v_silo = part_3::silo_base_shear_kn(v_i, v_c);
+    report.push(part_3::check_silo_wall(v_silo, document.silo_n_rd_kn));
+    report.push(part_3::check_silo_anchor(document.silo_v_ed_kn, document.silo_v_rd_kn));
+
+    report.push(part_4::check_tower_overturning(document.tower_m_ed_knm, document.tower_m_rd_knm));
+
+    let k_h = part_5::dam_seismic_coefficient(a_g, s, gamma_i);
+    let v_dam = part_5::dam_seismic_force_kn(k_h, document.dam_mass_t);
+    let s_ed = v_dam / document.dam_s_rd_kn.max(1.0);
+    report.push(part_5::check_dam_stability(s_ed, 1.0));
+
+    let bearing_red = part_6::bearing_reduction_factor(a_g);
+    let p_rd = document.foundation_p_rd_kpa * bearing_red;
+    let p_ed = part_6::seismic_bearing_pressure_kpa(v_dam, document.foundation_area_m2);
+    report.push(part_6::check_foundation_bearing(p_ed, p_rd));
+    report.push(part_6::check_foundation_sliding(document.foundation_h_ed_kn, document.foundation_h_rd_kn));
+
+    let _ = part_6::radiation_damping(part_6::stiffness_ratio(document.k_foundation, document.k_soil));
+
     report
 }
 
@@ -394,11 +444,60 @@ pub struct Document {
     pub drift_mm: f64,
     pub height_m: f64,
     pub multiple_resisting_systems: bool,
+    pub period_ratio: f64,
+    pub bridge_v_rd_kn: f64,
+    pub bearing_d_ed_mm: f64,
+    pub bearing_d_rd_mm: f64,
+    pub silo_height_m: f64,
+    pub silo_radius_m: f64,
+    pub silo_n_rd_kn: f64,
+    pub silo_v_ed_kn: f64,
+    pub silo_v_rd_kn: f64,
+    pub tower_m_ed_knm: f64,
+    pub tower_m_rd_knm: f64,
+    pub dam_mass_t: f64,
+    pub dam_s_rd_kn: f64,
+    pub foundation_area_m2: f64,
+    pub foundation_p_rd_kpa: f64,
+    pub foundation_h_ed_kn: f64,
+    pub foundation_h_rd_kn: f64,
+    pub k_foundation: f64,
+    pub k_soil: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { seismic_zone: 2, ground_type: "b".into(), importance_class: "cc2".into(), structural_system: "moment_frame_dch".into(), t1_s: 0.3, mass_t: 500.0, v_rd_kn: 800.0, drift_mm: 20.0, height_m: 12.0, multiple_resisting_systems: true }
+        Self {
+            seismic_zone: 2,
+            ground_type: "b".into(),
+            importance_class: "cc2".into(),
+            structural_system: "moment_frame_dch".into(),
+            t1_s: 0.3,
+            mass_t: 500.0,
+            v_rd_kn: 800.0,
+            drift_mm: 20.0,
+            height_m: 12.0,
+            multiple_resisting_systems: true,
+            period_ratio: 2.0,
+            bridge_v_rd_kn: 600.0,
+            bearing_d_ed_mm: 120.0,
+            bearing_d_rd_mm: 250.0,
+            silo_height_m: 10.0,
+            silo_radius_m: 5.0,
+            silo_n_rd_kn: 500.0,
+            silo_v_ed_kn: 180.0,
+            silo_v_rd_kn: 300.0,
+            tower_m_ed_knm: 1200.0,
+            tower_m_rd_knm: 2500.0,
+            dam_mass_t: 50_000.0,
+            dam_s_rd_kn: 2000.0,
+            foundation_area_m2: 100.0,
+            foundation_p_rd_kpa: 500.0,
+            foundation_h_ed_kn: 150.0,
+            foundation_h_rd_kn: 400.0,
+            k_foundation: 500_000.0,
+            k_soil: 200_000.0,
+        }
     }
 }
 
@@ -446,18 +545,7 @@ fn parse_structural_system(value: &str) -> part_1::StructuralSystem {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_building_seismic(
-        parse_seismic_zone(document.seismic_zone),
-        parse_ground_type(&document.ground_type),
-        parse_importance(&document.importance_class),
-        parse_structural_system(&document.structural_system),
-        document.t1_s,
-        document.mass_t,
-        document.v_rd_kn,
-        document.drift_mm,
-        document.height_m,
-        document.multiple_resisting_systems,
-    )
+    check_full_seismic(document)
 }
 
 pub struct En1998Family;
@@ -511,6 +599,27 @@ mod tests {
         assert!((rho - 1.3).abs() < 1e-9);
         let limit = part_1::drift_limit_mm(12.0, rho, part_1::DuctilityClass::Dcm, 1.0);
         assert!((limit - 109.2).abs() < 0.1);
+    }
+
+    #[test]
+    fn building_seismic_base_shear_uses_sd() {
+        let a_g = na_de::SeismicZone::Zone2.a_g();
+        let (tb, tc, td, s) = na_de::GroundType::B.spectrum_params();
+        let s_e = part_1::elastic_response_spectrum_type1(a_g, s, tb, tc, td, 0.3);
+        let gamma_i = part_1::ImportanceClass::Cc2.gamma_i();
+        let q = part_1::StructuralSystem::MomentFrameDch.q();
+        let s_d = part_1::design_spectrum_sd(s_e, gamma_i, q);
+        let expected_v_b = part_1::base_shear_from_design_kn(s_d, 500.0);
+
+        let report = check_building_seismic(na_de::SeismicZone::Zone2, na_de::GroundType::B, part_1::ImportanceClass::Cc2, part_1::StructuralSystem::MomentFrameDch, 0.3, 500.0, 800.0, 20.0, 12.0, true);
+        assert_eq!(report.checks.len(), 2);
+        assert!((report.checks[0].computed.value - expected_v_b * 1000.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn full_seismic_e2e() {
+        let report = check_full_seismic(&Document::default());
+        assert_eq!(report.checks.len(), 10);
     }
 
     #[test]

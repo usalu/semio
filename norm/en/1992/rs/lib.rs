@@ -109,6 +109,21 @@ pub mod part_1_1 {
     pub fn check_deflection(delta_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
         CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§7.4", "7.4"), Quantity::length_m(delta_mm / 1000.0), Quantity::length_m(limit_mm / 1000.0), "deflection SLS", annex)
     }
+
+    /// 🎯 Transfer stress σ_c = P / A_c [MPa] at prestressing.
+    pub fn prestress_transfer_stress_mpa(p_kn: f64, a_c_mm2: f64) -> f64 {
+        p_kn * 1000.0 / a_c_mm2
+    }
+
+    /// 🎯 Maximum transfer stress limit 0.6·f_ck per EN 1992-1-1 §5.10.9.
+    pub fn prestress_transfer_limit_mpa(f_ck_mpa: f64) -> f64 {
+        0.6 * f_ck_mpa
+    }
+
+    pub fn check_prestress_transfer(sigma_c_mpa: f64, f_ck_mpa: f64, annex: AnnexChoice) -> CheckResult {
+        let limit = prestress_transfer_limit_mpa(f_ck_mpa);
+        CheckResult::from_utilization(ClauseId::new("EN 1992-1-1", "§5.10", "5.10"), Quantity::stress_mpa(sigma_c_mpa), Quantity::stress_mpa(limit), "prestress transfer ULS", annex)
+    }
 }
 // #endregion 🔖Part1_1
 
@@ -219,6 +234,16 @@ pub fn check_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f6
     report
 }
 
+/// 📋 Full EN 1992 RC beam check with optional prestress transfer.
+pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64, rho_l: f64, n_ed_kn: f64, p_kn: f64, a_c_mm2: f64) -> CheckReport {
+    let mut report = check_rc_beam(m_ed_knm, v_ed_kn, f_ck, b_mm, d_mm, a_s_mm2, f_yk, rho_l, n_ed_kn);
+    if p_kn > 0.0 {
+        let sigma_c = part_1_1::prestress_transfer_stress_mpa(p_kn, a_c_mm2);
+        report.push(part_1_1::check_prestress_transfer(sigma_c, f_ck, AnnexChoice::De));
+    }
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -234,11 +259,31 @@ pub struct Document {
     pub f_yk: f64,
     pub rho_l: f64,
     pub n_ed_kn: f64,
+    pub p_kn: f64,
+    pub a_c_mm2: f64,
+    pub use_fem: bool,
+    pub span_m: f64,
+    pub udl_kn_m: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { m_ed_knm: 120.0, v_ed_kn: 80.0, f_ck: 30.0, b_mm: 300.0, d_mm: 450.0, a_s_mm2: 1200.0, f_yk: 500.0, rho_l: 0.01, n_ed_kn: 0.0 }
+        Self {
+            m_ed_knm: 120.0,
+            v_ed_kn: 80.0,
+            f_ck: 30.0,
+            b_mm: 300.0,
+            d_mm: 450.0,
+            a_s_mm2: 1200.0,
+            f_yk: 500.0,
+            rho_l: 0.01,
+            n_ed_kn: 0.0,
+            p_kn: 0.0,
+            a_c_mm2: 135_000.0,
+            use_fem: false,
+            span_m: 6.0,
+            udl_kn_m: 20.0,
+        }
     }
 }
 
@@ -246,7 +291,22 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1992Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_rc_beam(document.m_ed_knm, document.v_ed_kn, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l, document.n_ed_kn)
+    if document.use_fem {
+        return check_rc_beam_from_fem(document.span_m, document.udl_kn_m, document.f_ck, document.b_mm, document.d_mm, document.a_s_mm2, document.f_yk, document.rho_l).unwrap_or_else(|_| CheckReport::default());
+    }
+    check_full_rc_beam(
+        document.m_ed_knm,
+        document.v_ed_kn,
+        document.f_ck,
+        document.b_mm,
+        document.d_mm,
+        document.a_s_mm2,
+        document.f_yk,
+        document.rho_l,
+        document.n_ed_kn,
+        document.p_kn,
+        document.a_c_mm2,
+    )
 }
 
 pub struct En1992Family;
@@ -361,5 +421,34 @@ mod tests {
         assert!(!report.checks.is_empty());
         let m_ed = report.checks[0].computed.value / 1_000_000.0;
         assert!((m_ed - 90.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn prestress_transfer_c30() {
+        let sigma = part_1_1::prestress_transfer_stress_mpa(800.0, 135_000.0);
+        assert!((sigma - 5.93).abs() < 0.1);
+        let limit = part_1_1::prestress_transfer_limit_mpa(30.0);
+        assert!((limit - 18.0).abs() < 1e-9);
+        let report = check_full_rc_beam(120.0, 80.0, 30.0, 300.0, 450.0, 1200.0, 500.0, 0.01, 0.0, 800.0, 135_000.0);
+        assert_eq!(report.checks.len(), 3);
+        assert!(report.checks[2].utilization < 1.0);
+    }
+
+    #[test]
+    fn evaluate_fem_path() {
+        let mut doc = Document::default();
+        doc.use_fem = true;
+        let report = evaluate(&doc);
+        assert!(!report.checks.is_empty());
+        let m_ed = report.checks[0].computed.value / 1_000_000.0;
+        assert!((m_ed - 90.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn evaluate_analytical_with_prestress() {
+        let mut doc = Document::default();
+        doc.p_kn = 800.0;
+        let report = evaluate(&doc);
+        assert_eq!(report.checks.len(), 3);
     }
 }

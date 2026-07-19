@@ -7,6 +7,8 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;UnitTest</Configurations>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Compose.Rhino\Compose.Rhino.csproj" AdditionalProperties="Configuration=UnitTest" />
+    <ProjectReference Include="..\..\Compose.Rhino\cs\Compose.Rhino.csproj" AdditionalProperties="Configuration=UnitTest" />
     <ProjectReference Include="..\..\..\lib\net\Compose\cs\Compose.csproj" />
   </ItemGroup>
 

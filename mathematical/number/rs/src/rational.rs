@@ -15,6 +15,7 @@ pub struct Rational {
 
 impl Rational {
     /// ➗ Builds and normalizes `numer/denom`; `None` if `denom == 0`.
+    #[allow(clippy::needless_pass_by_value, reason = "denom is only ever borrowed here, but the by-value signature is public API consumed by mathematical_cas outside this crate; changing it is a cross-crate breaking change out of scope for this lint pass")]
     pub fn new(numer: Integer, denom: Integer) -> Option<Self> {
         if denom.is_zero() {
             return None;
@@ -167,7 +168,7 @@ impl Rational {
         let shift = 80 + d_bits - n_bits;
         let (scaled_numer, scaled_denom) = if shift >= 0 { (numer_mag.shl(shift as u64), self.denom.clone()) } else { (numer_mag.clone(), self.denom.shl((-shift) as u64)) };
         let (quotient, _remainder) = scaled_numer.div_rem(&scaled_denom);
-        let value = quotient.to_u128().map(|v| v as f64).unwrap_or_else(|| quotient.to_decimal().parse::<f64>().unwrap_or(f64::INFINITY));
+        let value = quotient.to_u128().map_or_else(|| quotient.to_decimal().parse::<f64>().unwrap_or(f64::INFINITY), |v| v as f64);
         sign * value * 2f64.powi(-(shift as i32))
     }
 

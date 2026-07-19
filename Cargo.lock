@@ -5243,6 +5243,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_entropy"
+version = "0.1.0"
+
+[[package]]
 name = "mathematical_fuzzy"
 version = "0.1.0"
 dependencies = [
@@ -8772,6 +8776,20 @@ dependencies = [
  "usvg 0.45.1",
  "uuid",
  "vcs",
+]
+
+[[package]]
+name = "semio-framework-os-run"
+version = "0.1.0"
+dependencies = [
+ "pretty_assertions",
+ "semio-framework-core",
+ "semio-framework-hash",
+ "semio-framework-os",
+ "semio-framework-plugin-host",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]

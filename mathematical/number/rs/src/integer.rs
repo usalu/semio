@@ -65,7 +65,7 @@ impl Integer {
             Sign::Positive => i64::try_from(mag).ok(),
             Sign::Negative => {
                 if mag <= i64::MAX as u64 + 1 {
-                    Some((mag as i128 * -1) as i64)
+                    Some(-(mag as i128) as i64)
                 } else {
                     None
                 }
@@ -202,7 +202,7 @@ impl Integer {
 
     /// √ⁿ Integer n-th root; even `n` rejects negative inputs, odd `n` accepts them.
     pub fn nth_root(&self, n: u32) -> Option<Self> {
-        if self.is_negative() && n % 2 == 0 {
+        if self.is_negative() && n.is_multiple_of(2) {
             return None;
         }
         let mag_root = self.magnitude.nth_root(n);

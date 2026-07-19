@@ -20,6 +20,7 @@ import {
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
   frameworkOsLockedPrefsEnv,
+  resolveTestLevel,
 } from "../../../../repo/lib/js/index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
@@ -1195,8 +1196,9 @@ class PluginCapabilityLintScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runVitest(this.root, segments, "vitest.config.ts");
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

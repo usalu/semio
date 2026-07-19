@@ -3,7 +3,7 @@
   "emoji": "📏",
   "status": "closed",
   "description": "Create the norm technology as headless Rust crates for end-to-end norm compliance computation: shared norm_core plus one family crate per listed path (norm/din/v/18599, norm/din/4108, norm/din/en/16798, norm/en/1990-1999), each implementing every part of that family with German national annex where applicable.",
-  "summary": "Replaced stub scaffold across all 14 norm crates with feature-complete implementations: expanded norm_core (table lookup, design situations, extended annex params, CheckResult::from_minimum); DIN 4108 with Glaser moisture, climate U-limits, 17 materials, summer heat; DIN EN 16798 with PMV/CO2, all parts 1-16, na_de; DIN V 18599 parts 1-12 wired to 4108/16798 via from_building(); EN 1990 full combination set 6.10/6.10a/6.10b plus DE ψ/γ/ξ tables; EN 1991 correct part mapping with DE snow/wind zones; EN 1992-1999 part-specific physics replacing macros (section class, buckling curves, composite interaction, k_mod matrix, Meyerhof bearing, seismic spectrum, aluminium alloys); FEM forces extracted from solve in EN 1992. 94 unit tests pass with numeric worked-example assertions.",
+  "summary": "Closed all remaining completeness gate gaps across 13 norm family crates. Energy: DIN 4108 check_full_envelope (parts 1–8, rh_int humidity correction), DIN EN 16798 ISO 7730 PMV/PPD + check_full_environment (parts 1–17 + na_de), DIN V 18599 balance_annual all 12 parts with clause-cited primary energy factors and distinct part_12 tabular method. Basis: EN 1990 persistent/accidental/seismic combination sets in evaluate; EN 1991 check_full_actions covering parts 1_1–1_7 and 2–4. Materials: EN 1992 prestress + optional FEM path; EN 1993 part_1_5_plated buckling + check_full_steel_member + FEM; EN 1994–1999 full check_full_* aggregators with expanded Documents; EN 1998 base shear uses design spectrum s_d + parts 2–6. All 130 unit tests pass (isolated CARGO_TARGET_DIR=/tmp/semio-norm-target-fc2). Checklist updated to complete.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2056"
   },
@@ -15,6 +15,7 @@
   },
   "sessions": [
     "⚪91767ed5390a4d20ba8dcc6f1a70a26d",
-    "⚪3a4fcadd589b46f1a82b126c997499cb"
+    "⚪3a4fcadd589b46f1a82b126c997499cb",
+    "⚪f966ffdb7dc34f69aa517d208b455314"
   ]
 }

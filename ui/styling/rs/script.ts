@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test` for the `ui_styling` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCargoTestBudgeted(["ui_styling"], import.meta.dir);
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["ui_styling"], import.meta.dir, rest);
   }
 }
 

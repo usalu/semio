@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭 Coda blnbo go router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, goLevelTestArgs } from "../../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    runTestBudgeted("go", ["test", "./..."], { cwd: this.root });
+  run(segments: string[]): void {
+    const { level, rest } = resolveTestLevel(segments);
+    runTestBudgeted("go", ["test", "./...", ...goLevelTestArgs(level), ...rest], { cwd: this.root });
   }
 }
 

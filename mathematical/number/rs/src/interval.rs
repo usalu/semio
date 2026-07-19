@@ -134,8 +134,8 @@ impl Interval {
 
     pub fn mul(&self, rhs: &Self) -> Self {
         let candidates = [self.lo * rhs.lo, self.lo * rhs.hi, self.hi * rhs.lo, self.hi * rhs.hi];
-        let lo = candidates.iter().cloned().fold(f64::INFINITY, f64::min).next_down();
-        let hi = candidates.iter().cloned().fold(f64::NEG_INFINITY, f64::max).next_up();
+        let lo = candidates.iter().copied().fold(f64::INFINITY, f64::min).next_down();
+        let hi = candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max).next_up();
         Self { lo, hi }
     }
 
@@ -144,8 +144,8 @@ impl Interval {
             return None;
         }
         let candidates = [1.0 / self.lo, 1.0 / self.hi];
-        let lo = candidates.iter().cloned().fold(f64::INFINITY, f64::min).next_down();
-        let hi = candidates.iter().cloned().fold(f64::NEG_INFINITY, f64::max).next_up();
+        let lo = candidates.iter().copied().fold(f64::INFINITY, f64::min).next_down();
+        let hi = candidates.iter().copied().fold(f64::NEG_INFINITY, f64::max).next_up();
         Some(Self { lo, hi })
     }
 
@@ -205,8 +205,8 @@ impl Interval {
             return Self { lo: -1.0, hi: 1.0 };
         }
         let samples = [self.lo.sin(), self.hi.sin(), self.midpoint().sin()];
-        let lo = samples.iter().cloned().fold(f64::INFINITY, f64::min);
-        let hi = samples.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let lo = samples.iter().copied().fold(f64::INFINITY, f64::min);
+        let hi = samples.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         Self { lo: widen_down(lo, 8), hi: widen_up(hi, 8) }
     }
 
@@ -215,8 +215,8 @@ impl Interval {
             return Self { lo: -1.0, hi: 1.0 };
         }
         let samples = [self.lo.cos(), self.hi.cos(), self.midpoint().cos()];
-        let lo = samples.iter().cloned().fold(f64::INFINITY, f64::min);
-        let hi = samples.iter().cloned().fold(f64::NEG_INFINITY, f64::max);
+        let lo = samples.iter().copied().fold(f64::INFINITY, f64::min);
+        let hi = samples.iter().copied().fold(f64::NEG_INFINITY, f64::max);
         Self { lo: widen_down(lo, 8), hi: widen_up(hi, 8) }
     }
 

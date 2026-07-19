@@ -29,7 +29,7 @@ impl ImageGray {
     /// <https://en.wikipedia.org/wiki/Rec._601>
     pub fn from_rgba8_luma(src: &ImageRgba8) -> Self {
         let mut out = Self::new(src.width, src.height);
-        for (dst, px) in out.data.iter_mut().zip(src.data.chunks_exact(4)) {
+        for (dst, px) in out.data.iter_mut().zip(src.data.as_chunks::<4>().0.iter()) {
             *dst = (0.299 * f32::from(px[0]) + 0.587 * f32::from(px[1]) + 0.114 * f32::from(px[2])) / 255.0;
         }
         out
@@ -139,7 +139,7 @@ pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
     match info.color_type {
         png::ColorType::Rgba => out.data.copy_from_slice(pixels),
         png::ColorType::Rgb => {
-            for (dst, src) in out.data.chunks_exact_mut(4).zip(pixels.chunks_exact(3)) {
+            for (dst, src) in out.data.as_chunks_mut::<4>().0.iter_mut().zip(pixels.as_chunks::<3>().0.iter()) {
                 dst[0] = src[0];
                 dst[1] = src[1];
                 dst[2] = src[2];
@@ -147,7 +147,7 @@ pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
             }
         }
         png::ColorType::Grayscale => {
-            for (dst, &luma) in out.data.chunks_exact_mut(4).zip(pixels.iter()) {
+            for (dst, &luma) in out.data.as_chunks_mut::<4>().0.iter_mut().zip(pixels.iter()) {
                 dst[0] = luma;
                 dst[1] = luma;
                 dst[2] = luma;
@@ -155,7 +155,7 @@ pub fn decode_png(bytes: &[u8]) -> Result<ImageRgba8, ImageError> {
             }
         }
         png::ColorType::GrayscaleAlpha => {
-            for (dst, src) in out.data.chunks_exact_mut(4).zip(pixels.chunks_exact(2)) {
+            for (dst, src) in out.data.as_chunks_mut::<4>().0.iter_mut().zip(pixels.as_chunks::<2>().0.iter()) {
                 dst[0] = src[0];
                 dst[1] = src[0];
                 dst[2] = src[0];
@@ -683,7 +683,7 @@ mod tests {
         let info = reader.next_frame(&mut buf).expect("decodable frame");
         assert_eq!(info.bit_depth, png::BitDepth::Sixteen);
         assert_eq!(info.color_type, png::ColorType::Grayscale);
-        let decoded: Vec<u16> = buf[..info.buffer_size()].chunks_exact(2).map(|pair| u16::from_be_bytes([pair[0], pair[1]])).collect();
+        let decoded: Vec<u16> = buf[..info.buffer_size()].as_chunks::<2>().0.iter().map(|&pair| u16::from_be_bytes(pair)).collect();
         assert_eq!(decoded, data);
     }
 

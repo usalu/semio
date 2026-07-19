@@ -973,8 +973,30 @@ export class CommitScript extends Script {
 }
 //#endregion 🔖CommitScript
 
+//#region 🔖OsScript
+/** 🕸️Headless OS studio commands — computes a media graph without a UI (`os run <bundle>.studio`). */
+export class OsScript extends Script {
+  run(segments: string[]): void {
+    const sub = segments[0];
+    if (sub === "run") {
+      const rest = segments.slice(1);
+      const bundle = rest.find((segment) => !segment.startsWith("--"));
+      if (!bundle) {
+        console.error("[os.run] usage: bun ./script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]");
+        process.exit(1);
+      }
+      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root });
+      return;
+    }
+    console.error(`[os] unknown subcommand ${JSON.stringify(sub)}`);
+    process.exit(1);
+  }
+}
+//#endregion 🔖OsScript
+
 //#region 🔖Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
+  .register("os", OsScript)
   .register("nx", NxScript)
   .register("setup", SetupScript)
   .register("start", StartScript)

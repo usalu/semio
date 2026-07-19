@@ -1,0 +1,13 @@
+{
+  "title": "Norm EN 1993 and EN 1998 Feature Completeness",
+  "emoji": "🔩",
+  "status": "open",
+  "description": "Implement Norm feature completeness in norm/en/1993/rs/lib.rs and norm/en/1998/rs/lib.rs: rename part_1_7 to part_1_5_plated, add FEM checks, check_full_steel_member, expand Document, fix seismic base shear, add check_full_seismic.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2153"
+  },
+  "goal": "🎯norm",
+  "sessions": [
+    "⚪7a442885b0d647f7af354f5cd748eec1"
+  ]
+}

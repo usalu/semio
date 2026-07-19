@@ -263,28 +263,34 @@ pub mod part_1_6 {
 }
 // #endregion 🔖Part1_6
 
-// #region 🔖Part1_7
-pub mod part_1_7 {
+// #region 🔖Part1_5Plated
+pub mod part_1_5_plated {
     use super::*;
 
-    /// 🪶 Aluminium partial factor γ_M1 per EN 1993-1-7.
-    pub const GAMMA_M_AL: f64 = 1.25;
-
-    pub fn aluminium_bending_knm(w_el_mm3: f64, f_0_2_mpa: f64) -> f64 {
-        w_el_mm3 * f_0_2_mpa / GAMMA_M_AL / 1_000_000.0
+    /// 📐 Plate reduction factor ρ per EN 1993-1-5 §4.4.
+    pub fn plate_reduction_factor(lambda_p: f64) -> f64 {
+        if lambda_p <= 0.673 {
+            1.0
+        } else {
+            (lambda_p - 0.055 * (3.0_f64).sqrt()) / (lambda_p * lambda_p)
+        }
     }
 
-    pub fn check_aluminium_bending(m_ed_knm: f64, m_rd_knm: f64) -> CheckResult {
-        CheckResult::from_utilization(
-            ClauseId::new("EN 1993-1-7", "§6", "6.1"),
-            Quantity::new(norm_core::QuantityKind::Moment, m_ed_knm * 1_000_000.0),
-            Quantity::new(norm_core::QuantityKind::Moment, m_rd_knm * 1_000_000.0),
-            "aluminium bending ULS",
-            AnnexChoice::En,
-        )
+    /// 📐 Plate effective width b_eff per EN 1993-1-5 §4.
+    pub fn effective_width_mm(b_mm: f64, lambda_p: f64) -> f64 {
+        plate_reduction_factor(lambda_p) * b_mm
+    }
+
+    /// 📐 Local buckling design stress σ_c,Rd [MPa] per EN 1993-1-5 §4.
+    pub fn local_buckling_stress_rd_mpa(f_y_mpa: f64, lambda_p: f64) -> f64 {
+        plate_reduction_factor(lambda_p) * f_y_mpa / na_de::gamma_m0()
+    }
+
+    pub fn check_plated_buckling(sigma_ed_mpa: f64, sigma_rd_mpa: f64) -> CheckResult {
+        CheckResult::from_utilization(ClauseId::new("EN 1993-1-5", "§4", "4.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(sigma_rd_mpa), "plated structure local buckling", AnnexChoice::En)
     }
 }
-// #endregion 🔖Part1_7
+// #endregion 🔖Part1_5Plated
 
 // #region 🔖Part1_8
 pub mod part_1_8 {
@@ -446,12 +452,11 @@ pub mod part_4 {
 
     /// 📐 Plate effective width b_eff per EN 1993-1-5 §4.
     pub fn effective_width_mm(b_mm: f64, lambda_p: f64) -> f64 {
-        let rho = if lambda_p <= 0.673 { 1.0 } else { (lambda_p - 0.055 * (3.0_f64).sqrt()) / (lambda_p * lambda_p) };
-        rho * b_mm
+        part_1_5_plated::effective_width_mm(b_mm, lambda_p)
     }
 
     pub fn check_plated_buckling(sigma_ed_mpa: f64, sigma_rd_mpa: f64) -> CheckResult {
-        CheckResult::from_utilization(ClauseId::new("EN 1993-1-5", "§4", "4.1"), Quantity::stress_mpa(sigma_ed_mpa), Quantity::stress_mpa(sigma_rd_mpa), "plated structure local buckling", AnnexChoice::En)
+        part_1_5_plated::check_plated_buckling(sigma_ed_mpa, sigma_rd_mpa)
     }
 }
 // #endregion 🔖Part4
@@ -507,6 +512,94 @@ pub fn check_steel_member(n_ed_kn: f64, m_ed_knm: f64, a_mm2: f64, w_pl_mm3: f64
     report
 }
 
+fn parse_fire_rating(value: &str) -> part_1_2::FireRating {
+    match value.to_ascii_lowercase().as_str() {
+        "r30" => part_1_2::FireRating::R30,
+        "r90" => part_1_2::FireRating::R90,
+        "r120" => part_1_2::FireRating::R120,
+        _ => part_1_2::FireRating::R60,
+    }
+}
+
+/// 📋 Full steel member check across EN 1993 parts 1-1 through 6.
+pub fn check_full_steel_member(document: &Document) -> CheckReport {
+    let annex = AnnexChoice::De;
+    let mut report = check_steel_member(document.n_ed_kn, document.m_ed_knm, document.a_mm2, document.w_pl_mm3, document.f_y_mpa, document.chi);
+
+    let v_rd = part_1_1::shear_resistance_kn(document.a_v_mm2, document.f_y_mpa);
+    report.push(part_1_1::check_shear(document.v_ed_kn, v_rd, annex));
+
+    report.push(part_1_2::check_fire_protection(document.fire_thickness_mm, parse_fire_rating(&document.fire_rating), document.fire_massivity));
+    report.push(part_1_3::check_fatigue_range(document.delta_sigma_mpa, document.fatigue_category, annex));
+    report.push(part_1_8::check_bolt_shear(document.bolt_f_ed_kn, document.bolt_f_v_rd_kn, annex));
+    report.push(part_1_8::check_bolt_bearing(document.bolt_f_ed_kn, document.bolt_f_b_rd_kn, annex));
+
+    let n_rd = part_1_1::axial_resistance_kn(document.a_mm2, document.f_y_mpa);
+    let m_rd = part_1_1::bending_resistance_knm(document.w_pl_mm3, document.f_y_mpa);
+    report.push(part_2::check_steel_bridge(document.n_ed_kn, n_rd, document.m_ed_knm, m_rd));
+
+    let silo_n_rd = part_1_4::silo_shell_buckling_kn(document.silo_t_mm, document.silo_r_mm, document.f_y_mpa, document.silo_length_mm);
+    report.push(part_1_4::check_silo_shell(document.silo_n_ed_kn, silo_n_rd));
+
+    report.push(part_1_5::check_pile_driving_stress(document.pile_sigma_mpa, document.f_y_mpa));
+
+    let pile_n_rd = part_5::pile_compression_kn(document.a_mm2, document.f_y_mpa, document.pile_k_red);
+    report.push(part_5::check_pile_foundation_steel(document.pile_n_ed_kn, pile_n_rd));
+
+    let stainless_m_rd = part_6::stainless_bending_knm(document.stainless_w_pl_mm3, document.f_y_mpa);
+    report.push(part_6::check_stainless_steel(document.stainless_m_ed_knm, stainless_m_rd));
+
+    let plated_sigma_rd = part_1_5_plated::local_buckling_stress_rd_mpa(document.f_y_mpa, document.plated_lambda_p);
+    report.push(part_1_5_plated::check_plated_buckling(document.plated_sigma_ed_mpa, plated_sigma_rd));
+
+    report
+}
+
+// #region 🔖Fem
+use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};
+
+fn max_beam_moment_knm(result: &fem_core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+        panic!("expected beam element result");
+    };
+    stations.iter().map(|s| s.m.abs()).fold(0.0_f64, f64::max) / 1000.0
+}
+
+fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem_core::ElementResult::Beam { stations }) = result.elements.iter().find(|(id, _)| id == element_id).expect("beam element result") else {
+        panic!("expected beam element result");
+    };
+    stations.iter().map(|s| s.v.abs()).fold(0.0_f64, f64::max) / 1000.0
+}
+
+/// 🏗️ Solve a simply supported steel beam with `fem_core` and run EN 1993 ULS checks.
+pub fn check_steel_member_from_fem(span_m: f64, udl_kn_m: f64, a_mm2: f64, w_pl_mm3: f64, a_v_mm2: f64, f_y_mpa: f64, chi: f64) -> Result<CheckReport, fem_core::FemError> {
+    let mut model = Model::default();
+    model.nodes.push(Node { id: "n0".into(), pos: [0.0, 0.0, 0.0] });
+    model.nodes.push(Node { id: "n1".into(), pos: [span_m, 0.0, 0.0] });
+    model.supports.push(Support { node_id: "n0".into(), fixed: vec![Dof::Tx, Dof::Ty] });
+    model.supports.push(Support { node_id: "n1".into(), fixed: vec![Dof::Ty] });
+    model.elements.push(Box::new(BeamEb2 { id: "b1".into(), start: "n0".into(), end: "n1".into(), e: 210e9, area: a_mm2 / 1e6, iy: a_mm2 * a_mm2 / 12e12, density: 7850.0 }));
+    model.member_loads.push(("b1".into(), MemberUdl { wx: 0.0, wy: -udl_kn_m * 1000.0, wz: 0.0 }));
+
+    let result = fem_core::solve_linear_static(&model)?;
+    let m_ed_knm = max_beam_moment_knm(&result, "b1");
+    let v_ed_kn = max_beam_shear_kn(&result, "b1");
+
+    let annex = AnnexChoice::De;
+    let n_rd = part_1_1::axial_resistance_kn(a_mm2, f_y_mpa);
+    let n_b_rd = part_1_1::buckling_resistance_kn(a_mm2, f_y_mpa, chi);
+    let m_rd = part_1_1::bending_resistance_knm(w_pl_mm3, f_y_mpa);
+    let v_rd = part_1_1::shear_resistance_kn(a_v_mm2, f_y_mpa);
+    let mut report = CheckReport::default();
+    report.push(part_1_1::check_cross_section(0.0, n_rd, annex));
+    report.push(part_1_1::check_member_buckling(0.0, n_b_rd, annex));
+    report.push(part_1_1::check_bending(m_ed_knm, m_rd, annex));
+    report.push(part_1_1::check_shear(v_ed_kn, v_rd, annex));
+    Ok(report)
+}
+// #endregion 🔖Fem
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -515,15 +608,64 @@ use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 pub struct Document {
     pub n_ed_kn: f64,
     pub m_ed_knm: f64,
+    pub v_ed_kn: f64,
     pub a_mm2: f64,
+    pub a_v_mm2: f64,
     pub w_pl_mm3: f64,
     pub f_y_mpa: f64,
     pub chi: f64,
+    pub fire_thickness_mm: f64,
+    pub fire_rating: String,
+    pub fire_massivity: f64,
+    pub delta_sigma_mpa: f64,
+    pub fatigue_category: u8,
+    pub bolt_f_ed_kn: f64,
+    pub bolt_f_v_rd_kn: f64,
+    pub bolt_f_b_rd_kn: f64,
+    pub silo_t_mm: f64,
+    pub silo_r_mm: f64,
+    pub silo_length_mm: f64,
+    pub silo_n_ed_kn: f64,
+    pub pile_sigma_mpa: f64,
+    pub pile_k_red: f64,
+    pub pile_n_ed_kn: f64,
+    pub stainless_m_ed_knm: f64,
+    pub stainless_w_pl_mm3: f64,
+    pub plated_lambda_p: f64,
+    pub plated_sigma_ed_mpa: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { n_ed_kn: 500.0, m_ed_knm: 150.0, a_mm2: 5000.0, w_pl_mm3: 500_000.0, f_y_mpa: 355.0, chi: 0.75 }
+        Self {
+            n_ed_kn: 500.0,
+            m_ed_knm: 150.0,
+            v_ed_kn: 80.0,
+            a_mm2: 5000.0,
+            a_v_mm2: 2500.0,
+            w_pl_mm3: 500_000.0,
+            f_y_mpa: 355.0,
+            chi: 0.75,
+            fire_thickness_mm: 20.0,
+            fire_rating: "r60".into(),
+            fire_massivity: 150.0,
+            delta_sigma_mpa: 50.0,
+            fatigue_category: 71,
+            bolt_f_ed_kn: 120.0,
+            bolt_f_v_rd_kn: 188.0,
+            bolt_f_b_rd_kn: 250.0,
+            silo_t_mm: 8.0,
+            silo_r_mm: 3000.0,
+            silo_length_mm: 4000.0,
+            silo_n_ed_kn: 200.0,
+            pile_sigma_mpa: 280.0,
+            pile_k_red: 0.85,
+            pile_n_ed_kn: 400.0,
+            stainless_m_ed_knm: 80.0,
+            stainless_w_pl_mm3: 300_000.0,
+            plated_lambda_p: 0.8,
+            plated_sigma_ed_mpa: 200.0,
+        }
     }
 }
 
@@ -531,7 +673,7 @@ pub type Op = SetDocumentOp<Document>;
 pub type Host = NormHost<En1993Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_steel_member(document.n_ed_kn, document.m_ed_knm, document.a_mm2, document.w_pl_mm3, document.f_y_mpa, document.chi)
+    check_full_steel_member(document)
 }
 
 pub struct En1993Family;
@@ -557,7 +699,35 @@ mod tests {
     #[test]
     fn steel_member_e2e() {
         let report = check_steel_member(500.0, 150.0, 5000.0, 500_000.0, 355.0, 0.75);
-        assert!(!report.checks.is_empty());
+        assert_eq!(report.checks.len(), 3);
+        let n_rd = part_1_1::axial_resistance_kn(5000.0, 355.0);
+        let n_b_rd = part_1_1::buckling_resistance_kn(5000.0, 355.0, 0.75);
+        let m_rd = part_1_1::bending_resistance_knm(500_000.0, 355.0);
+        assert!((report.checks[0].utilization - 500.0 / n_rd).abs() < 1e-6);
+        assert!((report.checks[1].utilization - 500.0 / n_b_rd).abs() < 1e-6);
+        assert!((report.checks[2].utilization - 150.0 / m_rd).abs() < 1e-6);
+    }
+
+    #[test]
+    fn full_steel_member_e2e() {
+        let report = check_full_steel_member(&Document::default());
+        assert_eq!(report.checks.len(), 14);
+    }
+
+    #[test]
+    fn steel_member_from_fem_e2e() {
+        let report = check_steel_member_from_fem(6.0, 20.0, 5000.0, 500_000.0, 2500.0, 355.0, 0.75).expect("fem solve");
+        assert_eq!(report.checks.len(), 4);
+        let m_ed = report.checks[2].computed.value / 1_000_000.0;
+        assert!((m_ed - 90.0).abs() < 1.0);
+    }
+
+    #[test]
+    fn plated_buckling_reduction() {
+        let rho = part_1_5_plated::plate_reduction_factor(0.5);
+        assert!((rho - 1.0).abs() < 1e-9);
+        let b_eff = part_1_5_plated::effective_width_mm(200.0, 0.5);
+        assert!((b_eff - 200.0).abs() < 1e-9);
     }
 
     #[test]

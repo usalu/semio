@@ -6,7 +6,7 @@
 // #endregion 🧲Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { useRef, useState, type ReactElement } from "react";
+import { useState, type ReactElement } from "react";
 
 import { GraphWasmCanvas } from "../../../infinite/cavas/react-renderer/index.tsx";
 import type { CanvasInputModifiers, GraphWasmSession } from "../../../infinite/cavas/react-renderer/index.tsx";
@@ -87,19 +87,11 @@ function createMockGraphWasmSession(onPointerCount: (count: number) => void): Gr
 //#region StoryHost
 function GraphWasmCanvasStoryHost({ enablePointer }: { readonly enablePointer: boolean }): ReactElement {
   const [pointerCount, setPointerCount] = useState(0);
-  const sessionRef = useRef<GraphWasmSession | null>(null);
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
       <div className="semio-graph-wasm-canvas-story" style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-        <GraphWasmCanvas
-          sessionFactory={() => {
-            const session = createMockGraphWasmSession(setPointerCount);
-            sessionRef.current = session;
-            return session;
-          }}
-          enablePointer={enablePointer}
-        />
+        <GraphWasmCanvas sessionFactory={() => createMockGraphWasmSession(setPointerCount)} enablePointer={enablePointer} />
       </div>
       <pre data-testid="graph-wasm-canvas-debug" style={{ margin: 0, padding: 4, fontSize: 11 }}>
         {JSON.stringify({ pointerEvents: pointerCount })}

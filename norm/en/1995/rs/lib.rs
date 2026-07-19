@@ -166,6 +166,37 @@ pub fn check_glulam_beam(m_ed_knm: f64, n_ed_kn: f64, w_mm3: f64, a_mm2: f64, f_
     report
 }
 
+/// 📋 Full EN 1995 check across bending, compression, connections, fire, and bridge parts.
+pub fn check_full_timber(
+    m_ed_knm: f64,
+    n_ed_kn: f64,
+    w_mm3: f64,
+    a_mm2: f64,
+    f_m_k: f64,
+    f_c_0_k: f64,
+    service: ServiceClass,
+    duration: LoadDuration,
+    m_crit_knm: f64,
+    f_ed_kn: f64,
+    a_ef_mm2: f64,
+    f_v_k: f64,
+    fire_duration_min: f64,
+    section_depth_mm: f64,
+) -> CheckReport {
+    let km = k_mod(service, duration);
+    let lambda = lambda_rel_m(w_mm3, f_m_k, m_crit_knm);
+    let kc = k_crit(lambda);
+    let mut report = check_glulam_beam(m_ed_knm, n_ed_kn, w_mm3, a_mm2, f_m_k, f_c_0_k, service, duration, m_crit_knm);
+    let f_rd = part_1_1::connection_bearing_resistance_kn(a_ef_mm2, f_v_k, km);
+    report.push(part_1_1::check_connection_bearing(f_ed_kn, f_rd, AnnexChoice::De));
+    let charred = part_1_2::charred_depth_mm(fire_duration_min);
+    let remaining = part_1_2::residual_section_mm(section_depth_mm, charred);
+    report.push(part_1_2::check_fire(charred, remaining));
+    let m_rd_bridge = part_2::bridge_bending_resistance_knm(w_mm3, f_m_k, service, duration, kc);
+    report.push(part_2::check_bridge_timber(m_ed_knm, m_rd_bridge));
+    report
+}
+
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
 
@@ -181,11 +212,31 @@ pub struct Document {
     pub service_class: String,
     pub load_duration: String,
     pub m_crit_knm: f64,
+    pub f_ed_kn: f64,
+    pub a_ef_mm2: f64,
+    pub f_v_k: f64,
+    pub fire_duration_min: f64,
+    pub section_depth_mm: f64,
 }
 
 impl Default for Document {
     fn default() -> Self {
-        Self { m_ed_knm: 25.0, n_ed_kn: 50.0, w_mm3: 1_000_000.0, a_mm2: 20_000.0, f_m_k: 24.0, f_c_0_k: 21.0, service_class: "sc1".into(), load_duration: "medium".into(), m_crit_knm: 80.0 }
+        Self {
+            m_ed_knm: 25.0,
+            n_ed_kn: 50.0,
+            w_mm3: 1_000_000.0,
+            a_mm2: 20_000.0,
+            f_m_k: 24.0,
+            f_c_0_k: 21.0,
+            service_class: "sc1".into(),
+            load_duration: "medium".into(),
+            m_crit_knm: 80.0,
+            f_ed_kn: 18.0,
+            a_ef_mm2: 12_000.0,
+            f_v_k: 2.5,
+            fire_duration_min: 30.0,
+            section_depth_mm: 300.0,
+        }
     }
 }
 
@@ -211,7 +262,22 @@ fn parse_load_duration(value: &str) -> LoadDuration {
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    check_glulam_beam(document.m_ed_knm, document.n_ed_kn, document.w_mm3, document.a_mm2, document.f_m_k, document.f_c_0_k, parse_service_class(&document.service_class), parse_load_duration(&document.load_duration), document.m_crit_knm)
+    check_full_timber(
+        document.m_ed_knm,
+        document.n_ed_kn,
+        document.w_mm3,
+        document.a_mm2,
+        document.f_m_k,
+        document.f_c_0_k,
+        parse_service_class(&document.service_class),
+        parse_load_duration(&document.load_duration),
+        document.m_crit_knm,
+        document.f_ed_kn,
+        document.a_ef_mm2,
+        document.f_v_k,
+        document.fire_duration_min,
+        document.section_depth_mm,
+    )
 }
 
 pub struct En1995Family;
@@ -257,5 +323,33 @@ mod tests {
     fn glulam_beam_e2e() {
         let report = check_glulam_beam(25.0, 50.0, 1_000_000.0, 20_000.0, 24.0, 21.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0);
         assert!(!report.checks.is_empty());
+    }
+
+    #[test]
+    fn connection_bearing_resistance_worked() {
+        let km = k_mod(ServiceClass::Sc1, LoadDuration::Medium);
+        let f_rd = part_1_1::connection_bearing_resistance_kn(12_000.0, 2.5, km);
+        assert!((f_rd - 18.46).abs() < 0.5);
+    }
+
+    #[test]
+    fn fire_char_depth_r30() {
+        let charred = part_1_2::charred_depth_mm(30.0);
+        assert!((charred - 19.5).abs() < 0.1);
+        let remaining = part_1_2::residual_section_mm(300.0, charred);
+        assert!((remaining - 261.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn full_timber_worked_example() {
+        let report = check_full_timber(25.0, 50.0, 1_000_000.0, 20_000.0, 24.0, 21.0, ServiceClass::Sc1, LoadDuration::Medium, 80.0, 18.0, 12_000.0, 2.5, 30.0, 300.0);
+        assert_eq!(report.checks.len(), 5);
+        assert!(report.checks[2].utilization < 1.0);
+    }
+
+    #[test]
+    fn evaluate_runs_all_parts() {
+        let report = evaluate(&Document::default());
+        assert_eq!(report.checks.len(), 5);
     }
 }

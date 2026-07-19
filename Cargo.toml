@@ -4,6 +4,7 @@ members = [
     "framework/hash/rs",
     "framework/plugin/rs",
     "framework/product/os/core/rs",
+    "framework/product/os/run/rs",
     "puzzle/plugin/rs",
     "puzzle/2d/rs",
     "puzzle/3d/rs",
@@ -55,6 +56,7 @@ members = [
     "mathematical/causal/rs",
     "mathematical/fuzzy/rs",
     "mathematical/sampling/rs",
+    "mathematical/entropy/rs",
     "mathematical/graph/traversal/rs",
     "mathematical/graph/components/rs",
     "mathematical/graph/dag/rs",
@@ -200,8 +202,7 @@ members = [
 resolver = "2"
 
 [profile.dev]
-debug = "line-tables-only"
-split-debuginfo = "unpacked"
+debug = false
 incremental = true
 
 [profile.dev.build-override]
@@ -209,6 +210,9 @@ opt-level = 3
 
 [profile.release]
 strip = "debuginfo"
+incremental = true
+codegen-units = 256
+lto = "off"
 
 # 🧹 RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

@@ -2,7 +2,7 @@
 /** 📜 `@semio-tech/graph-manifest` — codegen from manifest JSON sources to Rust + TypeScript. */
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted } from "../../../repo/lib/js/index.ts";
+import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, resolveTestLevel } from "../../../repo/lib/js/index.ts";
 
 //#region 🔖ManifestSource
 type ManifestAxes = { portModel?: string; directedness?: string };
@@ -310,7 +310,8 @@ class GenerateScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted(["mathematical_graph_manifest"], this.repoRoot, segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["mathematical_graph_manifest"], this.repoRoot, rest);
   }
 }
 

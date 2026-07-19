@@ -1,20 +1,55 @@
-# Norm Feature Complete — Part Checklist
+# Norm Feature Complete — Per-Part Gate Checklist
 
-All parts implemented with clause-cited formulas, DE NA where applicable, and worked-example tests.
+Gate: real formulas, clause tables, DE NA divergence, numeric worked-example test, evaluate() coverage.
 
-## norm_core — done
-## norm_din_4108 — parts 1,2,3,4,5,6,7,8 — done (Glaser, climate U-limits, 17 materials)
-## norm_din_en_16798 — parts 1-16 — done (PMV, CO2, full ventilation tables, na_de)
-## norm_din_v_18599 — parts 1-12 — done (wired to 4108 + 16798, from_building)
-## norm_en_1990 — full combinations 6.10/6.10a/6.10b, SLS, DE ψ/γ/ξ tables — done
-## norm_en_1991 — correct part mapping, wind/snow/DE zones — done
-## norm_en_1992 — flexure/shear/punching/torsion/crack/fire/FEM — done
-## norm_en_1993 — section class, buckling curves, distinct parts — done
-## norm_en_1994 — composite partial interaction, b_eff, V_L — done
-## norm_en_1995 — k_mod matrix, LTB, fire charring — done
-## norm_en_1996 — masonry shear/sliding/fire/retaining — done
-## norm_en_1997 — DA1/2/3, Meyerhof bearing, piles — done
-## norm_en_1998 — spectrum base shear, q factors, distinct parts — done
-## norm_en_1999 — alloys, HAZ, fatigue, hollow sections — done
+Verified: `CARGO_TARGET_DIR=/tmp/semio-norm-target-fc2 cargo test` — **130/130 passed** across 14 crates.
 
-Verification: 94 tests passed via `CARGO_TARGET_DIR=/tmp/semio-norm-target-fc cargo test -p norm_*`
+## norm_core
+- [x] Annex params (gamma_m, gamma_r, xi, combination selectors)
+- [x] NormHost session tests
+
+## norm_din_4108
+- [x] part_1 scope — evaluate
+- [x] part_2 U-limit — evaluate + numeric test
+- [x] part_3 Glaser + f_Rsi (rh_int wired) — evaluate + numeric test
+- [x] part_4 material λ — evaluate + numeric test
+- [x] part_5 summer heat (clause table) — evaluate + numeric test
+- [x] part_6 U + bridges — evaluate + numeric test
+- [x] part_7 airtightness class — evaluate + numeric test
+- [x] part_8 catalog — evaluate + numeric test
+
+## norm_din_en_16798
+- [x] parts 1–17 + na_de — evaluate all + ISO 7730 PMV/PPD
+
+## norm_din_v_18599
+- [x] parts 1–12 in balance_annual — distinct part_12 tabular method
+
+## norm_en_1990
+- [x] combinations 6.10/6.10a/6.10b + accidental/seismic — evaluate
+
+## norm_en_1991
+- [x] parts 1_1–1_7, 2–4 — evaluate all + numeric e2e
+
+## norm_en_1992
+- [x] flexure/shear/punching/torsion/crack/FEM — evaluate + prestress basics
+
+## norm_en_1993
+- [x] fix part numbering — all parts distinct — evaluate + FEM
+
+## norm_en_1994
+- [x] composite + connectors + fire — evaluate all parts
+
+## norm_en_1995
+- [x] k_mod + LTB + connections — evaluate all parts
+
+## norm_en_1996
+- [x] flexure/shear/sliding/retaining — evaluate all parts
+
+## norm_en_1997
+- [x] bearing + piles shaft — evaluate all parts
+
+## norm_en_1998
+- [x] s_d base shear + parts 2–6 — evaluate all
+
+## norm_en_1999
+- [x] alloys + joints — evaluate all parts

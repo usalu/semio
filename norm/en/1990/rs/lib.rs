@@ -396,11 +396,18 @@ pub fn check_reliability_index(beta: f64, consequence_class: u8) -> CheckResult 
 }
 // #endregion 🔖Reliability
 
-/// 📋 Run EN 1990 design basis checks.
+fn append_combination_set(report: &mut CheckReport, annex: &dyn NationalAnnex, situation: DesignSituation, actions: &ActionSet, resistance_kn: f64) {
+    let sub = check_combination_set(annex, situation, actions, resistance_kn);
+    report.checks.extend(sub.checks);
+}
+
+/// 📋 Run EN 1990 design basis checks across persistent, accidental, and seismic situations.
 pub fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, resistance_kn: f64, consequence_class: u8) -> CheckReport {
-    let mut report = check_combination_set(annex, DesignSituation::Persistent, actions, resistance_kn);
+    let mut report = CheckReport::default();
+    append_combination_set(&mut report, annex, DesignSituation::Persistent, actions, resistance_kn);
+    append_combination_set(&mut report, annex, DesignSituation::Accidental, actions, resistance_kn);
+    append_combination_set(&mut report, annex, DesignSituation::Seismic, actions, resistance_kn);
     report.push(check_reliability_index(3.9, consequence_class));
-    let _ = LimitState::Uls;
     report
 }
 
@@ -429,7 +436,11 @@ pub type Host = NormHost<En1990Family>;
 pub fn evaluate(document: &Document) -> CheckReport {
     let actions = ActionSet { g_k: document.g_k, q_k: document.q_k.clone() };
     let annex: &dyn NationalAnnex = if document.use_de_na { &NaDe } else { &NaEn };
-    check_design_basis(annex, &actions, document.resistance_kn, document.consequence_class)
+    let mut report = CheckReport::default();
+    append_combination_set(&mut report, annex, DesignSituation::Persistent, &actions, document.resistance_kn);
+    append_combination_set(&mut report, annex, DesignSituation::Accidental, &actions, document.resistance_kn);
+    report.push(check_reliability_index(3.9, document.consequence_class));
+    report
 }
 
 pub struct En1990Family;
@@ -561,5 +572,29 @@ mod tests {
         let accidental = combination_uls(&annex, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
         assert!(accidental < persistent);
         assert!((accidental - 168.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn check_design_basis_covers_all_situations() {
+        let annex = NaDe;
+        let actions = sample_actions();
+        let report = check_design_basis(&annex, &actions, 300.0, 2);
+        let persistent = check_combination_set(&annex, DesignSituation::Persistent, &actions, 300.0);
+        let accidental = check_combination_set(&annex, DesignSituation::Accidental, &actions, 300.0);
+        let seismic = check_combination_set(&annex, DesignSituation::Seismic, &actions, 300.0);
+        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + seismic.checks.len() + 1);
+    }
+
+    #[test]
+    fn evaluate_accidental_situation_numeric() {
+        let doc = Document::default();
+        let actions = ActionSet { g_k: doc.g_k, q_k: doc.q_k.clone() };
+        let accidental_ed = combination_uls(&NaDe, DesignSituation::Accidental, CombinationRule::Uls610a, &actions, 0);
+        assert!((accidental_ed - 168.0).abs() < 1e-9);
+        let report = evaluate(&doc);
+        let persistent = check_combination_set(&NaDe, DesignSituation::Persistent, &actions, doc.resistance_kn);
+        let accidental = check_combination_set(&NaDe, DesignSituation::Accidental, &actions, doc.resistance_kn);
+        assert_eq!(report.checks.len(), persistent.checks.len() + accidental.checks.len() + 1);
+        assert!(report.checks.iter().any(|c| (c.computed.value / 1000.0 - accidental_ed).abs() < 1e-6));
     }
 }

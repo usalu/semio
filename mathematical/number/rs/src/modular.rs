@@ -65,7 +65,7 @@ pub fn jacobi(a: i64, n: u64) -> i8 {
     let mut n = n;
     let mut result = 1i8;
     while a != 0 {
-        while a % 2 == 0 {
+        while a.is_multiple_of(2) {
             a /= 2;
             let r = n % 8;
             if r == 3 || r == 5 {
@@ -110,7 +110,7 @@ pub fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
     // General Tonelli-Shanks: write p - 1 = q * 2^s with q odd.
     let mut q = p - 1;
     let mut s = 0u32;
-    while q % 2 == 0 {
+    while q.is_multiple_of(2) {
         q /= 2;
         s += 1;
     }
@@ -122,7 +122,7 @@ pub fn sqrt_mod(a: u64, p: u64) -> Option<u64> {
     let mut m = s;
     let mut c = mod_pow(z, q, p);
     let mut t = mod_pow(a, q, p);
-    let mut r = mod_pow(a, (q + 1) / 2, p);
+    let mut r = mod_pow(a, q.div_ceil(2), p);
     loop {
         if t == 1 {
             return Some(r);
@@ -171,7 +171,7 @@ pub fn multiplicative_order(a: u64, m: u64) -> Option<u64> {
     let factors = crate::primes::factor_u64(phi);
     let mut order = phi;
     for &(p, _) in &factors {
-        while order % p == 0 && mod_pow(a, order / p, m) == 1 % m {
+        while order.is_multiple_of(p) && mod_pow(a, order / p, m) == 1 % m {
             order /= p;
         }
     }

@@ -441,10 +441,10 @@ impl Natural {
             x = next;
         }
         // Correct rounding: Newton converges to floor(root) or floor(root)+1; step down until x^n <= self.
-        while x.pow(n) > *self {
+        while x.pow(n as u64) > *self {
             x = x.checked_sub(&Self::one()).unwrap_or_else(Self::zero);
         }
-        while x.add(&Self::one()).pow(n) <= *self {
+        while x.add(&Self::one()).pow(n as u64) <= *self {
             x = x.add(&Self::one());
         }
         x

@@ -7,6 +7,8 @@
     <LangVersion>latest</LangVersion>
     <IsPackable>false</IsPackable>
     <Configurations>Debug;Release;UnitTest</Configurations>
+    <DebugType>none</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>

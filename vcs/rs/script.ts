@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🗄️ `@semio-tech/vcs-rs` router: `bun ./script.ts <wasm|test>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel } from "../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -22,7 +22,8 @@ class WasmScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted(["vcs"], this.root, segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["vcs"], this.root, rest);
   }
 }
 

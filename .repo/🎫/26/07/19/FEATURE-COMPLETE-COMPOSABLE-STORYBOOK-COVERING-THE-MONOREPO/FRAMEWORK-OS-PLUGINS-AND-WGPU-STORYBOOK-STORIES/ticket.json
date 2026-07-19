@@ -1,0 +1,13 @@
+{
+  "title": "Framework Os Plugins And Wgpu Storybook Stories",
+  "emoji": "🖥️",
+  "status": "open",
+  "description": "Extend the framework/os Storybook scope: add plugins.stories.tsx (one story per PLUGIN_BUILD_TARGETS entry via OsBootHost) and Wgpu.stories.tsx (boots @semio-tech/framework-renderer-wgpu with a WebGPU-unavailable fallback), a WgpuBootHost helper in .storybook/framework/os/index.tsx, a dispose-callback fix to framework/renderer/wgpu/index.ts's bootFrameworkOsWgpu (which had a stale 3-arg call against the real 2-arg semioRendererBoot wasm-bindgen export), and .storybook/os-plugins.spec.ts (Playwright coverage of the plugin matrix boot outcomes). Part of the parallel workforce populating the composable root Storybook (parent ticket FEATURE-COMPLETE-COMPOSABLE-STORYBOOK-COVERING-THE-MONOREPO).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2152"
+  },
+  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs",
+  "sessions": [
+    "⚪6941b53545bd417f92f0c903f187dbe4"
+  ]
+}

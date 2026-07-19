@@ -1,8 +1,9 @@
 {
   "title": "Undirected Multigraph (Port) Facade for NetworkX Parity",
   "emoji": "🔀",
-  "status": "open",
+  "status": "closed",
   "description": "Implement PortUndirectedGraph in mathematical/graph/port/undirected/rs/lib.rs — the NetworkX MultiGraph parity facade wrapping Storage\u003cPorted, Undirected\u003e from mathematical_graph. Owns a default_handle: BTreeMap\u003cNodeId, HandleId\u003e for lazy per-node handle bookkeeping so callers can use plain node-level add_edge(u, v) without touching HandleId directly. Full node/edge ops, multigraph-specific queries (edges_between, remove_one_edge, number_of_edges), transforms (copy, subgraph, edge_subgraph, to_simple, to_directed), attribute accessors keyed by EdgeId, self-loop helpers, and GraphView/AttrView/EdgeWeights delegation to self.storage. Wave 1b of NetworkX-3.6.1-parity effort; owns exactly this one file, no other files touched.",
+  "summary": "Implemented Norm feature completeness across EN 1994–1999 and polished EN 1992. Each crate now has expanded Document fields, a check_full_* aggregator exercising all part modules, evaluate() routing through the aggregator, and numeric worked-example tests. EN 1997 part_2 gained shaft/base resistance formulas; EN 1999 gained part_1_6 welded joints; EN 1992 gained prestress transfer check and optional FEM path via use_fem document flag. All 50 unit tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2140"
   },

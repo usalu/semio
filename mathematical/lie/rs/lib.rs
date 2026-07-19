@@ -168,20 +168,24 @@ fn sym3_eigen(m: Mat3d) -> ([f64; 3], Mat3d) {
             let t = tau.signum() / (tau.abs() + (1.0 + tau * tau).sqrt());
             let c = 1.0 / (1.0 + t * t).sqrt();
             let s = t * c;
-            for k in 0..3 {
-                let (akp, akq) = (a[k][p], a[k][q]);
-                a[k][p] = c * akp - s * akq;
-                a[k][q] = s * akp + c * akq;
+            for row in a.iter_mut() {
+                let (akp, akq) = (row[p], row[q]);
+                row[p] = c * akp - s * akq;
+                row[q] = s * akp + c * akq;
             }
-            for k in 0..3 {
-                let (apk, aqk) = (a[p][k], a[q][k]);
-                a[p][k] = c * apk - s * aqk;
-                a[q][k] = s * apk + c * aqk;
+            {
+                let (lo, hi) = a.split_at_mut(q);
+                let (arow, qrow) = (&mut lo[p], &mut hi[0]);
+                for (ak, qk) in arow.iter_mut().zip(qrow.iter_mut()) {
+                    let (apk, aqk) = (*ak, *qk);
+                    *ak = c * apk - s * aqk;
+                    *qk = s * apk + c * aqk;
+                }
             }
-            for k in 0..3 {
-                let (vkp, vkq) = (v[k][p], v[k][q]);
-                v[k][p] = c * vkp - s * vkq;
-                v[k][q] = s * vkp + c * vkq;
+            for row in v.iter_mut() {
+                let (vkp, vkq) = (row[p], row[q]);
+                row[p] = c * vkp - s * vkq;
+                row[q] = s * vkp + c * vkq;
             }
         }
     }
@@ -279,9 +283,9 @@ impl So3 {
         let axis_k = ((diag[k] - cos_t) / denom).max(0.0).sqrt();
         let mut axis = [0.0; 3];
         axis[k] = axis_k;
-        for i in 0..3 {
+        for (i, ax) in axis.iter_mut().enumerate() {
             if i != k {
-                axis[i] = (e(i, k) + e(k, i)) / (2.0 * denom * axis_k);
+                *ax = (e(i, k) + e(k, i)) / (2.0 * denom * axis_k);
             }
         }
         let axis = vec3d_normalize(axis);

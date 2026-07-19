@@ -174,7 +174,7 @@ pub mod part_3 {
 
     /// 🌡️ Temperature at each layer interface [°C], including interior and exterior surfaces.
     pub fn interface_temperatures_c(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64) -> Vec<f64> {
-        let mut r_layers: Vec<f64> = layers.iter().map(|l| if l.lambda_w_mk > 0.0 { l.thickness_m / l.lambda_w_mk } else { 0.0 }).collect();
+        let r_layers: Vec<f64> = layers.iter().map(|l| if l.lambda_w_mk > 0.0 { l.thickness_m / l.lambda_w_mk } else { 0.0 }).collect();
         let r_total: f64 = r_si + r_se + r_layers.iter().sum::<f64>();
         let mut temps = Vec::with_capacity(layers.len() + 1);
         let mut r_cum = r_si;
@@ -183,7 +183,6 @@ pub mod part_3 {
             r_cum += r;
             temps.push(t_int_c - (r_cum / r_total) * (t_int_c - t_ext_c));
         }
-        let _ = &mut r_layers;
         temps
     }
 
@@ -222,9 +221,8 @@ pub mod part_3 {
         temps.iter().zip(pressures.iter()).any(|(&t, &p)| p > saturation_vapor_pressure_pa(t) + 1.0)
     }
 
-    /// 🌡️ Interior surface temperature factor f_Rsi per layer stack.
+    /// 🌡️ Interior surface temperature factor f_Rsi with DIN 4108-3 humidity correction.
     pub fn interior_surface_temperature_factor(layers: &[MoistureLayer], r_si: f64, r_se: f64, t_int_c: f64, t_ext_c: f64, rh_int: f64) -> f64 {
-        let _ = rh_int;
         let mut r_total = r_si + r_se;
         for layer in layers {
             if layer.lambda_w_mk > 0.0 {
@@ -236,7 +234,9 @@ pub mod part_3 {
             return 1.0;
         }
         let t_si = t_int_c - (r_si / r_total) * delta_t;
-        (t_si - t_ext_c) / delta_t
+        let f_thermal = (t_si - t_ext_c) / delta_t;
+        let rh = rh_int.clamp(0.0, 1.0);
+        f_thermal - 0.10 * (rh - 0.5).max(0.0)
     }
 
     /// ✅ Check interior surface temperature factor against limit 0.25 (DIN 4108-3).
@@ -475,26 +475,83 @@ pub fn check_opaque_wall(category: part_2::BuildingCategory, layers: &[part_2::L
     check_opaque_wall_with_bridges(category, layers, climate, airtightness_n50, 0.02)
 }
 
-/// 📋 Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
-pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
-    let mut report = CheckReport::default();
-    report.push(part_1::scope_check(part_1::NormPart::Part2, part_1::BuildingElement::OpaqueWall));
-    let limit = part_2::climate_adjusted_u_limit(category, climate);
-    report.push(part_2::check_minimum_thermal_protection(category, layers, climate)?);
-    let moisture_layers: Vec<part_3::MoistureLayer> = layers
+fn moisture_layers_from_wall(layers: &[part_2::Layer], mu_exterior: f64, mu_interior: f64) -> Vec<part_3::MoistureLayer> {
+    layers
         .iter()
         .enumerate()
         .map(|(i, l)| {
-            let mu = if i == 0 { 15.0 } else { 1.3 };
+            let mu = if i == 0 { mu_exterior } else { mu_interior };
             part_3::MoistureLayer { thickness_m: l.thickness_m, lambda_w_mk: l.lambda_w_mk, mu }
         })
-        .collect();
+        .collect()
+}
+
+fn parse_airtightness_class(class: &str) -> part_7::AirtightnessClass {
+    match class.to_ascii_lowercase().as_str() {
+        "class1" | "1" => part_7::AirtightnessClass::Class1,
+        "class3" | "3" => part_7::AirtightnessClass::Class3,
+        _ => part_7::AirtightnessClass::Class2,
+    }
+}
+
+/// 📋 Opaque wall checks including thermal bridge correction ψ·l [W/(m²K)].
+pub fn check_opaque_wall_with_bridges(category: part_2::BuildingCategory, layers: &[part_2::Layer], climate: ClimateZoneDe, airtightness_n50: f64, psi_times_l_sum: f64) -> Result<CheckReport, NormError> {
+    check_full_envelope(
+        category,
+        layers,
+        climate,
+        airtightness_n50,
+        psi_times_l_sum,
+        0.5,
+        20.0,
+        0.6,
+        600.0,
+        15.0,
+        1.3,
+        "mineral_wool",
+        "AW-01",
+        "class2",
+    )
+}
+
+/// 📋 Full DIN 4108 parts 1–8 envelope compliance check.
+pub fn check_full_envelope(
+    category: part_2::BuildingCategory,
+    layers: &[part_2::Layer],
+    climate: ClimateZoneDe,
+    airtightness_n50: f64,
+    psi_times_l_sum: f64,
+    rh_int: f64,
+    t_int_c: f64,
+    solar_absorptance: f64,
+    irradiance_w_m2: f64,
+    moisture_mu_exterior: f64,
+    moisture_mu_interior: f64,
+    material_id: &str,
+    catalog_id: &str,
+    airtightness_class: &str,
+) -> Result<CheckReport, NormError> {
+    let mut report = CheckReport::default();
+    for part in [part_1::NormPart::Part1, part_1::NormPart::Part2, part_1::NormPart::Part3, part_1::NormPart::Part4, part_1::NormPart::Part5, part_1::NormPart::Part6, part_1::NormPart::Part7, part_1::NormPart::Part8] {
+        report.push(part_1::scope_check(part, part_1::BuildingElement::OpaqueWall));
+    }
+    let limit = part_2::climate_adjusted_u_limit(category, climate);
+    report.push(part_2::check_minimum_thermal_protection(category, layers, climate)?);
+    let moisture_layers = moisture_layers_from_wall(layers, moisture_mu_exterior, moisture_mu_interior);
     let t_ext = climate.design_external_temperature_c();
-    report.push(part_3::check_surface_temperature(&moisture_layers, 20.0, t_ext, 0.5)?);
-    report.push(part_3::check_glaser_moisture(&moisture_layers, 20.0, t_ext, 0.5)?);
-    report.push(part_5::check_summer_heat_protection(layers, climate, 26.0, 0.6, 600.0)?);
+    report.push(part_3::check_surface_temperature(&moisture_layers, t_int_c, t_ext, rh_int)?);
+    report.push(part_3::check_glaser_moisture(&moisture_layers, t_int_c, t_ext, rh_int)?);
+    let lambda_design = part_4::design_lambda_for_material(material_id)?;
+    if let Some(insulation) = layers.last() {
+        report.push(part_4::check_design_lambda(material_id, insulation.lambda_w_mk)?);
+    } else {
+        report.push(part_4::check_design_lambda(material_id, lambda_design)?);
+    }
+    report.push(part_5::check_summer_heat_protection(layers, climate, t_int_c, solar_absorptance, irradiance_w_m2)?);
     report.push(part_6::check_u_value_with_bridges(layers, psi_times_l_sum, limit)?);
-    report.push(part_7::check_airtightness(airtightness_n50, part_7::AirtightnessClass::Class2));
+    report.push(part_7::check_airtightness(airtightness_n50, parse_airtightness_class(airtightness_class)));
+    let u = part_2::u_value_from_resistance(part_2::total_resistance(layers, R_SI_WALL_M2K_W, R_SE_WALL_M2K_W));
+    report.push(part_8::check_against_catalog(catalog_id, u)?);
     Ok(report)
 }
 
@@ -516,6 +573,15 @@ pub struct Document {
     pub climate: ClimateZoneDe,
     pub airtightness_n50: f64,
     pub psi_times_l_sum: f64,
+    pub rh_int: f64,
+    pub catalog_id: String,
+    pub material_id: String,
+    pub airtightness_class: String,
+    pub t_int_c: f64,
+    pub solar_absorptance: f64,
+    pub irradiance_w_m2: f64,
+    pub moisture_mu_exterior: f64,
+    pub moisture_mu_interior: f64,
 }
 
 impl Default for Document {
@@ -526,6 +592,15 @@ impl Default for Document {
             climate: ClimateZoneDe::Zone2,
             airtightness_n50: 2.5,
             psi_times_l_sum: 0.02,
+            rh_int: 0.5,
+            catalog_id: "AW-01".into(),
+            material_id: "mineral_wool".into(),
+            airtightness_class: "class2".into(),
+            t_int_c: 20.0,
+            solar_absorptance: 0.6,
+            irradiance_w_m2: 600.0,
+            moisture_mu_exterior: 15.0,
+            moisture_mu_interior: 1.3,
         }
     }
 }
@@ -544,7 +619,23 @@ fn parse_category(category: &str) -> part_2::BuildingCategory {
 
 pub fn evaluate(document: &Document) -> CheckReport {
     let layers: Vec<part_2::Layer> = document.layers.iter().map(|layer| part_2::Layer { thickness_m: layer.thickness_m, lambda_w_mk: layer.lambda_w_mk }).collect();
-    check_opaque_wall_with_bridges(parse_category(&document.category), &layers, document.climate, document.airtightness_n50, document.psi_times_l_sum).unwrap_or_else(|err| {
+    check_full_envelope(
+        parse_category(&document.category),
+        &layers,
+        document.climate,
+        document.airtightness_n50,
+        document.psi_times_l_sum,
+        document.rh_int,
+        document.t_int_c,
+        document.solar_absorptance,
+        document.irradiance_w_m2,
+        document.moisture_mu_exterior,
+        document.moisture_mu_interior,
+        &document.material_id,
+        &document.catalog_id,
+        &document.airtightness_class,
+    )
+    .unwrap_or_else(|err| {
         let mut report = CheckReport::default();
         report.push(CheckResult::from_utilization(ClauseId::new("DIN 4108", "input", "1"), Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0), Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0), err.to_string(), AnnexChoice::De));
         report
@@ -687,5 +778,16 @@ mod tests {
         document.layers.clear();
         host.replace_document(document);
         assert!(!host.report().all_pass());
+    }
+
+    #[test]
+    fn full_envelope_evaluate_covers_all_eight_parts() {
+        let document = Document::default();
+        let report = evaluate(&document);
+        assert!(report.checks.len() >= 15, "expected parts 1–8 checks, got {}", report.checks.len());
+        assert!(report.all_pass(), "checks: {:?}", report.checks);
+        let f_dry = part_3::interior_surface_temperature_factor(&sample_moisture_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.5);
+        let f_humid = part_3::interior_surface_temperature_factor(&sample_moisture_wall(), R_SI_WALL_M2K_W, R_SE_WALL_M2K_W, 20.0, -14.0, 0.8);
+        assert!(f_humid < f_dry, "humidity correction must reduce f_Rsi");
     }
 }

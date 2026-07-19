@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
-/** ✏️ `@semio-tech/draw-rs` router: `bun ./script.ts <wasm|test>`. */
-import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+/** ✏️ `@semio-tech/draw-rs` router: `bun ./script.ts <wasm|test [fundamental|quick|long|exhaustive]>`. */
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -22,8 +21,9 @@ class WasmScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    execFileSync("cargo", ["test", "-p", "draw", ...segments], { stdio: "inherit", cwd: this.root });
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["draw"], this.root, rest);
   }
 }
 
