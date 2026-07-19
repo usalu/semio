@@ -1,0 +1,13 @@
+{
+  "title": "Graph Aware Reconcile for OsProjection",
+  "emoji": "🕸️",
+  "status": "open",
+  "description": "Implement `Operation::reconcile` for `OsProjection` in `framework/product/os/core/rs/lib.rs` (impl on `OsOp`, alongside the existing `diff`/`backwards` impl at ~line 693). Add a new `//#region 🔖GraphReconcile` containing a function that runs, in order, on the media graph: (1) orphan-edge drop — drop edges whose source/target node or port no longer exists (tombstone wins), emitting `StudioConflict{kind:\"media-graph/edge-orphaned\",...}`; (2) type-mismatch drop — drop edges whose port `resource_kind`s no longer match (re-typing wins), emitting `StudioConflict{kind:\"media-graph/edge-type-mismatch\",...}` (baseline string comparison since edges have no `contract` field yet); (3) duplicate-wire dedupe — among edges with identical (source_node_id, source_port_id, target_node_id, target_port_id), keep only the lexicographically smallest edge id, silently, no conflict; (4) cycle drop — if the edge set has a cycle, repeatedly drop the edge with the highest array index among the cycle's edges (deterministic proxy for \"newest\", documented limitation since `reconcile` only receives the projection, not per-edge HLTs) until acyclic, emitting `StudioConflict{kind:\"media-graph/edge-cycle\",...}`. Return `(OsProjection, Vec\u003cStudioConflict\u003e)` matching the vcs `Operation::reconcile` trait hook (`vcs/rs/lib.rs` ~line 401), already called from `materialize_document_projection_with_conflicts`/`ingest_envelope`/`projection_with_conflicts` in `vcs/rs/lib.rs`. Also add a `projection_with_conflicts` passthrough to `OsStore` (host module) and to `VcsDocumentApp` (`framework/plugin/rs/lib.rs`), plus a testkit helper `assert_graph_merge_preserves_referential_integrity` in `framework/plugin/rs/lib.rs`'s `testkit` module, and a concrete test in `framework/product/os/core/rs/lib.rs`'s existing host test module simulating two concurrent edits (one deletes a node, the other wires an edge to it) converging to a graph with the edge dropped and a conflict recorded. Verify with `cargo check -p semio-framework-os` and `cargo test -p semio-framework-os` (and whichever package framework/plugin/rs belongs to).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2144"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪6e714a6d82af42cabb1b9072a137f237"
+  ]
+}

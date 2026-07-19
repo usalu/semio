@@ -31,15 +31,28 @@ pub struct Pose {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum SolidSpec {
-    Box { width: f64, depth: f64, height: f64 },
-    Cylinder { radius: f64, height: f64 },
-    Sphere { radius: f64 },
+    Box {
+        width: f64,
+        depth: f64,
+        height: f64,
+    },
+    Cylinder {
+        radius: f64,
+        height: f64,
+    },
+    Sphere {
+        radius: f64,
+    },
     /// 🖼️ Non-parametric GLB-imported reference mesh — tessellation-only, no real B-Rep topology
     /// (mirrors `cad`'s `meshUrl` pattern); cannot serve as a Cut/Drill/Attach tool.
-    ImportedMesh { mesh_url: String },
+    ImportedMesh {
+        mesh_url: String,
+    },
     /// 🧊 STEP/OBJ/STL-imported solid with real B-Rep topology, resolved through the app's kernel
     /// session by handle id (mirrors `cad`'s `solidHandle` pattern); ephemeral to that session.
-    ImportedSolid { solid_handle: String },
+    ImportedSolid {
+        solid_handle: String,
+    },
 }
 
 /// 🪵 The raw workpiece the process starts from.
@@ -55,12 +68,7 @@ pub struct Stock {
 
 impl Default for Stock {
     fn default() -> Self {
-        Self {
-            id: "stock".into(),
-            label: "Stock".into(),
-            solid: SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 },
-            pose: Pose::default(),
-        }
+        Self { id: "stock".into(), label: "Stock".into(), solid: SolidSpec::Box { width: 1.0, depth: 1.0, height: 1.0 }, pose: Pose::default() }
     }
 }
 
@@ -169,12 +177,20 @@ pub fn empty_process3d_projection() -> Process3dDocument {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Process3dOp {
-    Steps { collection: CollectionOp<String, ProcessStep, ProcessStepPatch> },
-    SetStock { stock: Stock },
-    SetCursor { resolved_up_to: Option<usize> },
+    Steps {
+        collection: CollectionOp<String, ProcessStep, ProcessStepPatch>,
+    },
+    SetStock {
+        stock: Stock,
+    },
+    SetCursor {
+        resolved_up_to: Option<usize>,
+    },
     /// 🔁 Wholesale document swap (loading a different example fixture) — a true inverse restores the
     /// exact prior document, mirroring `ShootingOp::SetFixture`.
-    SetDocument { document: Process3dDocument },
+    SetDocument {
+        document: Process3dDocument,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -278,42 +294,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<Process3dDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Process3dEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Process3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Process3dStore::new(envelope)
                 }
-                None => Process3dStore::new(create_document_vcs_envelope(
-                    PROCESS_3D_SCHEMA,
-                    "process3d",
-                    empty_process3d_projection(),
-                    None,
-                )),
+                None => Process3dStore::new(create_document_vcs_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -330,16 +331,7 @@ mod tests {
     use vcs::{create_document_vcs_envelope, DocumentVcsCommand, Operation};
 
     fn cut_step(id: &str) -> ProcessStep {
-        ProcessStep {
-            id: id.into(),
-            label: "Cut".into(),
-            enabled: true,
-            origin: None,
-            measure: ProcessMeasure::Cut {
-                tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 },
-                pose: Pose::default(),
-            },
-        }
+        ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
     }
 
     fn new_store() -> Process3dStore {
@@ -349,41 +341,21 @@ mod tests {
     #[test]
     fn adds_and_removes_steps() {
         let mut store = new_store();
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }],
-                description: None,
-            })
-            .expect("add step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.steps[0].id, "cut-1");
 
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: "cut-1".into() } }],
-                description: None,
-            })
-            .expect("remove step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: "cut-1".into() } }], description: None }).expect("remove step");
         assert!(store.projection().expect("projection").steps.is_empty());
     }
 
     #[test]
     fn patches_a_step_and_undo_restores_it() {
         let mut store = new_store();
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }],
-                description: None,
-            })
-            .expect("add step");
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps {
-                    collection: CollectionOp::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } },
-                }],
-                description: None,
-            })
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: "cut-1".into(), patch: ProcessStepPatch { enabled: Some(false), ..Default::default() } } }], description: None })
             .expect("patch step");
         assert!(!store.projection().expect("projection").steps[0].enabled);
 
@@ -394,12 +366,7 @@ mod tests {
     #[test]
     fn patches_origin_and_undo_restores_it() {
         let mut store = new_store();
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }],
-                description: None,
-            })
-            .expect("add step");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Add { index: 0, item: cut_step("cut-1") } }], description: None }).expect("add step");
         assert!(store.projection().expect("projection").steps[0].origin.is_none());
 
         let origin = StepOrigin { module_id: "wood".into(), machine_id: "circularSaw".into(), modification_kind_id: "crosscut".into() };
@@ -438,12 +405,7 @@ mod tests {
             .expect("build steps + cursor");
         assert_eq!(store.projection().expect("projection").resolved_up_to, Some(2));
 
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: "b".into() } }],
-                description: None,
-            })
-            .expect("remove step clamps cursor");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: "b".into() } }], description: None }).expect("remove step clamps cursor");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.steps.len(), 1);
         assert_eq!(projection.resolved_up_to, Some(1));
@@ -454,9 +416,7 @@ mod tests {
         let mut store = new_store();
         let original_stock = store.projection().expect("projection").stock;
         let new_stock = Stock { id: "beam".into(), label: "Beam".into(), solid: SolidSpec::Cylinder { radius: 0.2, height: 2.0 }, pose: Pose::default() };
-        store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: new_stock.clone() }], description: None })
-            .expect("set stock");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: new_stock.clone() }], description: None }).expect("set stock");
         assert_eq!(store.projection().expect("projection").stock, new_stock);
 
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
@@ -487,15 +447,8 @@ mod tests {
     fn sets_stock_to_imported_solid_and_backwards_restores() {
         let mut store = new_store();
         let original_stock = store.projection().expect("projection").stock;
-        let imported_stock = Stock {
-            id: "stock".into(),
-            label: "Imported STEP".into(),
-            solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() },
-            pose: Pose::default(),
-        };
-        store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: imported_stock.clone() }], description: None })
-            .expect("set imported stock");
+        let imported_stock = Stock { id: "stock".into(), label: "Imported STEP".into(), solid: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() };
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Process3dOp::SetStock { stock: imported_stock.clone() }], description: None }).expect("set imported stock");
         assert_eq!(store.projection().expect("projection").stock, imported_stock);
 
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");

@@ -14,9 +14,13 @@ import {
   type CommandDefinition,
   type UtilityDefinition,
   type WindowMeasure,
+  type UtilityNode,
+  type UiNode,
 } from "@semio-tech/framework-core";
-import { Canvas2dHost, worldToScreenLogical } from "./components/canvas-2d-host.tsx";
+import { SelectionMarquee } from "@semio-tech/ui-react";
 import {
+  Canvas2dHost,
+  worldToScreenLogical,
   Board2dHost,
   board2dCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
@@ -33,16 +37,29 @@ import {
   pushPuzzle2dLiveMirrorOps,
   registerBoard2dPeer,
   unregisterBoard2dPeer,
-} from "./components/board-2d-host.tsx";
-import { NodeGraphHost, catalogueGhostDescriptorJson, computeDagMarqueeOverlay, nodeGraphViewportActionArgs, parseCatalogueAppDragPayload, parseDagSliderOverlays, resolveFixtureWidgetInstanceId } from "./components/node-graph-host.tsx";
-import { SelectionMarquee } from "@semio-tech/ui-react";
-import { Paint2dHost } from "./components/paint-2d-host.tsx";
-import { TableHost } from "./components/table-host.tsx";
-import { GraphTimelineHost } from "./components/graph-timeline-host.tsx";
-import { TextEditorHost, buildTextEditorContextMenuItems, lineRangeAt, multiSpanReplace } from "./components/text-editor-host.tsx";
-import { World3dHost, brushObjectPlacementArgs, parsePuzzle3dCatalogueDragPayload, resolveMeshStyle, resolveVortexPointerDownIntent, resolveWorldContextMenuTarget, snapWorldPointToGrid, worldInstancePickBlocked } from "./components/world-3d-host.tsx";
-import { parseWorldTerrainStyle } from "./components/world-terrain-layer.tsx";
-import {
+  NodeGraphHost,
+  catalogueGhostDescriptorJson,
+  computeDagMarqueeOverlay,
+  nodeGraphViewportActionArgs,
+  parseCatalogueAppDragPayload,
+  parseDagSliderOverlays,
+  resolveFixtureWidgetInstanceId,
+  Paint2dHost,
+  TableHost,
+  GraphTimelineHost,
+  TextEditorHost,
+  buildTextEditorContextMenuItems,
+  lineRangeAt,
+  multiSpanReplace,
+  World3dHost,
+  brushObjectPlacementArgs,
+  parsePuzzle3dCatalogueDragPayload,
+  resolveMeshStyle,
+  resolveVortexPointerDownIntent,
+  resolveWorldContextMenuTarget,
+  snapWorldPointToGrid,
+  worldInstancePickBlocked,
+  parseWorldTerrainStyle,
   InkCanvasHost,
   inkItemBounds,
   eraseInkStrokePointsInItem,
@@ -56,8 +73,6 @@ import {
   worldToScreen,
   type InkDocument,
   type InkStrokeItem,
-} from "./components/ink-canvas-host.tsx";
-import {
   appDocumentLabel,
   appWindowDocumentLabel,
   applyUiRefreshResponseToCache,
@@ -102,9 +117,8 @@ import {
   UISearch,
   type UISearchItem,
   useUIFind,
-} from "./os-shell.tsx";
-import { interpretUiNode } from "./ui-interpreter.tsx";
-import type { UtilityNode, UiNode } from "@semio-tech/framework-core";
+  interpretUiNode,
+} from "./index.tsx";
 
 //#region 🔌jsdom polyfills
 // cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
@@ -829,7 +843,7 @@ describe("declarative forms parity", () => {
   });
 
   it("dispatches the tree drop action with payload, target and position", async () => {
-    const { declarativeTreeDragController } = await import("./ui-interpreter.tsx");
+    const { declarativeTreeDragController } = await import("./index.tsx");
     const dispatched: unknown[] = [];
     const controller = declarativeTreeDragController(
       {

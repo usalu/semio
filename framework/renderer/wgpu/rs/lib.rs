@@ -1870,7 +1870,6 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
-            media_kinds: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             resource_kinds: Vec::new(),
@@ -9343,7 +9342,7 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
     if n.saturating_mul(m) > DIFF_LCS_CELL_BUDGET {
         let mut out = Vec::with_capacity(n + m);
         for i in 0..n.max(m) {
-            match (before.get(i), after.get(i)) {
+            match (before.get(i).copied(), after.get(i).copied()) {
                 (Some(b), Some(a)) if b == a => out.push(DiffLine { op: DiffLineOp::Equal, text: b }),
                 (Some(b), Some(a)) => {
                     out.push(DiffLine { op: DiffLineOp::Removed, text: b });
@@ -9523,28 +9522,57 @@ mod diff_view_tests {
 //#endregion DiffViewTests
 
 //#region EventFeed
-/// 🪶 Mirrors a `SurfaceKind::EventFeed` entry's renderer-relevant fields — a single row in the feed.
+/// 🪶 Mirrors a `SurfaceKind::EventFeed` entry (`{id, timestampMs, iconId, title, detail?, tone?}`,
+/// `ui_wgpu::EventFeedScene`'s doc comment / `EventFeedEntry` in `framework/core/js/index.ts`).
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct EventFeedEntryJson {
     id: String,
     #[serde(default)]
-    label: String,
+    timestamp_ms: i64,
+    #[serde(default)]
+    icon_id: String,
+    #[serde(default)]
+    title: String,
     #[serde(default)]
     detail: Option<String>,
     #[serde(default)]
-    timestamp: Option<String>,
+    tone: Option<String>,
+}
+
+/// 🕒 Renders a ms-since-epoch timestamp as a bare `HH:MM:SS` UTC time-of-day — no calendar/timezone
+/// library in this crate, so this deliberately doesn't attempt a full date.
+fn event_feed_time_of_day_utc(timestamp_ms: i64) -> String {
+    let ms_in_day = timestamp_ms.rem_euclid(86_400_000);
+    let total_seconds = ms_in_day / 1000;
+    let hours = total_seconds / 3600;
+    let minutes = (total_seconds % 3600) / 60;
+    let seconds = total_seconds % 60;
+    format!("{hours:02}:{minutes:02}:{seconds:02}")
+}
+
+/// 🎨 Maps an entry's free-form `tone` to an existing theme token — no new color literals. Only the
+/// tones this crate already has a token for get a distinct color; anything else (including no tone)
+/// stays neutral. Widen this as more tones prove common once the host apps start emitting them.
+fn event_feed_tone_color(tone: Option<&str>, theme: &Theme) -> Rgba {
+    match tone {
+        Some("error") | Some("danger") => theme.error,
+        Some("success") | Some("positive") => theme.accent,
+        Some("pending") | Some("warning") => theme.temporary,
+        _ => theme.text_muted,
+    }
 }
 
 fn event_feed_row_height(entry: &EventFeedEntryJson, row_h: f32, theme: &Theme) -> f32 {
     row_h + entry.detail.as_ref().map_or(0.0, |_| theme.font_size_small + theme.padding_standard * 0.25)
 }
 
-/// 📜 Renders [`SurfaceKind::EventFeed`]: a scrollable list of text rows (`entries_json`), each an
-/// optional timestamp + label + detail line. When `follow` is set the feed snaps to its bottom every
-/// frame (log-tail behavior); a manual wheel-scroll on a following feed is overridden on the next
-/// render, same tradeoff a live log tail makes. Rows dispatch `activate_action` (when set) with
-/// `{ "entryId": ... }`, mirroring `render_graph_timeline`'s per-row `checkoutCheckpoint` hit.
+/// 📜 Renders [`SurfaceKind::EventFeed`]: a scrollable list of text rows (`entries_json`), each a
+/// tone dot + optional icon + time-of-day + title, with an optional detail line beneath. When
+/// `follow` is set the feed snaps to its bottom every frame (log-tail behavior); a manual
+/// wheel-scroll on a following feed is overridden on the next render, same tradeoff a live log tail
+/// makes. Rows dispatch `activate_action` (when set) with `{ "entryId": ... }`, mirroring
+/// `render_graph_timeline`'s per-row `checkoutCheckpoint` hit.
 fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(feed) = &scene.event_feed else {
@@ -9596,12 +9624,27 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
             theme.separator,
             1.0,
         );
-        let mut label_x = inner.x + pad;
-        if let Some(timestamp) = &entry.timestamp {
-            draw_text(ctx, timestamp, label_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
-            label_x += 64.0;
+
+        let tone_color = event_feed_tone_color(entry.tone.as_deref(), theme);
+        let dot_y = y + row_h * 0.5;
+        ctx.draw.push_rounded([inner.x + pad, dot_y - 3.0, 6.0, 6.0], tone_color, 3.0);
+        let mut title_x = inner.x + pad + 6.0 + pad * 0.5;
+
+        if !entry.icon_id.is_empty() {
+            if let Some(icons) = ctx.icons {
+                if let Some(uv) = icons.icon_uv(&entry.icon_id) {
+                    ctx.draw.push_textured([title_x, y + (row_h - 14.0) * 0.5, 14.0, 14.0], uv, theme.text_element);
+                    title_x += 14.0 + pad * 0.5;
+                }
+            }
         }
-        draw_text(ctx, &entry.label, label_x, y + row_h * 0.65, theme.font_size_small, theme.text);
+
+        if entry.timestamp_ms != 0 {
+            let time_label = event_feed_time_of_day_utc(entry.timestamp_ms);
+            draw_text(ctx, &time_label, title_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+            title_x += 56.0;
+        }
+        draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, theme.text);
         if let Some(detail) = &entry.detail {
             draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, theme.text_muted);
         }
@@ -9632,19 +9675,55 @@ mod event_feed_tests {
         let entries: Vec<EventFeedEntryJson> = serde_json::from_str(json).unwrap();
         assert_eq!(entries.len(), 1);
         assert_eq!(entries[0].id, "only-required");
-        assert!(entries[0].label.is_empty());
+        assert_eq!(entries[0].timestamp_ms, 0);
+        assert!(entries[0].icon_id.is_empty());
+        assert!(entries[0].title.is_empty());
         assert!(entries[0].detail.is_none());
-        assert!(entries[0].timestamp.is_none());
+        assert!(entries[0].tone.is_none());
+    }
+
+    #[test]
+    fn entries_json_parses_the_full_wire_shape() {
+        let json = r#"[{"id":"e1","timestampMs":1000,"iconId":"bell","title":"Built","detail":"3 warnings","tone":"success"}]"#;
+        let entries: Vec<EventFeedEntryJson> = serde_json::from_str(json).unwrap();
+        assert_eq!(entries[0].timestamp_ms, 1000);
+        assert_eq!(entries[0].icon_id, "bell");
+        assert_eq!(entries[0].title, "Built");
+        assert_eq!(entries[0].detail.as_deref(), Some("3 warnings"));
+        assert_eq!(entries[0].tone.as_deref(), Some("success"));
     }
 
     #[test]
     fn row_height_grows_when_detail_is_present() {
         let theme = Theme::dark();
-        let without_detail = EventFeedEntryJson { id: "a".into(), label: "a".into(), detail: None, timestamp: None };
-        let with_detail =
-            EventFeedEntryJson { id: "b".into(), label: "b".into(), detail: Some("more".into()), timestamp: None };
+        let without_detail =
+            EventFeedEntryJson { id: "a".into(), timestamp_ms: 0, icon_id: String::new(), title: "a".into(), detail: None, tone: None };
+        let with_detail = EventFeedEntryJson {
+            id: "b".into(),
+            timestamp_ms: 0,
+            icon_id: String::new(),
+            title: "b".into(),
+            detail: Some("more".into()),
+            tone: None,
+        };
         let row_h = theme.control_height;
         assert!(event_feed_row_height(&with_detail, row_h, &theme) > event_feed_row_height(&without_detail, row_h, &theme));
+    }
+
+    #[test]
+    fn time_of_day_wraps_within_a_day() {
+        assert_eq!(event_feed_time_of_day_utc(0), "00:00:00");
+        assert_eq!(event_feed_time_of_day_utc(3_661_000), "01:01:01");
+        assert_eq!(event_feed_time_of_day_utc(86_400_000), "00:00:00");
+    }
+
+    #[test]
+    fn known_tones_resolve_to_distinct_theme_tokens() {
+        let theme = Theme::dark();
+        assert_eq!(event_feed_tone_color(Some("error"), &theme), theme.error);
+        assert_eq!(event_feed_tone_color(Some("success"), &theme), theme.accent);
+        assert_eq!(event_feed_tone_color(None, &theme), theme.text_muted);
+        assert_eq!(event_feed_tone_color(Some("unknown-tone"), &theme), theme.text_muted);
     }
 }
 //#endregion EventFeedTests
@@ -20210,7 +20289,6 @@ mod command_registry_tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
-            media_kinds: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             resource_kinds: Vec::new(),

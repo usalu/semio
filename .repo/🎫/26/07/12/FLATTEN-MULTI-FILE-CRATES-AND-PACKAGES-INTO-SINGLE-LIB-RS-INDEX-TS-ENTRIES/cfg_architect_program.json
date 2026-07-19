@@ -1,0 +1,76 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/architect/program/rs/src/lib.rs",
+  "use_path_attr": false,
+  "mods": [
+    {
+      "keyword": "mod",
+      "name": "adjacency",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/adjacency.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "analyze",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/analyze.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "exchange",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/exchange.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "kernel",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/kernel.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "ops",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/ops.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "outputs",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/outputs.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "program",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/program.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "registers",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/registers.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "report",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/report.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "search",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/search.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "status_summary",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/status_summary.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "template",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/template.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "trace",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/trace.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "validate",
+      "path": "/Users/ueli/Documents/semio/architect/program/rs/src/validate.rs"
+    }
+  ]
+}

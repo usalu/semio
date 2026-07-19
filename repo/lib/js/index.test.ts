@@ -611,13 +611,10 @@ describe("package boundary guards", () => {
   });
 
   test("framework renderer host has no per-technology registerUi surface host APIs", () => {
-    const shellPath = join(repoRoot, "framework/renderer/react/os-shell.tsx");
-    const interpreterPath = join(repoRoot, "framework/renderer/react/ui-interpreter.tsx");
-    const shellSource = readFileSync(shellPath, "utf8");
-    const interpreterSource = readFileSync(interpreterPath, "utf8");
-    const combined = `${shellSource}\n${interpreterSource}`;
-    expect(combined).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
-    expect(shellSource).toContain("bootFrameworkOs");
+    const indexPath = join(repoRoot, "framework/renderer/react/index.tsx");
+    const indexSource = readFileSync(indexPath, "utf8");
+    expect(indexSource).not.toMatch(/registerUi(?:Draw|Flow|Layout|Note|Puzzle2d|Puzzle3d|Puzzle5d|Sequence|Writer|Raster|Forms|Trinity|Procedural|Shooting|Gis|Cad|Dag|Lowpoly|Imperative|S)SurfaceHost/);
+    expect(indexSource).toContain("bootFrameworkOs");
   });
 });
 

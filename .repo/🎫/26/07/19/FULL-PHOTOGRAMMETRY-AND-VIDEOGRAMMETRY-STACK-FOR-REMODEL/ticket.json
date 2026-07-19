@@ -1,0 +1,13 @@
+{
+  "title": "Full Photogrammetry and Videogrammetry Stack for Remodel",
+  "emoji": "📷",
+  "status": "open",
+  "description": "Make remodel a sophisticated full-blown headless photogrammetry and videogrammetry library (classical algorithms, pure Rust, wasm32-safe, in-process) with the plugin UI exposing all features via framework primitives. Extend mathematical_algebra with SVD/least-squares; create mathematical_lie, mathematical_optimize, mathematical_spatial, mathematical_signal; create remodel_{image,camera,feature,sfm,dense,mesh,motion,geo,engine}; rewrite remodel_document schema (streams/calibration/GCPs/per-stage params/results, delete phantom native_port) and remodel-plugin (windows, panels, operations with arg forms, staged in-process job execution, exporters PLY/LAS/PNG/STL); framework extensions: World3dScene.points_json, HostEffect::DispatchAction, multi-file RequestFileOpen, OsMediaFormat::{Ply,Las}. Plan: /Users/ueli/.claude/plans/remodel-make-sure-remodel-snuggly-wand.md",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2143"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪31ab41ad31b4407f8a43c50abc51f49a"
+  ]
+}

@@ -693,7 +693,7 @@ export type UiExternalSlotNode = {
   readonly paramsJson: string;
 };
 
-/** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/components/*-host.tsx`. */
+/** 🧭 The dispatch key on {@link UiComponentSceneNode} — matches the lazy-loaded host component per `framework/renderer/react/index.tsx`. */
 export type ComponentKind = "canvas-2d" | "world-3d" | "node-graph" | "text-editor" | "table" | "paint-2d" | "tiled-map" | "board-2d" | "icon-render" | "ink-canvas" | "graph-timeline" | "block-list" | "diff-view" | "event-feed";
 
 /** 🖥️ A native (non-declarative) rendering surface — mirrors the wasm `componentScene` node; the active `componentKind` selects which optional scene field is populated. */
@@ -721,7 +721,7 @@ export type UiComponentSceneNode = {
   readonly eventFeed?: EventFeedScene;
 };
 
-/** 🧷 Shared prop shape for every `framework/renderer/react/components/*-host.tsx` component. */
+/** 🧷 Shared prop shape for every `framework/renderer/react/index.tsx` host component. */
 export type ComponentSceneHostProps = { readonly node: UiComponentSceneNode; readonly onAction: (action: ActionDescriptor) => void };
 //#endregion ComponentSceneProtocol
 

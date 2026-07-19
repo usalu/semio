@@ -2742,7 +2742,7 @@ impl TextEditorScene {
     /** @emoji ⌨️ Builds an editable code-input scene wired to a host settings-change action:
      * `settingsJson` carries `{"readOnly":false,"onEditSettings":<ActionDescriptor>}`, fired by the
      * renderer when the user edits editor settings (font size, tab width, ...) via its own chrome. */
-    pub fn code_input(buffer: String, language: &str, on_edit_settings: ActionDescriptor) -> Self {
+    pub fn code_input(buffer: String, language: &str, on_edit_settings: &ActionDescriptor) -> Self {
         let mut scene = Self::base(buffer, Some(language.into()), None);
         scene.settings_json = Some(serde_json::json!({ "readOnly": false, "onEditSettings": on_edit_settings }).to_string());
         scene

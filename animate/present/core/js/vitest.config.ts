@@ -18,8 +18,8 @@ export default defineConfig({
     name: "@semio-tech/animate-present-core",
     mode: "test",
     environment: "node",
-    include: ["index.ts", "internal.ts"],
-    includeSource: ["index.ts", "internal.ts"],
+    include: ["index.ts"],
+    includeSource: ["index.ts"],
     passWithNoTests: false,
   },
 });

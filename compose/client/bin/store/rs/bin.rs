@@ -49,7 +49,11 @@ mod errors {
         #[error(transparent)]
         Kit(#[from] compose::error::ComposeError),
         #[error("bind {addr}: {source}")]
-        BindFailed { addr: SocketAddr, #[source] source: std::io::Error },
+        BindFailed {
+            addr: SocketAddr,
+            #[source]
+            source: std::io::Error,
+        },
     }
 }
 use errors::StoreError;

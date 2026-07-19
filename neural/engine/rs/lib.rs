@@ -488,7 +488,7 @@ impl SchemaComponent {
         Ok(dictionary)
     }
 
-    fn success_output(&self, instance: Dictionary) -> Result<Dictionary, NeuralEngineError> {
+    fn success_output(&self, instance: &Dictionary) -> Result<Dictionary, NeuralEngineError> {
         let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::Dictionary(instance.clone()));
         for field in &self.schema.fields {
             // 🛡️ `instance` only reaches here after `Schema::validate` confirmed every
@@ -500,8 +500,8 @@ impl SchemaComponent {
         Ok(output.insert("errors", Value::Dictionary(schema_errors_list(&[]))))
     }
 
-    fn error_output(&self, messages: Vec<String>) -> Dictionary {
-        let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::null()).insert("errors", Value::Dictionary(schema_errors_list(&messages)));
+    fn error_output(&self, messages: &[String]) -> Dictionary {
+        let mut output = Dictionary::new().insert(self.schema.id.clone(), Value::null()).insert("errors", Value::Dictionary(schema_errors_list(messages)));
         for field in &self.schema.fields {
             output = output.insert(field.key.clone(), Value::null());
         }
@@ -520,9 +520,9 @@ impl Operation for SchemaComponent {
             (true, false) => self.deconstruct(input),
             (true, true) => self.modify(input, &provided),
         };
-        Ok(match result.and_then(|instance| self.success_output(instance)) {
+        Ok(match result.and_then(|instance| self.success_output(&instance)) {
             Ok(output) => output,
-            Err(error) => self.error_output(vec![error.to_string()]),
+            Err(error) => self.error_output(&[error.to_string()]),
         })
     }
 }
@@ -1129,11 +1129,11 @@ impl NeuralCache {
     }
 
     pub fn len(&self) -> usize {
-        self.entries.lock().map(|entries| entries.len()).unwrap_or(0)
+        self.entries.lock().map_or(0, |entries| entries.len())
     }
 
     pub fn is_empty(&self) -> bool {
-        self.entries.lock().map(|entries| entries.is_empty()).unwrap_or(true)
+        self.entries.lock().map_or(true, |entries| entries.is_empty())
     }
 
     pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>

@@ -28,6 +28,8 @@ using System.Xml;
 using System.IO.Compression;
 using FluentValidation;
 using Compose.Store;
+using System.Diagnostics;
+using System.Net.Sockets;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -153,7 +155,8 @@ public sealed class NewtonsoftComposeJsonCodec : IComposeJsonCodec
 
 #region 🏠Namespace
 // Implementations MUST reside in this namespace.
-namespace Compose;
+namespace Compose
+{
 #endregion 🏠Namespace
 
 
@@ -13872,8 +13875,1962 @@ public static class KitExporter
 
 #endregion 🪁KitExporter
 
+//#region 🔀ComposeDiff
+/// <summary>Kit diff validation, <see cref="AreKitsEqual"/> (normalized JSON), and canonical <see cref="KitDiff"/> JSON comparison.</summary>
+public static class ComposeDiff
+{
+    public static DesignChange GetDesignChange(Design before, Design after, string? author = null, DateTime? time = null)
+    {
+        var forward = Design.GetDesignDiff(before, after) ?? new DesignDiff();
+        var backward = Design.GetDesignDiff(after, before) ?? new DesignDiff();
+        return new DesignChange { Forward = forward, Backward = backward, Author = author, Time = time, Before = before, After = after };
+    }
+
+    public static bool AreKitsEqual(Kit a, Kit b) => StoreKitIO.KitsEqual(a, b);
+
+    public static KitDiffValidationResult ValidateKitDiff(Kit kit, KitDiff diff, bool heal = false)
+    {
+        var ctx = new KitDiffValidationContext { Heal = heal };
+        var kitObj = JObject.Parse(ComposeJson.Codec.SerializeKitDiffValidation(kit));
+        var diffObj = JObject.Parse(ComposeJson.Codec.SerializeKitDiffValidation(diff));
+        JObject? outDiff = heal ? (JObject)diffObj.DeepClone() : null;
+        var refs = RefSets.FromKit(kitObj);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "types", "type", "types", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "designs", "design", "designs",
+            (c, km, item, dm, p, r) => ValidateDesignDiffNested(c, km, item, dm, p, r), refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "tags", "tag", "tags", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "concepts", "concept", "concepts", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "ports", "port", "ports", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "qualities", "quality", "qualities", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "files", "file", "files", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "folders", "folder", "folders", null, refs);
+        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "authors", "author", "authors", null, refs);
+        if (diffObj["attributes"] is JObject attrPart)
+        {
+            var baseAttrs = kitObj["attributes"] as JArray;
+            _ = ValidateIdCollectionDiff(ctx, "kit.attributes", "attribute", baseAttrs, attrPart, null);
+        }
+        var ok = ctx.Errors.Count == 0;
+        KitDiff? diffOut = null;
+        if (heal && outDiff != null)
+        {
+            if (outDiff.Properties().Any())
+                diffOut = ComposeJson.Codec.DeserializeKitDiffValidation<KitDiff>(outDiff.ToString(Formatting.None));
+            else
+                diffOut = new KitDiff();
+        }
+        return new KitDiffValidationResult
+        {
+            Ok = ok,
+            Errors = ctx.Errors,
+            Warnings = ctx.Warnings,
+            Diff = diffOut
+        };
+    }
 
 
+    private sealed class KitDiffValidationContext
+    {
+        public bool Heal { get; init; }
+        public List<KitDiffValidationNote> Errors { get; } = new();
+        public List<KitDiffValidationNote> Warnings { get; } = new();
+        public void Push(string kind, string code, string message)
+        {
+            var n = new KitDiffValidationNote { Code = string.IsNullOrEmpty(code) ? null : code, Message = message };
+            if (kind == "errors") Errors.Add(n); else Warnings.Add(n);
+        }
+    }
+
+    private readonly struct RefSets
+    {
+        public HashSet<string> TypeIds { get; }
+        public HashSet<string> DesignIds { get; }
+        public HashSet<string> AuthorIds { get; }
+
+        private RefSets(HashSet<string> t, HashSet<string> d, HashSet<string> a)
+        {
+            TypeIds = t; DesignIds = d; AuthorIds = a;
+        }
+
+        public static RefSets FromKit(JObject kitObj) => new(
+            IdSetFromEntities(kitObj["types"]),
+            IdSetFromEntities(kitObj["designs"]),
+            IdSetFromEntities(kitObj["authors"]));
+    }
+
+    private static HashSet<string> IdSetFromEntities(JToken? v)
+    {
+        var s = new HashSet<string>();
+        if (v is not JArray arr) return s;
+        foreach (var x in arr)
+            if (x is JObject o && o["id"]?.Value<string>() is { } g && !string.IsNullOrEmpty(g))
+                s.Add(g);
+        return s;
+    }
+
+    private static List<JObject> ToJObjectList(JArray? arr)
+    {
+        var list = new List<JObject>();
+        if (arr == null) return list;
+        foreach (var x in arr)
+            if (x is JObject o) list.Add(o);
+        return list;
+    }
+
+    private static JArray? DiffUpdatesArray(JObject raw) => raw["updated"] as JArray ?? raw["modified"] as JArray;
+
+    private static bool KitDiffDeepEqual(JToken a, JToken b) => JToken.DeepEquals(a, b);
+
+    private delegate void DesignNestedHandler(KitDiffValidationContext ctx, JObject kitMap, JObject designItem, JObject? diffMap, string path, RefSets refs);
+
+    private static void RunTopLevelIdCollection(KitDiffValidationContext ctx, JObject kitObj, JObject diffObj, JObject? outDiff, bool heal,
+        string key, string idKey, string kitArrayKey, DesignNestedHandler? onDesign, RefSets refs)
+    {
+        if (diffObj[key] is not JObject part) return;
+        var baseArr = kitObj[kitArrayKey] as JArray;
+        var fixedObj = ValidateIdCollectionDiff(ctx, key, idKey, baseArr, part,
+            onDesign != null ? (c, item, dm, p) => onDesign(c, kitObj, item, dm, p, refs) : null);
+        if (!heal || outDiff == null) return;
+        if (fixedObj != null && fixedObj.Properties().Any()) outDiff[key] = fixedObj;
+        else outDiff.Remove(key);
+    }
+
+    private static JArray? FilterUpdatesById(JArray updates, string idKey, string gid)
+    {
+        var na = new JArray();
+        foreach (var u in updates)
+        {
+            if (u is not JObject um) { na.Add(u); continue; }
+            if (um[idKey] is JObject idObj && idObj["id"]?.Value<string>() == gid) continue;
+            na.Add(u);
+        }
+        return na;
+    }
+
+    private static JObject? ValidateIdCollectionDiff(KitDiffValidationContext ctx, string path, string idKey, JArray? baseEntities, JObject? raw,
+        Action<KitDiffValidationContext, JObject, JObject?, string>? onUpdated)
+    {
+        if (raw == null) return null;
+        var baseBy = new Dictionary<string, JObject>();
+        foreach (var ent in ToJObjectList(baseEntities))
+            if (ent["id"]?.Value<string>() is { } bg && !string.IsNullOrEmpty(bg))
+                baseBy[bg] = ent;
+        var removedSet = new HashSet<string>();
+        if (raw["removed"] is JArray remArr)
+            foreach (var r in remArr)
+                if (r is JObject rm && rm["id"]?.Value<string>() is { } rg)
+                    removedSet.Add(rg);
+        var afterRemove = new HashSet<string>();
+        foreach (var g in baseBy.Keys)
+            if (!removedSet.Contains(g)) afterRemove.Add(g);
+        JArray? hRem = null, hUpd = null, hAdd = null;
+        if (ctx.Heal)
+        {
+            if (raw["removed"] is JArray r0) hRem = (JArray)r0.DeepClone();
+            if (DiffUpdatesArray(raw) is JArray u0) hUpd = (JArray)u0.DeepClone();
+            if (raw["added"] is JArray a0) hAdd = (JArray)a0.DeepClone();
+        }
+        if (raw["removed"] is JArray removedTok)
+            foreach (var r in removedTok)
+                if (r is JObject rm)
+                {
+                    var rg = rm["id"]?.Value<string>() ?? "";
+                    if (!baseBy.ContainsKey(rg))
+                    {
+                        ctx.Push("warnings", "kitdiff.remove.missing-target", $"{path}: remove references missing {idKey} {rg}");
+                        if (hRem != null)
+                        {
+                            var nr = new JArray();
+                            foreach (var x in hRem)
+                                if (x is JObject xm && xm["id"]?.Value<string>() == rg) continue;
+                                else nr.Add(x);
+                            hRem = nr;
+                        }
+                    }
+                }
+        var addBy = new Dictionary<string, JObject>();
+        if (raw["added"] is JArray addArr)
+            foreach (var a in addArr)
+                if (a is JObject am && am["id"]?.Value<string>() is { } ag)
+                    addBy[ag] = am;
+        if (raw["removed"] is JArray removedTok2)
+            foreach (var r in removedTok2)
+                if (r is JObject rm)
+                {
+                    var rg = rm["id"]?.Value<string>() ?? "";
+                    if (baseBy.TryGetValue(rg, out var orig) && addBy.TryGetValue(rg, out var add) && KitDiffDeepEqual(orig, add))
+                    {
+                        ctx.Push("warnings", "kitdiff.cycle.noop-restore", $"{path}: removed and re-added {idKey} {rg} are deeply equal (no effective change)");
+                        if (ctx.Heal)
+                        {
+                            if (hRem != null)
+                            {
+                                var nr = new JArray();
+                                foreach (var x in hRem)
+                                    if (x is JObject xm && xm["id"]?.Value<string>() == rg) continue;
+                                    else nr.Add(x);
+                                hRem = nr;
+                            }
+                            if (hAdd != null)
+                            {
+                                var na = new JArray();
+                                foreach (var x in hAdd)
+                                    if (x is JObject xm && xm["id"]?.Value<string>() == rg) continue;
+                                    else na.Add(x);
+                                hAdd = na;
+                            }
+                        }
+                    }
+                }
+        var seenAdd = new HashSet<string>();
+        if (raw["added"] is JArray addedTok)
+            foreach (var a in addedTok)
+                if (a is JObject am)
+                {
+                    var ag = am["id"]?.Value<string>() ?? "";
+                    if (seenAdd.Contains(ag))
+                    {
+                        ctx.Push("errors", "kitdiff.add.duplicate-in-diff", $"{path}: duplicate added {idKey} id {ag}");
+                        if (hAdd != null)
+                        {
+                            var first = true;
+                            var na = new JArray();
+                            foreach (var x in hAdd)
+                            {
+                                if (x is JObject xm && xm["id"]?.Value<string>() == ag)
+                                {
+                                    if (first) { na.Add(x); first = false; }
+                                    continue;
+                                }
+                                na.Add(x);
+                            }
+                            hAdd = na;
+                        }
+                    }
+                    seenAdd.Add(ag);
+                    if (afterRemove.Contains(ag))
+                    {
+                        ctx.Push("errors", "kitdiff.add.duplicate-id", $"{path}: cannot add {idKey} {ag} that still exists after removes");
+                        if (hAdd != null)
+                        {
+                            var na = new JArray();
+                            foreach (var x in hAdd)
+                                if (x is JObject xm && xm["id"]?.Value<string>() == ag) continue;
+                                else na.Add(x);
+                            hAdd = na;
+                        }
+                    }
+                }
+        if (DiffUpdatesArray(raw) is JArray updTok)
+            foreach (var u in updTok)
+                if (u is JObject um && um[idKey] is JObject idObj)
+                {
+                    var gid = idObj["id"]?.Value<string>() ?? "";
+                    var p = $"{path}.{idKey}[{gid}]";
+                    if (string.IsNullOrEmpty(gid))
+                    {
+                        ctx.Push("errors", "kitdiff.update.bad-id", $"{p}: missing {idKey} id");
+                        if (hUpd != null) hUpd = FilterUpdatesById(hUpd, idKey, gid);
+                        continue;
+                    }
+                    if (!afterRemove.Contains(gid))
+                    {
+                        ctx.Push("errors", "kitdiff.update.missing-target", $"{p}: update targets {idKey} not present after removes");
+                        if (hUpd != null) hUpd = FilterUpdatesById(hUpd, idKey, gid);
+                        continue;
+                    }
+                    if (!baseBy.TryGetValue(gid, out var item))
+                    {
+                        ctx.Push("errors", "kitdiff.update.missing-base", $"{p}: {idKey} not found in base kit");
+                        if (hUpd != null) hUpd = FilterUpdatesById(hUpd, idKey, gid);
+                        continue;
+                    }
+                    var dm = um["diff"] as JObject;
+                    onUpdated?.Invoke(ctx, item, dm, p);
+                }
+        if (!ctx.Heal) return null;
+        var o = new JObject();
+        if (hRem is { Count: > 0 }) o["removed"] = hRem;
+        if (hUpd is { Count: > 0 }) o["updated"] = hUpd;
+        if (hAdd is { Count: > 0 }) o["added"] = hAdd;
+        return o.Properties().Any() ? o : null;
+    }
+
+    private static void ValidateDesignDiffNested(KitDiffValidationContext ctx, JObject kitMap, JObject design, JObject? diff, string path, RefSets refs)
+    {
+        if (diff == null) return;
+        if (diff["parent"] is JObject pObj && pObj["id"]?.Value<string>() is { } pg)
+        {
+            if (!string.IsNullOrEmpty(pg) && !refs.DesignIds.Contains(pg))
+                ctx.Push("errors", "kitdiff.ref.design-parent-missing", $"{path}: parent design {pg} not in kit");
+            if (design["id"]?.Value<string>() is { } dg && pg == dg)
+                ctx.Push("errors", "kitdiff.ref.design-parent-self", $"{path}: design cannot be its own parent");
+        }
+        if (diff["authors"] != null)
+        {
+            var da = diff["authors"]!;
+            if (da is JArray authArr)
+                foreach (var a in authArr)
+                    if (a is JObject am && am["id"]?.Value<string>() is { } g && !string.IsNullOrEmpty(g) && !refs.AuthorIds.Contains(g))
+                        ctx.Push("errors", "kitdiff.ref.author-missing", $"{path}: author {g} not in kit");
+            else if (da is JObject authObj)
+            {
+                var authBase = kitMap["authors"] as JArray;
+                _ = ValidateIdCollectionDiff(ctx, $"{path}.authors", "author", authBase, authObj, null);
+            }
+        }
+        if (diff["pieces"] is JObject pd)
+        {
+            var piecesBase = design["pieces"] as JArray;
+            _ = ValidateIdCollectionDiff(ctx, $"{path}.pieces", "piece", piecesBase, pd, null);
+            if (pd["added"] is JArray pAdd)
+                foreach (var a in pAdd)
+                    if (a is JObject am)
+                    {
+                        var tg = (am["type"] as JObject)?["id"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrEmpty(tg) && !refs.TypeIds.Contains(tg))
+                            ctx.Push("errors", "kitdiff.ref.piece-type-missing", $"{path}.pieces.added: type {tg} not in kit");
+                        var dsg = (am["design"] as JObject)?["id"]?.Value<string>() ?? "";
+                        if (!string.IsNullOrEmpty(dsg) && !refs.DesignIds.Contains(dsg))
+                            ctx.Push("errors", "kitdiff.ref.piece-design-missing", $"{path}.pieces.added: subdesign {dsg} not in kit");
+                    }
+        }
+    }
+
+    public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)
+    {
+        var jsonA = Utility.Serialize(a);
+        var jsonB = Utility.Serialize(b);
+        if (jsonA == jsonB) return true;
+        var tokenA = CanonicalizeToken(JToken.Parse(jsonA));
+        var tokenB = CanonicalizeToken(JToken.Parse(jsonB));
+        return JToken.DeepEquals(tokenA ?? JValue.CreateNull(), tokenB ?? JValue.CreateNull());
+    }
+
+    private static readonly HashSet<string> DefaultZeroKeys = new() { "x", "y", "z", "u", "v", "gap", "shift", "rise", "rotation", "turn", "tilt", "t" };
+    private static readonly HashSet<string> DefaultFalseKeys = new() { "mandatory", "isHidden", "isLocked", "isAbstract", "virtual" };
+
+    private static string? GetComparableId(JToken? token)
+    {
+        if (token == null || token.Type != JTokenType.Object) return null;
+        var obj = (JObject)token;
+        return (string?)(obj["id"]
+            ?? (obj["type"] as JObject)?["id"]
+            ?? (obj["design"] as JObject)?["id"]
+            ?? (obj["piece"] as JObject)?["id"]
+            ?? (obj["connection"] as JObject)?["id"]
+            ?? (obj["representation"] as JObject)?["id"]
+            ?? (obj["port"] as JObject)?["id"]
+            ?? (obj["connector"] as JObject)?["id"]
+            ?? (obj["prop"] as JObject)?["id"]
+            ?? (obj["attribute"] as JObject)?["id"]);
+    }
+
+    private static JToken? CanonicalizeToken(JToken? token, string key = "")
+    {
+        if (token == null || token.Type == JTokenType.Null) return null;
+        switch (token.Type)
+        {
+            case JTokenType.String:
+                var s = token.Value<string>();
+                return string.IsNullOrEmpty(s) ? null : token;
+            case JTokenType.Integer:
+            case JTokenType.Float:
+                var n = token.Value<double>();
+                return DefaultZeroKeys.Contains(key) && n == 0 ? null : token;
+            case JTokenType.Boolean:
+                var b = token.Value<bool>();
+                return DefaultFalseKeys.Contains(key) && !b ? null : token;
+            case JTokenType.Array:
+                var items = token.Children()
+                    .Select(c => CanonicalizeToken(c, key))
+                    .Where(c => c != null)
+                    .OrderBy(c => GetComparableId(c) ?? c!.ToString(Formatting.None))
+                    .ToList();
+                return items.Count > 0 ? new JArray(items) : null;
+            case JTokenType.Object:
+                var result = new JObject();
+                foreach (var prop in ((JObject)token).Properties().OrderBy(p => p.Name))
+                {
+                    var val = CanonicalizeToken(prop.Value, prop.Name);
+                    if (val != null) result[prop.Name] = val;
+                }
+                return result.Count > 0 ? result : null;
+            default:
+                return token;
+        }
+    }
+}
+//#endregion 🔀ComposeDiff
 
 
+//#region 🔧KitInPlaceDiff
+/// <summary>In-place application of a <see cref="KitDiff"/> to a <see cref="Kit"/> (host-side, no persistence).</summary>
+public static class KitInPlaceDiff
+{
+    public static void ApplyKitDiff(Kit kit, KitDiff diff)
+    {
+        if (diff.ShouldSerializeName()) kit.Name = diff.Name ?? "";
+        if (diff.ShouldSerializeVersion()) kit.Version = diff.Version ?? "";
+        if (diff.ShouldSerializeDescription()) kit.Description = diff.Description;
+        if (diff.ShouldSerializeIcon()) kit.Icon = diff.Icon;
+        if (diff.ShouldSerializeImage()) kit.Image = diff.Image;
+        if (diff.ShouldSerializePreview()) kit.Preview = diff.Preview;
+        if (diff.ShouldSerializeRemote()) kit.Remote = diff.Remote;
+        if (diff.ShouldSerializeHomepage()) kit.Homepage = diff.Homepage;
+        if (diff.ShouldSerializeLicense()) kit.License = diff.License;
+        if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt ?? kit.CreatedAt;
+        if (diff.ShouldSerializeModificationdAt()) kit.ModificationdAt = diff.ModificationdAt ?? kit.ModificationdAt;
 
+        if (diff.Types != null)
+        {
+            kit.Types ??= new List<Type>();
+            ApplyTypesDiff(kit.Types, diff.Types);
+        }
+
+        if (diff.Designs != null)
+        {
+            kit.Designs ??= new List<Design>();
+            ApplyDesignsDiff(kit.Designs, diff.Designs);
+        }
+
+        if (diff.Tags != null)
+        {
+            kit.Tags ??= new List<Tag>();
+            ApplyTagsDiff(kit.Tags, diff.Tags);
+        }
+
+        if (diff.Folders != null)
+        {
+            kit.Folders ??= new List<Folder>();
+            ApplyFoldersDiff(kit.Folders, diff.Folders);
+        }
+
+        if (diff.Ports != null)
+        {
+            kit.Ports ??= new List<Port>();
+            ApplyPortsDiff(kit.Ports, diff.Ports);
+        }
+
+        if (diff.Concepts != null)
+        {
+            kit.Concepts ??= new List<Concept>();
+            ApplyConceptsDiff(kit.Concepts, diff.Concepts);
+        }
+
+        if (diff.Files != null)
+        {
+            kit.Files ??= new List<File>();
+            ApplyFilesDiff(kit.Files, diff.Files);
+        }
+
+        if (diff.Authors != null)
+        {
+            kit.Authors ??= new List<Author>();
+            ApplyAuthorsDiff(kit.Authors, diff.Authors);
+        }
+
+        if (diff.Attributes != null)
+        {
+            kit.Attributes ??= new List<Attribute>();
+            ApplyAttributesDiff(kit.Attributes, diff.Attributes);
+        }
+    }
+
+    private static void ApplyTagsDiff(List<Tag> tags, TagsDiff diff)
+    {
+        if (diff.Removed != null)
+            tags.RemoveAll(t => diff.Removed.Any(r => r.Id == t.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var tag = tags.FirstOrDefault(t => t.Id == update.Tag.Id);
+                if (tag != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) tag.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) tag.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) tag.Icon = update.Diff.Icon;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            tags.AddRange(diff.Added);
+    }
+
+    private static void ApplyFoldersDiff(List<Folder> folders, FoldersDiff diff)
+    {
+        if (diff.Removed != null)
+            folders.RemoveAll(f => diff.Removed.Any(r => r.Id == f.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var folder = folders.FirstOrDefault(f => f.Id == update.Folder.Id);
+                if (folder != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) folder.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) folder.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeParent()) folder.Parent = update.Diff.Parent;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            folders.AddRange(diff.Added);
+    }
+
+    private static void ApplyPortsDiff(List<Port> ports, PortsDiff diff)
+    {
+        if (diff.Removed != null)
+            ports.RemoveAll(p => diff.Removed.Any(r => r.Id == p.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var port = ports.FirstOrDefault(p => p.Id == update.Port.Id);
+                if (port != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) port.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) port.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) port.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeCompatiblePorts()) port.CompatiblePorts = update.Diff.CompatiblePorts;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            ports.AddRange(diff.Added);
+    }
+
+    private static void ApplyConceptsDiff(List<Concept> concepts, ConceptsDiff diff)
+    {
+        if (diff.Removed != null)
+            concepts.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var concept = concepts.FirstOrDefault(c => c.Id == update.Concept.Id);
+                if (concept != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) concept.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) concept.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) concept.Icon = update.Diff.Icon;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            concepts.AddRange(diff.Added);
+    }
+
+    private static void ApplyFilesDiff(List<File> files, FilesDiff diff)
+    {
+        if (diff.Removed != null)
+            files.RemoveAll(f => diff.Removed.Any(r => r.Id == f.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var file = files.FirstOrDefault(f => f.Id == update.File.Id);
+                if (file != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) file.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeRemote()) file.Remote = update.Diff.Remote;
+                    if (update.Diff.ShouldSerializeFolder()) file.Folder = update.Diff.Folder;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            files.AddRange(diff.Added);
+    }
+
+    private static void ApplyAuthorsDiff(List<Author> authors, AuthorsDiff diff)
+    {
+        if (diff.Removed != null)
+            authors.RemoveAll(a => diff.Removed.Any(r => r.Id == a.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var author = authors.FirstOrDefault(a => a.Id == update.Author.Id);
+                if (author != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) author.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeEmail()) author.Email = update.Diff.Email ?? "";
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            authors.AddRange(diff.Added);
+    }
+
+    private static void ApplyAttributesDiff(List<Attribute> attributes, AttributesDiff diff)
+    {
+        if (diff.Removed != null)
+            attributes.RemoveAll(a => diff.Removed.Any(r => r.Id == a.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var attr = attributes.FirstOrDefault(a => a.Id == update.Attribute.Id);
+                if (attr != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeValue()) attr.Value = update.Diff.Value;
+                    if (update.Diff.ShouldSerializeDefinition()) attr.Definition = update.Diff.Definition;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            attributes.AddRange(diff.Added);
+    }
+
+    private static void ApplyTypesDiff(List<Type> types, TypesDiff diff)
+    {
+        if (diff.Removed != null)
+            types.RemoveAll(t => diff.Removed.Any(r => r.Id == t.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var type = types.FirstOrDefault(t => t.Id == update.Type.Id);
+                if (type != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) type.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) type.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) type.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeImage()) type.Image = update.Diff.Image;
+                    if (update.Diff.ShouldSerializeParent()) type.Parent = update.Diff.Parent;
+                    if (update.Diff.ShouldSerializeIsAbstract()) type.IsAbstract = update.Diff.IsAbstract;
+                    if (update.Diff.ShouldSerializeFolder()) type.Folder = update.Diff.Folder;
+                    if (update.Diff.ShouldSerializeStock()) type.Stock = update.Diff.Stock ?? type.Stock;
+                    if (update.Diff.ShouldSerializeVirtual()) type.Virtual = update.Diff.Virtual ?? type.Virtual;
+                    if (update.Diff.ShouldSerializeUnit()) type.Unit = update.Diff.Unit;
+                    if (update.Diff.ShouldSerializeLocation()) type.Location = update.Diff.Location;
+                    if (update.Diff.ShouldSerializeAuthors()) type.Authors = update.Diff.Authors?.Select(a => new AuthorId { Id = a.Id }).ToList();
+                    if (update.Diff.ShouldSerializeConcepts()) type.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Id = c.Id }).ToList();
+                    if (update.Diff.Connectors != null)
+                    {
+                        type.Connectors ??= new List<Connector>();
+                        ApplyConnectorsDiff(type.Connectors, update.Diff.Connectors);
+                    }
+                    if (update.Diff.Representations != null)
+                    {
+                        type.Representations ??= new List<Representation>();
+                        ApplyRepresentationsDiff(type.Representations, update.Diff.Representations);
+                    }
+                    if (update.Diff.Attributes != null)
+                    {
+                        type.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(type.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            types.AddRange(diff.Added);
+    }
+
+    private static void ApplyConnectorsDiff(List<Connector> connectors, ConnectorsDiff diff)
+    {
+        if (diff.Removed != null)
+            connectors.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var connector = connectors.FirstOrDefault(c => c.Id == update.Connector.Id);
+                if (connector != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) connector.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) connector.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializePort()) connector.Port = update.Diff.Port;
+                    if (update.Diff.ShouldSerializeMandatory()) connector.Mandatory = update.Diff.Mandatory ?? connector.Mandatory;
+                    if (update.Diff.ShouldSerializeT()) connector.T = update.Diff.T ?? connector.T;
+                    if (update.Diff.ShouldSerializePoint())
+                    {
+                        var pd = update.Diff.Point;
+                        var bp = connector.Point ?? new Point();
+                        connector.Point = new Point { X = bp.X + (pd?.X ?? 0), Y = bp.Y + (pd?.Y ?? 0), Z = bp.Z + (pd?.Z ?? 0) };
+                    }
+                    if (update.Diff.ShouldSerializeDirection())
+                    {
+                        var dd = update.Diff.Direction;
+                        var bd = connector.Direction ?? new Vector();
+                        connector.Direction = new Vector { X = bd.X + (dd?.X ?? 0), Y = bd.Y + (dd?.Y ?? 0), Z = bd.Z + (dd?.Z ?? 0) };
+                    }
+                    if (update.Diff.Attributes != null)
+                    {
+                        connector.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connector.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            connectors.AddRange(diff.Added);
+    }
+
+    private static void ApplyRepresentationsDiff(List<Representation> representations, RepresentationsDiff diff)
+    {
+        if (diff.Removed != null)
+            representations.RemoveAll(m => diff.Removed.Any(r => r.Id == m.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var representation = representations.FirstOrDefault(m => m.Id == update.Representation.Id);
+                if (representation != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) representation.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) representation.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeFile()) representation.File = update.Diff.File;
+                    if (update.Diff.ShouldSerializeTags()) representation.Tags = update.Diff.Tags;
+                    if (update.Diff.Attributes != null)
+                    {
+                        representation.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(representation.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            representations.AddRange(diff.Added);
+    }
+
+    private static void ApplyDesignsDiff(List<Design> designs, DesignsDiff diff)
+    {
+        if (diff.Removed != null)
+            designs.RemoveAll(d => diff.Removed.Any(r => r.Id == d.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var design = designs.FirstOrDefault(d => d.Id == update.Design.Id);
+                if (design != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) design.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) design.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) design.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeImage()) design.Image = update.Diff.Image;
+                    if (update.Diff.ShouldSerializeParent()) design.Parent = update.Diff.Parent;
+                    if (update.Diff.ShouldSerializeIsAbstract()) design.IsAbstract = update.Diff.IsAbstract;
+                    if (update.Diff.ShouldSerializeFolder()) design.Folder = update.Diff.Folder;
+                    if (update.Diff.ShouldSerializeCanScale()) design.CanScale = update.Diff.CanScale;
+                    if (update.Diff.ShouldSerializeCanMirror()) design.CanMirror = update.Diff.CanMirror;
+                    if (update.Diff.ShouldSerializeUnit()) design.Unit = update.Diff.Unit;
+                    if (update.Diff.ShouldSerializeActiveLayer()) design.ActiveLayer = update.Diff.ActiveLayer;
+                    if (update.Diff.ShouldSerializeLocation()) design.Location = update.Diff.Location;
+                    if (update.Diff.ShouldSerializeAuthors()) design.Authors = update.Diff.Authors?.Select(a => new AuthorId { Id = a.Id }).ToList();
+                    if (update.Diff.ShouldSerializeConcepts()) design.Concepts = update.Diff.Concepts?.Select(c => new ConceptId { Id = c.Id }).ToList();
+                    if (update.Diff.Pieces != null)
+                    {
+                        design.Pieces ??= new List<Piece>();
+                        ApplyPiecesDiff(design.Pieces, update.Diff.Pieces);
+                    }
+                    if (update.Diff.Connections != null)
+                    {
+                        design.Connections ??= new List<Connection>();
+                        ApplyConnectionsDiff(design.Connections, update.Diff.Connections);
+                    }
+                    if (update.Diff.Attributes != null)
+                    {
+                        design.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(design.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            designs.AddRange(diff.Added);
+    }
+
+    private static void ApplyPiecesDiff(List<Piece> pieces, PiecesDiff diff)
+    {
+        if (diff.Removed != null)
+            pieces.RemoveAll(p => diff.Removed.Any(r => r.Id == p.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var piece = pieces.FirstOrDefault(p => p.Id == update.Piece.Id);
+                if (piece != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) piece.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) piece.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeType()) piece.Type = update.Diff.Type;
+                    if (update.Diff.ShouldSerializeDesign()) piece.Design = update.Diff.Design;
+                    if (update.Diff.ShouldSerializePlane()) piece.Plane = update.Diff.Plane;
+                    if (update.Diff.ShouldSerializeCenter()) piece.Center = update.Diff.Center;
+                    if (update.Diff.ShouldSerializeScale()) piece.Scale = update.Diff.Scale;
+                    if (update.Diff.ShouldSerializeMirrorPlane()) piece.MirrorPlane = update.Diff.MirrorPlane;
+                    if (update.Diff.ShouldSerializeIsHidden()) piece.IsHidden = update.Diff.IsHidden;
+                    if (update.Diff.ShouldSerializeIsLocked()) piece.IsLocked = update.Diff.IsLocked;
+                    if (update.Diff.ShouldSerializeColor()) piece.Color = update.Diff.Color;
+                    if (update.Diff.Attributes != null)
+                    {
+                        piece.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(piece.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            pieces.AddRange(diff.Added);
+    }
+
+    private static void ApplyConnectionsDiff(List<Connection> connections, ConnectionsDiff diff)
+    {
+        if (diff.Removed != null)
+            connections.RemoveAll(c => diff.Removed.Any(r => r.Id == c.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var connection = connections.FirstOrDefault(c => c.Id == update.Connection.Id);
+                if (connection != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeParent() && update.Diff.Parent != null)
+                    {
+                        var s = connection.Parent ?? new Side();
+                        if (update.Diff.Parent.ShouldSerializePiece()) s.Piece = update.Diff.Parent.Piece;
+                        if (update.Diff.Parent.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Parent.DesignPiece;
+                        if (update.Diff.Parent.ShouldSerializeConnector()) s.Connector = update.Diff.Parent.Connector;
+                        connection.Parent = s;
+                    }
+                    if (update.Diff.ShouldSerializeChild() && update.Diff.Child != null)
+                    {
+                        var s = connection.Child ?? new Side();
+                        if (update.Diff.Child.ShouldSerializePiece()) s.Piece = update.Diff.Child.Piece;
+                        if (update.Diff.Child.ShouldSerializeDesignPiece()) s.DesignPiece = update.Diff.Child.DesignPiece;
+                        if (update.Diff.Child.ShouldSerializeConnector()) s.Connector = update.Diff.Child.Connector;
+                        connection.Child = s;
+                    }
+                    if (update.Diff.ShouldSerializeDescription()) connection.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeGap()) connection.Gap = connection.Gap + (update.Diff.Gap ?? 0f);
+                    if (update.Diff.ShouldSerializeShift()) connection.Shift = connection.Shift + (update.Diff.Shift ?? 0f);
+                    if (update.Diff.ShouldSerializeRise()) connection.Rise = connection.Rise + (update.Diff.Rise ?? 0f);
+                    if (update.Diff.ShouldSerializeRotation()) connection.Rotation = connection.Rotation + (update.Diff.Rotation ?? 0f);
+                    if (update.Diff.ShouldSerializeTurn()) connection.Turn = connection.Turn + (update.Diff.Turn ?? 0f);
+                    if (update.Diff.ShouldSerializeTilt()) connection.Tilt = connection.Tilt + (update.Diff.Tilt ?? 0f);
+                    if (update.Diff.ShouldSerializeU()) connection.U = (connection.U ?? 0f) + (update.Diff.U ?? 0f);
+                    if (update.Diff.ShouldSerializeV()) connection.V = (connection.V ?? 0f) + (update.Diff.V ?? 0f);
+                    if (update.Diff.Attributes != null)
+                    {
+                        connection.Attributes ??= new List<Attribute>();
+                        ApplyAttributesDiff(connection.Attributes, update.Diff.Attributes);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            connections.AddRange(diff.Added);
+    }
+}
+//#endregion 🔧KitInPlaceDiff
+
+
+//#region 📥KitState
+/// <summary>Replace all fields of an existing <see cref="Kit"/> instance in-place (used by transport sync without computing a <see cref="KitDiff"/>).</summary>
+public static class KitState
+{
+    public static void ReplaceInPlace(Kit target, Kit source)
+    {
+        target.Id = source.Id;
+        target.Name = source.Name;
+        target.Version = source.Version;
+        target.Description = source.Description;
+        target.Icon = source.Icon;
+        target.Image = source.Image;
+        target.Concepts = source.Concepts;
+        target.Tags = source.Tags;
+        target.Remote = source.Remote;
+        target.Homepage = source.Homepage;
+        target.License = source.License;
+        target.Authors = source.Authors;
+        target.Pieces = source.Pieces;
+        target.Groups = source.Groups;
+        target.Connections = source.Connections;
+        target.Props = source.Props;
+        target.Stats = source.Stats;
+        target.Attributes = source.Attributes;
+        target.Preview = source.Preview;
+        target.Qualities = source.Qualities;
+        target.Ports = source.Ports;
+        target.Files = source.Files;
+        target.Folders = source.Folders;
+        target.Types = source.Types;
+        target.Designs = source.Designs;
+        target.CreatedAt = source.CreatedAt;
+        target.ModificationdAt = source.ModificationdAt;
+    }
+}
+//#endregion 📥KitState
+
+
+//#region 🗄️Store
+namespace Store
+{
+    //#region Events
+/// <summary>📡 Command notifications for a {@link StoreSession} (mirrors compose/js {@code EventBus} command kinds).</summary>
+public sealed class StoreEventBus
+{
+    private readonly Dictionary<string, List<Action>> _kindHandlers = new(StringComparer.Ordinal);
+
+    /// <summary>📡 Fires after any kit command mutation succeeds.</summary>
+    public event Action? CommandSucceeded;
+
+    public void SubscribeKind(string kind, Action handler)
+    {
+        if (!_kindHandlers.TryGetValue(kind, out var list))
+        {
+            list = new List<Action>();
+            _kindHandlers[kind] = list;
+        }
+        if (!list.Contains(handler))
+            list.Add(handler);
+    }
+
+    public void UnsubscribeKind(string kind, Action handler)
+    {
+        if (_kindHandlers.TryGetValue(kind, out var list))
+            list.Remove(handler);
+    }
+
+    internal void PublishKind(string kind)
+    {
+        if (!_kindHandlers.TryGetValue(kind, out var list)) return;
+        foreach (var h in list.ToArray())
+            h();
+    }
+
+    internal void AfterCommand(string? fieldEventKind = null)
+    {
+        CommandSucceeded?.Invoke();
+        PublishKind("commandSucceeded");
+        if (!string.IsNullOrEmpty(fieldEventKind))
+            PublishKind(fieldEventKind);
+    }
+}
+
+/// <summary>📡 Subscribes {@link StoreSession} bus events.</summary>
+public static class StoreEventBridge
+{
+    public static void SubscribeCommandSucceeded(StoreSession session, Action handler) =>
+        session.Events.CommandSucceeded += handler;
+}
+    //#endregion Events
+
+    //#region StoreGraphqlSelection
+/// <summary>📬 Kit command selection helpers — mirrors <c>compose/js/graphql-kit-selection.ts</c>.</summary>
+internal static class StoreGraphqlSelection
+{
+    internal static string WithResponse(string kitSelection, string responseSelection)
+    {
+        var trimmed = kitSelection.Trim();
+        var open = trimmed.IndexOf('{');
+        if (open < 0) return AppendResponseAfterArgs(trimmed, responseSelection);
+        var close = FindMatchingCloseBrace(trimmed, open);
+        if (close < 0) return AppendResponseAfterArgs(trimmed, responseSelection);
+        var head = trimmed[..open].TrimEnd();
+        var inner = trimmed[(open + 1)..close].Trim();
+        var tail = trimmed[(close + 1)..].Trim();
+        var result = $"{head} {{ {TransformKitSelectionBlock(inner, responseSelection)} }}";
+        return tail.Length == 0 ? result : $"{result} {WithResponse(tail, responseSelection)}";
+    }
+
+    static int FindMatchingCloseBrace(string s, int openIdx)
+    {
+        if (openIdx < 0 || openIdx >= s.Length || s[openIdx] != '{') return -1;
+        var depth = 0;
+        var inString = false;
+        var escape = false;
+        for (var i = openIdx; i < s.Length; i++)
+        {
+            var ch = s[i];
+            if (inString)
+            {
+                if (escape) { escape = false; continue; }
+                if (ch == '\\') { escape = true; continue; }
+                if (ch == '"') inString = false;
+                continue;
+            }
+            if (ch == '"') { inString = true; continue; }
+            if (ch == '{') depth++;
+            else if (ch == '}')
+            {
+                depth--;
+                if (depth == 0) return i;
+            }
+        }
+        return -1;
+    }
+
+    static int LastArgListCloseParen(string s)
+    {
+        var depth = 0;
+        var inString = false;
+        var escape = false;
+        var last = -1;
+        for (var i = 0; i < s.Length; i++)
+        {
+            var ch = s[i];
+            if (inString)
+            {
+                if (escape) { escape = false; continue; }
+                if (ch == '\\') { escape = true; continue; }
+                if (ch == '"') inString = false;
+                continue;
+            }
+            if (ch == '"') { inString = true; continue; }
+            if (ch == '(') depth++;
+            else if (ch == ')')
+            {
+                depth--;
+                if (depth == 0) last = i;
+            }
+        }
+        return last;
+    }
+
+    static bool HasTopLevelSelectionBrace(string s)
+    {
+        var paren = 0;
+        var inString = false;
+        var escape = false;
+        for (var i = 0; i < s.Length; i++)
+        {
+            var ch = s[i];
+            if (inString)
+            {
+                if (escape) { escape = false; continue; }
+                if (ch == '\\') { escape = true; continue; }
+                if (ch == '"') inString = false;
+                continue;
+            }
+            if (ch == '"') { inString = true; continue; }
+            if (ch == '(') paren++;
+            else if (ch == ')') paren--;
+            else if (ch == '{' && paren == 0) return true;
+        }
+        return false;
+    }
+
+    static string AppendResponseAfterArgs(string fieldWithArgs, string responseSelection)
+    {
+        var t = fieldWithArgs.Trim();
+        if (t.Contains(responseSelection, StringComparison.Ordinal)) return t;
+        var closeParen = LastArgListCloseParen(t);
+        if (closeParen < 0) return $"{t} {{ {responseSelection} }}";
+        var after = t[(closeParen + 1)..].Trim();
+        if (after.StartsWith("{", StringComparison.Ordinal))
+        {
+            var open = closeParen + 1 + t[(closeParen + 1)..].IndexOf('{');
+            var close = FindMatchingCloseBrace(t, open);
+            if (close < 0) return $"{t} {{ {responseSelection} }}";
+            var head = t[..open].TrimEnd();
+            var inner = t[(open + 1)..close].Trim();
+            var tail = t[(close + 1)..].Trim();
+            return $"{head} {{ {TransformKitSelectionBlock(inner, responseSelection)} }}{(tail.Length == 0 ? "" : " " + tail)}";
+        }
+        return $"{t[..(closeParen + 1)]} {{ {responseSelection} }}";
+    }
+
+    static string TransformKitSelectionBlock(string inner, string responseSelection) =>
+        !HasTopLevelSelectionBrace(inner) ? AppendResponseAfterArgs(inner, responseSelection) : WithResponse(inner, responseSelection);
+}
+    //#endregion StoreGraphqlSelection
+
+    //#region StoreGraphql
+//#region 🌐Wire
+/// <summary>🌐 GraphQL-over-HTTP wire helpers aligned with <c>compose/js</c> (<c>graphqlWirePostBodyJson</c>, operation-kind guard).</summary>
+public static class StoreGraphqlWire
+{
+    /// <summary>🧵 Canonical POST body: <c>query</c>, <c>variables</c>, <c>operationName</c> always present.</summary>
+    public static string PostBodyJson(string query, JObject? variables = null, string? operationName = null) =>
+        ComposeJson.Codec.Serialize(new JObject
+        {
+            ["query"] = query,
+            ["variables"] = variables ?? new JObject(),
+            ["operationName"] = operationName == null ? JValue.CreateNull() : operationName,
+        });
+
+    /// <summary>🛑 Enforces golden-schema split: <c>Query</c> vs <c>Mutation</c> roots only.</summary>
+    public static void AssertOperationKind(string document, string kind)
+    {
+        var rest = document.TrimStart();
+        for (; ; )
+        {
+            if (rest.StartsWith("#"))
+            {
+                var nl = rest.IndexOf('\n');
+                if (nl < 0) throw new IOException($"graphql: expected {kind}, got unknown");
+                rest = rest[(nl + 1)..].TrimStart();
+                continue;
+            }
+            break;
+        }
+        var head = rest.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
+        var op = head.Split('(')[0];
+        if (!string.Equals(op, kind, StringComparison.OrdinalIgnoreCase))
+            throw new IOException($"graphql: expected {kind}, got {head}");
+    }
+
+    /// <summary>📬 Unwraps <c>data</c> or throws on GraphQL <c>errors</c>.</summary>
+    public static JToken UnwrapData(JToken response)
+    {
+        if (response is not JObject o) throw new IOException("graphql: response is not an object");
+        if (o["errors"] is JArray errs && errs.Count > 0)
+        {
+            var msg = errs[0]?["message"]?.Value<string>() ?? "GraphQL error";
+            throw new IOException("graphql: " + msg);
+        }
+        var data = o["data"];
+        if (data == null || data.Type == JTokenType.Null) throw new IOException("graphql: no data in response");
+        return data;
+    }
+}
+//#endregion 🌐Wire
+
+//#region 🌐Documents
+/// <summary>🌐 Golden-schema GraphQL documents aligned with <c>compose/js</c> (<c>schema.golden.graphql</c>).</summary>
+public static class StoreGraphql
+{
+    /// <summary>📬 <c>Response</c> selection on command mutation leaves.</summary>
+    public const string ResponseSelection =
+        "ok errors { kind message requestId } result { ... on IdResult { value } }";
+
+    /// <summary>🧭 Store entry query — mirrors <c>KIT_SESSION_QUERY_ENTRY</c> in compose/js.</summary>
+    public const string KitSessionQueryEntry =
+        "query KitStoreEntry { session { stores { edges { node { wip { id theKit { id } } } } } } }";
+
+    /// <summary>🧵 GraphQL string literal for variables.</summary>
+    public static string GqlString(string s) => ComposeJson.Codec.Serialize(s);
+
+    /// <summary>🧵 GraphQL ID list literal.</summary>
+    public static string GqlIdList(IEnumerable<string> ids) =>
+        "[" + string.Join(", ", ids.Select(GqlString)) + "]";
+
+    /// <summary>📖 <c>session.stores → wip.theKit.kit</c> read (theKit head).</summary>
+    public static string KitSessionWipKitQuery(string kitSelection) =>
+        $"query KitSessionWipStore {{ session {{ stores {{ edges {{ cursor node {{ wip {{ theKit {{ kit {{ {kitSelection} }} }} }} }} }} }} }} }}";
+
+    /// <summary>📖 <c>session.stores → node</c> store branch read.</summary>
+    public static string SessionStoreNodeQuery(string innerOnStore) =>
+        $"query Stores {{ session {{ stores {{ edges {{ cursor node {{ {innerOnStore} }} }} }} }} }}";
+
+    /// <summary>📖 WIP materialization: <c>initialKit</c>, <c>theKit.kit</c>, checkpoint anchors.</summary>
+    public static string KitWipMaterializationQuery() =>
+        @"query KitMaterialization {
+  session {
+    stores {
+      edges {
+        node {
+          wip {
+            initialKit { name }
+            theKit {
+              kit {
+                name
+                designs { edges { node { name } } }
+                types { edges { node { name } } }
+              }
+            }
+            checkpoints {
+              edges {
+                node {
+                  initial { name }
+                  kit { name }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}";
+
+    public static string SessionStoresCursorsQuery() =>
+        "query SessionStoreCursors { session { stores { edges { cursor } } } }";
+
+    public static string SessionStartMutation() =>
+        $"mutation SessionStart {{ session {{ start {{ {ResponseSelection} }} }} }}";
+
+    public static string SessionEndMutation() =>
+        $"mutation SessionEnd {{ session {{ end {{ {ResponseSelection} }} }} }}";
+
+    public static string SessionStoreStartNewChangeMutation() =>
+        $"mutation($storeId: ID!) {{ session {{ store(id: $storeId) {{ theKit {{ startNewChange {{ {ResponseSelection} }} }} }} }} }}";
+
+    /// <summary>✍️ <c>session.store → theKit → unsavedChange → kit</c> scoped mutation.</summary>
+    public static (string Query, JObject Variables) ScopedKitMutation(string storeId, string changeId, string kitSelection)
+    {
+        var inner = WithResponseSelection(kitSelection);
+        return (
+            $"mutation($storeId: ID!, $changeId: ID!) {{ session {{ store(id: $storeId) {{ theKit {{ unsavedChange(id: $changeId) {{ kit {{ {inner} }} }} }} }} }} }}",
+            new JObject { ["storeId"] = storeId, ["changeId"] = changeId });
+    }
+
+    /// <summary>✍️ <c>kit.rename</c> on the open unsaved change.</summary>
+    public static (string Query, JObject Variables) RenameKitMutation(string storeId, string changeId, string newName) =>
+        ScopedKitMutation(storeId, changeId, $"rename(newName: {GqlString(newName)})");
+
+    /// <summary>📬 Appends {@link ResponseSelection} to the innermost kit command field (mirrors compose/js <c>withResponseSelection</c>).</summary>
+    public static string WithResponseSelection(string kitSelection) =>
+        StoreGraphqlSelection.WithResponse(kitSelection, ResponseSelection);
+}
+//#endregion 🌐Documents
+
+//#region 🌐JsonPaths
+/// <summary>🧩 JSON-path helpers for golden <c>session → stores → wip → theKit → kit</c> reads.</summary>
+public static class StoreGraphqlJson
+{
+    public static string WipPath(int storeIndex = 0) => $"session.stores.edges[{storeIndex}].node.wip";
+
+    public static string? DefaultStoreCursor(JToken data, int storeIndex = 0) =>
+        data.SelectToken($"session.stores.edges[{storeIndex}].cursor")?.Value<string>();
+
+    public static JObject? SessionStoreNode(JToken data, string? storeCursor = null, int storeIndex = 0)
+    {
+        if (!string.IsNullOrEmpty(storeCursor))
+        {
+            var edges = data.SelectToken("session.stores.edges") as JArray;
+            if (edges != null)
+            {
+                foreach (var e in edges)
+                {
+                    if (e is not JObject edge) continue;
+                    if (edge["cursor"]?.Value<string>() == storeCursor)
+                        return edge["node"] as JObject;
+                }
+            }
+            return null;
+        }
+        return data.SelectToken($"session.stores.edges[{storeIndex}].node") as JObject;
+    }
+
+    public static JObject? WipBranch(JToken data, string? storeCursor = null, int storeIndex = 0) =>
+        SessionStoreNode(data, storeCursor, storeIndex)?["wip"] as JObject;
+
+    public static JObject? WipTheKitKit(JToken data, string? storeCursor = null, int storeIndex = 0) =>
+        WipBranch(data, storeCursor, storeIndex)?["theKit"]?["kit"] as JObject;
+
+    public static JToken? WipTheKitKitScalar(JToken data, string field, string? storeCursor = null, int storeIndex = 0) =>
+        WipTheKitKit(data, storeCursor, storeIndex)?[field];
+
+    public static JToken? WipInitialKitScalar(JToken data, string field, int storeIndex = 0) =>
+        data.SelectToken($"{WipPath(storeIndex)}.initialKit.{field}");
+
+    public static string? StartNewChangeId(JToken mutationData) =>
+        mutationData.SelectToken("session.store.theKit.startNewChange.result.value")?.Value<string>();
+
+    public static string? ResponseResultId(JToken? responseNode) =>
+        responseNode?["result"]?["value"]?.Value<string>();
+
+    /// <summary>📬 Throws when <c>Response.ok</c> is false.</summary>
+    public static void AssertResponseOk(JToken? responseNode, string label)
+    {
+        if (responseNode is not JObject o) return;
+        if (o["ok"]?.Value<bool>() == false)
+        {
+            var msg = o["errors"]?["message"]?.Value<string>() ?? "command failed";
+            throw new IOException($"graphql: {label}: {msg}");
+        }
+    }
+
+    /// <summary>📬 Finds the first <c>Response</c> node under <c>unsavedChange.kit</c> (supports aliased design commands).</summary>
+    public static JToken? FindKitCommandResponse(JToken mutationData)
+    {
+        var kit = mutationData.SelectToken("session.store.theKit.unsavedChange.kit");
+        return kit == null ? null : FindResponsePayload(kit);
+    }
+
+    static JToken? FindResponsePayload(JToken node)
+    {
+        if (node is JObject o && o.ContainsKey("ok")) return o;
+        if (node is not JContainer container) return null;
+        foreach (var child in container.Children())
+        {
+            var hit = FindResponsePayload(child);
+            if (hit != null) return hit;
+        }
+        return null;
+    }
+}
+//#endregion 🌐JsonPaths
+    //#endregion StoreGraphql
+
+    //#region StoreClient
+/// <summary>🌐 Thin HTTP GraphQL client to <c>compose-store</c> (<c>POST /install</c>, <c>POST /graphql</c>); same wire as <c>compose/js</c> <see cref="StoreSession.OpenHttp"/>.</summary>
+public sealed class StoreClient : IDisposable
+{
+    private readonly string _binaryPath;
+    private readonly HttpClient _http;
+    private Process? _process;
+    private string? _baseUrl;
+
+    public StoreClient(string? binaryPath = null, string? baseUrl = null)
+    {
+        _binaryPath = string.IsNullOrWhiteSpace(binaryPath)
+            ? StorePaths.ResolveStoreBinary()
+            : binaryPath.Trim();
+        _http = new HttpClient { Timeout = TimeSpan.FromMinutes(5) };
+        if (!string.IsNullOrWhiteSpace(baseUrl))
+            _baseUrl = baseUrl.TrimEnd('/');
+    }
+
+    public void Start()
+    {
+        if (_baseUrl != null) return;
+        if (_process != null) return;
+        if (!System.IO.File.Exists(_binaryPath))
+            throw new FileNotFoundException("compose-store binary not found", _binaryPath);
+
+        var port = AllocateFreeTcpPort();
+        var psi = new ProcessStartInfo
+        {
+            FileName = _binaryPath,
+            UseShellExecute = false,
+            RedirectStandardInput = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            CreateNoWindow = true,
+        };
+        psi.Environment["COMPOSE_STORE_PORT"] = port.ToString();
+        var rl = Environment.GetEnvironmentVariable("RUST_LOG");
+        psi.Environment["RUST_LOG"] = string.IsNullOrEmpty(rl) ? "error" : rl!;
+
+        _process = Process.Start(psi) ?? throw new IOException("compose-store: start failed");
+        _baseUrl = ReadReadyBaseUrl(_process, port);
+    }
+
+    private static int AllocateFreeTcpPort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        try
+        {
+            return ((IPEndPoint)listener.LocalEndpoint).Port;
+        }
+        finally
+        {
+            listener.Stop();
+        }
+    }
+
+    private static string ReadReadyBaseUrl(Process process, int fallbackPort)
+    {
+        var deadline = DateTime.UtcNow.AddSeconds(60);
+        while (DateTime.UtcNow < deadline)
+        {
+            if (process.HasExited)
+                throw new IOException("compose-store exited before ready");
+            var line = process.StandardOutput.ReadLine();
+            if (line == null)
+            {
+                Thread.Sleep(10);
+                continue;
+            }
+            if (line.Length == 0) continue;
+            try
+            {
+                var o = ComposeJson.Codec.ParseJsonRoot(line) as JObject;
+                if (o["composeStoreReady"]?.Value<bool>() == true)
+                {
+                    var port = o["port"]?.Value<int?>() ?? fallbackPort;
+                    return $"http://127.0.0.1:{port}";
+                }
+            }
+            catch (JsonException)
+            {
+                /* not the ready line */
+            }
+        }
+        throw new TimeoutException("compose-store: ready line timeout");
+    }
+
+    private string BaseUrl
+    {
+        get
+        {
+            Start();
+            return _baseUrl ?? throw new InvalidOperationException("compose-store: no base url");
+        }
+    }
+
+    /// <summary>📦 <c>POST /install</c> — exactly one install field per <c>compose-store</c>.</summary>
+    internal void Install(JObject body)
+    {
+        var json = body.ToString(Formatting.None);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var r = _http.PostAsync($"{BaseUrl}/install", content).GetAwaiter().GetResult();
+        var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        if (!r.IsSuccessStatusCode)
+            throw new IOException($"compose-store install {(int)r.StatusCode}: {t}");
+        WarmGraphqlSession();
+    }
+
+    /// <summary>🧾 Warm-path after install — <c>session.start</c> + store cursor probe (compose/js <c>warmGraphqlRead</c>).</summary>
+    internal void WarmGraphqlSession()
+    {
+        try
+        {
+            ExecuteMutation(StoreGraphql.SessionStartMutation());
+        }
+        catch
+        {
+            /* session may already be started */
+        }
+        _ = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
+    }
+
+    /// <summary>🪢 First <c>Session.stores.edges[].cursor</c> (store command scope id, typically <c>e0</c>).</summary>
+    internal string DefaultStoreId()
+    {
+        var data = ExecuteQuery(StoreGraphql.SessionStoresCursorsQuery());
+        var id = StoreGraphqlJson.DefaultStoreCursor(data);
+        if (string.IsNullOrEmpty(id))
+            throw new IOException("graphql: no session store cursor");
+        return id;
+    }
+
+    /// <summary>📖 <c>POST /graphql</c> query root (<c>type Query</c>).</summary>
+    internal JToken ExecuteQuery(string query, JObject? variables = null, string? operationName = null)
+    {
+        StoreGraphqlWire.AssertOperationKind(query, "query");
+        return StoreGraphqlWire.UnwrapData(PostGraphql(StoreGraphqlWire.PostBodyJson(query, variables, operationName)));
+    }
+
+    /// <summary>✍️ <c>POST /graphql</c> mutation root (<c>type Mutation</c>).</summary>
+    internal JToken ExecuteMutation(string query, JObject? variables = null, string? operationName = null)
+    {
+        StoreGraphqlWire.AssertOperationKind(query, "mutation");
+        return StoreGraphqlWire.UnwrapData(PostGraphql(StoreGraphqlWire.PostBodyJson(query, variables, operationName)));
+    }
+
+    private JToken PostGraphql(string requestJson)
+    {
+        using var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+        using var req = new HttpRequestMessage(HttpMethod.Post, $"{BaseUrl}/graphql") { Content = content };
+        req.Headers.TryAddWithoutValidation("Accept", "application/json");
+        var r = _http.SendAsync(req).GetAwaiter().GetResult();
+        var t = r.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        if (!r.IsSuccessStatusCode)
+            throw new IOException($"graphql http {(int)r.StatusCode}: {t}");
+        return JToken.Parse(t);
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            if (_baseUrl != null)
+            {
+                using var _ = _http.PostAsync($"{_baseUrl}/server/shutdown", null).GetAwaiter().GetResult();
+            }
+        }
+        catch { }
+
+        try
+        {
+            if (_process?.HasExited == false)
+                _process.WaitForExit(2000);
+        }
+        catch { }
+
+        _process?.Dispose();
+        _process = null;
+        _http.Dispose();
+    }
+}
+
+/// <summary>🧭 Thin GraphQL session over <see cref="StoreClient" /> (aligned with compose/js <c>Session</c> store surface).</summary>
+public sealed class StoreSession : IDisposable
+{
+    private readonly StoreClient _client;
+    private string? _storeId;
+    private string? _activeChangeId;
+    private WipKit? _kit;
+
+    public StoreSession(StoreClient client)
+    {
+        _client = client;
+        Events = new StoreEventBus();
+    }
+
+    /// <summary>📡 Command and field-change bus for this session.</summary>
+    public StoreEventBus Events { get; }
+
+    /// <summary>📦 WIP kit under <c>session.stores → wip.theKit.kit</c>.</summary>
+    public WipKit Kit => _kit ??= new WipKit(this);
+
+    /// <summary>🌐 Opens against an existing <c>compose-store</c> base URL (optional install-create first).</summary>
+    public static StoreSession OpenHttp(string baseUrl, JObject? installCreateDto = null)
+    {
+        var c = new StoreClient(baseUrl: baseUrl);
+        var session = new StoreSession(c);
+        if (installCreateDto != null)
+            session.InstallCreate(installCreateDto);
+        else
+            c.WarmGraphqlSession();
+        return session;
+    }
+
+    /// <summary>🪢 Store command scope id (<c>Session.stores.edges[].cursor</c>, typically <c>e0</c>).</summary>
+    public string StoreId => _storeId ??= _client.DefaultStoreId();
+
+    //#region 🎬 install commands
+    /// <summary>📦 <c>POST /install</c> with <c>create.dto</c>.</summary>
+    public void InstallCreate(JObject dto) =>
+        _client.Install(new JObject { ["create"] = new JObject { ["dto"] = dto } });
+
+    /// <summary>📥 <c>POST /install</c> with normalized initial-kit projection (<see cref="StoreKitIO.KitToInstallProjection"/>).</summary>
+    public void InstallProjection(Kit kit) =>
+        InstallCreate(StoreKitIO.KitToInstallProjection(kit));
+
+    /// <summary>📦 <c>POST /install</c> with <c>importFile.path</c>.</summary>
+    public void InstallImportFile(string path) =>
+        _client.Install(new JObject { ["importFile"] = new JObject { ["path"] = Path.GetFullPath(path) } });
+    //#endregion 🎬 install commands
+
+    //#region 🎬 session commands
+    /// <summary>🎬 <c>session.store.theKit.startNewChange</c>.</summary>
+    public string StartNewChange()
+    {
+        _activeChangeId = MutateStartNewChange();
+        Events.AfterCommand();
+        return _activeChangeId;
+    }
+
+    internal string EnsureChangeId() => _activeChangeId ??= MutateStartNewChange();
+    //#endregion 🎬 session commands
+
+    private string MutateStartNewChange()
+    {
+        var data = _client.ExecuteMutation(
+            StoreGraphql.SessionStoreStartNewChangeMutation(),
+            new JObject { ["storeId"] = StoreId });
+        var node = data.SelectToken("session.store.theKit.startNewChange");
+        StoreGraphqlJson.AssertResponseOk(node, "startNewChange");
+        var changeId = StoreGraphqlJson.ResponseResultId(node as JObject);
+        if (string.IsNullOrEmpty(changeId))
+            throw new IOException("graphql: startNewChange returned empty change id");
+        return changeId;
+    }
+
+    internal JToken ReadSessionEntry() =>
+        _client.ExecuteQuery(StoreGraphql.KitSessionQueryEntry);
+
+    internal JToken ReadKitSelection(string selection) =>
+        _client.ExecuteQuery(StoreGraphql.KitSessionWipKitQuery(selection));
+
+    internal JObject? ReadKitObject(string selection) =>
+        StoreGraphqlJson.WipTheKitKit(ReadKitSelection(selection), StoreId);
+
+    internal JToken ReadMaterialization() =>
+        _client.ExecuteQuery(StoreGraphql.KitWipMaterializationQuery());
+
+    internal void RunKitMutation(string changeId, string kitSelection, string? fieldEventKind)
+    {
+        var (query, variables) = StoreGraphql.ScopedKitMutation(StoreId, changeId, kitSelection);
+        var data = _client.ExecuteMutation(query, variables);
+        var op = kitSelection.Trim().Split('(')[0].Trim();
+        var node = StoreGraphqlJson.FindKitCommandResponse(data)
+            ?? data.SelectToken($"session.store.theKit.unsavedChange.kit.{op}");
+        StoreGraphqlJson.AssertResponseOk(node, op);
+        Events.AfterCommand(fieldEventKind);
+    }
+
+    public void Dispose() => _client.Dispose();
+}
+
+public static class StorePaths
+{
+    public static string ResolveStoreBinary()
+    {
+        var env = Environment.GetEnvironmentVariable("COMPOSE_STORE_BIN");
+        if (!string.IsNullOrWhiteSpace(env) && System.IO.File.Exists(env)) return env!.Trim();
+        var nextTo = Path.Combine(AppContext.BaseDirectory, "compose-store.exe");
+        if (System.IO.File.Exists(nextTo)) return nextTo;
+        var nextToNix = Path.Combine(AppContext.BaseDirectory, "compose-store");
+        if (System.IO.File.Exists(nextToNix)) return nextToNix;
+        for (var here = new DirectoryInfo(AppContext.BaseDirectory); here != null; here = here.Parent)
+        {
+            var win = Path.Combine(here.FullName, "target", "release", "compose-store.exe");
+            if (System.IO.File.Exists(win)) return win;
+            var unix = Path.Combine(here.FullName, "target", "release", "compose-store");
+            if (System.IO.File.Exists(unix)) return unix;
+        }
+        if (System.IO.File.Exists("compose-store.exe")) return "compose-store.exe";
+        if (System.IO.File.Exists("compose-store")) return "compose-store";
+        return "compose-store";
+    }
+}
+    //#endregion StoreClient
+
+    //#region StoreKit
+/// <summary>📦 WIP {@code theKit.kit} handle: getters for reads, methods for commands, events for field changes (compose/js {@link Kit}).</summary>
+public sealed class WipKit
+{
+    private const string KitObjectSelection =
+        "id name description icon image types { edges { node { id name } } } designs { edges { node { id name } } }";
+
+    private readonly StoreSession _session;
+
+    internal WipKit(StoreSession session) => _session = session;
+
+    //#region 📖 getters
+    /// <summary>📖 Golden <c>wip.theKit.kit.id</c>.</summary>
+    public string Id => GetScalar("id") ?? throw new IOException("graphql: missing kit.id");
+
+    /// <summary>📖 Golden <c>wip.theKit.kit.name</c>.</summary>
+    public string Name => GetScalar("name") ?? "";
+
+    /// <summary>📖 Golden <c>wip.theKit.kit.description</c>.</summary>
+    public string Description => GetScalar("description") ?? "";
+
+    /// <summary>📖 Materialized WIP branch (<c>initialKit</c>, <c>theKit.kit</c>, checkpoints).</summary>
+    public JToken Materialization => _session.ReadMaterialization();
+
+    /// <summary>📖 Full <c>kit { id name … }</c> object under the store cursor.</summary>
+    public JObject Object =>
+        _session.ReadKitObject(KitObjectSelection) ?? throw new IOException("graphql: missing wip.theKit.kit");
+    //#endregion 📖 getters
+
+    //#region 📡 field-change events
+    /// <summary>📡 <c>kit.name</c> changed after a successful command.</summary>
+    public event Action<string>? NameChanged;
+
+    /// <summary>📡 <c>kit.description</c> changed after a successful command.</summary>
+    public event Action<string>? DescriptionChanged;
+    //#endregion 📡 field-change events
+
+    //#region 🎬 commands
+    /// <summary>🎬 <c>kit.rename</c> on the open unsaved change.</summary>
+    public void Rename(string newName) =>
+        RunKitCommand($"rename(newName: {StoreGraphql.GqlString(newName)})", "kitRenamed");
+
+    /// <summary>🎬 <c>kit.changeDescription</c>.</summary>
+    public void ChangeDescription(string newDescription) =>
+        RunKitCommand($"changeDescription(newDescription: {StoreGraphql.GqlString(newDescription)})", "changedDescription");
+
+    public void CreateTag(string name, string? description = null, string? icon = null, int? order = null) =>
+        RunKitCommand(
+            $"createTag(name: {StoreGraphql.GqlString(name)}, description: {GqlOpt(description)}, icon: {GqlOpt(icon)}, order: {GqlOpt(order)})");
+
+    public void DeleteTag(string id) =>
+        RunKitCommand($"deleteTag(id: {StoreGraphql.GqlString(id)})");
+
+    public void DeleteTags(IEnumerable<string> ids) =>
+        RunKitCommand($"deleteTags(ids: {StoreGraphql.GqlIdList(ids)})");
+
+    public void CreateConcept(string name, string? description = null, string? icon = null, int? order = null) =>
+        RunKitCommand(
+            $"createConcept(name: {StoreGraphql.GqlString(name)}, description: {GqlOpt(description)}, icon: {GqlOpt(icon)}, order: {GqlOpt(order)})");
+
+    public void DeleteConcept(string id) =>
+        RunKitCommand($"deleteConcept(id: {StoreGraphql.GqlString(id)})");
+
+    public void DeleteConcepts(IEnumerable<string> ids) =>
+        RunKitCommand($"deleteConcepts(ids: {StoreGraphql.GqlIdList(ids)})");
+
+    public void CreateQuality(string key, string? value = null, string? unit = null, string? definition = null, string? description = null, string? icon = null) =>
+        RunKitCommand(
+            $"createQuality(key: {StoreGraphql.GqlString(key)}, value: {GqlOpt(value)}, unit: {GqlOpt(unit)}, definition: {GqlOpt(definition)}, description: {GqlOpt(description)}, icon: {GqlOpt(icon)})");
+
+    public void DeleteQuality(string id) =>
+        RunKitCommand($"deleteQuality(id: {StoreGraphql.GqlString(id)})");
+
+    public void DeleteQualities(IEnumerable<string> ids) =>
+        RunKitCommand($"deleteQualities(ids: {StoreGraphql.GqlIdList(ids)})");
+
+    public void CreateType(string name, string? description = null, string? icon = null, string? image = null, string? unit = null) =>
+        RunKitCommand(
+            $"createType(name: {StoreGraphql.GqlString(name)}, description: {GqlOpt(description)}, icon: {GqlOpt(icon)}, image: {GqlOpt(image)}, unit: {GqlOpt(unit)})");
+
+    public void DeleteType(string id) =>
+        RunKitCommand($"deleteType(id: {StoreGraphql.GqlString(id)})");
+
+    public void DeleteTypes(IEnumerable<string> ids) =>
+        RunKitCommand($"deleteTypes(ids: {StoreGraphql.GqlIdList(ids)})");
+
+    public void CreateDesign(string name, string? description = null, string? icon = null, string? image = null, string? unit = null) =>
+        RunKitCommand(
+            $"createDesign(name: {StoreGraphql.GqlString(name)}, description: {GqlOpt(description)}, icon: {GqlOpt(icon)}, image: {GqlOpt(image)}, unit: {GqlOpt(unit)})");
+
+    public void DeleteDesign(string id) =>
+        RunKitCommand($"deleteDesign(id: {StoreGraphql.GqlString(id)})");
+
+    public void DeleteDesigns(IEnumerable<string> ids) =>
+        RunKitCommand($"deleteDesigns(ids: {StoreGraphql.GqlIdList(ids)})");
+
+    /// <summary>🎬 Ensures {@code startNewChange} and returns the change id for subsequent commands.</summary>
+    public string EnsureChangeId() => _session.EnsureChangeId();
+    //#endregion 🎬 commands
+
+    private string? GetScalar(string field) =>
+        StoreGraphqlJson.WipTheKitKitScalar(_session.ReadKitSelection(field), field, _session.StoreId)?.Value<string>();
+
+    private static string GqlOpt(string? s) => s == null ? "null" : StoreGraphql.GqlString(s);
+
+    private static string GqlOpt(int? n) => n == null ? "null" : n.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+    private void RunKitCommand(string kitSelection, string? fieldEventKind = null)
+    {
+        var changeId = EnsureChangeId();
+        _session.RunKitMutation(changeId, kitSelection, fieldEventKind);
+        if (fieldEventKind == "kitRenamed")
+        {
+            var n = Name;
+            NameChanged?.Invoke(n);
+        }
+        else if (fieldEventKind == "changedDescription")
+        {
+            var d = Description;
+            DescriptionChanged?.Invoke(d);
+        }
+    }
+}
+    //#endregion StoreKit
+
+    //#region StoreKitIO
+/// <summary>📦 Load/save kits through <c>compose-store</c> GraphQL (<c>POST /install</c> + <c>POST /graphql</c>); equality via normalized JSON compare.</summary>
+public static class StoreKitIO
+{
+    public static JObject KitToJObject(Kit kit) => JObject.Parse(Utility.Serialize(kit));
+
+    /// <summary>📥 <c>POST /install</c> projection JSON: design pieces use <c>pose.plane</c> + <c>pose.center</c> (<c>u</c>/<c>v</c>) for compose-store hydration.</summary>
+    public static JObject KitToInstallProjection(Kit kit)
+    {
+        var dto = KitToJObject(kit);
+        if (dto["pieces"] is JArray rootPieces)
+        {
+            foreach (var piece in rootPieces.OfType<JObject>())
+                NormalizePiecePoseForInstall(piece);
+        }
+        if (dto["designs"] is JArray designs)
+        {
+            foreach (var design in designs.OfType<JObject>())
+            {
+                if (design["pieces"] is not JArray pieces) continue;
+                foreach (var piece in pieces.OfType<JObject>())
+                    NormalizePiecePoseForInstall(piece);
+            }
+        }
+        return dto;
+    }
+
+    private static JObject DefaultInstallPlane() => JObject.Parse(
+        """{"origin":{"x":0,"y":0,"z":0},"xAxis":{"x":1,"y":0,"z":0},"yAxis":{"x":0,"y":1,"z":0}}""");
+
+    private static JObject DefaultInstallCenter() => JObject.Parse("""{"u":0,"v":0}""");
+
+    private static JObject NormalizeInstallCenter(JToken? center)
+    {
+        if (center is JObject o)
+        {
+            var u = o["u"] ?? o["U"];
+            var v = o["v"] ?? o["V"];
+            if (u != null && v != null)
+                return new JObject { ["u"] = u, ["v"] = v };
+        }
+        return DefaultInstallCenter();
+    }
+
+    private static JObject NormalizeInstallPlane(JToken? plane)
+    {
+        if (plane is JObject o
+            && o["origin"] is JObject origin
+            && origin["x"] != null
+            && (o["xAxis"] is JObject || o["x_axis"] is JObject)
+            && (o["yAxis"] is JObject || o["y_axis"] is JObject))
+            return (JObject)o.DeepClone();
+        return DefaultInstallPlane();
+    }
+
+    private static void NormalizePiecePoseForInstall(JObject piece)
+    {
+        var pose = piece["pose"] as JObject;
+        var planeTok = pose?["plane"] ?? piece["plane"];
+        var centerTok = pose?["center"] ?? piece["center"];
+        var newPose = new JObject();
+        if (planeTok != null)
+            newPose["plane"] = NormalizeInstallPlane(planeTok);
+        else
+            newPose["plane"] = DefaultInstallPlane();
+        if (centerTok != null)
+            newPose["center"] = NormalizeInstallCenter(centerTok);
+        piece["pose"] = newPose;
+        piece.Remove("plane");
+        piece.Remove("center");
+    }
+
+    private static Kit SnapshotToKit(JToken tok) =>
+        Utility.DeserializeKit(tok.ToString(Formatting.None))!;
+
+    private static bool TryOpenStore(out StoreClient? client)
+    {
+        var bin = StorePaths.ResolveStoreBinary();
+        if (string.IsNullOrEmpty(bin) || !System.IO.File.Exists(bin))
+        {
+            client = null;
+            return false;
+        }
+        client = new StoreClient(bin);
+        return true;
+    }
+
+    /// <summary>🧾 After install/import, verifies materialized <c>wip.theKit.kit.name</c> via golden GraphQL when store is up.</summary>
+    private static void AssertGraphqlKitNameMatches(StoreSession session, string expectedName)
+    {
+        var actual = session.Kit.Name;
+        if (actual != expectedName)
+            throw new IOException($"graphql: materialized kit name {actual} != expected {expectedName}");
+    }
+
+    public static string? ResolveKitJsonPath(string folderPath)
+    {
+        var root = Path.GetFullPath(folderPath);
+        var direct = Path.Combine(root, "kit.json");
+        if (System.IO.File.Exists(direct)) return direct;
+        foreach (var f in Directory.EnumerateFiles(root, "kit.json", SearchOption.AllDirectories))
+        {
+            if (f.Contains($"{Path.DirectorySeparatorChar}.compose{Path.DirectorySeparatorChar}", StringComparison.Ordinal)
+                || f.Contains("/.compose/", StringComparison.Ordinal))
+                continue;
+            return f;
+        }
+        return null;
+    }
+
+    public static bool KitsEqual(Kit a, Kit b) =>
+        JToken.DeepEquals(
+            JObject.Parse(Utility.Serialize(a)),
+            JObject.Parse(Utility.Serialize(b)));
+
+    public static Kit LoadKitFromZip(string zipPath)
+    {
+        if (!System.IO.File.Exists(zipPath)) throw new FileNotFoundException(zipPath);
+        var tempDir = Path.Combine(Path.GetTempPath(), $"compose-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            ZipFile.ExtractToDirectory(zipPath, tempDir);
+            return LoadKitFromFolder(tempDir);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    public static Kit LoadKitFromFolder(string folderPath)
+    {
+        if (!Directory.Exists(folderPath) && !System.IO.File.Exists(folderPath)) throw new IOException(folderPath);
+        var kitJson = ResolveKitJsonPath(folderPath)
+            ?? throw new FileNotFoundException($"No kit.json under {folderPath}");
+        var kit = SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(kitJson)));
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
+        return kit;
+    }
+
+    public static Kit LoadKitFromFile(string filePath)
+    {
+        if (!System.IO.File.Exists(filePath)) throw new FileNotFoundException(filePath);
+        var kit = SnapshotToKit(JObject.Parse(System.IO.File.ReadAllText(filePath)));
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
+        return kit;
+    }
+
+    public static void SaveKitToFile(Kit kit, string filePath)
+    {
+        if (TryOpenStore(out var c) && c != null)
+        {
+            using (c)
+            using (var session = new StoreSession(c))
+            {
+                session.InstallCreate(KitToInstallProjection(kit));
+                AssertGraphqlKitNameMatches(session, kit.Name ?? "");
+            }
+        }
+        System.IO.File.WriteAllText(Path.GetFullPath(filePath), Utility.Serialize(kit));
+    }
+
+    public static void SaveKitToFolder(Kit kit, string folderPath)
+    {
+        Directory.CreateDirectory(folderPath);
+        SaveKitToFile(kit, Path.Combine(folderPath, "kit.json"));
+    }
+
+    public static void SaveKitToZip(Kit kit, string zipPath)
+    {
+        if (System.IO.File.Exists(zipPath)) System.IO.File.Delete(zipPath);
+        var tempDir = Path.Combine(Path.GetTempPath(), $"compose-kit-{Guid.NewGuid()}");
+        Directory.CreateDirectory(tempDir);
+        try
+        {
+            SaveKitToFolder(kit, tempDir);
+            ZipFile.CreateFromDirectory(tempDir, zipPath);
+        }
+        finally
+        {
+            if (Directory.Exists(tempDir))
+                Directory.Delete(tempDir, true);
+        }
+    }
+
+    /// <summary>🔁 Apply <paramref name="diff"/> to <paramref name="baseKit"/> or folder snapshot, persist via <see cref="SaveKitToFolder"/>, return updated kit.</summary>
+    public static Kit ApplyKitDiffAndSaveToFolder(string folderPath, KitDiff diff, Kit? baseKit = null)
+    {
+        var kit = Kit.ApplyDiff(baseKit ?? LoadKitFromFolder(folderPath), diff);
+        SaveKitToFolder(kit, folderPath);
+        return kit;
+    }
+}
+    //#endregion StoreKitIO
+
+}
+//#endregion 🗄️Store
+
+}

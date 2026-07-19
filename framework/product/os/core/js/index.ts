@@ -2,7 +2,7 @@
 /**
  * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
  * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OpEnvelope`,
- * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/os-shell.tsx` and
+ * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
  * `framework/product/os/dev/script.ts`. The OS kernel itself (media graph, program registry, ops)
  * is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of it. It still
  * exposes a small legacy `osBaselineResource`/`mergeOsProgramDefinition`/`registerAppVcsHandler`

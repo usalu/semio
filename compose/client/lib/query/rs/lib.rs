@@ -665,11 +665,7 @@ mod schema {
 
     pub fn resolve_call(action_id: &str) -> Result<CallTarget, super::ArchitectError> {
         let parts: Vec<&str> = action_id.split('.').collect();
-        CALL_TARGETS
-            .iter()
-            .copied()
-            .find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b))
-            .ok_or_else(|| super::ArchitectError::Plan(format!("unknown CALL target {action_id}")))
+        CALL_TARGETS.iter().copied().find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b)).ok_or_else(|| super::ArchitectError::Plan(format!("unknown CALL target {action_id}")))
     }
 
     pub fn call_variables(action_id: &str, args: &BTreeMap<String, serde_json::Value>) -> serde_json::Value {

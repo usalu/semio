@@ -6835,7 +6835,7 @@ export const ShellFindDialog: React.FC<ShellFindDialogProps> = ({ open, query, o
 // #region 🎛CommandPanel
 // The footer command palette used to be its own bespoke component; commands now render as category leaf
 // tabs under one expandable Command branch of the real `Panel` at anchor="bottom-middle" (see
-// `buildCommandCategoryTabs`/`FRAMEWORK_CATEGORY_COMMAND_ID` in framework/renderer/react/os-shell.tsx) —
+// `buildCommandCategoryTabs`/`FRAMEWORK_CATEGORY_COMMAND_ID` in framework/renderer/react/index.tsx) —
 // no ui-react component needed here anymore.
 // #endregion 🎛CommandPanel
 

@@ -1,0 +1,13 @@
+{
+  "title": "Styling Scope Storybook Stories",
+  "emoji": "🎨",
+  "status": "open",
+  "description": "Create .storybook/stories/styling/ (scope id \"styling\", titlePrefix \"🎨styling\", already registered in .storybook/scopes.ts) with docs-style gallery stories exercising @semio-tech/ui-styling: Theme.stories.tsx (builtinUiThemes() x resolveThemeAppearancePalettes swatch grids per ThemePaletteGroup), Tokens.stories.tsx (tokens.generated.ts as readable tables), Glass.stories.tsx (GlassTierProvider/getGlassSurfaceClass across tiers), ThemeRoundtrip.stories.tsx (interactive parseUiTheme/serializeUiTheme JSON round-trip). Part of the parallel workforce populating the composable root Storybook (parent ticket FEATURE-COMPLETE-COMPOSABLE-STORYBOOK-COVERING-THE-MONOREPO). Verify scope boots cleanly via bun ./script.ts dev storybook styling and add a playwright spec.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2142"
+  },
+  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs",
+  "sessions": [
+    "⚪084ee37198624c33991e12678d8b3ce8"
+  ]
+}

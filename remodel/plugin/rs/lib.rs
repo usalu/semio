@@ -1,14 +1,10 @@
 //! 🏺 Remodel plugin — photogrammetry play app (video → watertight mesh) bundled as a hot-swappable WASM component.
 
-use remodel_document::{
-    default_remodel_scene, CameraState, DenseResolution, ReconstructionParams, RemodelMesh, RemodelOp, RemodelScene,
-    SelectionState, SourceVideo, MeshSource, REMODEL_DOCUMENT_SCHEMA,
-};
+use remodel_document::{default_remodel_scene, CameraState, DenseResolution, MeshSource, ReconstructionParams, RemodelMesh, RemodelOp, RemodelScene, SelectionState, SourceVideo, REMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
-    app_labels, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_kind, resolve_labels, ui_stack_vertical, ui_text,
-    world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay,
-    AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UtilityCategory, UtilityDefinition,
-    UiNode, ViewState, WorldSunConfig, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+    app_labels, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_kind, resolve_labels, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiNode, UtilityCategory, UtilityDefinition, ViewState,
+    WorldSunConfig, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
 
@@ -36,11 +32,7 @@ struct RemodelPlayRuntime {
 
 //#region 🔖DocumentHelpers
 fn world_meshes_json(scene: &RemodelScene) -> String {
-    let meshes: Vec<Value> = scene
-        .result
-        .as_ref()
-        .map(|result| vec![json!({ "id": REMODEL_MESH_ID, "data": result.mesh })])
-        .unwrap_or_default();
+    let meshes: Vec<Value> = scene.result.as_ref().map(|result| vec![json!({ "id": REMODEL_MESH_ID, "data": result.mesh })]).unwrap_or_default();
     serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into())
 }
 
@@ -62,47 +54,19 @@ fn world_instances_json(scene: &RemodelScene) -> String {
 }
 
 fn build_document_panel(scene: &RemodelScene, runtime: &RemodelPlayRuntime, active_utility: &str, labels: &RemodelLabels) -> UiNode {
-    let video_label = scene
-        .source_video
-        .as_ref()
-        .map(|video| format!("{}: {} ({} {}, {:.1} fps)", labels.source_video, video.filename, video.frame_count, labels.frames, video.fps))
-        .unwrap_or_else(|| labels.no_source_video.into());
-    let job_label = format!(
-        "{}: {:?} ({:.0}%){}",
-        labels.reconstruction,
-        scene.job.stage,
-        scene.job.progress_0_1 * 100.0,
-        scene
-            .job
-            .error
-            .as_ref()
-            .map(|error| format!(" — {}: {error}", labels.error))
-            .unwrap_or_default()
-    );
+    let video_label = scene.source_video.as_ref().map(|video| format!("{}: {} ({} {}, {:.1} fps)", labels.source_video, video.filename, video.frame_count, labels.frames, video.fps)).unwrap_or_else(|| labels.no_source_video.into());
+    let job_label = format!("{}: {:?} ({:.0}%){}", labels.reconstruction, scene.job.stage, scene.job.progress_0_1 * 100.0, scene.job.error.as_ref().map(|error| format!(" — {}: {error}", labels.error)).unwrap_or_default());
     let mesh_label = scene
         .result
         .as_ref()
-        .map(|result| {
-            format!(
-                "{}: {:?}, {} {}, {} {}",
-                labels.mesh,
-                result.source,
-                result.mesh.vertex_count(),
-                labels.vertices,
-                result.mesh.triangle_count(),
-                labels.triangles
-            )
-        })
+        .map(|result| format!("{}: {:?}, {} {}, {} {}", labels.mesh, result.source, result.mesh.vertex_count(), labels.vertices, result.mesh.triangle_count(), labels.triangles))
         .unwrap_or_else(|| format!("{}: {}", labels.mesh, labels.mesh_none));
     let utility_label = format!("{}: {} · {}: {} ({})", labels.utility, active_utility, labels.selection, runtime.selection.mode, runtime.selection.ids.len());
     ui_stack_vertical(vec![ui_text(video_label), ui_text(job_label), ui_text(mesh_label), ui_text(utility_label)])
 }
 
 fn placeholder_result() -> RemodelMesh {
-    RemodelMesh {
-        mesh: mesh_from_kind("box"),
-        source: MeshSource::Placeholder,
-    }
+    RemodelMesh { mesh: mesh_from_kind("box"), source: MeshSource::Placeholder }
 }
 //#endregion 🔖DocumentHelpers
 
@@ -148,22 +112,22 @@ fn remodel_labels(view_state: &ViewState) -> &'static RemodelLabels {
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the
 /// command palette and Actions rail get a translated label without threading locale through the builder chain.
 fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("setParams", "Set Params", "Parameter festlegen"),
-        ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zuruecksetzen"),
-        ("clearResult", "Clear Result", "Ergebnis loeschen"),
-        ("importVideo", "Import Video", "Video importieren"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-    ])
+    localized_label_map(
+        is_de,
+        &[
+            ("setParams", "Set Params", "Parameter festlegen"),
+            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zuruecksetzen"),
+            ("clearResult", "Clear Result", "Ergebnis loeschen"),
+            ("importVideo", "Import Video", "Video importieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+        ],
+    )
 }
 
 /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_remodel_app`.
 fn remodel_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[
-        ("select", "Select", "Auswaehlen"),
-        ("sculpt", "Sculpt", "Formen"),
-    ])
+    localized_label_map(is_de, &[("select", "Select", "Auswaehlen"), ("sculpt", "Sculpt", "Formen")])
 }
 //#endregion 🔖CommandLabels
 
@@ -189,13 +153,7 @@ impl DocumentApp for RemodelPlayApp {
         default_remodel_scene()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        _doc: &DocumentView<'_, RemodelScene>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<RemodelOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, _doc: &DocumentView<'_, RemodelScene>, _view_state: &ViewState) -> ActionEmit<RemodelOp> {
         match action {
             SET_ACTIVE_UTILITY_ACTION_ID => {
                 // 🧰 Host-owned utility switch: remodel keeps no in-progress gesture scratch, so emit nothing.
@@ -206,10 +164,7 @@ impl DocumentApp for RemodelPlayApp {
                 if let Some(mode) = mode {
                     self.runtime.selection.mode = mode.into();
                 }
-                self.runtime.selection.ids = args
-                    .and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
+                self.runtime.selection.ids = args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 ActionEmit::default()
             }
             "setCamera" => {
@@ -219,9 +174,7 @@ impl DocumentApp for RemodelPlayApp {
                 ActionEmit::default()
             }
             "importVideo" => {
-                let video: Option<SourceVideo> = args
-                    .and_then(|value| value.get("video"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok());
+                let video: Option<SourceVideo> = args.and_then(|value| value.get("video")).and_then(|value| serde_json::from_value(value.clone()).ok());
                 if video.is_none() {
                     return ActionEmit::default();
                 }
@@ -239,10 +192,7 @@ impl DocumentApp for RemodelPlayApp {
                 if let Some(value) = args.and_then(|value| value.get("featureTargetCount")).and_then(|value| value.as_u64()) {
                     params.feature_target_count = value as u32;
                 }
-                if let Some(resolution) = args
-                    .and_then(|value| value.get("denseMvsResolution"))
-                    .and_then(|value| serde_json::from_value::<DenseResolution>(value.clone()).ok())
-                {
+                if let Some(resolution) = args.and_then(|value| value.get("denseMvsResolution")).and_then(|value| serde_json::from_value::<DenseResolution>(value.clone()).ok()) {
                     params.dense_mvs_resolution = resolution;
                 }
                 if let Some(value) = args.and_then(|value| value.get("tsdfVoxelSizeMm")).and_then(|value| value.as_f64()) {
@@ -408,9 +358,7 @@ mod tests {
     #[test]
     fn set_active_utility_switches_host_view_state_without_ops_or_history() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
-        let result = app
-            .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "sculpt" })), &ViewState::default(), &testkit::meta("local"))
-            .expect("switch utility");
+        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "sculpt" })), &ViewState::default(), &testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "utility switch is host-owned view state, never a document op");
         let view_state = ViewState { active_utility_id: Some("sculpt".into()), ..ViewState::default() };
         let document = app.render(REMODEL_PLAY_BODY_DOCUMENT, None, &view_state).expect("render doc");
@@ -446,14 +394,7 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
-        testkit::assert_undo_redo_round_trip(
-            &mut app,
-            "clearResult",
-            None,
-            |app| app.projection().expect("materialize projection").result.is_none(),
-            false,
-            true,
-        );
+        testkit::assert_undo_redo_round_trip(&mut app, "clearResult", None, |app| app.projection().expect("materialize projection").result.is_none(), false, true);
     }
 
     /// 🧪 The definitional proof: two independent instances start from the same document, apply

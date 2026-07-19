@@ -5217,6 +5217,16 @@ name = "mathematical_algebra"
 version = "0.1.0"
 
 [[package]]
+name = "mathematical_cas"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_number",
+ "mathematical_polynomial",
+ "mathematical_random",
+]
+
+[[package]]
 name = "mathematical_causal"
 version = "0.1.0"
 dependencies = [
@@ -5226,6 +5236,16 @@ dependencies = [
  "mathematical_random",
  "mathematical_statistics",
  "mathematical_tabular",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "mathematical_fuzzy"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_random",
  "serde",
  "thiserror 2.0.18",
 ]
@@ -5641,6 +5661,18 @@ dependencies = [
  "mathematical_algebra",
  "mathematical_graph",
  "mathematical_graph_components",
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_number"
+version = "0.1.0"
+
+[[package]]
+name = "mathematical_polynomial"
+version = "0.1.0"
+dependencies = [
+ "mathematical_number",
  "mathematical_random",
 ]
 
@@ -8703,6 +8735,7 @@ dependencies = [
  "semio-framework-sync",
  "serde",
  "serde_json",
+ "tokio",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",

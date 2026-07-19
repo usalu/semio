@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/math-number",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run @semio-tech/math-number:test"
+  }
+}

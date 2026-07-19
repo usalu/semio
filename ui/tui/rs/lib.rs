@@ -527,19 +527,7 @@ pub mod ansi {
 
     impl AnsiParser {
         pub fn new() -> Self {
-            Self {
-                state: ParserState::Ground,
-                params: Vec::new(),
-                current: 0,
-                has_current: false,
-                private: None,
-                utf8_buf: [0; 4],
-                utf8_len: 0,
-                utf8_need: 0,
-                paste_buf: String::new(),
-                paste_close: Vec::new(),
-                pending_esc: false,
-            }
+            Self { state: ParserState::Ground, params: Vec::new(), current: 0, has_current: false, private: None, utf8_buf: [0; 4], utf8_len: 0, utf8_need: 0, paste_buf: String::new(), paste_close: Vec::new(), pending_esc: false }
         }
 
         fn reset_seq(&mut self) {
@@ -753,7 +741,11 @@ pub mod ansi {
             let m = modifier_bits(((b >> 2) & 0x7).saturating_add(1));
             let btn = (b & 0x3) as u8;
             let kind = if b & 0x40 != 0 {
-                if btn == 0 { MouseKind::ScrollUp } else { MouseKind::ScrollDown }
+                if btn == 0 {
+                    MouseKind::ScrollUp
+                } else {
+                    MouseKind::ScrollDown
+                }
             } else if b & 0x20 != 0 {
                 MouseKind::Drag(btn)
             } else if final_byte == b'm' {
@@ -895,16 +887,7 @@ pub mod scene {
 
     impl Node {
         pub fn new(content: NodeContent) -> Self {
-            Self {
-                content,
-                style: Style::default(),
-                constraint: Constraint::default(),
-                visible: true,
-                children: Vec::new(),
-                parent: None,
-                rect: Rect::default(),
-                dirty: LAYOUT_DIRTY | PAINT_DIRTY,
-            }
+            Self { content, style: Style::default(), constraint: Constraint::default(), visible: true, children: Vec::new(), parent: None, rect: Rect::default(), dirty: LAYOUT_DIRTY | PAINT_DIRTY }
         }
 
         pub fn children(&self) -> &[NodeId] {
@@ -1292,11 +1275,7 @@ pub mod layout {
         for child in &node.children {
             let weight = axis_child_size(child);
             let size = ((f64::from(extent) * weight / total_weight).round() as u16).min(extent - offset);
-            let child_rect = if is_row {
-                Rect::new(area.x + offset, area.y, size, area.height)
-            } else {
-                Rect::new(area.x, area.y + offset, area.width, size)
-            };
+            let child_rect = if is_row { Rect::new(area.x + offset, area.y, size, area.height) } else { Rect::new(area.x, area.y + offset, area.width, size) };
             match child {
                 WindowLayoutChild::Axis(a) => solve_axis(a, child_rect, out),
                 WindowLayoutChild::Stack(s) => solve_stack(s, child_rect, out),
@@ -1310,10 +1289,7 @@ pub mod layout {
             return;
         }
         let tabs: Vec<String> = node.children.iter().map(|c| c.window_kind_id.clone()).collect();
-        let active = node
-            .active_window_kind_id
-            .clone()
-            .unwrap_or_else(|| node.children[0].window_kind_id.clone());
+        let active = node.active_window_kind_id.clone().unwrap_or_else(|| node.children[0].window_kind_id.clone());
         out.push(WindowMeasure { window_kind_id: active, rect: area, active: true, stack_tabs: tabs });
     }
 
@@ -1328,12 +1304,7 @@ pub mod layout {
     }
 
     /// 🏗️ Builds a row/column layout of individually-sized windows.
-    pub fn create_default_layout(
-        window_ids: &[String],
-        direction: &str,
-        sizes: Option<&[f64]>,
-        titles: Option<&[String]>,
-    ) -> WindowLayout {
+    pub fn create_default_layout(window_ids: &[String], direction: &str, sizes: Option<&[f64]>, titles: Option<&[String]>) -> WindowLayout {
         let children = window_ids
             .iter()
             .enumerate()
@@ -1341,20 +1312,11 @@ pub mod layout {
                 WindowLayoutChild::Stack(WindowLayoutStackNode {
                     size: sizes.and_then(|s| s.get(i)).copied(),
                     active_window_kind_id: Some(id.clone()),
-                    children: vec![WindowLayoutWindowNode {
-                        window_kind_id: id.clone(),
-                        title: titles.and_then(|t| t.get(i)).cloned(),
-                    }],
+                    children: vec![WindowLayoutWindowNode { window_kind_id: id.clone(), title: titles.and_then(|t| t.get(i)).cloned() }],
                 })
             })
             .collect();
-        WindowLayout {
-            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
-                kind: direction.to_string(),
-                size: None,
-                children,
-            }),
-        }
+        WindowLayout { root: WindowLayoutRoot::Axis(WindowLayoutAxisNode { kind: direction.to_string(), size: None, children }) }
     }
 
     /// 🏗️ Builds an evenly-weighted row layout.
@@ -1696,10 +1658,12 @@ pub mod widget {
     fn log_on_key(log: &mut LogState, ev: &KeyEvent) {
         let len = log.lines.len();
         match ev.key {
-            Key::PageUp => log.scroll = LogScroll::At(match log.scroll {
-                LogScroll::Follow => len.saturating_sub(1),
-                LogScroll::At(n) => n.saturating_sub(10),
-            }),
+            Key::PageUp => {
+                log.scroll = LogScroll::At(match log.scroll {
+                    LogScroll::Follow => len.saturating_sub(1),
+                    LogScroll::At(n) => n.saturating_sub(10),
+                })
+            }
             Key::PageDown => {
                 let next = match log.scroll {
                     LogScroll::Follow => return,
@@ -1829,11 +1793,7 @@ pub mod widget {
     fn paint_input(i: &InputState, theme: &Theme, rect: Rect, buf: &mut CellBuffer, focused: bool) {
         let bg = theme.surface(Surface::Panel);
         buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), bg));
-        let (text, fg) = if i.value.is_empty() {
-            (i.placeholder.as_str(), theme.role(Role::MutedForeground))
-        } else {
-            (i.value.as_str(), theme.role(Role::Foreground))
-        };
+        let (text, fg) = if i.value.is_empty() { (i.placeholder.as_str(), theme.role(Role::MutedForeground)) } else { (i.value.as_str(), theme.role(Role::Foreground)) };
         let (text, _) = truncate_to(text, rect.width);
         buf.put_str(Pos { x: rect.x, y: rect.y }, text, fg, bg, 0, rect);
         if focused && rect.width > 0 {
@@ -1936,7 +1896,13 @@ pub mod widget {
             for (ci, ((col, &cx), &w)) in t.columns.iter().zip(&xs).zip(&widths).enumerate() {
                 let text = if ci == 0 {
                     let indent = "  ".repeat(usize::from(row.level));
-                    let marker = if !row.has_children { "  " } else if row.expanded { "\u{25be} " } else { "\u{25b8} " };
+                    let marker = if !row.has_children {
+                        "  "
+                    } else if row.expanded {
+                        "\u{25be} "
+                    } else {
+                        "\u{25b8} "
+                    };
                     format!("{indent}{marker}{}", row.cells.first().map(String::as_str).unwrap_or(""))
                 } else {
                     row.cells.get(ci).cloned().unwrap_or_default()
@@ -2116,11 +2082,7 @@ pub mod chrome {
         let title_width = title_interior_width + 2;
         let has_tabs = rect.height >= 4 && title_width >= 3 && rect.width >= title_width + 2;
         let controls_fits = show_controls && rect.width >= title_width + controls_width + 3;
-        let controls = controls_fits.then(|| WindowTab {
-            x: rect.x + rect.width - controls_width,
-            interior: WINDOW_CONTROLS_INTERIOR.to_string(),
-            interior_width: controls_interior_width,
-        });
+        let controls = controls_fits.then(|| WindowTab { x: rect.x + rect.width - controls_width, interior: WINDOW_CONTROLS_INTERIOR.to_string(), interior_width: controls_interior_width });
         WindowChipLayout { has_tabs, title: WindowTab { x: rect.x, interior: title_interior.to_string(), interior_width: title_interior_width }, controls }
     }
 
@@ -2221,30 +2183,14 @@ pub mod chrome {
         let footer_id = scene.add(root, Node::new(NodeContent::Chrome(ChromeState::Footer(footer))));
         {
             let mut root_mut = scene.node_mut(root);
-            root_mut.set_constraint(crate::layout::Constraint {
-                direction: crate::layout::Direction::Column,
-                ..Default::default()
-            });
+            root_mut.set_constraint(crate::layout::Constraint { direction: crate::layout::Direction::Column, ..Default::default() });
         }
-        scene.node_mut(navbar_id).set_constraint(crate::layout::Constraint {
-            height: crate::layout::Dimension::Cells(2),
-            ..Default::default()
-        });
-        scene.node_mut(canvas_id).set_constraint(crate::layout::Constraint {
-            height: crate::layout::Dimension::Weight(1),
-            direction: crate::layout::Direction::Stack,
-            ..Default::default()
-        });
-        scene.node_mut(footer_id).set_constraint(crate::layout::Constraint {
-            height: crate::layout::Dimension::Cells(2),
-            ..Default::default()
-        });
+        scene.node_mut(navbar_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Cells(2), ..Default::default() });
+        scene.node_mut(canvas_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Weight(1), direction: crate::layout::Direction::Stack, ..Default::default() });
+        scene.node_mut(footer_id).set_constraint(crate::layout::Constraint { height: crate::layout::Dimension::Cells(2), ..Default::default() });
         let mut windows = Vec::new();
         for measure in solve_window_layout(layout, Rect::default()) {
-            let id = scene.add(
-                canvas_id,
-                Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))),
-            );
+            let id = scene.add(canvas_id, Node::new(NodeContent::Chrome(ChromeState::Window(WindowState::new(measure.window_kind_id.clone())))));
             windows.push((measure.window_kind_id, id));
         }
         Shell { navbar: navbar_id, canvas: canvas_id, footer: footer_id, windows }
@@ -2257,11 +2203,7 @@ pub mod chrome {
             let measures = solve_window_layout(layout, area);
             for (kind_id, id) in &self.windows {
                 if let Some(m) = measures.iter().find(|m| &m.window_kind_id == kind_id) {
-                    scene.node_mut(*id).set_constraint(crate::layout::Constraint {
-                        width: crate::layout::Dimension::Cells(m.rect.width),
-                        height: crate::layout::Dimension::Cells(m.rect.height),
-                        ..Default::default()
-                    });
+                    scene.node_mut(*id).set_constraint(crate::layout::Constraint { width: crate::layout::Dimension::Cells(m.rect.width), height: crate::layout::Dimension::Cells(m.rect.height), ..Default::default() });
                 }
             }
         }
@@ -2307,15 +2249,7 @@ pub mod engine {
     impl Tui {
         pub fn new(size: Size, theme: Theme) -> Self {
             let blank = Cell::blank([0, 0, 0], [0, 0, 0]);
-            Self {
-                scene: Scene::new(),
-                theme,
-                size,
-                front: CellBuffer::new(size, blank),
-                back: CellBuffer::new(size, blank),
-                focus: None,
-                full_redraw: true,
-            }
+            Self { scene: Scene::new(), theme, size, front: CellBuffer::new(size, blank), back: CellBuffer::new(size, blank), focus: None, full_redraw: true }
         }
 
         /// 🔍 The last fully-composed frame, for hosts/tests that need to inspect the actual render.
@@ -2603,9 +2537,8 @@ pub mod backend {
         use windows_sys::Win32::Foundation::HANDLE;
         use windows_sys::Win32::Storage::FileSystem::{ReadFile, WriteFile};
         use windows_sys::Win32::System::Console::{
-            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, SetConsoleMode, CONSOLE_SCREEN_BUFFER_INFO,
-            DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT,
-            ENABLE_VIRTUAL_TERMINAL_INPUT, ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
+            GetConsoleMode, GetConsoleScreenBufferInfo, GetStdHandle, SetConsoleMode, CONSOLE_SCREEN_BUFFER_INFO, DISABLE_NEWLINE_AUTO_RETURN, ENABLE_ECHO_INPUT, ENABLE_LINE_INPUT, ENABLE_PROCESSED_INPUT, ENABLE_VIRTUAL_TERMINAL_INPUT,
+            ENABLE_VIRTUAL_TERMINAL_PROCESSING, STD_INPUT_HANDLE, STD_OUTPUT_HANDLE,
         };
         use windows_sys::Win32::System::Threading::WaitForSingleObject;
 
@@ -2654,8 +2587,7 @@ pub mod backend {
             fn enter(&mut self) -> Result<(), BackendError> {
                 unsafe {
                     let out_mode = self.original_out | ENABLE_VIRTUAL_TERMINAL_PROCESSING | DISABLE_NEWLINE_AUTO_RETURN;
-                    let in_mode = (self.original_in | ENABLE_VIRTUAL_TERMINAL_INPUT)
-                        & !(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
+                    let in_mode = (self.original_in | ENABLE_VIRTUAL_TERMINAL_INPUT) & !(ENABLE_LINE_INPUT | ENABLE_ECHO_INPUT | ENABLE_PROCESSED_INPUT);
                     if SetConsoleMode(self.stdout, out_mode) == 0 || SetConsoleMode(self.stdin, in_mode) == 0 {
                         return Err(err("SetConsoleMode failed"));
                     }
@@ -2819,10 +2751,7 @@ mod tests {
     use crate::chrome::{shell, ChromeState, FooterState, NavbarState, WindowState};
     use crate::event::{Event, Key, KeyEvent, MouseEvent, MouseKind};
     use crate::geometry::{Pos, Rect, Size};
-    use crate::layout::{
-        create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction,
-        WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
-    };
+    use crate::layout::{create_default_layout, even_window_layout, solve, solve_window_layout, Constraint, Dimension, Direction, WindowLayout, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode};
     use crate::scene::{Node, NodeContent, Scene};
     use crate::text::{display_width, truncate_to};
     use crate::theme::{Role, Surface, Theme};
@@ -2861,12 +2790,7 @@ mod tests {
     fn layout_padding_and_gap() {
         let mut scene = Scene::new();
         let root = scene.root();
-        scene.node_mut(root).set_constraint(Constraint {
-            direction: Direction::Row,
-            gap: 1,
-            padding: [1, 1, 1, 1],
-            ..Default::default()
-        });
+        scene.node_mut(root).set_constraint(Constraint { direction: Direction::Row, gap: 1, padding: [1, 1, 1, 1], ..Default::default() });
         let a = scene.add(root, Node::new(NodeContent::Box));
         let b = scene.add(root, Node::new(NodeContent::Box));
         scene.node_mut(a).set_constraint(Constraint { width: Dimension::Cells(2), ..Default::default() });
@@ -2880,12 +2804,7 @@ mod tests {
 
     #[test]
     fn window_layout_row_of_stacks_tiles_without_gaps() {
-        let layout = create_default_layout(
-            &["a".to_string(), "b".to_string()],
-            "row",
-            Some(&[1.0, 1.0]),
-            None,
-        );
+        let layout = create_default_layout(&["a".to_string(), "b".to_string()], "row", Some(&[1.0, 1.0]), None);
         let measures = solve_window_layout(&layout, Rect::new(0, 0, 100, 10));
         assert_eq!(measures.len(), 2);
         assert_eq!(measures[0].rect.width + measures[1].rect.width, 100);
@@ -2899,10 +2818,7 @@ mod tests {
             root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
                 size: None,
                 active_window_kind_id: Some("b".into()),
-                children: vec![
-                    WindowLayoutWindowNode { window_kind_id: "a".into(), title: None },
-                    WindowLayoutWindowNode { window_kind_id: "b".into(), title: None },
-                ],
+                children: vec![WindowLayoutWindowNode { window_kind_id: "a".into(), title: None }, WindowLayoutWindowNode { window_kind_id: "b".into(), title: None }],
             }),
         };
         let measures = solve_window_layout(&layout, Rect::new(0, 0, 40, 10));
@@ -2999,10 +2915,7 @@ mod tests {
     }
 
     fn sample_table() -> TableState {
-        let columns = vec![
-            TableColumn::new("Plugin / App", 0, TableAlign::Left),
-            TableColumn::new("React", 6, TableAlign::Right),
-        ];
+        let columns = vec![TableColumn::new("Plugin / App", 0, TableAlign::Left), TableColumn::new("React", 6, TableAlign::Right)];
         let rows = vec![
             TableRow::parent("puzzle", vec!["puzzle".into(), "".into()]),
             TableRow::child("puzzle2d", vec!["puzzle2d".into(), "6012".into()], 1),

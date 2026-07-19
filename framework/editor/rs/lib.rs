@@ -1,8 +1,8 @@
 //! ✍️ Text editor engine on the infinite canvas.
 
-pub use infinite_cavas::{self as cavas, *};
 use cavas::camera::{Camera, Viewport};
 use cavas::text as canvas_text;
+pub use infinite_cavas::{self as cavas, *};
 use serde::Deserialize;
 
 // #region ⚠️ Errors
@@ -261,12 +261,7 @@ impl EditorHost {
     }
 
     pub fn set_editor_settings_json(&mut self, json: &str) {
-        let settings: EditorSettingsJson = serde_json::from_str(json).unwrap_or(EditorSettingsJson {
-            font_px: DEFAULT_FONT_PX,
-            line_height: DEFAULT_LINE_HEIGHT,
-            show_line_numbers: true,
-            tab_size: DEFAULT_TAB_SIZE,
-        });
+        let settings: EditorSettingsJson = serde_json::from_str(json).unwrap_or(EditorSettingsJson { font_px: DEFAULT_FONT_PX, line_height: DEFAULT_LINE_HEIGHT, show_line_numbers: true, tab_size: DEFAULT_TAB_SIZE });
         self.font_px = settings.font_px.clamp(10.0, 28.0);
         self.line_height = settings.line_height.clamp(16.0, 48.0);
         self.show_line_numbers = settings.show_line_numbers;
@@ -311,11 +306,7 @@ impl EditorHost {
     }
 
     fn rest_content_height(&self, line_count: usize) -> f64 {
-        let rest_origin = if self.dead_line_y > 0.0 {
-            self.dead_line_y
-        } else {
-            0.0
-        };
+        let rest_origin = if self.dead_line_y > 0.0 { self.dead_line_y } else { 0.0 };
         rest_origin + PAD_Y * 2.0 + line_count as f64 * self.line_height
     }
 
@@ -443,11 +434,7 @@ impl EditorHost {
                 }
             }
         }
-        let probe = if offset > 0 && (!self.text.is_char_boundary(offset) || offset == self.text.len()) {
-            prev_char_boundary(&self.text, offset)
-        } else {
-            offset
-        };
+        let probe = if offset > 0 && (!self.text.is_char_boundary(offset) || offset == self.text.len()) { prev_char_boundary(&self.text, offset) } else { offset };
         let mut best: Option<&SelectableSpanJson> = None;
         for span in &self.selectable_spans {
             if span.kind != "atomic" || probe < span.start || probe >= span.end {
@@ -712,9 +699,7 @@ impl EditorHost {
     }
 
     fn token_ending_at(&self, offset: usize) -> Option<&SemanticTokenJson> {
-        self.semantic_tokens
-            .iter()
-            .find(|token| token.end == offset && token.start < offset)
+        self.semantic_tokens.iter().find(|token| token.end == offset && token.start < offset)
     }
 
     pub fn backspace(&mut self) {
@@ -785,9 +770,7 @@ impl EditorHost {
     }
 
     pub fn move_left(&mut self, extend: bool) {
-        let next = self
-            .token_left_boundary(self.caret)
-            .unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
+        let next = self.token_left_boundary(self.caret).unwrap_or_else(|| if self.caret == 0 { 0 } else { prev_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
@@ -796,13 +779,7 @@ impl EditorHost {
     }
 
     pub fn move_right(&mut self, extend: bool) {
-        let next = self.token_right_boundary(self.caret).unwrap_or_else(|| {
-            if self.caret >= self.text.len() {
-                self.text.len()
-            } else {
-                next_char_boundary(&self.text, self.caret)
-            }
-        });
+        let next = self.token_right_boundary(self.caret).unwrap_or_else(|| if self.caret >= self.text.len() { self.text.len() } else { next_char_boundary(&self.text, self.caret) });
         self.caret = next;
         if !extend {
             self.anchor = self.caret;
@@ -907,7 +884,11 @@ impl EditorHost {
                 break;
             }
         }
-        if start <= end { (s, e) } else { (e, s) }
+        if start <= end {
+            (s, e)
+        } else {
+            (e, s)
+        }
     }
 
     fn allowed_composite_selection(&self, start: usize, end: usize, span: &SelectableSpanJson) -> bool {
@@ -982,11 +963,7 @@ impl EditorHost {
             let line_text = self.text.split('\n').nth(line).unwrap_or("");
             let y = self.line_y(line);
             let byte_start = if line == s_line { s_byte } else { 0 };
-            let byte_end = if line == e_line {
-                e_byte
-            } else {
-                line_text.len()
-            };
+            let byte_end = if line == e_line { e_byte } else { line_text.len() };
             let (x0, x1) = canvas_text::label_span_world_x(line_text, byte_start, byte_end, origin_x, font_px);
             self.fill_highlight_rect(scene, x0, x1, y, color);
         }
@@ -1053,31 +1030,13 @@ impl EditorHost {
     pub fn build_scene(&self) -> Scene {
         let mut world_scene = Scene::new();
         let bg = self.theme.raster_clear;
-        world_scene.fill(
-            FillRule::NonZero,
-            Affine::IDENTITY,
-            bg,
-            None,
-            &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0),
-        );
+        world_scene.fill(FillRule::NonZero, Affine::IDENTITY, bg, None, &Rect::new(-10_000.0, -10_000.0, 10_000.0, 10_000.0));
         let lines: Vec<&str> = if self.text.is_empty() { vec![""] } else { self.text.split('\n').collect() };
         let content_h = self.content_height(lines.len());
         if self.show_line_numbers {
             let gutter_bg = self.theme.grid_minor_stroke.multiply_alpha(0.12);
-            world_scene.fill(
-                FillRule::NonZero,
-                Affine::IDENTITY,
-                gutter_bg,
-                None,
-                &Rect::new(0.0, 0.0, self.gutter_width(), content_h),
-            );
-            world_scene.fill(
-                FillRule::NonZero,
-                Affine::IDENTITY,
-                self.theme.grid_minor_stroke.multiply_alpha(0.35),
-                None,
-                &Rect::new(self.gutter_width() - 1.0, 0.0, self.gutter_width(), content_h),
-            );
+            world_scene.fill(FillRule::NonZero, Affine::IDENTITY, gutter_bg, None, &Rect::new(0.0, 0.0, self.gutter_width(), content_h));
+            world_scene.fill(FillRule::NonZero, Affine::IDENTITY, self.theme.grid_minor_stroke.multiply_alpha(0.35), None, &Rect::new(self.gutter_width() - 1.0, 0.0, self.gutter_width(), content_h));
         }
         let (sel_start, sel_end) = self.selection_range();
         if !self.selection_occurrences.is_empty() {
@@ -1096,14 +1055,7 @@ impl EditorHost {
             let y = self.line_y(i);
             if self.show_line_numbers {
                 let gutter = format!("{}", i + 1);
-                canvas_text::append_label(
-                    &mut world_scene,
-                    &gutter,
-                    Point::new(self.gutter_number_x(&gutter), y),
-                    self.font_px,
-                    self.theme.label_fill.multiply_alpha(0.62),
-                    self.theme.label_halo,
-                );
+                canvas_text::append_label(&mut world_scene, &gutter, Point::new(self.gutter_number_x(&gutter), y), self.font_px, self.theme.label_fill.multiply_alpha(0.62), self.theme.label_halo);
             }
             if self.hover_occurrences.is_empty() {
                 if let (Some(hs), Some(he)) = (self.hover_token_start, self.hover_token_end) {
@@ -1162,14 +1114,7 @@ impl EditorHost {
             spans.push((cursor, line.len(), "plain"));
         }
         if spans.is_empty() {
-            canvas_text::append_label(
-                scene,
-                line,
-                Point::new(self.line_origin_x(), y),
-                self.font_px,
-                self.theme.label_fill,
-                self.theme.label_halo,
-            );
+            canvas_text::append_label(scene, line, Point::new(self.line_origin_x(), y), self.font_px, self.theme.label_fill, self.theme.label_halo);
             return;
         }
         let color_spans: Vec<(usize, usize, Color)> = spans
@@ -1180,27 +1125,13 @@ impl EditorHost {
                 (*start, *end, self.text_fill_for_abs_range(abs_s, abs_e))
             })
             .collect();
-        canvas_text::append_label_tspans(
-            scene,
-            line,
-            &color_spans,
-            Point::new(self.line_origin_x(), y),
-            self.font_px,
-            self.theme.label_halo,
-        );
+        canvas_text::append_label_tspans(scene, line, &color_spans, Point::new(self.line_origin_x(), y), self.font_px, self.theme.label_halo);
     }
 
     fn render_placeholders(&self, scene: &mut Scene) {
         for placeholder in &self.placeholders {
             let (x, y) = offset_to_world(self, placeholder.offset);
-            canvas_text::append_label(
-                scene,
-                &placeholder.label,
-                Point::new(x, y),
-                self.font_px,
-                self.theme.grid_minor_stroke,
-                self.theme.label_halo,
-            );
+            canvas_text::append_label(scene, &placeholder.label, Point::new(x, y), self.font_px, self.theme.grid_minor_stroke, self.theme.label_halo);
         }
     }
 
@@ -1208,13 +1139,7 @@ impl EditorHost {
         let (x, y) = offset_to_world(self, offset);
         let lh = self.line_height;
         let rect = Rect::new(x, y - lh * 0.8, x + 1.5, y + lh * 0.2);
-        scene.fill(
-            FillRule::NonZero,
-            Affine::IDENTITY,
-            self.theme.label_fill,
-            None,
-            &rect,
-        );
+        scene.fill(FillRule::NonZero, Affine::IDENTITY, self.theme.label_fill, None, &rect);
     }
 
     fn render_caret(&self, scene: &mut Scene, offset: usize) {
@@ -1290,10 +1215,7 @@ fn offset_at_line_col(text: &str, line: usize, col: usize) -> usize {
     let mut line_start = 0usize;
     for (i, ch) in text.char_indices() {
         if current_line == line {
-            let line_end = text[line_start..]
-                .find('\n')
-                .map(|idx| line_start + idx)
-                .unwrap_or(text.len());
+            let line_end = text[line_start..].find('\n').map(|idx| line_start + idx).unwrap_or(text.len());
             return line_start + col.min(line_end.saturating_sub(line_start));
         }
         if ch == '\n' {
@@ -1355,8 +1277,7 @@ impl EditorSessionInner {
 
     fn render_frame_gpu(&mut self) -> Result<(), JsValue> {
         let scene = self.host.build_scene();
-        self.gpu
-            .render_frame(&scene, self.host.theme.raster_clear)
+        self.gpu.render_frame(&scene, self.host.theme.raster_clear)
     }
 }
 
@@ -1371,12 +1292,7 @@ pub struct EditorSession {
 impl EditorSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            state: Rc::new(RefCell::new(EditorSessionInner {
-                host: EditorHost::new(),
-                gpu: cavas::gpu_session::CanvasGpuSession::default(),
-            })),
-        }
+        Self { state: Rc::new(RefCell::new(EditorSessionInner { host: EditorHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -1403,8 +1319,7 @@ impl EditorSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) =
-                cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             g.set_logical_size(lw, lh, dpr, pw, ph);
             g.gpu.finish_attach(canvas, render_ctx, renderer, surface);
@@ -1798,12 +1713,8 @@ mod tests {
     fn selection_snaps_var_label_composite() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a1:Piece)".into());
-        host.set_semantic_tokens_json(
-            r#"[{"start":0,"end":5,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":15,"class":"ident"}]"#,
-        );
-        host.set_selectable_spans_json(
-            r#"[{"start":7,"end":9,"kind":"atomic"},{"start":7,"end":15,"kind":"varLabel","headEnd":9},{"start":10,"end":15,"kind":"atomic"}]"#,
-        );
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":15,"class":"ident"}]"#);
+        host.set_selectable_spans_json(r#"[{"start":7,"end":9,"kind":"atomic"},{"start":7,"end":15,"kind":"varLabel","headEnd":9},{"start":10,"end":15,"kind":"atomic"}]"#);
         host.set_selection(8, 12);
         assert_eq!(host.anchor(), 7);
         assert_eq!(host.caret(), 15);
@@ -1813,12 +1724,8 @@ mod tests {
     fn select_span_at_picks_ident() {
         let mut host = EditorHost::new();
         host.set_text("RETURN a1.name".into());
-        host.set_semantic_tokens_json(
-            r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#,
-        );
-        host.set_selectable_spans_json(
-            r#"[{"start":7,"end":9,"kind":"atomic"},{"start":10,"end":14,"kind":"atomic"},{"start":7,"end":14,"kind":"propertyAccess","headEnd":9,"tailStart":10}]"#,
-        );
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":6,"class":"keyword"},{"start":7,"end":9,"class":"ident"},{"start":9,"end":10,"class":"operator"},{"start":10,"end":14,"class":"ident"}]"#);
+        host.set_selectable_spans_json(r#"[{"start":7,"end":9,"kind":"atomic"},{"start":10,"end":14,"kind":"atomic"},{"start":7,"end":14,"kind":"propertyAccess","headEnd":9,"tailStart":10}]"#);
         host.select_span_at(11);
         assert_eq!(host.anchor(), 10);
         assert_eq!(host.caret(), 14);
@@ -1853,18 +1760,15 @@ mod tests {
         host.set_text(lines);
         host.set_dead_line_y(32.0);
         assert!(host.scroll_overflows());
-        let screen_at_rest: serde_json::Value =
-            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        let screen_at_rest: serde_json::Value = serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
         assert!(screen_at_rest["y"].as_f64().unwrap() >= 32.0);
         host.wheel_scroll_screen(-40.0);
         assert!(host.chrome_edgeless_scroll());
-        let screen_edgeless: serde_json::Value =
-            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        let screen_edgeless: serde_json::Value = serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
         assert!(screen_edgeless["y"].as_f64().unwrap() < screen_at_rest["y"].as_f64().unwrap());
         host.wheel_scroll_screen(40.0);
         assert!(!host.chrome_edgeless_scroll());
-        let screen_restored: serde_json::Value =
-            serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
+        let screen_restored: serde_json::Value = serde_json::from_str(&host.world_to_screen_json(offset_to_world(&host, 0).0, offset_to_world(&host, 0).1)).unwrap();
         assert!((screen_restored["y"].as_f64().unwrap() - screen_at_rest["y"].as_f64().unwrap()).abs() < 0.5);
     }
 
@@ -1917,9 +1821,7 @@ mod tests {
     fn backspace_deletes_fixed_keyword_tokenwise() {
         let mut host = EditorHost::new();
         host.set_text("MATCH (a:Piece)".into());
-        host.set_semantic_tokens_json(
-            r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"}]"#,
-        );
+        host.set_semantic_tokens_json(r#"[{"start":0,"end":5,"class":"keyword"},{"start":5,"end":6,"class":"operator"}]"#);
         host.set_caret_anchor(3);
         host.backspace();
         assert_eq!(host.text(), " (a:Piece)");

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/compose-py` router: `bun ./script.ts <build|test>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, resolveTestLevel, runTestBudgeted, pytestLevelArgs } from "../../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -10,7 +10,8 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCmd("uv", ["run", "pytest", ...segments], { cwd: this.root });
+    const { level, rest } = resolveTestLevel(segments);
+    runTestBudgeted("uv", ["run", "pytest", ...pytestLevelArgs(level), ...rest], { cwd: this.root });
   }
 }
 

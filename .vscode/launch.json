@@ -2796,6 +2796,28 @@
       }
     },
     {
+      "name": "🧪test♾️mathematical-cas",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cargo test -p mathematical_number -p mathematical_polynomial -p mathematical_algebra -p mathematical_random -p mathematical_cas",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.76
+      }
+    },
+    {
+      "name": "🧪test🧮mathematical-fuzzy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/math-fuzzy:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.77
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

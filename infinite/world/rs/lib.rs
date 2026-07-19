@@ -808,12 +808,8 @@ fn terrain_band_mesh_key(surface_id: &str, z: u32, x: u32, y: u32, band: usize) 
 /// 🎨 Vertical hypsometric ramp — same stops as `getHypsometricTexture` in `world-terrain-layer.tsx`
 /// (green low ground -> tan -> grey -> white peaks), sampled at a band's center elevation ratio.
 fn hypsometric_color(t: f32) -> [f32; 4] {
-    let stops: [(f32, [f32; 3]); 4] = [
-        (0.0, [0x4b as f32 / 255.0, 0x6b as f32 / 255.0, 0x3a as f32 / 255.0]),
-        (0.5, [0xa6 as f32 / 255.0, 0x8a as f32 / 255.0, 0x5b as f32 / 255.0]),
-        (0.85, [0x8f as f32 / 255.0, 0x8f as f32 / 255.0, 0x8f as f32 / 255.0]),
-        (1.0, [1.0, 1.0, 1.0]),
-    ];
+    let stops: [(f32, [f32; 3]); 4] =
+        [(0.0, [0x4b as f32 / 255.0, 0x6b as f32 / 255.0, 0x3a as f32 / 255.0]), (0.5, [0xa6 as f32 / 255.0, 0x8a as f32 / 255.0, 0x5b as f32 / 255.0]), (0.85, [0x8f as f32 / 255.0, 0x8f as f32 / 255.0, 0x8f as f32 / 255.0]), (1.0, [1.0, 1.0, 1.0])];
     let t = t.clamp(0.0, 1.0);
     for window in stops.windows(2) {
         let (t0, c0) = window[0];
@@ -974,11 +970,7 @@ fn sync_terrain(state: &mut World3dState, gpu: &mut GpuContext, camera: &Camera3
         .filter_map(|band| {
             let mesh = state.meshes.get(&band.mesh_key)?;
             gpu.ensure_mesh(&band.mesh_key, band.mesh_version, &mesh.positions, &mesh.normals, &mesh.indices);
-            Some(SceneDraw3d {
-                mesh_key: band.mesh_key.clone(),
-                mesh_version: band.mesh_version,
-                instances: vec![Instance3d { id: format!("terrain-{}", band.mesh_key), model: Mat4::identity(), color: band.color, selected: false, hovered: false }],
-            })
+            Some(SceneDraw3d { mesh_key: band.mesh_key.clone(), mesh_version: band.mesh_version, instances: vec![Instance3d { id: format!("terrain-{}", band.mesh_key), model: Mat4::identity(), color: band.color, selected: false, hovered: false }] })
         })
         .collect()
 }
@@ -2211,7 +2203,14 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         // also pop a context menu — only a right-*click* (no meaningful movement since press)
         // resolves+dispatches a context-menu target, mirroring the React reference's
         // `onContextMenu` (which only fires on a genuine click, not a drag-then-release).
-        let is_click = state.right_press_point.map(|start| { let dx = x - start[0]; let dy = y - start[1]; (dx * dx + dy * dy).sqrt() <= CLICK_DRAG_THRESHOLD_PX }).unwrap_or(true);
+        let is_click = state
+            .right_press_point
+            .map(|start| {
+                let dx = x - start[0];
+                let dy = y - start[1];
+                (dx * dx + dy * dy).sqrt() <= CLICK_DRAG_THRESHOLD_PX
+            })
+            .unwrap_or(true);
         state.right_press_point = None;
         if is_click {
             if let Some((kind, id)) = resolve_world_context_menu_target(state) {

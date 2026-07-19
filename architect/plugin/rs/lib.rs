@@ -1,25 +1,16 @@
 //! 🏛️ Architect plugin — architectural program DocumentApp bundled as a hot-swappable WASM component.
 
 use architect_program::{
-    adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_program,
-    export_json, export_registers_csv, import_json, import_registers_csv, normalize_pair, run_analysis,
-    sample_program, search_program, status_summary, trace_chain, trace_impact, undirected_edges, validate_program,
-    Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, AnalysisResult, ConnectionKind,
-    EngagementLevel, EntityHeader, EntityId, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity,
-    MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOp, ProgramReport,
-    ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
-    Stakeholder, StakeholderPatch, TextField, TraceChain, TraceKind, TraceLink, UserCategory, UserProfile,
-    ValidationStatus, ARCHITECT_PROGRAM_SCHEMA,
+    adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_program, export_json, export_registers_csv, import_json, import_registers_csv, normalize_pair, run_analysis, sample_program, search_program,
+    status_summary, trace_chain, trace_impact, undirected_edges, validate_program, Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, AnalysisResult, ConnectionKind, EngagementLevel, EntityHeader, EntityId, Function,
+    FunctionKind, InfluenceLevel, Issue, IssueSeverity, MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOp, ProgramReport, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
+    Stakeholder, StakeholderPatch, TextField, TraceChain, TraceKind, TraceLink, UserCategory, UserProfile, ValidationStatus, ARCHITECT_PROGRAM_SCHEMA,
 };
 use semio_framework_plugin::{
-    create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
-    ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay,
-    BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup, SurfaceKind,
-    UiComponentSceneNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
-    UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState,
-    FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition,
+    ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    UiNumberStepperNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -44,15 +35,72 @@ const ARCHITECT_WINDOW_REPORT: &str = "architect-report";
 const ARCHITECT_WINDOW_TRACE: &str = "architect-trace";
 
 const REGISTER_IDS: &[&str] = &[
-    "stakeholders", "users", "activities", "functions", "elements", "quantities", "relationships", "adjacencies",
-    "processes", "flows", "access_rules", "operations", "equipment", "resources", "storage", "environmental",
-    "human_factors", "accessibility", "privacy", "safety", "security", "regulatory", "site_context",
-    "organizational", "services", "infrastructure", "information", "communication", "wayfinding", "schedules",
-    "flexibility", "growth", "sustainability", "resilience", "costs", "delivery", "risks", "conflicts",
-    "requirements", "priorities", "scenarios", "options", "decisions", "validations", "performance", "quality",
-    "documents", "assumptions", "constraints", "compliance_records", "approvals", "meetings", "changes",
-    "collaboration", "analyses", "reports", "search_filters", "status_records", "workshops", "surveys", "issues",
-    "audit_events", "templates", "knowledge", "benchmarks", "traces",
+    "stakeholders",
+    "users",
+    "activities",
+    "functions",
+    "elements",
+    "quantities",
+    "relationships",
+    "adjacencies",
+    "processes",
+    "flows",
+    "access_rules",
+    "operations",
+    "equipment",
+    "resources",
+    "storage",
+    "environmental",
+    "human_factors",
+    "accessibility",
+    "privacy",
+    "safety",
+    "security",
+    "regulatory",
+    "site_context",
+    "organizational",
+    "services",
+    "infrastructure",
+    "information",
+    "communication",
+    "wayfinding",
+    "schedules",
+    "flexibility",
+    "growth",
+    "sustainability",
+    "resilience",
+    "costs",
+    "delivery",
+    "risks",
+    "conflicts",
+    "requirements",
+    "priorities",
+    "scenarios",
+    "options",
+    "decisions",
+    "validations",
+    "performance",
+    "quality",
+    "documents",
+    "assumptions",
+    "constraints",
+    "compliance_records",
+    "approvals",
+    "meetings",
+    "changes",
+    "collaboration",
+    "analyses",
+    "reports",
+    "search_filters",
+    "status_records",
+    "workshops",
+    "surveys",
+    "issues",
+    "audit_events",
+    "templates",
+    "knowledge",
+    "benchmarks",
+    "traces",
 ];
 //#endregion 🔖Constants
 
@@ -106,11 +154,7 @@ struct RegisterBlockItem {
 
 //#region 🔖Helpers
 fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: ARCHITECT_APP_ID.into(),
-        action: action.into(),
-        args,
-    }
+    ActionDescriptor { controller_id: ARCHITECT_APP_ID.into(), action: action.into(), args }
 }
 
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
@@ -134,12 +178,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
     }
 }
 
-fn tree_item_with_action(
-    id: impl Into<String>,
-    label: impl Into<String>,
-    description: Option<String>,
-    action: ActionDescriptor,
-) -> UiTreeItemNode {
+fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
     UiTreeItemNode {
         id: id.into(),
         label: label.into(),
@@ -161,24 +200,11 @@ fn tree_item_with_action(
 }
 
 fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode {
-        id: id.into(),
-        label,
-        default_open: Some(true),
-        loading: None,
-        items,
-    }
+    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), loading: None, items }
 }
 
 fn tree_node(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-    UiNode::Tree(UiTreeNode {
-        sections,
-        loading: None,
-        selected_ids,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
+    UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
@@ -206,10 +232,7 @@ fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyKind>
 
 fn find_adjacency<'a>(program: &'a Program, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
     let (left, right) = normalize_pair(a, b);
-    program
-        .adjacencies
-        .iter()
-        .find(|row| row.element_a_id == left && row.element_b_id == right)
+    program.adjacencies.iter().find(|row| row.element_a_id == left && row.element_b_id == right)
 }
 
 fn default_element(name: impl Into<String>) -> ProgramElement {
@@ -246,10 +269,7 @@ fn default_element(name: impl Into<String>) -> ProgramElement {
 fn new_adjacency(program: &Program, a: &EntityId, b: &EntityId, kind: AdjacencyKind) -> Adjacency {
     let (left, right) = normalize_pair(a, b);
     Adjacency {
-        header: EntityHeader::new(
-            EntityId::new_serial("adjacency"),
-            format!("{} ↔ {}", element_label(program, &left), element_label(program, &right)),
-        ),
+        header: EntityHeader::new(EntityId::new_serial("adjacency"), format!("{} ↔ {}", element_label(program, &left), element_label(program, &right))),
         element_a_id: left,
         element_b_id: right,
         kind,
@@ -278,13 +298,7 @@ fn store_runtime_json<T: Serialize>(runtime: &mut ArchitectPlayRuntime, value: &
 }
 
 fn parse_register_id(args: Option<&Value>) -> Option<String> {
-    args.and_then(|value| {
-        value
-            .get("registerId")
-            .or_else(|| value.get("register"))
-            .and_then(|v| v.as_str())
-            .map(str::to_string)
-    })
+    args.and_then(|value| value.get("registerId").or_else(|| value.get("register")).and_then(|v| v.as_str()).map(str::to_string))
 }
 
 fn parse_entity_id_from_args(args: Option<&Value>, key: &str) -> Option<EntityId> {
@@ -643,26 +657,14 @@ fn add_register_item_op(program: &Program, register: &str, label: &str) -> Optio
         ($field:ident, $op:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (
-                ProgramOp::$op(CollectionOp::Add {
-                    index: program.$field.len(),
-                    item,
-                }),
-                id,
-            )
+            (ProgramOp::$op(CollectionOp::Add { index: program.$field.len(), item }), id)
         }};
     }
     Some(match register {
         "elements" => {
             let item = default_element(label);
             let id = item.header.id.clone();
-            (
-                ProgramOp::Elements(CollectionOp::Add {
-                    index: program.elements.len(),
-                    item,
-                }),
-                id,
-            )
+            (ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item }), id)
         }
         "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
         "requirements" => add!(requirements, Requirements, default_requirement(label)),
@@ -671,40 +673,16 @@ fn add_register_item_op(program: &Program, register: &str, label: &str) -> Optio
         "functions" => add!(functions, Functions, default_function(label)),
         "users" => add!(users, Users, default_user(label)),
         "activities" => {
-            let item: architect_program::Activity = default_from_json(
-                "activities",
-                label,
-                json!({ "code": "ACT", "category": "general", "activityType": "general" }),
-            )?;
+            let item: architect_program::Activity = default_from_json("activities", label, json!({ "code": "ACT", "category": "general", "activityType": "general" }))?;
             add!(activities, Activities, item)
         }
-        "assumptions" => add!(
-            assumptions,
-            Assumptions,
-            default_from_json::<architect_program::Assumption>(
-                "assumptions",
-                label,
-                json!({ "statement": { "text": "" }, "validationStatus": "pending" }),
-            )?
-        ),
-        "constraints" => add!(
-            constraints,
-            Constraints,
-            default_from_json::<architect_program::ConstraintRecord>(
-                "constraints",
-                label,
-                json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),
-            )?
-        ),
-        "compliance_records" => add!(
-            compliance_records,
-            ComplianceRecords,
-            default_from_json::<architect_program::ComplianceRecord>(
-                "compliance",
-                label,
-                json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),
-            )?
-        ),
+        "assumptions" => add!(assumptions, Assumptions, default_from_json::<architect_program::Assumption>("assumptions", label, json!({ "statement": { "text": "" }, "validationStatus": "pending" }),)?),
+        "constraints" => {
+            add!(constraints, Constraints, default_from_json::<architect_program::ConstraintRecord>("constraints", label, json!({ "constraintType": "general", "summary": { "text": "" }, "severity": "medium", "complianceStatus": "pending" }),)?)
+        }
+        "compliance_records" => {
+            add!(compliance_records, ComplianceRecords, default_from_json::<architect_program::ComplianceRecord>("compliance", label, json!({ "standardRef": "", "obligation": { "text": "" }, "complianceStatus": "pending", "severity": "medium" }),)?)
+        }
         "approvals" => add!(
             approvals,
             Approvals,
@@ -718,62 +696,16 @@ fn add_register_item_op(program: &Program, register: &str, label: &str) -> Optio
                 }),
             )?
         ),
-        "meetings" => add!(
-            meetings,
-            Meetings,
-            default_from_json::<architect_program::MeetingRecord>(
-                "meetings",
-                label,
-                json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),
-            )?
-        ),
-        "analyses" => add!(
-            analyses,
-            Analyses,
-            default_from_json::<AnalysisRecord>(
-                "analysis",
-                label,
-                json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),
-            )?
-        ),
-        "reports" => add!(
-            reports,
-            Reports,
-            default_from_json::<ReportRecord>(
-                "report",
-                label,
-                json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),
-            )?
-        ),
-        "templates" => add!(
-            templates,
-            Templates,
-            default_from_json::<architect_program::TemplateRecord>(
-                "template",
-                label,
-                json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),
-            )?
-        ),
+        "meetings" => add!(meetings, Meetings, default_from_json::<architect_program::MeetingRecord>("meetings", label, json!({ "meetingType": "workshop", "quorumMet": false, "meetingStatus": "draft" }),)?),
+        "analyses" => add!(analyses, Analyses, default_from_json::<AnalysisRecord>("analysis", label, json!({ "kind": "gap", "title": label, "outputSummary": { "text": "" } }),)?),
+        "reports" => add!(reports, Reports, default_from_json::<ReportRecord>("report", label, json!({ "kind": "executiveSummary", "title": label, "approvalStatus": "pending", "version": "0" }),)?),
+        "templates" => add!(templates, Templates, default_from_json::<architect_program::TemplateRecord>("template", label, json!({ "templateType": "sector", "version": "1", "approvalStatus": "pending", "usageCount": 0 }),)?),
         "traces" => {
-            let from = program
-                .elements
-                .first()
-                .map(|element| element.header.id.clone())
-                .unwrap_or_else(|| EntityId::new_serial("from"));
-            let to = program
-                .elements
-                .get(1)
-                .map(|element| element.header.id.clone())
-                .unwrap_or_else(|| EntityId::new_serial("to"));
+            let from = program.elements.first().map_or_else(|| EntityId::new_serial("from"), |element| element.header.id.clone());
+            let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (
-                ProgramOp::Traces(CollectionOp::Add {
-                    index: program.traces.len(),
-                    item,
-                }),
-                id,
-            )
+            (ProgramOp::Traces(CollectionOp::Add { index: program.traces.len(), item }), id)
         }
         _ => return None,
     })
@@ -859,10 +791,7 @@ fn remove_register_item_op(register: &str, entity_id: EntityId) -> Option<Progra
 fn patch_register_item_op(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramOp> {
     macro_rules! patch {
         ($op:ident, $ty:ty) => {
-            ProgramOp::$op(CollectionOp::Patch {
-                id: entity_id,
-                patch: serde_json::from_value::<$ty>(patch).ok()?,
-            })
+            ProgramOp::$op(CollectionOp::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
         };
     }
     Some(match register {
@@ -887,11 +816,7 @@ fn analysis_record_from(program: &Program, kind: AnalysisKind, result: &Analysis
         input_entity_ids: result.entity_ids.clone(),
         output_summary: TextField::plain(&result.summary),
         findings: result.findings.clone(),
-        metrics: result
-            .metrics
-            .iter()
-            .map(|metric| format!("{}={}{}", metric.name, metric.value, metric.unit.as_deref().unwrap_or("")))
-            .collect(),
+        metrics: result.metrics.iter().map(|metric| format!("{}={}{}", metric.name, metric.value, metric.unit.as_deref().unwrap_or(""))).collect(),
         charts: Vec::new(),
         run_by: None,
         run_at: Some(program.meta.timestamps.updated.clone()),
@@ -931,10 +856,7 @@ fn report_record_from(program: &Program, kind: ReportKind, report: &ProgramRepor
 }
 
 fn inspector_patch_action(register_id: &str, entity_id: &str, patch: &Value) -> ActionDescriptor {
-    architect_action(
-        "patchRegisterItem",
-        Some(json!({ "registerId": register_id, "entityId": entity_id, "patch": patch })),
-    )
+    architect_action("patchRegisterItem", Some(json!({ "registerId": register_id, "entityId": entity_id, "patch": patch })))
 }
 
 fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, label: &str, values: &[String], key: &str) -> UiNode {
@@ -949,7 +871,7 @@ fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, labe
             value: mixed.value,
             placeholder: mixed.placeholder,
             commit: Some("blur".into()),
-            on_change: inspector_patch_action(register_id, entity_id, json!({ key: patch_value })),
+            on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
             min: None,
             max: None,
             step: None,
@@ -972,8 +894,8 @@ fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, la
             value: mixed.value,
             step: 0.1,
             uniform: mixed.uniform,
-            on_absolute: inspector_patch_action(register_id, entity_id, json!({ key: patch_value })),
-            on_delta: inspector_patch_action(register_id, entity_id, json!({ key: patch_value })),
+            on_absolute: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
+            on_delta: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
         })),
         description: None,
         required: None,
@@ -992,7 +914,7 @@ fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, la
             icon_id: "check".into(),
             pressed: mixed.pressed,
             text: Some(if mixed.pressed { "Yes".into() } else { "No".into() }),
-            on_change: inspector_patch_action(register_id, entity_id, json!({ key: patch_value })),
+            on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
         })),
         description: None,
         required: None,
@@ -1028,75 +950,66 @@ fn parse_entity_id(value: Option<&Value>, key: &str) -> Option<EntityId> {
 }
 
 fn parse_adjacency_kind(value: Option<&Value>) -> Option<AdjacencyKind> {
-    value
-        .and_then(|args| args.get("kind"))
-        .and_then(|v| v.as_str())
-        .and_then(|kind| match kind {
-            "required" => Some(AdjacencyKind::Required),
-            "preferred" => Some(AdjacencyKind::Preferred),
-            "optional" => Some(AdjacencyKind::Optional),
-            "prohibited" => Some(AdjacencyKind::Prohibited),
-            _ => None,
-        })
+    value.and_then(|args| args.get("kind")).and_then(|v| v.as_str()).and_then(|kind| match kind {
+        "required" => Some(AdjacencyKind::Required),
+        "preferred" => Some(AdjacencyKind::Preferred),
+        "optional" => Some(AdjacencyKind::Optional),
+        "prohibited" => Some(AdjacencyKind::Prohibited),
+        _ => None,
+    })
 }
 
 fn analysis_kind_from_args(args: Option<&Value>) -> AnalysisKind {
-    args.and_then(|value| value.get("analysisKind"))
-        .and_then(|v| v.as_str())
-        .map(|kind| match kind {
-            "gap" => AnalysisKind::Gap,
-            "conflict" => AnalysisKind::Conflict,
-            "dependency" => AnalysisKind::Dependency,
-            "capacity" => AnalysisKind::Capacity,
-            "demand" => AnalysisKind::Demand,
-            "utilization" => AnalysisKind::Utilization,
-            "workflow" => AnalysisKind::Workflow,
-            "risk" => AnalysisKind::Risk,
-            "cost" => AnalysisKind::Cost,
-            "scenario" => AnalysisKind::Scenario,
-            "sensitivity" => AnalysisKind::Sensitivity,
-            "impact" => AnalysisKind::Impact,
-            "trend" => AnalysisKind::Trend,
-            "requirementComparison" => AnalysisKind::RequirementComparison,
-            "requirementClustering" => AnalysisKind::RequirementClustering,
-            "requirementFiltering" => AnalysisKind::RequirementFiltering,
-            "requirementSorting" => AnalysisKind::RequirementSorting,
-            "requirementScoring" => AnalysisKind::RequirementScoring,
-            "requirementWeighting" => AnalysisKind::RequirementWeighting,
-            "relationshipAnalysis" => AnalysisKind::RelationshipAnalysis,
-            _ => AnalysisKind::Gap,
-        })
-        .unwrap_or(AnalysisKind::Gap)
+    args.and_then(|value| value.get("analysisKind")).and_then(|v| v.as_str()).map_or(AnalysisKind::Gap, |kind| match kind {
+        "gap" => AnalysisKind::Gap,
+        "conflict" => AnalysisKind::Conflict,
+        "dependency" => AnalysisKind::Dependency,
+        "capacity" => AnalysisKind::Capacity,
+        "demand" => AnalysisKind::Demand,
+        "utilization" => AnalysisKind::Utilization,
+        "workflow" => AnalysisKind::Workflow,
+        "risk" => AnalysisKind::Risk,
+        "cost" => AnalysisKind::Cost,
+        "scenario" => AnalysisKind::Scenario,
+        "sensitivity" => AnalysisKind::Sensitivity,
+        "impact" => AnalysisKind::Impact,
+        "trend" => AnalysisKind::Trend,
+        "requirementComparison" => AnalysisKind::RequirementComparison,
+        "requirementClustering" => AnalysisKind::RequirementClustering,
+        "requirementFiltering" => AnalysisKind::RequirementFiltering,
+        "requirementSorting" => AnalysisKind::RequirementSorting,
+        "requirementScoring" => AnalysisKind::RequirementScoring,
+        "requirementWeighting" => AnalysisKind::RequirementWeighting,
+        "relationshipAnalysis" => AnalysisKind::RelationshipAnalysis,
+        _ => AnalysisKind::Gap,
+    })
 }
 
 fn report_kind_from_args(args: Option<&Value>) -> ReportKind {
-    args.and_then(|value| value.get("reportKind"))
-        .and_then(|v| v.as_str())
-        .map(|kind| match kind {
-            "executiveSummary" => ReportKind::ExecutiveSummary,
-            "programOverview" => ReportKind::ProgramOverview,
-            "stakeholderSummary" => ReportKind::StakeholderSummary,
-            "requirementsMatrix" => ReportKind::RequirementsMatrix,
-            "adjacencyMatrix" => ReportKind::AdjacencyMatrix,
-            "gapAnalysis" => ReportKind::GapAnalysis,
-            "riskRegister" => ReportKind::RiskRegister,
-            "decisionLog" => ReportKind::DecisionLog,
-            "validationSummary" => ReportKind::ValidationSummary,
-            "recommendation" => ReportKind::Recommendation,
-            "userSummary" => ReportKind::UserSummary,
-            "functionalSummary" => ReportKind::FunctionalSummary,
-            "capacitySummary" => ReportKind::CapacitySummary,
-            "workflowSummary" => ReportKind::WorkflowSummary,
-            "complianceSummary" => ReportKind::ComplianceSummary,
-            "costSummary" => ReportKind::CostSummary,
-            "scheduleSummary" => ReportKind::ScheduleSummary,
-            "changeSummary" => ReportKind::ChangeSummary,
-            "openIssueSummary" => ReportKind::OpenIssueSummary,
-            "prioritySummary" => ReportKind::PrioritySummary,
-            "scenarioSummary" => ReportKind::ScenarioSummary,
-            _ => ReportKind::ExecutiveSummary,
-        })
-        .unwrap_or(ReportKind::ExecutiveSummary)
+    args.and_then(|value| value.get("reportKind")).and_then(|v| v.as_str()).map_or(ReportKind::ExecutiveSummary, |kind| match kind {
+        "executiveSummary" => ReportKind::ExecutiveSummary,
+        "programOverview" => ReportKind::ProgramOverview,
+        "stakeholderSummary" => ReportKind::StakeholderSummary,
+        "requirementsMatrix" => ReportKind::RequirementsMatrix,
+        "adjacencyMatrix" => ReportKind::AdjacencyMatrix,
+        "gapAnalysis" => ReportKind::GapAnalysis,
+        "riskRegister" => ReportKind::RiskRegister,
+        "decisionLog" => ReportKind::DecisionLog,
+        "validationSummary" => ReportKind::ValidationSummary,
+        "recommendation" => ReportKind::Recommendation,
+        "userSummary" => ReportKind::UserSummary,
+        "functionalSummary" => ReportKind::FunctionalSummary,
+        "capacitySummary" => ReportKind::CapacitySummary,
+        "workflowSummary" => ReportKind::WorkflowSummary,
+        "complianceSummary" => ReportKind::ComplianceSummary,
+        "costSummary" => ReportKind::CostSummary,
+        "scheduleSummary" => ReportKind::ScheduleSummary,
+        "changeSummary" => ReportKind::ChangeSummary,
+        "openIssueSummary" => ReportKind::OpenIssueSummary,
+        "prioritySummary" => ReportKind::PrioritySummary,
+        "scenarioSummary" => ReportKind::ScenarioSummary,
+        _ => ReportKind::ExecutiveSummary,
+    })
 }
 
 fn analysis_kind_picker_options() -> Vec<ActionArgOption> {
@@ -1157,26 +1070,11 @@ fn report_kind_picker_options() -> Vec<ActionArgOption> {
 }
 
 fn entity_id_from_json(value: &Value) -> Option<String> {
-    value
-        .get("id")
-        .and_then(|id| id.as_str())
-        .map(str::to_string)
-        .or_else(|| value.get("header").and_then(|header| header.get("id")).and_then(|id| id.as_str()).map(str::to_string))
+    value.get("id").and_then(|id| id.as_str()).map(str::to_string).or_else(|| value.get("header").and_then(|header| header.get("id")).and_then(|id| id.as_str()).map(str::to_string))
 }
 
 fn entity_name_from_json(value: &Value) -> String {
-    value
-        .get("name")
-        .and_then(|name| name.as_str())
-        .map(str::to_string)
-        .or_else(|| {
-            value
-                .get("header")
-                .and_then(|header| header.get("name"))
-                .and_then(|name| name.as_str())
-                .map(str::to_string)
-        })
-        .unwrap_or_else(|| "Untitled".into())
+    value.get("name").and_then(|name| name.as_str()).map(str::to_string).or_else(|| value.get("header").and_then(|header| header.get("name")).and_then(|name| name.as_str()).map(str::to_string)).unwrap_or_else(|| "Untitled".into())
 }
 //#endregion 🔖Helpers
 
@@ -1193,16 +1091,7 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
     let mut pair_sections = Vec::new();
 
     glyph_rows.push(ui_text(" "));
-    pair_sections.push(tree_section(
-        "architect-adjacency.headers",
-        Some("Columns".into()),
-        matrix
-            .element_ids
-            .iter()
-            .enumerate()
-            .map(|(index, id)| tree_item(format!("architect-adjacency.col.{index}"), element_label(program, id)))
-            .collect(),
-    ));
+    pair_sections.push(tree_section("architect-adjacency.headers", Some("Columns".into()), matrix.element_ids.iter().enumerate().map(|(index, id)| tree_item(format!("architect-adjacency.col.{index}"), element_label(program, id))).collect()));
 
     for row in 1..n {
         let row_id = &matrix.element_ids[row];
@@ -1220,15 +1109,8 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
                     _ => {}
                 }
             }
-            let kind_label = cell
-                .as_ref()
-                .map(|existing| adjacency_kind_label(&existing.kind).to_string())
-                .unwrap_or_else(|| "—".into());
-            let label = format!(
-                "{} ↔ {} [{kind_label}]",
-                element_label(program, col_id),
-                element_label(program, row_id)
-            );
+            let kind_label = cell.as_ref().map_or_else(|| "—".into(), |existing| adjacency_kind_label(&existing.kind).to_string());
+            let label = format!("{} ↔ {} [{kind_label}]", element_label(program, col_id), element_label(program, row_id));
             items.push(tree_item_with_action(
                 format!("architect-adjacency.pair.{}-{}", col_id, row_id),
                 label,
@@ -1244,11 +1126,7 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             ));
         }
 
-        pair_sections.push(tree_section(
-            format!("architect-adjacency.row.{row}"),
-            Some(element_label(program, row_id)),
-            items,
-        ));
+        pair_sections.push(tree_section(format!("architect-adjacency.row.{row}"), Some(element_label(program, row_id)), items));
     }
 
     let conflicts = detect_adjacency_conflicts(program);
@@ -1256,10 +1134,7 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
         pair_sections.push(tree_section(
             "architect-adjacency.conflicts",
             Some(format!("Conflicts ({})", conflicts.len())),
-            conflicts
-                .iter()
-                .map(|conflict| tree_item(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), &conflict.message))
-                .collect(),
+            conflicts.iter().map(|conflict| tree_item(format!("architect-adjacency.conflict.{}", conflict.adjacency_a_id), &conflict.message)).collect(),
         ));
     }
 
@@ -1315,10 +1190,7 @@ fn graph_media_json(program: &Program, _camera: &GraphCamera) -> (String, String
             })
         })
         .collect();
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-    )
+    (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
 }
 
 fn render_graph_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNode {
@@ -1328,11 +1200,7 @@ fn render_graph_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNod
     scene.node_graph = Some(NodeGraphScene {
         editable: Some(true),
         capabilities_json: Some(r#"{"directedness":"undirected"}"#.into()),
-        selection_json: if runtime.selected_ids.is_empty() {
-            None
-        } else {
-            Some(serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into()))
-        },
+        selection_json: if runtime.selected_ids.is_empty() { None } else { Some(serde_json::to_string(&runtime.selected_ids).unwrap_or_else(|_| "[]".into())) },
         ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
     });
     UiNode::ComponentScene(scene)
@@ -1341,11 +1209,7 @@ fn render_graph_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNod
 
 //#region 🔖RegisterRender
 fn render_register_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNode {
-    let register = if runtime.active_register.is_empty() {
-        "elements"
-    } else {
-        runtime.active_register.as_str()
-    };
+    let register = if runtime.active_register.is_empty() { "elements" } else { runtime.active_register.as_str() };
     let entities = register_entities(program, register);
     if entities.is_empty() {
         return ui_text(format!("No entities in register '{register}'."));
@@ -1356,15 +1220,7 @@ fn render_register_body(program: &Program, runtime: &ArchitectPlayRuntime) -> Ui
         .filter_map(|entity| {
             let id = entity_id_from_json(entity)?;
             let name = entity_name_from_json(entity);
-            Some(RegisterBlockStep {
-                id: id.clone(),
-                title: name.clone(),
-                blocks: vec![RegisterBlockItem {
-                    id: format!("{id}-block"),
-                    label: name,
-                    kind: register.into(),
-                }],
-            })
+            Some(RegisterBlockStep { id: id.clone(), title: name.clone(), blocks: vec![RegisterBlockItem { id: format!("{id}-block"), label: name, kind: register.into() }] })
         })
         .collect();
     let steps_json = serde_json::to_string(&steps).unwrap_or_else(|_| "[]".into());
@@ -1376,12 +1232,7 @@ fn render_register_body(program: &Program, runtime: &ArchitectPlayRuntime) -> Ui
     .unwrap_or_else(|_| "[]".into());
     let selected_id = runtime.selected_ids.first().cloned();
     let mut scene = empty_component_scene(ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList);
-    scene.block_list = Some(BlockListScene {
-        steps_json,
-        palette_json,
-        selected_id,
-        dragging_id: None,
-    });
+    scene.block_list = Some(BlockListScene { steps_json, palette_json, selected_id, dragging_id: None });
     UiNode::ComponentScene(scene)
 }
 
@@ -1405,14 +1256,7 @@ fn build_document_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> UiN
     let register_items: Vec<UiTreeItemNode> = summary
         .by_register
         .iter()
-        .map(|row| {
-            tree_item_with_action(
-                format!("architect-document.register.{}", row.register),
-                format!("{} ({})", row.register, row.count),
-                None,
-                architect_action("selectRegister", Some(json!({ "registerId": row.register }))),
-            )
-        })
+        .map(|row| tree_item_with_action(format!("architect-document.register.{}", row.register), format!("{} ({})", row.register, row.count), None, architect_action("selectRegister", Some(json!({ "registerId": row.register })))))
         .collect();
     tree_node(
         vec![
@@ -1421,121 +1265,36 @@ fn build_document_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> UiN
                 Some("Program".into()),
                 vec![
                     tree_item("architect-document.meta.title", format!("Title: {}", program.meta.title)),
-                    tree_item(
-                        "architect-document.meta.project",
-                        format!("Project: {} ({})", program.project.client_name, program.project.code),
-                    ),
-                    tree_item(
-                        "architect-document.meta.entities",
-                        format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, runtime.active_register, register_len(program, &runtime.active_register)),
-                    ),
+                    tree_item("architect-document.meta.project", format!("Project: {} ({})", program.project.client_name, program.project.code)),
+                    tree_item("architect-document.meta.entities", format!("Entities tracked: {} (active register: {} / {})", summary.total_entities, runtime.active_register, register_len(program, &runtime.active_register))),
                 ],
             ),
             tree_section("architect-document.registers", Some("Registers".into()), register_items),
-            tree_section(
-                "architect-document.elements",
-                Some("Elements".into()),
-                if element_items.is_empty() {
-                    vec![tree_item("architect-document.elements.empty", "(none)")]
-                } else {
-                    element_items
-                },
-            ),
+            tree_section("architect-document.elements", Some("Elements".into()), if element_items.is_empty() { vec![tree_item("architect-document.elements.empty", "(none)")] } else { element_items }),
         ],
-        Some(
-            runtime
-                .selected_ids
-                .iter()
-                .map(|id| format!("architect-document.element.{id}"))
-                .collect(),
-        ),
+        Some(runtime.selected_ids.iter().map(|id| format!("architect-document.element.{id}")).collect()),
     )
 }
 
 fn build_catalogue_tree() -> UiNode {
-    let register_items: Vec<UiTreeItemNode> = REGISTER_IDS
-        .iter()
-        .map(|register| {
-            tree_item_with_action(
-                format!("architect-catalogue.register.{register}"),
-                *register,
-                None,
-                architect_action(
-                    "selectRegister",
-                    Some(json!({ "registerId": register })),
-                ),
-            )
-        })
-        .collect();
+    let register_items: Vec<UiTreeItemNode> =
+        REGISTER_IDS.iter().map(|register| tree_item_with_action(format!("architect-catalogue.register.{register}"), *register, None, architect_action("selectRegister", Some(json!({ "registerId": register }))))).collect();
     tree_node(
         vec![
             tree_section(
                 "architect-catalogue.actions",
                 Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
                 vec![
-                    tree_item_with_action(
-                        "architect-catalogue.add-item",
-                        "Add Register Item",
-                        None,
-                        architect_action(
-                            "addRegisterItem",
-                            Some(json!({ "registerId": "elements", "template": null })),
-                        ),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.validate",
-                        "Run Validation",
-                        None,
-                        architect_action("runValidation", None),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.analysis",
-                        "Run Analysis",
-                        None,
-                        architect_action("runAnalysis", Some(json!({ "analysisKind": "gap" }))),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.report",
-                        "Run Report",
-                        None,
-                        architect_action("runReport", Some(json!({ "reportKind": "executiveSummary" }))),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.export",
-                        "Export Program",
-                        None,
-                        architect_action("exportProgram", None),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.import",
-                        "Import Program",
-                        None,
-                        architect_action("importProgram", Some(json!({ "json": "" }))),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.export-csv",
-                        "Export Registers CSV",
-                        None,
-                        architect_action("exportRegistersCsv", None),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.import-csv",
-                        "Import Registers CSV",
-                        None,
-                        architect_action("importRegistersCsv", Some(json!({ "csv": "", "strategy": "upsert" }))),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.apply-template",
-                        "Apply Template",
-                        None,
-                        architect_action("applyTemplate", Some(json!({ "templateId": "" }))),
-                    ),
-                    tree_item_with_action(
-                        "architect-catalogue.search",
-                        "Search Program",
-                        None,
-                        architect_action("search", Some(json!({ "query": "" }))),
-                    ),
+                    tree_item_with_action("architect-catalogue.add-item", "Add Register Item", None, architect_action("addRegisterItem", Some(json!({ "registerId": "elements", "template": null })))),
+                    tree_item_with_action("architect-catalogue.validate", "Run Validation", None, architect_action("runValidation", None)),
+                    tree_item_with_action("architect-catalogue.analysis", "Run Analysis", None, architect_action("runAnalysis", Some(json!({ "analysisKind": "gap" })))),
+                    tree_item_with_action("architect-catalogue.report", "Run Report", None, architect_action("runReport", Some(json!({ "reportKind": "executiveSummary" })))),
+                    tree_item_with_action("architect-catalogue.export", "Export Program", None, architect_action("exportProgram", None)),
+                    tree_item_with_action("architect-catalogue.import", "Import Program", None, architect_action("importProgram", Some(json!({ "json": "" })))),
+                    tree_item_with_action("architect-catalogue.export-csv", "Export Registers CSV", None, architect_action("exportRegistersCsv", None)),
+                    tree_item_with_action("architect-catalogue.import-csv", "Import Registers CSV", None, architect_action("importRegistersCsv", Some(json!({ "csv": "", "strategy": "upsert" })))),
+                    tree_item_with_action("architect-catalogue.apply-template", "Apply Template", None, architect_action("applyTemplate", Some(json!({ "templateId": "" })))),
+                    tree_item_with_action("architect-catalogue.search", "Search Program", None, architect_action("search", Some(json!({ "query": "" })))),
                 ],
             ),
             tree_section("architect-catalogue.registers", Some("Registers".into()), register_items),
@@ -1558,30 +1317,16 @@ fn render_report_body(runtime: &ArchitectPlayRuntime) -> UiNode {
                 items.push(tree_item(format!("architect-report.section.{index}.body"), &section.body));
             }
             for (bullet_index, bullet) in section.bullets.iter().enumerate() {
-                items.push(tree_item(
-                    format!("architect-report.section.{index}.bullet.{bullet_index}"),
-                    format!("• {bullet}"),
-                ));
+                items.push(tree_item(format!("architect-report.section.{index}.bullet.{bullet_index}"), format!("• {bullet}")));
             }
-            tree_section(
-                format!("architect-report.section.{index}"),
-                Some(section.heading.clone()),
-                items,
-            )
+            tree_section(format!("architect-report.section.{index}"), Some(section.heading.clone()), items)
         })
         .collect();
     tree_node(
-        vec![tree_section(
-            "architect-report.meta",
-            Some(report.title.clone()),
-            vec![
-                tree_item("architect-report.kind", format!("Kind: {:?}", report.kind)),
-                tree_item("architect-report.generated", format!("Generated: {}", report.generated_at)),
-            ],
-        )]
-        .into_iter()
-        .chain(sections)
-        .collect(),
+        vec![tree_section("architect-report.meta", Some(report.title.clone()), vec![tree_item("architect-report.kind", format!("Kind: {:?}", report.kind)), tree_item("architect-report.generated", format!("Generated: {}", report.generated_at))])]
+            .into_iter()
+            .chain(sections)
+            .collect(),
         None,
     )
 }
@@ -1595,64 +1340,14 @@ fn render_trace_body(program: &Program, runtime: &ArchitectPlayRuntime) -> UiNod
     let chain: TraceChain = trace_chain(&mut scratch, &root);
     let impact = trace_impact(&mut scratch, &root);
     let trail = audit_trail(program, Some(&root));
-    let chain_items: Vec<UiTreeItemNode> = chain
-        .links
-        .iter()
-        .enumerate()
-        .map(|(index, link)| {
-            tree_item(
-                format!("architect-trace.chain.{index}"),
-                format!("{:?}: {} → {}", link.kind, link.from_id, link.to_id),
-            )
-        })
-        .collect();
-    let impact_items: Vec<UiTreeItemNode> = impact
-        .upstream_ids
-        .iter()
-        .enumerate()
-        .map(|(index, id)| tree_item(format!("architect-trace.impact.{index}"), id.to_string()))
-        .collect();
-    let audit_items: Vec<UiTreeItemNode> = trail
-        .events
-        .iter()
-        .take(12)
-        .enumerate()
-        .map(|(index, event)| {
-            tree_item(
-                format!("architect-trace.audit.{index}"),
-                format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name),
-            )
-        })
-        .collect();
+    let chain_items: Vec<UiTreeItemNode> = chain.links.iter().enumerate().map(|(index, link)| tree_item(format!("architect-trace.chain.{index}"), format!("{:?}: {} → {}", link.kind, link.from_id, link.to_id))).collect();
+    let impact_items: Vec<UiTreeItemNode> = impact.upstream_ids.iter().enumerate().map(|(index, id)| tree_item(format!("architect-trace.impact.{index}"), id.to_string())).collect();
+    let audit_items: Vec<UiTreeItemNode> = trail.events.iter().take(12).enumerate().map(|(index, event)| tree_item(format!("architect-trace.audit.{index}"), format!("{:?} @ {} — {}", event.action, event.timestamp, event.header.name))).collect();
     tree_node(
         vec![
-            tree_section(
-                "architect-trace.chain",
-                Some(format!("Trace Chain ({})", chain.links.len())),
-                if chain_items.is_empty() {
-                    vec![tree_item("architect-trace.chain.empty", "(no links)")]
-                } else {
-                    chain_items
-                },
-            ),
-            tree_section(
-                "architect-trace.impact",
-                Some(format!("Impact ({})", impact.upstream_ids.len())),
-                if impact_items.is_empty() {
-                    vec![tree_item("architect-trace.impact.empty", "(no upstream)")]
-                } else {
-                    impact_items
-                },
-            ),
-            tree_section(
-                "architect-trace.audit",
-                Some(format!("Audit Trail ({})", trail.events.len())),
-                if audit_items.is_empty() {
-                    vec![tree_item("architect-trace.audit.empty", "(no events)")]
-                } else {
-                    audit_items
-                },
-            ),
+            tree_section("architect-trace.chain", Some(format!("Trace Chain ({})", chain.links.len())), if chain_items.is_empty() { vec![tree_item("architect-trace.chain.empty", "(no links)")] } else { chain_items }),
+            tree_section("architect-trace.impact", Some(format!("Impact ({})", impact.upstream_ids.len())), if impact_items.is_empty() { vec![tree_item("architect-trace.impact.empty", "(no upstream)")] } else { impact_items }),
+            tree_section("architect-trace.audit", Some(format!("Audit Trail ({})", trail.events.len())), if audit_items.is_empty() { vec![tree_item("architect-trace.audit.empty", "(no events)")] } else { audit_items }),
         ],
         None,
     )
@@ -1668,166 +1363,58 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
     if let Some(element) = program.elements.iter().find(|row| row.header.id == id) {
         let fields = vec![
             ui_inspector_readonly_field("architect-inspection.element.id", "Id", entity_id.clone()),
-            inspector_text_field(register, &entity_id, "architect-inspection.element.name", "Name", &[element.header.name.clone()], "name"),
-            inspector_text_field(register, &entity_id, "architect-inspection.element.code", "Code", &[element.code.clone()], "code"),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.element.level",
-                "Level",
-                &[element.level.clone().unwrap_or_default()],
-                "level",
-            ),
+            inspector_text_field(register, &entity_id, "architect-inspection.element.name", "Name", std::slice::from_ref(&element.header.name), "name"),
+            inspector_text_field(register, &entity_id, "architect-inspection.element.code", "Code", std::slice::from_ref(&element.code), "code"),
+            inspector_text_field(register, &entity_id, "architect-inspection.element.level", "Level", &[element.level.clone().unwrap_or_default()], "level"),
             ui_inspector_readonly_field("architect-inspection.element.kind", "Kind", format!("{:?}", element.kind)),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-            id: "architect-inspection.element".into(),
-            label: "Element".into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.element".into(), label: "Element".into(), default_open: Some(true), fields }]);
     }
     if let Some(stakeholder) = program.stakeholders.iter().find(|row| row.header.id == id) {
         let fields = vec![
             ui_inspector_readonly_field("architect-inspection.stakeholder.id", "Id", entity_id.clone()),
-            inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.name", "Name", &[stakeholder.header.name.clone()], "name"),
-            inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.role", "Role", &[stakeholder.role.clone()], "role"),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.stakeholder.organization",
-                "Organization",
-                &[stakeholder.organization.clone()],
-                "organization",
-            ),
+            inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.name", "Name", std::slice::from_ref(&stakeholder.header.name), "name"),
+            inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.role", "Role", std::slice::from_ref(&stakeholder.role), "role"),
+            inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.organization", "Organization", std::slice::from_ref(&stakeholder.organization), "organization"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-            id: "architect-inspection.stakeholder".into(),
-            label: "Stakeholder".into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.stakeholder".into(), label: "Stakeholder".into(), default_open: Some(true), fields }]);
     }
     if let Some(adjacency) = program.adjacencies.iter().find(|row| row.header.id == id) {
         let fields = vec![
             ui_inspector_readonly_field("architect-inspection.adjacency.id", "Id", entity_id.clone()),
-            ui_inspector_readonly_field(
-                "architect-inspection.adjacency.pair",
-                "Pair",
-                format!(
-                    "{} ↔ {}",
-                    element_label(program, &adjacency.element_a_id),
-                    element_label(program, &adjacency.element_b_id)
-                ),
-            ),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.adjacency.kind",
-                "Kind",
-                &[adjacency_kind_label(&adjacency.kind).to_string()],
-                "kind",
-            ),
+            ui_inspector_readonly_field("architect-inspection.adjacency.pair", "Pair", format!("{} ↔ {}", element_label(program, &adjacency.element_a_id), element_label(program, &adjacency.element_b_id))),
+            inspector_text_field(register, &entity_id, "architect-inspection.adjacency.kind", "Kind", &[adjacency_kind_label(&adjacency.kind).to_string()], "kind"),
             inspector_number_field(register, &entity_id, "architect-inspection.adjacency.weight", "Weight", &[adjacency.weight], "weight"),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.adjacency.connection",
-                "Connection",
-                &[format!("{:?}", adjacency.connection)],
-                "connection",
-            ),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.adjacency.separations",
-                "Separations",
-                &[adjacency
-                    .separations
-                    .iter()
-                    .map(|separation| format!("{separation:?}"))
-                    .collect::<Vec<_>>()
-                    .join(", ")],
-                "separations",
-            ),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.adjacency.internalExternalAccess",
-                "Internal/External Access",
-                &[adjacency.internal_external_access.clone().unwrap_or_default()],
-                "internalExternalAccess",
-            ),
-            inspector_toggle_field(
-                register,
-                &entity_id,
-                "architect-inspection.adjacency.sharedWall",
-                "Shared Wall",
-                &[adjacency.shared_wall],
-                "sharedWall",
-            ),
+            inspector_text_field(register, &entity_id, "architect-inspection.adjacency.connection", "Connection", &[format!("{:?}", adjacency.connection)], "connection"),
+            inspector_text_field(register, &entity_id, "architect-inspection.adjacency.separations", "Separations", &[adjacency.separations.iter().map(|separation| format!("{separation:?}")).collect::<Vec<_>>().join(", ")], "separations"),
+            inspector_text_field(register, &entity_id, "architect-inspection.adjacency.internalExternalAccess", "Internal/External Access", &[adjacency.internal_external_access.clone().unwrap_or_default()], "internalExternalAccess"),
+            inspector_toggle_field(register, &entity_id, "architect-inspection.adjacency.sharedWall", "Shared Wall", &[adjacency.shared_wall], "sharedWall"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-            id: "architect-inspection.adjacency".into(),
-            label: "Adjacency".into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.adjacency".into(), label: "Adjacency".into(), default_open: Some(true), fields }]);
     }
     if let Some(requirement) = program.requirements.iter().find(|row| row.header.id == id) {
         let fields = vec![
             ui_inspector_readonly_field("architect-inspection.requirement.id", "Id", entity_id.clone()),
-            inspector_text_field(register, &entity_id, "architect-inspection.requirement.name", "Name", &[requirement.header.name.clone()], "name"),
-            inspector_text_field(register, &entity_id, "architect-inspection.requirement.code", "Code", &[requirement.code.clone()], "code"),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.requirement.statement",
-                "Statement",
-                &[requirement.statement.text.clone()],
-                "statement",
-            ),
+            inspector_text_field(register, &entity_id, "architect-inspection.requirement.name", "Name", std::slice::from_ref(&requirement.header.name), "name"),
+            inspector_text_field(register, &entity_id, "architect-inspection.requirement.code", "Code", std::slice::from_ref(&requirement.code), "code"),
+            inspector_text_field(register, &entity_id, "architect-inspection.requirement.statement", "Statement", std::slice::from_ref(&requirement.statement.text), "statement"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-            id: "architect-inspection.requirement".into(),
-            label: "Requirement".into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.requirement".into(), label: "Requirement".into(), default_open: Some(true), fields }]);
     }
     if let Some(risk) = program.risks.iter().find(|row| row.header.id == id) {
         let fields = vec![
             ui_inspector_readonly_field("architect-inspection.risk.id", "Id", entity_id.clone()),
-            inspector_text_field(register, &entity_id, "architect-inspection.risk.name", "Name", &[risk.header.name.clone()], "name"),
-            inspector_text_field(
-                register,
-                &entity_id,
-                "architect-inspection.risk.statement",
-                "Statement",
-                &[risk.risk_statement.text.clone()],
-                "riskStatement",
-            ),
+            inspector_text_field(register, &entity_id, "architect-inspection.risk.name", "Name", std::slice::from_ref(&risk.header.name), "name"),
+            inspector_text_field(register, &entity_id, "architect-inspection.risk.statement", "Statement", std::slice::from_ref(&risk.risk_statement.text), "riskStatement"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
-            id: "architect-inspection.risk".into(),
-            label: "Risk".into(),
-            default_open: Some(true),
-            fields,
-        }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.risk".into(), label: "Risk".into(), default_open: Some(true), fields }]);
     }
-    let generic_name = register_entities(program, register)
-        .into_iter()
-        .find(|entity| entity_id_from_json(entity).as_deref() == Some(entity_id.as_str()))
-        .map(|entity| entity_name_from_json(&entity))
-        .unwrap_or_else(|| entity_id.clone());
+    let generic_name = register_entities(program, register).into_iter().find(|entity| entity_id_from_json(entity).as_deref() == Some(entity_id.as_str())).map_or_else(|| entity_id.clone(), |entity| entity_name_from_json(&entity));
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "architect-inspection.generic".into(),
         label: format!("{register} entity"),
         default_open: Some(true),
-        fields: vec![
-            ui_inspector_readonly_field("architect-inspection.generic.id", "Id", entity_id.clone()),
-            inspector_text_field(register, &entity_id, "architect-inspection.generic.name", "Name", &[generic_name], "name"),
-        ],
+        fields: vec![ui_inspector_readonly_field("architect-inspection.generic.id", "Id", entity_id.clone()), inspector_text_field(register, &entity_id, "architect-inspection.generic.name", "Name", &[generic_name], "name")],
     }])
 }
 //#endregion 🔖Panels
@@ -1862,22 +1449,13 @@ impl DocumentApp for ArchitectApp {
         sample_program()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, Program>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<ProgramOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _view_state: &ViewState) -> ActionEmit<ProgramOp> {
         self.ensure_default_register();
         let program = doc.projection;
         match action {
             "setSelection" => {
                 if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    self.runtime.selected_ids = ids
-                        .iter()
-                        .filter_map(|value| value.as_str().map(str::to_string))
-                        .collect();
+                    self.runtime.selected_ids = ids.iter().filter_map(|value| value.as_str().map(str::to_string)).collect();
                 }
                 ActionEmit::default()
             }
@@ -1892,10 +1470,7 @@ impl DocumentApp for ArchitectApp {
                 let Some(register) = parse_register_id(args) else {
                     return ActionEmit::default();
                 };
-                let label = args
-                    .and_then(|value| value.get("name"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("New Item");
+                let label = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("New Item");
                 if let Some(template_id) = args.and_then(|value| value.get("templateId")).and_then(|value| value.as_str()) {
                     let template_id = EntityId(template_id.into());
                     if let Some(template) = program.templates.iter().find(|row| row.header.id == template_id).cloned() {
@@ -1924,14 +1499,8 @@ impl DocumentApp for ArchitectApp {
                     ops.push(op);
                 }
                 if register == "elements" {
-                    for adjacency in program
-                        .adjacencies
-                        .iter()
-                        .filter(|row| row.element_a_id == entity_id || row.element_b_id == entity_id)
-                    {
-                        ops.push(ProgramOp::ClearAdjacency {
-                            id: adjacency.header.id.clone(),
-                        });
+                    for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id == entity_id || row.element_b_id == entity_id) {
+                        ops.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
                     }
                 }
                 ActionEmit::ops(ops)
@@ -1972,15 +1541,7 @@ impl DocumentApp for ArchitectApp {
             "search" => {
                 if let Some(query) = args.and_then(|value| value.get("query")).and_then(|value| value.as_str()) {
                     self.runtime.search_query = query.into();
-                    let hits = search_program(
-                        program,
-                        &SearchQuery {
-                            keywords: query.split_whitespace().map(str::to_string).collect(),
-                            ..SearchQuery::default()
-                        },
-                        None,
-                        Some(&mut self.runtime.search_history),
-                    );
+                    let hits = search_program(program, &SearchQuery { keywords: query.split_whitespace().map(str::to_string).collect(), ..SearchQuery::default() }, None, Some(&mut self.runtime.search_history));
                     self.runtime.selected_ids = hits.iter().take(8).map(|hit| hit.entity_id.to_string()).collect();
                     store_runtime_json(&mut self.runtime, &hits);
                 }
@@ -1995,11 +1556,7 @@ impl DocumentApp for ArchitectApp {
                 let cycle = args.and_then(|value| value.get("cycle")).and_then(|value| value.as_bool()).unwrap_or(false);
                 let explicit = parse_adjacency_kind(args);
                 let existing = find_adjacency(program, &a, &b);
-                let next = if cycle {
-                    next_adjacency_kind(existing.map(|row| &row.kind))
-                } else {
-                    explicit.or_else(|| next_adjacency_kind(existing.map(|row| &row.kind)))
-                };
+                let next = if cycle { next_adjacency_kind(existing.map(|row| &row.kind)) } else { explicit.or_else(|| next_adjacency_kind(existing.map(|row| &row.kind))) };
                 match next {
                     Some(kind) => {
                         let adjacency = if let Some(row) = existing {
@@ -2021,39 +1578,22 @@ impl DocumentApp for ArchitectApp {
                 }
             }
             "addElement" => {
-                let name = args
-                    .and_then(|value| value.get("name"))
-                    .and_then(|value| value.as_str())
-                    .unwrap_or("New Room");
+                let name = args.and_then(|value| value.get("name")).and_then(|value| value.as_str()).unwrap_or("New Room");
                 let element = default_element(name);
                 let id = element.header.id.to_string();
                 self.runtime.selected_ids = vec![id];
                 self.runtime.active_register = "elements".into();
-                ActionEmit::ops(vec![ProgramOp::Elements(CollectionOp::Add {
-                    index: program.elements.len(),
-                    item: element,
-                })])
+                ActionEmit::ops(vec![ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item: element })])
             }
             "removeElement" => {
-                let id = args
-                    .and_then(|value| value.get("elementId"))
-                    .or_else(|| args.and_then(|value| value.get("id")))
-                    .and_then(|value| value.as_str());
+                let id = args.and_then(|value| value.get("elementId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str());
                 let Some(id) = id else {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_ids.retain(|selected| selected != id);
-                let mut ops = vec![ProgramOp::Elements(CollectionOp::Remove {
-                    id: EntityId(id.into()),
-                })];
-                for adjacency in program
-                    .adjacencies
-                    .iter()
-                    .filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id)
-                {
-                    ops.push(ProgramOp::ClearAdjacency {
-                        id: adjacency.header.id.clone(),
-                    });
+                let mut ops = vec![ProgramOp::Elements(CollectionOp::Remove { id: EntityId(id.into()) })];
+                for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
+                    ops.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
                 }
                 ActionEmit::ops(ops)
             }
@@ -2068,10 +1608,7 @@ impl DocumentApp for ArchitectApp {
                 let record = analysis_record_from(program, kind, &result);
                 self.runtime.last_analysis = Some(result.clone());
                 store_runtime_json(&mut self.runtime, &result);
-                ActionEmit::ops(vec![ProgramOp::Analyses(CollectionOp::Add {
-                    index: program.analyses.len(),
-                    item: record,
-                })])
+                ActionEmit::ops(vec![ProgramOp::Analyses(CollectionOp::Add { index: program.analyses.len(), item: record })])
             }
             "runReport" => {
                 let kind = report_kind_from_args(args);
@@ -2079,10 +1616,7 @@ impl DocumentApp for ArchitectApp {
                 let record = report_record_from(program, kind, &report);
                 self.runtime.last_report = Some(report.clone());
                 store_runtime_json(&mut self.runtime, &report);
-                ActionEmit::ops(vec![ProgramOp::Reports(CollectionOp::Add {
-                    index: program.reports.len(),
-                    item: record,
-                })])
+                ActionEmit::ops(vec![ProgramOp::Reports(CollectionOp::Add { index: program.reports.len(), item: record })])
             }
             "applyTemplate" => {
                 let Some(template_id) = parse_entity_id_from_args(args, "templateId") else {
@@ -2096,26 +1630,17 @@ impl DocumentApp for ArchitectApp {
             }
             "exportRegistersCsv" => {
                 let csv = export_registers_csv(program).unwrap_or_default();
-                ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: format!("{}.registers.csv", program.meta.document_id),
-                    mime_type: "text/csv".into(),
-                    data: csv,
-                    encoding: None,
-                })
+                ActionEmit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.registers.csv", program.meta.document_id), mime_type: "text/csv".into(), data: csv, encoding: None })
             }
             "importRegistersCsv" => {
                 let Some(csv) = args.and_then(|value| value.get("csv")).and_then(|value| value.as_str()) else {
                     return ActionEmit::default();
                 };
-                let strategy = args
-                    .and_then(|value| value.get("strategy"))
-                    .and_then(|value| value.as_str())
-                    .map(|strategy| match strategy {
-                        "replace" => MergeStrategy::Replace,
-                        "skipDuplicates" => MergeStrategy::SkipDuplicates,
-                        _ => MergeStrategy::Upsert,
-                    })
-                    .unwrap_or(MergeStrategy::Upsert);
+                let strategy = args.and_then(|value| value.get("strategy")).and_then(|value| value.as_str()).map_or(MergeStrategy::Upsert, |strategy| match strategy {
+                    "replace" => MergeStrategy::Replace,
+                    "skipDuplicates" => MergeStrategy::SkipDuplicates,
+                    _ => MergeStrategy::Upsert,
+                });
                 let mut next = program.clone();
                 if import_registers_csv(&mut next, csv, strategy).is_err() {
                     return ActionEmit::default();
@@ -2124,12 +1649,7 @@ impl DocumentApp for ArchitectApp {
             }
             "exportProgram" => {
                 let json_text = export_json(program).unwrap_or_else(|error| json!({ "error": error.to_string() }).to_string());
-                ActionEmit::effect(HostEffect::DownloadMediaExport {
-                    filename: format!("{}.architect.json", program.meta.document_id),
-                    mime_type: "application/json".into(),
-                    data: json_text,
-                    encoding: None,
-                })
+                ActionEmit::effect(HostEffect::DownloadMediaExport { filename: format!("{}.architect.json", program.meta.document_id), mime_type: "application/json".into(), data: json_text, encoding: None })
             }
             "importProgram" => {
                 let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) else {
@@ -2142,11 +1662,7 @@ impl DocumentApp for ArchitectApp {
                 ActionEmit::ops(vec![ProgramOp::SetProgram { program: Box::new(next) }])
             }
             "nodeGraphEdit" => {
-                let edit_ops = args
-                    .and_then(|value| value.get("ops"))
-                    .and_then(|value| value.as_array())
-                    .cloned()
-                    .unwrap_or_default();
+                let edit_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let mut emitted = Vec::new();
                 for op in edit_ops {
                     match op.get("op").and_then(Value::as_str).unwrap_or("") {
@@ -2157,25 +1673,15 @@ impl DocumentApp for ArchitectApp {
                                 let a = EntityId(source.into());
                                 let b = EntityId(target.into());
                                 let kind = find_adjacency(program, &a, &b).map_or(AdjacencyKind::Preferred, |row| row.kind.clone());
-                                emitted.push(ProgramOp::SetAdjacency {
-                                    adjacency: new_adjacency(program, &a, &b, kind),
-                                });
+                                emitted.push(ProgramOp::SetAdjacency { adjacency: new_adjacency(program, &a, &b, kind) });
                             }
                         }
                         "deleteSelection" => {
                             if let Some(ids) = op.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
                                 for id in ids {
-                                    emitted.push(ProgramOp::Elements(CollectionOp::Remove {
-                                        id: EntityId(id.clone()),
-                                    }));
-                                    for adjacency in program
-                                        .adjacencies
-                                        .iter()
-                                        .filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id)
-                                    {
-                                        emitted.push(ProgramOp::ClearAdjacency {
-                                            id: adjacency.header.id.clone(),
-                                        });
+                                    emitted.push(ProgramOp::Elements(CollectionOp::Remove { id: EntityId(id.clone()) }));
+                                    for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
+                                        emitted.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
                                     }
                                 }
                             }
@@ -2222,14 +1728,7 @@ impl DocumentApp for ArchitectApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        let mut overlay = AppLabelsOverlay::with_framework_panel_tabs(
-            [
-                "framework.panel.document",
-                "framework.panel.catalogue",
-                "framework.panel.inspection",
-            ],
-            is_de,
-        );
+        let mut overlay = AppLabelsOverlay::with_framework_panel_tabs(["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"], is_de);
         overlay.window_kind_labels = HashMap::from([
             (ARCHITECT_WINDOW_ADJACENCY.to_string(), "Adjacency".into()),
             (ARCHITECT_WINDOW_GRAPH.to_string(), "Graph".into()),
@@ -2237,16 +1736,9 @@ impl DocumentApp for ArchitectApp {
             (ARCHITECT_WINDOW_REPORT.to_string(), "Report".into()),
             (ARCHITECT_WINDOW_TRACE.to_string(), "Trace".into()),
         ]);
-        overlay.mode_labels = HashMap::from([
-            ("edit".into(), "Edit".into()),
-            ("review".into(), "Review".into()),
-            ("report".into(), "Report".into()),
-        ]);
+        overlay.mode_labels = HashMap::from([("edit".into(), "Edit".into()), ("review".into(), "Review".into()), ("report".into(), "Report".into())]);
         overlay.action_labels = architect_action_labels(is_de);
-        overlay.example_labels = HashMap::from([
-            ("sample".into(), "Sample Clinic".into()),
-            ("empty".into(), "Empty Program".into()),
-        ]);
+        overlay.example_labels = HashMap::from([("sample".into(), "Sample Clinic".into()), ("empty".into(), "Empty Program".into())]);
         overlay
     }
 }
@@ -2276,10 +1768,7 @@ fn architect_action_labels(is_de: bool) -> HashMap<String, String> {
         ("search", "Search", "Suchen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
     ];
-    ENTRIES
-        .iter()
-        .map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string()))
-        .collect()
+    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
 //#endregion 🔖CommandLabels
 
@@ -2293,39 +1782,14 @@ fn create_architect_app() -> App {
             .mode("review", "Review")
             .mode("report", "Report")
             .default_mode_id("edit")
-            .window_kind(
-                ARCHITECT_WINDOW_ADJACENCY,
-                "Adjacency",
-                ARCHITECT_BODY_ADJACENCY,
-                SurfaceKind::Canvas2d,
-            )
+            .window_kind(ARCHITECT_WINDOW_ADJACENCY, "Adjacency", ARCHITECT_BODY_ADJACENCY, SurfaceKind::Canvas2d)
             .window_kind(ARCHITECT_WINDOW_GRAPH, "Graph", ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph)
-            .window_kind(
-                ARCHITECT_WINDOW_REGISTER,
-                "Register",
-                ARCHITECT_BODY_REGISTER,
-                SurfaceKind::BlockList,
-            )
+            .window_kind(ARCHITECT_WINDOW_REGISTER, "Register", ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList)
             .window_kind(ARCHITECT_WINDOW_REPORT, "Report", ARCHITECT_BODY_REPORT, SurfaceKind::TextEditor)
             .window_kind(ARCHITECT_WINDOW_TRACE, "Trace", ARCHITECT_BODY_TRACE, SurfaceKind::TextEditor)
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-                FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-                PanelGroup::Workbench,
-                ARCHITECT_BODY_DOCUMENT,
-            )
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-                FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-                PanelGroup::Workbench,
-                ARCHITECT_BODY_CATALOGUE,
-            )
-            .panel_tab(
-                FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-                FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
-                PanelGroup::Details,
-                ARCHITECT_BODY_INSPECTION,
-            )
+            .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, ARCHITECT_BODY_DOCUMENT)
+            .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, ARCHITECT_BODY_CATALOGUE)
+            .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, ARCHITECT_BODY_INSPECTION)
             .operation("setAdjacencyKind", "Set Adjacency Kind")
             .operation("addRegisterItem", "Add Register Item")
             .operation("removeRegisterItem", "Remove Register Item")
@@ -2346,79 +1810,23 @@ fn create_architect_app() -> App {
             .view_action("setSelection", "Set Selection")
             .shell_action("exportProgram", "Export Program")
             .shell_action("exportRegistersCsv", "Export Registers CSV")
-            .action_with(ActionDefinition {
-                in_palette: false,
-                ..ActionDefinition::new("setAdjacencyFilter", "Set Adjacency Filter", ActionKind::View)
-            })
-            .action_args(
-                "selectRegister",
-                vec![ActionArgDef::select(
-                    "registerId",
-                    "Register",
-                    REGISTER_IDS
-                        .iter()
-                        .map(|register| ActionArgOption::new(*register, *register))
-                        .collect(),
-                )],
-            )
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setAdjacencyFilter", "Set Adjacency Filter", ActionKind::View) })
+            .action_args("selectRegister", vec![ActionArgDef::select("registerId", "Register", REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, *register)).collect())])
             .action_args(
                 "addRegisterItem",
-                vec![
-                    ActionArgDef::select(
-                        "registerId",
-                        "Register",
-                        REGISTER_IDS
-                            .iter()
-                            .map(|register| ActionArgOption::new(*register, *register))
-                            .collect(),
-                    ),
-                    ActionArgDef::text("name", "Name"),
-                    ActionArgDef::text("templateId", "Template Id"),
-                ],
+                vec![ActionArgDef::select("registerId", "Register", REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, *register)).collect()), ActionArgDef::text("name", "Name"), ActionArgDef::text("templateId", "Template Id")],
             )
-            .action_args(
-                "removeRegisterItem",
-                vec![
-                    ActionArgDef::select(
-                        "registerId",
-                        "Register",
-                        REGISTER_IDS
-                            .iter()
-                            .map(|register| ActionArgOption::new(*register, *register))
-                            .collect(),
-                    ),
-                    ActionArgDef::text("entityId", "Entity Id"),
-                ],
-            )
+            .action_args("removeRegisterItem", vec![ActionArgDef::select("registerId", "Register", REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, *register)).collect()), ActionArgDef::text("entityId", "Entity Id")])
             .action_args(
                 "patchRegisterItem",
-                vec![
-                    ActionArgDef::select(
-                        "registerId",
-                        "Register",
-                        REGISTER_IDS
-                            .iter()
-                            .map(|register| ActionArgOption::new(*register, *register))
-                            .collect(),
-                    ),
-                    ActionArgDef::text("entityId", "Entity Id"),
-                    ActionArgDef::text("patch", "Patch JSON"),
-                ],
+                vec![ActionArgDef::select("registerId", "Register", REGISTER_IDS.iter().map(|register| ActionArgOption::new(*register, *register)).collect()), ActionArgDef::text("entityId", "Entity Id"), ActionArgDef::text("patch", "Patch JSON")],
             )
             .action_args("applyTemplate", vec![ActionArgDef::text("templateId", "Template Id")])
             .action_args(
                 "importRegistersCsv",
                 vec![
                     ActionArgDef::text("csv", "CSV"),
-                    ActionArgDef::select(
-                        "strategy",
-                        "Strategy",
-                        vec![
-                            ActionArgOption::new("upsert", "Upsert"),
-                            ActionArgOption::new("replace", "Replace"),
-                            ActionArgOption::new("skipDuplicates", "Skip Duplicates"),
-                        ],
-                    ),
+                    ActionArgDef::select("strategy", "Strategy", vec![ActionArgOption::new("upsert", "Upsert"), ActionArgOption::new("replace", "Replace"), ActionArgOption::new("skipDuplicates", "Skip Duplicates")]),
                 ],
             )
             .action_args(
@@ -2426,46 +1834,22 @@ fn create_architect_app() -> App {
                 vec![ActionArgDef::select(
                     "kind",
                     "Kind",
-                    vec![
-                        ActionArgOption::new("required", "Required"),
-                        ActionArgOption::new("preferred", "Preferred"),
-                        ActionArgOption::new("optional", "Optional"),
-                        ActionArgOption::new("prohibited", "Prohibited"),
-                    ],
+                    vec![ActionArgOption::new("required", "Required"), ActionArgOption::new("preferred", "Preferred"), ActionArgOption::new("optional", "Optional"), ActionArgOption::new("prohibited", "Prohibited")],
                 )],
             )
-            .action_args(
-                "runAnalysis",
-                vec![ActionArgDef::select("analysisKind", "Analysis", analysis_kind_picker_options())],
-            )
-            .action_args(
-                "runReport",
-                vec![ActionArgDef::select("reportKind", "Report", report_kind_picker_options())],
-            )
+            .action_args("runAnalysis", vec![ActionArgDef::select("analysisKind", "Analysis", analysis_kind_picker_options())])
+            .action_args("runReport", vec![ActionArgDef::select("reportKind", "Report", report_kind_picker_options())])
             .action_args("search", vec![ActionArgDef::text("query", "Query")])
             .action_args("importProgram", vec![ActionArgDef::text("json", "Program JSON")])
             .default_layout(create_default_layout(
-                &[
-                    ARCHITECT_WINDOW_ADJACENCY.into(),
-                    ARCHITECT_WINDOW_GRAPH.into(),
-                    ARCHITECT_WINDOW_REGISTER.into(),
-                    ARCHITECT_WINDOW_REPORT.into(),
-                ],
+                &[ARCHITECT_WINDOW_ADJACENCY.into(), ARCHITECT_WINDOW_GRAPH.into(), ARCHITECT_WINDOW_REGISTER.into(), ARCHITECT_WINDOW_REPORT.into()],
                 "row",
                 Some(&[30.0, 30.0, 20.0, 20.0]),
                 Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]),
             )),
     )
-    .example(
-        "sample",
-        "Sample Clinic",
-        serde_json::to_string(&sample_program()).expect("sample_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"),
-    )
-    .example(
-        "empty",
-        "Empty Program",
-        serde_json::to_string(&empty_program()).expect("empty_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"),
-    )
+    .example("sample", "Sample Clinic", serde_json::to_string(&sample_program()).expect("sample_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"))
+    .example("empty", "Empty Program", serde_json::to_string(&empty_program()).expect("empty_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"))
     .program("architect", "Architect", "data")
 }
 
@@ -2487,13 +1871,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     fn with_doc_view<R>(program: &Program, run: impl FnOnce(DocumentView<'_, Program>) -> R) -> R {
-        let history = HistoryView {
-            columns: Vec::new(),
-            can_undo: false,
-            can_redo: false,
-            active_alternative_id: None,
-            current_checkpoint_id: None,
-        };
+        let history = HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None };
         run(DocumentView { projection: program, history: &history })
     }
 
@@ -2558,12 +1936,7 @@ mod tests {
         let mut app = ArchitectApp::default();
         let program = sample_program();
         with_doc_view(&program, |doc| {
-            app.handle_action(
-                "search",
-                Some(&json!({ "query": "Reception" })),
-                &doc,
-                &ViewState::default(),
-            );
+            app.handle_action("search", Some(&json!({ "query": "Reception" })), &doc, &ViewState::default());
         });
         assert!(!app.runtime.selected_ids.is_empty());
         assert!(!app.runtime.search_history.is_empty());
@@ -2574,12 +1947,7 @@ mod tests {
         let mut app = ArchitectApp::default();
         let program = sample_program();
         with_doc_view(&program, |doc| {
-            app.handle_action(
-                "selectRegister",
-                Some(&json!({ "registerId": "stakeholders" })),
-                &doc,
-                &ViewState::default(),
-            );
+            app.handle_action("selectRegister", Some(&json!({ "registerId": "stakeholders" })), &doc, &ViewState::default());
         });
         assert_eq!(app.runtime.active_register, "stakeholders");
         assert!(!register_entities(&program, "stakeholders").is_empty());
@@ -2613,12 +1981,7 @@ mod tests {
         let mut app = ArchitectApp::default();
         let program = sample_program();
         with_doc_view(&program, |doc| {
-            app.handle_action(
-                "runReport",
-                Some(&json!({ "reportKind": "executiveSummary" })),
-                &doc,
-                &ViewState::default(),
-            );
+            app.handle_action("runReport", Some(&json!({ "reportKind": "executiveSummary" })), &doc, &ViewState::default());
             let node = app.render(ARCHITECT_BODY_REPORT, &doc, &ViewState::default());
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("Overview"));
@@ -2633,16 +1996,9 @@ mod tests {
         for option in &options {
             let kind = analysis_kind_from_args(Some(&json!({ "analysisKind": option.value })));
             let mapped = format!("{kind:?}");
-            assert!(
-                !mapped.is_empty(),
-                "missing mapping for {}",
-                option.value
-            );
+            assert!(!mapped.is_empty(), "missing mapping for {}", option.value);
         }
-        assert_eq!(
-            analysis_kind_from_args(Some(&json!({ "analysisKind": "relationshipAnalysis" }))),
-            AnalysisKind::RelationshipAnalysis
-        );
+        assert_eq!(analysis_kind_from_args(Some(&json!({ "analysisKind": "relationshipAnalysis" }))), AnalysisKind::RelationshipAnalysis);
     }
 
     #[test]
@@ -2651,12 +2007,7 @@ mod tests {
         let program = sample_program();
         let csv = export_registers_csv(&program).expect("export csv");
         with_doc_view(&program, |doc| {
-            let emit = app.handle_action(
-                "importRegistersCsv",
-                Some(&json!({ "csv": csv, "strategy": "upsert" })),
-                &doc,
-                &ViewState::default(),
-            );
+            let emit = app.handle_action("importRegistersCsv", Some(&json!({ "csv": csv, "strategy": "upsert" })), &doc, &ViewState::default());
             assert!(matches!(emit.ops.first(), Some(ProgramOp::SetProgram { .. })));
         });
     }

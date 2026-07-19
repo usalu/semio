@@ -1,12 +1,12 @@
 // #region 🧲Header
 // 💻 .storybook/framework/os/index.tsx
 // Specs: Boot `FrameworkOsShell` inside Storybook's own React tree, filtered to one plugin from the generated registry.
-// Summary: Mirrors `bootFrameworkOs` (`framework/renderer/react/os-shell.tsx`) minus its `createRoot` call — Storybook already owns the tree, so this renders the shell directly and lets decorator/story unmount handle cleanup. Serves prebuilt plugin WASM from `/plugin-modules` (aliased + static-dir'd by the `framework/os` scope in `.storybook/scopes.ts`) and never triggers a cargo build: a missing artifact renders an instruction panel instead of failing silently.
+// Summary: Mirrors `bootFrameworkOs` (`framework/renderer/react/index.tsx`) minus its `createRoot` call — Storybook already owns the tree, so this renders the shell directly and lets decorator/story unmount handle cleanup. Serves prebuilt plugin WASM from `/plugin-modules` (aliased + static-dir'd by the `framework/os` scope in `.storybook/scopes.ts`) and never triggers a cargo build: a missing artifact renders an instruction panel instead of failing silently.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import { useEffect, useMemo, useState } from "react";
-import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/renderer/react/os-shell.tsx";
+import { FrameworkOsShell, resolveShellLocks, type FrameworkOsLocks } from "../../../framework/renderer/react/index.tsx";
 import { PLUGIN_BUILD_TARGETS, pluginModuleUrl, type PluginBuildTarget } from "../../../framework/plugin/registry/generated/plugins.ts";
 import { bootstrapElementsSurfaceChromeDocument, readStoredUiChromeAppearance } from "@semio-tech/ui-react";
 

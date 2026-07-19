@@ -645,6 +645,7 @@ pub fn cholesky(a: &MatD) -> Result<MatD, AlgebraError> {
 pub fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
     let n = l.rows;
     let mut y = vec![0.0; n];
+    #[allow(clippy::needless_range_loop, reason = "k indexes both the 2D matrix `l` and the 1D `y`; an iterator rewrite would need to zip two unrelated index spaces and reads worse than the loop")]
     for row in 0..n {
         let mut sum = b.get(row);
         for k in 0..row {
@@ -653,6 +654,7 @@ pub fn cholesky_solve(l: &MatD, b: &VecD) -> VecD {
         y[row] = sum / l.get(row, row);
     }
     let mut x = vec![0.0; n];
+    #[allow(clippy::needless_range_loop, reason = "k indexes both the 2D matrix `l` and the 1D `x`; an iterator rewrite would need to zip two unrelated index spaces and reads worse than the loop")]
     for row in (0..n).rev() {
         let mut sum = y[row];
         for k in (row + 1)..n {
@@ -1423,7 +1425,7 @@ mod tests {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
         let (vals, _) = lanczos_extreme_eigen(&a, 2, true, 4, 11).expect("converges");
-        let mut sorted = vals.clone();
+        let mut sorted = vals;
         sorted.sort_by(|x, y| y.partial_cmp(x).unwrap());
         assert!((sorted[0] - 4.0).abs() < 1e-6);
         assert!((sorted[1] - 3.0).abs() < 1e-6);
@@ -1434,7 +1436,7 @@ mod tests {
         let triplets = [(0, 0, 1.0), (1, 1, 4.0), (2, 2, 2.0), (3, 3, 3.0)];
         let a = CsrMatrix::from_triplets(4, 4, &triplets);
         let (vals, _) = lanczos_extreme_eigen(&a, 2, false, 4, 11).expect("converges");
-        let mut sorted = vals.clone();
+        let mut sorted = vals;
         sorted.sort_by(|x, y| x.partial_cmp(y).unwrap());
         assert!((sorted[0] - 1.0).abs() < 1e-6);
         assert!((sorted[1] - 2.0).abs() < 1e-6);
@@ -1499,10 +1501,10 @@ mod tests {
             let a_dense = a_sparse.to_dense();
             let (lanczos_vals, _) = lanczos_extreme_eigen(&a_sparse, 3, true, n, 42).expect("lanczos succeeds");
             let (dense_vals, _) = jacobi_eigen_symmetric(&a_dense, 500).expect("jacobi succeeds");
-            let mut dense_top3: Vec<f64> = dense_vals.clone();
+            let mut dense_top3: Vec<f64> = dense_vals;
             dense_top3.sort_by(|a, b| b.partial_cmp(a).unwrap());
             dense_top3.truncate(3);
-            let mut lanczos_sorted = lanczos_vals.clone();
+            let mut lanczos_sorted = lanczos_vals;
             lanczos_sorted.sort_by(|a, b| b.partial_cmp(a).unwrap());
             for (l, d) in lanczos_sorted.iter().zip(dense_top3.iter()) {
                 assert!((l - d).abs() < 1e-6);

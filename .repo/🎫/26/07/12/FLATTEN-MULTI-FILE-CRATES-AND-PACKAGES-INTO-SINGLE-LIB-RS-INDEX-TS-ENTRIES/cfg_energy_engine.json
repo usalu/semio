@@ -1,0 +1,256 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/energy/engine/rs/lib.rs",
+  "use_path_attr": true,
+  "mods": [
+    {
+      "keyword": "mod",
+      "name": "air_exchange",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/air_exchange.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "air_system",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/air_system.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "airflow_network",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/airflow_network.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "calendar",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/calendar.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "coils",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/coils.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "comfort",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/comfort.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "controls",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/controls.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "curves",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/curves.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "daylight",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/daylight.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "dispatch",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/dispatch.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "economics",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/economics.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "electrical",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/electrical.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "envelope",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/envelope.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "error",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/error.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "evaporative",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/evaporative.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "fans",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/fans.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "faults",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/faults.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "fenestration",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/fenestration.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "gains",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/gains.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "geometry",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/geometry.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "heat_recovery",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/heat_recovery.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "humidity_eq",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/humidity_eq.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "hvac_topo",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/hvac_topo.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "iaq",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/iaq.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "ideal_hvac",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/ideal_hvac.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "kernel",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/kernel.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "material",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/material.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "meters",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/meters.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "metrics",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/metrics.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "model",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/model.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "num",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/num.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "output",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/output.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "plant",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/plant.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "precompute",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/precompute.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "props",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/props.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "refrigeration",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/refrigeration.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "results",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/results.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "room_air",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/room_air.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "schedule",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/schedule.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "shw",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/shw.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "sim",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/sim.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "site",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/site.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "sizing",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/sizing.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "solar",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/solar.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "solar_thermal",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/solar_thermal.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "terminal",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/terminal.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "units",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/units.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "water",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/water.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "zone_air",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/zone_air.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "zone_hvac",
+      "path": "/Users/ueli/Documents/semio/energy/engine/rs/src/zone_hvac.rs"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Fuzzy Logic Mathematical Bundle",
+  "emoji": "🌫️",
+  "status": "closed",
+  "description": "Add mathematical/fuzzy crate (mathematical_fuzzy) with full advanced fuzzy logic: type-1/IT2/IFS sets, membership functions, inference engines (Mamdani/Sugeno/Tsukamoto/Larsen), defuzzification, ANFIS, rule learning, hierarchical MIMO, FCM, fuzzy AHP/TOPSIS/VIKOR, evolving systems, explainability. Zero external numerics deps.",
+  "summary": "Added the full `mathematical/fuzzy` bundle (`mathematical_fuzzy` crate, `@semio-tech/math-fuzzy` nx package) implementing advanced fuzzy logic end-to-end in a single `lib.rs`:\n\n**Foundation:** membership functions (triangular, trapezoidal, Gaussian, bell, sigmoid, singleton, piecewise-linear), type-1/IT2/IFS sets, t-norms/t-conorms, hedges, fuzzy arithmetic with α-cuts, fuzzy relations (max-min/max-product composition), possibility/necessity measures.\n\n**Inference:** linguistic variables, weighted/confident rules, Mamdani/Sugeno/Tsukamoto/Larsen/hybrid engines, MIMO and hierarchical systems, full defuzzification suite, explainability traces.\n\n**Learning:** adaptive MF fitting, ANFIS hybrid learning, Wang–Mendel rule induction, subtractive clustering, rule pruning/weighting, GA and PSO optimizers, evolving fuzzy systems.\n\n**Applications:** fuzzy c-means + Gustafson–Kessel, fuzzy AHP/TOPSIS/VIKOR, temporal/spatial evaluators, hybrid uncertainty bridges, `FanController` demo pipeline.\n\nWired into workspace `Cargo.toml`, launch.json (`🧪test🧮mathematical-fuzzy`), with 17 passing tests (fundamental + long). Zero external numerics deps; depends only on `mathematical_algebra`, `mathematical_random`, `serde`, `thiserror`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2132"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪38e29addb00e4b1faf2aad6efdee0611"
+  ]
+}

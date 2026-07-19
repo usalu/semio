@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 import type { BundleLinter } from "../../lib/js/index.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../lib/js/index.ts";
 import { getWorkspaceRoot } from "../../lib/js/index.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest, resolveTestLevel } from "../../lib/js/index.ts";
 import { defineLint } from "../../lib/js/index.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
@@ -20,8 +20,9 @@ class BuildScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
-    runVitest(this.root, segments, "js/vitest.config.ts");
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runVitest(this.root, rest, "js/vitest.config.ts");
   }
 }
 

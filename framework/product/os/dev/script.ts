@@ -1293,7 +1293,7 @@ async function runStudioE2eVerify(baseUrl: string, timeoutMs: number): Promise<v
 
   console.log(`[DEBUG] navigating to ${baseUrl}`);
   await page.goto(baseUrl, { waitUntil: "domcontentloaded", timeout: 120_000 });
-  await page.waitForFunction(() => document.body.innerText.includes("Home") && /Demo Studio|New Studio/i.test(document.body.innerText) && document.querySelectorAll("#root *").length > 150, { timeout: 120_000 });
+  await page.waitForFunction(() => /home/i.test(document.body.innerText) && /Demo Studio|New Studio/i.test(document.body.innerText) && document.querySelectorAll("#root *").length > 150, { timeout: 120_000 });
 
   const deadline = Date.now() + timeoutMs;
   const booted = await waitForStudioE2eCondition(page, ({ text }) => /Home/i.test(text) && /Studios|Search/i.test(text) && /Demo Studio|New Studio/i.test(text), "home shell with studios", deadline);

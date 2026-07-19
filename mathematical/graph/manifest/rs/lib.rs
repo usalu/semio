@@ -321,7 +321,7 @@ impl TrinityManifest {
 
     /// 📜 Nakagin capsule tower compile-time manifest.
     pub fn nakagin_default() -> Self {
-        crate::generated::nakagin::nakagin_manifest().to_trinity_manifest()
+        nakagin::nakagin_manifest().to_trinity_manifest()
     }
 }
 
@@ -434,7 +434,7 @@ impl<'a> ManifestValidator<'a> {
         Ok(())
     }
 
-    pub fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef], edges: &[TrinityEdgeRef]) -> Result<(), ManifestValidationError> {
+    pub fn validate_trinity_graph(&self, nodes: &[TrinityNodeRef<'_>], edges: &[TrinityEdgeRef<'_>]) -> Result<(), ManifestValidationError> {
         for node in nodes {
             self.validate_node_kind(node.kind)?;
             self.validate_node_properties(node.kind, node.properties)?;

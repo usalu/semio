@@ -54,4 +54,4 @@ line-length = 250
 [tool.pytest.ini_options]
 python_files = ["test_*.py", "*_test.py", "*.test.py", "main.py"]
 testpaths = ["."]
-addopts = "--import-mode=importlib"
+addopts = "--import-mode=importlib --tb=line"

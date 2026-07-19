@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "allowJs": false,
+    "incremental": false,
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": ["react", "react-dom"]
+  },
+  "include": [
+    "/Users/ueli/Documents/semio/framework/core/js/index.ts",
+    "/Users/ueli/Documents/semio/framework/renderer/react/ui-interpreter.tsx",
+    "/Users/ueli/Documents/semio/framework/renderer/react/components/diff-view-host.tsx",
+    "/Users/ueli/Documents/semio/framework/renderer/react/components/event-feed-host.tsx"
+  ]
+}

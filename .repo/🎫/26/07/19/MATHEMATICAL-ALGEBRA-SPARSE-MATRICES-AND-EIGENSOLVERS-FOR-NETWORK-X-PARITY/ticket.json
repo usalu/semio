@@ -1,0 +1,14 @@
+{
+  "title": "Mathematical Algebra: Sparse Matrices and Eigensolvers for NetworkX Parity",
+  "emoji": "🧮",
+  "status": "closed",
+  "description": "Wave 1 (Foundation) of the NetworkX-3.6.1-parity effort (umbrella ticket 26/07/19/NETWORK-X-PARITY-FOR-MATHEMATICAL-GRAPH-CRATES). Expand mathematical_algebra (mathematical/algebra/rs/lib.rs, currently 732 lines, dense-only) with in-house sparse-matrix and eigensolver support needed by later spectral/centrality waves: CsrMatrix (spmv/transpose/from_triplets), AlgebraError, dense Cholesky + solve, Householder QR, Jacobi symmetric eigendecomposition, Lanczos extreme eigenpairs (sparse), power iteration, conjugate gradient, Padé matrix exponential. Purely additive, zero new dependencies. Ownership: exactly mathematical/algebra/rs/lib.rs.",
+  "summary": "Expanded mathematical_algebra (732→1517 lines) with all 8 planned new regions, purely additive — existing Vec3/Mat4/Mat2/VecD/MatD/Mat3d untouched. Added: CsrMatrix (from_triplets with dedup-by-sum, spmv, transpose, row iterator, to_dense, nnz); AlgebraError with Display+Error; dense Cholesky decomposition + cholesky_solve; Householder QR for rows\u003e=cols matrices; Jacobi cyclic-rotation full symmetric eigendecomposition; Lanczos extreme-eigenpair iteration with full reorthogonalization for sparse symmetric matrices (hand-rolled local seed mixer, no dependency on mathematical_random); power iteration with residual-based convergence; conjugate gradient for sparse SPD systems; Padé scaling-and-squaring matrix exponential.\n\nFound and fixed during my own review: 2 clippy findings (needless_range_loop in cholesky_solve, justified with #[allow(..., reason=...)] per house style since the loop indexes two unrelated arrays; 4 redundant .clone() calls in tests where the source vec wasn't reused afterward — replaced with plain moves).\n\nVerification: cargo build/test -p mathematical_algebra clean (46 tests including golden-value checks against hand-computable small cases, 0 failures); cargo clippy -p mathematical_algebra --all-targets -- -D warnings clean (this crate has zero dependencies, so no transitive-dependency noise). nx `bun ./script.ts test` wiring confirmed correct.\n\nNote: the agent that did this work hit an account-wide Claude Code session-limit failure before opening a ticket or running final verification; I (the orchestrating session) verified the already-complete code directly, fixed the two clippy findings, and am opening/closing this ticket retroactively to document the work.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2133"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8dd24e222796498b96e48d79aedd4ef2"
+  ]
+}

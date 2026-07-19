@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: verify-close
     content: Run vcs/sync/hub tests; runtime backbone attach round-trips with [DEBUG]; close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

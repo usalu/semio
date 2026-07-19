@@ -1,0 +1,91 @@
+{
+  "lib_path": "/Users/ueli/Documents/semio/animate/core/rs/lib.rs",
+  "use_path_attr": true,
+  "mods": [
+    {
+      "keyword": "mod",
+      "name": "animation",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/animation.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "animations_catalog",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/animations_catalog.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "axes",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/axes.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "camera",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/camera.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "color",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/color.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "config",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/config.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "geometry",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/geometry.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "graph",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/graph.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "hash",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/hash.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "matrix",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/matrix.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "rate",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/rate.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "scene",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/scene.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "section",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/section.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "sobject",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/sobject.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "text",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/text.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "three_d",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/three_d.rs"
+    },
+    {
+      "keyword": "mod",
+      "name": "updater",
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/src/updater.rs"
+    }
+  ]
+}

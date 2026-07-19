@@ -5,7 +5,6 @@ use semio_framework_sync::{
     DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentHost, PersistenceBinding,
 };
 use serde::Deserialize;
-use serde_json::Value;
 use wasm_bindgen::prelude::*;
 
 //#region 🔖Protocol

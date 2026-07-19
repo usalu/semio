@@ -1,0 +1,13 @@
+{
+  "title": "Computer Algebra System Bundle",
+  "emoji": "🧮",
+  "status": "open",
+  "description": "Create mathematical/cas: a full-blown headless computer algebra system in pure Rust, consumed over its Rust API. Implement intermediate general-purpose crates mathematical/number (arbitrary precision, number theory, abstract algebra traits) and mathematical/polynomial (generic uni/multivariate polynomials, factorization, Groebner bases, root isolation), extend mathematical/algebra with generic exact linear algebra, and build the mathematical_cas kernel (expression representation, canonicalization, assumptions, pattern matching) plus domains: simplify, calculus (diff/integrate/limits/series), solve, symbolic matrices, ODEs, special functions, transforms, PDEs, quantifier elimination, tensor calculus, units, numeric evaluation. Zero external dependencies, matching the mathematical/* purity precedent.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2131"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪933c58347f9441ce92509ac284bdc81e"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Directed Multigraph (Port) Facade for NetworkX Parity",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Implement PortDirectedGraph in mathematical/graph/port/directed/normal/rs/lib.rs — the NetworkX MultiDiGraph parity facade wrapping Storage\u003cPorted, Directed\u003e. Union of directed-specific semantics (DirectedGraph/DiGraph facade) and multi-edge semantics (PortUndirectedGraph/MultiGraph facade). Uses a lazily-created default_handle: BTreeMap\u003cNodeId, HandleId\u003e per node to route node-level edge ops through Storage's HandleId-based add_edge. Covers construction, node ops, multigraph edge ops (parallel edges, in/out edges, path/cycle/star), queries (successors/predecessors dedup, degree counting parallel edges, density), transforms (copy/subgraph/edge_subgraph/reverse/to_undirected with reciprocal semantics/to_simple collapsing parallel edges), attributes, and self-loops. Implements GraphView/AttrView/EdgeWeights by delegation. Sole owned file: mathematical/graph/port/directed/normal/rs/lib.rs — no other files touched, no use of the empty stub algorithm-domain crates.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2141"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪96a4a37d4b4741ed9da1de2829775626"
+  ]
+}

@@ -1,10 +1,11 @@
 #!/usr/bin/env bun
 /** 🦀 `kernel/3d/brep/rs` router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCargoTestBudgeted(["kernel_3d_brepkit"], this.root);
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["kernel_3d_brepkit"], this.root, rest);
   }
 }
 

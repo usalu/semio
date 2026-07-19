@@ -962,7 +962,11 @@ pub enum OsMediaCapability {
 /// 🗂️ An app-declared OS resource kind (e.g. a 3D mesh format, a raster format) — the manifest-level
 /// counterpart to `AppBuilder::resource_kind(...)` (`framework/plugin/rs`), letting `framework/product/os/core`
 /// build its resource catalog from `AppDefinition.resource_kinds` at plugin registration time instead of
-/// hardcoding a per-app match on kind-id strings.
+/// hardcoding a per-app match on kind-id strings. Absorbs the manifest-level media-kind fields
+/// (`media_type`/`schema`/`export_formats`/`import_formats`, matching `MediaKindDescriptor` below field-for-field)
+/// so one spec carries both the OS-catalog presentation shape and the `MediaType` a wire actually negotiates
+/// — see `crate::media_types_compatible`. `OsResourceDescriptor` (`framework/product/os/core`) threads
+/// `media_type` through so registry lookups return it alongside the rest of the descriptor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -973,6 +977,10 @@ pub struct ResourceKindSpec {
     pub component_kind: String,
     pub dimension: String,
     pub media_capability: OsMediaCapability,
+    pub media_type: MediaType,
+    pub schema: String,
+    pub export_formats: Vec<OsMediaFormat>,
+    pub import_formats: Vec<OsMediaFormat>,
 }
 //#endregion ResourceKind
 
@@ -1033,7 +1041,7 @@ pub enum MediaWireFormat {
     Document { schema: String },
 }
 
-/// 📇 An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import.
+/// 📇 An app-declared media kind — the manifest-level counterpart to `MediaType`, naming a concrete component/schema an app can produce or consume plus which `OsMediaFormat`s it can export/import. `ResourceKindSpec` (see the `ResourceKind` region above) now carries these same four fields directly, so this shape has no live producer — kept for now as the standalone media-kind vocabulary dependent tickets (edge contracts, WIT/SDK) may still key off of.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -2858,7 +2866,6 @@ mod tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
-            media_kinds: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             resource_kinds: Vec::new(),
@@ -2877,7 +2884,7 @@ pub mod ui {
 
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
-use crate::mesh::{MediaKindDescriptor, MediaPortSpec, ResourceKindSpec};
+use crate::mesh::{MediaPortSpec, ResourceKindSpec};
 
 //#region 🔖Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3823,9 +3830,6 @@ pub struct AppDefinition {
     /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dialogs: Vec<DialogDefinition>,
-    /// 🧬 The media kinds this app can produce or consume — see `crate::MediaKindDescriptor`.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub media_kinds: Vec<MediaKindDescriptor>,
     /// 🔌 This app's media graph input ports — see `crate::MediaPortSpec`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub media_inputs: Vec<MediaPortSpec>,
@@ -5091,7 +5095,6 @@ mod app_document_tests {
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
             dialogs: Vec::new(),
-            media_kinds: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             resource_kinds: Vec::new(),

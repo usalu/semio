@@ -1210,27 +1210,18 @@ pub mod geom {
             let x = [p.x_axis.x, p.x_axis.y, p.x_axis.z];
             let y = [p.y_axis.x, p.y_axis.y, p.y_axis.z];
             let z = cross(x, y);
-            [
-                x[0], y[0], z[0], p.origin.x, x[1], y[1], z[1], p.origin.y, x[2], y[2], z[2], p.origin.z, 0.0, 0.0, 0.0, 1.0,
-            ]
+            [x[0], y[0], z[0], p.origin.x, x[1], y[1], z[1], p.origin.y, x[2], y[2], z[2], p.origin.z, 0.0, 0.0, 0.0, 1.0]
         }
 
         fn matrix_to_plane(m: [f64; 16]) -> PlaneInput {
-            PlaneInput {
-                origin: PointInput { x: m[3], y: m[7], z: m[11] },
-                x_axis: VectorInput { x: m[0], y: m[4], z: m[8] },
-                y_axis: VectorInput { x: m[1], y: m[5], z: m[9] },
-            }
+            PlaneInput { origin: PointInput { x: m[3], y: m[7], z: m[11] }, x_axis: VectorInput { x: m[0], y: m[4], z: m[8] }, y_axis: VectorInput { x: m[1], y: m[5], z: m[9] } }
         }
 
         fn mul_mat(a: [f64; 16], b: [f64; 16]) -> [f64; 16] {
             let mut out = [0.0; 16];
             for col in 0..4 {
                 for row in 0..4 {
-                    out[col * 4 + row] = a[row] * b[col * 4]
-                        + a[4 + row] * b[col * 4 + 1]
-                        + a[8 + row] * b[col * 4 + 2]
-                        + a[12 + row] * b[col * 4 + 3];
+                    out[col * 4 + row] = a[row] * b[col * 4] + a[4 + row] * b[col * 4 + 1] + a[8 + row] * b[col * 4 + 2] + a[12 + row] * b[col * 4 + 3];
                 }
             }
             out
@@ -1245,32 +1236,11 @@ pub mod geom {
             let c = angle.cos();
             let s = angle.sin();
             let t = 1.0 - c;
-            [
-                t * x * x + c,
-                t * x * y + s * z,
-                t * x * z - s * y,
-                0.0,
-                t * x * y - s * z,
-                t * y * y + c,
-                t * y * z + s * x,
-                0.0,
-                t * x * z + s * y,
-                t * y * z - s * x,
-                t * z * z + c,
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-            ]
+            [t * x * x + c, t * x * y + s * z, t * x * z - s * y, 0.0, t * x * y - s * z, t * y * y + c, t * y * z + s * x, 0.0, t * x * z + s * y, t * y * z - s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0]
         }
 
         fn apply_mat_vec3(m: [f64; 16], v: [f64; 3]) -> [f64; 3] {
-            [
-                m[0] * v[0] + m[4] * v[1] + m[8] * v[2],
-                m[1] * v[0] + m[5] * v[1] + m[9] * v[2],
-                m[2] * v[0] + m[6] * v[1] + m[10] * v[2],
-            ]
+            [m[0] * v[0] + m[4] * v[1] + m[8] * v[2], m[1] * v[0] + m[5] * v[1] + m[9] * v[2], m[2] * v[0] + m[6] * v[1] + m[10] * v[2]]
         }
 
         fn quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
@@ -1295,24 +1265,7 @@ pub mod geom {
             let (xx, xy, xz) = (x * x2, x * y2, x * z2);
             let (yy, yz, zz) = (y * y2, y * z2, z * z2);
             let (wx, wy, wz) = (w * x2, w * y2, w * z2);
-            [
-                1.0 - (yy + zz),
-                xy + wz,
-                xz - wy,
-                0.0,
-                xy - wz,
-                1.0 - (xx + zz),
-                yz + wx,
-                0.0,
-                xz + wy,
-                yz - wx,
-                1.0 - (xx + yy),
-                0.0,
-                0.0,
-                0.0,
-                0.0,
-                1.0,
-            ]
+            [1.0 - (yy + zz), xy + wz, xz - wy, 0.0, xy - wz, 1.0 - (xx + zz), yz + wx, 0.0, xz + wy, yz - wx, 1.0 - (xx + yy), 0.0, 0.0, 0.0, 0.0, 1.0]
         }
 
         async fn connector_geom(c: &Arc<Connector>) -> (PointInput, VectorInput, f64) {
@@ -1477,15 +1430,8 @@ pub mod geom {
                         let neighbor_piece = piece_map.get(neighbor_id).expect("adjacency only links ids already verified present in piece_map").clone();
                         let parent_side = conn.parent.read().await.clone();
                         let child_side = conn.child.read().await.clone();
-                        let (parent_piece_id, _child_piece_id) = (
-                            parent_side.references_piece().await.id.as_str().to_string(),
-                            child_side.references_piece().await.id.as_str().to_string(),
-                        );
-                        let (parent_side_ref, child_side_ref) = if parent_piece_id == current_id {
-                            (&parent_side, &child_side)
-                        } else {
-                            (&child_side, &parent_side)
-                        };
+                        let (parent_piece_id, _child_piece_id) = (parent_side.references_piece().await.id.as_str().to_string(), child_side.references_piece().await.id.as_str().to_string());
+                        let (parent_side_ref, child_side_ref) = if parent_piece_id == current_id { (&parent_side, &child_side) } else { (&child_side, &parent_side) };
                         let parent_ty = current_piece.is_type().await;
                         let child_ty = neighbor_piece.is_type().await;
                         let parent_connector = resolve_connector(parent_ty.as_ref(), parent_side_ref.references_connector().await.as_ref().map(|c| &c.id), kit).await;
@@ -1507,10 +1453,7 @@ pub mod geom {
                         } else if parent_direction.z.abs() > 0.5 {
                             (parent_center.u + connection_u, parent_center.v + connection_v + DIAGRAM_VERTICAL_V_EXTRA)
                         } else {
-                            (
-                                parent_center.u + connection_u * DIAGRAM_HORIZONTAL_SCALE,
-                                parent_center.v + connection_v * DIAGRAM_HORIZONTAL_SCALE,
-                            )
+                            (parent_center.u + connection_u * DIAGRAM_HORIZONTAL_SCALE, parent_center.v + connection_v * DIAGRAM_HORIZONTAL_SCALE)
                         };
                         piece_centers.insert(neighbor_id.clone(), CoordinateInput { u: round_f(child_u), v: round_f(child_v) });
                         queue.push_back(neighbor_id.clone());
@@ -1521,17 +1464,7 @@ pub mod geom {
             for p in &pieces {
                 let pid = p.id.as_str().to_string();
                 if !visited.contains(&pid) {
-                    bfs_root(
-                        &pid,
-                        &piece_map,
-                        &adjacency,
-                        kit,
-                        &mut visited,
-                        &mut piece_planes,
-                        &mut piece_centers,
-                        &original_centers,
-                    )
-                    .await;
+                    bfs_root(&pid, &piece_map, &adjacency, kit, &mut visited, &mut piece_planes, &mut piece_centers, &original_centers).await;
                 }
             }
             let mut out = HashMap::new();
@@ -4103,14 +4036,7 @@ pub mod kit {
 
                 /// @emoji 🔗 Linked piece without stored absolute pose (position resolved via flatten).
                 pub async fn new_connected_with_external_id(id: Id, owner_design: Weak<super::Design>, blueprint: super::super::r#type::Blueprint) -> Arc<Self> {
-                    Arc::new(Self {
-                        id,
-                        owner_design,
-                        position: RwLock::new(None),
-                        blueprint: RwLock::new(blueprint),
-                        connection_kind: RwLock::new(Some(PieceConnectionKind::Connected)),
-                        ..Default::default()
-                    })
+                    Arc::new(Self { id, owner_design, position: RwLock::new(None), blueprint: RwLock::new(blueprint), connection_kind: RwLock::new(Some(PieceConnectionKind::Connected)), ..Default::default() })
                 }
 
                 pub async fn set_name(&self, name: Option<String>) {
@@ -7858,15 +7784,12 @@ pub mod vcs {
 
     //#region 🔖kit_vcs
     pub mod kit_vcs {
-        use vcs::{
-            create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope,
-            DocumentVcsStore, Operation as VcsOperation, OperationDiff,
-        };
-        #[cfg(test)]
-        use vcs::DocumentVcsCommand;
         use crate::external_adapters::futures_lite::future::block_on;
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
+        #[cfg(test)]
+        use vcs::DocumentVcsCommand;
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope, DocumentVcsStore, Operation as VcsOperation, OperationDiff};
 
         pub const KIT_SNAPSHOT_SCHEMA: &str = "compose.kit";
 
@@ -7905,10 +7828,7 @@ pub mod vcs {
 
         impl ComposeWireOperation {
             pub fn from_operation(op: &crate::operation::Operation) -> Self {
-                Self {
-                    kind: op.kind().to_string(),
-                    input: crate::kit_backbone::kit_operation_step_input_json(op),
-                }
+                Self { kind: op.kind().to_string(), input: crate::kit_backbone::kit_operation_step_input_json(op) }
             }
         }
 
@@ -7938,12 +7858,7 @@ pub mod vcs {
                     let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
-                    op.to_backwards(&kit)
-                        .await
-                        .expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved op that fails to invert has no propagation path")
-                        .into_iter()
-                        .map(|row| ComposeWireOperation::from_operation(&row))
-                        .collect()
+                    op.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved op that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
                 })
             }
         }
@@ -7990,16 +7905,8 @@ pub mod vcs {
             fn kit_snapshot_vcs_rename_roundtrip() {
                 let baseline = Value::Object(Default::default());
                 let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
-                let op = Operation::RenameKit {
-                    scope: Scope::Kit,
-                    input: Input::Name { name: "patched".into() },
-                };
-                store
-                    .dispatch(DocumentVcsCommand::Apply {
-                        operations: vec![ComposeWireOperation::from_operation(&op)],
-                        description: None,
-                    })
-                    .expect("apply");
+                let op = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
+                store.dispatch(DocumentVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&op)], description: None }).expect("apply");
                 let snap = store.projection().expect("projection");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
             }
@@ -8038,10 +7945,7 @@ pub mod vcs {
 
     impl Graph {
         fn placeholder_kit_snapshot_store() -> kit_vcs::KitSnapshotStore {
-            kit_vcs::create_kit_snapshot_store(
-                &Id::default(),
-                crate::external_adapters::serde_json::Value::Object(Default::default()),
-            )
+            kit_vcs::create_kit_snapshot_store(&Id::default(), crate::external_adapters::serde_json::Value::Object(Default::default()))
         }
         /// 🆕 Build a brand-new Graph; seeds [`Graph::mutable_kit`] from a deep-cloned empty [`Kit`] so [`Graph::initial_kit`] baselines never alias live mutation.
         pub async fn new() -> Arc<Self> {
@@ -8297,10 +8201,7 @@ pub mod vcs {
                 self.the_kit_snapshot_store
                     .lock()
                     .map_err(|_| ComposeError::invalid("kit vcs store lock poisoned"))?
-                    .dispatch(vcs::DocumentVcsCommand::Apply {
-                        operations: vec![wire],
-                        description: None,
-                    })
+                    .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
                 alt.change_seq.fetch_add(1, Ordering::Relaxed);
@@ -8395,10 +8296,7 @@ pub mod vcs {
                 *self.the_kit_open_edit.write().await = Arc::downgrade(&tx);
                 return Ok(tx);
             }
-            let alt = self
-                .workspace_alternative(workspace_id)
-                .await
-                .ok_or_else(|| ComposeError::not_found("Workspace", workspace_id.as_str()))?;
+            let alt = self.workspace_alternative(workspace_id).await.ok_or_else(|| ComposeError::not_found("Workspace", workspace_id.as_str()))?;
             let seq = alt.unsaved_edits.read().await.len() as i32;
             let tx = Edit::with_id(EditOwner::Alternative(Arc::downgrade(&alt)), tx_id, seq).await;
             alt.unsaved_edits.write().await.push(tx.clone());
@@ -12018,20 +11916,12 @@ pub mod kit_backbone {
 
     pub(crate) fn point_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Option<crate::geom::PointInput> {
         let o = v.as_object()?;
-        Some(crate::geom::PointInput {
-            x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0),
-            y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0),
-            z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0),
-        })
+        Some(crate::geom::PointInput { x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0), y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0), z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0) })
     }
 
     pub(crate) fn vector_input_from_json(v: &crate::external_adapters::serde_json::Value) -> Option<crate::geom::VectorInput> {
         let o = v.as_object()?;
-        Some(crate::geom::VectorInput {
-            x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0),
-            y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0),
-            z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0),
-        })
+        Some(crate::geom::VectorInput { x: o.get("x").and_then(|x| x.as_f64()).unwrap_or(0.0), y: o.get("y").and_then(|x| x.as_f64()).unwrap_or(0.0), z: o.get("z").and_then(|x| x.as_f64()).unwrap_or(0.0) })
     }
 
     //#region 🔖 wire_tags
@@ -13101,7 +12991,11 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🪢 Hydrates [`crate::kit::design::Design`] pieces from one `designs[]` entity (`pieces` block or array).
-    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
+    pub(crate) async fn hydrate_design_pieces_from_snapshot_value(
+        des: &std::sync::Arc<crate::kit::design::Design>,
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        d_json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::ComposeError> {
         use std::collections::HashMap;
         {
             let mut pcs = des.pieces.write().await;
@@ -13144,7 +13038,11 @@ pub mod kit_backbone {
     }
 
     /// @emoji 🔗 Hydrates design connections and wires parent/child piece graph links.
-    pub(crate) async fn hydrate_design_connections_from_snapshot_value(des: &std::sync::Arc<crate::kit::design::Design>, kit: &std::sync::Arc<crate::kit::Kit>, d_json: &crate::external_adapters::serde_json::Value) -> Result<(), crate::error::ComposeError> {
+    pub(crate) async fn hydrate_design_connections_from_snapshot_value(
+        des: &std::sync::Arc<crate::kit::design::Design>,
+        kit: &std::sync::Arc<crate::kit::Kit>,
+        d_json: &crate::external_adapters::serde_json::Value,
+    ) -> Result<(), crate::error::ComposeError> {
         {
             let mut conns = des.connections.write().await;
             conns.clear();
@@ -13167,16 +13065,8 @@ pub mod kit_backbone {
                 .ok_or_else(|| crate::error::ComposeError::invalid("connection child piece"))?;
             let parent_piece = des.piece_by_external_id(&parent_piece_id.into()).await.ok_or_else(|| crate::error::ComposeError::not_found("Piece", parent_piece_id))?;
             let child_piece = des.piece_by_external_id(&child_piece_id.into()).await.ok_or_else(|| crate::error::ComposeError::not_found("Piece", child_piece_id))?;
-            let parent_connector_id = cj
-                .get("parent")
-                .or_else(|| cj.get("connecting"))
-                .and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector")))
-                .and_then(crate::kit_backbone::json_entity_id_ref);
-            let child_connector_id = cj
-                .get("child")
-                .or_else(|| cj.get("connected"))
-                .and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector")))
-                .and_then(crate::kit_backbone::json_entity_id_ref);
+            let parent_connector_id = cj.get("parent").or_else(|| cj.get("connecting")).and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector"))).and_then(crate::kit_backbone::json_entity_id_ref);
+            let child_connector_id = cj.get("child").or_else(|| cj.get("connected")).and_then(|s| s.get("connector").or_else(|| s.get("referencesConnector"))).and_then(crate::kit_backbone::json_entity_id_ref);
             let parent_side = crate::kit::design::connection::Side::new(parent_piece.clone()).await;
             let child_side = crate::kit::design::connection::Side::new(child_piece.clone()).await;
             if let Some(conn_id) = parent_connector_id {
@@ -19274,11 +19164,8 @@ mod tests {
     /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with s technologies.
     #[test]
     fn vcs_typed_ops_materialize_projection() {
-        use vcs::{
-            create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore,
-            Operation, OperationDiff,
-        };
         use serde::{Deserialize, Serialize};
+        use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsStore, Operation, OperationDiff};
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         struct KitProjection {
@@ -19292,9 +19179,7 @@ mod tests {
 
         impl OperationDiff<KitProjection> for KitDiff {
             fn apply(&self, projection: &KitProjection) -> KitProjection {
-                KitProjection {
-                    id: self.id.clone().unwrap_or_else(|| projection.id.clone()),
-                }
+                KitProjection { id: self.id.clone().unwrap_or_else(|| projection.id.clone()) }
             }
 
             fn absorb(&mut self, other: Self) {
@@ -19320,20 +19205,13 @@ mod tests {
             }
 
             fn backwards(&self, projection: &KitProjection) -> Vec<Self> {
-                vec![KitOp::SetId {
-                    id: projection.id.clone(),
-                }]
+                vec![KitOp::SetId { id: projection.id.clone() }]
             }
         }
 
         let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
         let mut store = DocumentVcsStore::new(envelope);
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![KitOp::SetId { id: "patched".into() }],
-                description: None,
-            })
-            .expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![KitOp::SetId { id: "patched".into() }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").id, "patched");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
@@ -21613,24 +21491,15 @@ mod tests {
             if !path.exists() {
                 return;
             }
-            let json_v: crate::external_adapters::serde_json::Value =
-                crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read assembled metabolism kit")).expect("parse");
-            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(json_v.clone())
-                .await
-                .expect("wip overlay");
+            let json_v: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(&path).expect("read assembled metabolism kit")).expect("parse");
+            let rt = crate::worker::ParentStore::spawn_wip_overlay_from_initial_kit_projection_json(json_v.clone()).await.expect("wip overlay");
             let wip_kit = rt.wip_graph.mutable_kit.read().await.clone();
-            let wip_design = wip_kit
-                .design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef"))
-                .await
-                .expect("nakagin design on wip kit");
+            let wip_design = wip_kit.design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef")).await.expect("nakagin design on wip kit");
             assert_eq!(wip_design.has_pieces().await.len(), 180, "wip nakagin piece count");
             assert_eq!(wip_design.has_connections().await.len(), 179, "wip nakagin connection count");
             let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json_v).await.expect("overlay");
             let kit = graph.materialized_kit_for_workspace(&graph.id).await;
-            let design = kit
-                .design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef"))
-                .await
-                .expect("nakagin design");
+            let design = kit.design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef")).await.expect("nakagin design");
             assert_eq!(design.has_pieces().await.len(), 180, "nakagin piece count");
             assert_eq!(design.has_connections().await.len(), 179, "nakagin connection count");
         });

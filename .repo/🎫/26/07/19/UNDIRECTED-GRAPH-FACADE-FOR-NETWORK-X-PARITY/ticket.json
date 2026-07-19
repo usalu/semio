@@ -1,0 +1,13 @@
+{
+  "title": "Undirected Graph Facade for NetworkX Parity",
+  "emoji": "⚪",
+  "status": "open",
+  "description": "Implement `UndirectedGraph`, the NetworkX `Graph` parity facade, in mathematical/graph/normal/undirected/rs/lib.rs. It wraps mathematical_graph::Storage\u003cNormal, Undirected\u003e and exposes construction, node/edge ops, queries, transforms (copy/subgraph/edge_subgraph/to_directed/clear), attribute get/set, self-loop helpers, and path helpers, plus GraphView/AttrView/EdgeWeights delegation. Wave 1b of the NetworkX-3.6.1-parity effort; owns exactly this one file, only depends on mathematical_graph (core, frozen) for this pass — other pre-declared crate deps in Cargo.toml are empty stubs left untouched for later waves.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2138"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪466578064a5b4117a1b32f188a55a264"
+  ]
+}

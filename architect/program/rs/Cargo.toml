@@ -9,7 +9,7 @@ description = "Headless architectural programming domain — program registers, 
 [lints]
 workspace = true
 [lib]
-path = "src/lib.rs"
+path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }

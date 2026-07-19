@@ -1,0 +1,13 @@
+{
+  "title": "Undirected Multigraph (Port) Facade for NetworkX Parity",
+  "emoji": "🔀",
+  "status": "open",
+  "description": "Implement PortUndirectedGraph in mathematical/graph/port/undirected/rs/lib.rs — the NetworkX MultiGraph parity facade wrapping Storage\u003cPorted, Undirected\u003e from mathematical_graph. Owns a default_handle: BTreeMap\u003cNodeId, HandleId\u003e for lazy per-node handle bookkeeping so callers can use plain node-level add_edge(u, v) without touching HandleId directly. Full node/edge ops, multigraph-specific queries (edges_between, remove_one_edge, number_of_edges), transforms (copy, subgraph, edge_subgraph, to_simple, to_directed), attribute accessors keyed by EdgeId, self-loop helpers, and GraphView/AttrView/EdgeWeights delegation to self.storage. Wave 1b of NetworkX-3.6.1-parity effort; owns exactly this one file, no other files touched.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2140"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8a16c484258b43d3bd5f2b334c65a64b"
+  ]
+}
