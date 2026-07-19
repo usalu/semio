@@ -1,3 +1,5 @@
+wa o  aresp`q_final_heating`ir sddtouynti
+
 ---
 name: Vector Figure-Ground Styles
 overview: Add a per-window "Style" sub-option (Colored / Figure-Ground / Inverted-Figure) that applies in Vector and Combined render modes, painting an LOD-aware black/white figure-ground silhouette using theme tokens.
@@ -22,7 +24,6 @@ todos:
     status: completed
 isProject: false
 ---
-
 # Vector Figure-Ground Styles
 
 Add a vector "style" axis orthogonal to the existing render mode (`image`/`vector`/`combined`). The new control offers `Colored` (current behavior), `Figure-Ground`, and `Inverted-Figure`, and is shown when the render mode is Vector or Combined.
@@ -50,8 +51,6 @@ flowchart LR
   session --> rs["MapHost.vector_style"]
   rs --> paint[append_vector_tiles dispatch]
 ```
-
-
 
 ## 1. Rust core — [gis/map/rs/lib.rs](gis/map/rs/lib.rs)
 
@@ -93,4 +92,3 @@ flowchart LR
 
 - Work proceeds inside a repo MCP ticket; structure additions with the existing `#region` markers in `lib.rs`.
 - No new files; all changes extend existing `lib.rs`, `react/index.tsx`, `play/index.ts`, and the playground host.
-

@@ -859,6 +859,44 @@ This database contains the exhaustive extraction of lighting requirements from T
 | Ticket and luggage offices  | 500           | 19        | 80      |
 | Waiting rooms               | 200           | 22        | 80      |
 
+### 3.5 Lighting Usage Boundary Conditions (DIN V 18599-10)
+
+This table defines the usage boundary conditions for lighting calculations according to DIN V 18599-10 (Tab. 2).
+
+| Lfd. Nr. | Nutzung | $\bar{E}_m$ [lx] | $h_{Ne}$ [m] | $k_A$ | $C_A$ | $k$ | $F_t$ | $k_{vB}$ |
+| :------- | :------ | :--------------- | :----------- | :---- | :---- | :-- | :---- | :------- |
+| 1 | Einzelbüro | 500 | 0.8 | 0.84 | 0.3 | 0.9 | 0.7 | 1 |
+| 2 | Gruppenbüro | 500 | 0.8 | 0.92 | 0.3 | 1.25 | 0.7 | 1 |
+| 6 | Einzelhandel/Kaufhaus | 300 | 0.8 | 0.93 | 0 | 2.5 | 1 | 1.5 |
+| 7 | Einzelhandel/Kaufhaus (Lebensmittelabteilung mit Kühlprodukten) | 300 | 0.8 | 0.93 | 0 | 2.5 | 1 | 1 |
+| 8 | Klassenzimmer (Schule) Gruppenraum (Kindergarten) | 300 | 0.8 | 0.97 | 0.25 | 2 | 0.9 | 1 |
+| 16 | WC- und Sanitärräume in NWG | 200 | 0.8 | 1 | 0.9 | 0.8 | 1 | 1 |
+| 17 | Sonstige Aufenthaltsräume | 300 | 0.8 | 0.93 | 0.5 | 1.25 | 1 | 1 |
+| 18 | Nebenflächen (ohne Aufenthaltsräume) | 100 | 0.8 | 1 | 0.9 | 1.5 | 1 | 1 |
+| 19 | Verkehrsflächen | 100 | 0.2 | 1 | 0.8 | 0.8 | 1 | 1 |
+| 20 | Lager, Technik, Archiv | 100 | 0.8 | 1 | 0.98 | 1.5 | 0.5 | 2 |
+| 27 | Ausstellungsräume und Museum mit konservatorischen Anforderungen | 200 | 0.8 | 0.88 | 0 | 2.0 | 1 | 1 |
+| 35 | Fitnessraum | 300 | 0 | 1 | 0 | 2.0 | 1 | 1 |
+
+### 3.6 Usage and Operating Times (DIN V 18599-10)
+
+This table defines the usage and operating times according to DIN V 18599-10 (Tab. 1).
+
+| Lfd. Nr. | Nutzung | $t_{Nutz,d}$ [h/d] | $d_{Nutz,a}$ [d/a] | $t_{tag}$ [h/a] | $t_{Nacht}$ [h/a] | $t_{v,op,d}$ [h/d] | $d_{op,a}$ [d/a] | $t_{h,op,d}$ [h/d] |
+| :------- | :------ | :----------------- | :----------------- | :-------------- | :---------------- | :----------------- | :--------------- | :----------------- |
+| 1 | Einzelbüro | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 2 | Gruppenbüro | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 6 | Einzelhandel/Kaufhaus | 12 | 300 | 3009 | 591 | 14 | 300 | 14 |
+| 7 | Einzelhandel/Kaufhaus (Lebensmittelabteilung mit Kühlprodukten) | 12 | 300 | 3009 | 591 | 14 | 300 | 14 |
+| 8 | Klassenzimmer (Schule) Gruppenraum (Kindergarten) | 7 | 200 | 1400 | 0 | 9 | 200 | 9 |
+| 16 | WC- und Sanitärräume in NWG | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 17 | Sonstige Aufenthaltsräume | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 18 | Nebenflächen (ohne Aufenthaltsräume) | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 19 | Verkehrsflächen | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 20 | Lager, Technik, Archiv | 11 | 250 | 2543 | 207 | 13 | 250 | 13 |
+| 27 | Ausstellungsräume und Museum mit konservatorischen Anforderungen | 8 | 250 | 1846 | 151 | 24 | 365 | 24 |
+| 35 | Fitnessraum | 15 | 365 | 3663 | 1812 | 17 | 365 | 17 |
+
 ### Implementation Summary
 
 To build the transmission module, your software needs to:

@@ -1,3 +1,5 @@
+heizung, eleuchtung, lüftung, heat water
+
 # Energy Calculation Documentation
 
 This document outlines the energy calculation logic based on the `calculate_energy` function found in `sketchpad-rs/src/lib.rs` and the geometric mapping logic in `main_mcp.js`. It breaks down the formulas used and maps the variables to their source locations within the application state and external databases.
@@ -144,12 +146,20 @@ The overall transmission heat transfer coefficient ($H_T$ or $H_{tr}$) represent
 
 * **Temperature Adjustment Factor ($F_x$):**
   * **Enum `UnheatedSpaceType`:**
-    * `Attic`, `Sunspace`, `CrawlSpaceVentilated` $\implies 0.8$
-    * `AdjacentUnheatedRoom`, `UnheatedBasement`, `StaircaseExterior`, `CrawlSpaceUnventilated` $\implies 0.5$
-    * `StaircaseInterior` $\implies 0.35$
-  * **Enum `GroundContactType`:**
-    * `GroundwaterContact` $\implies 1.0$
-    * `FloorSlabOnGround`, `BasementWallShallow`, `BasementWallDeep`, `HeatedBasementFloor` $\implies 0.5$
+    * **Before:** `Basement` and `Attic` mapped arbitrarily.
+    * **Now:** Aligned with DIN V 18599-2 Table 5:
+      * `Attic`, `Sunspace`, `CrawlSpaceVentilated`, `Garage` $\implies 0.8$
+      * `AdjacentUnheatedRoom`, `UnheatedBasement`, `StaircaseExterior`, `CrawlSpaceUnventilated`, `Storage` $\implies 0.5$
+      * `StaircaseInterior` $\implies 0.35$
+  * **Enum `GroundContactType` (B' Method):**
+    * **Before:** Simple fixed values (e.g., 0.5 for ground).
+    * **Now:** Uses the Characteristic Dimension ($B' = A / (0.5 \cdot P)$) to approximate DIN V 18599-2 Table 6 via `f_x_factor_from_b_prime()`.
+      * $B' < 4m \implies 0.6 \text{ to } 0.7$
+      * $4m \le B' < 8m \implies 0.45 \text{ to } 0.55$
+      * $B' \ge 8m \implies 0.3 \text{ to } 0.4$
+  * **Inter-zone Heat Transfer (The 4K Rule):**
+    * **Before:** Hardcoded `temp_diff / 25.0`.
+    * **Now:** In `parse_and_process_zones`, if two conditioned zones differ by $\le 4K$, heat transfer is ignored (DIN V 18599-2). If $> 4K$, $F_x$ is derived dynamically via $\approx \Delta T / 32.0$ (assuming $-12^\circ\text{C}$ exterior, $20^\circ\text{C}$ interior).
 * **Thermal Bridge Penalty ($\Delta U_{WB}$):**
   * **Enum `ThermalBridgeCategory`:**
     * `InternalInsulationIssues` $\implies 0.15$
@@ -235,6 +245,20 @@ Heat loss specifically driven by the mechanical supply air system via struct `Me
 * **Daily Average Rate:** $n_{mech} = n_{mech,SUP} \cdot \frac{t_{v,mech}}{24}$
 * **Heat Transfer:** $H_{V,mech} = n_{mech} \cdot V \cdot 0.34$
 
+### 4.5 Fan Electricity Demand (SFP)
+
+**New Addition:** Specific Fan Power calculation introduced per DIN V 18599-7. Mechanical ventilation systems require auxiliary electrical energy to power the fans that move air through the building. This energy demand is calculated using the Specific Fan Power (SFP) value.
+
+* **Formula:** $W_V = P_{SFP} \cdot \dot{V}_{mech} \cdot t_{v,mech} \cdot d$
+* **Function:** `calculate_fan_electricity_demand(v_dot_mech, p_sfp, t_v_mech, days)` returns the auxiliary electricity demand in Wh for mechanical ventilation.
+
+**Detailed Parameter Breakdown:**
+* **$P_{SFP}$ (`p_sfp`):** The Specific Fan Power rating of the ventilation system. It represents the electrical power needed to move a specific volume of air, typically expressed in $W/(m^3/h)$ or $kW/(m^3/s)$. A lower value indicates a more efficient fan system.
+* **$\dot{V}_{mech}$ (`v_dot_mech`):** The mechanical supply air volume flow rate in $m^3/h$. This is the actual volume of air being moved by the fans per hour.
+* **$t_{v,mech}$ (`t_v_mech`):** The daily operating hours of the mechanical ventilation system (hours/day).
+* **$d$ (`days`):** The number of operating days in the calculation period (e.g., 365 for annual calculation or $d_{hs,loss}$ for the heating season).
+* **Result ($W_V$):** The total electrical energy consumed by the fans over the calculation period, measured in Watt-hours ($Wh$).
+
 ## 5. Heating/Cooling Profiles & Parameters
 
 **Concept & Formula:**
@@ -301,6 +325,11 @@ The engine computes `net_daily_gain_wh` by balancing sources and sinks based on 
 Uses `StandardGainProfile` values derived from DIN V 18599-10 ($q_{i,combined}, q_{i,p}, q_{i,app}, q_{i,sink,app}$):
 
 * **Residential:** Uses a flat combined heat rate ($q_{i,combined} = 3.75 \text{ W/m}^2$).
+
+  **Source Mapping (`src/lib.rs`):**
+
+  - **Values:** The properties `q_i_combined` (3.75 W/m²) and `t_nutz` (24.0 h) are defined in the `StandardGainProfile::from_profile_id(0)` factory method.
+  - **Calculation:** The equation is executed in `InternalGainsEngine::daily_energy_balance_wh()` as `(profile.q_i_combined * self.a_ngf) * profile.t_nutz`.
 
   $$
   \text{gain}_{res} = (q_{i,combined} \cdot A_{ngf}) \cdot t_{nutz}
@@ -390,6 +419,37 @@ Opaque surfaces absorb solar radiation but also constantly radiate heat to the c
 
    * **$\alpha$ (Solar Absorptance):** `Light` = 0.30, `Medium` = 0.60, `Dark` = 0.90
 2. **Sky Radiation Loss:**
+
+   $$
+   Q_{sky\_loss} = U \cdot \Delta\theta_{ER} \cdot t_{season}
+   $$
+
+## 8. Lighting Energy Demand ($Q_{l,f}$)
+
+**Concept & Formula:**
+The electricity demand for lighting is driven by the room's usage profile, the installed lamp technology, presence controls, and the availability of natural daylight.
+
+* **Installed Power Density ($p_j$):**
+  $$
+  p_j = p_{j,lx} \cdot E_m \cdot k_{WF} \cdot k_A \cdot k_L
+  $$
+  * $p_{j,lx}$: Base power per lux (Table 5 interpolation based on Room Index $k$).
+  * $E_m$: Required illuminance in lux (from `RoomUsage` profiles).
+  * $k_L$: Lamp technology factor (e.g., LED = 0.49, Incandescent = 6.0).
+
+* **Final Energy Calculation:**
+  $$
+  Q_{l,f} = p_j \cdot (A_{TL} \cdot t_{eff,day,TL} + A_{kTL} \cdot t_{eff,day,kTL} + A_{room} \cdot t_{eff,night})
+  $$
+
+### 8.1 Daylight Factor Approximation ($F_{TL}$)
+
+**Gap Identification:** DIN V 18599-4 requires complex interpolations across multiple tables (Tables 12 and 15) to calculate $C_{TL,vers}$ based on exact cardinal orientations and shading topologies.
+Because these reference tables are embedded as images in the LEITFADEN, the engine uses a robust approximation for $F_{TL}$ (Daylight Supply Factor):
+
+1. Calculates the raw daylight quotient $D_{Rb}$ (Eq. 30).
+2. Uses a weighted average for $C_{TL,vers}$ assuming a generic South-facing distribution (67% unshaded / 33% active blinds).
+3. Evaluates $C_{TL,kon}$ (Daylight Control System Efficiency) based on simplified Table 25 values for 500 Lux.
 
    $$
    Q_{sky} = f_{sky} \cdot h_{r} \cdot \Delta\theta_{ER} \cdot t_{hours}
@@ -788,19 +848,23 @@ The required hot water demand ($q_{w,b}$) is determined by mapping a user-friend
 **Source Mapping (`dhw_system::DHWEngine::calculate_final_energy`):**
 
 * **Consumption Profile (`dhw_consumption_profile`):**
+
   * `Eco` $\implies 25.0 \text{ L/person/day}$
   * `Standard` $\implies 40.0 \text{ L/person/day}$
   * `Comfort` $\implies 60.0 \text{ L/person/day}$
 * **Base Thermal Demand:** The daily liters are multiplied by an estimated occupant count ($A_{NGF} / 35.0$).
+
   $$
   Q_{w,b\_annual} = \text{daily\_liters} \cdot 365 \cdot 0.058 \text{ kWh/L}
   $$
 * **Shower Demand:** Estimated as $60\%$ of total demand.
+
   $$
   q_{w,shower} = q_{w,b} \cdot 0.60
   $$
 * **Wastewater Heat Recovery (WRG) (`dhw_wrg_technology`):**
   Based on **Passivhaus Institut (PHI)** component certifications:
+
   * `None` $\implies 0\%$ recovery
   * `ModernDrain` $\implies 30\%$ recovery
   * `ActiveHighTech` $\implies 50\%$ recovery
@@ -809,6 +873,7 @@ The required hot water demand ($q_{w,b}$) is determined by mapping a user-friend
   q_{w,wrg} = q_{w,shower} \cdot \text{WRG\_efficiency}
   $$
 * **Reduced Demand:**
+
   $$
   q_{w,b,reduced} = \max(0.0,\; q_{w,b} - q_{w,wrg})
   $$
@@ -919,7 +984,7 @@ If the generator is electrically driven (e.g. Heat Pump, Electric Instantaneous)
 ## 12. Primary Calculation: Final Heating Demand (`q_final_heating`)
 
 **Concept & Formula:**
-In the primary energy calculation flow within `lib.rs` (around the `calculate_energy` function), the final delivered energy for heating (`q_final_heating`) and auxiliary electricity (`w_final_heating`) are now computed exactly using the detailed physical **Heating System Engine** described in Sections 8 and 9 (based on **DIN V 18599-5**). 
+In the primary energy calculation flow within `lib.rs` (around the `calculate_energy` function), the final delivered energy for heating (`q_final_heating`) and auxiliary electricity (`w_final_heating`) are now computed exactly using the detailed physical **Heating System Engine** described in Sections 8 and 9 (based on **DIN V 18599-5**).
 
 The old simplified **TABULA** estimation is still calculated in parallel as a reference value, allowing users to compare the exact physical results with the European statistical average.
 
@@ -927,6 +992,7 @@ The old simplified **TABULA** estimation is still calculated in parallel as a re
 
 * **Exact Calculation (`HeatingSystemEngine`):**
   The `Parameters` struct injects granular physical configurations into the engine:
+
   * `heating_emission_type` (e.g. `Radiator`, `UnderfloorHeating`)
   * `heating_emission_control` (e.g. `ElectronicPI`)
   * `heating_pipe_insulation` (e.g. `EnEV100`)
@@ -935,16 +1001,16 @@ The old simplified **TABULA** estimation is still calculated in parallel as a re
   * `heating_system` (Generator, e.g. `Gas Condensing Boiler`, `Air Source Heat Pump`)
 
   The engine returns `heating_res.q_del_h` (assigned to `q_final_heating`) and `heating_res.w_h_total` (assigned to `w_final_heating`).
-
 * **TABULA Reference Estimate:**
   The engine continues to run the simplified TABULA Equation 20 in the background for comparison:
+
   * `"Gas Condensing Boiler"` $\implies e_{g,h} = 1.05, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
   * `"Gas Non-Condensing Boiler"` $\implies e_{g,h} = 1.18, q_{d,h,spec} = 15.0, q_{s,h,spec} = 5.0$
   * `"Air Source Heat Pump"` $\implies e_{g,h} = 0.35, q_{d,h,spec} = 10.0, q_{s,h,spec} = 5.0$
   * `"Biomass Pellet Boiler"` $\implies e_{g,h} = 1.25, q_{d,h,spec} = 15.0, q_{s,h,spec} = 10.0$
   * `"Direct Electric Heating"` $\implies e_{g,h} = 1.00, q_{d,h,spec} = 0.0, q_{s,h,spec} = 0.0$
   * *Default Fallback* $\implies e_{g,h} = 1.10, q_{d,h,spec} = 15.0, q_{s,h,spec} = 0.0$
-  
+
   This produces `q_final_heating_tabula_estimate`, which is appended to the final JSON output but is **not** passed into the Primary Energy balancing.
 
 ## 13. Primary Energy & Consumption Balancing (DIN V 18599-1)
@@ -1211,3 +1277,56 @@ flowchart LR
 **Required `state.params` Fields & Allowed Values:**
 
 * **`heating_system`**: `"CondensingGasBoiler"`, `"OldGasBoiler"`, `"PelletBoiler"`, `"DirectElectric"`, `"HeatPumpAirWater"`, `"GroundSourceHeatPump"`, `"DistrictHeating"`
+
+---
+
+# 11. Engine Integration Test Results
+
+A comprehensive automated integration test suite has been implemented in the `sketchpad-rs` core `calculate_energy` engine (`engine_tests` module) to stress-test the mathematical robustness under edge cases according to DIN V 18599.
+
+All tests execute successfully without panics or unhandled errors.
+
+### 11.1 Sanity Tests
+- **Basic Heating**: Tested with a standard 100 m² base, $U_{wall}=0.3$. Engine produced a finite, positive heating demand ($Q_{H,nd} > 0$).
+- **Perfect Insulation**: Tested with extremely high insulation ($\lambda \approx 0.0001$). Verified that total transmission heat loss drops drastically (towards minimal limits).
+- **Terrible Insulation**: Tested with severely poor envelope constraints. Verified that heating demand scales massively ($Q_{H,nd} > 6,000$ kWh/a for a tiny layout), confirming proper correlation between R-values and final transmission.
+
+### 11.2 Edge-Case Integrity (Zeros & Negatives)
+- **Zero Inputs**: Tested with $A_{floor} = 0$, $Volume = 0$. Validated that internal logic clamps bounding divisors safely. The engine calculates to zero rather than panicking.
+- **Negative Inputs**: Tested with $-100.0$ Area values. Validated that `geom.validate()` successfully intercepts negative geometric footprints at execution boundaries, halting the engine and explicitly returning an `Err("Total floor area cannot be negative")`.
+
+### 11.3 Mathematical Extremes
+- **Extreme Constraints**: Tested with values exceeding $10,000,000$. Validated that the 64-bit precision floating-point arithmetic resists `Infinity` overflow.
+- **Tiny Spans**: Tested with dimensions of $10^{-7}$. Validated that computations resist numerical underflow or `NaN` collapse.
+
+### 11.4 Randomized Fuzz Logic
+- Loop-tested across 1,000 iterations using pseudo-random wave-generated inputs for $U$-values and dimensions. Validated that arbitrary boundary conditions never result in an engine crash or unhandled `unwrap` failure.
+
+# 12. Real-World Correctness Suite
+
+The calculation engine is validated using a correctness testing suite to ensure the engine reproduces known real-world energy demands and responds to physical changes monotonically. This suite is implemented in `src/lib.rs` under `mod real_world_tests` and `mod sensitivity_tests`.
+
+### 12.1. Reference Buildings
+
+These tests anchor the engine against known DIN V 18599/TABULA reference cases:
+
+1.  **`simple_box_single_zone`**: A theoretical 100m² box to isolate and verify core math (Transmission, Ventilation, Solar/Internal Gains). Hand-calculated using Potsdam climate data.
+2.  **`detached_house_eh55`**: A modern SFH (Efficiency House 55 standard) mapped against TABULA 2016+ archetypes. Verifies highly insulated models ($Q_{H,nd} \approx 40$ kWh/m²a).
+3.  **`detached_house_altbau`**: A pre-1859 existing building with poor insulation. Verifies massive transmission losses ($Q_{H,nd} \approx 540$ kWh/m²a).
+4.  **`office_building_multizone`**: Verifies cooling, heat recovery, and high internal gains typical of non-residential buildings.
+5.  **`school_building`**: A large-scale regression baseline for scaling assumptions.
+
+Every reference case specifies expected outputs for `heating_demand_kWh_a`, `transmission_loss_kWh_a`, etc., tested within a configurable tolerance (e.g., ±5%).
+
+### 12.2. Sensitivity Tests (Deltas)
+
+Sensitivity tests systematically vary one parameter to assert the *directional* change and *monotonicity* of the output, proving the engine respects physics:
+
+*   **S1: Insulation Addition:** Adding 10cm EPS insulation must *decrease* transmission loss and heating demand.
+*   **S3: Window Area Reduction:** Halving window area must *decrease* solar gains and transmission loss (since typical windows have higher U-values than walls).
+*   **S4: Infiltration:** Shifting from Category I (tight) to Category IV (leaky) must *increase* ventilation loss.
+*   **S5: Heat Recovery:** Engaging 80% heat recovery on mechanical ventilation must significantly *decrease* heating demand.
+*   **S6: HVAC Swaps:** Swapping a Gas Boiler for an Air Source Heat Pump must *decrease* final and primary energy demand (due to high COP), even while heating demand remains roughly constant.
+*   **S7: Monotonicity Sweep:** Incrementally adding 0cm, 5cm, 10cm, 15cm, and 20cm of wall insulation must result in a strictly monotonically decreasing curve for heating demand.
+
+This rigid test infrastructure guarantees that future refactorings (like multi-zone loop isolation) will not subtly break the building physics core.

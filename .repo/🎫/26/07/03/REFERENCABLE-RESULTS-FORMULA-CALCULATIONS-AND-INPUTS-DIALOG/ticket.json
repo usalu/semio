@@ -1,0 +1,11 @@
+{
+  "title": "Referencable Results Formula Calculations and Inputs Dialog",
+  "emoji": "⚡️",
+  "status": "closed",
+  "description": "Make each energy result row in sketchpad referencable. Clicking on a result should open a dialog explaining the formula calculation, listing inputs, and allowing the user to change those inputs dynamically.",
+  "summary": "Made each energy result row referencable. Clicking on a result opens a dialog showing formulas in KaTeX, live calculations, and interactive inputs. Synchronized changes back to the sidebar to trigger calculations dynamically.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪fbd086f6f9774c68a427fc6549b83edf"
+  ]
+}
