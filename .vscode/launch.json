@@ -2463,14 +2463,36 @@
       }
     },
     {
-      "name": "🧪test🎭e2e",
+      "name": "🧪test🏃quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./script.ts test e2e",
+      "command": "bun ./script.ts test quick",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
         "order": 391.4
+      }
+    },
+    {
+      "name": "🧪test🐢long",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test long",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.45
+      }
+    },
+    {
+      "name": "🧪test🐘exhaustive",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test exhaustive",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.48
       }
     },
     {
@@ -2532,7 +2554,7 @@
       "name": "🧪test📏norm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999",
+      "command": "cargo test -p norm_core -p norm_din_4108 -p norm_din_en_16798 -p norm_din_v_18599 -p norm_en_1990 -p norm_en_1991 -p norm_en_1992 -p norm_en_1993 -p norm_en_1994 -p norm_en_1995 -p norm_en_1996 -p norm_en_1997 -p norm_en_1998 -p norm_en_1999 -p norm-plugin",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",

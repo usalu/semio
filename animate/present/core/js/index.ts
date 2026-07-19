@@ -1218,7 +1218,7 @@ if (import.meta.vitest) {
 		it("materializes deck projection from inline json", () => {
 			const handler = createPresentationAppVcsHandler();
 			const projection = handler.materializeProjection({
-				inline: JSON.stringify({ schema: "presentation.deck", source: { src: "/a.png" }, tiles: [{ id: "t1", name: "A", crop: { x: 0, y: 0, width: 1, height: 1 } }] }),
+				inline: JSON.stringify({ schema: "animate.present.deck", source: { src: "/a.png", kind: "figure", frame: { x: 0, y: 0, width: 1, height: 1 } }, tiles: [{ id: "t1", name: "A", crop: { x: 0, y: 0, width: 1, height: 1 } }] }),
 			}) as { tiles: readonly unknown[] };
 			expect(projection.tiles).toHaveLength(1);
 		});

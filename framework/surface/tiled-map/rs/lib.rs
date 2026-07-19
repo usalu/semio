@@ -674,8 +674,8 @@ pub mod vector_tiles {
         }
     }
 
-    pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, String> {
-        let raw = RawTile::decode(bytes).map_err(|e| e.to_string())?;
+    pub fn decode_mvt(bytes: &[u8]) -> Result<VectorTile, crate::FrameworkSurfaceTiledMapError> {
+        let raw = RawTile::decode(bytes)?;
         let mut layers = Vec::new();
         for layer in raw.layers {
             let extent = layer.extent.filter(|e| *e > 0).unwrap_or(DEFAULT_MVT_EXTENT);
@@ -1402,12 +1402,7 @@ fn map_segments_intersect_rect(x0: f64, y0: f64, x1: f64, y1: f64, min_x: f64, m
     if (x0 >= min_x && x0 <= max_x && y0 >= min_y && y0 <= max_y) || (x1 >= min_x && x1 <= max_x && y1 >= min_y && y1 <= max_y) {
         return true;
     }
-    let edges = [
-        (min_x, min_y, max_x, min_y),
-        (max_x, min_y, max_x, max_y),
-        (max_x, max_y, min_x, max_y),
-        (min_x, max_y, min_x, min_y),
-    ];
+    let edges = [(min_x, min_y, max_x, min_y), (max_x, min_y, max_x, max_y), (max_x, max_y, min_x, max_y), (min_x, max_y, min_x, min_y)];
     for (ax, ay, bx, by) in edges {
         if map_segments_intersect(x0, y0, x1, y1, ax, ay, bx, by) {
             return true;
@@ -1593,6 +1588,19 @@ impl LabelDeclutter {
 }
 // #endregion 🔖LabelDeclutter
 
+//#region ⚠️ Errors
+/// ⚠️ Tiled-map host errors — JSON decode failures, raster tile decode failures, and vector-tile protobuf decode failures.
+#[derive(Debug, thiserror::Error)]
+pub enum FrameworkSurfaceTiledMapError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error(transparent)]
+    Image(#[from] image::ImageError),
+    #[error(transparent)]
+    Mvt(#[from] prost::DecodeError),
+}
+//#endregion ⚠️ Errors
+
 impl MapHost {
     pub fn new() -> Self {
         Self::default()
@@ -1614,8 +1622,8 @@ impl MapHost {
         }
     }
 
-    pub fn set_map_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_map_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
         let mut next = self.theme;
         Self::apply_theme_field(&mut next, &v, "surfaceClear", |t, c| t.surface_clear = c);
         Self::apply_theme_field(&mut next, &v, "landFill", |t, c| t.land_fill = c);
@@ -1708,8 +1716,8 @@ impl MapHost {
         }
     }
 
-    pub fn set_layer_visibility_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.layer_visibility = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_layer_visibility_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+        self.layer_visibility = serde_json::from_str(json)?;
         Ok(())
     }
 
@@ -1717,8 +1725,8 @@ impl MapHost {
         serde_json::to_string(&self.layer_visibility).unwrap_or_else(|_| "{}".into())
     }
 
-    pub fn set_layer_stroke_scale_from_json(&mut self, json: &str) -> Result<(), String> {
-        let parsed: MapLayerStrokeScale = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_layer_stroke_scale_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let parsed: MapLayerStrokeScale = serde_json::from_str(json)?;
         self.layer_stroke_scale = parsed.sanitized();
         Ok(())
     }
@@ -1787,8 +1795,8 @@ impl MapHost {
         self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
     }
 
-    pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), String> {
-        let img = image::load_from_memory(png_bytes).map_err(|e| e.to_string())?;
+    pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, png_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let img = image::load_from_memory(png_bytes)?;
         let rgba = img.to_rgba8();
         let (w, h) = rgba.dimensions();
         let image = RasterImage::rgba8(w, h, Arc::new(rgba.into_raw()));
@@ -1796,14 +1804,14 @@ impl MapHost {
         Ok(())
     }
 
-    pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), String> {
+    pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, pbf_bytes: &[u8]) -> Result<(), FrameworkSurfaceTiledMapError> {
         let tile = vector_tiles::decode_mvt(pbf_bytes)?;
         self.vector_tiles.insert(tiles::tile_key(z, x, y), tile);
         Ok(())
     }
 
-    pub fn sync_map_json(&mut self, json: &str) -> Result<(), String> {
-        let desc: MapDescriptorJson = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn sync_map_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let desc: MapDescriptorJson = serde_json::from_str(json)?;
         self.positions.clear();
         self.routes.clear();
         self.regions.clear();
@@ -1868,7 +1876,7 @@ impl MapHost {
             let dx = s.x - sx;
             let dy = s.y - sy;
             let d2 = dx * dx + dy * dy;
-            if d2 <= hit_r2 && best.as_ref().map_or(true, |(_, best_d2)| d2 < *best_d2) {
+            if d2 <= hit_r2 && best.as_ref().is_none_or(|(_, best_d2)| d2 < *best_d2) {
                 best = Some((pos.id.clone(), d2));
             }
         }
@@ -1892,7 +1900,7 @@ impl MapHost {
                 }
                 prev = Some(s);
             }
-            if min_d <= hit_r && best.as_ref().map_or(true, |(_, best_d)| min_d < *best_d) {
+            if min_d <= hit_r && best.as_ref().is_none_or(|(_, best_d)| min_d < *best_d) {
                 best = Some((route.id.clone(), min_d));
             }
         }
@@ -1951,11 +1959,7 @@ impl MapHost {
         for pos in self.positions.values() {
             let w = projection::lonlat_to_world(pos.lon, pos.lat);
             let s = map_viewport::world_to_screen(&self.camera, &self.viewport, w);
-            let hit = if crossing {
-                s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y
-            } else {
-                s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y
-            };
+            let hit = if crossing { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y } else { s.x >= min_x && s.x <= max_x && s.y >= min_y && s.y <= max_y };
             if hit {
                 positions.push(pos.id.clone());
             }
@@ -1972,11 +1976,7 @@ impl MapHost {
                     map_viewport::world_to_screen(&self.camera, &self.viewport, w)
                 })
                 .collect();
-            let hit = if crossing {
-                map_polyline_intersects_rect(&screen_pts, min_x, min_y, max_x, max_y)
-            } else {
-                screen_pts.iter().all(|p| p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y)
-            };
+            let hit = if crossing { map_polyline_intersects_rect(&screen_pts, min_x, min_y, max_x, max_y) } else { screen_pts.iter().all(|p| p.x >= min_x && p.x <= max_x && p.y >= min_y && p.y <= max_y) };
             if hit {
                 routes.push(route.id.clone());
             }
@@ -2018,11 +2018,7 @@ impl MapHost {
                     map_viewport::world_to_screen(&self.camera, &self.viewport, w)
                 })
                 .collect();
-            let hit = if crossing {
-                map_polyline_intersects_polygon(&screen_pts, &points)
-            } else {
-                screen_pts.iter().all(|p| map_point_in_polygon(p.x, p.y, &points))
-            };
+            let hit = if crossing { map_polyline_intersects_polygon(&screen_pts, &points) } else { screen_pts.iter().all(|p| map_point_in_polygon(p.x, p.y, &points)) };
             if hit {
                 routes.push(route.id.clone());
             }
@@ -2055,8 +2051,8 @@ impl MapHost {
         }
     }
 
-    pub fn set_selection_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_selection_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
         self.selected_positions.clear();
         self.selected_routes.clear();
         if let Some(rows) = v.get("positions").and_then(|x| x.as_array()) {
@@ -2076,13 +2072,13 @@ impl MapHost {
         Ok(())
     }
 
-    pub fn set_hover_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_hover_json(&mut self, json: &str) -> Result<(), FrameworkSurfaceTiledMapError> {
         if json == "null" {
             self.hovered_kind = None;
             self.hovered_id = None;
             return Ok(());
         }
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let v: serde_json::Value = serde_json::from_str(json)?;
         self.hovered_kind = v.get("kind").and_then(|x| x.as_str()).map(str::to_string);
         self.hovered_id = v.get("id").and_then(|x| x.as_str()).map(str::to_string);
         Ok(())
@@ -2098,8 +2094,7 @@ impl MapHost {
     }
 
     pub fn focus_feature(&mut self, kind: &str, id: &str) -> bool {
-        let limits: serde_json::Value =
-            serde_json::from_str(&gis_map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
+        let limits: serde_json::Value = serde_json::from_str(&gis_map_camera_limits_json_for_viewport(&self.viewport)).unwrap_or_default();
         let min_zoom = limits.get("min").and_then(|value| value.as_f64()).unwrap_or(0.05);
         let max_zoom = limits.get("max").and_then(|value| value.as_f64()).unwrap_or(64.0);
         match kind {
@@ -2112,10 +2107,7 @@ impl MapHost {
                 self.camera.y = world.y;
                 self.camera.zoom = (self.camera.zoom * 1.75).clamp(min_zoom, max_zoom);
                 self.clamp_camera_to_world();
-                self.push_event(
-                    "camera",
-                    serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }),
-                );
+                self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
                 true
             }
             "route" => {
@@ -2142,10 +2134,7 @@ impl MapHost {
                 self.camera.y = (min_y + max_y) * 0.5;
                 self.camera.zoom = fit_zoom;
                 self.clamp_camera_to_world();
-                self.push_event(
-                    "camera",
-                    serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }),
-                );
+                self.push_event("camera", serde_json::json!({ "x": self.camera.x, "y": self.camera.y, "zoom": self.camera.zoom }));
                 true
             }
             _ => false,
@@ -2316,7 +2305,7 @@ impl MapHost {
         let mut prev: Option<Point> = None;
         for (i, &(lx, ly)) in pts.iter().enumerate() {
             let s = to_screen(lx, ly);
-            let jump = prev.map(|p| p.distance(s)).unwrap_or(0.0);
+            let jump = prev.map_or(0.0, |p| p.distance(s));
             if i == 0 || jump > jump_limit {
                 path.move_to(s);
             } else {
@@ -2774,13 +2763,7 @@ impl MapHost {
             let width = route.stroke_width * self.layer_stroke_scale.routes;
             if selected || hovered {
                 let halo = if selected { selection_color } else { hover_color };
-                scene.stroke(
-                    &Stroke::new(width * 2.4),
-                    Affine::IDENTITY,
-                    halo,
-                    None,
-                    &path,
-                );
+                scene.stroke(&Stroke::new(width * 2.4), Affine::IDENTITY, halo, None, &path);
             }
             let color = if selected {
                 selection_color
@@ -2828,11 +2811,7 @@ impl MapHost {
                 scene.fill(FillRule::NonZero, Affine::IDENTITY, halo_color, None, &halo);
             }
             scene.fill(FillRule::NonZero, Affine::IDENTITY, fill, None, &circle);
-            let stroke_width = if selected || hovered {
-                ui_styling::strokes::MAP_POSITION_MULT * pos_scale * 1.5
-            } else {
-                ui_styling::strokes::MAP_POSITION_MULT * pos_scale
-            };
+            let stroke_width = if selected || hovered { ui_styling::strokes::MAP_POSITION_MULT * pos_scale * 1.5 } else { ui_styling::strokes::MAP_POSITION_MULT * pos_scale };
             scene.stroke(&Stroke::new(stroke_width), Affine::IDENTITY, stroke, None, &circle);
             if self.layer_visibility.position_labels {
                 let label = pos.name.as_deref().or(pos.label.as_deref()).map(str::trim).filter(|t| !t.is_empty());
@@ -3001,17 +2980,17 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = syncMapJson)]
     pub fn sync_map_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.sync_map_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.sync_map_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadTile)]
     pub fn upload_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.upload_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.upload_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadVectorTile)]
     pub fn upload_vector_tile(&mut self, z: u32, x: u32, y: u32, bytes: &[u8]) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.upload_vector_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.upload_vector_tile(z, x, y, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setRenderMode)]
@@ -3036,7 +3015,7 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = setLayerVisibilityJson)]
     pub fn set_layer_visibility_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_layer_visibility_from_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_layer_visibility_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = layerVisibilityJson)]
@@ -3046,7 +3025,7 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = setLayerStrokeScaleJson)]
     pub fn set_layer_stroke_scale_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_layer_stroke_scale_from_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_layer_stroke_scale_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = layerStrokeScaleJson)]
@@ -3061,7 +3040,7 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = setMapThemeJson)]
     pub fn set_map_theme_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_map_theme_from_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_map_theme_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = visibleVectorTilesJson)]
@@ -3101,12 +3080,12 @@ impl MapSession {
 
     #[wasm_bindgen(js_name = setSelectionJson)]
     pub fn set_selection_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_selection_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_selection_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setHoverJson)]
     pub fn set_hover_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_hover_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_hover_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = cameraJson)]
@@ -3599,10 +3578,7 @@ mod tests {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
-        host.sync_map_json(
-            r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#,
-        )
-        .expect("descriptor");
+        host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#).expect("descriptor");
         let screen: serde_json::Value = serde_json::from_str(&host.position_screen_json("zurich")).expect("json");
         let sx = screen["x"].as_f64().expect("x");
         let sy = screen["y"].as_f64().expect("y");
@@ -3616,13 +3592,10 @@ mod tests {
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
         host.fit_world_camera();
-        host.sync_map_json(
-            r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#,
-        )
-        .expect("descriptor");
+        host.sync_map_json(r#"{"positions":[{"id":"zurich","lon":8.54,"lat":47.37,"label":"Zürich"}],"routes":[{"id":"route-a","points":[[8.54,47.37],[8.55,47.38]],"stroke_width":2}],"regions":[]}"#).expect("descriptor");
         let raw: serde_json::Value = serde_json::from_str(&host.features_in_rect_json(0.0, 0.0, 800.0, 600.0, true)).expect("json");
-        assert!(raw["positions"].as_array().map(|rows| !rows.is_empty()).unwrap_or(false));
-        assert!(raw["routes"].as_array().map(|rows| !rows.is_empty()).unwrap_or(false));
+        assert!(raw["positions"].as_array().is_some_and(|rows| !rows.is_empty()));
+        assert!(raw["routes"].as_array().is_some_and(|rows| !rows.is_empty()));
     }
 
     #[test]
@@ -3765,7 +3738,7 @@ mod tests {
     #[test]
     #[ignore = "requires .repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf from demotiles"]
     fn decode_demotile_fixture_has_named_layers() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         assert!(!tile.layers.is_empty());
@@ -3777,7 +3750,7 @@ mod tests {
 
     #[test]
     fn demotile_fixture_countries_use_multi_ring_polygons() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-2-2-1.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries layer");
@@ -3787,7 +3760,7 @@ mod tests {
 
     #[test]
     fn fixture_linestrings_split_at_moveto() {
-        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES");
+        let dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES");
         let mut found = false;
         for entry in std::fs::read_dir(&dir).expect("fixture dir") {
             let path = entry.expect("entry").path();
@@ -3811,7 +3784,7 @@ mod tests {
 
     #[test]
     fn demotile_z5_has_countries_and_centroids() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3823,7 +3796,7 @@ mod tests {
 
     #[test]
     fn demotile_z0_has_many_country_features() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let tile = super::vector_tiles::decode_mvt(&bytes).expect("decode");
         let countries = tile.layers.iter().find(|l| l.name == "countries").expect("countries");
@@ -3832,7 +3805,7 @@ mod tests {
 
     #[test]
     fn figure_world_tile_paints_many_countries() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3847,7 +3820,7 @@ mod tests {
 
     #[test]
     fn colored_world_tile_paints_land_over_water_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-0-0-0.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3861,7 +3834,7 @@ mod tests {
 
     #[test]
     fn figure_country_lod_uses_land_mass_backdrop() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-3-4-2.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3946,7 +3919,7 @@ mod tests {
 
     #[test]
     fn label_camera_setup_intersects_fixture_tile() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3962,7 +3935,7 @@ mod tests {
 
     #[test]
     fn figure_ground_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3980,7 +3953,7 @@ mod tests {
 
     #[test]
     fn colored_vector_labels_increase_scene_when_enabled() {
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../.repo/🎫/26/06/03/MAP-VECTOR-TILES/sample-5-17-11.pbf");
         let bytes = std::fs::read(path).expect("fixture pbf");
         let mut host = super::MapHost::new();
         host.set_size(800, 600, 1.0);
@@ -3997,4 +3970,3 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
-

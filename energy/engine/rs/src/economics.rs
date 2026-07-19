@@ -1,6 +1,6 @@
 //! 💰 Utility tariffs and life-cycle costing (non-physics post-pass).
 
-use crate::meters::{EndUse, FuelType, MeterStore};
+use crate::meters::{FuelType, MeterStore};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Tariff
@@ -31,8 +31,7 @@ impl UtilityTariff {
             .periods
             .iter()
             .find(|p| p.months.contains(&month) && hour >= p.start_hour && hour < p.end_hour)
-            .map(|p| p.energy_rate_per_kwh)
-            .unwrap_or(0.1);
+            .map_or(0.1, |p| p.energy_rate_per_kwh);
         energy_kwh * rate
     }
 }

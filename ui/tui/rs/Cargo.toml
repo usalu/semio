@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Handcrafted retained-mode terminal UI: semio-styled scene/cell renderer (default, wasm-safe) and native ANSI terminal backend (feature \"terminal\")"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

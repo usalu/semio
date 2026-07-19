@@ -173,6 +173,36 @@
         "forwardAllArgs": true
       }
     },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true,
+        "env": {
+          "STORYBOOK_PORT": "6010"
+        }
+      }
+    },
     "verify": {
       "executor": "nx:run-commands",
       "dependsOn": [],
@@ -186,17 +216,6 @@
       "dependsOn": [],
       "options": {
         "command": "bun ./script.ts verify gate"
-      }
-    },
-    "test-storybook": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "command": "bun ./script.ts test storybook",
-        "forwardAllArgs": true,
-        "env": {
-          "STORYBOOK_PORT": "6010"
-        }
       }
     },
     "build": {

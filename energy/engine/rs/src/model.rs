@@ -2,7 +2,7 @@
 
 use crate::error::{Diagnostics, Error, Severity};
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 // #region 🔖Ids
 /// 🆔 Stable internal entity identifier.

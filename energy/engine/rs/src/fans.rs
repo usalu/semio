@@ -1,7 +1,6 @@
 //! 🌀 Fan performance: pressure rise, efficiency curves, fan laws, and part-load power.
 
 use crate::curves::PerformanceCurve;
-use crate::units::RHO_AIR_REF;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Fan

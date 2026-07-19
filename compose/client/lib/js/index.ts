@@ -5121,7 +5121,7 @@ export async function openSessionHttp(baseUrl: string, opts?: SessionHttpOpenOpt
 //#endregion 🚀PublicAPI
 
 //#region 🧪Tests
-if (typeof process !== "undefined" && !!process.env && (process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1" || process.env["COMPOSE_JS_RUN_EMBEDDED_E2E_TESTS"] === "1")) {
+if (typeof process !== "undefined" && !!process.env && process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1") {
   const { describe, it, expect } = await import("vitest");
   const eventually = async <T>(read: () => Promise<T>, matches: (value: T) => boolean, timeoutMs = 5_000): Promise<T> => {
     const startedAt = Date.now();
@@ -5133,9 +5133,10 @@ if (typeof process !== "undefined" && !!process.env && (process.env["COMPOSE_JS_
     }
     return lastValue;
   };
+  /** 🎚️Rank of `SEMIO_TEST_LEVEL` (fundamental=0..exhaustive=3); a shipped-package inline copy of `repo/lib/js/index.ts`'s `testLevelRank` — this file can't import repo-internal dev tooling. */
+  const semioTestLevelRank = Math.max(0, ["fundamental", "quick", "long", "exhaustive"].indexOf(process.env["SEMIO_TEST_LEVEL"] ?? "fundamental"));
 
   //#region ⚡FastUnit
-  if (process.env["COMPOSE_JS_RUN_EMBEDDED_TESTS"] === "1")
   describe("compose/js", () => {
     it("graphql wire kinds match golden operation roots", () => {
       expect(graphqlWireOperationKind("  #c\nquery X { session { __typename } }")).toBe("query");
@@ -5194,7 +5195,8 @@ if (typeof process !== "undefined" && !!process.env && (process.env["COMPOSE_JS_
   //#endregion ⚡FastUnit
 
   //#region 🐘WasmE2e
-  if (process.env["COMPOSE_JS_RUN_EMBEDDED_E2E_TESTS"] === "1")
+  /** ⏱️`long`-level (rank ≥ 2): each `it` boots the rs WASM engine via `Session.openInMemory`, too slow for fundamental/quick. */
+  if (semioTestLevelRank >= 2)
   describe("compose/js e2e", () => {
     it("fetchComposeFileSystemChildren returns typologies at kit root after installProjection", async () => {
       const { readFile } = await import("node:fs/promises");

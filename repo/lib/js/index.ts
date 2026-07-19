@@ -886,8 +886,72 @@ export function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: 
 }
 
 //#region ⏱️TestBudget
-/** ⏱️Default hard wall-clock budget (ms) for a project's default `test` target. */
-export const DEFAULT_TEST_BUDGET_MS = 30_000;
+/** ⏱️Ordered test levels — every test belongs to exactly one; running level L runs all levels ≤ L, budgeted at L's limit. */
+export const TEST_LEVELS = ["fundamental", "quick", "long", "exhaustive"] as const;
+export type TestLevel = (typeof TEST_LEVELS)[number];
+
+/** ⏱️Hard wall-clock budget (ms) per test level. */
+export const TEST_LEVEL_BUDGET_MS: Record<TestLevel, number> = {
+  fundamental: 15_000,
+  quick: 30_000,
+  long: 300_000,
+  exhaustive: 900_000,
+};
+
+/** ⏱️Deprecated alias for the fundamental-level budget; kept for straggling call sites during the leveled-test migration. */
+export const DEFAULT_TEST_BUDGET_MS = TEST_LEVEL_BUDGET_MS.fundamental;
+
+function isTestLevel(value: string | undefined): value is TestLevel {
+  return !!value && (TEST_LEVELS as readonly string[]).includes(value);
+}
+
+/** ⏱️Reads the active test level (`SEMIO_TEST_LEVEL`, defaulting to `fundamental`) — set by [[resolveTestLevel]]. */
+function activeTestLevel(): TestLevel {
+  return isTestLevel(process.env.SEMIO_TEST_LEVEL) ? (process.env.SEMIO_TEST_LEVEL as TestLevel) : "fundamental";
+}
+
+/**
+ * 🎚️Resolves the test level from `segments[0]` (if it names a level) or `SEMIO_TEST_LEVEL`, else `fundamental`.
+ * Sets `process.env.SEMIO_TEST_LEVEL` so every child process spawned afterwards (vitest, cargo, go, pytest,
+ * dotnet) inherits it without explicit plumbing. Returns the remaining segments.
+ */
+export function resolveTestLevel(segments: string[]): { level: TestLevel; rest: string[] } {
+  const [first, ...restIfLevel] = segments;
+  const level = isTestLevel(first) ? first : activeTestLevel();
+  process.env.SEMIO_TEST_LEVEL = level;
+  return { level, rest: isTestLevel(first) ? restIfLevel : segments };
+}
+
+/** 🎚️Numeric rank of a test level (0=fundamental..3=exhaustive), for `if (testLevelRank() >= testLevelRank("long"))`-style gating in test files. */
+export function testLevelRank(level: string | undefined = process.env.SEMIO_TEST_LEVEL): number {
+  const idx = TEST_LEVELS.indexOf((isTestLevel(level) ? level : "fundamental") as TestLevel);
+  return idx === -1 ? 0 : idx;
+}
+
+function levelsAbove(level: TestLevel): readonly TestLevel[] {
+  return TEST_LEVELS.slice(TEST_LEVELS.indexOf(level) + 1);
+}
+
+/** ⏱️Cumulative `go test` args for the active level: keeps `-short` through `quick`, adds `-skip` for `Test<Level>`-prefixed tests above it. */
+export function goLevelTestArgs(level: TestLevel = activeTestLevel()): string[] {
+  const args: string[] = [];
+  if (TEST_LEVELS.indexOf(level) <= TEST_LEVELS.indexOf("quick")) args.push("-short");
+  const skipped = levelsAbove(level).map((l) => l[0]!.toUpperCase() + l.slice(1));
+  if (skipped.length) args.push("-skip", `^Test(${skipped.join("|")})`);
+  return args;
+}
+
+/** ⏱️Cumulative pytest `-m` marker expression for the active level: excludes markers registered for levels above it. */
+export function pytestLevelArgs(level: TestLevel = activeTestLevel()): string[] {
+  const excluded = levelsAbove(level);
+  return excluded.length ? ["-m", excluded.map((l) => `not ${l}`).join(" and ")] : [];
+}
+
+/** ⏱️Cumulative dotnet xunit `--filter` expression for the active level: excludes `Category` traits above it (an absent trait counts as `fundamental`). */
+export function dotnetLevelArgs(level: TestLevel = activeTestLevel()): string[] {
+  const excluded = levelsAbove(level);
+  return excluded.length ? ["--filter", excluded.map((l) => `Category!=${l}`).join("&")] : [];
+}
 
 /**
  * ⏱️SIGKILLs `pid`'s whole process tree, not just `pid` — a timed-out `spawnSync`/`execFileSync` only signals the
@@ -914,7 +978,7 @@ function killTestBudgetTree(pid: number): void {
  * the pending child/timer handles regardless, and the eventual `process.exit()` below still takes effect.
  */
 export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): Promise<void> {
-  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? DEFAULT_TEST_BUDGET_MS);
+  const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[activeTestLevel()]);
   const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let timedOut = false;
   const timer = setTimeout(() => {
@@ -926,17 +990,27 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
     child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
   }).finally(() => clearTimeout(timer));
   if (timedOut) {
-    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. Trim tests or move them to a test-e2e target.`);
+    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms (level "${activeTestLevel()}") — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).`);
     process.exit(1);
   }
   if (signal || code !== 0) process.exit(code ?? 1);
 }
 
-/** 🦀Warm-builds test binaries (un-budgeted) then runs `cargo test` under the budget — Rust compile time isn't part of the test budget. */
+/**
+ * 🦀Warm-builds test binaries (un-budgeted) then runs `cargo test` under the active level's budget, appending
+ * cumulative `--skip <level>::` filters for every level above it (tests live in `mod quick`/`mod long`/`mod
+ * exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`). Splits `extraArgs` on an existing
+ * `--` so callers passing their own libtest args (e.g. `--nocapture`) still compose correctly.
+ */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
   runCmd("cargo", ["build", "--tests", ...packageArgs], { cwd, env });
-  await runTestBudgeted("cargo", ["test", ...packageArgs, ...extraArgs], { cwd, env });
+  const dashIdx = extraArgs.indexOf("--");
+  const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
+  const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
+  const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
+  const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
+  await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
 }
 //#endregion ⏱️TestBudget
 

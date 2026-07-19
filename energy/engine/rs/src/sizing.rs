@@ -1,6 +1,6 @@
 //! 📐 Zone and equipment sizing from design-day calculations.
 
-use crate::model::{EntityId, Model};
+use crate::model::Model;
 use crate::results::{SizingResult, SizingTables};
 use crate::site::{DesignDay, DesignDayKind};
 use crate::units::CP_DRY_AIR;

@@ -1770,6 +1770,7 @@ function pluginWorkerUrl(moduleUrl: string): string {
 class PluginWorkerClient {
   private worker: Worker | null = null;
   private readonly pending = new Map<string, { resolve: (value: Record<string, unknown>) => void; reject: (error: Error) => void; watchdog: number }>();
+  onBackboneOutbound?: (uri: string, messageJson: string) => void;
 
   constructor(
     private readonly pluginId: string,
@@ -1786,7 +1787,16 @@ class PluginWorkerClient {
 
   private attachWorker(worker: Worker): void {
     worker.onmessage = (event: MessageEvent) => {
-      const message = event.data as { requestId?: string; type?: PluginWorkerMessageType; message?: string; value?: string; instanceId?: number; ok?: boolean };
+      const message = event.data as {
+        requestId?: string;
+        type?: PluginWorkerMessageType | "backboneOutbound";
+        uri?: string;
+        message?: string;
+      };
+      if (message.type === "backboneOutbound" && message.uri && message.message != null) {
+        this.onBackboneOutbound?.(message.uri, message.message);
+        return;
+      }
       const requestId = message.requestId;
       if (!requestId) return;
       const entry = this.pending.get(requestId);
@@ -1861,6 +1871,10 @@ class PluginWorkerClient {
     this.worker?.terminate();
     this.worker = null;
   }
+
+  postBackboneInbound(uri: string, messages: readonly string[]): void {
+    this.worker?.postMessage({ type: "backboneInbound", uri, messages });
+  }
 }
 
 /**
@@ -1868,8 +1882,12 @@ class PluginWorkerClient {
  * `plugin-worker.js` supports). Caller falls back to the direct main-thread import on failure (no
  * `plugin-worker.js` alongside this module, wasm-bindgen-only plugin, or `Worker` unavailable).
  */
+const pluginWorkerClients = new Map<string, PluginWorkerClient>();
+
 async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): Promise<PluginWasmHandle> {
   const client = new PluginWorkerClient(pluginId, moduleUrl);
+  pluginWorkerClients.set(pluginId, client);
+  client.onBackboneOutbound = (uri, messageJson) => relayPluginBackboneOutbound(uri, messageJson);
   await client.start();
   const manifest = JSON.parse(await client.manifest()) as PluginManifest;
   return withSerializedPluginWasmHandle({
@@ -1882,10 +1900,27 @@ async function loadPluginModuleViaWorker(pluginId: string, moduleUrl: string): P
     render: async (instanceId, bodyKey, viewState) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState))) as PluginUiNode,
     renderWithDocument: async (instanceId, bodyKey, viewState, documentJson) => JSON.parse(await client.render(instanceId, bodyKey, JSON.stringify(viewState), documentJson)) as PluginUiNode,
     refreshUi: async (instanceId, request) => JSON.parse(await client.refreshUi(instanceId, JSON.stringify(request))) as PluginUiRefreshResponse,
-    dispose: () => client.dispose(),
+    dispose: () => {
+      pluginWorkerClients.delete(pluginId);
+      client.dispose();
+    },
   });
 }
 //#endregion PluginWorkerClient
+
+export function relayPluginBackboneOutbound(uri: string, messageJson: string): void {
+  pluginBackboneOutboundRelay?.(uri, messageJson);
+}
+
+export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly string[]): void {
+  pluginWorkerClients.get(pluginId)?.postBackboneInbound(uri, messages);
+}
+
+let pluginBackboneOutboundRelay: ((uri: string, messageJson: string) => void) | null = null;
+
+export function setPluginBackboneOutboundRelay(relay: ((uri: string, messageJson: string) => void) | null): void {
+  pluginBackboneOutboundRelay = relay;
+}
 
 const pluginModuleHandleCache = new Map<string, Promise<PluginWasmHandle>>();
 

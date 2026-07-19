@@ -1,7 +1,7 @@
 //! 💧 Physical property functions: moist air, water, steam, refrigerants, glycol.
 
 use crate::num::newton_raphson;
-use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, R_DRY_AIR, R_WATER_VAPOR, T_TRIPLE_WATER};
+use crate::units::{c_to_k, CP_DRY_AIR, H_FG_0C, P_STD, R_DRY_AIR, R_WATER_VAPOR};
 
 // #region 🔖Psychrometrics
 /// 💧 Saturation pressure of water [Pa] (Magnus-type, valid ~0–50°C).

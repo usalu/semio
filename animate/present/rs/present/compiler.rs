@@ -9,7 +9,8 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 /// 🚨 Static-site compilation failure.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
+#[error("{message}")]
 pub struct PresentCompileError {
     pub message: String,
 }
@@ -19,14 +20,6 @@ impl PresentCompileError {
         Self { message: message.into() }
     }
 }
-
-impl std::fmt::Display for PresentCompileError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.message)
-    }
-}
-
-impl std::error::Error for PresentCompileError {}
 
 pub type Result<T> = std::result::Result<T, PresentCompileError>;
 
@@ -51,7 +44,7 @@ pub fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<Sc
         .with_subtitles_path(scene_dir.join("scene.srt"));
     let scene = scene_for_hash(config.clone(), scene_hash);
     let outputs = render_scene(scene, config, &[OutputFormat::Mp4, OutputFormat::LastFrame])
-        .map_err(|error| PresentCompileError::new(error))?;
+        .map_err(|error| PresentCompileError::new(error.to_string()))?;
     Ok(SceneAssetBundle {
         scene_hash: scene_hash.into(),
         mp4: outputs.mp4,

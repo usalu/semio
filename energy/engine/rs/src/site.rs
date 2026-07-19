@@ -1,6 +1,6 @@
 //! 🌤️ Site, weather, EPW ingest, design days, solar position, ground temperatures.
 
-use crate::error::{Error, Severity};
+use crate::error::Error;
 use crate::props::{humidity_ratio_from_rh, moist_air_density};
 use crate::units::{deg_to_rad, rad_to_deg};
 use serde::{Deserialize, Serialize};

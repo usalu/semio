@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "semio monorepo orchestrator CLI + TUI dashboard (binary: semio)"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

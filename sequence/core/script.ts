@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/sequence-core` router: `bun ./script.ts wasm|test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild, resolveTestLevel } from "../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -25,7 +25,8 @@ class WasmScript extends BundleScript {
 /** ⏱️Warm-cache Rust unit tests in `rs/` — this bundle has no JS test suite, so `test` runs the crate's `#[cfg(test)]` modules instead of vitest. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted(["sequence_core"], join(this.root, "rs"), segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["sequence_core"], join(this.root, "rs"), rest);
   }
 }
 

@@ -18,15 +18,13 @@ Generic document version control: typed operations, replay materialization, chec
 
 ## Bundles
 
-| Bundle      | Role                                   |
-| ----------- | -------------------------------------- |
-| `vcs/rs`    | Rust/WASM engine (`vcs` crate)         |
-| `vcs/core`  | TypeScript mirror + `DocumentVcsStore` |
-| `vcs/react` | `HistoryTable` UI                      |
-| `vcs/play`  | History playground demo                |
+| Bundle         | Role                                              |
+| -------------- | ------------------------------------------------- |
+| `vcs/rs`       | Rust/WASM engine (`vcs` crate) — sole source of truth |
+| `vcs/plugin`   | WASM play demo (`vcs-play` DocumentApp)           |
 
 ## Mechanisms
 
 - `DocumentVcsStore::dispatch` — apply, undo, redo, commit checkpoint, create/switch alternative
 - `materialize_document_projection` — replay applied edit ids
-- `Backbone` trait — `dev://`, `local://`/`sqlite://`, `remote://` URI resolution
+- `Backbone` trait — non-blocking queue; IO in `framework/sync` actor (`temp://`, `file://`, `folder://`, `remote://`)

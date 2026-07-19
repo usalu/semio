@@ -1,3 +1,4 @@
+use crate::VideoError;
 use framework_hash::hash_bytes;
 use std::collections::HashMap;
 use std::fs;
@@ -13,14 +14,14 @@ pub struct PartialMovieCache {
 
 impl PartialMovieCache {
     /// 📂 Opens or creates a cache directory.
-    pub fn open(root: impl Into<PathBuf>) -> Result<Self, String> {
+    pub fn open(root: impl Into<PathBuf>) -> Result<Self, VideoError> {
         Self::open_with_limit(root, usize::MAX)
     }
 
     /// 📂 Opens a cache directory enforcing `max_entries` LRU eviction.
-    pub fn open_with_limit(root: impl Into<PathBuf>, max_entries: usize) -> Result<Self, String> {
+    pub fn open_with_limit(root: impl Into<PathBuf>, max_entries: usize) -> Result<Self, VideoError> {
         let root = root.into();
-        fs::create_dir_all(&root).map_err(|err| format!("cache dir: {err}"))?;
+        fs::create_dir_all(&root).map_err(VideoError::io("cache dir"))?;
         let mut entries = HashMap::new();
         let mut access_order = Vec::new();
         if let Ok(read) = fs::read_dir(&root) {
@@ -55,7 +56,7 @@ impl PartialMovieCache {
     }
 
     /// 💾 Registers a rendered partial movie and evicts oldest entries when over capacity.
-    pub fn insert(&mut self, hash: String, path: PathBuf) -> Result<(), String> {
+    pub fn insert(&mut self, hash: String, path: PathBuf) -> Result<(), VideoError> {
         if !self.entries.contains_key(&hash) {
             self.access_order.push(hash.clone());
         } else {
@@ -71,10 +72,10 @@ impl PartialMovieCache {
     }
 
     /// 🧾 Records cache metadata on disk.
-    pub fn write_index(&self) -> Result<(), String> {
+    pub fn write_index(&self) -> Result<(), VideoError> {
         let index_path = self.root.join("index.json");
-        let payload = serde_json::to_string_pretty(&self.access_order).map_err(|err| format!("{err}"))?;
-        fs::write(index_path, payload).map_err(|err| format!("cache index: {err}"))?;
+        let payload = serde_json::to_string_pretty(&self.access_order).map_err(VideoError::json("cache index"))?;
+        fs::write(index_path, payload).map_err(VideoError::io("cache index"))?;
         Ok(())
     }
 
@@ -84,7 +85,7 @@ impl PartialMovieCache {
     }
 
     /// 🧹 Removes all cached partial movies from disk.
-    pub fn flush(root: impl Into<PathBuf>) -> Result<usize, String> {
+    pub fn flush(root: impl Into<PathBuf>) -> Result<usize, VideoError> {
         let root = root.into();
         if !root.exists() {
             return Ok(0);
@@ -94,17 +95,17 @@ impl PartialMovieCache {
             for entry in read.flatten() {
                 let path = entry.path();
                 if path.is_file() {
-                    fs::remove_file(&path).map_err(|err| format!("cache flush file: {err}"))?;
+                    fs::remove_file(&path).map_err(VideoError::io("cache flush file"))?;
                     removed += 1;
                 } else if path.is_dir() {
-                    fs::remove_dir_all(&path).map_err(|err| format!("cache flush dir: {err}"))?;
+                    fs::remove_dir_all(&path).map_err(VideoError::io("cache flush dir"))?;
                     removed += 1;
                 }
             }
         }
         let index_path = root.join("index.json");
         if index_path.exists() {
-            fs::remove_file(index_path).map_err(|err| format!("cache flush index: {err}"))?;
+            fs::remove_file(index_path).map_err(VideoError::io("cache flush index"))?;
         }
         Ok(removed)
     }
@@ -114,13 +115,9 @@ impl PartialMovieCache {
         self.access_order.push(hash.to_string());
     }
 
-    fn evict_if_needed(&mut self) -> Result<(), String> {
+    fn evict_if_needed(&mut self) -> Result<(), VideoError> {
         while self.access_order.len() > self.max_entries {
-            let oldest = self
-                .access_order
-                .first()
-                .cloned()
-                .ok_or_else(|| "cache eviction: empty order".to_string())?;
+            let oldest = self.access_order.first().cloned().ok_or(VideoError::CacheEvictionEmpty)?;
             self.access_order.remove(0);
             if let Some(path) = self.entries.remove(&oldest) {
                 if path.is_dir() {

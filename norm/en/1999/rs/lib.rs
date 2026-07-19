@@ -1,6 +1,7 @@
 //! ✨ EN 1999 design of aluminium structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -290,6 +291,76 @@ pub fn check_aluminium_member(
     report.push(part_1_1::check_bending(m_ed_knm, m_rd, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub n_ed_kn: f64,
+    pub m_ed_knm: f64,
+    pub a_mm2: f64,
+    pub w_el_mm3: f64,
+    pub alloy: String,
+    pub chi: f64,
+    pub i_t_mm4: f64,
+    pub l_cr_mm: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            n_ed_kn: 80.0,
+            m_ed_knm: 4.0,
+            a_mm2: 1200.0,
+            w_el_mm3: 24_000.0,
+            alloy: "aw6060t6".into(),
+            chi: 0.85,
+            i_t_mm4: 5000.0,
+            l_cr_mm: 3000.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1999Family>;
+
+fn parse_alloy(value: &str) -> part_1_1::Alloy {
+    match value.to_ascii_lowercase().as_str() {
+        "aw6082t6" => part_1_1::Alloy::Aw6082T6,
+        _ => part_1_1::Alloy::Aw6060T6,
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_aluminium_member(
+        document.n_ed_kn,
+        document.m_ed_knm,
+        document.a_mm2,
+        document.w_el_mm3,
+        parse_alloy(&document.alloy),
+        document.chi,
+        document.i_t_mm4,
+        document.l_cr_mm,
+    )
+}
+
+pub struct En1999Family;
+
+impl NormFamily for En1999Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1999
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

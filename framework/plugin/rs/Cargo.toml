@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Declarative app plugin SDK for semio framework WASM components"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

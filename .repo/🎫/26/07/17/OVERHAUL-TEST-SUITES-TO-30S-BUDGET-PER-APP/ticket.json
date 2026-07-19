@@ -1,7 +1,7 @@
 {
   "title": "Overhaul Test Suites to 30s Budget Per App",
   "emoji": "🧪",
-  "status": "closed",
+  "status": "open",
   "description": "Every project's default `test` nx target must finish in ≤30s (Rust measured as warm-cache test execution, compile excluded). Structurally slow suites (Storybook/Playwright e2e, Postgres testcontainer tests in compose/server/hub/rs/bin.rs, VSCode extension-host suite) move to a separate opt-in `test-e2e` target excluded from the default test run. Add a central hard wall-clock guard in repo/lib/js/index.ts so runner helpers (vitest, cargo, pytest, go, dotnet, bun test) enforce the budget and fail loudly on regression. Trim tests across all ~90 projects to keep only complicated-feature coverage (algorithms, geometry, protocol, interaction/reducer logic) and delete trivial tests (export-exists checks, getter identity, CSS-substring matching, serde round-trip padding). Execute via a fleet of parallel agents, one per project, each measuring baseline, trimming, migrating to the budgeted helper, and verifying ≤30s.",
   "summary": "Fixed the vitest-worker leak in runTestBudgeted: execFileSync's built-in timeout only ever SIGKILLs the direct child, not descendant processes (vitest's node .../vitest/dist/workers/forks.js pool), which survived indefinitely at 100%+ CPU after a budget kill.\n\nRoot cause found empirically: the natural fix (spawnSync + detached:true + kill(-pid) on timeout) does NOT work under Bun — verified that Bun's spawnSync silently ignores `detached` and never makes the child its own process-group leader, so `kill(-pid)` targets the wrong (or a nonexistent) group. Async `child_process.spawn` with `detached: true` does correctly create a new process group under Bun (verified with a throwaway grandchild-process repro).\n\nRewrote runTestBudgeted as async (spawn + setTimeout budget + kill(-pid,'SIGKILL') on POSIX / `taskkill /T /F` on Windows on timeout), and runCargoTestBudgeted/runVitest as async wrappers. Confirmed via Script.run's existing `void | Promise\u003cvoid\u003e` signature and ScriptRouter's `await Promise.resolve(cmd.run(...))` plumbing that the ~100 script.ts call sites needed NO changes — Bun/Node's event loop stays alive on the pending child+timer handles even when the async call is fire-and-forgotten from a synchronous `run(): void`, and the eventual process.exit() inside runTestBudgeted still takes effect. Found and fixed the one exception: framework/core/script.ts's TestScript.run() fires runCargoTestBudgeted then runVitest sequentially in the same method (cargo must finish before vitest starts) — made it async/awaited. Also awaited the two runRepoGoTest call sites in root script.ts for consistency (already inside an async run()).\n\nVerified end-to-end: a real vitest project (compose/client/lib/js) still passes normally (exit 0) with the async implementation; a forced SEMIO_TEST_BUDGET_MS=50 timeout run against the same project kills the whole tree with zero new leaked `vitest/dist/workers` processes (confirmed via pgrep pid diff before/after), versus the previous behavior which left workers running indefinitely.",
   "github": {
@@ -10,6 +10,7 @@
   "goal": "🎯aioptimizedrepo",
   "sessions": [
     "⚪53cced14f5e244d094a644940bda4534",
-    "⚪e3b69d96595a4e3a81eec981409a1772"
+    "⚪e3b69d96595a4e3a81eec981409a1772",
+    "⚪bddd3bd2b71241089763d9c6335a4e49"
   ]
 }

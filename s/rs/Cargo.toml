@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "S studio CQRS store — programs, app instances, media graph, checkpoints"
 
+
+[lints]
+workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

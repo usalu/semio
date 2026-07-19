@@ -6,6 +6,7 @@ mod header {
     // {@link HubStorage} (os-hub-storage) — sqlite today, postgres/neo4j are sibling backends.
 }
 
+use axum::body::Bytes;
 use axum::extract::ws::{Message, WebSocket, WebSocketUpgrade};
 use axum::extract::{Path, Query, State};
 use axum::http::{HeaderMap, StatusCode};
@@ -14,8 +15,9 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use dashmap::DashMap;
 use futures::{SinkExt, StreamExt};
-use os_hub_storage::model::{DocumentRecord, NodeRecord, StudioRole};
+use os_hub_storage::model::{BlobRecord, DocumentRecord, NodeRecord, StudioRole};
 use os_hub_storage::HubStorage;
+use os_hub_storage_sqlite::SqliteStorage;
 use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OpEnvelope, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -503,6 +505,58 @@ async fn resolve_auth(state: &HubState, studio_id: &str, document_id: &str, toke
 async fn authorized(state: &HubState, studio_id: &str, document_id: &str, token: Option<&str>) -> bool {
     !matches!(resolve_auth(state, studio_id, document_id, token).await, AuthOutcome::Denied)
 }
+
+//#region Blobs
+/// @emoji 📦 Studio-scoped blobs have no owning document, so this borrows `resolve_auth`'s
+/// session→role branch as-is (studio role lookup never touches `document_id`) by passing the
+/// blob hash in the document-id slot; the share-token branch then degrades to `Denied` unless a
+/// document happens to share the blob's hash as its id, which content hashes never do in
+/// practice. A session with any studio role is required — a document's share token intentionally
+/// does not widen into read access over the whole studio's content-addressed blob store.
+async fn authorized_for_blob(state: &HubState, studio_id: &str, hash: &str, token: Option<&str>) -> bool {
+    !matches!(resolve_auth(state, studio_id, hash, token).await, AuthOutcome::Denied)
+}
+
+async fn put_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, body: Bytes) -> Result<Json<BlobRecord>, StatusCode> {
+    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    let media_type = headers.get(axum::http::header::CONTENT_TYPE).and_then(|value| value.to_str().ok()).unwrap_or("application/octet-stream");
+    let record = state.storage.put_blob(&body, media_type).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    // The path hash is client-supplied (content-addressed URL); a mismatch against the
+    // storage-computed hash means the client sent the wrong bytes for that address — a bad
+    // request, distinct from `put_envelope`'s CONFLICT which signals a version CAS race.
+    if record.hash != hash {
+        return Err(StatusCode::BAD_REQUEST);
+    }
+    Ok(Json(record))
+}
+
+/// @emoji 📭 `HubStorage::get_blob` returns only bytes (media type isn't retrievable on read —
+/// see `HubStorage::put_blob`'s doc comment), so the response always serves as generic binary;
+/// a typed content-type on GET needs a storage-trait change out of this ticket's bin.rs-only scope.
+async fn get_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<impl IntoResponse, StatusCode> {
+    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+        return Err(StatusCode::UNAUTHORIZED);
+    }
+    match state.storage.get_blob(&hash).await {
+        Ok(Some(bytes)) => Ok(([(axum::http::header::CONTENT_TYPE, "application/octet-stream")], bytes)),
+        Ok(None) => Err(StatusCode::NOT_FOUND),
+        Err(_) => Err(StatusCode::INTERNAL_SERVER_ERROR),
+    }
+}
+
+async fn head_blob(Path((studio_id, hash)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> StatusCode {
+    if !authorized_for_blob(&state, &studio_id, &hash, bearer(&headers).as_deref()).await {
+        return StatusCode::UNAUTHORIZED;
+    }
+    match state.storage.has_blob(&hash).await {
+        Ok(true) => StatusCode::OK,
+        Ok(false) => StatusCode::NOT_FOUND,
+        Err(_) => StatusCode::INTERNAL_SERVER_ERROR,
+    }
+}
+//#endregion Blobs
 //#endregion 🔖Rest
 
 //#region 🔖WebSocket
@@ -612,6 +666,7 @@ fn router(state: HubState) -> Router {
     Router::new()
         .route("/auth/sessions", post(create_auth_session))
         .route("/studios/{studio_id}/nodes", get(list_nodes).post(create_node))
+        .route("/studios/{studio_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/studios/{studio_id}/documents/{id}", get(get_document))
         .route("/studios/{studio_id}/documents/{id}/envelope", get(get_envelope).put(put_envelope))
         .route("/studios/{studio_id}/documents/{id}/ops", post(append_op).get(get_ops_since))
@@ -621,7 +676,7 @@ fn router(state: HubState) -> Router {
 }
 
 /// @emoji 🧬 Resolves and connects the storage backend selected by `OS_HUB_STORAGE_BACKEND`
-/// (`sqlite` today; `postgres`/`neo4j` are sibling crates wired in by HP-2/HP-3).
+/// (`sqlite` default; `postgres` when `OS_HUB_DATABASE_URL` is set).
 async fn connect_storage() -> Result<Arc<dyn HubStorage>, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {
@@ -632,7 +687,16 @@ async fn connect_storage() -> Result<Arc<dyn HubStorage>, HubError> {
                     let _ = std::fs::create_dir_all(parent);
                 }
             }
-            let storage = os_hub_storage_sqlite::SqliteStorage::connect(&db_path).await?;
+            let storage = SqliteStorage::connect(&db_path).await?;
+            storage.seed().await?;
+            Ok(Arc::new(storage))
+        }
+        "postgres" => {
+            let database_url = std::env::var("OS_HUB_DATABASE_URL")
+                .map_err(|_| HubError::UnknownStorageBackend("postgres requires OS_HUB_DATABASE_URL".into()))?;
+            let storage = os_hub_storage_postgres::PostgresStorage::connect(&database_url)
+                .await
+                .map_err(|error| HubError::Storage(error))?;
             storage.seed().await?;
             Ok(Arc::new(storage))
         }
@@ -915,6 +979,46 @@ mod tests {
             }
             _ => panic!("expected a resolved session"),
         }
+    }
+
+    // 🔬 Blob round-trip: PUT then GET returns identical bytes and HEAD reports found; a hash
+    // that was never PUT is reported missing by both GET and HEAD.
+    #[tokio::test]
+    async fn blob_put_get_head_round_trip() {
+        let state = memory_state().await;
+        let bytes = Bytes::from_static(b"hello hub blob bytes");
+        let mut headers = HeaderMap::new();
+        headers.insert(axum::http::header::CONTENT_TYPE, "text/plain".parse().unwrap());
+
+        // Learn the content hash the storage backend assigns; put_blob is idempotent so this
+        // doesn't change what the HTTP-level put below observes.
+        let expected = state.storage.put_blob(&bytes, "text/plain").await.expect("seed hash");
+
+        let put = put_blob(Path((STUDIO.to_string(), expected.hash.clone())), headers.clone(), State(state.clone()), bytes.clone()).await.expect("put blob");
+        assert_eq!(put.0.hash, expected.hash);
+        assert_eq!(put.0.media_type, "text/plain");
+        assert_eq!(put.0.size, bytes.len() as i64);
+
+        let response = get_blob(Path((STUDIO.to_string(), expected.hash.clone())), HeaderMap::new(), State(state.clone())).await.expect("get blob").into_response();
+        let got = axum::body::to_bytes(response.into_body(), usize::MAX).await.expect("read body");
+        assert_eq!(got.as_ref(), bytes.as_ref());
+
+        assert_eq!(head_blob(Path((STUDIO.to_string(), expected.hash.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::OK);
+
+        let missing = "not-a-real-hash".to_string();
+        assert_eq!(head_blob(Path((STUDIO.to_string(), missing.clone())), HeaderMap::new(), State(state.clone())).await, StatusCode::NOT_FOUND);
+        assert_eq!(get_blob(Path((STUDIO.to_string(), missing)), HeaderMap::new(), State(state)).await.err(), Some(StatusCode::NOT_FOUND));
+    }
+
+    // 🔬 A client-provided hash that doesn't match the computed content hash is a bad request,
+    // and the wrong path hash never gets associated with those bytes in storage.
+    #[tokio::test]
+    async fn blob_put_rejects_hash_mismatch() {
+        let state = memory_state().await;
+        let bytes = Bytes::from_static(b"mismatched content");
+        let result = put_blob(Path((STUDIO.to_string(), "not-the-real-hash".to_string())), HeaderMap::new(), State(state.clone()), bytes.clone()).await;
+        assert_eq!(result.err(), Some(StatusCode::BAD_REQUEST));
+        assert!(!state.storage.has_blob("not-the-real-hash").await.unwrap(), "wrong path hash must not be a stored key");
     }
 }
 //#endregion 🔖Tests

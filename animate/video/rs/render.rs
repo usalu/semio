@@ -8,6 +8,7 @@ use std::path::PathBuf;
 use crate::cache::PartialMovieCache;
 use crate::renderer::{frame_hash, CapturedFrame, VelloRenderer};
 use crate::writer::{write_sections_srt, SceneFileWriter};
+use crate::VideoError;
 
 /// 📼 Encoded artifact kinds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -29,7 +30,7 @@ pub struct OutputPaths {
 }
 
 /// 🎬 Renders any `Scene` implementation to configured outputs.
-pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, String> {
+pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[OutputFormat]) -> Result<OutputPaths, VideoError> {
     scene.setup(&config);
     let mut recorder = FrameRecorder { inner: scene, captures: Vec::new() };
     recorder.construct();
@@ -40,12 +41,12 @@ pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[Ou
 
     let sections = recorder.inner.sections().clone();
     let sections_path = config.output_dir.join("sections.json");
-    fs::create_dir_all(&config.output_dir).map_err(|err| format!("output dir: {err}"))?;
+    fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
     fs::write(
         &sections_path,
-        serde_json::to_string_pretty(&sections).map_err(|err| format!("sections json: {err}"))?,
+        serde_json::to_string_pretty(&sections).map_err(VideoError::json("sections json"))?,
     )
-    .map_err(|err| format!("sections write: {err}"))?;
+    .map_err(VideoError::io("sections write"))?;
 
     let camera = recorder.inner.camera().clone();
     let mut renderer = VelloRenderer::new(config.width, config.height)?;
@@ -69,7 +70,7 @@ pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[Ou
             if let Some(partial) = current_partial.take() {
                 let encoded = writer.finalize_partial(&partial)?;
                 if let Some(cache) = cache.as_mut() {
-                    cache.insert(current_hash.clone(), encoded);
+                    cache.insert(current_hash.clone(), encoded)?;
                 }
             }
             if let Some(cache) = cache.as_mut() {

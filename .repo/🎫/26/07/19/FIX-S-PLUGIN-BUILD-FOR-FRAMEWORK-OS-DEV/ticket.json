@@ -1,0 +1,13 @@
+{
+  "title": "Fix S Plugin Build for Framework OS Dev",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The s-plugin crate fails to compile in framework-os-dev:dev because it imports MeasureSelectItem and WindowEngagementStatus via semio_framework_plugin::component::layout, which no longer exists after the layout components moved into ui_wgpu and are re-exported flatly by semio_framework_plugin. Fix the imports and verify the s app works end to end via the dev server.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2116"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪964de67764294e9a877e50eed3aadd0f"
+  ]
+}

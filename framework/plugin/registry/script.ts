@@ -138,7 +138,6 @@ function parseAssetsForCrate(manifestPath: string): AssetSpecRow[] {
     const kind = block.match(/^kind\s*=\s*"([^"]+)"/m)?.[1] as AssetSpecRow["kind"] | undefined;
     const route = block.match(/^route\s*=\s*"([^"]+)"/m)?.[1];
     if (!kind || !route) {
-      console.warn(`[DEBUG] plugin registry catalog: skipping malformed assets entry in ${manifestPath}`);
       continue;
     }
     const app = block.match(/^app\s*=\s*"([^"]+)"/m)?.[1];
@@ -199,7 +198,6 @@ function parsePlaygroundsForCrate(manifestPath: string, pluginId: string, crateP
   for (const block of blocks) {
     const entry = parsePlaygroundBlock(block.join("\n"), pluginId, cratePath);
     if (entry) entries.push(entry);
-    else console.warn(`[DEBUG] plugin registry catalog: skipping malformed playground entry in ${manifestPath}`);
   }
   return entries;
 }
@@ -270,8 +268,7 @@ function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string
 function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry | undefined {
   try {
     return parsePluginCargo(manifestPath, repoRoot);
-  } catch (error) {
-    console.warn(`[DEBUG] plugin registry catalog: skipping ${manifestPath}: ${error instanceof Error ? error.message : String(error)}`);
+  } catch {
     return undefined;
   }
 }

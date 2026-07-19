@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Schema derivation and validation for the command kernel"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

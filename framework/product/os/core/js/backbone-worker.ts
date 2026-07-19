@@ -1,30 +1,51 @@
 // #region Header
 /**
- * @emoji 🧵 `backbone-worker.ts` — the browser-side actor twin of `framework/sync`'s Rust
- * `DocumentHost`. Runs in a dedicated Web Worker so all document-sync IO (hub WebSocket, folder
- * fetch/SSE polling, multi-tab convergence) happens off the main thread — the UI is never blocked.
- *
- * Protocol types ({@link BackboneWorkerRequest}/{@link BackboneWorkerResponse}/{@link DocumentEvent}/
- * {@link DocumentActorMsg}/{@link PersistenceBinding}) live in `./index.ts` so both this worker and
- * `os-shell.tsx` import the same shapes. This worker is deliberately dumb — it relays queues and
- * fans out `DocumentEvent`s, it never materializes a projection (that stays the plugin store's job,
- * same division of labor as the Rust actor's `ChannelBackbone`).
- *
- * Per-document responsibilities:
- * - `PersistenceBinding.hub`: a `WebSocket` to `${baseUrl}/studios/{studioId}/documents/{id}/ws`,
- *   speaking the exact `HubClientFrame`/`HubServerFrame` JSON the kernel module (`framework/core/rs`'s
- *   🔖HubProtocol region) and the hub server (`framework/product/os/hub/rs/bin.rs`) use.
- * - `PersistenceBinding.folder`: fetch/SSE against the dev middleware's `/semio-backbone` endpoint.
- *   The middleware's multi-document SSE watch endpoint (`GET /semio-backbone/watch?uri=`) is a
- *   dev-workflow deliverable (`framework/product/os/dev/script.ts`) that may land after this file;
- *   until an `EventSource` connects successfully this degrades to polling the envelope endpoint on
- *   an interval — a documented, functional fallback, not a silent gap.
- * - A `BroadcastChannel` per document id fans local ops out to other tabs open on the same document
- *   and ingests theirs, for same-machine multi-tab convergence independent of any server.
+ * @emoji 🧵 `backbone-worker.ts` — thin loader for the Rust WASM `semio-framework-sync-worker`
+ * actor (`framework/sync/worker/rs`). When the wasm package is unavailable (vitest/node), falls
+ * back to the embedded TypeScript actor twin so dev workflows keep working.
  */
 // #endregion Header
 
 import type { BackboneWorkerRequest, BackboneWorkerResponse, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, HubClientFrame, HubServerFrame, OpEnvelope, PersistenceBinding, RemoteState } from "./index";
+
+type RustWorkerHost = {
+  handleRequestJson(json: string): void;
+  postReady(): void;
+};
+
+let rustHost: RustWorkerHost | null = null;
+
+async function ensureRustHost(): Promise<RustWorkerHost | null> {
+  if (rustHost) return rustHost;
+  if (typeof WebAssembly === "undefined") return null;
+  try {
+    const module = await import("@semio-tech/framework-sync-worker");
+    await module.default();
+    rustHost = new module.BackboneWorkerHost() as RustWorkerHost;
+    return rustHost;
+  } catch {
+    return null;
+  }
+}
+
+const rustHostPromise = ensureRustHost();
+
+(self as unknown as DedicatedWorkerGlobalScope).onmessage = (messageEvent: MessageEvent<BackboneWorkerRequest>) => {
+  void rustHostPromise.then((host) => {
+    if (host) {
+      host.handleRequestJson(JSON.stringify(messageEvent.data));
+      return;
+    }
+    handleTsRequest(messageEvent.data);
+  });
+};
+
+void rustHostPromise.then((host) => {
+  if (host) host.postReady();
+  else post({ kind: "ready" });
+});
+
+//#region 🔖TsFallback
 
 //#region 🔖Constants
 /** 🛰️ Must match `framework/product/os/core/js/index.ts`'s `BACKBONE_ENDPOINT_PATH`. */
@@ -429,8 +450,7 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
 //#endregion 🔖Lifecycle
 
 //#region 🔖MessageBridge
-(self as unknown as DedicatedWorkerGlobalScope).onmessage = (messageEvent: MessageEvent<BackboneWorkerRequest>) => {
-  const request = messageEvent.data;
+function handleTsRequest(request: BackboneWorkerRequest): void {
   switch (request.kind) {
     case "open":
       openDocument(request);
@@ -444,7 +464,6 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       break;
     }
   }
-};
-
-post({ kind: "ready" });
+}
 //#endregion 🔖MessageBridge
+//#endregion 🔖TsFallback

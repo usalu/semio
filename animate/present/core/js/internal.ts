@@ -1985,12 +1985,6 @@ export function analogy(spec: AnalogySpec): Presentation {
 //#endregion 🔖Analogy
 
 //#region 🔖DocumentVcs
-import {
-	createDocumentVcsEnvelope,
-	materializeDocumentProjection,
-	type DocumentVcsEnvelope,
-} from "@semio-tech/vcs-core";
-
 export type FigureTileSource = {
 	readonly src: string;
 	readonly kind: string;
@@ -2071,13 +2065,30 @@ export function diffPresentationEditOp(_projection: PresentationDeck, operation:
 	return operation;
 }
 
-export type PresentationDeckVcsEnvelope = DocumentVcsEnvelope<PresentationDeck, PresentationEditOp>;
+export type PresentationDeckVcsEnvelope = {
+	readonly schema: string;
+	readonly id: string;
+	vcs: {
+		readonly initialProjection: PresentationDeck;
+		readonly edits: ReadonlyArray<{ readonly id: string; readonly forwards: readonly PresentationEditOp[] }>;
+	};
+};
+
+const PRESENT_DECK_SCHEMA = "animate.present.deck";
 
 const PRESENTATION_DECK_EMPTY = (): PresentationDeck => ({
-	schema: "presentation.deck",
+	schema: PRESENT_DECK_SCHEMA,
 	source: { src: "", kind: "figure", frame: { x: 0, y: 0, width: 1, height: 1 } },
 	tiles: [],
 });
+
+function createPresentEnvelope(id: string): PresentationDeckVcsEnvelope {
+	return {
+		schema: PRESENT_DECK_SCHEMA,
+		id,
+		vcs: { initialProjection: PRESENTATION_DECK_EMPTY(), edits: [] },
+	};
+}
 
 /** @emoji 📐 Clamps one tile crop rect to normalized source bounds. */
 export function clampTileCrop(crop: FigureTileDraft["crop"]): FigureTileDraft["crop"] {
@@ -2142,17 +2153,21 @@ export function applyPresentationEditOp(deck: PresentationDeck, op: Presentation
 /** @emoji 🧩 S app VCS handler factory for presentation deck documents. */
 export function createPresentationAppVcsHandler() {
 	return {
-		format: "presentation.deck",
-		createEnvelope: (id: string) => createDocumentVcsEnvelope("presentation.deck", id, PRESENTATION_DECK_EMPTY()),
+		format: PRESENT_DECK_SCHEMA,
+		createEnvelope: createPresentEnvelope,
 		applyOp: applyPresentationEditOp,
 		serializeEnvelope: (envelope: PresentationDeckVcsEnvelope) => JSON.stringify(envelope),
 		deserializeEnvelope: (json: string) => JSON.parse(json) as PresentationDeckVcsEnvelope,
 		materializeProjection: (source: { readonly vcsJson?: string; readonly inline?: string }) => {
-			if (source.vcsJson) {
-				const envelope = JSON.parse(source.vcsJson) as PresentationDeckVcsEnvelope;
-				return materializeDocumentProjection(envelope, envelope.vcs.edits.map((edit) => edit.id), applyPresentationEditOp);
-			}
 			if (source.inline) return JSON.parse(source.inline) as PresentationDeck;
+			if (source.vcsJson) {
+				let deck = PRESENTATION_DECK_EMPTY();
+				const envelope = JSON.parse(source.vcsJson) as PresentationDeckVcsEnvelope;
+				for (const edit of envelope.vcs.edits) {
+					for (const op of edit.forwards) deck = applyPresentationEditOp(deck, op);
+				}
+				return deck;
+			}
 			return PRESENTATION_DECK_EMPTY();
 		},
 	};

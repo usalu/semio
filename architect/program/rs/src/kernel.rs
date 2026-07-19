@@ -293,35 +293,27 @@ pub struct ProgramDiagnostic {
     pub register: Option<String>,
 }
 
-/// @emoji 💥 Fatal program operation or exchange error.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+// #endregion
+
+//#region ⚠️ Errors
+/// 💥 Fatal program operation or exchange error.
+#[derive(Clone, Debug, thiserror::Error, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ProgramError {
+    #[error("invalid schema: expected {expected}, got {actual}")]
     InvalidSchema { expected: String, actual: String },
+    #[error("missing entity {id}")]
     MissingEntity { id: EntityId },
+    #[error("duplicate adjacency {a} — {b}")]
     DuplicateAdjacency { a: EntityId, b: EntityId },
+    #[error("serialize error: {0}")]
     Serialize(String),
+    #[error("deserialize error: {0}")]
     Deserialize(String),
+    #[error("csv error: {0}")]
     Csv(String),
 }
-
-impl fmt::Display for ProgramError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            Self::InvalidSchema { expected, actual } => {
-                write!(f, "invalid schema: expected {expected}, got {actual}")
-            }
-            Self::MissingEntity { id } => write!(f, "missing entity {id}"),
-            Self::DuplicateAdjacency { a, b } => write!(f, "duplicate adjacency {a} — {b}"),
-            Self::Serialize(msg) => write!(f, "serialize error: {msg}"),
-            Self::Deserialize(msg) => write!(f, "deserialize error: {msg}"),
-            Self::Csv(msg) => write!(f, "csv error: {msg}"),
-        }
-    }
-}
-
-impl std::error::Error for ProgramError {}
-// #endregion
+//#endregion ⚠️ Errors
 
 #[cfg(test)]
 mod tests {

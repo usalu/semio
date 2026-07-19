@@ -491,31 +491,45 @@ pub fn empty_fem3d_projection() -> Fem3dDocument {
 }
 
 // #region 🔖Bridge
+
+// #region 🔖Errors
+/// ⚠️ Everything that can go wrong resolving or solving a `Fem3dDocument`.
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum Fem3dError {
+    #[error("material not found: {0}")]
+    MaterialNotFound(String),
+    #[error("section not found: {0}")]
+    SectionNotFound(String),
+    #[error("node not found: {0}")]
+    NodeNotFound(String),
+    #[error("load case not found: {0}")]
+    LoadCaseNotFound(String),
+    #[error("mode index out of range: {0}")]
+    ModeIndexOutOfRange(usize),
+    #[error(transparent)]
+    Fem(#[from] fem_core::FemError),
+}
+// #endregion 🔖Errors
+
 /// 🌉 Resolves a `Fem3dDocument`'s nodes/elements/supports (materials/sections looked up by id) into
 /// their `fem_core` equivalents — the geometry shared by both `build_model` (single frozen-signature
 /// solve) and `fem3d_solve_all` (multi-case/combination solve).
-fn resolve_geometry(doc: &Fem3dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>), String> {
+fn resolve_geometry(doc: &Fem3dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>), Fem3dError> {
     let nodes: Vec<Node> = doc.nodes.iter().map(|node| Node { id: node.id.clone(), pos: [node.x, node.y, node.z] }).collect();
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut elements: Vec<Box<dyn Element>> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
         match element {
             FemElement::Bar { id, start, end, material_id, section_id } => {
-                let material = doc
-                    .materials
-                    .iter()
-                    .find(|m| &m.id == material_id)
-                    .ok_or_else(|| format!("material not found: {material_id}"))?;
-                let section = doc
-                    .sections
-                    .iter()
-                    .find(|s| &s.id == section_id)
-                    .ok_or_else(|| format!("section not found: {section_id}"))?;
+                let material =
+                    doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let section =
+                    doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
-                    return Err(format!("node not found: {start}"));
+                    return Err(Fem3dError::NodeNotFound(start.clone()));
                 }
                 if !node_exists(end) {
-                    return Err(format!("node not found: {end}"));
+                    return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
                 elements.push(Box::new(Bar3 {
                     id: id.clone(),
@@ -527,21 +541,15 @@ fn resolve_geometry(doc: &Fem3dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Eleme
                 }));
             }
             FemElement::Frame { id, start, end, material_id, section_id, roll } => {
-                let material = doc
-                    .materials
-                    .iter()
-                    .find(|m| &m.id == material_id)
-                    .ok_or_else(|| format!("material not found: {material_id}"))?;
-                let section = doc
-                    .sections
-                    .iter()
-                    .find(|s| &s.id == section_id)
-                    .ok_or_else(|| format!("section not found: {section_id}"))?;
+                let material =
+                    doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let section =
+                    doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
-                    return Err(format!("node not found: {start}"));
+                    return Err(Fem3dError::NodeNotFound(start.clone()));
                 }
                 if !node_exists(end) {
-                    return Err(format!("node not found: {end}"));
+                    return Err(Fem3dError::NodeNotFound(end.clone()));
                 }
                 elements.push(Box::new(Frame3 {
                     id: id.clone(),
@@ -565,10 +573,10 @@ fn resolve_geometry(doc: &Fem3dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Eleme
 
 /// 🌉 Resolves a `Fem3dDocument` load case into a `fem_core::Model`: nodes, `Bar3`/`Frame3` elements
 /// (materials/sections looked up by id), supports, and the named load case's nodal loads.
-pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, String> {
+pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let mut model = Model { nodes, elements, supports, nodal_loads: Vec::new(), member_loads: Vec::new() };
-    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| format!("load case not found: {case_id}"))?;
+    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     for load in &case.loads {
         model.nodal_loads.push(NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value });
     }
@@ -578,7 +586,7 @@ pub fn build_model(doc: &Fem3dDocument, case_id: &str) -> Result<Model, String> 
 /// 🚀 Frozen entry point: builds the model for `case_id` and runs `fem_core::solve_linear_static`.
 /// Consumed directly by `fem-plugin` — do not rename or change this signature.
 pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<fem_core::StaticResult, String> {
-    let model = build_model(doc, case_id)?;
+    let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
     fem_core::solve_linear_static(&model).map_err(|e| e.to_string())
 }
 
@@ -587,7 +595,7 @@ pub fn fem3d_solve(doc: &Fem3dDocument, case_id: &str) -> Result<fem_core::Stati
 /// `fem_core::analyses::solve_multi_case` (self-weight honored via `doc.materials`' `rho`, gravity
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
 /// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
-pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::StaticResult>, String> {
+pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::StaticResult>, Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let cases: Vec<analyses::LoadCase> = doc
@@ -602,7 +610,7 @@ pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::
         .collect();
     let combinations: Vec<analyses::Combination> =
         doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.clone() }).collect();
-    analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(|e| e.to_string())
+    analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
 }
 
 // #region 🔖ModalBuckling
@@ -631,22 +639,22 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 }
 
 /// 🎵 Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, String> {
+pub fn fem3d_modal(doc: &Fem3dDocument) -> Result<analyses::ModalResult, Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
-    analyses::modal(&model, doc.analysis.modal_count).map_err(|e| e.to_string())
+    analyses::modal(&model, doc.analysis.modal_count).map_err(Fem3dError::from)
 }
 
 /// 🌉 Richer modal entry point: solves the same modal analysis as `fem3d_modal` but also unpacks mode
 /// `mode_index`'s shape into a per-node `[f64;6]` displacement map. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
-pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), String> {
+pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = analyses::AnalysisModel { nodes, elements, supports };
-    let result = analyses::modal(&model, doc.analysis.modal_count).map_err(|e| e.to_string())?;
-    let freq = *result.frequencies_hz.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
-    let shape = result.shapes.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
+    let result = analyses::modal(&model, doc.analysis.modal_count)?;
+    let freq = *result.frequencies_hz.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
+    let shape = result.shapes.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
     let mut values: HashMap<String, [f64; 6]> = HashMap::new();
     for (i, (node_id, dof)) in order.iter().enumerate() {
         values.entry(node_id.clone()).or_insert([0.0; 6])[dof.index()] = shape.get(i);
@@ -655,8 +663,8 @@ pub fn fem3d_modal_mode_values(doc: &Fem3dDocument, mode_index: usize) -> Result
 }
 
 /// 🌉 Shared buckling-case resolution for `fem3d_buckling`/`fem3d_buckling_mode_values`.
-fn buckling_case(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::LoadCase, String> {
-    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| format!("load case not found: {case_id}"))?;
+fn buckling_case(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::LoadCase, Fem3dError> {
+    let case = doc.load_cases.iter().find(|c| c.id == case_id).ok_or_else(|| Fem3dError::LoadCaseNotFound(case_id.to_string()))?;
     Ok(analyses::LoadCase {
         id: case.id.clone(),
         nodal_loads: case.loads.iter().map(|load| NodalLoad { node_id: load.node_id.clone(), dof: load.dof, value: load.value }).collect(),
@@ -666,24 +674,24 @@ fn buckling_case(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::LoadCas
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::BucklingResult, String> {
+pub fn fem3d_buckling(doc: &Fem3dDocument, case_id: &str) -> Result<analyses::BucklingResult, Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
     let case = buckling_case(doc, case_id)?;
-    analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(|e| e.to_string())
+    analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem3dError::from)
 }
 
 /// 🌉 Richer buckling entry point: mirrors `fem3d_modal_mode_values` — solves the same buckling
 /// analysis as `fem3d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub fn fem3d_buckling_mode_values(doc: &Fem3dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), String> {
+pub fn fem3d_buckling_mode_values(doc: &Fem3dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem3dError> {
     let (nodes, elements, supports) = resolve_geometry(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let case = buckling_case(doc, case_id)?;
     let model = analyses::AnalysisModel { nodes, elements, supports };
-    let result = analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(|e| e.to_string())?;
-    let factor = *result.factors.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
-    let shape = result.shapes.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
+    let result = analyses::buckling(&model, &case, doc.analysis.buckling_count)?;
+    let factor = *result.factors.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
+    let shape = result.shapes.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
     let mut values: HashMap<String, [f64; 6]> = HashMap::new();
     for (i, (node_id, dof)) in order.iter().enumerate() {
         values.entry(node_id.clone()).or_insert([0.0; 6])[dof.index()] = shape.get(i);
@@ -926,7 +934,7 @@ mod tests {
             *material_id = "missing".into();
         }
         let err = build_model(&doc, "point").unwrap_err();
-        assert!(err.contains("missing"), "error should name the dangling id: {err}");
+        assert!(err.to_string().contains("missing"), "error should name the dangling id: {err}");
     }
 
     #[test]
@@ -936,7 +944,7 @@ mod tests {
             *section_id = "missing".into();
         }
         let err = build_model(&doc, "point").unwrap_err();
-        assert!(err.contains("missing"), "error should name the dangling id: {err}");
+        assert!(err.to_string().contains("missing"), "error should name the dangling id: {err}");
     }
 
     #[test]
@@ -946,7 +954,7 @@ mod tests {
             *end = "missing".into();
         }
         let err = build_model(&doc, "point").unwrap_err();
-        assert!(err.contains("missing"), "error should name the dangling id: {err}");
+        assert!(err.to_string().contains("missing"), "error should name the dangling id: {err}");
     }
     // #endregion 🔖BuildModel
 
@@ -1104,7 +1112,7 @@ mod tests {
     fn fem3d_buckling_unknown_case_errors() {
         let (doc, ..) = cantilever_fixture();
         let err = fem3d_buckling(&doc, "missing").err().expect("expected error");
-        assert!(err.contains("load case not found"), "unexpected error: {err}");
+        assert!(err.to_string().contains("load case not found"), "unexpected error: {err}");
     }
     // #endregion 🔖ModalBuckling
 

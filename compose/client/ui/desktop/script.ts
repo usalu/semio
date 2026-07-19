@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
-/** 🧭 Desktop app router: `bun ./script.ts <test|test-e2e>` (integration test runner). */
+/** 🧭 Desktop app router: `bun ./script.ts test [level]` (integration test runner). */
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 
 export async function runTests(
   options: {
@@ -51,20 +51,18 @@ export async function runTests(
   });
 }
 
-/** ⏱️The Electron integration suite (`test/suite/index.mjs`) boots a real `electron-forge` app and loads a >200-file fixture kit — genuinely e2e, no fast in-repo unit split exists. See `test-e2e`. */
+/** ⏱️The Electron integration suite (`test/suite/index.mjs`) boots a real `electron-forge` app and loads a >200-file fixture kit — genuinely `exhaustive`-only, no fast in-repo unit split exists. */
 class TestScript extends BundleScript {
-  run(): void {
-    console.log("[test] @semio-tech/compose-desktop has no fast unit suite — run `test-e2e` for the Electron integration suite.");
-  }
-}
-
-/** 🖥️Full Electron integration suite; excluded from the default ≤30s `test` budget. */
-class TestE2eScript extends BundleScript {
-  async run(): Promise<void> {
+  async run(segments: string[]): Promise<void> {
+    const { level } = resolveTestLevel(segments);
+    if (level !== "exhaustive") {
+      console.log(`[test] @semio-tech/compose-desktop has no ${level}-level suite — run at the "exhaustive" level for the Electron integration suite.`);
+      return;
+    }
     await runTests();
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-e2e", TestE2eScript);
+const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
 await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -325,37 +325,35 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                 }));
                 program.equipment.push(item);
             }
-            "adjacency" | "adjacency_bundle" => {
-                if element_ids.len() >= 2 {
-                    let (a, b) = normalize_pair(element_ids[0].clone(), element_ids[1].clone());
-                    let adjacency = Adjacency {
-                        header: EntityHeader::new(id.clone(), format!("{} Adjacency", template.header.name)),
-                        element_a_id: a,
-                        element_b_id: b,
-                        kind: AdjacencyKind::Preferred,
-                        connection: ConnectionKind::Direct,
-                        separations: Vec::new(),
-                        weight: 1.0,
-                        rationale: Some(TextField::plain("template bundle")),
-                        distance_max_m: None,
-                        distance_min_m: None,
-                        level_constraint: None,
-                        access_path: None,
-                        shared_wall: true,
-                        shared_entry: false,
-                        traffic_isolation: false,
-                        circulation_overlap: true,
-                        conflict_ids: Vec::new(),
-                        normalized: true,
-                        verification_status: ValidationStatus::Pending,
-                        source_relationship_id: None,
-                        internal_external_access: None,
-                    };
-                    ops.push(ProgramOp::SetAdjacency {
-                        adjacency: adjacency.clone(),
-                    });
-                    set_adjacency(program, adjacency);
-                }
+            "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
+                let (a, b) = normalize_pair(&element_ids[0], &element_ids[1]);
+                let adjacency = Adjacency {
+                    header: EntityHeader::new(id.clone(), format!("{} Adjacency", template.header.name)),
+                    element_a_id: a,
+                    element_b_id: b,
+                    kind: AdjacencyKind::Preferred,
+                    connection: ConnectionKind::Direct,
+                    separations: Vec::new(),
+                    weight: 1.0,
+                    rationale: Some(TextField::plain("template bundle")),
+                    distance_max_m: None,
+                    distance_min_m: None,
+                    level_constraint: None,
+                    access_path: None,
+                    shared_wall: true,
+                    shared_entry: false,
+                    traffic_isolation: false,
+                    circulation_overlap: true,
+                    conflict_ids: Vec::new(),
+                    normalized: true,
+                    verification_status: ValidationStatus::Pending,
+                    source_relationship_id: None,
+                    internal_external_access: None,
+                };
+                ops.push(ProgramOp::SetAdjacency {
+                    adjacency: adjacency.clone(),
+                });
+                set_adjacency(program, adjacency);
             }
             _ => {}
         }

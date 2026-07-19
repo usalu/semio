@@ -1,0 +1,14 @@
+{
+  "name": "@semio-tech/norm-plugin",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "norm/plugin",
+        "command": "bun ./script.ts test",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

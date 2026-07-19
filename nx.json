@@ -66,8 +66,23 @@
     },
     "test": {
       "dependsOn": [],
-      "inputs": ["default", "^default"],
+      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }],
       "cache": true
+    },
+    "test-quick": {
+      "dependsOn": [],
+      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }],
+      "cache": true
+    },
+    "test-long": {
+      "dependsOn": [],
+      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }],
+      "cache": true
+    },
+    "test-exhaustive": {
+      "dependsOn": [],
+      "inputs": ["default", "^default", { "env": "SEMIO_TEST_LEVEL" }, { "env": "SEMIO_TEST_BUDGET_MS" }],
+      "cache": false
     },
     "publish": {
       "dependsOn": ["^publish"],

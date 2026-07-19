@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🏪 `@semio-tech/compose-store` router: `bun script.ts <build|dev|test>`. `compose-store/rs` is a standalone Cargo workspace, kept out of the repo-root workspace. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 const crate = "compose-store";
@@ -18,10 +18,11 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️Warm-cache unit tests under the 30s wall-clock budget; build is un-timed. */
+/** ⏱️Warm-cache unit tests under the active level's wall-clock budget (see `resolveTestLevel`); build is un-timed. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargoTestBudgeted([crate], join(this.root, "rs"), segments);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted([crate], join(this.root, "rs"), rest);
   }
 }
 

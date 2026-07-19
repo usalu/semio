@@ -1,4 +1,5 @@
 use crate::render::OutputFormat;
+use crate::VideoError;
 use animate_core::{AnimateConfig, SectionList};
 use image::{ImageBuffer, Rgba};
 use std::fs;
@@ -6,14 +7,14 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// 🧹 Clears partial-movie cache directories from config.
-pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, String> {
+pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, VideoError> {
     crate::cache::PartialMovieCache::flush(&config.cache.partial_movie_dir)
 }
 
 /// 📝 Writes section timings as an SRT subtitle sidecar.
-pub fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), String> {
+pub fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), VideoError> {
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).map_err(|err| format!("subtitle dir: {err}"))?;
+        fs::create_dir_all(parent).map_err(VideoError::io("subtitle dir"))?;
     }
     let mut body = String::new();
     for (index, section) in sections.sections.iter().enumerate() {
@@ -26,7 +27,7 @@ pub fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), Str
         body.push_str(&section.name);
         body.push_str("\n\n");
     }
-    fs::write(path, body).map_err(|err| format!("subtitle write: {err}"))
+    fs::write(path, body).map_err(VideoError::io("subtitle write"))
 }
 
 fn format_srt_timestamp(seconds: f64) -> String {
@@ -50,14 +51,14 @@ pub struct SceneFileWriter {
 
 impl SceneFileWriter {
     /// 🏗️ Prepares writer directories from config.
-    pub fn new(config: &AnimateConfig, formats: &[OutputFormat]) -> Result<Self, String> {
-        fs::create_dir_all(&config.output_dir).map_err(|err| format!("output dir: {err}"))?;
-        fs::create_dir_all(&config.media_dir).map_err(|err| format!("media dir: {err}"))?;
+    pub fn new(config: &AnimateConfig, formats: &[OutputFormat]) -> Result<Self, VideoError> {
+        fs::create_dir_all(&config.output_dir).map_err(VideoError::io("output dir"))?;
+        fs::create_dir_all(&config.media_dir).map_err(VideoError::io("media dir"))?;
         let partial_root = config.cache.partial_movie_dir.clone();
-        fs::create_dir_all(&partial_root).map_err(|err| format!("partial dir: {err}"))?;
+        fs::create_dir_all(&partial_root).map_err(VideoError::io("partial dir"))?;
         let png_sequence_dir = if formats.contains(&OutputFormat::PngSequence) {
             let dir = config.output_dir.join("frames");
-            fs::create_dir_all(&dir).map_err(|err| format!("png dir: {err}"))?;
+            fs::create_dir_all(&dir).map_err(VideoError::io("png dir"))?;
             Some(dir)
         } else {
             None
@@ -73,25 +74,25 @@ impl SceneFileWriter {
     }
 
     /// 🎬 Begins a new partial movie directory for `hash`.
-    pub fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, String> {
+    pub fn begin_partial(&mut self, hash: &str, frame_start: u32) -> Result<PathBuf, VideoError> {
         let dir = self.partial_root.join(format!("{}_{frame_start}", &hash[..hash.len().min(12)]));
-        fs::create_dir_all(&dir).map_err(|err| format!("partial begin: {err}"))?;
+        fs::create_dir_all(&dir).map_err(VideoError::io("partial begin"))?;
         Ok(dir)
     }
 
     /// 🖼️ Writes one RGBA frame as PNG into a partial directory.
-    pub fn write_frame_png(&mut self, partial_dir: &Path, pixels: &[u8], frame_index: u32) -> Result<(), String> {
+    pub fn write_frame_png(&mut self, partial_dir: &Path, pixels: &[u8], frame_index: u32) -> Result<(), VideoError> {
         let path = partial_dir.join(format!("{frame_index:06}.png"));
         write_png_file(&path, pixels, self.config.width, self.config.height)?;
         if let Some(dir) = &self.png_sequence_dir {
             let global = dir.join(format!("{frame_index:06}.png"));
-            fs::copy(&path, &global).map_err(|err| format!("png copy: {err}"))?;
+            fs::copy(&path, &global).map_err(VideoError::io("png copy"))?;
         }
         Ok(())
     }
 
     /// ✅ Encodes a partial PNG directory to mp4 and tracks it for concat.
-    pub fn finalize_partial(&mut self, partial_dir: &Path) -> Result<PathBuf, String> {
+    pub fn finalize_partial(&mut self, partial_dir: &Path) -> Result<PathBuf, VideoError> {
         let partial_mp4 = partial_dir.with_extension("mp4");
         run_ffmpeg(&[
             "-y",
@@ -117,7 +118,7 @@ impl SceneFileWriter {
     }
 
     /// 🎞️ Concatenates partial movies and emits configured sidecar outputs.
-    pub fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, String> {
+    pub fn encode_outputs(&self, last_frame: Option<&[u8]>) -> Result<super::render::OutputPaths, VideoError> {
         let mut outputs = super::render::OutputPaths::default();
         if self.formats.contains(&OutputFormat::Mp4) && !self.partial_paths.is_empty() {
             let mp4 = self.config.output_dir.join(format!("{}.mp4", self.file_stem));
@@ -165,15 +166,15 @@ fn format_number(value: f64) -> String {
     format_number_for_hash(value)
 }
 
-fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), String> {
+fn write_png_file(path: &Path, pixels: &[u8], width: u32, height: u32) -> Result<(), VideoError> {
     let image: ImageBuffer<Rgba<u8>, Vec<u8>> =
-        ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or_else(|| "invalid rgba buffer".to_string())?;
-    image.save(path).map_err(|err| format!("png write: {err}"))
+        ImageBuffer::from_raw(width, height, pixels.to_vec()).ok_or(VideoError::InvalidRgbaBuffer)?;
+    image.save(path).map_err(|err| VideoError::backend("png write", err))
 }
 
-fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), String> {
+fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), VideoError> {
     if partials.len() == 1 {
-        fs::copy(&partials[0], output).map_err(|err| format!("copy partial: {err}"))?;
+        fs::copy(&partials[0], output).map_err(VideoError::io("copy partial"))?;
         return Ok(());
     }
     let list_path = output.with_extension("txt");
@@ -181,7 +182,7 @@ fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), String> {
     for partial in partials {
         list.push_str(&format!("file '{}'\n", partial.display()));
     }
-    fs::write(&list_path, list).map_err(|err| format!("concat list: {err}"))?;
+    fs::write(&list_path, list).map_err(VideoError::io("concat list"))?;
     run_ffmpeg(&[
         "-y",
         "-f",
@@ -196,7 +197,7 @@ fn concat_partials(partials: &[PathBuf], output: &Path) -> Result<(), String> {
     ])
 }
 
-fn mux_audio_track(video: &Path, audio: &Path, output: &Path) -> Result<(), String> {
+fn mux_audio_track(video: &Path, audio: &Path, output: &Path) -> Result<(), VideoError> {
     run_ffmpeg(&[
         "-y",
         "-i",
@@ -212,12 +213,12 @@ fn mux_audio_track(video: &Path, audio: &Path, output: &Path) -> Result<(), Stri
     ])
 }
 
-fn run_ffmpeg(args: &[&str]) -> Result<(), String> {
-    let status = Command::new("ffmpeg").args(args).status().map_err(|err| format!("ffmpeg spawn: {err}"))?;
+fn run_ffmpeg(args: &[&str]) -> Result<(), VideoError> {
+    let status = Command::new("ffmpeg").args(args).status().map_err(VideoError::io("ffmpeg spawn"))?;
     if status.success() {
         Ok(())
     } else {
-        Err(format!("ffmpeg failed with status {status}"))
+        Err(VideoError::FfmpegStatus(status))
     }
 }
 

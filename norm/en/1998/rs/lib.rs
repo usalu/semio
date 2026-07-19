@@ -1,6 +1,7 @@
 //! 🌋 EN 1998 design of structures for earthquake resistance.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -442,6 +443,115 @@ pub fn check_building_seismic(
     report.push(part_1::check_drift(drift_mm, drift_limit, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub seismic_zone: u8,
+    pub ground_type: String,
+    pub importance_class: String,
+    pub structural_system: String,
+    pub t1_s: f64,
+    pub mass_t: f64,
+    pub v_rd_kn: f64,
+    pub drift_mm: f64,
+    pub height_m: f64,
+    pub multiple_resisting_systems: bool,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            seismic_zone: 2,
+            ground_type: "b".into(),
+            importance_class: "cc2".into(),
+            structural_system: "moment_frame_dch".into(),
+            t1_s: 0.3,
+            mass_t: 500.0,
+            v_rd_kn: 800.0,
+            drift_mm: 20.0,
+            height_m: 12.0,
+            multiple_resisting_systems: true,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1998Family>;
+
+fn parse_seismic_zone(value: u8) -> na_de::SeismicZone {
+    match value {
+        0 => na_de::SeismicZone::Zone0,
+        1 => na_de::SeismicZone::Zone1,
+        3 => na_de::SeismicZone::Zone3,
+        _ => na_de::SeismicZone::Zone2,
+    }
+}
+
+fn parse_ground_type(value: &str) -> na_de::GroundType {
+    match value.to_ascii_lowercase().as_str() {
+        "a" => na_de::GroundType::A,
+        "c" => na_de::GroundType::C,
+        "d" => na_de::GroundType::D,
+        "e" => na_de::GroundType::E,
+        _ => na_de::GroundType::B,
+    }
+}
+
+fn parse_importance(value: &str) -> part_1::ImportanceClass {
+    match value.to_ascii_lowercase().as_str() {
+        "cc1" => part_1::ImportanceClass::Cc1,
+        "cc3" => part_1::ImportanceClass::Cc3,
+        "cc4" => part_1::ImportanceClass::Cc4,
+        _ => part_1::ImportanceClass::Cc2,
+    }
+}
+
+fn parse_structural_system(value: &str) -> part_1::StructuralSystem {
+    match value.to_ascii_lowercase().as_str() {
+        "moment_frame_dcm" => part_1::StructuralSystem::MomentFrameDcm,
+        "moment_frame_dcl" => part_1::StructuralSystem::MomentFrameDcl,
+        "shear_wall" => part_1::StructuralSystem::ShearWall,
+        "braced_frame" => part_1::StructuralSystem::BracedFrame,
+        "inverted_pendulum" => part_1::StructuralSystem::InvertedPendulum,
+        "dual_system" => part_1::StructuralSystem::DualSystem,
+        _ => part_1::StructuralSystem::MomentFrameDch,
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_building_seismic(
+        parse_seismic_zone(document.seismic_zone),
+        parse_ground_type(&document.ground_type),
+        parse_importance(&document.importance_class),
+        parse_structural_system(&document.structural_system),
+        document.t1_s,
+        document.mass_t,
+        document.v_rd_kn,
+        document.drift_mm,
+        document.height_m,
+        document.multiple_resisting_systems,
+    )
+}
+
+pub struct En1998Family;
+
+impl NormFamily for En1998Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1998
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

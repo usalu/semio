@@ -84,7 +84,7 @@ fn valid_tile_ids(deck: &PresentDeck, ids: Vec<String>) -> Vec<String> {
 //#endregion 🔖Runtime
 
 //#region 🔖VideoExport
-fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<animate_present::SceneAssetBundle>, String> {
+fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<animate_present::SceneAssetBundle>, animate_present::PresentError> {
     export_video_from_scene(scene, std::path::Path::new(output_dir))
 }
 //#endregion 🔖VideoExport
@@ -759,7 +759,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     Err(error) => ActionEmit::effect(HostEffect::DownloadMediaExport {
                         filename: "animate-video-export-error.txt".into(),
                         mime_type: "text/plain".into(),
-                        data: error,
+                        data: error.to_string(),
                         encoding: None,
                     }),
                 }
@@ -950,7 +950,7 @@ fn create_animate_present_app() -> App {
             // 🎛️ App-scope command — see `handle_command` for why this isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", "Reset to Default Grid", "document"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_present_deck()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_present_deck()).expect("default present deck serializes"))
     .program("animate", "Animate", "deck")
 }
 

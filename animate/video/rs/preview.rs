@@ -1,3 +1,4 @@
+use crate::VideoError;
 use animate_core::{preview_scene_loop, AnimateConfig, Scene, SceneFrame};
 use std::io::Write;
 
@@ -14,7 +15,7 @@ pub fn preview_scene_window<S: Scene>(
     mut scene: S,
     config: &AnimateConfig,
     max_frames: Option<u64>,
-) -> Result<PreviewOutcome, String> {
+) -> Result<PreviewOutcome, VideoError> {
     scene.setup(config);
     #[cfg(feature = "preview-window")]
     {
@@ -33,7 +34,7 @@ fn preview_scene_window_winit<S: Scene>(
     mut scene: S,
     config: &AnimateConfig,
     max_frames: Option<u64>,
-) -> Result<PreviewOutcome, String> {
+) -> Result<PreviewOutcome, VideoError> {
     use crate::renderer::{CapturedFrame, VelloRenderer};
     use std::sync::atomic::{AtomicBool, Ordering};
     use std::sync::Arc;
@@ -51,12 +52,12 @@ fn preview_scene_window_winit<S: Scene>(
         window: Option<Arc<Window>>,
         closed: Arc<AtomicBool>,
         constructed: bool,
-        error: Option<String>,
+        error: Option<VideoError>,
     }
 
     impl<S: Scene> PreviewApp<S> {
-        fn fail(&mut self, message: String) {
-            self.error = Some(message);
+        fn fail(&mut self, error: VideoError) {
+            self.error = Some(error);
         }
     }
 
@@ -72,7 +73,7 @@ fn preview_scene_window_winit<S: Scene>(
             ) {
                 Ok(window) => Arc::new(window),
                 Err(err) => {
-                    self.fail(format!("preview window: {err}"));
+                    self.fail(VideoError::backend("preview window", err));
                     event_loop.exit();
                     return;
                 }
@@ -143,10 +144,10 @@ fn preview_scene_window_winit<S: Scene>(
         constructed: false,
         error: None,
     };
-    let event_loop = EventLoop::new().map_err(|err| format!("preview event loop: {err}"))?;
+    let event_loop = EventLoop::new().map_err(|err| VideoError::backend("preview event loop", err))?;
     event_loop
         .run_app(&mut app)
-        .map_err(|err| format!("preview run: {err}"))?;
+        .map_err(|err| VideoError::backend("preview run", err))?;
     app.scene.tear_down();
     if let Some(error) = app.error {
         return Err(error);
@@ -160,7 +161,7 @@ fn preview_scene_window_winit<S: Scene>(
     }
 }
 
-fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> Result<PreviewOutcome, String> {
+fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
     let max = max_frames.unwrap_or(120);
     let mut stderr = std::io::stderr();
     preview_scene_loop(scene, max, |frame: &SceneFrame| {
@@ -174,7 +175,7 @@ fn preview_scene_window_metadata<S: Scene>(scene: &mut S, max_frames: Option<u64
 }
 
 /// 🧪 Headless preview used by CLI `--preview` flag.
-pub fn preview_scene_headless<S: Scene>(scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, String> {
+pub fn preview_scene_headless<S: Scene>(scene: S, config: &AnimateConfig, max_frames: Option<u64>) -> Result<PreviewOutcome, VideoError> {
     preview_scene_window(scene, config, max_frames)
 }
 

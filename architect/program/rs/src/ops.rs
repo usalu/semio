@@ -371,15 +371,10 @@ pub fn invert_program_op(program: &Program, op: &ProgramOp) -> ProgramOp {
                 }
             }
         }
-        ProgramOp::ClearAdjacency { id } => {
-            let existing = program
-                .adjacencies
-                .iter()
-                .find(|row| &row.header.id == id)
-                .cloned()
-                .expect("clear adjacency target must exist");
-            ProgramOp::SetAdjacency { adjacency: existing }
-        }
+        ProgramOp::ClearAdjacency { id } => match program.adjacencies.iter().find(|row| &row.header.id == id).cloned() {
+            Some(existing) => ProgramOp::SetAdjacency { adjacency: existing },
+            None => ProgramOp::ClearAdjacency { id: id.clone() },
+        },
         ProgramOp::SetProgram { .. } => ProgramOp::SetProgram {
             program: program.clone(),
         },

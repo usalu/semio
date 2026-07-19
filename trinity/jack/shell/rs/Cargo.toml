@@ -8,6 +8,9 @@ rust-version = "1.88"
 name = "trinity_jack_shell"
 path = "bin.rs"
 
+
+[lints]
+workspace = true
 [dependencies]
 trinity_jack = { path = "../../core/rs" }
 trinity_ram = { path = "../../../ram/rs" }

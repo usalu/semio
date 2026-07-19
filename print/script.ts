@@ -7,7 +7,7 @@ import { arch, platform } from "node:os";
 import { existsSync, mkdirSync, readFileSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, runBundleScriptMain } from "../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, TEST_LEVELS } from "../repo/lib/js/index.ts";
 
 const printRoot = import.meta.dir;
 const repoRoot = getWorkspaceRoot();
@@ -600,9 +600,15 @@ class WatchScript extends BundleScript {
 }
 
 //#region ⏱️Test
-/** ⏱️Warm-cache unit tests only, pure functions with no Tectonic/network/fs I/O — full 12-PDF Tectonic build is `#[e2e]`, see `test-e2e`. */
+/** ⏱️Fundamental unit tests (pure functions, no Tectonic/network/fs I/O) always run; the full 12-PDF Tectonic build only runs at the `long` level and above. */
 class TestScript extends BundleScript {
-  run(): void {
+  async run(segments: string[]): Promise<void> {
+    const { level } = resolveTestLevel(segments);
+    this.runUnitTests();
+    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) await this.runTectonicBuild();
+  }
+
+  private runUnitTests(): void {
     //#region parseHex6 / blendHex
     assert.deepEqual(parseHex6("#ff0080"), [255, 0, 128]);
     assert.deepEqual(parseHex6("abc"), [170, 187, 204]);
@@ -662,11 +668,9 @@ class TestScript extends BundleScript {
 
     console.log("print: unit tests passed");
   }
-}
 
-/** 🖨️Full Tectonic build of every template in light+dark — needs the Tectonic toolchain and font downloads, excluded from the default ≤30s `test` budget. */
-class TestE2eScript extends BundleScript {
-  async run(): Promise<void> {
+  /** 🖨️Full Tectonic build of every template in light+dark — needs the Tectonic toolchain and font downloads. */
+  private async runTectonicBuild(): Promise<void> {
     emitSemioTokensSty();
     await fetchPrintFonts();
     const tectonic = await ensureTectonic();
@@ -682,7 +686,7 @@ class TestE2eScript extends BundleScript {
 }
 //#endregion ⏱️Test
 
-const router = new ScriptRouter(printRoot).register("generate", GenerateScript).register("fonts", FontsScript).register("build", BuildScript).register("watch", WatchScript).register("test", TestScript).register("test-e2e", TestE2eScript);
+const router = new ScriptRouter(printRoot).register("generate", GenerateScript).register("fonts", FontsScript).register("build", BuildScript).register("watch", WatchScript).register("test", TestScript);
 
 if (import.meta.main) {
   await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });

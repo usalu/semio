@@ -10,6 +10,9 @@ name = "os-hub-storage-neo4j"
 version = "0.1.0"
 edition = "2021"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

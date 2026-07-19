@@ -5,14 +5,33 @@ pub mod present;
 pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileError, PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA, SceneAssetBundle};
 
 use vcs::{
-    collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore,
-    Identified, Operation, OperationDiff, Patchable,
+    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, materialize_document_projection,
+    CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
 };
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use vcs::DocumentVcsCommand;
 use serde::{Deserialize, Serialize};
 
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
+
+//#region 🔖Error
+/// 🎞️ Errors from present deck video export and VCS envelope materialization.
+#[derive(Debug, thiserror::Error)]
+pub enum PresentError {
+    /// 🎬 The scene had no scene hashes to render.
+    #[error("presentation has no scene hashes to export")]
+    NoSceneHashes,
+    /// 🎥 A per-scene render/compile failed.
+    #[error(transparent)]
+    Compile(#[from] PresentCompileError),
+    /// 🧾 The stored envelope JSON was malformed.
+    #[error("deserialize envelope: {0}")]
+    DeserializeEnvelope(#[from] serde_json::Error),
+    /// 📐 VCS replay failed while materializing the projection.
+    #[error(transparent)]
+    Vcs(#[from] vcs::VcsError),
+}
+//#endregion 🔖Error
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -234,14 +253,14 @@ pub fn build_tile_morph_prompt(source: &FigureTileSource, drafts: &[FigureTileDr
 
 //#region 🔖VideoExport
 /// 🎬 Renders every unique `scene_hash` referenced by a {@link PresentScene}.
-pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, String> {
+pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, PresentError> {
     let hashes = scene.scene_hashes();
     if hashes.is_empty() {
-        return Err("presentation has no scene hashes to export".into());
+        return Err(PresentError::NoSceneHashes);
     }
     hashes
         .into_iter()
-        .map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(|error| error.message))
+        .map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(PresentError::from))
         .collect()
 }
 //#endregion 🔖VideoExport
@@ -400,6 +419,20 @@ impl Operation<PresentDeck> for PresentOp {
 }
 //#endregion 🔖Ops
 
+//#region 🔖VcsEnvelope
+/// @emoji 📦 Creates an empty typed VCS envelope for a presentation deck document.
+pub fn create_present_envelope(id: &str) -> PresentEnvelope {
+    create_document_vcs_envelope(PRESENT_DECK_SCHEMA, id, empty_present_deck(), None)
+}
+
+/// @emoji 📐 Replays every stored edit in `envelope_json` and returns the materialized deck projection.
+pub fn materialize_present_projection_json(envelope_json: &str) -> Result<PresentDeck, PresentError> {
+    let envelope: PresentEnvelope = serde_json::from_str(envelope_json)?;
+    let edit_ids: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+    Ok(materialize_document_projection(&envelope, &edit_ids)?)
+}
+//#endregion 🔖VcsEnvelope
+
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
@@ -410,6 +443,17 @@ mod wasm_bridge {
     #[wasm_bindgen]
     pub struct PresentDocumentVcs {
         store: RefCell<PresentStore>,
+    }
+
+    #[wasm_bindgen(js_name = createPresentEnvelopeJson)]
+    pub fn create_present_envelope_json(id: &str) -> Result<String, JsValue> {
+        serde_json::to_string(&create_present_envelope(id)).map_err(|error| JsValue::from_str(&error.to_string()))
+    }
+
+    #[wasm_bindgen(js_name = materializePresentProjectionJson)]
+    pub fn materialize_present_projection_json_wasm(envelope_json: &str) -> Result<String, JsValue> {
+        let deck = materialize_present_projection_json(envelope_json).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        serde_json::to_string(&deck).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen]
@@ -455,6 +499,15 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn envelope_helpers_round_trip() {
+        let envelope = create_present_envelope("deck-1");
+        let json = serde_json::to_string(&envelope).expect("serialize");
+        let deck = materialize_present_projection_json(&json).expect("materialize");
+        assert_eq!(deck.schema, PRESENT_DECK_SCHEMA);
+        assert!(deck.tiles.is_empty());
+    }
 
     #[test]
     fn grid_seed_produces_tiles() {

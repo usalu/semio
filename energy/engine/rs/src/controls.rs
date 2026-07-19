@@ -121,8 +121,8 @@ pub fn evaluate_controls(
     };
 
     ThermostatOutput {
-        heating_fraction: heating_fraction,
-        cooling_fraction: cooling_fraction,
+        heating_fraction,
+        cooling_fraction,
         humidifying_fraction: humid_frac,
         dehumidifying_fraction: dehumid_frac,
         heating_setpoint_c: thermostat.heating_setpoint_c.max(thermostat.min_heating_setpoint_c),
@@ -198,7 +198,7 @@ pub fn allocate_load_by_priority(
     load: ZoneLoad,
     capacities_w: &[(ZoneEquipmentPriority, f64)],
 ) -> Vec<(ZoneEquipmentPriority, ZoneLoad)> {
-    let mut sorted: Vec<_> = capacities_w.iter().copied().collect();
+    let mut sorted: Vec<_> = capacities_w.to_vec();
     sorted.sort_by_key(|(p, _)| *p);
     let mut remaining = load;
     let mut result = Vec::new();

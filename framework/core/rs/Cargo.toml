@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Render-independent framework kernel: Platform, ActionBus, declarative UiTree, layouts"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

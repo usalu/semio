@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
-/** 🧭 `@semio-tech/repo-vscode` router: `bun ./script.ts <dev|test|test-e2e|build|lint|build-vsix>`. */
-import { BundleScript, ScriptRouter, runBunx, runBundleScriptMain } from "../../lib/js/index.ts";
+/** 🧭 `@semio-tech/repo-vscode` router: `bun ./script.ts <dev|test [level]|build|lint|build-vsix>`. */
+import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../lib/js/index.ts";
 
 class DevScript extends BundleScript {
   run(): void {
@@ -8,16 +8,14 @@ class DevScript extends BundleScript {
   }
 }
 
-/** ⏱️The extension-host Mocha suite (`js/extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). See `test-e2e`. */
+/** ⏱️The extension-host Mocha suite (`js/extension.test.ts`) can only run inside the VSCode test harness — no fast in-repo unit split without a second test file (disallowed). Runs only at `long` and above. */
 class TestScript extends BundleScript {
-  run(): void {
-    console.log("[test] @semio-tech/repo-vscode has no fast unit suite — run `test-e2e` for the extension-host suite.");
-  }
-}
-
-/** 🖥️Full extension-host Mocha suite; excluded from the default ≤30s `test` budget. */
-class TestE2eScript extends BundleScript {
-  run(): void {
+  run(segments: string[]): void {
+    const { level } = resolveTestLevel(segments);
+    if (TEST_LEVELS.indexOf(level) < TEST_LEVELS.indexOf("long")) {
+      console.log(`[test] @semio-tech/repo-vscode has no ${level}-level suite — run at "long" or above for the extension-host suite.`);
+      return;
+    }
     runBunx(["vscode-test"], this.root);
   }
 }
@@ -45,7 +43,6 @@ class BuildVsixScript extends BundleScript {
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("test", TestScript)
-  .register("test-e2e", TestE2eScript)
   .register("build", BuildScript)
   .register("lint", LintScript)
   .register("build-vsix", BuildVsixScript);

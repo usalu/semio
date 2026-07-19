@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Headless presentation compiler: deck documents and static wgpu-ready sites"
 
+
+[lints]
+workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 
@@ -18,6 +21,7 @@ animate_video = { path = "../../video/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+thiserror = "2.0.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2.106"

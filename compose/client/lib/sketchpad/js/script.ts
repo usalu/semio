@@ -3,7 +3,7 @@
 import { existsSync, rmSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../../../repo/lib/js/index.ts";
-import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForFile, getWorkspaceRoot, runBundleScriptMain, runPolicyOnlyMain, runVitest, runViteBunxDevPlain } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForFile, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runPolicyOnlyMain, runVitest, runViteBunxDevPlain } from "../../../../../repo/lib/js/index.ts";
 
 export const policyFile = "index.ts";
 
@@ -22,9 +22,11 @@ class DevScript extends BundleScript {
   }
 }
 
+/** ⏱️Fundamental/quick vitest suite; the Playwright board e2e lives at the `long` level, wired directly in project.json (different toolchain, see `pw-loader.mjs`). */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments);
+    const { rest } = resolveTestLevel(segments);
+    runVitest(this.root, rest);
   }
 }
 

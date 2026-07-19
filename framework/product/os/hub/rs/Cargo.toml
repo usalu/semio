@@ -13,6 +13,9 @@ edition = "2021"
 name = "os-hub"
 path = "bin.rs"
 
+
+[lints]
+workspace = true
 [dependencies]
 axum = { version = "0.8", features = ["ws"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -29,6 +32,7 @@ dashmap = "6"
 semio-framework-core = { path = "../../../../core/rs" }
 os-hub-storage = { path = "../storage/rs" }
 os-hub-storage-sqlite = { path = "../storage/sqlite/rs" }
+os-hub-storage-postgres = { path = "../storage/postgres/rs" }
 
 [dev-dependencies]
 tokio = { version = "1", features = ["full", "test-util"] }

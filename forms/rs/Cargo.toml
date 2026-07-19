@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Forms document domain — a forms-flavored instance of the generic `protocol` list/block model"
 
+
+[lints]
+workspace = true
 [lib]
 crate-type = ["rlib", "cdylib"]
 path = "lib.rs"

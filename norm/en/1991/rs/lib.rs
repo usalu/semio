@@ -2,6 +2,7 @@
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ImposedCategory, Quantity};
 use norm_en_1990::{na_de::NaDe, na_en::NaEn, NationalAnnex};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -423,6 +424,60 @@ pub fn check_floor_actions(
     report.push(part_1_3::check_snow(s, 1.2, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub area_m2: f64,
+    pub category: ImposedCategory,
+    pub wind_zone_vb: f64,
+    pub snow_zone: u8,
+    pub use_de_na: bool,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            area_m2: 50.0,
+            category: ImposedCategory::B,
+            wind_zone_vb: 25.0,
+            snow_zone: 2,
+            use_de_na: true,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1991Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_floor_actions(
+        document.area_m2,
+        document.category,
+        document.wind_zone_vb,
+        document.snow_zone,
+        document.use_de_na,
+    )
+}
+
+pub struct En1991Family;
+
+impl NormFamily for En1991Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1991
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

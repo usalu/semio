@@ -31,7 +31,7 @@ impl Engine {
         })?;
 
         let start = Instant::now();
-        let weather_records = Self::resolve_weather(config)?;
+        let weather_records = Self::resolve_weather(config);
         let pre = PrecomputedModel::build(model, config.zone_timestep_minutes, config.system_timestep_minutes);
         let dt_s = pre.zone_timestep_s;
 
@@ -155,11 +155,7 @@ impl Engine {
             run_metadata: RunMetadata {
                 model_name: model.name.clone(),
                 model_version: model.version.clone(),
-                weather_location: config
-                    .weather
-                    .as_ref()
-                    .map(|w| w.location.clone())
-                    .unwrap_or_else(|| "synthetic".into()),
+                weather_location: config.weather.as_ref().map_or_else(|| "synthetic".into(), |w| w.location.clone()),
                 timesteps: hour_index,
                 warmup_days: config.warmup_days,
                 elapsed_ms: elapsed,
@@ -167,21 +163,19 @@ impl Engine {
         })
     }
 
-    fn resolve_weather(config: &SimulationConfig) -> Result<Vec<WeatherRecord>, Error> {
+    fn resolve_weather(config: &SimulationConfig) -> Vec<WeatherRecord> {
         if let Some(epw) = &config.weather {
-            return Ok(epw.records.clone());
+            return epw.records.clone();
         }
         match config.environment {
-            SimulationEnvironment::HeatingDesignDay => Ok(design_day_weather(-10.0)),
-            SimulationEnvironment::CoolingDesignDay => Ok(design_day_weather(35.0)),
-            _ => Ok(Self::synthetic_weather_year()),
+            SimulationEnvironment::HeatingDesignDay => design_day_weather(-10.0),
+            SimulationEnvironment::CoolingDesignDay => design_day_weather(35.0),
+            _ => Self::synthetic_weather_year(),
         }
     }
 
     fn synthetic_weather_year() -> Vec<WeatherRecord> {
-        (0..8760)
-            .map(|h| synthetic_hour(h))
-            .collect()
+        (0..8760).map(synthetic_hour).collect()
     }
 }
 // #endregion 🔖Engine
@@ -356,11 +350,13 @@ mod tests {
     #[test]
     fn engine_runs_single_zone() {
         let model = test_model_single_zone();
-        let mut config = SimulationConfig::default();
-        config.warmup_days = 1;
-        config.run_period_end_month = 1;
-        config.run_period_end_day = 3;
-        config.environment = SimulationEnvironment::WeatherRunPeriod;
+        let config = SimulationConfig {
+            warmup_days: 1,
+            run_period_end_month: 1,
+            run_period_end_day: 3,
+            environment: SimulationEnvironment::WeatherRunPeriod,
+            ..Default::default()
+        };
         let results = Engine::run(&model, &config).unwrap();
         assert!(results.run_metadata.timesteps > 0);
         assert!(results.meters.facility_total_kwh(FuelType::Electricity) >= 0.0);

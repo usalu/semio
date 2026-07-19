@@ -119,27 +119,34 @@ fn force_layout_seed(nodes: &[u32], edges: &[(u32, u32)], radius: f64, center: P
                 let dy = pb.y() - pa.y();
                 let dist = (dx * dx + dy * dy).sqrt().max(0.01);
                 let rep = 0.05 / dist;
-                forces.get_mut(&a).unwrap().0 -= dx * rep;
-                forces.get_mut(&a).unwrap().1 -= dy * rep;
-                forces.get_mut(&b).unwrap().0 += dx * rep;
-                forces.get_mut(&b).unwrap().1 += dy * rep;
+                let force_a = forces.get_mut(&a).expect("a is drawn from nodes, forces is keyed by all of nodes");
+                force_a.0 -= dx * rep;
+                force_a.1 -= dy * rep;
+                let force_b = forces.get_mut(&b).expect("b is drawn from nodes, forces is keyed by all of nodes");
+                force_b.0 += dx * rep;
+                force_b.1 += dy * rep;
             }
         }
         for &(a, b) in edges {
-            let pa = pos[&a];
-            let pb = pos[&b];
+            let (Some(&pa), Some(&pb)) = (pos.get(&a), pos.get(&b)) else {
+                continue;
+            };
             let dx = pb.x() - pa.x();
             let dy = pb.y() - pa.y();
             let dist = (dx * dx + dy * dy).sqrt().max(0.01);
             let att = dist * 0.02;
-            forces.get_mut(&a).unwrap().0 += dx / dist * att;
-            forces.get_mut(&a).unwrap().1 += dy / dist * att;
-            forces.get_mut(&b).unwrap().0 -= dx / dist * att;
-            forces.get_mut(&b).unwrap().1 -= dy / dist * att;
+            if let Some(force_a) = forces.get_mut(&a) {
+                force_a.0 += dx / dist * att;
+                force_a.1 += dy / dist * att;
+            }
+            if let Some(force_b) = forces.get_mut(&b) {
+                force_b.0 -= dx / dist * att;
+                force_b.1 -= dy / dist * att;
+            }
         }
         for &id in nodes {
             let (fx, fy) = forces[&id];
-            let p = pos.get_mut(&id).unwrap();
+            let p = pos.get_mut(&id).expect("id is drawn from nodes, pos is keyed by all of nodes");
             *p = Point::new(p.x() + fx, p.y() + fy);
         }
     }

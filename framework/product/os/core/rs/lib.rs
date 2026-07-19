@@ -1486,13 +1486,16 @@ pub mod backbone {
     //! json directly, bypassing the duplex `Backbone` channel since there is no other process here.
 
     use crate::host::OsBackbonePort;
+    #[cfg(not(target_arch = "wasm32"))]
     use crate::media_graph::OS_STUDIO_SCHEMA;
+    #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
     use vcs::{MemoryBackbonePort, VcsError};
 
     /// @emoji 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
     /// folder holds exactly one os document at its root (app documents get their own document ids once
     /// {@link OsDocumentRef} routes them through `framework/sync`'s multi-document `DocumentHost`).
+    #[cfg(not(target_arch = "wasm32"))]
     const STUDIO_FOLDER_DOCUMENT_ID: &str = "studio";
 
     enum StudioPortKind {

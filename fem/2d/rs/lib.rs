@@ -481,6 +481,29 @@ pub fn empty_fem2d_projection() -> Fem2dDocument {
 
 // #region 🔖Bridge
 
+// #region 🔖Errors
+/// ⚠️ Everything that can go wrong resolving or solving a `Fem2dDocument`.
+#[derive(Clone, Debug, PartialEq, thiserror::Error)]
+pub enum Fem2dError {
+    #[error("unknown node id: {0}")]
+    UnknownNodeId(String),
+    #[error("unknown material id: {0}")]
+    UnknownMaterialId(String),
+    #[error("unknown section id: {0}")]
+    UnknownSectionId(String),
+    #[error("unknown region id: {0}")]
+    UnknownRegionId(String),
+    #[error("region {region_id} failed to mesh: {reason}")]
+    MeshFailed { region_id: String, reason: String },
+    #[error("load case not found: {0}")]
+    LoadCaseNotFound(String),
+    #[error("mode index out of range: {0}")]
+    ModeIndexOutOfRange(usize),
+    #[error(transparent)]
+    Fem(#[from] fem_core::FemError),
+}
+// #endregion 🔖Errors
+
 // #region 🔖RegionMeshing
 /// ⚖️ Gravitational acceleration (m/s²) used both by the document-bridge's own lumped self-weight
 /// translation (`self_weight_nodal_loads`, feeding the frozen `fem2d_solve`) and as the `gravity`
@@ -510,7 +533,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// (within `1e-9`, both x and y) with an existing document node reuses that node's id, so supports and
 /// loads placed on that node reach the mesh; otherwise a node is synthesized once per unique mesh
 /// point as `{region_id}_m{point_index}`.
-fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedRegion>), String> {
+fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<MeshedRegion>), Fem2dError> {
     let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
@@ -521,15 +544,13 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<d
             FemElement::Beam { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id),
         };
         if !node_exists(start) {
-            return Err(format!("unknown node id: {start}"));
+            return Err(Fem2dError::UnknownNodeId(start.clone()));
         }
         if !node_exists(end) {
-            return Err(format!("unknown node id: {end}"));
+            return Err(Fem2dError::UnknownNodeId(end.clone()));
         }
-        let material =
-            doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| format!("unknown material id: {material_id}"))?;
-        let section =
-            doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| format!("unknown section id: {section_id}"))?;
+        let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(material_id.clone()))?;
+        let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem2dError::UnknownSectionId(section_id.clone()))?;
         match element {
             FemElement::Bar { .. } => {
                 elements.push(Box::new(Bar2 { id: id.clone(), start: start.clone(), end: end.clone(), e: material.e, area: section.area, density: material.rho }));
@@ -552,9 +573,9 @@ fn build_nodes_and_elements(doc: &Fem2dDocument) -> Result<(Vec<Node>, Vec<Box<d
     for region in &doc.regions {
         let domain = fem_core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = fem_core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| format!("region {} failed to mesh: {:?}", region.id, e))?;
-        let material =
-            doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| format!("unknown material id: {}", region.material_id))?;
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts)
+            .map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
+        let material = doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
 
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
         for (point_index, p) in tri_mesh.points.iter().enumerate() {
@@ -653,9 +674,8 @@ fn area_load_nodal_loads(region: &MeshedRegion, pressure: f64) -> Vec<NodalLoad>
 
 /// 🌉 Resolves a `Fem2dDocument` plus a named load case into a `fem_core::Model`, erroring
 /// descriptively on any dangling material/section/node/region reference.
-pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, String> {
-    let load_case =
-        doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| format!("load case not found: {case_id}"))?;
+pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, Fem2dError> {
+    let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
@@ -669,7 +689,7 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, String> 
                 member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }))
             }
             FemLoad::Area { region_id, pressure, .. } => {
-                let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| format!("unknown region id: {region_id}"))?;
+                let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
                 nodal_loads.extend(area_load_nodal_loads(region, *pressure));
             }
         }
@@ -685,7 +705,7 @@ pub fn build_model(doc: &Fem2dDocument, case_id: &str) -> Result<Model, String> 
 /// equilibrium. Signature is a contract consumed directly by `fem-plugin` — do not rename or
 /// change it.
 pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<fem_core::StaticResult, String> {
-    let model = build_model(doc, case_id)?;
+    let model = build_model(doc, case_id).map_err(|e| e.to_string())?;
     fem_core::solve_linear_static(&model).map_err(|e| e.to_string())
 }
 
@@ -694,7 +714,7 @@ pub fn fem2d_solve(doc: &Fem2dDocument, case_id: &str) -> Result<fem_core::Stati
 /// together via `fem_core::analyses::solve_multi_case` — self-weight honored per-case through
 /// `doc.materials`' `rho` (see `self_weight_nodal_loads`'s doc for the `Tri3Cst` caveat), gravity
 /// fixed at `[0.0, -9.81, 0.0]`. Returns results keyed by case id ∪ combination id.
-pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::StaticResult>, String> {
+pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::StaticResult>, Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
     let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
@@ -710,7 +730,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::
                     member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 }))
                 }
                 FemLoad::Area { region_id, pressure, .. } => {
-                    let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| format!("unknown region id: {region_id}"))?;
+                    let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
                     nodal_loads.extend(area_load_nodal_loads(region, *pressure));
                 }
             }
@@ -721,7 +741,7 @@ pub fn fem2d_solve_all(doc: &Fem2dDocument) -> Result<HashMap<String, fem_core::
     let combinations: Vec<fem_core::analyses::Combination> =
         doc.combinations.iter().map(|c| fem_core::analyses::Combination { id: c.id.clone(), terms: c.terms.clone() }).collect();
 
-    fem_core::analyses::solve_multi_case(&model, &cases, &combinations, [0.0, -GRAVITY_G, 0.0]).map_err(|e| e.to_string())
+    fem_core::analyses::solve_multi_case(&model, &cases, &combinations, [0.0, -GRAVITY_G, 0.0]).map_err(Fem2dError::from)
 }
 
 // #region 🔖ModalBuckling
@@ -752,25 +772,25 @@ fn mode_dof_order(nodes: &[Node], elements: &[Box<dyn Element>]) -> Vec<(String,
 }
 
 /// 🎵 Modal analysis: lowest `doc.analysis.modal_count` natural frequencies/mode shapes.
-pub fn fem2d_modal(doc: &Fem2dDocument) -> Result<fem_core::analyses::ModalResult, String> {
+pub fn fem2d_modal(doc: &Fem2dDocument) -> Result<fem_core::analyses::ModalResult, Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
     let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
-    fem_core::analyses::modal(&model, doc.analysis.modal_count).map_err(|e| e.to_string())
+    fem_core::analyses::modal(&model, doc.analysis.modal_count).map_err(Fem2dError::from)
 }
 
 /// 🌉 Richer modal entry point: solves the same modal analysis as `fem2d_modal` but also unpacks mode
 /// `mode_index`'s shape `VecD` into a friendly per-node `[f64;6]` displacement map (see `mode_dof_order`),
 /// ready to feed the same deformed-shape rendering `fem-plugin` already uses for static results. Returns
 /// `(frequency_hz, node_id -> displacement values)`.
-pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), String> {
+pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, _regions) = build_nodes_and_elements(doc)?;
     let order = mode_dof_order(&nodes, &elements);
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
     let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
-    let result = fem_core::analyses::modal(&model, doc.analysis.modal_count).map_err(|e| e.to_string())?;
-    let freq = *result.frequencies_hz.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
-    let shape = result.shapes.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
+    let result = fem_core::analyses::modal(&model, doc.analysis.modal_count)?;
+    let freq = *result.frequencies_hz.get(mode_index).ok_or(Fem2dError::ModeIndexOutOfRange(mode_index))?;
+    let shape = result.shapes.get(mode_index).ok_or(Fem2dError::ModeIndexOutOfRange(mode_index))?;
     let mut values: HashMap<String, [f64; 6]> = HashMap::new();
     for (i, (node_id, dof)) in order.iter().enumerate() {
         values.entry(node_id.clone()).or_insert([0.0; 6])[dof.index()] = shape.get(i);
@@ -782,10 +802,10 @@ pub fn fem2d_modal_mode_values(doc: &Fem2dDocument, mode_index: usize) -> Result
 /// geometry plus the ONE named `case_id`'s `analyses::LoadCase`, mirroring `fem2d_solve_all`'s
 /// per-case load translation (nodal/member-UDL/area loads), erroring `"load case not found: {case_id}"`
 /// if `case_id` isn't in `doc.load_cases`.
-fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core::analyses::LoadCase), String> {
+fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<(Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core::analyses::LoadCase), Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
-    let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| format!("load case not found: {case_id}"))?;
+    let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 
     let mut nodal_loads = Vec::new();
     let mut member_loads = Vec::new();
@@ -794,7 +814,7 @@ fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<(Vec<Node>, Vec
             FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
             FemLoad::MemberUdl { element_id, wx, wy, .. } => member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 })),
             FemLoad::Area { region_id, pressure, .. } => {
-                let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| format!("unknown region id: {region_id}"))?;
+                let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
                 nodal_loads.extend(area_load_nodal_loads(region, *pressure));
             }
         }
@@ -804,22 +824,22 @@ fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<(Vec<Node>, Vec
 }
 
 /// 🏛️ Linear buckling: lowest `doc.analysis.buckling_count` load factors/mode shapes for `case_id`.
-pub fn fem2d_buckling(doc: &Fem2dDocument, case_id: &str) -> Result<fem_core::analyses::BucklingResult, String> {
+pub fn fem2d_buckling(doc: &Fem2dDocument, case_id: &str) -> Result<fem_core::analyses::BucklingResult, Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
-    fem_core::analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(|e| e.to_string())
+    fem_core::analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem2dError::from)
 }
 
 /// 🌉 Richer buckling entry point: mirrors `fem2d_modal_mode_values` — solves the same buckling
 /// analysis as `fem2d_buckling` but also unpacks mode `mode_index`'s shape into a per-node
 /// displacement map. Returns `(load_factor, node_id -> displacement values)`.
-pub fn fem2d_buckling_mode_values(doc: &Fem2dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), String> {
+pub fn fem2d_buckling_mode_values(doc: &Fem2dDocument, case_id: &str, mode_index: usize) -> Result<(f64, HashMap<String, [f64; 6]>), Fem2dError> {
     let (nodes, elements, supports, case) = buckling_inputs(doc, case_id)?;
     let order = mode_dof_order(&nodes, &elements);
     let model = fem_core::analyses::AnalysisModel { nodes, elements, supports };
-    let result = fem_core::analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(|e| e.to_string())?;
-    let factor = *result.factors.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
-    let shape = result.shapes.get(mode_index).ok_or_else(|| format!("mode index out of range: {mode_index}"))?;
+    let result = fem_core::analyses::buckling(&model, &case, doc.analysis.buckling_count)?;
+    let factor = *result.factors.get(mode_index).ok_or(Fem2dError::ModeIndexOutOfRange(mode_index))?;
+    let shape = result.shapes.get(mode_index).ok_or(Fem2dError::ModeIndexOutOfRange(mode_index))?;
     let mut values: HashMap<String, [f64; 6]> = HashMap::new();
     for (i, (node_id, dof)) in order.iter().enumerate() {
         values.entry(node_id.clone()).or_insert([0.0; 6])[dof.index()] = shape.get(i);
@@ -842,12 +862,13 @@ pub struct RegionMesh {
 /// 🗺️ Triangulates every `FemRegion` in `doc` (same `fem_core::mesh::triangulate` call as
 /// `build_nodes_and_elements`, so triangle indices/ids line up deterministically with solved results)
 /// and returns just the geometry — cheap enough to call on every render.
-pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, String> {
+pub fn fem2d_mesh_preview(doc: &Fem2dDocument) -> Result<Vec<RegionMesh>, Fem2dError> {
     let mut out = Vec::with_capacity(doc.regions.len());
     for region in &doc.regions {
         let domain = fem_core::mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = fem_core::mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
-        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts).map_err(|e| format!("region {} failed to mesh: {:?}", region.id, e))?;
+        let tri_mesh = fem_core::mesh::triangulate(&domain, &opts)
+            .map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
         out.push(RegionMesh { region_id: region.id.clone(), points: tri_mesh.points, tris: tri_mesh.tris });
     }
     Ok(out)
@@ -1151,7 +1172,7 @@ mod tests {
         let mut doc = simply_supported_beam_doc();
         doc.materials.clear();
         let err = build_model(&doc, "dead").unwrap_err();
-        assert!(err.contains("material"), "unexpected error: {err}");
+        assert!(err.to_string().contains("material"), "unexpected error: {err}");
     }
 
     #[test]
@@ -1159,7 +1180,7 @@ mod tests {
         let mut doc = simply_supported_beam_doc();
         doc.sections.clear();
         let err = build_model(&doc, "dead").unwrap_err();
-        assert!(err.contains("section"), "unexpected error: {err}");
+        assert!(err.to_string().contains("section"), "unexpected error: {err}");
     }
 
     #[test]
@@ -1167,7 +1188,7 @@ mod tests {
         let mut doc = simply_supported_beam_doc();
         doc.nodes.clear();
         let err = build_model(&doc, "dead").unwrap_err();
-        assert!(err.contains("node"), "unexpected error: {err}");
+        assert!(err.to_string().contains("node"), "unexpected error: {err}");
     }
     // #endregion 🔖BuildModel
 
@@ -1364,7 +1385,7 @@ mod tests {
     fn fem2d_buckling_unknown_case_errors() {
         let doc = simply_supported_beam_doc();
         let err = fem2d_buckling(&doc, "missing").err().expect("expected error");
-        assert!(err.contains("load case not found"), "unexpected error: {err}");
+        assert!(err.to_string().contains("load case not found"), "unexpected error: {err}");
     }
     // #endregion 🔖ModalBuckling
 

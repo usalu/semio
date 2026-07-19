@@ -1,9 +1,9 @@
 //! 🏠 Zone equipment catalog: baseboards, radiant, fan coils, PTAC, VRF, ERV.
 
 use crate::coils::{cooling_coil_output_w, heating_coil_output_w, CoilAirState, CoolingCoil, HeatingCoil};
-use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan, FanType};
+use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
 use crate::heat_recovery::{heat_recovery_exchange_w, HeatRecoveryUnit, HxAirstream};
-use crate::units::{CP_DRY_AIR, P_STD, RHO_AIR_REF};
+use crate::units::{CP_DRY_AIR, RHO_AIR_REF};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖ZoneEquipment

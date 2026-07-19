@@ -17730,13 +17730,6 @@ func mustReadKitSchemaSQL() string {
 // #region kit_graph
 // #region Kit graph session (TypeScript parity: commitKitGraphChange, backbone, transactions, history)
 
-package compose
-
-import (
-	"encoding/json"
-	"fmt"
-)
-
 // Backbone receives outbound graph commits; implementations may run Changed asynchronously.
 type Backbone interface {
 	Changed(KitGraphChange) error

@@ -11,6 +11,27 @@
         "cwd": "framework/renderer/wgpu"
       }
     },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test quick",
+        "cwd": "framework/renderer/wgpu"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test long",
+        "cwd": "framework/renderer/wgpu"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test exhaustive",
+        "cwd": "framework/renderer/wgpu"
+      }
+    },
     "wasm": {
       "executor": "nx:run-commands",
       "options": {

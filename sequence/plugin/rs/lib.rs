@@ -775,22 +775,24 @@ mod tests {
         assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != step_id));
     }
 
-    #[test]
-    fn footer_tools_include_run_stop_reorganize_and_orientation() {
-        let mut app = new_app();
-        let json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
-        for id in ["sequence-tools-run", "sequence-tools-stop", "sequence-tools-reorganize", "sequence-tools-orientation-lr", "sequence-tools-orientation-tb"] {
-            assert!(json.contains(&format!("\"id\":\"{id}\"")), "tools expose {id}");
-        }
-    }
+    // 🧰 `footer_tools_include_run_stop_reorganize_and_orientation` asserted on `VcsDocumentApp::tools()`,
+    // which no longer exists (toolbars are derived by the renderer from the utility registry now — see
+    // `sequence_utility_labels` above; this manifest declares no utilities, so run/stop/reorganize have
+    // no toolbar-tool equivalent to assert on). Its behavioral coverage lives on in
+    // `run_stores_result_and_renders_in_script`, `stop_action_clears_last_run_result`, and
+    // `reorganize_action_spreads_step_positions_apart`.
 
     #[test]
-    fn set_orientation_action_flips_toggle_state() {
+    fn set_orientation_action_changes_reorganize_layout_axis() {
         let mut app = new_app();
         app.handle_action("setOrientation", Some(&json!({ "orientation": "topBottom" })), &ViewState::default(), &testkit::meta("local")).expect("orientation");
-        let tools_json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
-        let tb_pressed = tools_json.split(r#""id":"sequence-tools-orientation-tb""#).nth(1).and_then(|rest| rest.split_once("\"pressed\":")).map(|(_, rest)| rest.starts_with("true")).unwrap_or(false);
-        assert!(tb_pressed, "top-to-bottom toggle should be pressed, got {tools_json}");
+        let ids: Vec<String> = app.projection().expect("projection").steps.iter().map(|step| step.id.clone()).collect();
+        for id in &ids {
+            app.handle_action("moveMediaNode", Some(&json!({ "nodeId": id, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("move");
+        }
+        app.handle_action("reorganize", None, &ViewState::default(), &testkit::meta("local")).expect("reorganize");
+        let ys: Vec<f64> = app.projection().expect("projection").steps.iter().map(|step| step.y).collect();
+        assert!(ys.iter().any(|y| *y != 0.0), "topBottom orientation should spread steps vertically, got {ys:?}");
     }
 
     #[test]
@@ -845,9 +847,12 @@ mod tests {
         let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("\"Steps\""));
         assert!(document_json.contains("\"Flow edges\""));
-        let tools_json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
-        for label in ["\"Run\"", "\"Stop\"", "\"Reorganize\"", "\"Left to right\"", "\"Top to bottom\""] {
-            assert!(tools_json.contains(label), "tools expose {label}");
+        // 🧰 Run/stop/reorganize no longer render as toolbar tools (see note on the removed
+        // `footer_tools_include_run_stop_reorganize_and_orientation` test above) — their locale
+        // translation now surfaces only through the action-label overlay.
+        let action_labels = app.app_labels(&ViewState::default()).action_labels;
+        for (id, label) in [("run", "Run"), ("stop", "Stop"), ("reorganize", "Reorganize")] {
+            assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
     }
 
@@ -859,9 +864,9 @@ mod tests {
         assert!(document_json.contains("Schritte"));
         assert!(document_json.contains("Ablaufkanten"));
         assert!(!document_json.contains("\"Steps\""));
-        let tools_json = serde_json::to_string(&app.tools(&view_state)).unwrap();
-        for label in ["Ausführen", "Stopp", "Neu anordnen", "Links nach rechts", "Oben nach unten"] {
-            assert!(tools_json.contains(label), "tools expose {label}");
+        let action_labels = app.app_labels(&view_state).action_labels;
+        for (id, label) in [("run", "Ausfuehren"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
+            assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
     }
 }

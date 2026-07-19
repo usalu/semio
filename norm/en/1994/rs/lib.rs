@@ -1,6 +1,7 @@
 //! 🔗 EN 1994 design of composite steel and concrete structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -166,6 +167,63 @@ pub fn check_composite_beam(
     report.push(part_1_1::check_longitudinal_shear(v_ed_kn, v_l_rd, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub m_ed_knm: f64,
+    pub v_ed_kn: f64,
+    pub m_pla: f64,
+    pub m_pl_rd: f64,
+    pub eta: f64,
+    pub v_l_rd: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            m_ed_knm: 200.0,
+            v_ed_kn: 120.0,
+            m_pla: 80.0,
+            m_pl_rd: 250.0,
+            eta: 0.75,
+            v_l_rd: 150.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1994Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_composite_beam(
+        document.m_ed_knm,
+        document.v_ed_kn,
+        document.m_pla,
+        document.m_pl_rd,
+        document.eta,
+        document.v_l_rd,
+    )
+}
+
+pub struct En1994Family;
+
+impl NormFamily for En1994Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1994
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

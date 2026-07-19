@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧭 `os-hub` router: `bun ./script.ts <setup|build|test|dev>`. */
-import { BundleScript, ScriptRouter, OS_HUB_PORT, OS_HUB_PORT_ENV, runBundleScriptMain, runCargo, runCmd } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, OS_HUB_PORT, OS_HUB_PORT_ENV, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class SetupScript extends BundleScript {
@@ -17,7 +17,8 @@ class BuildScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "--manifest-path", "rs/Cargo.toml", ...segments], this.root);
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["os-hub"], join(this.root, "rs"), rest);
   }
 }
 

@@ -9,6 +9,30 @@
         "cwd": "kernel/2d/js",
         "command": "bun ./script.ts test"
       }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "kernel/2d/js",
+        "command": "bun ./script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "kernel/2d/js",
+        "command": "bun ./script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "kernel/2d/js",
+        "command": "bun ./script.ts test exhaustive"
+      }
     }
   }
 }

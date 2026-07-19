@@ -1,0 +1,20 @@
+{
+  "name": "@semio-tech/framework-sync-worker",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "targets": {
+    "wasm": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/sync/worker",
+        "command": "bun ./script.ts wasm"
+      }
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/sync/worker",
+        "command": "bun ./script.ts test"
+      }
+    }
+  }
+}

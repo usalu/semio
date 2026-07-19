@@ -1,3 +1,4 @@
+use crate::VideoError;
 use animate_core::{AnimateConfig, Camera, Color, Sobject};
 use pollster::block_on;
 use vello::kurbo::Stroke as KurboStroke;
@@ -30,7 +31,7 @@ struct StaticBackgroundCache {
 
 impl VelloRenderer {
     /// 🏗️ Creates a headless wgpu + Vello renderer at `width` × `height`.
-    pub fn new(width: u32, height: u32) -> Result<Self, String> {
+    pub fn new(width: u32, height: u32) -> Result<Self, VideoError> {
         let width = width.max(1);
         let height = height.max(1);
         let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
@@ -42,7 +43,7 @@ impl VelloRenderer {
             compatible_surface: None,
             force_fallback_adapter: false,
         }))
-        .map_err(|err| format!("no wgpu adapter available: {err:?}"))?;
+        .map_err(|err| VideoError::backend("no wgpu adapter available", format!("{err:?}")))?;
         let (device, queue) = block_on(adapter.request_device(&wgpu::DeviceDescriptor {
             label: Some("animate_video"),
             required_features: wgpu::Features::empty(),
@@ -51,7 +52,7 @@ impl VelloRenderer {
             trace: wgpu::Trace::Off,
             experimental_features: Default::default(),
         }))
-        .map_err(|err| format!("wgpu device: {err:?}"))?;
+        .map_err(|err| VideoError::backend("wgpu device", format!("{err:?}")))?;
         let renderer = Renderer::new(
             &device,
             RendererOptions {
@@ -61,7 +62,7 @@ impl VelloRenderer {
                 pipeline_cache: None,
             },
         )
-        .map_err(|err| format!("vello renderer: {err:?}"))?;
+        .map_err(|err| VideoError::backend("vello renderer", format!("{err:?}")))?;
         let (target_texture, target_view) = create_target_texture(&device, width, height);
         let readback_buffer = device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("animate_video_readback"),
@@ -83,7 +84,7 @@ impl VelloRenderer {
     }
 
     /// 🖼️ Renders captured mobjects to RGBA8 pixels.
-    pub fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, String> {
+    pub fn render_capture(&mut self, capture: &CapturedFrame, camera: &Camera, config: &AnimateConfig) -> Result<Vec<u8>, VideoError> {
         let static_hash = static_layer_hash(capture, config);
         if self.static_cache.as_ref().is_some_and(|cache| cache.hash == static_hash) {
             return Ok(self.static_cache.as_ref().expect("cache").pixels.clone());
@@ -98,7 +99,7 @@ impl VelloRenderer {
         Ok(pixels)
     }
 
-    fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, String> {
+    fn render_scene_to_pixels(&mut self, scene: &Scene, background: VelloColor) -> Result<Vec<u8>, VideoError> {
         let params = RenderParams {
             base_color: background,
             width: self.width,
@@ -107,7 +108,7 @@ impl VelloRenderer {
         };
         self.renderer
             .render_to_texture(&self.device, &self.queue, scene, &self.target_view, &params)
-            .map_err(|err| format!("vello render: {err:?}"))?;
+            .map_err(|err| VideoError::backend("vello render", format!("{err:?}")))?;
         read_pixels(
             &self.device,
             &self.queue,
@@ -241,7 +242,7 @@ fn read_pixels(
     readback_buffer: &wgpu::Buffer,
     width: u32,
     height: u32,
-) -> Result<Vec<u8>, String> {
+) -> Result<Vec<u8>, VideoError> {
     let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
         label: Some("animate_video_readback"),
     });
@@ -275,8 +276,8 @@ fn read_pixels(
     let _ = device.poll(wgpu::PollType::wait_indefinitely());
     receiver
         .recv()
-        .map_err(|_| "readback channel closed".to_string())?
-        .map_err(|err| format!("map async: {err:?}"))?;
+        .map_err(|_| VideoError::ReadbackChannelClosed)?
+        .map_err(|err| VideoError::backend("map async", format!("{err:?}")))?;
     let data = slice.get_mapped_range();
     let pixels = data.to_vec();
     drop(data);

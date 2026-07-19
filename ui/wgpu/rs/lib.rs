@@ -646,18 +646,17 @@ pub struct WindowEngagement {
 
 /// 🤝 Closed replacement for `Option<WindowEngagement>` — makes "this window kind never engages" a
 /// named variant instead of `None`, so absence is an explicit, typed state rather than an implicit gap.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// ⚠️ `WindowEngagement` is a wide variant (nested `Vec`/`Option` fields), making `Some` far
+/// larger than `None` — boxing it would be a breaking public-API change (every construction/match
+/// site across ~30 plugins would need `Box::new`/deref updates), out of scope for a mechanical pass.
+#[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "value")]
 pub enum WindowEngagementSlot {
+    #[default]
     None,
     Some(WindowEngagement),
-}
-
-impl Default for WindowEngagementSlot {
-    fn default() -> Self {
-        Self::None
-    }
 }
 
 impl WindowEngagementSlot {
@@ -2607,6 +2606,10 @@ pub struct UiComponentSceneNode {
 //#endregion 🔖ComponentScenes
 
 //#region 🔖UiNode
+/// ⚠️ `ComponentScene`'s payload dwarfs the other variants (nested scene JSON blobs) — boxing it
+/// would be a breaking public-API change (every construction/match site across ~30 plugins would
+/// need `Box::new`/deref updates), out of scope for a mechanical pass.
+#[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum UiNode {
@@ -2813,6 +2816,7 @@ pub fn ui_external_slot(
     })
 }
 
+#[allow(clippy::too_many_arguments, reason = "one arg per scene-kind payload; grouping into a struct is a T2 restructure, out of scope")]
 fn component_scene(
     surface_id: impl Into<String>,
     controller_id: impl Into<String>,
@@ -3805,7 +3809,7 @@ impl Node {
             spec,
             state: WidgetState::default(),
             layout: LayoutBucket::default(),
-            paint: PaintBucket::default(),
+            paint: PaintBucket,
             flags: NodeFlags::empty(),
         }
     }
@@ -4718,9 +4722,7 @@ pub fn measure_action_item(
     } else {
         0.0
     };
-    let text_w = label
-        .map(|value| atlas.measure_text(value, theme.font_size_small).0)
-        .unwrap_or(0.0);
+    let text_w = label.map_or(0.0, |value| atlas.measure_text(value, theme.font_size_small).0);
     theme.padding_standard * 2.0 + icon_w + text_w
 }
 
@@ -4818,7 +4820,7 @@ pub fn resolve_semio_cursor<E>(hit: Option<&HitTarget<E>>, drag: CursorDragState
         return SemioCursor::Move;
     }
     if hit.kind == HitKind::DockSplit {
-        return hit.drag_axis.map(axis_cursor).unwrap_or(SemioCursor::Default);
+        return hit.drag_axis.map_or(SemioCursor::Default, axis_cursor);
     }
     if hit.kind == HitKind::ScrollRegion {
         if let Some(axis) = hit.drag_axis {
@@ -4852,10 +4854,10 @@ fn cursor_for_active_drag(kind: Option<HitKind>, axis: Option<DragAxis>) -> Semi
     match kind {
         Some(HitKind::Slider) => SemioCursor::Grabbing,
         Some(HitKind::PanelResize) => SemioCursor::EwResize,
-        Some(HitKind::DockSplit) => axis.map(axis_cursor).unwrap_or(SemioCursor::Default),
+        Some(HitKind::DockSplit) => axis.map_or(SemioCursor::Default, axis_cursor),
         Some(HitKind::DockJoinCorner) => SemioCursor::Move,
-        Some(HitKind::ScrollRegion) => axis.map(axis_cursor).unwrap_or(SemioCursor::Default),
-        _ => axis.map(axis_cursor).unwrap_or(SemioCursor::Grabbing),
+        Some(HitKind::ScrollRegion) => axis.map_or(SemioCursor::Default, axis_cursor),
+        _ => axis.map_or(SemioCursor::Grabbing, axis_cursor),
     }
 }
 
@@ -5550,7 +5552,7 @@ impl DrawList {
 
     pub fn pop_scissor(&mut self) {
         self.scissor_stack.pop();
-        let parent = self.scissor_stack.last().cloned();
+        let parent = self.scissor_stack.last().copied();
         self.layers.push(DrawLayer {
             scissor: parent,
             foreground_of: self.active_foreground_of(),
@@ -5615,7 +5617,7 @@ impl DrawList {
     pub fn end_glass_content(&mut self) {
         self.glass_content_stack.pop();
         self.layers.push(DrawLayer {
-            scissor: self.scissor_stack.last().cloned(),
+            scissor: self.scissor_stack.last().copied(),
             foreground_of: self.active_foreground_of(),
             ..DrawLayer::default()
         });
@@ -6040,6 +6042,7 @@ pub struct GpuMeshBuffers {
     pub index_count: u32,
 }
 
+#[derive(Default)]
 pub struct MeshGpuStore {
     meshes: std::collections::HashMap<String, GpuMeshBuffers>,
 }
@@ -6055,14 +6058,6 @@ pub fn mesh_content_version(positions: &[f32], normals: &[f32], indices: &[u32])
         hash = hash.wrapping_mul(0x100000001b3);
     }
     hash
-}
-
-impl Default for MeshGpuStore {
-    fn default() -> Self {
-        Self {
-            meshes: std::collections::HashMap::new(),
-        }
-    }
 }
 
 impl MeshGpuStore {
@@ -6136,18 +6131,10 @@ impl MeshGpuStore {
 
 pub const WORLD_GLOBALS_SLOT_SIZE: u64 = 256;
 
+#[derive(Default)]
 pub struct GrowBuffer {
     buffer: Option<wgpu::Buffer>,
     capacity: usize,
-}
-
-impl Default for GrowBuffer {
-    fn default() -> Self {
-        Self {
-            buffer: None,
-            capacity: 0,
-        }
-    }
 }
 
 impl GrowBuffer {
@@ -6183,24 +6170,13 @@ impl GrowBuffer {
     }
 }
 
+#[derive(Default)]
 pub struct FrameBuffers {
     pub world_instances: GrowBuffer,
     pub world_lines: GrowBuffer,
     pub ui_instances: GrowBuffer,
     pub vector_vertices: GrowBuffer,
     pub glass_instances: GrowBuffer,
-}
-
-impl Default for FrameBuffers {
-    fn default() -> Self {
-        Self {
-            world_instances: GrowBuffer::default(),
-            world_lines: GrowBuffer::default(),
-            ui_instances: GrowBuffer::default(),
-            vector_vertices: GrowBuffer::default(),
-            glass_instances: GrowBuffer::default(),
-        }
-    }
 }
 
 #[repr(C)]
@@ -6251,7 +6227,7 @@ impl WorldGlobalsRing {
                 resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                     buffer: &buffer,
                     offset: 0,
-                    size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
+                    size: std::num::NonZeroU64::new(size_of::<World3dGlobals>() as u64),
                 }),
             }],
         });
@@ -6282,7 +6258,7 @@ impl WorldGlobalsRing {
                 resource: wgpu::BindingResource::Buffer(wgpu::BufferBinding {
                     buffer: &self.buffer,
                     offset: 0,
-                    size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
+                    size: std::num::NonZeroU64::new(size_of::<World3dGlobals>() as u64),
                 }),
             }],
         });
@@ -6781,7 +6757,7 @@ impl UiPipelines {
                         }],
                     },
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<UiInstance>() as wgpu::BufferAddress,
+                        array_stride: size_of::<UiInstance>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &[
                             wgpu::VertexAttribute { offset: 0, shader_location: 1, format: wgpu::VertexFormat::Float32x4 },
@@ -6822,7 +6798,7 @@ impl UiPipelines {
                 module: &vector_shader,
                 entry_point: Some("vs_main"),
                 buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: mem::size_of::<VectorVertex>() as wgpu::BufferAddress,
+                    array_stride: size_of::<VectorVertex>() as wgpu::BufferAddress,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: &[
                         wgpu::VertexAttribute { offset: 0, shader_location: 0, format: wgpu::VertexFormat::Float32x2 },
@@ -6856,7 +6832,7 @@ impl UiPipelines {
                 ty: wgpu::BindingType::Buffer {
                     ty: wgpu::BufferBindingType::Uniform,
                     has_dynamic_offset: true,
-                    min_binding_size: std::num::NonZeroU64::new(mem::size_of::<World3dGlobals>() as u64),
+                    min_binding_size: std::num::NonZeroU64::new(size_of::<World3dGlobals>() as u64),
                 },
                 count: None,
             }],
@@ -6877,7 +6853,7 @@ impl UiPipelines {
                 entry_point: Some("vs_main"),
                 buffers: &[
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<World3dVertex>() as wgpu::BufferAddress,
+                        array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Vertex,
                         attributes: &[
                             wgpu::VertexAttribute {
@@ -6893,7 +6869,7 @@ impl UiPipelines {
                         ],
                     },
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
+                        array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &[
                             wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
@@ -6921,7 +6897,7 @@ impl UiPipelines {
                 cull_mode: None,
                 ..Default::default()
             },
-            depth_stencil: depth_state.clone(),
+            depth_stencil: depth_state,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -6952,7 +6928,7 @@ impl UiPipelines {
                 entry_point: Some("vs_main"),
                 buffers: &[
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<World3dVertex>() as wgpu::BufferAddress,
+                        array_stride: size_of::<World3dVertex>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Vertex,
                         attributes: &[
                             wgpu::VertexAttribute {
@@ -6968,7 +6944,7 @@ impl UiPipelines {
                         ],
                     },
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
+                        array_stride: size_of::<World3dGpuInstance>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &[
                             wgpu::VertexAttribute { offset: 0, shader_location: 3, format: wgpu::VertexFormat::Float32x4 },
@@ -6996,7 +6972,7 @@ impl UiPipelines {
                 cull_mode: Some(wgpu::Face::Back),
                 ..Default::default()
             },
-            depth_stencil: translucent_depth_state.clone(),
+            depth_stencil: translucent_depth_state,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -7008,7 +6984,7 @@ impl UiPipelines {
                 module: &world_lines_shader,
                 entry_point: Some("vs_main"),
                 buffers: &[wgpu::VertexBufferLayout {
-                    array_stride: mem::size_of::<WorldLineGpuVertex>() as wgpu::BufferAddress,
+                    array_stride: size_of::<WorldLineGpuVertex>() as wgpu::BufferAddress,
                     step_mode: wgpu::VertexStepMode::Vertex,
                     attributes: &[
                         wgpu::VertexAttribute {
@@ -7039,7 +7015,7 @@ impl UiPipelines {
                 topology: wgpu::PrimitiveTopology::LineList,
                 ..Default::default()
             },
-            depth_stencil: world_line_depth_state.clone(),
+            depth_stencil: world_line_depth_state,
             multisample: wgpu::MultisampleState::default(),
             multiview: None,
             cache: None,
@@ -7067,7 +7043,7 @@ impl UiPipelines {
                     ty: wgpu::BindingType::Buffer {
                         ty: wgpu::BufferBindingType::Uniform,
                         has_dynamic_offset: false,
-                        min_binding_size: std::num::NonZeroU64::new(mem::size_of::<BlurGlobals>() as u64),
+                        min_binding_size: std::num::NonZeroU64::new(size_of::<BlurGlobals>() as u64),
                     },
                     count: None,
                 },
@@ -7205,7 +7181,7 @@ impl UiPipelines {
                         }],
                     },
                     wgpu::VertexBufferLayout {
-                        array_stride: mem::size_of::<GlassInstance>() as wgpu::BufferAddress,
+                        array_stride: size_of::<GlassInstance>() as wgpu::BufferAddress,
                         step_mode: wgpu::VertexStepMode::Instance,
                         attributes: &[
                             wgpu::VertexAttribute { offset: 0, shader_location: 1, format: wgpu::VertexFormat::Float32x4 },
@@ -7437,7 +7413,7 @@ impl UiPipelines {
         screen_w: f32,
         screen_h: f32,
     ) {
-        let instance_stride = mem::size_of::<World3dGpuInstance>() as u64;
+        let instance_stride = size_of::<World3dGpuInstance>() as u64;
         pass.set_pipeline(&self.world_pipeline);
         let viewport = prepared.viewport;
         pass.set_viewport(viewport[0], viewport[1], viewport[2], viewport[3], 0.0, 1.0);
@@ -7453,7 +7429,7 @@ impl UiPipelines {
             &[self.world_globals_ring.offset_for_slot(slot)],
         );
         for draw_call in &prepared.draws {
-            Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer.clone(), instance_stride);
+            Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer, instance_stride);
         }
         if prepared.line_count > 0 {
             if let Some(line_buffer) = line_buffer {
@@ -7463,7 +7439,7 @@ impl UiPipelines {
                     &self.world_globals_ring.bind_group,
                     &[self.world_globals_ring.offset_for_slot(slot)],
                 );
-                let line_stride = mem::size_of::<WorldLineGpuVertex>() as u64;
+                let line_stride = size_of::<WorldLineGpuVertex>() as u64;
                 let byte_offset = prepared.line_start as u64 * line_stride;
                 pass.set_vertex_buffer(
                     0,
@@ -7480,7 +7456,7 @@ impl UiPipelines {
                 &[self.world_globals_ring.offset_for_slot(slot)],
             );
             for draw_call in &prepared.translucent_draws {
-                Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer.clone(), instance_stride);
+                Self::draw_world_range(pass, mesh_store, draw_call, instance_buffer, instance_stride);
             }
         }
         pass.set_viewport(0.0, 0.0, screen_w, screen_h, 0.0, 1.0);
@@ -7523,7 +7499,7 @@ impl UiPipelines {
         pass.set_pipeline(&self.ui_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
         pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-        pass.set_vertex_buffer(1, instance_buffer.clone());
+        pass.set_vertex_buffer(1, *instance_buffer);
         pass.draw(0..6, start..start + count);
     }
 
@@ -7604,7 +7580,7 @@ impl UiPipelines {
         }
         pass.set_pipeline(&self.vector_pipeline);
         pass.set_bind_group(0, &self.glyph_bind_group, &[]);
-        pass.set_vertex_buffer(0, vector_buffer.clone());
+        pass.set_vertex_buffer(0, *vector_buffer);
         pass.draw(start..start + count, 0..1);
     }
 
@@ -7683,8 +7659,8 @@ impl UiPipelines {
                                     mesh_store,
                                     scene,
                                     prepared_slot as u32,
-                                    instance_buffer.clone(),
-                                    line_buffer.clone(),
+                                    *instance_buffer,
+                                    line_buffer,
                                     width,
                                     height,
                                 );
@@ -7796,7 +7772,7 @@ impl UiPipelines {
             Some((prepared, map)) => (Some(prepared), map),
             None => (None, vec![None; draw.scene_passes.len()]),
         };
-        let world_prepared = prepared_holder.as_ref().map(|prepared| prepared.as_slice());
+        let world_prepared = prepared_holder.as_deref();
         let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Backdrop);
         let ui_buffer = if all_ui.is_empty() {
             None
@@ -8012,7 +7988,7 @@ impl UiPipelines {
             Some((prepared, map)) => (Some(prepared), map),
             None => (None, vec![None; draw.scene_passes.len()]),
         };
-        let world_prepared = prepared_holder.as_ref().map(|prepared| prepared.as_slice());
+        let world_prepared = prepared_holder.as_deref();
         let (all_ui, all_vec, batches) = build_layer_batches(draw, LayerBatchFilter::Foreground);
         if all_ui.is_empty()
             && all_vec.is_empty()
@@ -8576,7 +8552,7 @@ impl UiPipelines {
                     pass.set_pipeline(&self.ui_pipeline);
                     pass.set_bind_group(0, &self.glyph_bind_group, &[]);
                     pass.set_vertex_buffer(0, self.quad_vertex_buffer.slice(..));
-                    pass.set_vertex_buffer(1, instance_buffer.clone());
+                    pass.set_vertex_buffer(1, *instance_buffer);
                     pass.draw(
                         0..6,
                         batch.ui_start..batch.ui_start + batch.ui_count,
@@ -8586,7 +8562,7 @@ impl UiPipelines {
             if batch.vec_count > 0 {
                 if let Some(vector_buffer) = &vector_buffer {
                     pass.set_pipeline(&self.vector_pipeline);
-                    pass.set_vertex_buffer(0, vector_buffer.clone());
+                    pass.set_vertex_buffer(0, *vector_buffer);
                     pass.draw(
                         batch.vec_start..batch.vec_start + batch.vec_count,
                         0..1,
@@ -9213,7 +9189,7 @@ impl PointerModifiers {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct DragState {
     pub active: bool,
     pub button: i16,
@@ -9225,23 +9201,6 @@ pub struct DragState {
     pub axis: Option<DragAxis>,
     pub kind: Option<HitKind>,
     pub points: Vec<[f32; 2]>,
-}
-
-impl Default for DragState {
-    fn default() -> Self {
-        Self {
-            active: false,
-            button: 0,
-            start_x: 0.0,
-            start_y: 0.0,
-            current_x: 0.0,
-            current_y: 0.0,
-            target_id: None,
-            axis: None,
-            kind: None,
-            points: Vec::new(),
-        }
-    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -9633,8 +9592,8 @@ fn style_for(node: &UiNode) -> Style {
             Style {
                 display: Display::Flex,
                 flex_direction: if vertical { FlexDirection::Column } else { FlexDirection::Row },
-                gap: Size { width: length(0.0), height: length(0.0) },
-                padding: Rect { left: length(0.0), right: length(0.0), top: length(0.0), bottom: length(0.0) },
+                gap: Size { width: length(0.0_f32), height: length(0.0_f32) },
+                padding: Rect { left: length(0.0_f32), right: length(0.0_f32), top: length(0.0_f32), bottom: length(0.0_f32) },
                 size: Size { width: auto(), height: auto() },
                 ..Default::default()
             }
@@ -9642,8 +9601,8 @@ fn style_for(node: &UiNode) -> Style {
         UiNode::Field(_) | UiNode::Section(_) => Style {
             display: Display::Flex,
             flex_direction: FlexDirection::Column,
-            gap: Size { width: length(0.0), height: length(0.0) },
-            padding: Rect { left: length(0.0), right: length(0.0), top: length(0.0), bottom: length(0.0) },
+            gap: Size { width: length(0.0_f32), height: length(0.0_f32) },
+            padding: Rect { left: length(0.0_f32), right: length(0.0_f32), top: length(0.0_f32), bottom: length(0.0_f32) },
             size: Size { width: auto(), height: auto() },
             ..Default::default()
         },
@@ -9686,7 +9645,7 @@ const SECTION_HEADER_HEIGHT: f32 = 24.0;
 /// stays `Stack`/`Field`-only.
 fn apply_section_metrics(style: &mut Style, theme: &Theme) {
     style.padding.top = length(SECTION_HEADER_HEIGHT);
-    style.gap = Size { width: length(0.0), height: length(theme.gap_standard) };
+    style.gap = Size { width: length(0.0_f32), height: length(theme.gap_standard) };
 }
 
 fn leaf_context(node: &UiNode) -> LeafContext {
@@ -11500,7 +11459,7 @@ fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId, theme: &Theme) {
     }) else {
         return;
     };
-    let width = tree.node(tree_id).map(|node| node.layout.width).unwrap_or(0.0);
+    let width = tree.node(tree_id).map_or(0.0, |node| node.layout.width);
     let mut section_y = 0.0;
     for section in &tree_node.sections {
         let Some(section_id) = find_child_by_key(tree, tree_id, &NodeKey::Explicit(section.id.clone())) else { continue };
@@ -11727,8 +11686,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
         .items
         .iter()
         .find(|item| item.value == node.value)
-        .map(|item| item.label.as_str())
-        .unwrap_or_else(|| node.placeholder.as_deref().unwrap_or("Select…"));
+        .map_or_else(|| node.placeholder.as_deref().unwrap_or("Select…"), |item| item.label.as_str());
     draw_text_on(draw, atlas, label, bounds.x + theme.padding_standard, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
     if let Some(icons) = icons {
         push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
@@ -15869,7 +15827,7 @@ pub struct WidgetContext<'a, E> {
     pub collapsed_sections: &'a mut HashMap<String, bool>,
     pub open_selects: &'a mut HashMap<String, bool>,
     pub interaction_maps: Option<&'a mut WidgetInteractionMaps<E>>,
-    pub pick_clip: Option<crate::geometry::Rect>,
+    pub pick_clip: Option<Rect>,
 }
 
 #[derive(Clone, Debug)]
@@ -16136,7 +16094,7 @@ pub fn render_widget<E: Clone>(
             ctx.draw.push_line(bounds.x, y, bounds.x + bounds.w, y, ctx.theme.separator, 1.0);
         }
         WidgetNode::Button { id, icon_id, label, event } => {
-            render_button(id.clone(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
+            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
         }
         WidgetNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -16232,7 +16190,7 @@ pub fn render_widget<E: Clone>(
 fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {
         ControlNode::Button { id, icon_id, label, event } => {
-            render_button(id.clone(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
+            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx)
         }
         ControlNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -16293,14 +16251,14 @@ fn register_toggle_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, pres
 }
 
 fn render_button<E: Clone>(
-    id: Option<String>,
+    id: Option<&String>,
     icon_id: Option<&str>,
     label: &str,
     event: Option<E>,
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
 ) {
-    let control_id = id.clone().or_else(|| Some(label.to_string()));
+    let control_id = id.cloned().or_else(|| Some(label.to_string()));
     let hovered = ctx.input.hovered_id == control_id;
     let bg = item_bg(ctx.theme, false, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
@@ -16394,8 +16352,7 @@ fn render_select<E: Clone>(
     let label = items
         .iter()
         .find(|item| item.value == value)
-        .map(|item| item.label.as_str())
-        .unwrap_or(placeholder.unwrap_or("Select…"));
+        .map_or(placeholder.unwrap_or("Select…"), |item| item.label.as_str());
     draw_text(
         ctx,
         label,
@@ -17075,8 +17032,7 @@ fn render_tree_item<E: Clone>(
         let label_w = action
             .label
             .as_ref()
-            .map(|label| measure_text_width(ctx, label, ctx.theme.font_size_small) + ctx.theme.gap_standard)
-            .unwrap_or(0.0);
+            .map_or(0.0, |label| measure_text_width(ctx, label, ctx.theme.font_size_small) + ctx.theme.gap_standard);
         let action_w = TREE_ICON_SIZE + ctx.theme.padding_standard + label_w;
         actions_x -= action_w;
         let action_rect = Rect::new(actions_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5 - 2.0, action_w, TREE_ICON_SIZE + 4.0);
@@ -17380,24 +17336,13 @@ pub fn modifiers_from_winit(modifiers: winit::keyboard::ModifiersState) -> Point
     }
 }
 
+#[derive(Default)]
 pub struct WindowInputState {
     pub pointer_x: f32,
     pub pointer_y: f32,
     pub pointer_down: bool,
     pub pointer_button: i16,
     pub modifiers: PointerModifiers,
-}
-
-impl Default for WindowInputState {
-    fn default() -> Self {
-        Self {
-            pointer_x: 0.0,
-            pointer_y: 0.0,
-            pointer_down: false,
-            pointer_button: 0,
-            modifiers: PointerModifiers::default(),
-        }
-    }
 }
 
 pub fn dispatch_window_event(

@@ -457,10 +457,6 @@ pub mod types {
             }
         }
 
-        fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
-            infinite_cavas::theme::color_from_json_rgba8(arr)
-        }
-
         fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
             infinite_cavas::theme::merge_color_field(next, v, key);
         }

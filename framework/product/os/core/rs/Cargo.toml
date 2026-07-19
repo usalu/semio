@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Plugin-based OS kernel: hot-swappable WASM components, media graph, document VCS"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 
@@ -23,12 +26,15 @@ png = "0.17.16"
 resvg = "0.45.1"
 tiny-skia = "0.11.4"
 usvg = "0.45.1"
-uuid = { version = "1.20", features = ["v7", "serde"] }
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 semio-framework-sync = { path = "../../../../sync/rs" }
 tokio = { version = "1", features = ["sync"], default-features = false }
+uuid = { version = "1.20", features = ["v7", "serde"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+uuid = { version = "1.20", features = ["v7", "serde", "js"] }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

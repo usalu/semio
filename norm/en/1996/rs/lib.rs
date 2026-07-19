@@ -1,6 +1,7 @@
 //! 🧱 EN 1996 design of masonry structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
@@ -193,6 +194,57 @@ pub fn check_masonry_wall(
     report.push(part_1_1::check_compression(sigma, f_d, AnnexChoice::De));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub n_ed_kn: f64,
+    pub area_mm2: f64,
+    pub f_k_mpa: f64,
+    pub gamma_m: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            n_ed_kn: 200.0,
+            area_mm2: 500_000.0,
+            f_k_mpa: 5.0,
+            gamma_m: 2.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1996Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_masonry_wall(
+        document.n_ed_kn,
+        document.area_mm2,
+        document.f_k_mpa,
+        document.gamma_m,
+    )
+}
+
+pub struct En1996Family;
+
+impl NormFamily for En1996Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1996
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

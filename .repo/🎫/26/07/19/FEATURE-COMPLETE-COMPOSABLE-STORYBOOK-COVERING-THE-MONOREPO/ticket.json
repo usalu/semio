@@ -1,0 +1,13 @@
+{
+  "title": "Feature Complete Composable Storybook Covering the Monorepo",
+  "emoji": "📖",
+  "status": "open",
+  "description": "Make the root Storybook absolutely feature complete and cover the complete monorepo: a composable, data-driven scope registry (filters for starting apps/plugins), a decorator toolkit (renderer/theme/locale/terminology/platform/wasm swapping), app-boot stories for the OS shell driven by the plugin registry, and story coverage for every React-renderable surface across ui-react, framework renderer hosts, puzzle 2d/3d/5d, infinite canvas/world, cad, coda, compose, animate, and styling. Refactor away the three hardcoded scope stacks in .storybook/main.ts, clean up orphaned Storybook deps/targets/ports, and never block on cargo (use prebuilt WASM only). Executed via a workforce of parallel agents writing disjoint new story files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2123"
+  },
+  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs",
+  "sessions": [
+    "⚪8b453d991c0c4b89934c4ea397ba19c7"
+  ]
+}

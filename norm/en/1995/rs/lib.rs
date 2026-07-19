@@ -1,6 +1,7 @@
 //! 🪵 EN 1995 design of timber structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, LoadDuration, Quantity};
+use serde::{Deserialize, Serialize};
 
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
@@ -208,6 +209,90 @@ pub fn check_glulam_beam(
     report.push(part_1_1::check_compression(n_ed_kn, n_rd, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub m_ed_knm: f64,
+    pub n_ed_kn: f64,
+    pub w_mm3: f64,
+    pub a_mm2: f64,
+    pub f_m_k: f64,
+    pub f_c_0_k: f64,
+    pub service_class: String,
+    pub load_duration: String,
+    pub m_crit_knm: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            m_ed_knm: 25.0,
+            n_ed_kn: 50.0,
+            w_mm3: 1_000_000.0,
+            a_mm2: 20_000.0,
+            f_m_k: 24.0,
+            f_c_0_k: 21.0,
+            service_class: "sc1".into(),
+            load_duration: "medium".into(),
+            m_crit_knm: 80.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1995Family>;
+
+fn parse_service_class(value: &str) -> ServiceClass {
+    match value.to_ascii_lowercase().as_str() {
+        "sc2" => ServiceClass::Sc2,
+        "sc3" => ServiceClass::Sc3,
+        _ => ServiceClass::Sc1,
+    }
+}
+
+fn parse_load_duration(value: &str) -> LoadDuration {
+    match value.to_ascii_lowercase().as_str() {
+        "permanent" => LoadDuration::Permanent,
+        "long" => LoadDuration::Long,
+        "short" => LoadDuration::Short,
+        "instantaneous" => LoadDuration::Instantaneous,
+        _ => LoadDuration::Medium,
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_glulam_beam(
+        document.m_ed_knm,
+        document.n_ed_kn,
+        document.w_mm3,
+        document.a_mm2,
+        document.f_m_k,
+        document.f_c_0_k,
+        parse_service_class(&document.service_class),
+        parse_load_duration(&document.load_duration),
+        document.m_crit_knm,
+    )
+}
+
+pub struct En1995Family;
+
+impl NormFamily for En1995Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1995
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

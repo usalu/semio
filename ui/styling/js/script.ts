@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🧭 `@semio-tech/ui-styling` task router: `bun ./script.ts <generate|fonts>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../repo/lib/js/index.ts";
 import { fetchElementsFonts, generateStylingArtifacts } from "../script.ts";
 
 class GenerateScript extends BundleScript {
@@ -16,8 +16,9 @@ class FontsScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(): void {
-    runTestBudgeted(process.execPath, ["test"], { cwd: this.root });
+  run(segments: string[]): void {
+    const { rest } = resolveTestLevel(segments);
+    runTestBudgeted(process.execPath, ["test", ...rest], { cwd: this.root });
   }
 }
 

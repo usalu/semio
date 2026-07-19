@@ -12,8 +12,10 @@ import {
   defineLint,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
+  goLevelTestArgs,
   loadFrameworkOsPlaygroundCatalog,
   resolveFrameworkOsPlaygroundPlugin,
+  resolveTestLevel,
   runCmd,
   runTestBudgeted,
   installMicroCommitGitHooks,
@@ -21,8 +23,10 @@ import {
   runMicroCommit,
   runWorkspaceScriptMain,
   TechnologyLinter,
+  TEST_LEVELS,
   tryRun,
   type BreachRecord,
+  type TestLevel,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
@@ -576,37 +580,36 @@ export class FormatScript extends Script {
 //#endregion 🔖FormatScript
 
 //#region 🔖TestScript
+/** 🎚️Nx target name for a level — `fundamental` keeps the bare `test` target; others get a `test-<level>` suffix. */
+function testTargetForLevel(level: TestLevel): string {
+  return level === "fundamental" ? "test" : `test-${level}`;
+}
+
 export class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
-    if (segments[0] === "e2e") {
-      await this.runE2e();
-      return;
-    }
-    if (segments[0] === "storybook") {
+    const { level, rest } = resolveTestLevel(segments);
+    if (rest[0] === "storybook") {
       await this.runStorybookPlaywright();
       return;
     }
-    if (segments[0] === "repo-client") {
-      await this.runRepoGoTest("./repo/client/cli/go", segments.slice(1));
+    if (rest[0] === "repo-client") {
+      await this.runRepoGoTest("./repo/client/cli/go", level, rest.slice(1));
       return;
     }
-    if (segments[0] === "repo-mcp") {
+    if (rest[0] === "repo-mcp") {
       runCmd("go", ["build", "-o", join(this.root, process.platform === "win32" ? "repo/client/client.exe" : "repo/client/client"), "./repo/client/mcp/go"], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
       for (const pkg of ["./repo/client/mcp/go", "./repo/client/mcp/cursor/go", "./repo/client/mcp/copilot/go", "./repo/client/mcp/claude/go", "./repo/client/mcp/codex/go", "./repo/client/mcp/kiro/go"]) {
         runCmd("go", ["build", pkg], { cwd: this.root, env: { ...process.env, GOWORK: join(this.root, "go.work") } });
       }
-      await this.runRepoGoTest("./repo/client/cli/go", ["-run", "Mcp|MCP|mcp", ...segments.slice(1)]);
+      await this.runRepoGoTest("./repo/client/cli/go", level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });
     runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root });
-    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
-  }
-
-  /** 🎭Runs every opt-in `test-e2e` target (Postgres containers, VSCode extension host, sketchpad Playwright, …) plus the Storybook board e2e — excluded from the default ≤30s `test` budget. */
-  private async runE2e(): Promise<void> {
-    runCmd("bun", ["nx", "run-many", "-t", "test-e2e", "--all", "--exclude", "workspace"], { cwd: this.root });
-    await this.runStorybookPlaywright();
+    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root });
+    if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
+      await this.runStorybookPlaywright();
+    }
   }
 
   private async waitForUrl(url: string, timeoutMs: number): Promise<void> {
@@ -641,9 +644,9 @@ export class TestScript extends Script {
     throw new Error(`No free TCP port in ${preferred}..${preferred + span - 1}`);
   }
 
-  /** ⏱️`-short` skips the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go` so the default budgeted `test` target stays ≤30s. */
-  private async runRepoGoTest(module: string, extraArgs: string[]): Promise<void> {
-    await runTestBudgeted("go", ["test", module, "-short", ...extraArgs], {
+  /** ⏱️`goLevelTestArgs` keeps `-short` (skipping the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go`) through `quick` and adds a cumulative `-skip` above the requested level. */
+  private async runRepoGoTest(module: string, level: TestLevel, extraArgs: string[]): Promise<void> {
+    await runTestBudgeted("go", ["test", module, ...goLevelTestArgs(level), ...extraArgs], {
       cwd: this.root,
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
     });

@@ -2,7 +2,7 @@
 /** @emoji ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { spawnSync } from "node:child_process";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, resolveTestLevel } from "../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -11,8 +11,9 @@ class BuildScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(): void {
-    runCmd("cargo", ["test", "-p", "repo_cli"], { cwd: this.repoRoot });
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["repo_cli"], this.repoRoot, rest);
   }
 }
 

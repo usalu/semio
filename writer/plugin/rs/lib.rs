@@ -1780,13 +1780,19 @@ mod tests {
         assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
     }
 
+    // 🧰 `VcsDocumentApp::tools()` (a per-app custom toolbar) no longer exists — toolbars are now
+    // derived by the renderer from the utility registry (`writer_utility_labels` above; writer
+    // declares no utilities). Format/lint were never single-sourced from that removed toolbar
+    // though: they're `WindowEngagementPossible` entries in `window_engagements()`, which is still
+    // the one surface for them — assert on that surface instead.
     #[test]
-    fn tools_include_format_and_lint_buttons() {
+    fn window_engagements_include_format_and_lint_possible_engagements() {
         let mut app = new_app::<WriterPlayApp>();
-        let tools = app.tools(&ViewState::default());
-        let json = serde_json::to_string(&tools).unwrap();
-        assert!(json.contains("writer-format"));
-        assert!(json.contains("writer-lint"));
+        let engagements = app.window_engagements(&ViewState::default());
+        let engagement = engagements.get(WRITER_PLAY_WINDOW_KIND).expect("writer window engagement");
+        let ids: Vec<&str> = engagement.possible_engagements.as_ref().expect("possible engagements").iter().map(|possible| possible.id.as_str()).collect();
+        assert!(ids.contains(&"writer-format"));
+        assert!(ids.contains(&"writer-lint"));
     }
 
     #[test]
@@ -1863,11 +1869,10 @@ mod tests {
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("\"Language\""));
         assert!(catalogue_json.contains("Cypher-inspired"));
-        let tools = app.tools(&ViewState::default());
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("\"category\":\"actions\""));
-        assert!(tools_json.contains("\"Format\""));
-        assert!(tools_json.contains("\"Lint\""));
+        let engagements = app.window_engagements(&ViewState::default());
+        let engagements_json = serde_json::to_string(&engagements).unwrap();
+        assert!(engagements_json.contains("\"Format\""));
+        assert!(engagements_json.contains("\"Lint\""));
         let measures = app.window_measures(&ViewState::default());
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Font size"));
@@ -1887,10 +1892,6 @@ mod tests {
         let catalogue = app.render(WRITER_PLAY_BODY_CATALOGUE, None, &view_state).expect("render");
         let catalogue_json = serde_json::to_string(&catalogue).unwrap();
         assert!(catalogue_json.contains("Sprache"));
-        let tools = app.tools(&view_state);
-        let tools_json = serde_json::to_string(&tools).unwrap();
-        assert!(tools_json.contains("Formatieren"));
-        assert!(tools_json.contains("Prüfen"));
         let measures = app.window_measures(&view_state);
         let measures_json = serde_json::to_string(&measures).unwrap();
         assert!(measures_json.contains("Schriftgröße"));
@@ -1898,6 +1899,8 @@ mod tests {
         let engagements = app.window_engagements(&view_state);
         let engagements_json = serde_json::to_string(&engagements).unwrap();
         assert!(engagements_json.contains("Texteditor"));
+        assert!(engagements_json.contains("Formatieren"));
+        assert!(engagements_json.contains("Prüfen"));
     }
 }
 //#endregion 🧪Tests

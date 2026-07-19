@@ -9,6 +9,9 @@ publish = false
 name = "compose-store"
 path = "bin.rs"
 
+
+[lints]
+workspace = true
 [dependencies]
 compose = { path = "../../../lib/rs" }
 serde = { version = "1.0.228", features = ["derive"] }

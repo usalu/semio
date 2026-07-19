@@ -1,6 +1,7 @@
 //! 🌬️ DIN EN 16798 indoor environmental input parameters and ventilation / HVAC energy.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, OccupancyType, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖Part1
 pub mod part_1 {
@@ -545,6 +546,60 @@ pub fn check_residential_environment(
     report.push(na_de::check_acoustic_level(l_aeq_db));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub floor_area_m2: f64,
+    pub occupants: u32,
+    pub ventilation_m3_h: f64,
+    pub t_op_c: f64,
+    pub l_aeq_db: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            floor_area_m2: 90.0,
+            occupants: 3,
+            ventilation_m3_h: 120.0,
+            t_op_c: 21.0,
+            l_aeq_db: 30.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<DinEn16798Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_residential_environment(
+        document.floor_area_m2,
+        document.occupants,
+        document.ventilation_m3_h,
+        document.t_op_c,
+        document.l_aeq_db,
+    )
+}
+
+pub struct DinEn16798Family;
+
+impl NormFamily for DinEn16798Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::DinEn16798
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

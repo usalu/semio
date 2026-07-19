@@ -1,7 +1,9 @@
 //! 📏 Norm core: shared quantities, clause identity, compliance results, and national annex selection.
 
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use vcs::{Operation, OperationDiff};
 
 // #region 🔖Quantity
 /// 📐 Physical quantity kind for SI-normalized norm computations.
@@ -464,27 +466,153 @@ pub enum OccupancyType {
 
 // #region 🔖Error
 /// ⚠️ Norm computation error.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, thiserror::Error)]
 pub enum NormError {
+    #[error("incomplete input: {field}")]
     IncompleteInput { field: String },
+    #[error("out of scope: {clause}")]
     OutOfScope { clause: ClauseId },
+    #[error("invalid {field}: {reason}")]
     InvalidValue { field: String, reason: String },
 }
+// #endregion 🔖Error
 
-impl fmt::Display for NormError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+// #region 🔖Family
+/// 🏷️ Stable identifier for each norm family crate exposed as a DocumentApp.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum NormFamilyId {
+    Din4108,
+    DinEn16798,
+    DinV18599,
+    En1990,
+    En1991,
+    En1992,
+    En1993,
+    En1994,
+    En1995,
+    En1996,
+    En1997,
+    En1998,
+    En1999,
+}
+
+impl NormFamilyId {
+    pub fn label(self) -> &'static str {
         match self {
-            Self::IncompleteInput { field } => write!(f, "incomplete input: {field}"),
-            Self::OutOfScope { clause } => write!(f, "out of scope: {clause}"),
-            Self::InvalidValue { field, reason } => {
-                write!(f, "invalid {field}: {reason}")
-            }
+            Self::Din4108 => "DIN 4108",
+            Self::DinEn16798 => "DIN EN 16798",
+            Self::DinV18599 => "DIN V 18599",
+            Self::En1990 => "EN 1990",
+            Self::En1991 => "EN 1991",
+            Self::En1992 => "EN 1992",
+            Self::En1993 => "EN 1993",
+            Self::En1994 => "EN 1994",
+            Self::En1995 => "EN 1995",
+            Self::En1996 => "EN 1996",
+            Self::En1997 => "EN 1997",
+            Self::En1998 => "EN 1998",
+            Self::En1999 => "EN 1999",
         }
     }
 }
 
-impl std::error::Error for NormError {}
-// #endregion 🔖Error
+/// 🧩 Headless norm family contract: typed document, undoable ops, and compliance evaluation.
+pub trait NormFamily: Send + Sync + 'static {
+    type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
+    type Op: Operation<Self::Document> + Clone + PartialEq + Send;
+
+    fn family_id() -> NormFamilyId;
+    fn evaluate(document: &Self::Document) -> CheckReport;
+}
+
+/// 📤 Replace the whole family document (VCS undoable).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentDiff<D> {
+    #[serde(default)]
+    pub document: Option<D>,
+}
+
+impl<D: Clone + Default + Serialize + DeserializeOwned> OperationDiff<D> for DocumentDiff<D> {
+    fn apply(&self, projection: &D) -> D {
+        self.document.clone().unwrap_or_else(|| projection.clone())
+    }
+
+    fn absorb(&mut self, other: Self) {
+        if other.document.is_some() {
+            self.document = other.document;
+        }
+    }
+}
+
+/// 📤 Whole-document replacement operation shared by norm family sessions.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(tag = "op", rename_all = "camelCase")]
+pub enum SetDocumentOp<D> {
+    SetDocument { document: D },
+}
+
+impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D> for SetDocumentOp<D> {
+    type Diff = DocumentDiff<D>;
+
+    fn diff(&self, _projection: &D) -> DocumentDiff<D> {
+        match self {
+            Self::SetDocument { document } => DocumentDiff {
+                document: Some(document.clone()),
+            },
+        }
+    }
+
+    fn backwards(&self, projection: &D) -> Vec<Self> {
+        vec![Self::SetDocument {
+            document: projection.clone(),
+        }]
+    }
+}
+
+/// 🧠 Retained headless session: document inputs plus the last computed compliance report.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(bound(serialize = "F::Document: Serialize", deserialize = "F::Document: DeserializeOwned"))]
+pub struct NormHost<F: NormFamily> {
+    pub document: F::Document,
+    pub report: CheckReport,
+}
+
+impl<F: NormFamily> Default for NormHost<F> {
+    fn default() -> Self {
+        Self::from_document(F::Document::default())
+    }
+}
+
+impl<F: NormFamily> NormHost<F> {
+    pub fn from_document(document: F::Document) -> Self {
+        let report = F::evaluate(&document);
+        Self { document, report }
+    }
+
+    pub fn document(&self) -> &F::Document {
+        &self.document
+    }
+
+    pub fn report(&self) -> &CheckReport {
+        &self.report
+    }
+
+    pub fn apply(&mut self, op: &F::Op) {
+        self.document = vcs::apply_operation(&self.document, op);
+        self.report = F::evaluate(&self.document);
+    }
+
+    pub fn replace_document(&mut self, document: F::Document) {
+        self.document = document;
+        self.report = F::evaluate(&self.document);
+    }
+
+    pub fn evaluate(&mut self) {
+        self.report = F::evaluate(&self.document);
+    }
+}
+// #endregion 🔖Family
 
 #[cfg(test)]
 mod tests {
@@ -523,5 +651,43 @@ mod tests {
             AnnexChoice::De,
         );
         assert_eq!(result.status, CheckStatus::Pass);
+    }
+
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    struct DemoDocument {
+        value: f64,
+    }
+
+    struct DemoFamily;
+
+    impl NormFamily for DemoFamily {
+        type Document = DemoDocument;
+        type Op = SetDocumentOp<DemoDocument>;
+
+        fn family_id() -> NormFamilyId {
+            NormFamilyId::En1990
+        }
+
+        fn evaluate(document: &DemoDocument) -> CheckReport {
+            let mut report = CheckReport::default();
+            report.push(CheckResult::from_utilization(
+                ClauseId::new("demo", "§1", "1.1"),
+                Quantity::new(QuantityKind::Dimensionless, document.value),
+                Quantity::new(QuantityKind::Dimensionless, 1.0),
+                "demo check",
+                AnnexChoice::De,
+            ));
+            report
+        }
+    }
+
+    #[test]
+    fn norm_host_recomputes_report_after_apply() {
+        let mut host = NormHost::<DemoFamily>::default();
+        assert!(host.report().checks[0].utilization < 1.0);
+        host.apply(&SetDocumentOp::SetDocument {
+            document: DemoDocument { value: 2.0 },
+        });
+        assert!(host.report().checks[0].utilization > 1.0);
     }
 }

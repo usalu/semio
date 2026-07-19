@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖PairNormalization
 /// @emoji 📐 Canonical undirected endpoint order using `mathematical_graph::orient_endpoints`.
-pub fn normalize_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
+pub fn normalize_pair(a: &EntityId, b: &EntityId) -> (EntityId, EntityId) {
     let (left, right) = orient_endpoints::<&str, Undirected>(&a.0, &b.0);
     (EntityId(left.to_string()), EntityId(right.to_string()))
 }
@@ -17,7 +17,7 @@ pub fn normalize_pair(a: EntityId, b: EntityId) -> (EntityId, EntityId) {
 // #region 🔖Mutations
 /// @emoji ➕ Upserts an adjacency row with normalized endpoints; replaces same pair if present.
 pub fn set_adjacency(program: &mut Program, mut adjacency: Adjacency) {
-    let (a, b) = normalize_pair(adjacency.element_a_id.clone(), adjacency.element_b_id.clone());
+    let (a, b) = normalize_pair(&adjacency.element_a_id, &adjacency.element_b_id);
     adjacency.element_a_id = a;
     adjacency.element_b_id = b;
     adjacency.normalized = true;
@@ -202,7 +202,7 @@ mod tests {
     fn normalize_pair_orders_endpoints() {
         let a = EntityId("element-2".into());
         let b = EntityId("element-10".into());
-        assert_eq!(normalize_pair(b.clone(), a.clone()), (b, a));
+        assert_eq!(normalize_pair(&b, &a), (b, a));
     }
 
     #[test]

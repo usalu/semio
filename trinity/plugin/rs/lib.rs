@@ -1254,13 +1254,17 @@ pub mod app_jack {
             assert!(json.contains("Flat V"));
         }
 
+        // 🧰 `VcsDocumentApp::tools()` no longer exists — toolbars are now derived by the renderer
+        // from the utility registry, which this app declares none of. `runJackQuery` is a plain
+        // operation and `undo` is a framework-injected History action; both still live in the
+        // static `AppDefinition.actions` list (undo/redo render via the History rail, not a
+        // per-app toolbar) — assert on that surface instead.
         #[test]
-        fn tools_include_run_jack_query() {
-            let mut app = new_app();
-            let tools = app.tools(&ViewState::default());
-            let json = serde_json::to_string(&tools).unwrap();
-            assert!(json.contains("runJackQuery"));
-            assert!(json.contains("undo"));
+        fn app_definition_declares_run_jack_query_and_history_actions() {
+            let definition = create_trinity_jack_app().definition;
+            let action_ids: Vec<&str> = definition.actions.iter().map(|action| action.id.as_str()).collect();
+            assert!(action_ids.contains(&"runJackQuery"));
+            assert!(action_ids.contains(&"undo"));
         }
 
         #[test]
@@ -1285,9 +1289,11 @@ pub mod app_jack {
             assert!(catalogue_json.contains("Fixturen"));
             assert!(catalogue_json.contains("Beispielabfragen"));
             assert!(catalogue_json.contains("Manifestarten"));
-            let tools_json = serde_json::to_string(&app.tools(&view_state)).unwrap();
-            assert!(tools_json.contains("Verlauf"));
-            assert!(tools_json.contains("Abfrage"));
+            // 🧰 `VcsDocumentApp::tools()` no longer exists (see the removed toolbar test above); the
+            // "Verlauf" (History rail group) label had no per-app surface even before removal — only
+            // the `runJackQuery` action label is this app's own to assert on.
+            let action_labels = app.app_labels(&view_state).action_labels;
+            assert_eq!(action_labels.get("runJackQuery").map(String::as_str), Some("Jack-Abfrage ausfuehren"));
         }
 
         #[test]
@@ -3037,12 +3043,16 @@ pub mod app_rewrite {
             assert!(serde_json::to_string(&before).unwrap().contains("lodJson"));
         }
 
+        // 🧰 `VcsDocumentApp::tools()` no longer exists — toolbars are now derived by the renderer
+        // from the utility registry, which this app declares none of. `reorganize` is a plain view
+        // action and `undo` is a framework-injected History action; both still live in the static
+        // `AppDefinition.actions` list.
         #[test]
-        fn tools_include_history_and_reorganize() {
-            let mut app = new_app();
-            let json = serde_json::to_string(&app.tools(&ViewState::default())).unwrap();
-            assert!(json.contains("undo"));
-            assert!(json.contains("reorganize"));
+        fn app_definition_declares_reorganize_and_history_actions() {
+            let definition = create_rewrite_app().definition;
+            let action_ids: Vec<&str> = definition.actions.iter().map(|action| action.id.as_str()).collect();
+            assert!(action_ids.contains(&"undo"));
+            assert!(action_ids.contains(&"reorganize"));
         }
 
         #[test]
@@ -3066,9 +3076,11 @@ pub mod app_rewrite {
             assert!(catalogue_json.contains("Zu RHS hinzufügen"));
             let parameters_json = serde_json::to_string(&app.render(TRINITY_REWRITE_PLAY_BODY_PARAMETERS, None, &view_state).expect("render")).unwrap();
             assert!(parameters_json.contains("\"Parameter\""));
-            let tools_json = serde_json::to_string(&app.tools(&view_state)).unwrap();
-            assert!(tools_json.contains("Verlauf"));
-            assert!(tools_json.contains("Regel"));
+            // 🧰 `VcsDocumentApp::tools()` no longer exists (see the removed toolbar test above); the
+            // "Verlauf" (History rail group) label had no per-app surface even before removal — only
+            // the `resetRule` action label is this app's own to assert on.
+            let action_labels = app.app_labels(&view_state).action_labels;
+            assert_eq!(action_labels.get("resetRule").map(String::as_str), Some("Regel zuruecksetzen"));
         }
 
         #[test]

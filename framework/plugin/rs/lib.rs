@@ -2917,7 +2917,7 @@ impl PluginBundle {
         self
     }
 
-    pub fn local_backbone_storage(mut self) -> Self {
+    pub fn local_backbone_storage(self) -> Self {
         self.capability(CapabilityRequirement {
             resource: ResourceKind::Backbone,
             rights: Rights::Read,

@@ -150,34 +150,9 @@ struct DocumentJson {
 
 #[derive(Clone)]
 enum LayerNode {
-    Pixel {
-        id: String,
-        visible: bool,
-        opacity: f32,
-        blend: BlendMode,
-        transform: Affine,
-        width: u32,
-        height: u32,
-        image_key: Option<String>,
-        mask: Option<MaskState>,
-    },
-    Group {
-        id: String,
-        visible: bool,
-        opacity: f32,
-        blend: BlendMode,
-        transform: Affine,
-        children: Vec<LayerNode>,
-        mask: Option<MaskState>,
-    },
-    Adjustment {
-        id: String,
-        visible: bool,
-        opacity: f32,
-        blend: BlendMode,
-        kind: String,
-        params: AdjustmentParamsJson,
-    },
+    Pixel { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, width: u32, height: u32, image_key: Option<String>, mask: Option<MaskState> },
+    Group { id: String, visible: bool, opacity: f32, blend: BlendMode, transform: Affine, children: Vec<LayerNode>, mask: Option<MaskState> },
+    Adjustment { id: String, visible: bool, opacity: f32, blend: BlendMode, kind: String, params: AdjustmentParamsJson },
 }
 
 #[derive(Clone)]
@@ -217,39 +192,16 @@ fn blend_from_str(raw: &str) -> BlendMode {
 fn affine_from_json(t: &TransformJson) -> Affine {
     let cos_r = t.rotation.cos();
     let sin_r = t.rotation.sin();
-    Affine::new([
-        t.scale_x * cos_r,
-        t.scale_x * sin_r,
-        -t.scale_y * sin_r,
-        t.scale_y * cos_r,
-        t.x,
-        t.y,
-    ])
+    Affine::new([t.scale_x * cos_r, t.scale_x * sin_r, -t.scale_y * sin_r, t.scale_y * cos_r, t.x, t.y])
 }
 
 fn parse_mask(m: &MaskJson) -> MaskState {
-    MaskState {
-        enabled: m.enabled,
-        invert: m.invert,
-        width: m.width.unwrap_or(512),
-        height: m.height.unwrap_or(512),
-    }
+    MaskState { enabled: m.enabled, invert: m.invert, width: m.width.unwrap_or(512), height: m.height.unwrap_or(512) }
 }
 
 fn parse_layer(raw: LayerNodeJson) -> LayerNode {
     match raw {
-        LayerNodeJson::Pixel {
-            id,
-            visible,
-            opacity,
-            blend_mode,
-            transform,
-            mask,
-            width,
-            height,
-            image_key,
-            ..
-        } => LayerNode::Pixel {
+        LayerNodeJson::Pixel { id, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => LayerNode::Pixel {
             id,
             visible,
             opacity: opacity.clamp(0.0, 1.0),
@@ -260,53 +212,34 @@ fn parse_layer(raw: LayerNodeJson) -> LayerNode {
             image_key,
             mask: mask.map(|m| parse_mask(&m)),
         },
-        LayerNodeJson::Group {
-            id,
-            visible,
-            opacity,
-            blend_mode,
-            transform,
-            mask,
-            children,
-            ..
-        } => LayerNode::Group {
-            id,
-            visible,
-            opacity: opacity.clamp(0.0, 1.0),
-            blend: blend_from_str(&blend_mode),
-            transform: affine_from_json(&transform),
-            children: children.into_iter().map(parse_layer).collect(),
-            mask: mask.map(|m| parse_mask(&m)),
-        },
-        LayerNodeJson::Adjustment {
-            id,
-            visible,
-            opacity,
-            blend_mode,
-            adjustment_kind,
-            params,
-            ..
-        } => LayerNode::Adjustment {
-            id,
-            visible,
-            opacity: opacity.clamp(0.0, 1.0),
-            blend: blend_from_str(&blend_mode),
-            kind: adjustment_kind,
-            params,
-        },
+        LayerNodeJson::Group { id, visible, opacity, blend_mode, transform, mask, children, .. } => {
+            LayerNode::Group { id, visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), transform: affine_from_json(&transform), children: children.into_iter().map(parse_layer).collect(), mask: mask.map(|m| parse_mask(&m)) }
+        }
+        LayerNodeJson::Adjustment { id, visible, opacity, blend_mode, adjustment_kind, params, .. } => LayerNode::Adjustment { id, visible, opacity: opacity.clamp(0.0, 1.0), blend: blend_from_str(&blend_mode), kind: adjustment_kind, params },
     }
 }
 
-fn parse_document(json: &str) -> Result<RasterDocument, String> {
-    let doc: DocumentJson = serde_json::from_str(json).map_err(|e| e.to_string())?;
+fn parse_document(json: &str) -> Result<RasterDocument, FrameworkSurfacePaintError> {
+    let doc: DocumentJson = serde_json::from_str(json)?;
     if doc.schema != "raster.document" {
-        return Err(format!("unsupported schema {}", doc.schema));
+        return Err(FrameworkSurfacePaintError::UnsupportedSchema(doc.schema));
     }
-    Ok(RasterDocument {
-        layers: doc.layers.into_iter().map(parse_layer).collect(),
-    })
+    Ok(RasterDocument { layers: doc.layers.into_iter().map(parse_layer).collect() })
 }
 // #endregion 🔖Document
+
+//#region ⚠️ Errors
+/// ⚠️ Raster-paint host errors — JSON decode failures, unsupported document schema, and image decode failures.
+#[derive(Debug, thiserror::Error)]
+pub enum FrameworkSurfacePaintError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error(transparent)]
+    Image(#[from] image::ImageError),
+    #[error("unsupported schema {0}")]
+    UnsupportedSchema(String),
+}
+//#endregion ⚠️ Errors
 
 // #region 🔖Pixels
 fn checkerboard_rgba(width: u32, height: u32, light_cell: u8, dark_cell: u8) -> Vec<u8> {
@@ -428,8 +361,8 @@ impl RasterHost {
         }
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
         cavas::theme::merge_color_field(&mut self.theme_clear, &v, "rasterClear");
         let (checkerboard_light_cell, checkerboard_dark_cell) = cavas::theme::checkerboard_shades_for_clear(self.theme_clear);
         self.checkerboard_light_cell = checkerboard_light_cell;
@@ -469,8 +402,9 @@ impl RasterHost {
         }
         if self.active_utility.starts_with("paint") {
             self.painting = true;
-            self.last_paint = Some(self.screen_to_world(sx, sy));
-            self.paint_at(self.last_paint.unwrap());
+            let point = self.screen_to_world(sx, sy);
+            self.last_paint = Some(point);
+            self.paint_at(point);
         }
     }
 
@@ -508,12 +442,11 @@ impl RasterHost {
     fn ensure_layer_buffer(&mut self, id: &str, width: u32, height: u32) -> &mut Vec<u8> {
         let key = Self::layer_pixel_buffer_key(id);
         let len = (width * height * 4) as usize;
-        self.paint_buffers
-            .entry(key)
-            .or_insert_with(|| checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell));
-        let buf = self.paint_buffers.get_mut(&Self::layer_pixel_buffer_key(id)).unwrap();
+        let checkerboard_light_cell = self.checkerboard_light_cell;
+        let checkerboard_dark_cell = self.checkerboard_dark_cell;
+        let buf = self.paint_buffers.entry(key).or_insert_with(|| checkerboard_rgba(width, height, checkerboard_light_cell, checkerboard_dark_cell));
         if buf.len() != len {
-            *buf = checkerboard_rgba(width, height, self.checkerboard_light_cell, self.checkerboard_dark_cell);
+            *buf = checkerboard_rgba(width, height, checkerboard_light_cell, checkerboard_dark_cell);
         }
         buf
     }
@@ -564,30 +497,32 @@ impl RasterHost {
         }
     }
 
-    pub fn sync_document_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn sync_document_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
         self.document = parse_document(json)?;
         Ok(())
     }
 
-    pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), String> {
-        let img = image::load_from_memory(bytes).map_err(|e| e.to_string())?;
+    pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
+        let img = image::load_from_memory(bytes)?;
         let rgba = img.to_rgba8();
         let width = rgba.width();
         let height = rgba.height();
         let key = Self::layer_pixel_buffer_key(layer_id);
-        self.paint_buffers.insert(key.clone(), rgba.into_raw());
-        let image = image_from_rgba(width, height, self.paint_buffers.get(&key).unwrap().clone());
+        let raw = rgba.into_raw();
+        self.paint_buffers.insert(key.clone(), raw.clone());
+        let image = image_from_rgba(width, height, raw);
         self.images.insert(key, image);
         Ok(())
     }
 
-    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), String> {
-        let img = image::load_from_memory(bytes).map_err(|e| e.to_string())?;
+    pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), FrameworkSurfacePaintError> {
+        let img = image::load_from_memory(bytes)?;
         let rgba = img.to_rgba8();
         let width = rgba.width();
         let height = rgba.height();
-        self.paint_buffers.insert(key.to_string(), rgba.into_raw());
-        let image = image_from_rgba(width, height, self.paint_buffers.get(key).unwrap().clone());
+        let raw = rgba.into_raw();
+        self.paint_buffers.insert(key.to_string(), raw.clone());
+        let image = image_from_rgba(width, height, raw);
         self.images.insert(key.to_string(), image);
         Ok(())
     }
@@ -608,8 +543,8 @@ impl RasterHost {
         self.hovered_id = id;
     }
 
-    pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), String> {
-        let ids: Vec<String> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), FrameworkSurfacePaintError> {
+        let ids: Vec<String> = serde_json::from_str(json)?;
         self.selected_ids = ids;
         Ok(())
     }
@@ -634,17 +569,7 @@ impl RasterHost {
 
     fn append_layer_node(&mut self, scene: &mut Scene, cam: Affine, node: &LayerNode, isolated_id: Option<&str>) {
         match node {
-            LayerNode::Pixel {
-                id,
-                visible,
-                opacity,
-                blend,
-                transform,
-                width,
-                height,
-                image_key,
-                mask,
-            } => {
+            LayerNode::Pixel { id, visible, opacity, blend, transform, width, height, image_key, mask } => {
                 if !visible {
                     return;
                 }
@@ -660,11 +585,7 @@ impl RasterHost {
                 if let Some(mask_state) = mask {
                     if mask_state.enabled {
                         let mask_key = format!("mask:{id}");
-                        let mut mask_rgba = self
-                            .mask_buffers
-                            .entry(mask_key.clone())
-                            .or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize])
-                            .clone();
+                        let mut mask_rgba = self.mask_buffers.entry(mask_key.clone()).or_insert_with(|| vec![255u8; (mask_state.width * mask_state.height * 4) as usize]).clone();
                         if mask_state.invert {
                             for a in mask_rgba.chunks_exact_mut(4) {
                                 a[3] = 255 - a[3];
@@ -676,29 +597,12 @@ impl RasterHost {
                 }
                 cavas::raster::draw_image_arc(scene, &img, Affine::IDENTITY);
                 scene.pop_layer();
-                if self.show_selection_chrome
-                    && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id))
-                {
+                if self.show_selection_chrome && (self.hovered_id.as_deref() == Some(id.as_str()) || self.selected_ids.iter().any(|s| s == id)) {
                     let stroke = Rect::new(0.0, 0.0, *width as f64, *height as f64);
-                    scene.stroke(
-                        &Stroke::new(2.0 / self.camera.zoom.max(0.1)),
-                        world,
-                        Color::from_rgba8(80, 160, 255, 220),
-                        None,
-                        &stroke,
-                    );
+                    scene.stroke(&Stroke::new(2.0 / self.camera.zoom.max(0.1)), world, Color::from_rgba8(80, 160, 255, 220), None, &stroke);
                 }
             }
-            LayerNode::Group {
-                id,
-                visible,
-                opacity,
-                blend,
-                transform,
-                children,
-                mask,
-                ..
-            } => {
+            LayerNode::Group { id, visible, opacity, blend, transform, children, mask, .. } => {
                 if !visible {
                     return;
                 }
@@ -717,14 +621,7 @@ impl RasterHost {
                 scene.pop_layer();
                 let _ = mask;
             }
-            LayerNode::Adjustment {
-                visible,
-                opacity,
-                blend,
-                kind,
-                params,
-                ..
-            } => {
+            LayerNode::Adjustment { visible, opacity, blend, kind, params, .. } => {
                 if !visible || isolated_id.is_some() {
                     return;
                 }
@@ -749,11 +646,7 @@ impl RasterHost {
         let mut scene = Scene::new();
         let cam = cavas::camera::camera_content_affine(&self.camera, &self.viewport);
         let key = format!("mask:{layer_id}");
-        let rgba = self
-            .mask_buffers
-            .entry(key.clone())
-            .or_insert_with(|| vec![255u8; 512 * 512 * 4])
-            .clone();
+        let rgba = self.mask_buffers.entry(key.clone()).or_insert_with(|| vec![255u8; 512 * 512 * 4]).clone();
         let img = self.images.insert(key, image_from_rgba(512, 512, rgba));
         cavas::raster::draw_image_arc(&mut scene, &img, cam);
         scene
@@ -865,19 +758,8 @@ struct ViewportJsonIn {
 
 /// 🎯 Flattened pick candidate — mirrors premigration `flattenRasterLayers` (document order, parent pushed before children, no visibility cascade).
 enum PickEntry {
-    Pixel {
-        id: String,
-        visible: bool,
-        transform: Affine,
-        width: u32,
-        height: u32,
-        ancestors: Vec<(String, bool)>,
-    },
-    Group {
-        id: String,
-        visible: bool,
-        children: Vec<LayerNode>,
-    },
+    Pixel { id: String, visible: bool, transform: Affine, width: u32, height: u32, ancestors: Vec<(String, bool)> },
+    Group { id: String, visible: bool, children: Vec<LayerNode> },
 }
 
 impl RasterHost {
@@ -916,14 +798,7 @@ impl RasterHost {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { id, visible, transform, width, height, .. } => {
-                        out.push(PickEntry::Pixel {
-                            id: id.clone(),
-                            visible: *visible,
-                            transform: *transform,
-                            width: *width,
-                            height: *height,
-                            ancestors: ancestors.to_vec(),
-                        });
+                        out.push(PickEntry::Pixel { id: id.clone(), visible: *visible, transform: *transform, width: *width, height: *height, ancestors: ancestors.to_vec() });
                     }
                     LayerNode::Group { id, visible, children, .. } => {
                         out.push(PickEntry::Group { id: id.clone(), visible: *visible, children: children.clone() });
@@ -979,8 +854,8 @@ impl RasterHost {
     }
 
     /// 🖱️ Pixel layer ids hit by a screen-space marquee (rect or lasso bbox) — port of premigration `resolveRasterMarqueeLayerHits`.
-    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, String> {
-        let query: MarqueeQueryIn = serde_json::from_str(query_json).map_err(|e| e.to_string())?;
+    pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, FrameworkSurfacePaintError> {
+        let query: MarqueeQueryIn = serde_json::from_str(query_json)?;
         if query.points.len() < 2 {
             return Ok("[]".into());
         }
@@ -1013,12 +888,7 @@ impl RasterHost {
                         }
                         let hw = *width as f64 * 0.5;
                         let hh = *height as f64 * 0.5;
-                        let corners = [
-                            *transform * Point::new(-hw, -hh),
-                            *transform * Point::new(hw, -hh),
-                            *transform * Point::new(hw, hh),
-                            *transform * Point::new(-hw, hh),
-                        ];
+                        let corners = [*transform * Point::new(-hw, -hh), *transform * Point::new(hw, -hh), *transform * Point::new(hw, hh), *transform * Point::new(-hw, hh)];
                         *acc = Some(ScreenRect::union(*acc, ScreenRect::from_points(&corners)));
                     }
                     LayerNode::Group { children, .. } => walk(children, acc),
@@ -1049,9 +919,9 @@ impl RasterHost {
     }
 
     /// 🧭 Maps the composite viewport into navigator screen space for the overview overlay rectangle — port of premigration `rasterNavigatorViewportOverlay`. `self.camera`/`self.viewport` act as the navigator's own camera/viewport.
-    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, String> {
-        let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json).map_err(|e| e.to_string())?;
-        let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json).map_err(|e| e.to_string())?;
+    pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, FrameworkSurfacePaintError> {
+        let content_camera: CameraJsonIn = serde_json::from_str(content_camera_json)?;
+        let content_viewport: ViewportJsonIn = serde_json::from_str(content_viewport_json)?;
         let cc = Camera { x: content_camera.x, y: content_camera.y, zoom: cavas::camera::clamp_zoom(content_camera.zoom) };
         let cv = Viewport { width: (content_viewport.width.max(1.0)) as u32, height: (content_viewport.height.max(1.0)) as u32, dpr: 1.0 };
         let top_left_world = cavas::camera::screen_to_world(&cc, &cv, Point::new(0.0, 0.0));
@@ -1103,8 +973,7 @@ impl RasterSessionInner {
             }
             _ => self.host.build_render_scene(),
         };
-        self.gpu
-            .render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+        self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
     }
 }
 
@@ -1119,14 +988,7 @@ pub struct RasterSession {
 impl RasterSession {
     #[wasm_bindgen(constructor)]
     pub fn new() -> Self {
-        Self {
-            state: Rc::new(RefCell::new(RasterSessionInner {
-                host: RasterHost::new(),
-                gpu: cavas::gpu_session::CanvasGpuSession::default(),
-                isolated_view: None,
-                view_mode: "composite".into(),
-            })),
-        }
+        Self { state: Rc::new(RefCell::new(RasterSessionInner { host: RasterHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default(), isolated_view: None, view_mode: "composite".into() })) }
     }
 
     #[wasm_bindgen(js_name = gpuReady)]
@@ -1148,8 +1010,7 @@ impl RasterSession {
         }
         let canvas = canvas.clone();
         future_to_promise(async move {
-            let (render_ctx, renderer, surface) =
-                cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+            let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
             let mut g = inner.borrow_mut();
             if g.gpu.gpu_ready() {
                 g.set_logical_size(lw, lh, dpr, pw, ph);
@@ -1203,25 +1064,17 @@ impl RasterSession {
 
     #[wasm_bindgen(js_name = syncDocumentJson)]
     pub fn sync_document_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.sync_document_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.sync_document_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadLayerImage)]
     pub fn upload_layer_image(&mut self, layer_id: &str, bytes: &[u8]) -> Result<(), JsValue> {
-        self.state
-            .borrow_mut()
-            .host
-            .upload_layer_image(layer_id, bytes)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.upload_layer_image(layer_id, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = uploadRasterImageKey)]
     pub fn upload_raster_image_key(&mut self, key: &str, bytes: &[u8]) -> Result<(), JsValue> {
-        self.state
-            .borrow_mut()
-            .host
-            .upload_raster_image_key(key, bytes)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.upload_raster_image_key(key, bytes).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setActiveUtility)]
@@ -1246,11 +1099,7 @@ impl RasterSession {
 
     #[wasm_bindgen(js_name = setSelectionIdsJson)]
     pub fn set_selection_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state
-            .borrow_mut()
-            .host
-            .set_selection_ids_json(json)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_selection_ids_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
@@ -1268,8 +1117,7 @@ impl RasterSession {
         let mut g = self.state.borrow_mut();
         g.view_mode = mode.to_string();
         g.isolated_view = layer_id;
-        g.host
-            .set_show_selection_chrome(mode != "navigator");
+        g.host.set_show_selection_chrome(mode != "navigator");
     }
 
     #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
@@ -1279,7 +1127,7 @@ impl RasterSession {
 
     #[wasm_bindgen(js_name = marqueeHitsJson)]
     pub fn marquee_hits_json(&self, query_json: &str) -> Result<String, JsValue> {
-        self.state.borrow().host.marquee_hits_json(query_json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.marquee_hits_json(query_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = navigatorFitCameraJson)]
@@ -1289,11 +1137,7 @@ impl RasterSession {
 
     #[wasm_bindgen(js_name = navigatorViewportOverlayJson)]
     pub fn navigator_viewport_overlay_json(&self, content_camera_json: &str, content_viewport_json: &str) -> Result<String, JsValue> {
-        self.state
-            .borrow()
-            .host
-            .navigator_viewport_overlay_json(content_camera_json, content_viewport_json)
-            .map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.navigator_viewport_overlay_json(content_camera_json, content_viewport_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 // #endregion 🔖WasmSession
@@ -1312,7 +1156,7 @@ mod tests {
 
     #[test]
     fn parse_play_fixtures() {
-        let json = include_str!("../example/semio.raster.json");
+        let json = include_str!("../../../../raster/example/semio.raster.json");
         let doc = parse_document(json).expect("parse semio fixture");
         assert!(!doc.layers.is_empty(), "semio should have layers");
     }
@@ -1354,12 +1198,7 @@ mod tests {
         let partial_hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(partial_marquee).expect("marquee")).expect("json");
         assert!(partial_hits.is_empty(), "small marquee should not fully contain any layer");
 
-        let crossing_hits: Vec<String> = serde_json::from_str(
-            &host
-                .marquee_hits_json(r#"{"points":[{"x":195,"y":150},{"x":260,"y":250}],"crossing":true}"#)
-                .expect("marquee"),
-        )
-        .expect("json");
+        let crossing_hits: Vec<String> = serde_json::from_str(&host.marquee_hits_json(r#"{"points":[{"x":195,"y":150},{"x":260,"y":250}],"crossing":true}"#).expect("marquee")).expect("json");
         assert!(!crossing_hits.is_empty(), "same rect with crossing=true should hit intersecting layers");
     }
 
@@ -1378,13 +1217,10 @@ mod tests {
         let fit_json = host.navigator_fit_camera_json(300.0, 300.0);
         let fit: CameraJsonIn = serde_json::from_str(&fit_json).expect("camera json");
         host.set_camera(fit.x, fit.y, fit.zoom);
-        let overlay_json = host
-            .navigator_viewport_overlay_json(r#"{"x":0,"y":0,"zoom":1}"#, r#"{"width":400,"height":400}"#)
-            .expect("overlay");
+        let overlay_json = host.navigator_viewport_overlay_json(r#"{"x":0,"y":0,"zoom":1}"#, r#"{"width":400,"height":400}"#).expect("overlay");
         let overlay: serde_json::Value = serde_json::from_str(&overlay_json).expect("overlay json");
         assert!(overlay["width"].as_f64().unwrap() > 0.0);
         assert!(overlay["height"].as_f64().unwrap() > 0.0);
     }
 }
 // #endregion 🧪Tests
-

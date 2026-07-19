@@ -297,8 +297,8 @@ pub mod app_home {
     //#endregion 🔖DocumentHelpers
 
     //#region 🔖Terminology
-    /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
     app_labels! {
+        /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
         struct SHomeLabels {
             vfs_empty_message: &'static str = en: "No studios yet. Create one from the toolbar.", de: "Noch keine Studios vorhanden. Erstelle eines ueber die Werkzeugleiste.";
             window_main: &'static str = en: "Studios", de: "Studios";
@@ -663,8 +663,7 @@ pub mod app_studio {
     use semio_framework_plugin::{
         app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
         create_default_layout, host_now_ms, is_de_locale, localized_label_map, resolve_labels, tree_item_desc,
-        component::layout::MeasureSelectItem, component::layout::WindowEngagementStatus,
-        ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text,
+        ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, MeasureSelectItem, WindowEngagementStatus,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
         AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup,
         PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode,
@@ -1135,8 +1134,8 @@ pub mod app_studio {
     //#endregion 🔖DocumentHelpers
 
     //#region 🔖Terminology
-    /// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
     app_labels! {
+        /// 🗣️ Complete UI label set for the Studio app; one field per label makes every locale combination compile-checked.
         struct SStudioLabels {
             apps_section: &'static str = en: "Apps", de: "Apps";
             media_vfs_empty_message: &'static str = en: "No app instances in the media graph.", de: "Keine App-Instanzen im Mediengraphen.";

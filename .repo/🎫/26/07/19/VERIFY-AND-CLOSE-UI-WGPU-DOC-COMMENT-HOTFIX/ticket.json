@@ -1,0 +1,13 @@
+{
+  "title": "Verify and Close UI WGPU Doc Comment Hotfix",
+  "emoji": "✅",
+  "status": "open",
+  "description": "Verify that the earlier hotfix converting an illegal inner doc-comment (//!) after other items inside a #[cfg(test)] mod scope in ui/wgpu/rs/lib.rs (which caused rustc E0753 and blocked cargo check --workspace) to a legal outer doc-comment (///) survived a subsequent large relocation/refactor of the file (the GoldenHarness test region moved from ~line 12379 to ~line 15308 as part of unrelated engine-relocation work). Steps: (1) read the original stale ticket .repo/🎫/26/07/18/FIX-WORKSPACE-BLOCKING-DOC-COMMENT-PLACEMENT-IN-UI-WGPU/ticket.json for context, (2) grep ui/wgpu/rs/lib.rs for '//#region 🔖GoldenHarness' and confirm the following doc comment uses /// not //!, (3) grep the whole file for occurrences of top-level //! inner doc comments and spot check a handful sit at the very top of their enclosing mod/crate scope (no new E0753 issues from the relocation), (4) run `cargo check -p ui_wgpu` synchronously and confirm no E0753 (note any other unrelated errors from concurrent in-flight work without fixing them), (5) attempt to close the old stale ticket 26/07/18/FIX-WORKSPACE-BLOCKING-DOC-COMMENT-PLACEMENT-IN-UI-WGPU noting the fix survived, then close this ticket with full verification results.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2117"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪752b0e49f5c24f01a820be15e944e877"
+  ]
+}

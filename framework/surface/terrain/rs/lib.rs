@@ -104,9 +104,18 @@ const TERRARIUM_TILE_PX: u32 = 256;
 /// keep per-tile JSON payloads and triangle counts small, fine enough to read as terrain relief.
 const TERRAIN_GRID_RESOLUTION: u32 = 33;
 
+//#region ⚠️ Errors
+/// ⚠️ Terrain DEM tile decode errors.
+#[derive(Debug, thiserror::Error)]
+pub enum FrameworkSurfaceTerrainError {
+    #[error(transparent)]
+    Image(#[from] image::ImageError),
+}
+//#endregion ⚠️ Errors
+
 /// 🎨 Elevation decoded from a Mapzen/AWS "Terrarium" RGB-encoded PNG: `R*256 + G + B/256 - 32768`.
-fn decode_terrarium_png(bytes: &[u8]) -> Result<image::RgbaImage, String> {
-    image::load_from_memory(bytes).map(|image| image.to_rgba8()).map_err(|error| error.to_string())
+fn decode_terrarium_png(bytes: &[u8]) -> Result<image::RgbaImage, FrameworkSurfaceTerrainError> {
+    Ok(image::load_from_memory(bytes)?.to_rgba8())
 }
 
 fn sample_elevation(image: &image::RgbaImage, px: f32, py: f32) -> f32 {
@@ -347,10 +356,7 @@ impl TerrainSessionCore {
         let distance = (dx * dx + dy * dy + dz * dz).sqrt().max(1.0);
         let zoom = tiles::pick_zoom(distance);
         let (center_lon, center_lat) = projection::local_meters_to_lonlat(target[0], target[1], self.state.origin_lon, self.state.origin_lat);
-        let rows: Vec<VisibleTileRow> = tiles::visible_tiles(center_lon, center_lat, zoom)
-            .into_iter()
-            .map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) })
-            .collect();
+        let rows: Vec<VisibleTileRow> = tiles::visible_tiles(center_lon, center_lat, zoom).into_iter().map(|(z, x, y)| VisibleTileRow { z, x, y, key: tiles::tile_key(z, x, y) }).collect();
         serde_json::to_string(&rows).unwrap_or_else(|_| "[]".to_string())
     }
 
@@ -534,6 +540,5 @@ mod tests {
         assert_eq!(value["exaggeration"], 1.5);
         assert_eq!(value["tileUrlTemplate"], GIS_3D_TERRAIN_TILE_URL_TEMPLATE);
     }
-
 }
 //#endregion Tests

@@ -183,7 +183,7 @@ pub enum RequirementKind { Functional, Spatial, Performance, Regulatory, Operati
 #[serde(rename_all = "camelCase")]
 pub enum ValidationStatus { Pending, Passed, Failed, Waived, Deferred }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum AnalysisKind {
     Gap,

@@ -6653,7 +6653,9 @@ mod tests {
 // #region 🔖DocumentVcs
 use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 #[cfg(any(test, target_arch = "wasm32"))]
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use vcs::create_document_vcs_envelope;
+#[cfg(test)]
+use vcs::DocumentVcsCommand;
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 

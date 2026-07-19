@@ -1,6 +1,7 @@
 //! 🧱 EN 1992 design of concrete structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -281,6 +282,72 @@ pub fn check_rc_beam(
     report.push(part_1_1::check_shear(v_ed_kn, v_rd, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub m_ed_knm: f64,
+    pub v_ed_kn: f64,
+    pub f_ck: f64,
+    pub b_mm: f64,
+    pub d_mm: f64,
+    pub a_s_mm2: f64,
+    pub f_yk: f64,
+    pub rho_l: f64,
+    pub n_ed_kn: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            m_ed_knm: 120.0,
+            v_ed_kn: 80.0,
+            f_ck: 30.0,
+            b_mm: 300.0,
+            d_mm: 450.0,
+            a_s_mm2: 1200.0,
+            f_yk: 500.0,
+            rho_l: 0.01,
+            n_ed_kn: 0.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1992Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_rc_beam(
+        document.m_ed_knm,
+        document.v_ed_kn,
+        document.f_ck,
+        document.b_mm,
+        document.d_mm,
+        document.a_s_mm2,
+        document.f_yk,
+        document.rho_l,
+        document.n_ed_kn,
+    )
+}
+
+pub struct En1992Family;
+
+impl NormFamily for En1992Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1992
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 // #region 🔖Fem
 use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};

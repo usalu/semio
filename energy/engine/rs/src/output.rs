@@ -1,6 +1,5 @@
 //! 📊 Output variable registration and time aggregation.
 
-use crate::units::Quantity;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 

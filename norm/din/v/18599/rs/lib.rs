@@ -3,10 +3,11 @@
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity};
 use norm_din_4108::part_2::Layer;
 use norm_din_en_16798::part_7 as ventilation_16798;
+use serde::{Deserialize, Serialize};
 
 // #region 🔖Shared
 /// 🏢 Building use class for energy reference area factors.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum UseClass {
     Residential,
     Office,
@@ -14,7 +15,7 @@ pub enum UseClass {
 }
 
 /// 📐 Monthly climate data for balancing.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct MonthlyClimate {
     pub theta_e_c: [f64; 12],
     pub g_h_w_m2: [f64; 12],
@@ -82,7 +83,7 @@ fn cooling_degree_hours(climate: &MonthlyClimate, theta_int_cool: f64) -> f64 {
 // #endregion 🔖Shared
 
 /// 📋 Inputs for annual energy balancing.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct BalancingInputs {
     pub use_class: UseClass,
     pub heated_area_m2: f64,
@@ -508,6 +509,49 @@ pub fn balance_annual(inputs: &BalancingInputs) -> Result<CheckReport, NormError
 pub fn check_primary_energy(inputs: &BalancingInputs) -> Result<CheckResult, NormError> {
     part_10::check(inputs)
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+pub type Document = BalancingInputs;
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<DinV18599Family>;
+
+impl Default for Document {
+    fn default() -> Self {
+        Document::reference_residential(ClimateZoneDe::Zone2, 100.0)
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    balance_annual(document).unwrap_or_else(|err| {
+        let mut report = CheckReport::default();
+        report.push(CheckResult::from_utilization(
+            ClauseId::new("DIN V 18599", "input", "1"),
+            Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0),
+            Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
+            err.to_string(),
+            AnnexChoice::De,
+        ));
+        report
+    })
+}
+
+pub struct DinV18599Family;
+
+impl NormFamily for DinV18599Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::DinV18599
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

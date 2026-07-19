@@ -17,7 +17,7 @@ use crate::error::Error;
 use crate::faults::SeveritySchedule;
 use crate::gains::{compute_equipment_gain_w, compute_lighting_gain_w, compute_people_gain_w, ActivityLevel, GainDecomposition};
 use crate::ideal_hvac::{ideal_loads_deliver, IdealLoadsConfig, IdealLoadsInput};
-use crate::model::{EntityId, Model, OutsideBoundary, SurfaceClass};
+use crate::model::{EntityId, Model, OutsideBoundary};
 use crate::plant::{PlantLoopSimulation, PlantStream, Pump};
 use crate::precompute::PrecomputedModel;
 use crate::props::saturation_pressure_pa;
@@ -242,17 +242,13 @@ impl SimulationKernel {
                 let temp_ok = state.zones.iter().all(|(id, zs)| {
                     prev_temps
                         .get(id)
-                        .map(|prev| (zs.air.temp_c - prev).abs() <= config.tolerances.temperature_k)
-                        .unwrap_or(false)
+                        .is_some_and(|prev| (zs.air.temp_c - prev).abs() <= config.tolerances.temperature_k)
                 });
                 let load_ok = state.zones.iter().all(|(id, zs)| {
-                    prev_loads
-                        .get(id)
-                        .map(|prev| {
-                            let load = zs.heating_demand_w + zs.cooling_demand_w;
-                            (load - prev).abs() <= config.tolerances.energy_w
-                        })
-                        .unwrap_or(false)
+                    prev_loads.get(id).is_some_and(|prev| {
+                        let load = zs.heating_demand_w + zs.cooling_demand_w;
+                        (load - prev).abs() <= config.tolerances.energy_w
+                    })
                 });
                 if temp_ok && load_ok {
                     state.warmup_complete = true;
@@ -309,15 +305,11 @@ impl SimulationKernel {
                 Some(OutsideBoundary::OutdoorAir) | None => weather.dry_bulb_c,
                 Some(OutsideBoundary::OtherSideTemperature) => weather.dry_bulb_c - 5.0,
                 Some(OutsideBoundary::Adiabatic) | Some(OutsideBoundary::Interzone(_)) => {
-                    state.surfaces.get(sid).map(|s| s.outside_temp_c).unwrap_or(weather.dry_bulb_c)
+                    state.surfaces.get(sid).map_or(weather.dry_bulb_c, |s| s.outside_temp_c)
                 }
             };
 
-            let zone_t = state
-                .zones
-                .get(&sp.zone_id)
-                .map(|z| z.air.temp_c)
-                .unwrap_or(weather.dry_bulb_c);
+            let zone_t = state.zones.get(&sp.zone_id).map_or(weather.dry_bulb_c, |z| z.air.temp_c);
 
             let mut solar_w_m2 = 0.0;
             if sp.sun_exposed && sun_alt > 0.0 {
@@ -369,11 +361,7 @@ impl SimulationKernel {
 
         for (fid, fp) in &pre.fenestrations {
             if let Some(surface) = model.surfaces.iter().find(|s| s.id == fp.surface_id) {
-                let zone_t = state
-                    .zones
-                    .get(&surface.zone_id)
-                    .map(|z| z.air.temp_c)
-                    .unwrap_or(weather.dry_bulb_c);
+                let zone_t = state.zones.get(&surface.zone_id).map_or(weather.dry_bulb_c, |z| z.air.temp_c);
                 let u = fp.u_value_w_m2k;
                 let cond_w = u * fp.area_m2 * (weather.dry_bulb_c - zone_t);
                 *zone_envelope_w.entry(surface.zone_id).or_default() += cond_w;
@@ -399,8 +387,8 @@ impl SimulationKernel {
             let floor_area_m2 = geom.floor_area_m2;
             let exterior_area_m2 = geom.exterior_area_m2;
 
-            let zone_t = state.zones.get(&zone.id).map(|z| z.air.temp_c).unwrap_or(weather.dry_bulb_c);
-            let zone_w = state.zones.get(&zone.id).map(|z| z.air.humidity_ratio).unwrap_or(weather.humidity_ratio());
+            let zone_t = state.zones.get(&zone.id).map_or(weather.dry_bulb_c, |z| z.air.temp_c);
+            let zone_w = state.zones.get(&zone.id).map_or(weather.humidity_ratio(), |z| z.air.humidity_ratio);
 
             let mut lighting_dim = 1.0_f64;
             if let Some(dz) = model.daylight_zones.iter().find(|d| d.zone_id == zone.id) {
@@ -453,36 +441,31 @@ impl SimulationKernel {
                 ));
             }
 
-            let mut infil_flow = model
-                .infiltrations
-                .iter()
-                .find(|i| i.zone_id == zone.id)
-                .map(|inf| {
-                    let sched = config.schedules.lookup(inf.schedule_id, &ctx);
-                    let spec = InfiltrationSpec {
-                        method: InfiltrationMethod::WindAndStack,
-                        schedule_factor: sched,
-                        ach: 0.0,
-                        flow_per_exterior_area_m3_s_m2: inf.flow_per_exterior_area_m3_s_m2,
-                        effective_leakage_area_m2: 0.0,
-                        discharge_coefficient: 0.65,
-                        constant_coefficient: inf.constant_term_coefficient,
-                        temperature_coefficient: inf.temperature_term_coefficient,
-                        velocity_coefficient: inf.velocity_term_coefficient,
-                        velocity_squared_coefficient: inf.velocity_squared_term_coefficient,
-                        stack_height_m: 3.0,
-                    };
-                    infiltration_flow_m3_s(
-                        &spec,
-                        zone.volume_m3,
-                        exterior_area_m2,
-                        weather.dry_bulb_c,
-                        zone_t,
-                        weather.wind_speed_m_s,
-                        weather.atmospheric_pressure_pa,
-                    )
-                })
-                .unwrap_or(0.0);
+            let mut infil_flow = model.infiltrations.iter().find(|i| i.zone_id == zone.id).map_or(0.0, |inf| {
+                let sched = config.schedules.lookup(inf.schedule_id, &ctx);
+                let spec = InfiltrationSpec {
+                    method: InfiltrationMethod::WindAndStack,
+                    schedule_factor: sched,
+                    ach: 0.0,
+                    flow_per_exterior_area_m3_s_m2: inf.flow_per_exterior_area_m3_s_m2,
+                    effective_leakage_area_m2: 0.0,
+                    discharge_coefficient: 0.65,
+                    constant_coefficient: inf.constant_term_coefficient,
+                    temperature_coefficient: inf.temperature_term_coefficient,
+                    velocity_coefficient: inf.velocity_term_coefficient,
+                    velocity_squared_coefficient: inf.velocity_squared_term_coefficient,
+                    stack_height_m: 3.0,
+                };
+                infiltration_flow_m3_s(
+                    &spec,
+                    zone.volume_m3,
+                    exterior_area_m2,
+                    weather.dry_bulb_c,
+                    zone_t,
+                    weather.wind_speed_m_s,
+                    weather.atmospheric_pressure_pa,
+                )
+            });
 
             if let Some(afn_def) = &model.airflow_network {
                 let mut nodes = vec![AfNode {
@@ -494,8 +477,8 @@ impl SimulationKernel {
                 }];
                 for (zid, nid) in &afn_def.zone_node_ids {
                     if *zid == zone.id {
-                        let zt = state.zones.get(zid).map(|z| z.air.temp_c).unwrap_or(zone_t);
-                        let zw = state.zones.get(zid).map(|z| z.air.humidity_ratio).unwrap_or(zone_w);
+                        let zt = state.zones.get(zid).map_or(zone_t, |z| z.air.temp_c);
+                        let zw = state.zones.get(zid).map_or(zone_w, |z| z.air.humidity_ratio);
                         nodes.push(AfNode {
                             id: *nid,
                             elevation_m: 3.0,
@@ -510,7 +493,7 @@ impl SimulationKernel {
                         nodes,
                         links: vec![AfLink {
                             id: 1,
-                            node_a: afn_def.zone_node_ids.iter().find(|(z, _)| *z == zone.id).map(|(_, n)| *n).unwrap_or(1),
+                            node_a: afn_def.zone_node_ids.iter().find(|(z, _)| *z == zone.id).map_or(1, |(_, n)| *n),
                             node_b: afn_def.outdoor_node_id,
                             kind: AfLinkKind::Crack,
                             flow_coefficient: 0.01,
@@ -558,14 +541,12 @@ impl SimulationKernel {
                 .thermostats
                 .iter()
                 .find(|t| t.zone_id == zone.id)
-                .map(|t| config.schedules.lookup(t.heating_setpoint_schedule_id, &ctx) * 24.0 + 20.0)
-                .unwrap_or(setpoints.heating_c);
+                .map_or(setpoints.heating_c, |t| config.schedules.lookup(t.heating_setpoint_schedule_id, &ctx) * 24.0 + 20.0);
             let cool_sp = model
                 .thermostats
                 .iter()
                 .find(|t| t.zone_id == zone.id)
-                .map(|t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0)
-                .unwrap_or(setpoints.cooling_c);
+                .map_or(setpoints.cooling_c, |t| config.schedules.lookup(t.cooling_setpoint_schedule_id, &ctx) * 6.0 + 24.0);
 
             let humidistat = model.humidistats.iter().find(|h| h.zone_id == zone.id);
             let hum_spec = humidistat.map(|h| HumidistatSpec {
@@ -643,8 +624,7 @@ impl SimulationKernel {
                         .faults
                         .iter()
                         .find(|f| f.target_equipment_id == ils.id)
-                        .map(|f| 1.0 - f.severity * SeveritySchedule::constant(1.0).at_hour(weather.hour))
-                        .unwrap_or(1.0);
+                        .map_or(1.0, |f| 1.0 - f.severity * SeveritySchedule::constant(1.0).at_hour(weather.hour));
 
                     let config_ils = IdealLoadsConfig {
                         max_heating_supply_air_temp_c: ils.max_heating_supply_air_temp_c,
@@ -684,6 +664,7 @@ impl SimulationKernel {
                     zone_state.unmet_cooling_w = output.unmet_cooling_w;
                 }
 
+                #[allow(unused_assignments, reason = "balance.system_sensible_w accumulation feeds a second advance_zone_air rebalance pass not yet wired for the zone_equipment path (only the ideal_loads path above rebalances today) — in-flight energy BEM zone-equipment coupling")]
                 for ze in model.zone_equipment.iter().filter(|z| z.zone_id == zone.id) {
                     let equip = match ze.equipment_type {
                         crate::model::ZoneEquipmentType::FanCoil => ZoneEquipment::FanCoil {
@@ -782,7 +763,7 @@ impl SimulationKernel {
                 pump,
                 glycol_fraction: 0.0,
             };
-            let plant_out = loop_sim.simulate(results.first().map(|r| r.load_w).unwrap_or(0.0));
+            let plant_out = loop_sim.simulate(results.first().map_or(0.0, |r| r.load_w));
             state.delivered_total.pump_w += plant_out.electrical_power_w;
             state.plant_supply_c = plant_out.outlet.temperature_c;
             let _ = config;

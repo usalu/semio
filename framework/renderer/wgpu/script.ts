@@ -9,6 +9,7 @@ import {
   SEMIO_ASSET_SERVER_PORT,
   SEMIO_ASSET_BASE_URL_ENV,
   getWorkspaceRoot,
+  resolveTestLevel,
   runBundleScriptMain,
   runVitest,
   frameworkOsPlaygroundDefaultPort,
@@ -162,7 +163,8 @@ class NativeRunScript extends BundleScript {
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runVitest(this.root, segments, "vitest.config.ts");
+    const { rest } = resolveTestLevel(segments);
+    runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

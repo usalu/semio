@@ -19374,38 +19374,291 @@ mod tests {
 
     use crate::kit_store_comprehensive_e2e::kit_store_comprehensive_fixture_path;
 
-    #[test]
-    fn kit_store_comprehensive_fixture_contract_is_valid() {
-        let Some(path) = kit_store_comprehensive_fixture_path() else {
-            eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
-            return;
-        };
-        let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
-        crate::kit_store_comprehensive_e2e::kit_store_validate_comprehensive_fixture(&fixture);
-    }
+    /// ⏱️Quick: comprehensive-fixture E2E replay reads a large fixture and exercises every replay engine.
+    mod quick {
+        use super::*;
 
-    #[test]
-    fn kit_store_comprehensive_fixture_all_replay_engines_match_golden() {
-        block_on(async {
+        #[test]
+        fn kit_store_comprehensive_fixture_contract_is_valid() {
             let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_replay_engines_match_golden");
+                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_contract_is_valid: missing kit-store.comprehensive.compose.json");
                 return;
             };
             let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
-            crate::kit_store_comprehensive_e2e::run_all_replay_engines(&fixture).await;
-        });
+            crate::kit_store_comprehensive_e2e::kit_store_validate_comprehensive_fixture(&fixture);
+        }
+
+        #[test]
+        fn kit_store_comprehensive_fixture_all_replay_engines_match_golden() {
+            block_on(async {
+                let Some(path) = kit_store_comprehensive_fixture_path() else {
+                    eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_replay_engines_match_golden");
+                    return;
+                };
+                let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
+                crate::kit_store_comprehensive_e2e::run_all_replay_engines(&fixture).await;
+            });
+        }
+
+        #[test]
+        fn kit_store_comprehensive_fixture_all_scenarios() {
+            block_on(async {
+                let Some(path) = kit_store_comprehensive_fixture_path() else {
+                    eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
+                    return;
+                };
+                let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
+                crate::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
+            });
+        }
+
+        #[test]
+        fn kit_store_golden_operations_replay_matches_expected_invariants() {
+            block_on(async {
+                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                    eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing compose/asset/compose/kit-store.golden.*.json");
+                    return;
+                };
+                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+                let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+
+                let g = crate::vcs::Graph::new().await;
+                let workspace_id = g.id.clone();
+                let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
+                let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
+                for rec in golden_ops {
+                    let kind = rec["kind"].as_str().expect("operation kind");
+                    let input = &rec["input"];
+                    match kind {
+                        "createFixedPiece" => {
+                            let design_id = crate::id::Id::from(input["designId"].as_str().expect("designId"));
+                            let blueprint_id = crate::id::Id::from(input["blueprintId"].as_str().expect("blueprintId"));
+                            let position = crate::kit_backbone::position_input_from_json(&input["position"]).expect("position from golden json");
+                            let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
+                            let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
+                            g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
+                        }
+                        other => panic!("unsupported golden operation kind: {other}"),
+                    }
+                }
+
+                let inv = &exp["invariants"];
+                let kit = g.materialized_kit_for_workspace(&workspace_id).await;
+                let ds = kit.designs_flat().await;
+                assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
+                let mut total = 0usize;
+                let mut centers: Vec<[f64; 2]> = Vec::new();
+                for d in ds.iter() {
+                    for p in d.pieces.read().await.iter() {
+                        total += 1;
+                        let guard = p.position.read().await;
+                        let n = guard.as_ref().expect("piece position");
+                        let pv = n.snapshot_input().await;
+                        centers.push([pv.center.u, pv.center.v]);
+                    }
+                }
+                centers.sort_by(|a, b| a[0].total_cmp(&b[0]).then_with(|| a[1].total_cmp(&b[1])));
+                assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
+                let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
+                assert_eq!(centers.len(), expect_centers.len(), "centers len");
+                for (got, want) in centers.iter().zip(expect_centers.iter()) {
+                    assert!((got[0] - want[0]).abs() < 1e-9, "center u");
+                    assert!((got[1] - want[1]).abs() < 1e-9, "center v");
+                }
+
+                let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
+                let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.compose.json");
+                assert_eq!(fp, exp_fp, "projectionFingerprint");
+            });
+        }
+
+        /// 🪡 `kit_graph_engine::apply_kit_operation` must replay the same golden operations as manual apply.
+        #[test]
+        fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
+            block_on(async {
+                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                    eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
+                    return;
+                };
+                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+                let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
+
+                let g = crate::vcs::Graph::new().await;
+                let workspace_id = g.id.clone();
+                let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
+                let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
+                for rec in golden_ops {
+                    let kind = rec["kind"].as_str().expect("operation kind");
+                    let input = rec.get("input").expect("input");
+                    let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
+                    let applied = crate::kit_graph_engine::apply_kit_operation(&g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
+                    assert!(applied.created_piece.is_some(), "expected piece for {kind}");
+                    assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
+                }
+
+                let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
+                let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+                assert_eq!(fp, exp_fp, "projectionFingerprint via typed apply");
+            });
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        #[test]
+        fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
+            block_on(async {
+                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                    eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
+                    return;
+                };
+                let dir = tempfile::tempdir().expect("temp dir");
+                let path = dir.path().join("dev-kit.json");
+
+                let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+                let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+
+                let g = crate::vcs::Graph::new().await;
+                let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
+                let graph_workspace = g.id.as_str().to_string();
+                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
+                for op in &mut stored {
+                    if op.workspace_id == golden_draft_id {
+                        op.workspace_id = graph_workspace.clone();
+                    }
+                }
+                let uri_full = format!("file://{}", path.display());
+                let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
+                let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored_operations(&stored);
+                std::fs::write(&path, crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
+
+                crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
+
+                let workspace_id = g.id.clone();
+                let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
+                let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+                assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
+            });
+        }
+
+        #[cfg(not(target_arch = "wasm32"))]
+        #[test]
+        fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
+            block_on(async {
+                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                    eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
+                    return;
+                };
+                let dir = tempfile::tempdir().expect("temp dir");
+                let proj_root = dir.path().join("workspace");
+                std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
+                let proj_canon = proj_root.canonicalize().expect("canonical workspace");
+                let uri_local = format!("local://{}", proj_canon.display());
+                let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
+
+                let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+                let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
+
+                let g_bootstrap = crate::vcs::Graph::new().await;
+                let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
+
+                let g2 = crate::vcs::Graph::new().await;
+                let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
+                let graph_workspace = g2.id.as_str().to_string();
+                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
+                for op in &mut stored {
+                    if op.workspace_id == golden_draft_id {
+                        op.workspace_id = graph_workspace.clone();
+                    }
+                }
+
+                let db_path = proj_canon.join(".compose").join("wip.db");
+                let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
+                for operation in &stored {
+                    let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
+                    conn.execute(
+                        "INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
+                        rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
+                    )
+                    .expect("insert  operation entity");
+                }
+                drop(conn);
+
+                crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
+
+                let workspace_id = g2.id.clone();
+                let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
+                let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
+                assert_eq!(fp, exp_fp, "local .compose backbone replay must match US-001 golden fingerprint");
+            });
+        }
     }
 
-    #[test]
-    fn kit_store_comprehensive_fixture_all_scenarios() {
-        block_on(async {
-            let Some(path) = kit_store_comprehensive_fixture_path() else {
-                eprintln!("[DEBUG] skip kit_store_comprehensive_fixture_all_scenarios: missing kit-store.comprehensive.compose.json");
-                return;
-            };
-            let fixture: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path).expect("read comprehensive fixture")).expect("parse comprehensive fixture");
-            crate::kit_store_comprehensive_e2e::run_in_process(&fixture).await;
-        });
+    /// ⏱️Long: mutation-visibility checks that route through `dispatch_wip_wait`'s bus poll —
+    /// its 30s deadline (see [`crate::worker::ParentStore::dispatch_wip_wait`]) means a lagged/missed
+    /// broadcast event makes these consume the full timeout instead of finishing sub-second.
+    mod long {
+        use super::*;
+
+        #[test]
+        fn create_fixed_piece_end_to_end() {
+            block_on(async {
+                let schema = crate::gql::build_schema().await;
+                let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+                let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
+                assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
+
+                // The wip child applies asynchronously; wait briefly for the event loop.
+                std::thread::sleep(std::time::Duration::from_millis(150));
+
+                let q = relay_wip_designs_have_piece();
+                let res = schema.execute(q).await;
+                assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
+                let data = res.data.into_json().unwrap();
+                let edges = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("design edges");
+                let any_piece = edges.iter().any(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
+                assert!(any_piece, "expected at least one piece in wip; got: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
+            });
+        }
+
+        #[test]
+        fn wip_and_authoritative_are_isolated() {
+            block_on(async {
+                let schema = crate::gql::build_schema().await;
+                let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+                let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
+                std::thread::sleep(std::time::Duration::from_millis(150));
+
+                let q = relay_auth_designs_piece_ids();
+                let res = schema.execute(q).await;
+                let data = res.data.into_json().unwrap();
+                let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
+                let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
+                assert!(all_empty, "authoritative leaked pieces: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
+            });
+        }
+
+        /// 🛡️ Mutation visibility without re-snapshotting: read wip, mutate, read wip again, second
+        /// read must reflect the mutation. Proves the resolver sees the live Arc, not a snapshot.
+        #[test]
+        fn mutation_visible_without_resnapshotting() {
+            block_on(async {
+                let schema = crate::gql::build_schema().await;
+                let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
+                let q = relay_wip_designs_have_piece();
+
+                let before = schema.execute(q).await;
+                let before_data = before.data.into_json().unwrap();
+                let before_pieces = relay_piece_count_wip(&before_data);
+
+                let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
+                std::thread::sleep(std::time::Duration::from_millis(150));
+
+                let after = schema.execute(q).await;
+                let after_data = after.data.into_json().unwrap();
+                let after_pieces = relay_piece_count_wip(&after_data);
+
+                assert_eq!(after_pieces, before_pieces + 1, "mutation not visible on re-read; before={} after={}", before_pieces, after_pieces);
+            });
+        }
     }
 
     /// @emoji 📜 `gql::sdl()` is code-first; set `COMPOSE_GOLDEN_STRICT=1` to assert every golden `type`/`interface`/`union`/`input`/`enum`/`scalar` exists in generated SDL (structural superset).
@@ -20762,44 +21015,6 @@ mod tests {
         assert_eq!(crate::operation::GRAPH_OPERATION_REGISTRY_LEN, 98);
     }
 
-    #[test]
-    fn create_fixed_piece_end_to_end() {
-        block_on(async {
-            let schema = crate::gql::build_schema().await;
-            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let res = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
-            assert!(res.errors.is_empty(), "mutation errors: {:?}", res.errors);
-
-            // The wip child applies asynchronously; wait briefly for the event loop.
-            std::thread::sleep(std::time::Duration::from_millis(150));
-
-            let q = relay_wip_designs_have_piece();
-            let res = schema.execute(q).await;
-            assert!(res.errors.is_empty(), "query errors: {:?}", res.errors);
-            let data = res.data.into_json().unwrap();
-            let edges = data["store"]["wip"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("design edges");
-            let any_piece = edges.iter().any(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.iter().any(|_| true)).unwrap_or(false));
-            assert!(any_piece, "expected at least one piece in wip; got: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
-        });
-    }
-
-    #[test]
-    fn wip_and_authoritative_are_isolated() {
-        block_on(async {
-            let schema = crate::gql::build_schema().await;
-            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
-            std::thread::sleep(std::time::Duration::from_millis(150));
-
-            let q = relay_auth_designs_piece_ids();
-            let res = schema.execute(q).await;
-            let data = res.data.into_json().unwrap();
-            let edges = data["store"]["authoritative"]["theKit"]["kit"]["hasDesigns"]["edges"].as_array().expect("auth design edges");
-            let all_empty = edges.iter().all(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.is_empty()).unwrap_or(true));
-            assert!(all_empty, "authoritative leaked pieces: {}", crate::external_adapters::serde_json::to_string_pretty(&data).unwrap());
-        });
-    }
-
     /// 🛡️ Traversal must share Arcs, not deep-copy entities. Resolves a deep path and asserts
     /// the live `Arc<Piece>` strong count grows only by the bounded number of resolver hops
     /// that touch it (not by the number of pieces in the design).
@@ -20841,212 +21056,9 @@ mod tests {
         edges.iter().map(|e| e["node"]["hasPieces"]["edges"].as_array().map(|pe| pe.len()).unwrap_or(0)).sum()
     }
 
-    /// 🛡️ Mutation visibility without re-snapshotting: read wip, mutate, read wip again, second
-    /// read must reflect the mutation. Proves the resolver sees the live Arc, not a snapshot.
-    #[test]
-    fn mutation_visible_without_resnapshotting() {
-        block_on(async {
-            let schema = crate::gql::build_schema().await;
-            let (_, tx_id) = graphql_seed_defaults_and_open_tx(&schema).await;
-            let q = relay_wip_designs_have_piece();
-
-            let before = schema.execute(q).await;
-            let before_data = before.data.into_json().unwrap();
-            let before_pieces = relay_piece_count_wip(&before_data);
-
-            let _ = schema.execute(Request::new(ADD_FIXED_PIECE_TO_DESIGN).variables(add_fixed_piece_vars(&tx_id, "des1"))).await;
-            std::thread::sleep(std::time::Duration::from_millis(150));
-
-            let after = schema.execute(q).await;
-            let after_data = after.data.into_json().unwrap();
-            let after_pieces = relay_piece_count_wip(&after_data);
-
-            assert_eq!(after_pieces, before_pieces + 1, "mutation not visible on re-read; before={} after={}", before_pieces, after_pieces);
-        });
-    }
-
     /// 🗃️ Delegates to [`crate::kit_graph_engine::projection_fingerprint_for_kit`] (single implementation).
     pub async fn stable_projection_fingerprint(kit: &Arc<crate::kit::Kit>) -> String {
         crate::kit_graph_engine::projection_fingerprint_for_kit(kit.as_ref()).await
-    }
-
-    #[test]
-    fn kit_store_golden_operations_replay_matches_expected_invariants() {
-        block_on(async {
-            let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing compose/asset/compose/kit-store.golden.*.json");
-                return;
-            };
-            let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
-            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
-
-            let g = crate::vcs::Graph::new().await;
-            let workspace_id = g.id.clone();
-            let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
-            for rec in golden_ops {
-                let kind = rec["kind"].as_str().expect("operation kind");
-                let input = &rec["input"];
-                match kind {
-                    "createFixedPiece" => {
-                        let design_id = crate::id::Id::from(input["designId"].as_str().expect("designId"));
-                        let blueprint_id = crate::id::Id::from(input["blueprintId"].as_str().expect("blueprintId"));
-                        let position = crate::kit_backbone::position_input_from_json(&input["position"]).expect("position from golden json");
-                        let name = input.get("name").and_then(|v| v.as_str()).map(|s| s.to_string());
-                        let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
-                        g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
-                    }
-                    other => panic!("unsupported golden operation kind: {other}"),
-                }
-            }
-
-            let inv = &exp["invariants"];
-            let kit = g.materialized_kit_for_workspace(&workspace_id).await;
-            let ds = kit.designs_flat().await;
-            assert_eq!(ds.len(), inv["designCount"].as_u64().expect("designCount") as usize, "designCount");
-            let mut total = 0usize;
-            let mut centers: Vec<[f64; 2]> = Vec::new();
-            for d in ds.iter() {
-                for p in d.pieces.read().await.iter() {
-                    total += 1;
-                    let guard = p.position.read().await;
-                    let n = guard.as_ref().expect("piece position");
-                    let pv = n.snapshot_input().await;
-                    centers.push([pv.center.u, pv.center.v]);
-                }
-            }
-            centers.sort_by(|a, b| a[0].total_cmp(&b[0]).then_with(|| a[1].total_cmp(&b[1])));
-            assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
-            let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
-            assert_eq!(centers.len(), expect_centers.len(), "centers len");
-            for (got, want) in centers.iter().zip(expect_centers.iter()) {
-                assert!((got[0] - want[0]).abs() < 1e-9, "center u");
-                assert!((got[1] - want[1]).abs() < 1e-9, "center v");
-            }
-
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint in kit-store.golden.expected.compose.json");
-            assert_eq!(fp, exp_fp, "projectionFingerprint");
-        });
-    }
-
-    /// 🪡 `kit_graph_engine::apply_kit_operation` must replay the same golden operations as manual apply.
-    #[test]
-    fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
-        block_on(async {
-            let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
-                return;
-            };
-            let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
-            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
-
-            let g = crate::vcs::Graph::new().await;
-            let workspace_id = g.id.clone();
-            let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-            let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
-            for rec in golden_ops {
-                let kind = rec["kind"].as_str().expect("operation kind");
-                let input = rec.get("input").expect("input");
-                let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
-                let applied = crate::kit_graph_engine::apply_kit_operation(&g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
-                assert!(applied.created_piece.is_some(), "expected piece for {kind}");
-                assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
-            }
-
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "projectionFingerprint via typed apply");
-        });
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
-        block_on(async {
-            let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
-                return;
-            };
-            let dir = tempfile::tempdir().expect("temp dir");
-            let path = dir.path().join("dev-kit.json");
-
-            let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
-            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
-
-            let g = crate::vcs::Graph::new().await;
-            let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
-            let graph_workspace = g.id.as_str().to_string();
-            let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
-            for op in &mut stored {
-                if op.workspace_id == golden_draft_id {
-                    op.workspace_id = graph_workspace.clone();
-                }
-            }
-            let uri_full = format!("file://{}", path.display());
-            let norm = crate::kit_backbone::normalize_connection_uri(&uri_full);
-            let bundle = crate::kit_backbone::DevBackboneBundleDoc::from_stored_operations(&stored);
-            std::fs::write(&path, crate::external_adapters::serde_json::to_string_pretty(&bundle).expect("serialize kit-store bundle")).expect("write kit-store bundle");
-
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g).await.expect("dev json mount+replay");
-
-            let workspace_id = g.id.clone();
-            let fp = stable_projection_fingerprint(&g.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "dev-json backbone replay must match US-001 golden fingerprint");
-        });
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
-        block_on(async {
-            let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
-                eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
-                return;
-            };
-            let dir = tempfile::tempdir().expect("temp dir");
-            let proj_root = dir.path().join("workspace");
-            std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
-            let proj_canon = proj_root.canonicalize().expect("canonical workspace");
-            let uri_local = format!("local://{}", proj_canon.display());
-            let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
-
-            let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
-            let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
-
-            let g_bootstrap = crate::vcs::Graph::new().await;
-            let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
-
-            let g2 = crate::vcs::Graph::new().await;
-            let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
-            let graph_workspace = g2.id.as_str().to_string();
-            let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
-            for op in &mut stored {
-                if op.workspace_id == golden_draft_id {
-                    op.workspace_id = graph_workspace.clone();
-                }
-            }
-
-            let db_path = proj_canon.join(".compose").join("wip.db");
-            let conn = rusqlite::Connection::open(&db_path).expect("open wip.db");
-            for operation in &stored {
-                let input_json = crate::external_adapters::serde_json::to_string(&operation.input).expect("input json");
-                conn.execute(
-                    "INSERT INTO _operation_log (draft_id, transaction_id, kind, input_json, kit_diff_json) VALUES (?1, ?2, ?3, ?4, ?5)",
-                    rusqlite::params![operation.workspace_id, operation.transaction_id, operation.kind, input_json, operation.kit_diff.as_ref().map(|v| crate::external_adapters::serde_json::to_string(v).expect("kit diff json"))],
-                )
-                .expect("insert  operation entity");
-            }
-            drop(conn);
-
-            crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g2).await.expect("replay wip.db");
-
-            let workspace_id = g2.id.clone();
-            let fp = stable_projection_fingerprint(&g2.materialized_kit_for_workspace(&workspace_id).await).await;
-            let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-            assert_eq!(fp, exp_fp, "local .compose backbone replay must match US-001 golden fingerprint");
-        });
     }
 
     #[test]

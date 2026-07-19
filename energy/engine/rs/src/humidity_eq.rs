@@ -1,7 +1,7 @@
 //! 💦 Humidity equipment: steam/water humidifiers, dehumidifiers, solid desiccant.
 
 use crate::props::{latent_heat_vaporization, saturation_pressure_pa};
-use crate::units::{H_FG_0C, P_STD};
+use crate::units::H_FG_0C;
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Humidifier

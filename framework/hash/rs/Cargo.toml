@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Content-addressing and Merkle hash utilities for the framework kernel"
 
+
+[lints]
+workspace = true
 [lib]
 path = "lib.rs"
 

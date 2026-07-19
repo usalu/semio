@@ -20,12 +20,30 @@
         "forwardAllArgs": true
       }
     },
-    "test-e2e": {
+    "test-quick": {
       "executor": "nx:run-commands",
       "dependsOn": ["@semio-tech/compose-rs:build"],
       "options": {
         "cwd": "compose/client/lib/js",
-        "command": "bun ./script.ts test-e2e",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio-tech/compose-rs:build"],
+      "options": {
+        "cwd": "compose/client/lib/js",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["@semio-tech/compose-rs:build"],
+      "options": {
+        "cwd": "compose/client/lib/js",
+        "command": "bun ./script.ts test exhaustive",
         "forwardAllArgs": true
       }
     }

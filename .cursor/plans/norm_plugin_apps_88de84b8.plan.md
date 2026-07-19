@@ -4,19 +4,19 @@ overview: Add a retained headless NormHost session layer on top of the existing 
 todos:
   - id: ticket
     content: Open ticket under goal Norm and bind plan
-    status: pending
+    status: completed
   - id: norm-core-host
     content: Add NormFamily + NormHost session primitives and headless tests in norm_core
-    status: pending
+    status: completed
   - id: family-sessions
     content: Add Document, Op, evaluate, Host wiring in all 13 family crates
-    status: pending
+    status: completed
   - id: norm-plugin
     content: Create norm/plugin with 13 DocumentApps, Cargo metadata, workspace + launch registration
-    status: pending
+    status: completed
   - id: verify
     content: Run norm_core, family, and norm-plugin tests; close ticket with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/compose-rs-wasm` router: `bun ./script.ts <wasm|build|test>`. */
 import { execFileSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runWasmPackWebBuild, runCargoTestBudgeted, resolveTestLevel } from "../../../../repo/lib/js/index.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -37,9 +37,11 @@ class BuildScript extends BundleScript {
   }
 }
 
+/** ⏱️Level-budgeted; heavy fixture/sqlite-replay tests live in `mod quick`, and tests that route through `dispatch_wip_wait`'s 30s bus-poll deadline live in `mod long` (both nested in `mod tests`, see `lib.rs`). */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    execFileSync("cargo", ["test", ...segments], { stdio: "inherit", cwd: this.root });
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["compose"], this.root, rest);
   }
 }
 

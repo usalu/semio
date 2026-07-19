@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** 🔺 `@semio-tech/trinity-ram-rs` router: `bun ./script.ts <wasm|test>`. */
-import { BundleScript, ScriptRouter, playPollingEnv, runBundleScriptMain, runCargo, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, playPollingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../repo/lib/js/index.ts";
 import { join } from "node:path";
 
 class WasmScript extends BundleScript {
@@ -21,9 +21,11 @@ class WasmScript extends BundleScript {
   }
 }
 
+/** ⏱️Level-budgeted; unmarked `mod tests` cases are `fundamental`. */
 class TestScript extends BundleScript {
   run(segments: string[]): void {
-    runCargo(["test", "-p", "trinity_ram", ...segments], this.repoRoot, playPollingEnv());
+    const { rest } = resolveTestLevel(segments);
+    runCargoTestBudgeted(["trinity_ram"], this.repoRoot, rest, playPollingEnv());
   }
 }
 

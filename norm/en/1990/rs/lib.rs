@@ -4,6 +4,7 @@ use norm_core::{
     AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, DesignSituation, ImposedCategory,
     LimitState, Quantity,
 };
+use serde::{Deserialize, Serialize};
 
 pub use norm_core::NationalAnnex;
 
@@ -628,6 +629,68 @@ pub fn check_design_basis(
     let _ = LimitState::Uls;
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub g_k: f64,
+    pub q_k: Vec<(String, f64)>,
+    pub resistance_kn: f64,
+    pub consequence_class: u8,
+    pub use_de_na: bool,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            g_k: 100.0,
+            q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)],
+            resistance_kn: 300.0,
+            consequence_class: 2,
+            use_de_na: true,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1990Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    let actions = ActionSet {
+        g_k: document.g_k,
+        q_k: document.q_k.clone(),
+    };
+    let annex: &dyn NationalAnnex = if document.use_de_na {
+        &NaDe
+    } else {
+        &NaEn
+    };
+    check_design_basis(
+        annex,
+        &actions,
+        document.resistance_kn,
+        document.consequence_class,
+    )
+}
+
+pub struct En1990Family;
+
+impl NormFamily for En1990Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1990
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

@@ -1,7 +1,7 @@
 //! 💧 Evaporative cooling: direct and indirect with effectiveness and water use.
 
 use crate::props::{humidity_ratio_from_rh, latent_heat_vaporization, saturation_pressure_pa, wet_bulb_c};
-use crate::units::{CP_DRY_AIR, H_FG_0C, P_STD};
+use crate::units::{CP_DRY_AIR, H_FG_0C};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖EvaporativeCooler

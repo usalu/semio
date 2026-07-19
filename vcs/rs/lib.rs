@@ -4,6 +4,7 @@ use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
     MergeStrategyKind, OpEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
 };
+#[cfg(not(target_arch = "wasm32"))]
 use semio_framework_hash::hash_bytes;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
@@ -197,8 +198,6 @@ pub enum VcsError {
     Deserialize(String),
     #[error("backbone error: {0}")]
     Backbone(String),
-    #[error("remote sync not implemented")]
-    RemoteSyncNotImplemented,
 }
 //#endregion 🔖Errors
 
@@ -604,8 +603,7 @@ where
 //#endregion 🔖Materialize
 
 //#region 🔖History
-/// @emoji 📜 One row of a checkpoint history/ancestor graph. Mirrors premigration `HistoryColumn`
-/// (`vcs/core/js/internal.ts`).
+/// @emoji 📜 One row of a checkpoint history/ancestor graph.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HistoryColumn {
@@ -966,23 +964,12 @@ where
                     Ok(())
                 }
                 UndoPolicy::SemanticUndo | UndoPolicy::CompensatingAction => {
-                    // Requires a compensating command to invert non-mechanically; no such mechanism
-                    // exists in this crate yet, so this preserves the prior behavior of undoing the
-                    // local tail once a `semantic_command` is supplied. A real compensating-action
-                    // implementation is out of scope here (see WS-D plugin contract).
-                    if semantic_command.is_none() {
-                        return Err(VcsError::Backbone(
-                            "semantic undo requires compensating command".into(),
-                        ));
-                    }
-                    let last = self.applied_edit_ids.last().cloned().ok_or(VcsError::NothingToUndo)?;
-                    if !self.edit_is_local(&last) {
-                        return Err(VcsError::ForeignEdit(last));
-                    }
-                    self.applied_edit_ids.pop();
-                    self.redo_edit_ids.push(last);
-                    self.bump();
-                    Ok(())
+                    let command_json = semantic_command.ok_or_else(|| {
+                        VcsError::Backbone("semantic undo requires compensating command".into())
+                    })?;
+                    let command: DocumentVcsCommand<Op> =
+                        serde_json::from_str(&command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
+                    self.dispatch_inner(command)
                 }
             },
             DocumentVcsCommand::Redo => {
@@ -1531,6 +1518,9 @@ pub enum BackboneMessage {
 /// hub sync, file watching, presence) lives behind this queue in `framework/sync`'s actor layer,
 /// which owns the other end; the store's `pump()`/`flush_outbound()` run synchronously on the
 /// caller's thread and must never be blocked by transport work.
+///
+/// URI schemes are resolved by the host actor (`framework/sync`): `temp://` (in-memory),
+/// `file://` (single JSON blob), `folder://` (sqlite `.semio/document.db`), `remote://` (OS hub).
 pub trait Backbone: Send + Sync {
     fn descriptor(&self) -> DocumentBackboneRef;
     fn send(&mut self, message: BackboneMessage) -> Result<(), VcsError>;
@@ -3266,6 +3256,31 @@ mod tests {
         store.dispatch(DocumentVcsCommand::Redo).expect("redo brings the local edit back");
         assert_eq!(store.applied_edit_ids().len(), 2);
         assert_eq!(store.projection().expect("projection").n, 1, "redo re-applies the local edit at the tail");
+    }
+
+    #[test]
+    fn compensating_undo_dispatches_semantic_command() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 5 }],
+                description: None,
+            })
+            .expect("apply");
+        let undo_apply = serde_json::to_string(&DocumentVcsCommand::Apply {
+            operations: vec![DemoOp::SetN { n: 0 }],
+            description: Some("compensate".into()),
+        })
+        .expect("serialize undo apply");
+        store
+            .dispatch(DocumentVcsCommand::UndoWithPolicy {
+                policy: UndoPolicy::CompensatingAction,
+                semantic_command: Some(undo_apply),
+            })
+            .expect("compensating undo");
+        assert_eq!(store.projection().expect("projection").n, 0);
     }
 
     #[test]

@@ -1788,7 +1788,7 @@ pub mod app_3d {
 
     fn widget_preview_mesh_kind(widget: &Widget) -> Option<&'static str> {
         match widget {
-            Widget::Neuron { neuronKind, preview, .. } if *preview => Some(neuron_mesh_kind(neuronKind)),
+            Widget::Neuron { neuron_kind, preview, .. } if *preview => Some(neuron_mesh_kind(neuron_kind)),
             Widget::OutputPreview { .. } => Some(PROCEDURAL_FALLBACK_MESH_KIND),
             _ => None,
         }

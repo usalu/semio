@@ -6,6 +6,9 @@ rust-version = "1.88"
 description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
 build = "build.rs"
 
+
+[lints]
+workspace = true
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

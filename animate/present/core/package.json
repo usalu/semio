@@ -8,9 +8,6 @@
   "exports": {
     ".": "./js/index.ts"
   },
-  "dependencies": {
-    "@semio-tech/vcs-core": "workspace:*"
-  },
   "devDependencies": {
     "typescript": "^5.9.3",
     "vitest": "^4.0.17"

@@ -104,7 +104,7 @@ pub fn heating_coil_output_w(coil: &HeatingCoil, inlet: &CoilAirState, load_w: f
                 water_heat_removal_w: 0.0,
             }
         }
-        HeatingCoil::HotWater { ua_w_per_k, water_inlet_c, water_flow_kg_s, water_cp } => {
+        HeatingCoil::HotWater { ua_w_per_k, water_inlet_c, water_flow_kg_s: _, water_cp: _ } => {
             let q_max = ua_w_per_k * (water_inlet_c - inlet.temperature_c).max(0.0);
             let q = load_w.min(q_max);
             let delta_t = q / (m_dot * CP_DRY_AIR);
@@ -209,7 +209,7 @@ pub fn cooling_coil_output_w(
     let w_sat = saturation_humidity_ratio(t_saturated, inlet.pressure_pa);
     let h_sat = moist_air_enthalpy_j_per_kg(t_saturated, w_sat);
     let h_out_ideal = h_in - q_total / m_dot;
-    let h_out = bf * h_in + (1.0 - bf) * h_out_ideal;
+    let _h_out = bf * h_in + (1.0 - bf) * h_out_ideal;
     let t_out_ideal = inlet.temperature_c - q_sensible / (m_dot * CP_DRY_AIR);
     let t_out = bf * inlet.temperature_c + (1.0 - bf) * t_out_ideal;
     let w_out_ideal = inlet.humidity_ratio - q_latent / (m_dot * latent_heat_vaporization(t_out));

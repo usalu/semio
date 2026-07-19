@@ -1,6 +1,7 @@
 //! 🌍 EN 1997 geotechnical design.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
@@ -227,6 +228,90 @@ pub fn check_shallow_foundation(
     report.push(part_1::check_settlement(settlement, settlement_limit_mm, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub v_ed_kn: f64,
+    pub h_ed_kn: f64,
+    pub footing_area_m2: f64,
+    pub phi_deg: f64,
+    pub c_kpa: f64,
+    pub gamma_kn_m3: f64,
+    pub b_m: f64,
+    pub d_f_m: f64,
+    pub e_s_mpa: f64,
+    pub nu: f64,
+    pub design_approach: String,
+    pub settlement_limit_mm: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            v_ed_kn: 500.0,
+            h_ed_kn: 80.0,
+            footing_area_m2: 2.0,
+            phi_deg: 30.0,
+            c_kpa: 0.0,
+            gamma_kn_m3: 18.0,
+            b_m: 2.0,
+            d_f_m: 1.5,
+            e_s_mpa: 30_000.0,
+            nu: 0.3,
+            design_approach: "da1str".into(),
+            settlement_limit_mm: 25.0,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1997Family>;
+
+fn parse_design_approach(value: &str) -> DesignApproach {
+    match value.to_ascii_lowercase().as_str() {
+        "da1geo" => DesignApproach::Da1Geo,
+        "da2" => DesignApproach::Da2,
+        "da3" => DesignApproach::Da3,
+        _ => DesignApproach::Da1Str,
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_shallow_foundation(
+        document.v_ed_kn,
+        document.h_ed_kn,
+        document.footing_area_m2,
+        document.phi_deg,
+        document.c_kpa,
+        document.gamma_kn_m3,
+        document.b_m,
+        document.d_f_m,
+        document.e_s_mpa,
+        document.nu,
+        parse_design_approach(&document.design_approach),
+        document.settlement_limit_mm,
+    )
+}
+
+pub struct En1997Family;
+
+impl NormFamily for En1997Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1997
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

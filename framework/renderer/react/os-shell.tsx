@@ -276,6 +276,8 @@ import {
   type WindowLayoutWindowNode,
   type WindowMeasure,
   type World3dScene,
+  postPluginBackboneInbound,
+  setPluginBackboneOutboundRelay,
 } from "@semio-tech/framework-core";
 import {
   FRAMEWORK_SYNC_CONTROLLER_ID,
@@ -1073,7 +1075,7 @@ export function appDocumentLabel(document: readonly string[]): string {
 
 /** 🗺️ Resolves the document path effective under the active terminology; unknown/native ids fall back to `app.document`. */
 export function resolveAppDocument(app: Pick<AppDefinition, "document" | "terminologyDocuments">, terminology: string): readonly string[] {
-  return app.terminologyDocuments[terminology] ?? app.document;
+  return app.terminologyDocuments?.[terminology] ?? app.document;
 }
 
 /** 🗺️ Resolves the document path for a non-active app (studio spawn palette/spawned entries) by looking up its `AppDefinition` across loaded plugins; falls back to the raw `document` when the app can't be found. */
@@ -1088,7 +1090,7 @@ export function resolveDocumentByAppId(loadedPlugins: readonly LoadedPluginState
 export function appWindowDocumentLabel(app: AppDefinition, terminology: string, windowLabel: string): string {
   const trimmed = windowLabel.trim();
   if (trimmed) return trimmed;
-  const override = app.terminologyDocuments[terminology];
+  const override = app.terminologyDocuments?.[terminology];
   return override?.[override.length - 1]?.trim() || app.label.trim();
 }
 
@@ -2566,8 +2568,6 @@ export function FrameworkOsShell({
       if (event.kind === "status") {
         dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOps: event.pendingOps, remote: event.remote } });
       } else if (event.kind === "presence") {
-        // 👥 Presence now flows only through here (the deleted `presence:` URI hack used to be the
-        // source) — plugins keep reading it via `ViewState.presencePeersJson`.
         const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
         dispatch({
           type: "SET_SESSION",
@@ -2575,8 +2575,12 @@ export function FrameworkOsShell({
         });
       } else if (event.kind === "remoteOps" && entry.plugin.applyOperations) {
         void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
+        const actorUri = `actor://${message.documentId}`;
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "ops", envelopes: event.envelopes })]);
       } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
         void entry.plugin.loadAppDocument(entry.session.instanceId, event.envelopeJson);
+        const actorUri = `actor://${message.documentId}`;
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "snapshot", envelopeJson: event.envelopeJson })]);
       } else if (event.kind === "conflict") {
         console.warn("[os-shell] sync conflict", message.documentId, event.message);
       }
@@ -2652,6 +2656,31 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
     dispatch({ type: "SET_SYNC_CARD_KIND", value: null });
   }, [panel?.activeSpawnedId, session, studioMode]);
+
+  useEffect(() => {
+    setPluginBackboneOutboundRelay((uri, messageJson) => {
+      const documentId = uri.startsWith("actor://") ? uri.slice("actor://".length) : null;
+      if (!documentId) return;
+      const worker = backboneWorkerRef.current;
+      if (!worker) return;
+      let actorMessage: DocumentActorMsg;
+      try {
+        const parsed = JSON.parse(messageJson) as { kind?: string; envelopes?: unknown; envelopeJson?: string };
+        if (parsed.kind === "ops") {
+          actorMessage = { kind: "localOps", envelopes: (parsed.envelopes ?? []) as DocumentActorMsg extends { kind: "localOps"; envelopes: infer E } ? E : never };
+        } else if (parsed.kind === "snapshot") {
+          actorMessage = { kind: "localSnapshot", envelopeJson: parsed.envelopeJson ?? "{}" };
+        } else {
+          return;
+        }
+      } catch {
+        return;
+      }
+      const request: BackboneWorkerRequest = { kind: "send", documentId, message: actorMessage };
+      worker.postMessage(request);
+    });
+    return () => setPluginBackboneOutboundRelay(null);
+  }, []);
 
   useEffect(() => {
     const worker = backboneWorkerRef.current;

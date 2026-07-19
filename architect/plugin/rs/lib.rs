@@ -210,7 +210,7 @@ fn next_adjacency_kind(current: Option<&AdjacencyKind>) -> Option<AdjacencyKind>
 }
 
 fn find_adjacency<'a>(program: &'a Program, a: &EntityId, b: &EntityId) -> Option<&'a Adjacency> {
-    let (left, right) = normalize_pair(a.clone(), b.clone());
+    let (left, right) = normalize_pair(a, b);
     program
         .adjacencies
         .iter()
@@ -249,7 +249,7 @@ fn default_element(name: impl Into<String>) -> ProgramElement {
 }
 
 fn new_adjacency(program: &Program, a: EntityId, b: EntityId, kind: AdjacencyKind) -> Adjacency {
-    let (left, right) = normalize_pair(a.clone(), b.clone());
+    let (left, right) = normalize_pair(&a, &b);
     Adjacency {
         header: EntityHeader::new(
             EntityId::new_serial("adjacency"),
@@ -2463,8 +2463,16 @@ fn create_architect_app() -> App {
                 Some(&["Adjacency".into(), "Graph".into(), "Register".into(), "Report".into()]),
             )),
     )
-    .example("sample", "Sample Clinic", serde_json::to_string(&sample_program()).unwrap())
-    .example("empty", "Empty Program", serde_json::to_string(&empty_program()).unwrap())
+    .example(
+        "sample",
+        "Sample Clinic",
+        serde_json::to_string(&sample_program()).expect("sample_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"),
+    )
+    .example(
+        "empty",
+        "Empty Program",
+        serde_json::to_string(&empty_program()).expect("empty_program is a static hand-built fixture with no non-finite floats or non-UTF8 keys"),
+    )
     .program("architect", "Architect", "data")
 }
 
@@ -2581,7 +2589,7 @@ mod tests {
             );
         });
         assert_eq!(app.runtime.active_register, "stakeholders");
-        assert!(register_entities(&program, "stakeholders").len() > 0);
+        assert!(!register_entities(&program, "stakeholders").is_empty());
     }
 
     #[test]

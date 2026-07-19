@@ -332,7 +332,7 @@ pub fn sample_program() -> Program {
         success_metrics: Vec::new(),
     });
 
-    let (a, b) = crate::adjacency::normalize_pair(reception_id.clone(), waiting_id.clone());
+    let (a, b) = crate::adjacency::normalize_pair(&reception_id, &waiting_id);
     program.adjacencies.push(Adjacency {
         header: EntityHeader::new(EntityId::new_serial("adjacency"), "Reception ↔ Waiting"),
         element_a_id: a,

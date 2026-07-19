@@ -5,6 +5,9 @@ edition = "2021"
 rust-version = "1.88"
 description = "Generic document VCS engine — Operation/Edit/Change/Checkpoint/Alternative, materialize-by-replay, backbone"
 
+
+[lints]
+workspace = true
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false
 

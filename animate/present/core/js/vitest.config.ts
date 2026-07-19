@@ -12,7 +12,6 @@ export default defineConfig({
   resolve: {
     alias: {
       "@semio-tech/animate-present-core": resolve(root, "index.ts"),
-      "@semio-tech/vcs-core": resolve(root, "../../../../vcs/core/js/index.ts"),
     },
   },
   test: {

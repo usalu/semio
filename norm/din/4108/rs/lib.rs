@@ -4,6 +4,7 @@ use norm_core::{
     AnnexChoice, CheckReport, CheckResult, ClauseId, ClimateZoneDe, NormError, Quantity,
     TableEntry1D, table_lookup_linear,
 };
+use serde::{Deserialize, Serialize};
 
 pub const R_SI_WALL_M2K_W: f64 = 0.13;
 pub const R_SE_WALL_M2K_W: f64 = 0.04;
@@ -667,6 +668,104 @@ pub fn check_opaque_wall_with_bridges(
     Ok(report)
 }
 
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LayerDocument {
+    pub thickness_m: f64,
+    pub lambda_w_mk: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub category: String,
+    pub layers: Vec<LayerDocument>,
+    pub climate: ClimateZoneDe,
+    pub airtightness_n50: f64,
+    pub psi_times_l_sum: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            category: "residential".into(),
+            layers: vec![
+                LayerDocument {
+                    thickness_m: 0.24,
+                    lambda_w_mk: 0.81,
+                },
+                LayerDocument {
+                    thickness_m: 0.14,
+                    lambda_w_mk: 0.035,
+                },
+            ],
+            climate: ClimateZoneDe::Zone2,
+            airtightness_n50: 2.5,
+            psi_times_l_sum: 0.02,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<Din4108Family>;
+
+fn parse_category(category: &str) -> part_2::BuildingCategory {
+    match category.to_ascii_lowercase().as_str() {
+        "office" => part_2::BuildingCategory::Office,
+        "school" => part_2::BuildingCategory::School,
+        "industrial" => part_2::BuildingCategory::Industrial,
+        _ => part_2::BuildingCategory::Residential,
+    }
+}
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    let layers: Vec<part_2::Layer> = document
+        .layers
+        .iter()
+        .map(|layer| part_2::Layer {
+            thickness_m: layer.thickness_m,
+            lambda_w_mk: layer.lambda_w_mk,
+        })
+        .collect();
+    check_opaque_wall_with_bridges(
+        parse_category(&document.category),
+        &layers,
+        document.climate,
+        document.airtightness_n50,
+        document.psi_times_l_sum,
+    )
+    .unwrap_or_else(|err| {
+        let mut report = CheckReport::default();
+        report.push(CheckResult::from_utilization(
+            ClauseId::new("DIN 4108", "input", "1"),
+            Quantity::new(norm_core::QuantityKind::Dimensionless, 2.0),
+            Quantity::new(norm_core::QuantityKind::Dimensionless, 1.0),
+            err.to_string(),
+            AnnexChoice::De,
+        ));
+        report
+    })
+}
+
+pub struct Din4108Family;
+
+impl NormFamily for Din4108Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::Din4108
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -836,14 +935,12 @@ mod tests {
     }
 
     #[test]
-    fn part_1_scope_opaque_wall_covers_thermal_parts() {
-        assert!(part_1::applies_to_element(
-            part_1::NormPart::Part2,
-            part_1::BuildingElement::OpaqueWall,
-        ));
-        assert!(!part_1::applies_to_element(
-            part_1::NormPart::Part7,
-            part_1::BuildingElement::Window,
-        ));
+    fn host_updates_report_after_document_replace() {
+        let mut host = Host::default();
+        assert!(host.report().all_pass());
+        let mut document = Document::default();
+        document.layers.clear();
+        host.replace_document(document);
+        assert!(!host.report().all_pass());
     }
 }

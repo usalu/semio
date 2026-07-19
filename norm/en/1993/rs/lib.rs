@@ -1,6 +1,7 @@
 //! 🔩 EN 1993 design of steel structures.
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
+use serde::{Deserialize, Serialize};
 
 // #region 🔖NaDe
 pub mod na_de {
@@ -620,6 +621,63 @@ pub fn check_steel_member(
     report.push(part_1_1::check_bending(m_ed_knm, m_rd, annex));
     report
 }
+
+// #region 🔖Session
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Document {
+    pub n_ed_kn: f64,
+    pub m_ed_knm: f64,
+    pub a_mm2: f64,
+    pub w_pl_mm3: f64,
+    pub f_y_mpa: f64,
+    pub chi: f64,
+}
+
+impl Default for Document {
+    fn default() -> Self {
+        Self {
+            n_ed_kn: 500.0,
+            m_ed_knm: 150.0,
+            a_mm2: 5000.0,
+            w_pl_mm3: 500_000.0,
+            f_y_mpa: 355.0,
+            chi: 0.75,
+        }
+    }
+}
+
+pub type Op = SetDocumentOp<Document>;
+pub type Host = NormHost<En1993Family>;
+
+pub fn evaluate(document: &Document) -> CheckReport {
+    check_steel_member(
+        document.n_ed_kn,
+        document.m_ed_knm,
+        document.a_mm2,
+        document.w_pl_mm3,
+        document.f_y_mpa,
+        document.chi,
+    )
+}
+
+pub struct En1993Family;
+
+impl NormFamily for En1993Family {
+    type Document = Document;
+    type Op = Op;
+
+    fn family_id() -> NormFamilyId {
+        NormFamilyId::En1993
+    }
+
+    fn evaluate(document: &Document) -> CheckReport {
+        evaluate(document)
+    }
+}
+// #endregion 🔖Session
 
 #[cfg(test)]
 mod tests {

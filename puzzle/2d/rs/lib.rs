@@ -266,18 +266,18 @@ impl BoardSession {
         let mut raw: serde_json::Value = serde_json::from_str(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         normalize_board_descriptor_hidden_to_visible(&mut raw);
         let desc: SceneDescriptorJson = serde_json::from_value(raw).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e))?;
+        self.state.borrow_mut().host.sync_descriptor(&desc).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(())
     }
 
     #[wasm_bindgen(js_name = setNodePositionsJson)]
     pub fn set_node_positions_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_node_positions_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_node_positions_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setKindCatalogsJson)]
     pub fn set_board_kind_catalogs_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_board_kind_catalogs_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setCanvasThemeJson)]
@@ -383,7 +383,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setHandleLinkCompatJson)]
     pub fn set_handle_link_compat_json(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_handle_link_compat_from_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_handle_link_compat_from_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setWorldRasterTiling)]
@@ -403,7 +403,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setGridFactor)]
     pub fn set_grid_factor_wasm(&mut self, v: f64) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_grid_factor(v).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_grid_factor(v).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setActiveUtility)]
@@ -473,7 +473,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setBrushSessionJson)]
     pub fn set_brush_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_brush_session_mirror_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_brush_session_mirror_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = clearBrushSessionJson)]
@@ -483,7 +483,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setFixtureDropPreviewJson)]
     pub fn set_fixture_drop_preview_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_fixture_drop_preview_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_fixture_drop_preview_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = clearFixtureDropPreview)]
@@ -493,7 +493,7 @@ impl BoardSession {
 
     #[wasm_bindgen(js_name = setLinkSessionJson)]
     pub fn set_link_session_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_external_link_preview_json(json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_external_link_preview_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = clearLinkSessionJson)]

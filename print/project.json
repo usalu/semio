@@ -39,11 +39,25 @@
         "command": "bun ./script.ts test"
       }
     },
-    "test-e2e": {
+    "test-quick": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "print",
-        "command": "bun ./script.ts test-e2e"
+        "command": "bun ./script.ts test quick"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test long"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "print",
+        "command": "bun ./script.ts test exhaustive"
       }
     }
   }
