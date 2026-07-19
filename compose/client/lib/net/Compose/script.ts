@@ -5,7 +5,7 @@ import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotn
 
 class BuildScript extends BundleScript {
   run(): void {
-    const buildResult = spawnSync("dotnet", ["build", "Compose.csproj", "-c", "Debug"], {
+    const buildResult = spawnSync("dotnet", ["build", "cs/Compose.csproj", "-c", "Debug"], {
       cwd: this.root,
       stdio: "inherit",
     });
@@ -17,7 +17,7 @@ class BuildScript extends BundleScript {
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runTestBudgeted("dotnet", ["test", "../Compose.Tests/Compose.Tests.csproj", ...dotnetLevelArgs(level), ...rest], { cwd: this.root });
+    await runTestBudgeted("dotnet", ["test", "../Compose.Tests/cs/Compose.Tests.csproj", ...dotnetLevelArgs(level), ...rest], { cwd: this.root });
   }
 }
 

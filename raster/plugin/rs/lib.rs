@@ -676,7 +676,7 @@ use semio_framework_plugin::{SurfaceKind,
     build_paint_2d_scene, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
     Paint2dScene, ResourceKindSpec, UtilityCategory, UtilityDefinition, is_de_locale, localized_label_map, resolve_labels,
     selection_ids, tree_item_with_action,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, ViewState,
@@ -1475,6 +1475,10 @@ fn create_raster_app() -> App {
                 component_kind: "raster".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+                schema: "raster.document".into(),
+                export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("raster")
             .mode("edit", "Edit")

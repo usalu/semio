@@ -4,7 +4,7 @@ use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOp};
 #[cfg(test)]
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
-    create_default_layout, ui_stack_vertical, ui_text, ActionEmit, App, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+    create_default_layout, ui_stack_vertical, ui_text, ActionEmit, App, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::Serialize;
@@ -112,6 +112,10 @@ macro_rules! define_norm_family_app {
                             component_kind: "norm".into(),
                             dimension: "compliance".into(),
                             media_capability: OsMediaCapability::MeshOnly,
+                            media_type: MediaType { class: MediaClass::Computation, form: MediaForm::Value },
+                            schema: format!("norm.{variant}.document", variant = $variant),
+                            export_formats: vec![],
+                            import_formats: vec![],
                         })
                         .mode("edit", "Edit")
                         .default_mode_id("edit")

@@ -32,7 +32,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Elements.Styling\Elements.Styling.csproj" />
+    <ProjectReference Include="..\..\Elements.Styling\cs\Elements.Styling.csproj" />
   </ItemGroup>
 
   <ItemGroup>

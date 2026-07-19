@@ -3703,7 +3703,7 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, kinds);
     }
 
-    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{\\\"raster\\\":true,\\\"water\\\":true,\\\"land\\\":true,\\\"roads\\\":true,\\\"buildings\\\":true,\\\"borders\\\":true,\\\"labels\\\":true,\\\"positions\\\":true,\\\"positionLabels\\\":true,\\\"routes\\\":true,\\\"regions\\\":true}\",\"layerStrokeScaleJson\":\"{\\\"raster\\\":1,\\\"water\\\":1,\\\"land\\\":1,\\\"roads\\\":1,\\\"buildings\\\":1,\\\"borders\\\":1,\\\"labels\\\":1,\\\"positions\\\":1,\\\"positionLabels\\\":1,\\\"routes\\\":1,\\\"regions\\\":1}\",\"selectionJson\":\"{\\\"positions\\\":[],\\\"routes\\\":[]}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
+    const GOLDEN_SCENES_JSON: &str = "[{\"cameraX\":1.0,\"cameraY\":2.0,\"zoom\":1.5,\"layersJson\":\"[]\"},{\"columnsJson\":\"[]\",\"rowsJson\":\"[]\"},{\"documentSyncJson\":\"{}\",\"assetsJson\":\"[]\",\"cameraJson\":\"{}\",\"selectionJson\":\"[]\",\"hoveredId\":\"h1\",\"activeUtility\":\"brush\",\"brushSize\":4.0,\"brushOpacity\":1.0,\"viewMode\":\"composite\"},{\"requestJson\":\"{}\"},{\"schemaJson\":\"{}\",\"rowsJson\":\"[]\",\"emptyMessage\":\"Empty\",\"dragDropEnabled\":true},{\"mapFixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"renderMode\":\"combined\",\"vectorStyle\":\"colored\",\"lodMode\":\"automatic\",\"tileUrlTemplate\":\"/osm/{z}/{x}/{y}.png\",\"vectorTileUrlTemplate\":\"/vt/{z}/{x}/{y}.pbf\",\"layerVisibilityJson\":\"{}\",\"layerStrokeScaleJson\":\"{}\",\"selectionJson\":\"{}\",\"hoverJson\":\"null\",\"selectionMethod\":\"rectangle\",\"selectionMode\":\"default\"},{\"fixtureJson\":\"{}\",\"cameraJson\":\"{}\",\"glyphCatalogsJson\":\"{}\",\"selectionJson\":\"[]\",\"interactive\":true,\"selectionMethod\":\"rectangle\",\"gridSnapEnabled\":false,\"gridFactor\":1.0,\"suggestionOffset\":0.0,\"brushWeightsJson\":\"{}\",\"placementCompatibilityJson\":\"[]\",\"lodMode\":\"automatic\"},{\"documentJson\":\"{}\",\"selectionJson\":\"[]\",\"activeUtility\":\"select\",\"viewMode\":\"edit\",\"interactive\":true},{\"columnsJson\":\"[]\"},{\"nodesJson\":\"[]\",\"edgesJson\":\"[]\",\"viewportJson\":\"{}\"},{\"buffer\":\"buf\",\"language\":\"rust\"},{\"stepsJson\":\"[]\",\"paletteJson\":\"[]\"}]";
 
     #[test]
     fn scene_records_serialize_to_golden_json() {
@@ -3738,8 +3738,6 @@ mod ui_node_wire_format_tests {
             NodeGraphScene::base("[]".into(), "[]".into(), "{}".into()),
             TextEditorScene::base("buf".into(), Some("rust".into()), None),
             BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None },
-            DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()) },
-            EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()) },
         );
         let json = serde_json::to_string(&scenes).unwrap();
         assert_eq!(json, GOLDEN_SCENES_JSON);
@@ -3756,9 +3754,24 @@ mod ui_node_wire_format_tests {
             NodeGraphScene,
             TextEditorScene,
             BlockListScene,
-            DiffViewScene,
-            EventFeedScene,
         ) = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, scenes);
+    }
+
+    /// 🆚 `DiffViewScene`/`EventFeedScene` golden coverage lives in its own pair-tuple (rather than
+    /// joining `scene_records_serialize_to_golden_json`'s tuple above) because std only implements
+    /// `Debug`/`PartialEq` for tuples up to 12 elements, and that tuple is already at the cap.
+    const GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON: &str = "[{\"before\":\"a\",\"after\":\"b\",\"language\":\"rust\",\"mode\":\"unified\"},{\"entriesJson\":\"[]\",\"follow\":true,\"activateAction\":\"openEvent\"}]";
+
+    #[test]
+    fn diff_view_and_event_feed_scenes_serialize_to_golden_json() {
+        let scenes = (
+            DiffViewScene { before: "a".into(), after: "b".into(), language: Some("rust".into()), mode: Some("unified".into()) },
+            EventFeedScene { entries_json: "[]".into(), follow: Some(true), activate_action: Some("openEvent".into()) },
+        );
+        let json = serde_json::to_string(&scenes).unwrap();
+        assert_eq!(json, GOLDEN_DIFF_VIEW_EVENT_FEED_SCENES_JSON);
+        let roundtripped: (DiffViewScene, EventFeedScene) = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, scenes);
     }
 }

@@ -377,8 +377,8 @@ pub mod wire {
             }
         }
         for edge in edges {
-            let from_kind = nodes.iter().find(|n| n.id == edge.from).map(|n| n.kind.as_str()).unwrap_or("node");
-            let to_kind = nodes.iter().find(|n| n.id == edge.to).map(|n| n.kind.as_str()).unwrap_or("node");
+            let from_kind = nodes.iter().find(|n| n.id == edge.from).map_or("node", |n| n.kind.as_str());
+            let to_kind = nodes.iter().find(|n| n.id == edge.to).map_or("node", |n| n.kind.as_str());
             let connector = if edge.directed { "->" } else { "-" };
             let props = format_properties(&edge.properties);
             lines.push(format!("{}:{}@{}{}{}:{}@{}{}", edge.from, from_kind, edge.from_port, connector, edge.to, to_kind, edge.to_port, props));
@@ -1650,9 +1650,9 @@ impl Parser {
     }
 
     fn parse_pattern(&mut self) -> Result<Pattern, GraphDslError> {
-        self.expect(Token::LParen)?;
+        self.expect(&Token::LParen)?;
         let left = self.parse_pattern_node()?;
-        self.expect(Token::RParen)?;
+        self.expect(&Token::RParen)?;
         if matches!(self.peek(), Token::Dash) {
             self.bump();
             let (edge_var, edge_kind) = if matches!(self.peek(), Token::LBracket) {
@@ -1664,7 +1664,7 @@ impl Parser {
                 } else {
                     None
                 };
-                self.expect(Token::RBracket)?;
+                self.expect(&Token::RBracket)?;
                 (edge_var, edge_kind)
             } else {
                 (None, None)
@@ -1675,9 +1675,9 @@ impl Parser {
             } else {
                 false
             };
-            self.expect(Token::LParen)?;
+            self.expect(&Token::LParen)?;
             let right = self.parse_pattern_node()?;
-            self.expect(Token::RParen)?;
+            self.expect(&Token::RParen)?;
             Ok(Pattern { nodes: vec![left], edge: Some(PatternEdge { var: edge_var, kind: edge_kind, directed, right }) })
         } else {
             Ok(Pattern { nodes: vec![left], edge: None })
@@ -1686,7 +1686,7 @@ impl Parser {
 
     fn parse_pattern_node(&mut self) -> Result<PatternNode, GraphDslError> {
         let var = self.expect_ident()?;
-        self.expect(Token::Colon)?;
+        self.expect(&Token::Colon)?;
         let kind = self.expect_ident()?;
         let port = if matches!(self.peek(), Token::At) {
             self.bump();
@@ -1710,9 +1710,9 @@ impl Parser {
 
     fn parse_assignment(&mut self) -> Result<Assignment, GraphDslError> {
         let var = self.expect_ident()?;
-        self.expect(Token::Dot)?;
+        self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
-        self.expect(Token::Eq)?;
+        self.expect(&Token::Eq)?;
         let value = self.parse_value()?;
         Ok(Assignment { var, prop, value })
     }
@@ -1743,7 +1743,7 @@ impl Parser {
 
     fn parse_cmp_expr(&mut self) -> Result<Expr, GraphDslError> {
         let var = self.expect_ident()?;
-        self.expect(Token::Dot)?;
+        self.expect(&Token::Dot)?;
         let prop = self.expect_ident()?;
         match self.bump() {
             Token::Eq => Ok(Expr::Eq { var, prop, value: self.parse_value()? }),
@@ -1763,8 +1763,8 @@ impl Parser {
         }
     }
 
-    fn expect(&mut self, want: Token) -> Result<(), GraphDslError> {
-        if std::mem::discriminant(self.peek()) == std::mem::discriminant(&want) {
+    fn expect(&mut self, want: &Token) -> Result<(), GraphDslError> {
+        if std::mem::discriminant(self.peek()) == std::mem::discriminant(want) {
             self.bump();
             Ok(())
         } else {
@@ -1962,7 +1962,7 @@ fn build_return(graph: &dyn QueryableGraph, bindings: &[Binding], items: &[Retur
         let mut row = Vec::new();
         for item in items {
             let val = match item {
-                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node_name(id)).map(PropertyValue::String).unwrap_or(PropertyValue::Null),
+                ReturnItem::Var(v) => binding.nodes.get(v).and_then(|id| graph.node_name(id)).map_or(PropertyValue::Null, PropertyValue::String),
                 ReturnItem::Property { var, prop } => binding_value(graph, binding, var, prop).unwrap_or(PropertyValue::Null),
             };
             row.push(val);

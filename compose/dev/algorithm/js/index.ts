@@ -90,6 +90,11 @@ export function findReplaceableTypesForSelection(_sel: { pieces: readonly string
 // #endregion 🧰StoryKitFacade
 
 // #region 🧱PlainDesignModel
+/** @emoji 🗃️ Reads a `pieces`/`connections` node that is either a bare array (test-built {@link Design}) or a fixture-wrapped `{items}` node. */
+function __itemsOf<T>(node: unknown): readonly T[] {
+  return Array.isArray(node) ? (node as readonly T[]) : fixtureItemsOf<T>(node);
+}
+
 function __listDesignsFromBundle(kit: unknown): Record<string, unknown>[] {
   const d = kitSurface(kit)["designs"];
   return [...fixtureItemsOf<Record<string, unknown>>(d)];
@@ -141,11 +146,11 @@ function __connectionEndpoints(c: Record<string, unknown>): { parentId?: string;
 }
 
 function __piecesOfPlain(plain: Record<string, unknown>): Record<string, unknown>[] {
-  return [...fixtureItemsOf<Record<string, unknown>>(plain["pieces"])];
+  return [...__itemsOf<Record<string, unknown>>(plain["pieces"])];
 }
 
 function __connectionsOfPlain(plain: Record<string, unknown>): Record<string, unknown>[] {
-  return [...fixtureItemsOf<Record<string, unknown>>(plain["connections"])];
+  return [...__itemsOf<Record<string, unknown>>(plain["connections"])];
 }
 
 function __applyDesignDiff(plain: Record<string, unknown>, diff: DesignDiff): void {
@@ -198,14 +203,10 @@ class Design {
     return this.plain["name"] as string | undefined;
   }
   get pieces(): readonly Record<string, unknown>[] {
-    const p = this.plain["pieces"];
-    if (Array.isArray(p)) return p as readonly Record<string, unknown>[];
-    return fixtureItemsOf(p) as readonly Record<string, unknown>[];
+    return __itemsOf(this.plain["pieces"]);
   }
   get connections(): readonly Record<string, unknown>[] {
-    const c = this.plain["connections"];
-    if (Array.isArray(c)) return c as readonly Record<string, unknown>[];
-    return fixtureItemsOf(c) as readonly Record<string, unknown>[];
+    return __itemsOf(this.plain["connections"]);
   }
   get parent(): { id: string } | undefined {
     const p = this.plain["parent"] as { id?: string } | undefined;
@@ -359,7 +360,7 @@ function __pasteCoordinateOffset(srcPieces: readonly Record<string, unknown>[], 
   const anchoring = options.anchoring ?? "original";
   if (anchoring === "original") return coordinate;
   const srcCentroid = __centroidOfPieces(srcPieces);
-  const tgtPieces = fixtureItemsOf<Record<string, unknown>>(targetPlain["pieces"]);
+  const tgtPieces = __itemsOf<Record<string, unknown>>(targetPlain["pieces"]);
   const tgtCentroid = __centroidOfPieces(tgtPieces);
   if (!srcCentroid || !tgtCentroid) return coordinate;
   return { u: tgtCentroid.u - srcCentroid.u + coordinate.u, v: tgtCentroid.v - srcCentroid.v + coordinate.v };
@@ -483,8 +484,8 @@ export async function copyDesign(design: Design, pieceIds: readonly string[], co
   const src = __plainFromDesign(design);
   const pieceSet = new Set(pieceIds.map(String));
   const connSet = new Set(connectionIds.map(String));
-  const allPieces = fixtureItemsOf<Record<string, unknown>>(src["pieces"]);
-  const allConnections = fixtureItemsOf<Record<string, unknown>>(src["connections"]);
+  const allPieces = __itemsOf<Record<string, unknown>>(src["pieces"]);
+  const allConnections = __itemsOf<Record<string, unknown>>(src["connections"]);
   for (const c of allConnections) {
     if (!connSet.has(__connectionId(c))) continue;
     const { parentId, childId } = __connectionEndpoints(c);
@@ -514,7 +515,7 @@ export async function copyDesign(design: Design, pieceIds: readonly string[], co
 export async function pasteDesign(source: Design, target: Design, options: PasteDesignOptions = {}): Promise<DesignDiff> {
   const src = __plainFromDesign(source);
   const tgt = __plainFromDesign(target);
-  const srcPieces = fixtureItemsOf<Record<string, unknown>>(src["pieces"]);
+  const srcPieces = __itemsOf<Record<string, unknown>>(src["pieces"]);
   const offset = __pasteCoordinateOffset(srcPieces, tgt, options);
   const added = srcPieces.map((p) => {
     const row = { ...p };
@@ -526,7 +527,7 @@ export async function pasteDesign(source: Design, target: Design, options: Paste
     if (pose?.center) row["pose"] = { ...pose, center: shifted };
     return row;
   });
-  const connectionsAdded = fixtureItemsOf<Record<string, unknown>>(src["connections"]).map((c) => ({ ...c }));
+  const connectionsAdded = __itemsOf<Record<string, unknown>>(src["connections"]).map((c) => ({ ...c }));
   return {
     pieces: { added },
     ...(connectionsAdded.length ? { connections: { added: connectionsAdded } } : {}),

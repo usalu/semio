@@ -13,7 +13,6 @@ mod renderer {
         #[cfg(target_arch = "wasm32")]
         pub use vello::wgpu;
         pub use vello::Scene;
-        pub use vello_encoding;
         pub use vello_svg;
         pub use vello_svg::usvg;
     }
@@ -242,7 +241,7 @@ mod renderer {
             self.0.encoding().path_tags.len()
         }
         /// @emoji 🔓 Escape hatch exposing the raw `vello` encoding for callers that need path-tag-level introspection (e.g. LOD/label test assertions) beyond `is_empty`/`path_count`.
-        pub fn encoding(&self) -> &backend::vello_encoding::Encoding {
+        pub fn encoding(&self) -> &vello_encoding::Encoding {
             self.0.encoding()
         }
 
@@ -261,7 +260,7 @@ mod renderer {
 
         /// @emoji 🏷️ Appends the SVG tree into a scene.
         pub fn append_to_scene(&self, scene: &mut Scene) {
-            backend::vello_svg::append_tree(&mut scene.0, &self.0);
+            vello_svg::append_tree(&mut scene.0, &self.0);
         }
     }
 
@@ -676,8 +675,8 @@ pub mod svg_icon {
 
 impl SvgDocument {
     /// @emoji 🏷️ Parses icon SVG with bundled emoji font options.
-    pub fn parse_icons(svg: &str) -> Result<Self, crate::CanvasError> {
-        let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| crate::CanvasError::SvgParse(e.to_string()))?;
+    pub fn parse_icons(svg: &str) -> Result<Self, CanvasError> {
+        let tree = usvg::Tree::from_str(svg, svg_icon::usvg_options_icons()).map_err(|e| CanvasError::SvgParse(e.to_string()))?;
         Ok(Self::from_tree(tree))
     }
 
@@ -801,7 +800,7 @@ pub mod text {
             return 0.0;
         }
         if !line.is_char_boundary(end) {
-            let prev = line[..end].char_indices().next_back().map(|(i, _)| i).unwrap_or(0);
+            let prev = line[..end].char_indices().next_back().map_or(0, |(i, _)| i);
             return label_prefix_advance_svg(line, prev, px);
         }
         let prefix = &line[..end];
@@ -1068,7 +1067,7 @@ pub mod raster {
         scene.draw_image(image, transform);
     }
 
-    pub fn draw_image_arc(scene: &mut Scene, image: &std::sync::Arc<RasterImage>, transform: Affine) {
+    pub fn draw_image_arc(scene: &mut Scene, image: &Arc<RasterImage>, transform: Affine) {
         scene.draw_image(image, transform);
     }
 
@@ -1127,18 +1126,13 @@ pub mod gpu_session {
     use wasm_bindgen::prelude::JsValue;
     use web_sys::HtmlCanvasElement;
 
+    #[derive(Default)]
     pub struct CanvasGpuSession {
         #[allow(dead_code, reason = "Retains canvas for the WebGPU surface lifetime.")]
         canvas: Option<HtmlCanvasElement>,
         render_ctx: Option<util::RenderContext>,
         renderer: Option<vello::Renderer>,
         surface: Option<util::RenderSurface<'static>>,
-    }
-
-    impl Default for CanvasGpuSession {
-        fn default() -> Self {
-            Self { canvas: None, render_ctx: None, renderer: None, surface: None }
-        }
     }
 
     impl CanvasGpuSession {
@@ -1623,7 +1617,7 @@ pub mod icon_codec {
                 Some(icon_shortcodes::ShortcodeResolved::Emoji(em)) => resolve_emoji_body(em),
                 Some(icon_shortcodes::ShortcodeResolved::SvgPlain(svg)) => BoardResolvedIcon::SvgPlain(svg.to_string()),
                 Some(icon_shortcodes::ShortcodeResolved::SvgThemed(svg)) => BoardResolvedIcon::SvgThemed(svg.to_string()),
-                None => themed_lookup(code).map(|svg| BoardResolvedIcon::SvgThemed(svg.to_string())).unwrap_or(BoardResolvedIcon::None),
+                None => themed_lookup(code).map_or(BoardResolvedIcon::None, |svg| BoardResolvedIcon::SvgThemed(svg.to_string())),
             },
             Icon::Data { data } => resolve_icon_data(data),
             Icon::Emoji { emoji } => resolve_emoji_body(emoji),
@@ -1636,7 +1630,7 @@ pub mod icon_codec {
                     BoardResolvedIcon::SvgPlain(svg.clone())
                 }
             }
-            Icon::Catalog { key } => themed_lookup(key).map(|svg| BoardResolvedIcon::SvgThemed(svg.to_string())).unwrap_or(BoardResolvedIcon::None),
+            Icon::Catalog { key } => themed_lookup(key).map_or(BoardResolvedIcon::None, |svg| BoardResolvedIcon::SvgThemed(svg.to_string())),
         }
     }
 

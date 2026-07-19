@@ -26,8 +26,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\lib\net\Elements.Styling\Elements.Styling.csproj" />
-    <ProjectReference Include="..\..\..\lib\net\Compose\Compose.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Elements.Styling\cs\Elements.Styling.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Compose\cs\Compose.csproj" />
   </ItemGroup>
 
   <ItemGroup>

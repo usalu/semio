@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Compose\Compose.csproj" />
+    <ProjectReference Include="..\..\Compose\cs\Compose.csproj" />
   </ItemGroup>
 
 </Project>

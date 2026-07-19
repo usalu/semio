@@ -1,0 +1,14 @@
+[package]
+name = "mathematical_sampling"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[dependencies]
+mathematical_random = { path = "../../random/rs" }
+
+[lints]
+workspace = true
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"

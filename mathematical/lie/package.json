@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/math-lie",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run math-lieest"
+  }
+}

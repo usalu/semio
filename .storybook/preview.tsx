@@ -339,8 +339,41 @@ export const withRenderer: Decorator = (Story, context) => {
  * (`.storybook/compose/algorithm/kit-store/index.tsx`). Dynamic imports code-split per loader, so a
  * scoped Storybook boot never pulls in another scope's wasm graph until a story actually requests it
  * via `parameters.wasm`. */
+
+// #region 🔌FrameworkHostsWasmLoaders
+/** 🧵 Wraps a `framework/renderer/react/index.tsx`-style wasm-bindgen module import (bare workspace
+ * specifier, resolved by bun-symlinked `node_modules/@semio-tech/*` — no scope alias needed) into a
+ * single-flight `WASM_LOADERS` entry; `mod.default()` is itself idempotent once the wasm instance is
+ * live, but the cache also collapses concurrent first-call races and clears on failure so a later
+ * story render can retry. */
+const frameworkHostsWasmInitPromises = new Map<string, Promise<void>>();
+function singleFlightWasmInit(id: string, load: () => Promise<{ readonly default: (input?: unknown) => Promise<unknown> }>): () => Promise<void> {
+  return () => {
+    let promise = frameworkHostsWasmInitPromises.get(id);
+    if (!promise) {
+      promise = load()
+        .then(async (mod) => {
+          await mod.default();
+        })
+        .catch((error) => {
+          frameworkHostsWasmInitPromises.delete(id);
+          throw error;
+        });
+      frameworkHostsWasmInitPromises.set(id, promise);
+    }
+    return promise;
+  };
+}
+// #endregion 🔌FrameworkHostsWasmLoaders
+
 const WASM_LOADERS: Record<string, () => Promise<void>> = {
   compose: () => import("./compose/algorithm/kit-store/index.tsx").then((m) => m.ensureComposeWasm()),
+  "node-graph": singleFlightWasmInit("node-graph", () => import("@semio-tech/framework-surface-node-graph-rs/pkg/framework_surface_node_graph.js")),
+  editor: singleFlightWasmInit("editor", () => import("@semio-tech/framework-editor-rs/pkg/framework_editor.js")),
+  "paint-2d": singleFlightWasmInit("paint-2d", () => import("@semio-tech/framework-surface-paint-rs/pkg/framework_surface_paint.js")),
+  "tiled-map": singleFlightWasmInit("tiled-map", () => import("@semio-tech/framework-surface-tiled-map-rs/pkg/framework_surface_tiled_map.js")),
+  terrain: singleFlightWasmInit("terrain", () => import("@semio-tech/framework-surface-terrain-rs/pkg/framework_surface_terrain.js")),
+  flow: singleFlightWasmInit("flow", () => import("@semio-tech/flow-core/pkg/flow_core.js")),
 };
 
 type WasmGateState = "idle" | "loading" | "ready" | "error";

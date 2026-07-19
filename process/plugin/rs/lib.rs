@@ -8,7 +8,7 @@ use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
     app_labels, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_indexed_with_face_groups, mesh_from_kind, resolve_labels, tree_item_desc, tree_item_with_action,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor,
-    ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode,
+    ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
@@ -1536,6 +1536,10 @@ fn create_process3d_app() -> App {
                 component_kind: "process3d".into(),
                 dimension: "3d".into(),
                 media_capability: OsMediaCapability::Brep,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+                schema: "process.3d".into(),
+                export_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Glb],
+                import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
             })
             .icon_id("hammer")
             .mode("edit", "Edit")

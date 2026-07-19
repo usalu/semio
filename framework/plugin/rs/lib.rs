@@ -151,9 +151,9 @@ use semio_framework_core::{
     },
     set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
-    IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, ModeDefinition, Modes, PanelGroup,
-    PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, UtilityDefinition, UtilityRef, ViewState,
-    WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
+    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, UtilityDefinition,
+    UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ActionDescriptor, NamedLayout, UiButtonNode,
@@ -166,7 +166,7 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use vcs::{
     build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
-    DocumentVcsStore, HistoryColumn, Operation,
+    DocumentVcsStore, HistoryColumn, Operation, StudioConflict,
 };
 
 pub struct ModeSpec {
@@ -285,6 +285,13 @@ pub struct KeybindingSpec {
 pub use semio_framework_core::{OsMediaCapability, ResourceKindSpec};
 //#endregion 🔖ResourceKind
 
+//#region 🔖MediaPort
+/// 🧬 `MediaClass`/`MediaType` also live in `semio-framework-core` — re-exported so callers can build
+/// `ResourceKindSpec.media_type` and `AppBuilder::media_input(...)`/`media_output(...)` port specs
+/// without a direct `semio-framework-core` dependency.
+pub use semio_framework_core::{MediaClass, MediaType};
+//#endregion 🔖MediaPort
+
 pub struct AppBuilder {
     id: String,
     label: String,
@@ -306,6 +313,8 @@ pub struct AppBuilder {
     introduction: Option<IntroductionDefinition>,
     dialogs: Vec<DialogDefinition>,
     resource_kinds: Vec<ResourceKindSpec>,
+    media_inputs: Vec<MediaPortSpec>,
+    media_outputs: Vec<MediaPortSpec>,
 }
 
 impl AppBuilder {
@@ -332,12 +341,29 @@ impl AppBuilder {
             introduction: None,
             dialogs: Vec::new(),
             resource_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
         }
     }
 
     /// 🗂️ Declares one resource kind this app produces/consumes (see `ResourceKindSpec`). Repeatable.
     pub fn resource_kind(mut self, spec: ResourceKindSpec) -> Self {
         self.resource_kinds.push(spec);
+        self
+    }
+
+    /// 🔌 Declares one media graph input port this app accepts (see `MediaPortSpec`). Repeatable;
+    /// validated in `build_definition` (non-empty/unique id, `direction` must be `In`).
+    pub fn media_input(mut self, spec: MediaPortSpec) -> Self {
+        self.media_inputs.push(spec);
+        self
+    }
+
+    /// 🔌 Declares one media graph output port this app produces (see `MediaPortSpec`). Repeatable;
+    /// validated in `build_definition` (non-empty/unique id, `direction` must be `Out`, `MediaForm::Any`
+    /// is rejected — `Any` is only ever legal on the accepting/input side, see `media_types_compatible`).
+    pub fn media_output(mut self, spec: MediaPortSpec) -> Self {
+        self.media_outputs.push(spec);
         self
     }
 
@@ -936,6 +962,38 @@ impl AppBuilder {
             }
             validate_arg_defs(&self.id, &format!("dialog {}", dialog.id), &dialog.args);
         }
+        let mut media_port_ids = HashSet::new();
+        for port in self.media_inputs.iter().chain(self.media_outputs.iter()) {
+            assert!(!port.id.trim().is_empty(), "app {} media port id must be non-empty", self.id);
+            assert!(
+                media_port_ids.insert(port.id.clone()),
+                "app {} duplicate media port id {}",
+                self.id,
+                port.id
+            );
+        }
+        for port in &self.media_inputs {
+            assert!(
+                port.direction == MediaPortDirection::In,
+                "app {} media input {} must declare direction In",
+                self.id,
+                port.id
+            );
+        }
+        for port in &self.media_outputs {
+            assert!(
+                port.direction == MediaPortDirection::Out,
+                "app {} media output {} must declare direction Out",
+                self.id,
+                port.id
+            );
+            assert!(
+                !matches!(port.media_type.form, MediaForm::Any),
+                "app {} media output {} must not declare MediaForm::Any (Any is only legal on inputs, see media_types_compatible)",
+                self.id,
+                port.id
+            );
+        }
         AppDefinition {
             id: self.id,
             label: self.label,
@@ -991,9 +1049,8 @@ impl AppBuilder {
             terminology_documents: self.terminology_documents,
             introduction: self.introduction,
             dialogs: self.dialogs,
-            media_kinds: Vec::new(),
-            media_inputs: Vec::new(),
-            media_outputs: Vec::new(),
+            media_inputs: self.media_inputs,
+            media_outputs: self.media_outputs,
             resource_kinds: self.resource_kinds,
         }
     }
@@ -1573,7 +1630,7 @@ pub mod testkit {
 
 use super::{ActionMeta, App, AppActionRegistry, DocumentApp, PluginApp, VcsDocumentApp};
 use semio_framework_core::ViewState;
-use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+use vcs::{Backbone, BackboneMessage, MemoryBackbone, StudioConflict};
 
 /// 🪪 A local-actor `ActionMeta` for test dispatch (`instance_id: 1`).
 pub fn meta(actor: &str) -> ActionMeta {
@@ -1644,6 +1701,35 @@ pub fn assert_two_instances_converge<A, P>(
     instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
     instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
     assert_eq!(probe(&instance_a), probe(&instance_b), "both instances must converge on the same projection");
+}
+
+/// 🧪 The `Operation::reconcile` counterpart to `assert_two_instances_converge`: `action_delete`/
+/// `action_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
+/// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound ops, then both
+/// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
+/// must be false for the converged projection, and at least one `StudioConflict` must have been
+/// reported (dropping a dangling reference silently, with no conflict, would hide real data loss).
+pub fn assert_graph_merge_preserves_referential_integrity<A, P>(
+    channel: &str,
+    action_delete: (&str, Option<&serde_json::Value>),
+    action_wire: (&str, Option<&serde_json::Value>),
+    probe: impl Fn(&VcsDocumentApp<A>) -> (P, Vec<StudioConflict>),
+    has_dangling_ref: impl Fn(&P) -> bool,
+) where
+    A: DocumentApp + Default,
+    P: PartialEq + std::fmt::Debug,
+{
+    let (mut instance_a, mut instance_b) = paired_apps::<A>(channel);
+    instance_a.handle_action(action_delete.0, action_delete.1, &ViewState::default(), &meta("actor-a")).expect("a deletes the node");
+    instance_b.handle_action(action_wire.0, action_wire.1, &ViewState::default(), &meta("actor-b")).expect("b wires the edge");
+    instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
+    instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+    let (projection_a, conflicts_a) = probe(&instance_a);
+    let (projection_b, conflicts_b) = probe(&instance_b);
+    assert_eq!(projection_a, projection_b, "both instances must converge on the same reconciled projection");
+    assert!(!has_dangling_ref(&projection_a), "converged projection must not retain a dangling reference");
+    assert!(!conflicts_a.is_empty(), "dropping the dangling reference must surface a StudioConflict");
+    assert_eq!(conflicts_a, conflicts_b, "both instances must report the same reconciliation conflicts");
 }
 
 /// 🧪 Applies `action` on a sender attached to a backbone, replays the resulting envelopes onto a
@@ -2715,6 +2801,12 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// need direct structural access to document state instead of a rendered node.
     pub fn projection(&self) -> Result<A::Projection, String> {
         self.store.projection().map_err(|error| error.to_string())
+    }
+
+    /// @emoji 🤝 Fresh replay plus whatever `Op::reconcile` reports for the result — the typed
+    /// counterpart to `vcs::DocumentVcsStore::projection_with_conflicts`.
+    pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<StudioConflict>), String> {
+        self.store.projection_with_conflicts().map_err(|error| error.to_string())
     }
 
     fn build_history_view(&self) -> HistoryView {
@@ -4619,9 +4711,10 @@ mod tests {
 
 pub use app::{
     ActionEmit, ActionMeta, App, AppBuilder, AppInstance, DocumentApp, DocumentView, HistoryView,
-    KeybindingSpec, ModeSpec, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp, PluginBundle,
-    ResourceKindSpec, VcsDocumentApp, WindowKindSpec,
+    KeybindingSpec, MediaClass, MediaType, ModeSpec, OsMediaCapability, PanelTabSpec, PanelTreeBuilder, Plugin, PluginApp,
+    PluginBundle, ResourceKindSpec, VcsDocumentApp, WindowKindSpec,
 };
+pub use semio_framework_core::{MediaForm, MediaPortDirection, MediaPortSpec};
 pub use app::{
     is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item, tree_item_desc,
     tree_item_with_action, tree_item_with_action_draggable, AppLabelsOverlayExt, LocaleLabels,

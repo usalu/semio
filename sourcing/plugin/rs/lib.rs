@@ -3,7 +3,7 @@
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     app_labels, build_table_scene, build_world_3d_scene, is_de_locale, localized_label_map, resolve_labels, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, OsMediaCapability, ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode,
+    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode,
     UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
@@ -528,6 +528,10 @@ pub fn create_sourcing_curate_app() -> App {
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Type },
+                schema: "catalogue.kinds".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .resource_kind(ResourceKindSpec {
                 id: "catalogue.sourcing".into(),
@@ -536,6 +540,10 @@ pub fn create_sourcing_curate_app() -> App {
                 component_kind: "catalogue".into(),
                 dimension: "data".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Kit, form: MediaForm::Kit },
+                schema: "sourcing.curate".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("shopping-cart")
             .mode("curate", "Curate")

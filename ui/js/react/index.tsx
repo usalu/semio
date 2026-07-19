@@ -23351,22 +23351,26 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const windowsKeyRef = reactHostPort.useRef(windowsKey);
   layoutStateRef.current = layoutState;
 
-  const layoutChangeSkipRef = reactHostPort.useRef(true);
+  // 🚧 `onLayoutChange` is for user-driven layout mutations (drag/resize/close/activate) only.
+  // Prop-derived states — the mount initializer and every prop resync — must never echo back:
+  // during a session switch the windows prop changes before the layout prop, so the resync
+  // reconciles against a stale layout and would write a pruned (possibly empty) layout into the
+  // host's state, clobbering the layout the host is about to seed.
+  const propDerivedLayoutJsonRef = reactHostPort.useRef(JSON.stringify(initialLayout));
   reactHostPort.useEffect(() => {
-    if (layoutChangeSkipRef.current) {
-      layoutChangeSkipRef.current = false;
-      return;
-    }
+    if (JSON.stringify(layoutState) === propDerivedLayoutJsonRef.current) return;
     onLayoutChange?.(layoutState);
   }, [layoutState, onLayoutChange]);
 
   reactHostPort.useEffect(() => {
     const layoutChanged = layoutKeyRef.current !== layoutKey;
-    if (layoutChanged) layoutChangeSkipRef.current = true;
-    if (!layoutChanged && windowsKeyRef.current === windowsKey) return;
+    const windowsChanged = windowsKeyRef.current !== windowsKey;
+    if (!layoutChanged && !windowsChanged) return;
     layoutKeyRef.current = layoutKey;
     windowsKeyRef.current = windowsKey;
-    setLayoutState(resolveModeLayout(windows, layout));
+    const resolved = resolveModeLayout(windows, layout);
+    propDerivedLayoutJsonRef.current = JSON.stringify(resolved);
+    setLayoutState(resolved);
     setMaximizedStackPath(null);
   }, [layout, layoutKey, windows, windowsKey]);
 

@@ -24,7 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Compose.Rhino\Compose.Rhino.csproj" AdditionalProperties="Configuration=UnitTest" />
-    <ProjectReference Include="..\..\..\lib\net\Compose\Compose.csproj" />
+    <ProjectReference Include="..\..\..\lib\net\Compose\cs\Compose.csproj" />
   </ItemGroup>
 
 </Project>

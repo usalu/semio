@@ -17,7 +17,7 @@ use semio_framework_plugin::{
     mesh_from_kind, resolve_labels, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, DocumentApp, DocumentView, MeshData, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    Canvas2dScene, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
     ResourceKindSpec, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode,
     UiToggleNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -2173,6 +2173,10 @@ fn create_lowpoly_app() -> App {
                 component_kind: "lowpoly".into(),
                 dimension: "3d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                schema: "lowpoly.fixture".into(),
+                export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl],
+                import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .resource_kind(ResourceKindSpec {
                 id: "3d.mesh".into(),
@@ -2181,6 +2185,10 @@ fn create_lowpoly_app() -> App {
                 component_kind: "mesh".into(),
                 dimension: "3d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                schema: "mesh.reference".into(),
+                export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl],
+                import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("box")
             .mode("edit", "Edit")

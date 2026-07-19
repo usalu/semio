@@ -1,0 +1,18 @@
+[package]
+name = "remodel_dense"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../image/rs" }
+remodel_camera = { path = "../../camera/rs" }
+mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
+mathematical_spatial = { path = "../../../mathematical/spatial/rs" }

@@ -1,0 +1,25 @@
+[package]
+name = "remodel_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../image/rs" }
+remodel_camera = { path = "../../camera/rs" }
+remodel_feature = { path = "../../feature/rs" }
+remodel_sfm = { path = "../../sfm/rs" }
+remodel_dense = { path = "../../dense/rs" }
+remodel_mesh = { path = "../../mesh/rs" }
+remodel_motion = { path = "../../motion/rs" }
+remodel_geo = { path = "../../geo/rs" }
+remodel_document = { path = "../../rs" }
+semio-framework-core = { path = "../../../framework/core/rs" }
+mathematical_random = { path = "../../../mathematical/random/rs" }

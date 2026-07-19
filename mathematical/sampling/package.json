@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/math-sampling",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run @semio-tech/math-sampling:test"
+  }
+}

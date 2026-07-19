@@ -97,18 +97,19 @@ export async function buildIconAtlas(): Promise<{
   return { width, height, pixels, entries };
 }
 
-export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<void> {
-  const root = document.getElementById(options.rootId ?? "root");
-  if (!root) throw new Error("missing #root");
-  root.replaceChildren();
-  const canvas = document.createElement("canvas");
-  canvas.id = "semio-wgpu-canvas";
-  canvas.style.display = "block";
-  canvas.style.width = "100%";
-  canvas.style.height = "100vh";
-  canvas.style.touchAction = "none";
-  canvas.style.outline = "none";
-  root.append(canvas);
+/**
+ * 🧊 Boots the real wgpu renderer WASM, mirroring `framework/renderer/wgpu/js/boot.ts` (the Trunk dev
+ * entry) exactly: `semioRendererBoot(handles, pluginFilter)` takes no canvas — the Rust side
+ * (`#[wasm_bindgen(js_name = semioRendererBoot)]` in `framework/renderer/wgpu/rs/lib.rs`) always looks up
+ * `document.getElementById("root")` itself, clears it, and creates+appends its own `#semio-wgpu-canvas`.
+ * Returns a dispose callback for hosts (e.g. Storybook) that need to unmount cleanly — it detaches the
+ * DOM the Rust side built; the underlying wasm event loop has no JS-visible stop handle, so this is a
+ * best-effort cleanup, not a full runtime teardown.
+ */
+export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = {}): Promise<() => void> {
+  const rootId = options.rootId ?? "root";
+  const root = document.getElementById(rootId);
+  if (!root) throw new Error(`[DEBUG] missing #${rootId}`);
 
   const pluginEntries = options.plugins ?? [];
   const [handles, iconAtlas] = await Promise.all([
@@ -124,16 +125,17 @@ export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions = 
   const rendererUrl = options.rendererModuleUrl ?? DEFAULT_RENDERER_MODULE_URL;
   const rendererModule = (await import(/* @vite-ignore */ rendererUrl)) as {
     default?: (input?: WebAssembly.Module | BufferSource | Response) => Promise<void>;
-    semioRendererBoot?: (canvas: HTMLCanvasElement, plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => Promise<void>;
+    semioRendererBoot?: (plugins: { pluginId: string; handle: ReturnType<typeof pluginHandleForBridge> }[], pluginFilter: string) => Promise<void>;
     uploadIconAtlas?: (width: number, height: number, pixels: Uint8Array, entriesJson: string) => void;
   };
   if (rendererModule.default) await rendererModule.default();
   if (!rendererModule.semioRendererBoot) {
     throw new Error("[DEBUG] wgpu renderer module missing semioRendererBoot");
   }
-  await rendererModule.semioRendererBoot(canvas, handles, options.plugin ?? "s");
+  await rendererModule.semioRendererBoot(handles, options.plugin ?? "s");
   if (rendererModule.uploadIconAtlas) {
     rendererModule.uploadIconAtlas(iconAtlas.width, iconAtlas.height, iconAtlas.pixels, JSON.stringify(iconAtlas.entries));
   }
   await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+  return () => root.replaceChildren();
 }

@@ -2818,6 +2818,17 @@
       }
     },
     {
+      "name": "🧪test🎰mathematical-sampling",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/math-sampling:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.78
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

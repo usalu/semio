@@ -110,7 +110,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
-    DocumentApp, DocumentView, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
+    DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
     UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1404,6 +1404,10 @@ fn create_writer_app() -> App {
                 component_kind: "writer".into(),
                 dimension: "text".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Text, form: MediaForm::Document },
+                schema: "writer.document".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("writer")
             .mode("edit", "Edit")

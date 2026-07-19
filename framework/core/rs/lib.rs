@@ -4356,6 +4356,9 @@ pub enum HostEffect {
     RequestSync,
     /// @emoji 🧭 Navigates the shell to a URI (studio/instance/document route).
     Navigate { uri: String },
+    /// @emoji 🌐 Opens an external URL in a new browser tab — the host-bridge substitute for a plugin
+    /// reaching into `web-sys`/`window()` directly, which the plugin capability lint forbids.
+    OpenExternalUrl { url: String },
     /// @emoji 🗂️ Replaces the active studio/window panel state with a serialized panel JSON.
     SetPanel { panel_json: String },
     /// @emoji ⬇️ Downloads an in-memory media export as a file (base64 or utf-8 `data`).

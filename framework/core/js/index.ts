@@ -1670,6 +1670,7 @@ export type HostEffect =
   | { readonly closeWindow: { readonly window: number } }
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
+  | { readonly openExternalUrl: { readonly url: string } }
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }

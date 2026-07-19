@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/remodel-sfm",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run remodel-sfmest"
+  }
+}

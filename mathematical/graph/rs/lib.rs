@@ -477,11 +477,11 @@ impl<P: PortModel, D: Directedness> GraphView for Storage<P, D> {
         }
     }
     fn out_degree(&self, node: NodeId) -> usize {
-        self.successors.get(&node).map(|m| m.values().map(Vec::len).sum()).unwrap_or(0)
+        self.successors.get(&node).map_or(0, |m| m.values().map(Vec::len).sum())
     }
     fn in_degree(&self, node: NodeId) -> usize {
         if D::DIRECTED {
-            self.predecessors.get(&node).map(|m| m.values().map(Vec::len).sum()).unwrap_or(0)
+            self.predecessors.get(&node).map_or(0, |m| m.values().map(Vec::len).sum())
         } else {
             self.out_degree(node)
         }
@@ -610,7 +610,7 @@ impl Csr {
 
 // #region 🔖Views
 /// 🪟 Read-only borrowed views over any `GraphView`. Deliberately excluded: NetworkX's mutable attribute-sharing views (`G.subgraph()` et al. alias the parent's attribute dicts) — that aliasing pattern doesn't fit Rust ownership, so every view here only ever borrows. Callers who need an owned, mutated copy build one explicitly (a `.copy()`-style constructor lives on the per-kind facade crates from a later wave); these types just leave that seam open.
-
+///
 /// 🔎 Restricts a graph to a node subset; an edge is included only when both endpoints are in the subset.
 pub struct SubgraphView<'g, G: GraphView> {
     graph: &'g G,
@@ -1813,13 +1813,13 @@ pub mod algorithms {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(std::cmp::Reverse(OrderedFloat(0.0, from)));
         while let Some(std::cmp::Reverse(OrderedFloat(d, u))) = heap.pop() {
-            if dist[u].map(|cur| d > cur).unwrap_or(true) {
+            if dist[u].map_or(true, |cur| d > cur) {
                 continue;
             }
             for &v in &adj.out[u] {
                 let w = weights.get(&(u, v)).copied().unwrap_or(1.0);
                 let nd = d + w;
-                if dist[v].map(|cur| nd < cur).unwrap_or(true) {
+                if dist[v].map_or(true, |cur| nd < cur) {
                     dist[v] = Some(nd);
                     heap.push(std::cmp::Reverse(OrderedFloat(nd, v)));
                 }
@@ -1839,7 +1839,7 @@ pub mod algorithms {
         let mut heap = std::collections::BinaryHeap::new();
         heap.push(std::cmp::Reverse(OrderedFloat(0.0, from)));
         while let Some(std::cmp::Reverse(OrderedFloat(d, u))) = heap.pop() {
-            if dist[u].map(|cur| d > cur).unwrap_or(true) {
+            if dist[u].map_or(true, |cur| d > cur) {
                 continue;
             }
             if u == to {
@@ -1855,7 +1855,7 @@ pub mod algorithms {
             for &v in &adj.out[u] {
                 let w = weights.get(&(u, v)).copied().unwrap_or(1.0);
                 let nd = d + w;
-                if dist[v].map(|cur| nd < cur).unwrap_or(true) {
+                if dist[v].map_or(true, |cur| nd < cur) {
                     dist[v] = Some(nd);
                     parent[v] = u;
                     heap.push(std::cmp::Reverse(OrderedFloat(nd, v)));

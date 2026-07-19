@@ -8014,7 +8014,7 @@ pub mod vcs {
         pub async fn reseed_kit_snapshot_store_from_mutable_kit(self: &Arc<Self>) {
             let kit = self.mutable_kit.read().await.clone();
             let snap = crate::kit_backbone::initial_kit_projection_value(&kit).await;
-            *self.the_kit_snapshot_store.lock().expect("the_kit_snapshot_store mutex poisoned by a prior panic") = kit_vcs::create_kit_snapshot_store(&self.id, snap);
+            *self.the_kit_snapshot_store.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = kit_vcs::create_kit_snapshot_store(&self.id, snap);
         }
 
         /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
@@ -8088,7 +8088,7 @@ pub mod vcs {
             let base = self.mutable_kit.read().await.clone();
             let mat = if ws == self.id {
                 let snap = {
-                    let store = self.the_kit_snapshot_store.lock().expect("the_kit_snapshot_store mutex poisoned by a prior panic");
+                    let store = self.the_kit_snapshot_store.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
                     kit_vcs::materialize_kit_snapshot(store.envelope(), store.applied_edit_ids())
                 };
                 let mat = base.deep_clone().await;
@@ -8200,7 +8200,7 @@ pub mod vcs {
                 self.the_kit_workspace_seq.fetch_add(1, Ordering::Relaxed);
                 self.the_kit_snapshot_store
                     .lock()
-                    .map_err(|_| ComposeError::invalid("kit vcs store lock poisoned"))?
+                    .unwrap_or_else(|poisoned| poisoned.into_inner())
                     .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![wire], description: None })
                     .map_err(|e| ComposeError::invalid(e.to_string()))?;
             } else if let Some(alt) = self.workspace_alternative(&ws).await {
@@ -14014,7 +14014,7 @@ pub mod event {
 
         /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
         pub async fn emit_event(&self, ev: Event) {
-            let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().expect("path_sinks mutex poisoned by a prior panic").iter().map(|(p, t)| (p.clone(), t.clone())).collect();
+            let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).iter().map(|(p, t)| (p.clone(), t.clone())).collect();
             for (paths, tx) in sinks {
                 if paths.is_empty() || ev.matches_watched_paths(&paths) {
                     let _ = tx.send(ev.clone()).await;
@@ -14032,7 +14032,7 @@ pub mod event {
         /// @emoji 🔔 Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
         pub fn subscribe_paths(&self, watched: &[String]) -> crate::external_adapters::async_channel::Receiver<Event> {
             let (tx, rx) = crate::external_adapters::async_channel::unbounded();
-            self.path_sinks.lock().expect("path_sinks mutex poisoned by a prior panic").push((watched.to_vec(), tx));
+            self.path_sinks.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).push((watched.to_vec(), tx));
             rx
         }
     }

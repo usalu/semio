@@ -2126,7 +2126,7 @@ use semio_framework_plugin::{PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, OsMediaCapability, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -2730,7 +2730,6 @@ fn collect_modelspace_solids(kernel: &mut dyn BrepKernel, envelope: &CadPlayView
 /// @emoji 📤 Encodes `solids` through the kernel's native OBJ/STL/STEP codec for `format`; STL is
 /// base64-wrapped since it is a binary format, OBJ/STEP stay UTF-8 text.
 fn export_solids_as(kernel: &mut dyn BrepKernel, solids: &[GeometryHandle], format: semio_framework_plugin::OsMediaFormat, stem: &str) -> Option<CadSolidExport> {
-    use semio_framework_plugin::OsMediaFormat;
     let filename = format!("{stem}.{}", format.as_str());
     let mime_type = format.mime_type().to_string();
     match format {
@@ -5194,6 +5193,10 @@ fn create_cad_app() -> App {
                 component_kind: "cad".into(),
                 dimension: "3d".into(),
                 media_capability: OsMediaCapability::Brep,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+                schema: "cad.scene".into(),
+                export_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Glb],
+                import_formats: vec![OsMediaFormat::Step, OsMediaFormat::Obj, OsMediaFormat::Stl],
             })
             .icon_id("box")
             .terminology("reuse")

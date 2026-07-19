@@ -5,7 +5,7 @@ pub mod host {
     //! 🔌 Plugin host, studio document VCS store, backbone, and catalog.
 
     use crate::instance::{create_default_os_parameter, create_os_document_id, create_os_id, patch_os_parameter, OsAppInstance, OsDocumentRef, OsInstanceState, OsParameter, OsParameterFieldBinding, OsParameterType};
-    use crate::media_graph::{empty_media_graph, media_graph_node_for_instance, sync_media_graph_parameter_ports, MediaGraphPosition, OsMediaGraph, OsMediaGraphEdge, OS_MEDIA_GRAPH_SCHEMA, OS_STUDIO_SCHEMA};
+    use crate::media_graph::{empty_media_graph, media_graph_node_for_instance, sync_media_graph_parameter_ports, MediaGraphPosition, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode, OS_MEDIA_GRAPH_SCHEMA, OS_STUDIO_SCHEMA};
     use crate::registry::{os_app_primary_output_kind, os_app_registration, PluginRegistry};
     use semio_framework_core::{
         ActionContext, ActionInvocation, AppDefinition, Contribution, DocumentDiff, DocumentHandle, DocumentVersion, HybridLogicalTimestamp, InverseOperation, InvocationResult, KernelOperation, OperationId, PluginManifest, SchemaId, UndoGroup,
@@ -16,7 +16,7 @@ pub mod host {
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
     use ui_wgpu::{ui_recovery_panel, UiNode};
-    use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError};
+    use vcs::{create_document_vcs_envelope, document_backbone_ref, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, StudioConflict, VcsError};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
@@ -747,7 +747,152 @@ pub mod host {
                 OsOp::SyncParameterPorts => Vec::new(),
             }
         }
+
+        /// @emoji 🤝 Media-graph referential-integrity pass — see `reconcile_os_media_graph` (region
+        /// 🔖GraphReconcile below) for the four ordered rules it runs.
+        fn reconcile(projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
+            reconcile_os_media_graph(projection)
+        }
     }
+
+    //#region 🔖GraphReconcile
+    /// @emoji 🧵 Post-materialization media-graph integrity pass run by `OsOp::reconcile`. Runs, in
+    /// order: (1) drop edges whose source/target node or port no longer exists (a concurrent delete
+    /// tombstone wins over the wiring), (2) drop edges whose port types no longer match (a concurrent
+    /// re-typing wins over the wiring), (3) dedupe edges with identical endpoints down to the
+    /// lexicographically smallest id (deterministic across peers replaying the same op log), (4) break
+    /// any cycle the previous rules left behind. Each rule operates on the edge set the previous one
+    /// produced.
+    fn reconcile_os_media_graph(mut projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
+        let mut conflicts = Vec::new();
+        let mut edges = std::mem::take(&mut projection.media_graph.edges);
+        let node_by_id: HashMap<&str, &OsMediaGraphNode> = projection.media_graph.nodes.iter().map(|node| (node.id.as_str(), node)).collect();
+
+        //#region OrphanEdgeDrop
+        edges.retain(|edge| {
+            let source_ok = node_by_id.get(edge.source_node_id.as_str()).is_some_and(|node| node.outputs.iter().any(|port| port.id == edge.source_port_id));
+            let target_ok = node_by_id.get(edge.target_node_id.as_str()).is_some_and(|node| node.inputs.iter().any(|port| port.id == edge.target_port_id));
+            if source_ok && target_ok {
+                true
+            } else {
+                conflicts.push(StudioConflict {
+                    kind: "media-graph/edge-orphaned".into(),
+                    uri: edge.id.clone(),
+                    message: format!("edge {} references a node or port that no longer exists ({}:{} -> {}:{})", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id),
+                });
+                false
+            }
+        });
+        //#endregion OrphanEdgeDrop
+
+        //#region TypeMismatchDrop
+        // 🩹 Baseline comparison: straight `resource_kind` string equality, since `OsMediaGraphEdge` has
+        // no `contract` field yet. Once edge contracts land, prefer the contract's `kind_id` against the
+        // live port types (contract wins if present), falling back to this comparison otherwise.
+        edges.retain(|edge| {
+            let source_kind = node_by_id.get(edge.source_node_id.as_str()).and_then(|node| node.outputs.iter().find(|port| port.id == edge.source_port_id)).map(|port| port.resource_kind.as_str());
+            let target_kind = node_by_id.get(edge.target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == edge.target_port_id)).map(|port| port.resource_kind.as_str());
+            match (source_kind, target_kind) {
+                (Some(source), Some(target)) if source == target => true,
+                _ => {
+                    conflicts.push(StudioConflict {
+                        kind: "media-graph/edge-type-mismatch".into(),
+                        uri: edge.id.clone(),
+                        message: format!("edge {} connects ports whose types no longer match", edge.id),
+                    });
+                    false
+                }
+            }
+        });
+        //#endregion TypeMismatchDrop
+
+        //#region DuplicateWireDedupe
+        // 🧮 No conflict reported here — identical wiring intent from two peers isn't a disagreement.
+        let mut smallest_id_for_wire: HashMap<(String, String, String, String), String> = HashMap::new();
+        for edge in &edges {
+            let wire = (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
+            smallest_id_for_wire.entry(wire).and_modify(|smallest| if edge.id < *smallest { *smallest = edge.id.clone() }).or_insert_with(|| edge.id.clone());
+        }
+        edges.retain(|edge| {
+            let wire = (edge.source_node_id.clone(), edge.source_port_id.clone(), edge.target_node_id.clone(), edge.target_port_id.clone());
+            smallest_id_for_wire.get(&wire).is_some_and(|smallest| smallest == &edge.id)
+        });
+        //#endregion DuplicateWireDedupe
+
+        //#region CycleDrop
+        edges = drop_media_graph_cycle_edges(edges, &mut conflicts);
+        //#endregion CycleDrop
+
+        projection.media_graph.edges = edges;
+        (projection, conflicts)
+    }
+
+    /// @emoji 🌀 Repeatedly finds a cycle in `edges` (by node-id adjacency) and drops the participating
+    /// edge with the highest array index — a deterministic proxy for "newest edit" since
+    /// `Operation::reconcile` only receives the materialized `OsProjection` by value, not per-edge
+    /// `HybridLogicalTimestamp`s from the edit log. `apply_os_operation`'s `ConnectMediaPorts` handler
+    /// appends new edges to the end of the vec, so a higher index approximates a later edit; true
+    /// HLT-based tie-breaking would need `reconcile` to also see edit history, not just the projection.
+    fn drop_media_graph_cycle_edges(mut edges: Vec<OsMediaGraphEdge>, conflicts: &mut Vec<StudioConflict>) -> Vec<OsMediaGraphEdge> {
+        while let Some(cycle_node_ids) = find_media_graph_cycle_participants(&edges) {
+            let newest_cycle_edge_index = edges.iter().enumerate().filter(|(_, edge)| cycle_node_ids.contains(&edge.source_node_id) && cycle_node_ids.contains(&edge.target_node_id)).map(|(index, _)| index).max();
+            let Some(newest_cycle_edge_index) = newest_cycle_edge_index else { break };
+            let dropped = edges.remove(newest_cycle_edge_index);
+            conflicts.push(StudioConflict {
+                kind: "media-graph/edge-cycle".into(),
+                uri: dropped.id.clone(),
+                message: format!("edge {} was dropped to break a cycle in the media graph", dropped.id),
+            });
+        }
+        edges
+    }
+
+    /// @emoji 🔍 DFS cycle detection adapted from `media_graph::validate_media_graph`'s check, but
+    /// returning the participant node ids of the first cycle found (rather than just an error string)
+    /// so the caller can identify which edges are eligible for dropping.
+    fn find_media_graph_cycle_participants(edges: &[OsMediaGraphEdge]) -> Option<HashSet<String>> {
+        let mut adjacency: HashMap<String, Vec<String>> = HashMap::new();
+        let mut node_ids: HashSet<String> = HashSet::new();
+        for edge in edges {
+            node_ids.insert(edge.source_node_id.clone());
+            node_ids.insert(edge.target_node_id.clone());
+            adjacency.entry(edge.source_node_id.clone()).or_default().push(edge.target_node_id.clone());
+        }
+        let mut visited = HashSet::new();
+        for node_id in &node_ids {
+            if visited.contains(node_id) {
+                continue;
+            }
+            let mut stack: Vec<String> = Vec::new();
+            let mut on_stack: HashSet<String> = HashSet::new();
+            if let Some(cycle) = dfs_find_media_graph_cycle(node_id, &adjacency, &mut stack, &mut on_stack, &mut visited) {
+                return Some(cycle);
+            }
+        }
+        None
+    }
+
+    fn dfs_find_media_graph_cycle(node_id: &str, adjacency: &HashMap<String, Vec<String>>, stack: &mut Vec<String>, on_stack: &mut HashSet<String>, visited: &mut HashSet<String>) -> Option<HashSet<String>> {
+        if on_stack.contains(node_id) {
+            let start = stack.iter().position(|id| id == node_id).unwrap_or(0);
+            return Some(stack[start..].iter().cloned().collect());
+        }
+        if visited.contains(node_id) {
+            return None;
+        }
+        stack.push(node_id.to_string());
+        on_stack.insert(node_id.to_string());
+        for next in adjacency.get(node_id).into_iter().flatten() {
+            if let Some(cycle) = dfs_find_media_graph_cycle(next, adjacency, stack, on_stack, visited) {
+                return Some(cycle);
+            }
+        }
+        stack.pop();
+        on_stack.remove(node_id);
+        visited.insert(node_id.to_string());
+        None
+    }
+    //#endregion 🔖GraphReconcile
 
     pub fn materialize_os_projection(document: &OsDocument, applied_edit_ids: &[String]) -> Result<OsProjection, VcsError> {
         let envelope = OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone() };
@@ -791,6 +936,12 @@ pub mod host {
 
         pub fn projection(&self) -> Result<OsProjection, VcsError> {
             self.inner.projection()
+        }
+
+        /// @emoji 🤝 Fresh replay plus whatever `OsOp::reconcile`'s media-graph pass reports. See
+        /// `vcs::DocumentVcsStore::projection_with_conflicts`.
+        pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<StudioConflict>), VcsError> {
+            self.inner.projection_with_conflicts()
         }
 
         pub fn document(&self) -> OsDocument {
@@ -1029,7 +1180,7 @@ pub mod host {
         use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
-        use vcs::MemoryBackbonePort;
+        use vcs::{MemoryBackbone, MemoryBackbonePort};
 
         #[test]
         fn loads_plugin_apps_into_registry() {
@@ -1435,6 +1586,46 @@ pub mod host {
         #[test]
         fn validates_media_graph_cycles() {
             assert!(validate_media_graph(&empty_media_graph()).ok);
+        }
+
+        #[test]
+        fn concurrent_delete_and_wire_reconciles_without_a_dangling_edge() {
+            seed_draw_program();
+            let mut store_a = OsStore::new(create_empty_os_document("studio", "Studio"));
+            let node_a_instance = store_a.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 0.0, y: 0.0 }).expect("spawn a");
+            let node_b_instance = store_a.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 200.0, y: 0.0 }).expect("spawn b");
+            let mut store_b = OsStore::new(store_a.document());
+
+            let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race");
+            store_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+            store_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+
+            let projection = store_a.projection().expect("projection");
+            let node_a = projection.media_graph.nodes.iter().find(|node| node.instance_id == node_a_instance).expect("node a");
+            let node_b = projection.media_graph.nodes.iter().find(|node| node.instance_id == node_b_instance).expect("node b");
+            let source_node_id = node_a.id.clone();
+            let source_port_id = node_a.outputs.first().expect("node a output port").id.clone();
+            let target_node_id = node_b.id.clone();
+            let target_port_id = node_b.inputs.first().expect("node b input port").id.clone();
+
+            // 🏃 Actor A deletes node B; actor B (unaware of the delete) concurrently wires a new edge
+            // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
+            store_a.dispatch_apply(vec![OsOp::RemoveAppInstance { instance_id: node_b_instance.clone() }]).expect("remove node b");
+            store_b
+                .dispatch_apply(vec![OsOp::ConnectMediaPorts {
+                    edge: OsMediaGraphEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id },
+                }])
+                .expect("wire edge to node b");
+            store_a.tick().expect("pump a");
+            store_b.tick().expect("pump b");
+
+            let (converged_a, conflicts_a) = store_a.projection_with_conflicts().expect("projection with conflicts a");
+            let (converged_b, conflicts_b) = store_b.projection_with_conflicts().expect("projection with conflicts b");
+            assert_eq!(converged_a, converged_b, "both peers must converge on the same reconciled projection");
+            assert!(converged_a.media_graph.nodes.iter().all(|node| node.instance_id != node_b_instance), "node b must stay removed");
+            assert!(converged_a.media_graph.edges.iter().all(|edge| edge.target_node_id != target_node_id), "the edge wired to the deleted node must be dropped, not dangling");
+            assert!(conflicts_a.iter().any(|conflict| conflict.kind == "media-graph/edge-orphaned"), "dropping the dangling edge must surface a conflict");
+            assert_eq!(conflicts_a, conflicts_b, "both peers must report the same reconciliation conflicts");
         }
 
         // 🫀 The old `presence_upserts_prunes_and_excludes_self` test exercised the deleted `presence:`
@@ -3421,6 +3612,10 @@ pub mod media_graph {
                 component_kind: "draw".into(),
                 dimension: "2d".into(),
                 media_capability: semio_framework_core::OsMediaCapability::MeshOnly,
+                media_type: semio_framework_core::MediaType { class: semio_framework_core::MediaClass::TwoD, form: semio_framework_core::MediaForm::Vector },
+                schema: "draw.document".into(),
+                export_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
+                import_formats: vec![semio_framework_core::OsMediaFormat::Svg, semio_framework_core::OsMediaFormat::Png],
             });
             let mut resources = HashMap::new();
             resources.insert("draw".into(), os_baseline_resource("2d.drawing", "draw.document", "draw"));
@@ -3512,7 +3707,7 @@ pub mod registry {
     //! 🗂️ Plugin manifest registry and OS program/resource catalog.
 
     use crate::instance::{media_port_id_for_spec, OsParameterFieldSpec};
-    use semio_framework_core::{AppDefinition, ModeDefinition, OsMediaCapability, PluginManifest, ProgramDefinition, ResourceKindSpec, WindowKindDefinition};
+    use semio_framework_core::{AppDefinition, MediaClass, MediaForm, MediaType, ModeDefinition, OsMediaCapability, PluginManifest, ProgramDefinition, ResourceKindSpec, WindowKindDefinition};
     use serde::{Deserialize, Serialize};
     use std::collections::HashMap;
     use std::sync::{LazyLock, Mutex};
@@ -3529,6 +3724,9 @@ pub mod registry {
         pub source_format: String,
         pub component_kind: String,
         pub dimension: String,
+        /// 🧬 The `MediaType` this resource kind negotiates on the media graph — see
+        /// `semio_framework_core::media_types_compatible`.
+        pub media_type: MediaType,
     }
 
     /// 🗂️ One registered resource kind's full catalog entry — the descriptor plus the media capability
@@ -3541,7 +3739,14 @@ pub mod registry {
 
     fn resource_kind_entry_from_spec(spec: &ResourceKindSpec) -> ResourceKindEntry {
         ResourceKindEntry {
-            descriptor: OsResourceDescriptor { kind: spec.id.clone(), name: spec.name.clone(), source_format: spec.source_format.clone(), component_kind: spec.component_kind.clone(), dimension: spec.dimension.clone() },
+            descriptor: OsResourceDescriptor {
+                kind: spec.id.clone(),
+                name: spec.name.clone(),
+                source_format: spec.source_format.clone(),
+                component_kind: spec.component_kind.clone(),
+                dimension: spec.dimension.clone(),
+                media_type: spec.media_type,
+            },
             media_capability: spec.media_capability,
         }
     }
@@ -3554,7 +3759,14 @@ pub mod registry {
         registry.insert(
             "parameter.value".to_string(),
             ResourceKindEntry {
-                descriptor: OsResourceDescriptor { kind: "parameter.value".into(), name: "Parameter".into(), source_format: "parameter.value".into(), component_kind: "parameter".into(), dimension: "data".into() },
+                descriptor: OsResourceDescriptor {
+                    kind: "parameter.value".into(),
+                    name: "Parameter".into(),
+                    source_format: "parameter.value".into(),
+                    component_kind: "parameter".into(),
+                    dimension: "data".into(),
+                    media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                },
                 media_capability: OsMediaCapability::MeshOnly,
             },
         );
@@ -3600,6 +3812,7 @@ pub mod registry {
             source_format: kind.into(),
             component_kind: "panel".into(),
             dimension: "unknown".into(),
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
         })
     }
 

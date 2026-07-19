@@ -108,6 +108,19 @@ impl Rng {
         items.get(idx)
     }
 
+    /// 🎲 Raw 256-bit state words, for external snapshot/restore of a generator mid-stream.
+    pub fn state(&self) -> [u64; 4] {
+        self.s
+    }
+
+    /// 🌱 Rebuilds a generator from previously captured state words (inverse of [`Rng::state`]).
+    /// The all-zero state is xoshiro256**'s fixed point (every subsequent draw is also zero), so
+    /// callers must never pass it; debug builds catch the mistake immediately.
+    pub fn from_state(s: [u64; 4]) -> Self {
+        debug_assert!(s != [0u64; 4], "from_state: all-zero state is the xoshiro256** fixed point");
+        Self { s }
+    }
+
     /// 🎯 `k` distinct indices drawn uniformly from `0..n`, via Floyd's O(k)-time, O(k)-space partial
     /// sampling algorithm — it never materializes the full `0..n` universe, which matters once `n` is a
     /// graph's node count and `k` is a small subsample. Order is not itself a uniform permutation.
@@ -339,6 +352,19 @@ mod tests {
         let seq_a: Vec<f64> = (0..64).map(|_| a.next_f64()).collect();
         let seq_b: Vec<f64> = (0..64).map(|_| b.next_f64()).collect();
         assert_eq!(seq_a, seq_b);
+    }
+
+    #[test]
+    fn rng_state_round_trip_resumes_identically() {
+        let mut original = Rng::from_seed(4242);
+        for _ in 0..17 {
+            original.next_u64();
+        }
+        let snapshot = original.state();
+        let mut resumed = Rng::from_state(snapshot);
+        let expected: Vec<u64> = (0..32).map(|_| original.next_u64()).collect();
+        let actual: Vec<u64> = (0..32).map(|_| resumed.next_u64()).collect();
+        assert_eq!(expected, actual);
     }
 
     #[test]

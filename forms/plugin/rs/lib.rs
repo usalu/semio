@@ -10,7 +10,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionKind, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
-    DocumentApp, DocumentView, HostEffect, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
+    DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
     UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
     ViewState,
@@ -2023,6 +2023,10 @@ fn create_forms_app() -> App {
                 component_kind: "forms".into(),
                 dimension: "data".into(),
                 media_capability: OsMediaCapability::Brep,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                schema: "forms.dictionary".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("forms")
             .mode("blueprint", "Blueprint")

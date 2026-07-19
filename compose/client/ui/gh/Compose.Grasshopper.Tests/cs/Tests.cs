@@ -18,6 +18,7 @@ using Rhino.FileIO;
 using Rhino.Geometry;
 using Compose.Grasshopper;
 using static Compose.Grasshopper.Compatibility;
+using Xunit;
 
 namespace Compose.Grasshopper.Tests;
 

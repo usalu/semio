@@ -15,7 +15,7 @@ pub mod app_2d {
         ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, tree_item_with_action, ActionArgDef, ActionArgOption, ActionEmit, App,
         AppLabelsOverlayExt, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
-        NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
+        NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
         ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -977,6 +977,10 @@ pub mod app_2d {
                     component_kind: "procedural2d".into(),
                     dimension: "2d".into(),
                     media_capability: OsMediaCapability::MeshOnly,
+                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
+                    schema: "procedural.2d".into(),
+                    export_formats: vec![],
+                    import_formats: vec![],
                 })
                 .icon_id("procedural2d")
                 .mode("edit", "Edit")
@@ -1294,7 +1298,7 @@ pub mod app_3d {
         create_named_layout, merge_world_selection_ids,
         mesh_from_kind, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, AppLabelsOverlayExt, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, MeasureSelectItem, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition,
+        ActionDescriptor, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition,
         UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, ViewState, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -2786,6 +2790,10 @@ pub mod app_3d {
                     component_kind: "procedural3d".into(),
                     dimension: "3d".into(),
                     media_capability: OsMediaCapability::MeshOnly,
+                    media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Flow },
+                    schema: "procedural.3d".into(),
+                    export_formats: vec![],
+                    import_formats: vec![],
                 })
                 .icon_id("workflow")
                 .mode("edit", "Edit")
@@ -2984,7 +2992,7 @@ pub mod app_3d {
             )
             .expect("set example");
             let projection = app.projection().expect("projection");
-            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
+            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.prim3d.sphere")));
         }
 
         #[test]
@@ -3082,7 +3090,7 @@ pub mod app_3d {
             )
             .expect("set example");
             let projection = app.projection().expect("projection");
-            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.prim3d.sphere")));
+            assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.prim3d.sphere")));
         }
 
         #[test]
@@ -3250,7 +3258,7 @@ pub mod app_3d {
             let projection = app.projection().expect("projection");
             let transform_id = "extrude__gumball_translate";
             let transform = projection.fixture.widgets.iter().find(|widget| widget_id(widget) == transform_id).expect("transform neuron created");
-            assert!(matches!(transform, Widget::Neuron { neuronKind, .. } if neuronKind == "brep.xform.translate"));
+            assert!(matches!(transform, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.xform.translate"));
             let offset = gumball_widget_offset(&host_from_fixture(&projection.fixture), transform_id);
             assert_eq!(offset, [1.0, 2.0, 3.0]);
             let source = projection.fixture.widgets.iter().find(|widget| widget_id(widget) == "extrude").expect("source widget");
@@ -3283,7 +3291,7 @@ pub mod app_3d {
             .expect("rotate");
             let rotated = app.projection().expect("projection");
             let rotate_id = "extrude__gumball_rotate";
-            assert!(rotated.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == rotate_id && neuronKind == "brep.xform.rotate")));
+            assert!(rotated.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == rotate_id && neuron_kind == "brep.xform.rotate")));
             assert_eq!(gumball_widget_number_param(&host_from_fixture(&rotated.fixture), rotate_id, "angle", 0.0), std::f64::consts::FRAC_PI_2);
 
             let mut scale_app = new_app();
@@ -3296,7 +3304,7 @@ pub mod app_3d {
             .expect("scale");
             let scaled = scale_app.projection().expect("projection");
             let scale_id = "extrude__gumball_scale";
-            assert!(scaled.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuronKind, .. } if id == scale_id && neuronKind == "brep.xform.scale")));
+            assert!(scaled.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { id, neuron_kind, .. } if id == scale_id && neuron_kind == "brep.xform.scale")));
             assert_eq!(gumball_widget_number_param(&host_from_fixture(&scaled.fixture), scale_id, "factor", 1.0), 2.0);
         }
 

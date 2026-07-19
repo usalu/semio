@@ -1,0 +1,13 @@
+{
+  "title": "Fix Gis Plugin Forbidden Web-Sys Dependency",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "The plugin-capability lint (`bun ./script.ts plugin lint` in framework/product/os/dev) fails with \"[plugin-capability-lint] gis-plugin: forbidden dependency web-sys\". gis/plugin/rs/Cargo.toml declares web-sys under the wasm32 target for a direct `web_sys::window().open_with_url(url)` call in `domain::open_url`, used by the gis2d \"openSource\" action to open a feature's source URL in a new tab. Plugins must be host-agnostic per the framework's plugin capability rules, so route this through the host bridge instead: add a `HostEffect::OpenExternalUrl { url }` variant to framework/core/rs/lib.rs's HostEffect enum (mirrored in framework/core/js/index.ts's HostEffect type and handled in framework/renderer/react/index.tsx's applyHostEffects via window.open), remove the web-sys dependency and open_url function from gis-plugin, and have the openSource action push the new HostEffect instead. Verify with `bun ./script.ts plugin lint` from framework/product/os/dev and `cargo check -p gis-plugin`.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2149"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪afc5d67b89c94879ad9a185b64b3a6e5"
+  ]
+}

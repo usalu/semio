@@ -1,0 +1,24 @@
+[package]
+name = "remodel_motion"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_image = { path = "../../image/rs" }
+remodel_feature = { path = "../../feature/rs" }
+remodel_camera = { path = "../../camera/rs" }
+remodel_sfm = { path = "../../sfm/rs" }
+mathematical_signal = { path = "../../../mathematical/signal/rs" }
+mathematical_lie = { path = "../../../mathematical/lie/rs" }
+mathematical_optimize = { path = "../../../mathematical/optimize/rs" }
+mathematical_spatial = { path = "../../../mathematical/spatial/rs" }
+mathematical_graph = { path = "../../../mathematical/graph/rs" }
+mathematical_graph_matching = { path = "../../../mathematical/graph/matching/rs" }

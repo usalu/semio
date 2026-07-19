@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKi
     tree_item, tree_item_with_action, tree_item_with_action_draggable,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
-    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec,
+    ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec,
     ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
@@ -1905,6 +1905,10 @@ fn create_draw_app() -> App {
                 component_kind: "draw".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                schema: "draw.document".into(),
+                export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("draw")
             .mode("edit", "Edit")

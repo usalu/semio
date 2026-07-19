@@ -3,7 +3,7 @@
 use remodel_document::{default_remodel_scene, CameraState, DenseResolution, MeshSource, ReconstructionParams, RemodelMesh, RemodelOp, RemodelScene, SelectionState, SourceVideo, REMODEL_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{
     app_labels, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_kind, resolve_labels, ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiNode, UtilityCategory, UtilityDefinition, ViewState,
+    ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec, SurfaceKind, UiNode, UtilityCategory, UtilityDefinition, ViewState,
     WorldSunConfig, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde_json::{json, Value};
@@ -252,6 +252,10 @@ fn create_remodel_app() -> App {
                 component_kind: "remodel".into(),
                 dimension: "3d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+                schema: "remodel.scene".into(),
+                export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl],
+                import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
             .icon_id("scan")
             .mode("model", "Model")

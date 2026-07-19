@@ -9,7 +9,7 @@ use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
 use semio_framework_plugin::{
     app_labels, build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels,
     tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, ActionDescriptor, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, DocumentApp, DocumentView, LocaleLabels, OsMediaCapability,
+    AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, DocumentApp, DocumentView, LocaleLabels, MediaClass, MediaForm, MediaType, OsMediaCapability,
     PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, UiNode, UiTreeItemNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
@@ -700,6 +700,10 @@ pub fn create_wires_app() -> App {
                 component_kind: "wires".into(),
                 dimension: "graph".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Dag },
+                schema: WIRES_FIXTURE_SCHEMA.into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("reasoning-wires")
             .mode("edit", "Edit")

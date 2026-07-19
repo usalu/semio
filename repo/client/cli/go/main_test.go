@@ -258,7 +258,7 @@ func TestContributorDiscovery(t *testing.T) {
 	})
 }
 
-func TestDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
+func TestExhaustiveDevcontainerPostAttachGitKrakenWorkspaceBootstrap(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow devcontainer post-attach subprocess test in short mode")
 	}
@@ -1165,7 +1165,7 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 	}
 }
 
-func TestNormalizeTicketFileInput(t *testing.T) {
+func TestExhaustiveNormalizeTicketFileInput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow normalize ticket file input test in short mode")
 	}
@@ -7778,7 +7778,7 @@ func verifyTreeDocument(t *testing.T, node *TreeNode, parentPrefix string) {
 	}
 }
 
-func TestMonorepoTreeEntityIDs(t *testing.T) {
+func TestExhaustiveMonorepoTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -7881,7 +7881,7 @@ func TestMonorepoTreeEntityIDs(t *testing.T) {
 	verifyTreeDocument(t, tree, "")
 }
 
-func TestGoalTreeEntityIDs(t *testing.T) {
+func TestExhaustiveGoalTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -7916,7 +7916,7 @@ func TestGoalTreeEntityIDs(t *testing.T) {
 	}
 }
 
-func TestContributorTreeEntityIDs(t *testing.T) {
+func TestExhaustiveContributorTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -7943,7 +7943,7 @@ func TestContributorTreeEntityIDs(t *testing.T) {
 	}
 }
 
-func TestCheckpointTreeEntityIDs(t *testing.T) {
+func TestExhaustiveCheckpointTreeEntityIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -8244,7 +8244,7 @@ func TestDraftListIDs(t *testing.T) {
 	}
 }
 
-func TestMonorepoTreeFullIDDocument(t *testing.T) {
+func TestExhaustiveMonorepoTreeFullIDDocument(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -8342,7 +8342,7 @@ func TestMonorepoTreeFullIDDocument(t *testing.T) {
 	verifyTreeDocument(t, tree, "")
 }
 
-func TestGoalTreeIDs(t *testing.T) {
+func TestExhaustiveGoalTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -8385,7 +8385,7 @@ func TestGoalTreeIDs(t *testing.T) {
 	}
 }
 
-func TestContributorTreeIDs(t *testing.T) {
+func TestExhaustiveContributorTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -8427,7 +8427,7 @@ func TestContributorTreeIDs(t *testing.T) {
 	}
 }
 
-func TestCheckpointTreeIDs(t *testing.T) {
+func TestExhaustiveCheckpointTreeIDs(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
@@ -10275,7 +10275,7 @@ func TestInferEntityKind(t *testing.T) {
 	}
 }
 
-func TestMarkdownOutput(t *testing.T) {
+func TestExhaustiveMarkdownOutput(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow markdown output test in short mode")
 	}
@@ -10350,7 +10350,7 @@ func TestMarkdownOutput(t *testing.T) {
 	}
 }
 
-func TestLifecycleCommands(t *testing.T) {
+func TestExhaustiveLifecycleCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow lifecycle commands test in short mode")
 	}
@@ -10511,7 +10511,7 @@ func TestLifecycleCommands(t *testing.T) {
 	}
 }
 
-func TestListCommands(t *testing.T) {
+func TestExhaustiveListCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow list commands test in short mode")
 	}
@@ -10650,7 +10650,7 @@ func TestListCommands(t *testing.T) {
 	}
 }
 
-func TestSectionCommands(t *testing.T) {
+func TestExhaustiveSectionCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow section commands test in short mode")
 	}
@@ -10768,7 +10768,7 @@ func TestSectionCommands(t *testing.T) {
 	}
 }
 
-func TestStreamingList(t *testing.T) {
+func TestExhaustiveStreamingList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow streaming list test in short mode")
 	}
@@ -11912,7 +11912,7 @@ func TestMcpToolsSchemas(t *testing.T) {
 // #endregion 📜Tree
 
 // 🔍#region 🏂Query
-func TestQueryFlag(t *testing.T) {
+func TestExhaustiveQueryFlag(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query flag test in short mode")
 	}
@@ -12118,7 +12118,7 @@ func TestQueryFlag(t *testing.T) {
 	}
 }
 
-func TestQueryFuzzyMatch(t *testing.T) {
+func TestExhaustiveQueryFuzzyMatch(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query fuzzy match test in short mode")
 	}
@@ -12167,7 +12167,7 @@ func TestQueryFuzzyMatch(t *testing.T) {
 	})
 }
 
-func TestCacheIndexAndTreeQuery(t *testing.T) {
+func TestExhaustiveCacheIndexAndTreeQuery(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow cache index test in short mode")
 	}
@@ -12266,7 +12266,7 @@ func TestCacheIndexAndTreeQuery(t *testing.T) {
 	})
 }
 
-func TestQueryEmptyReturnsAll(t *testing.T) {
+func TestExhaustiveQueryEmptyReturnsAll(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow query empty test in short mode")
 	}
@@ -12299,7 +12299,7 @@ func TestQueryEmptyReturnsAll(t *testing.T) {
 	}
 }
 
-func TestStatuteCommands(t *testing.T) {
+func TestExhaustiveStatuteCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow statute commands test in short mode")
 	}
@@ -12352,7 +12352,7 @@ func TestStatuteCommands(t *testing.T) {
 	})
 }
 
-func TestCheckpointCommands(t *testing.T) {
+func TestExhaustiveCheckpointCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow checkpoint commands test in short mode")
 	}
@@ -12826,7 +12826,7 @@ func TestToolGoalUri(t *testing.T) {
 }
 
 // ⛳#region 🕹️Output Parity
-func TestParityGoalList(t *testing.T) {
+func TestExhaustiveParityGoalList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity goal list test in short mode")
 	}
@@ -12871,7 +12871,7 @@ func TestParityGoalList(t *testing.T) {
 	})
 }
 
-func TestParityContributorList(t *testing.T) {
+func TestExhaustiveParityContributorList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity contributor list test in short mode")
 	}
@@ -12903,7 +12903,7 @@ func TestParityContributorList(t *testing.T) {
 	})
 }
 
-func TestParityTicketList(t *testing.T) {
+func TestExhaustiveParityTicketList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity ticket list test in short mode")
 	}
@@ -12972,7 +12972,7 @@ func TestParityDraftList(t *testing.T) {
 	})
 }
 
-func TestParityTechnologyList(t *testing.T) {
+func TestExhaustiveParityTechnologyList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity technology list test in short mode")
 	}
@@ -13005,7 +13005,7 @@ func TestParityTechnologyList(t *testing.T) {
 	})
 }
 
-func TestParityTechnologyTree(t *testing.T) {
+func TestExhaustiveParityTechnologyTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity technology tree test in short mode")
 	}
@@ -13049,7 +13049,7 @@ func TestParityTechnologyTree(t *testing.T) {
 	})
 }
 
-func TestParityPolicyList(t *testing.T) {
+func TestExhaustiveParityPolicyList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow parity policy list test in short mode")
 	}
@@ -13822,7 +13822,7 @@ func TestRenderMonorepoTree(t *testing.T) {
 	})
 }
 
-func TestBuildMonorepoTree(t *testing.T) {
+func TestExhaustiveBuildMonorepoTree(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree build test in short mode")
 	}
@@ -21470,7 +21470,7 @@ func TestEventIDsUseComposeRepoFormat(t *testing.T) {
 // #endregion 🗂️Hook
 
 // 🧜#region ⏲️Mermaid
-func TestMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+func TestExhaustiveMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("walks all bundles for LOC treemap; too slow for -short runs on large monorepos")
 	}
@@ -21510,7 +21510,7 @@ func TestMermaidLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	}
 }
 
-func TestMermaidLocByLanguage(t *testing.T) {
+func TestExhaustiveMermaidLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language test in short mode")
 	}
@@ -21539,7 +21539,7 @@ func TestMermaidLocByLanguage(t *testing.T) {
 	}
 }
 
-func TestMermaidLocByContributors(t *testing.T) {
+func TestExhaustiveMermaidLocByContributors(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-contributors test in short mode")
 	}
@@ -21558,7 +21558,7 @@ func TestMermaidLocByContributors(t *testing.T) {
 	}
 }
 
-func TestMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
+func TestExhaustiveMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc command test in short mode")
 	}
@@ -21577,7 +21577,7 @@ func TestMermaidCommandLocByTechnologiesBundlesFoldersFiles(t *testing.T) {
 	}
 }
 
-func TestMermaidCommandLocByLanguage(t *testing.T) {
+func TestExhaustiveMermaidCommandLocByLanguage(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow mermaid loc-by-language command test in short mode")
 	}

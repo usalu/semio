@@ -7,7 +7,7 @@
       "executor": "nx:run-commands",
       "options": {
         "cwd": "compose/client/lib/net/Compose.Tests",
-        "command": "dotnet test Compose.Tests.csproj"
+        "command": "dotnet test cs/Compose.Tests.csproj"
       }
     }
   }

@@ -10,3 +10,6 @@ workspace = true
 [lib]
 crate-type = ["rlib"]
 path = "lib.rs"
+
+[dependencies]
+mathematical_number = { path = "../../number/rs" }

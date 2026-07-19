@@ -3325,7 +3325,6 @@ dependencies = [
  "serde_json",
  "vcs",
  "wasm-bindgen",
- "web-sys",
 ]
 
 [[package]]
@@ -5215,6 +5214,9 @@ dependencies = [
 [[package]]
 name = "mathematical_algebra"
 version = "0.1.0"
+dependencies = [
+ "mathematical_number",
+]
 
 [[package]]
 name = "mathematical_cas"
@@ -5665,8 +5667,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "mathematical_lie"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+]
+
+[[package]]
 name = "mathematical_number"
 version = "0.1.0"
+
+[[package]]
+name = "mathematical_optimize"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_random",
+]
 
 [[package]]
 name = "mathematical_polynomial"
@@ -5687,6 +5704,24 @@ dependencies = [
 
 [[package]]
 name = "mathematical_random"
+version = "0.1.0"
+
+[[package]]
+name = "mathematical_sampling"
+version = "0.1.0"
+dependencies = [
+ "mathematical_random",
+]
+
+[[package]]
+name = "mathematical_signal"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+]
+
+[[package]]
+name = "mathematical_spatial"
 version = "0.1.0"
 
 [[package]]
@@ -8058,6 +8093,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "remodel_camera"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_lie",
+ "mathematical_optimize",
+]
+
+[[package]]
+name = "remodel_dense"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_spatial",
+ "remodel_camera",
+ "remodel_image",
+]
+
+[[package]]
 name = "remodel_document"
 version = "0.1.0"
 dependencies = [
@@ -8066,6 +8120,94 @@ dependencies = [
  "serde_json",
  "vcs",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "remodel_engine"
+version = "0.1.0"
+dependencies = [
+ "mathematical_random",
+ "remodel_camera",
+ "remodel_dense",
+ "remodel_document",
+ "remodel_feature",
+ "remodel_geo",
+ "remodel_image",
+ "remodel_mesh",
+ "remodel_motion",
+ "remodel_sfm",
+ "semio-framework-core",
+]
+
+[[package]]
+name = "remodel_feature"
+version = "0.1.0"
+dependencies = [
+ "mathematical_random",
+ "mathematical_spatial",
+ "remodel_image",
+]
+
+[[package]]
+name = "remodel_geo"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_lie",
+ "mathematical_spatial",
+ "remodel_dense",
+ "remodel_image",
+ "remodel_mesh",
+ "remodel_sfm",
+]
+
+[[package]]
+name = "remodel_image"
+version = "0.1.0"
+dependencies = [
+ "png 0.17.16",
+]
+
+[[package]]
+name = "remodel_mesh"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_spatial",
+ "remodel_camera",
+ "remodel_dense",
+ "remodel_image",
+ "semio-framework-core",
+]
+
+[[package]]
+name = "remodel_motion"
+version = "0.1.0"
+dependencies = [
+ "mathematical_graph",
+ "mathematical_graph_matching",
+ "mathematical_lie",
+ "mathematical_optimize",
+ "mathematical_signal",
+ "mathematical_spatial",
+ "remodel_camera",
+ "remodel_feature",
+ "remodel_image",
+ "remodel_sfm",
+]
+
+[[package]]
+name = "remodel_sfm"
+version = "0.1.0"
+dependencies = [
+ "mathematical_algebra",
+ "mathematical_lie",
+ "mathematical_optimize",
+ "mathematical_random",
+ "mathematical_spatial",
+ "remodel_camera",
+ "remodel_feature",
+ "remodel_image",
 ]
 
 [[package]]

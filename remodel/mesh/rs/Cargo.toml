@@ -1,0 +1,20 @@
+[package]
+name = "remodel_mesh"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["rlib"]
+path = "lib.rs"
+
+[dependencies]
+remodel_dense = { path = "../../dense/rs" }
+remodel_image = { path = "../../image/rs" }
+remodel_camera = { path = "../../camera/rs" }
+semio-framework-core = { path = "../../../framework/core/rs" }
+mathematical_algebra = { path = "../../../mathematical/algebra/rs" }
+mathematical_spatial = { path = "../../../mathematical/spatial/rs" }

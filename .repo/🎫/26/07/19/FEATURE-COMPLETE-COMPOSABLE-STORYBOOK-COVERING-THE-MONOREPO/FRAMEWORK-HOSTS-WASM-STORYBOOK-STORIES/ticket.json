@@ -1,0 +1,13 @@
+{
+  "title": "Framework Hosts Wasm Storybook Stories",
+  "emoji": "🔌",
+  "status": "open",
+  "description": "Create .storybook/stories/framework/hosts/ (scope id \"framework/hosts\", titlePrefix \"🛠️framework🔌hosts\", already registered in .storybook/scopes.ts) covering the framework renderer hosts backed by prebuilt Rust/WASM engines: NodeGraphHost.stories.tsx (incl. flow-graph variant via isFlowGraphScene/fixtureJson + flow/core wasm), TextEditorHost.stories.tsx, Paint2dHost.stories.tsx, TiledMapHost.stories.tsx, WorldTerrainLayer.stories.tsx (wrapped in an r3f Canvas), World3dHost.stories.tsx. Verify each engine's prebuilt pkg/*.wasm artifact exists before storying it (never trigger a cargo build). Add single-flight loader functions to WASM_LOADERS in .storybook/preview.tsx for node-graph/editor/paint-2d/tiled-map/terrain/flow, gated via parameters.wasm. A separate concurrent workstream is writing the non-wasm hosts (TableHost/BlockListHost/GraphTimelineHost/IconRenderHost/InkCanvasHost/Canvas2dHost/UiInterpreter) in the same directory — do not touch those filenames. Verify the scope boots via bun ./script.ts dev storybook framework/hosts and add a playwright spec (.storybook/framework-hosts-wasm.spec.ts) iterating the new story ids for a 200 status / no significant console errors. Part of the parallel workforce populating the composable root Storybook (parent ticket FEATURE-COMPLETE-COMPOSABLE-STORYBOOK-COVERING-THE-MONOREPO).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2146"
+  },
+  "goal": "🎯r2602🎯updateddocs🎯updateddevdocs",
+  "sessions": [
+    "⚪ccf4348b9ec24b82828ff9b5d5e5a8d1"
+  ]
+}

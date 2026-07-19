@@ -8,7 +8,7 @@ pub mod app_jack {
         is_de_locale, localized_label_map, resolve_labels, text_identifier_occurrences_json, tree_item, tree_item_with_action,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
         ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
-        DocumentView, MeasureSelectItem, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec,
+        DocumentView, MeasureSelectItem, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec,
         TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
         ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
         WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
@@ -1029,6 +1029,10 @@ pub mod app_jack {
                     component_kind: "trinity".into(),
                     dimension: "graph".into(),
                     media_capability: OsMediaCapability::MeshOnly,
+                    media_type: MediaType { class: MediaClass::Graph, form: MediaForm::Trinity },
+                    schema: "trinity.graph".into(),
+                    export_formats: vec![],
+                    import_formats: vec![],
                 })
                 .icon_id("trinity")
                 .mode("explore", "Explore")

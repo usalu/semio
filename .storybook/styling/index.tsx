@@ -105,10 +105,8 @@ export function DataTable({ columns, rows }: { readonly columns: readonly string
         </thead>
         <tbody>
           {rows.map((row, rowIndex) => (
-            // biome-ignore lint: rows are a stable generated snapshot, index keys are fine
             <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                // biome-ignore lint: see above
                 <td key={cellIndex} style={{ padding: "4px 10px", borderBottom: "1px solid rgba(128, 128, 128, 0.15)", fontFamily: cellIndex === 0 ? "monospace" : undefined, whiteSpace: "nowrap" }}>
                   {cell}
                 </td>

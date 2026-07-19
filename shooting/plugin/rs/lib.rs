@@ -7,7 +7,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_text, tree_item_with_action, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_scene,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
     App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
-    DocumentView, IconRenderScene, MeasureSelectItem, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
+    DocumentView, IconRenderScene, MeasureSelectItem, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
     UiNode, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
     WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -1416,6 +1416,10 @@ fn create_shooting_app() -> App {
                 component_kind: "shooting".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Raster },
+                schema: "shooting.scene".into(),
+                export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("camera")
             .mode("edit", "Edit")

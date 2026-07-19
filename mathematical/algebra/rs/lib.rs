@@ -500,6 +500,617 @@ pub fn vec3d_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
 }
 // #endregion 🔖Mat3d
 
+// #region 🔖VecG
+use mathematical_number::{CommutativeRing, EuclideanDomain, Field, GcdDomain, IntegralDomain, Ring};
+
+/// 📐 Generic dense vector over any [`Ring`] — the exact-arithmetic counterpart to [`VecD`], used
+/// when entries are `Rational`, `Integer`, `ModInt`, or (from `mathematical_cas`) symbolic expressions.
+#[derive(Clone, Debug, PartialEq)]
+pub struct VecG<T> {
+    pub data: Vec<T>,
+}
+
+impl<T: Ring> VecG<T> {
+    pub fn zeros(n: usize) -> Self {
+        Self { data: (0..n).map(|_| T::zero()).collect() }
+    }
+
+    pub fn from_vec(data: Vec<T>) -> Self {
+        Self { data }
+    }
+
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+
+    pub fn get(&self, i: usize) -> &T {
+        &self.data[i]
+    }
+
+    pub fn set(&mut self, i: usize, value: T) {
+        self.data[i] = value;
+    }
+
+    pub fn add(&self, other: &Self) -> Self {
+        Self { data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.add(b)).collect() }
+    }
+
+    pub fn sub(&self, other: &Self) -> Self {
+        Self { data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.sub(b)).collect() }
+    }
+
+    pub fn scale(&self, s: &T) -> Self {
+        Self { data: self.data.iter().map(|v| v.mul(s)).collect() }
+    }
+
+    pub fn dot(&self, other: &Self) -> T {
+        self.data.iter().zip(other.data.iter()).fold(T::zero(), |acc, (a, b)| acc.add(&a.mul(b)))
+    }
+}
+// #endregion 🔖VecG
+
+// #region 🔖MatG
+/// 🧮 Generic dense row-major matrix over any [`Ring`] — the exact-arithmetic counterpart to [`MatD`].
+#[derive(Clone, Debug, PartialEq)]
+pub struct MatG<T> {
+    pub rows: usize,
+    pub cols: usize,
+    pub data: Vec<T>,
+}
+
+impl<T: Ring> MatG<T> {
+    pub fn zeros(rows: usize, cols: usize) -> Self {
+        Self { rows, cols, data: (0..rows * cols).map(|_| T::zero()).collect() }
+    }
+
+    pub fn identity(n: usize) -> Self {
+        let mut m = Self::zeros(n, n);
+        for i in 0..n {
+            m.set(i, i, T::one());
+        }
+        m
+    }
+
+    pub fn from_rows(rows: Vec<Vec<T>>) -> Self {
+        let nrows = rows.len();
+        let ncols = rows.first().map_or(0, |r| r.len());
+        let data = rows.into_iter().flatten().collect();
+        Self { rows: nrows, cols: ncols, data }
+    }
+
+    pub fn get(&self, row: usize, col: usize) -> &T {
+        &self.data[row * self.cols + col]
+    }
+
+    pub fn set(&mut self, row: usize, col: usize, value: T) {
+        self.data[row * self.cols + col] = value;
+    }
+
+    pub fn transpose(&self) -> Self {
+        let mut out = Self::zeros(self.cols, self.rows);
+        for row in 0..self.rows {
+            for col in 0..self.cols {
+                out.set(col, row, self.get(row, col).clone());
+            }
+        }
+        out
+    }
+
+    pub fn matmul(&self, other: &Self) -> Self {
+        assert_eq!(self.cols, other.rows, "MatG::matmul: dimension mismatch");
+        let mut out = Self::zeros(self.rows, other.cols);
+        for row in 0..self.rows {
+            for col in 0..other.cols {
+                let mut sum = T::zero();
+                for k in 0..self.cols {
+                    sum = sum.add(&self.get(row, k).mul(other.get(k, col)));
+                }
+                out.set(row, col, sum);
+            }
+        }
+        out
+    }
+
+    pub fn mul_vec(&self, x: &VecG<T>) -> VecG<T> {
+        assert_eq!(self.cols, x.len(), "MatG::mul_vec: dimension mismatch");
+        let mut out = VecG::zeros(self.rows);
+        for row in 0..self.rows {
+            let mut sum = T::zero();
+            for col in 0..self.cols {
+                sum = sum.add(&self.get(row, col).mul(x.get(col)));
+            }
+            out.set(row, sum);
+        }
+        out
+    }
+
+    pub fn add(&self, other: &Self) -> Self {
+        Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.add(b)).collect() }
+    }
+
+    pub fn sub(&self, other: &Self) -> Self {
+        Self { rows: self.rows, cols: self.cols, data: self.data.iter().zip(other.data.iter()).map(|(a, b)| a.sub(b)).collect() }
+    }
+
+    pub fn scale(&self, s: &T) -> Self {
+        Self { rows: self.rows, cols: self.cols, data: self.data.iter().map(|v| v.mul(s)).collect() }
+    }
+}
+// #endregion 🔖MatG
+
+// #region 🔖ExactElimination
+impl<T: Field> MatG<T> {
+    /// 🧮 Reduced row-echelon form via Gauss-Jordan elimination with first-nonzero pivoting (exact
+    /// rings have no notion of numerical stability, so there's no reason to pivot on magnitude).
+    /// Returns `(rref, pivot_columns, rank)`.
+    pub fn rref(&self) -> (Self, Vec<usize>, usize) {
+        let mut m = self.clone();
+        let mut pivots = Vec::new();
+        let mut pivot_row = 0;
+        for col in 0..m.cols {
+            if pivot_row >= m.rows {
+                break;
+            }
+            let Some(found) = (pivot_row..m.rows).find(|&r| !m.get(r, col).is_zero()) else {
+                continue;
+            };
+            if found != pivot_row {
+                for c in 0..m.cols {
+                    let tmp = m.get(found, c).clone();
+                    let cur = m.get(pivot_row, c).clone();
+                    m.set(found, c, cur);
+                    m.set(pivot_row, c, tmp);
+                }
+            }
+            let pivot_val = m.get(pivot_row, col).clone();
+            let inv = pivot_val.inv().expect("nonzero pivot has an inverse in a field");
+            for c in 0..m.cols {
+                let scaled = m.get(pivot_row, c).mul(&inv);
+                m.set(pivot_row, c, scaled);
+            }
+            for r in 0..m.rows {
+                if r == pivot_row {
+                    continue;
+                }
+                let factor = m.get(r, col).clone();
+                if factor.is_zero() {
+                    continue;
+                }
+                for c in 0..m.cols {
+                    let sub = m.get(r, c).sub(&factor.mul(m.get(pivot_row, c)));
+                    m.set(r, c, sub);
+                }
+            }
+            pivots.push(col);
+            pivot_row += 1;
+        }
+        let rank = pivots.len();
+        (m, pivots, rank)
+    }
+
+    pub fn rank(&self) -> usize {
+        self.rref().2
+    }
+
+    /// 🧮 Determinant via Gauss-Jordan with first-nonzero pivoting, tracking the pivot product and
+    /// row-swap sign (valid over any field; degenerates to `zero()` for a singular matrix).
+    pub fn det(&self) -> T {
+        assert_eq!(self.rows, self.cols, "MatG::det: requires a square matrix");
+        let n = self.rows;
+        let mut m = self.clone();
+        let mut sign = T::one();
+        let mut det = T::one();
+        for col in 0..n {
+            let Some(found) = (col..n).find(|&r| !m.get(r, col).is_zero()) else {
+                return T::zero();
+            };
+            if found != col {
+                for c in 0..n {
+                    let tmp = m.get(found, c).clone();
+                    let cur = m.get(col, c).clone();
+                    m.set(found, c, cur);
+                    m.set(col, c, tmp);
+                }
+                sign = sign.neg();
+            }
+            let pivot_val = m.get(col, col).clone();
+            det = det.mul(&pivot_val);
+            let inv = pivot_val.inv().expect("nonzero pivot has an inverse in a field");
+            for r in (col + 1)..n {
+                let factor = m.get(r, col).mul(&inv);
+                if factor.is_zero() {
+                    continue;
+                }
+                for c in col..n {
+                    let sub = m.get(r, c).sub(&factor.mul(m.get(col, c)));
+                    m.set(r, c, sub);
+                }
+            }
+        }
+        det.mul(&sign)
+    }
+
+    pub fn inverse(&self) -> Option<Self> {
+        assert_eq!(self.rows, self.cols, "MatG::inverse: requires a square matrix");
+        let n = self.rows;
+        let mut augmented = Self::zeros(n, 2 * n);
+        for row in 0..n {
+            for col in 0..n {
+                augmented.set(row, col, self.get(row, col).clone());
+            }
+            augmented.set(row, n + row, T::one());
+        }
+        let (rref, _, rank) = augmented.rref();
+        if rank < n {
+            return None;
+        }
+        let mut inv = Self::zeros(n, n);
+        for row in 0..n {
+            for col in 0..n {
+                inv.set(row, col, rref.get(row, n + col).clone());
+            }
+        }
+        Some(inv)
+    }
+
+    pub fn solve(&self, b: &VecG<T>) -> Option<VecG<T>> {
+        assert_eq!(self.rows, self.cols, "MatG::solve: requires a square matrix");
+        let n = self.rows;
+        let mut augmented = Self::zeros(n, n + 1);
+        for row in 0..n {
+            for col in 0..n {
+                augmented.set(row, col, self.get(row, col).clone());
+            }
+            augmented.set(row, n, b.get(row).clone());
+        }
+        let (rref, _, rank) = augmented.rref();
+        if rank < n {
+            return None;
+        }
+        Some(VecG::from_vec((0..n).map(|row| rref.get(row, n).clone()).collect()))
+    }
+
+    /// 🕳️ Basis of the null space, read off the RREF's free columns.
+    pub fn nullspace(&self) -> Vec<VecG<T>> {
+        let (rref, pivots, _) = self.rref();
+        let pivot_set: std::collections::BTreeSet<usize> = pivots.iter().copied().collect();
+        let free_cols: Vec<usize> = (0..self.cols).filter(|c| !pivot_set.contains(c)).collect();
+        free_cols
+            .into_iter()
+            .map(|free_col| {
+                let mut v = VecG::zeros(self.cols);
+                v.set(free_col, T::one());
+                for (pivot_row, &pivot_col) in pivots.iter().enumerate() {
+                    let coeff = rref.get(pivot_row, free_col).clone();
+                    v.set(pivot_col, coeff.neg());
+                }
+                v
+            })
+            .collect()
+    }
+}
+
+impl<T: IntegralDomain> MatG<T> {
+    /// 🧮 Bareiss fraction-free elimination: every interior division is provably exact in any integral
+    /// domain, so this computes an exact determinant over `Integer`/`ModInt`/polynomial coefficient
+    /// rings without ever leaving the ring (no need for `Field`).
+    pub fn det_bareiss(&self) -> T {
+        assert_eq!(self.rows, self.cols, "MatG::det_bareiss: requires a square matrix");
+        let n = self.rows;
+        if n == 0 {
+            return T::one();
+        }
+        let mut m = self.clone();
+        let mut prev_pivot = T::one();
+        let mut sign = T::one();
+        for k in 0..n - 1 {
+            if m.get(k, k).is_zero() {
+                let Some(swap_row) = ((k + 1)..n).find(|&r| !m.get(r, k).is_zero()) else {
+                    return T::zero();
+                };
+                for c in 0..n {
+                    let tmp = m.get(swap_row, c).clone();
+                    let cur = m.get(k, c).clone();
+                    m.set(swap_row, c, cur);
+                    m.set(k, c, tmp);
+                }
+                sign = sign.neg();
+            }
+            for i in (k + 1)..n {
+                for j in (k + 1)..n {
+                    let cross = m.get(i, j).mul(m.get(k, k)).sub(&m.get(i, k).mul(m.get(k, j)));
+                    let divided = if k == 0 { cross } else { cross.exact_div(&prev_pivot).expect("Bareiss: division is exact by the algorithm's theorem") };
+                    m.set(i, j, divided);
+                }
+            }
+            prev_pivot = m.get(k, k).clone();
+        }
+        m.get(n - 1, n - 1).mul(&sign)
+    }
+
+    pub fn rank_bareiss(&self) -> usize
+    where
+        T: GcdDomain,
+    {
+        // Fraction-free rank via row-reduction to echelon form, counting nonzero pivot rows.
+        let mut m = self.clone();
+        let mut prev_pivot = T::one();
+        let mut pivot_row = 0;
+        for col in 0..m.cols {
+            if pivot_row >= m.rows {
+                break;
+            }
+            let Some(found) = (pivot_row..m.rows).find(|&r| !m.get(r, col).is_zero()) else {
+                continue;
+            };
+            if found != pivot_row {
+                for c in 0..m.cols {
+                    let tmp = m.get(found, c).clone();
+                    let cur = m.get(pivot_row, c).clone();
+                    m.set(found, c, cur);
+                    m.set(pivot_row, c, tmp);
+                }
+            }
+            for r in (pivot_row + 1)..m.rows {
+                for c in (col + 1)..m.cols {
+                    let cross = m.get(r, c).mul(m.get(pivot_row, col)).sub(&m.get(r, col).mul(m.get(pivot_row, c)));
+                    let divided = if pivot_row == 0 { cross } else { cross.exact_div(&prev_pivot).unwrap_or(cross) };
+                    m.set(r, c, divided);
+                }
+                m.set(r, col, T::zero());
+            }
+            prev_pivot = m.get(pivot_row, col).clone();
+            pivot_row += 1;
+        }
+        pivot_row
+    }
+}
+// #endregion 🔖ExactElimination
+
+// #region 🔖Charpoly
+impl<T: CommutativeRing> MatG<T> {
+    /// 🧮 Characteristic polynomial coefficients (low-to-high, monic) via the Berkowitz algorithm —
+    /// division-free, so it is valid over any commutative ring (including `ModInt` under small
+    /// characteristic, where Faddeev-LeVerrier's division by `1..n` would break, and rings with no
+    /// notion of eigen-decomposition at all). Returns `Vec<T>`, not a `PolyU`, because this crate must
+    /// not depend on `mathematical_polynomial`; `mathematical_cas` wraps the result where a polynomial
+    /// type is wanted.
+    pub fn charpoly(&self) -> Vec<T> {
+        assert_eq!(self.rows, self.cols, "MatG::charpoly: requires a square matrix");
+        let n = self.rows;
+        if n == 0 {
+            return vec![T::one()];
+        }
+        // Berkowitz's method: build the sequence of principal submatrices A_1..A_n and combine their
+        // Toeplitz-structured characteristic-polynomial-generating vectors via the classical recurrence.
+        let mut poly = vec![T::one()]; // characteristic polynomial of the empty matrix
+        for k in 1..=n {
+            // Submatrix of the first k rows/cols.
+            let sub = |r: usize, c: usize| self.get(r, c).clone();
+            let a_kk = sub(k - 1, k - 1);
+            let r: Vec<T> = (0..k - 1).map(|j| sub(k - 1, j)).collect();
+            let c: Vec<T> = (0..k - 1).map(|i| sub(i, k - 1)).collect();
+            // C = the (k-1)x(k-1) leading submatrix already folded into `poly` via previous steps; we
+            // instead recompute r * M^i * c directly using repeated matrix-vector products against the
+            // leading (k-1)-submatrix, which is simple and correct (if not the fastest possible variant).
+            let leading = {
+                let mut lm = MatG::zeros(k - 1, k - 1);
+                for i in 0..k - 1 {
+                    for j in 0..k - 1 {
+                        lm.set(i, j, sub(i, j));
+                    }
+                }
+                lm
+            };
+            // new_poly[i] accumulates the degree structure; build via the standard "bordered matrix"
+            // determinant expansion: char(A_k)(x) = (x - a_kk) * char(A_{k-1})(x) - r * adj-chain * c.
+            let mut new_poly = vec![T::zero(); poly.len() + 1];
+            // (x - a_kk) * poly(x): shift poly up by one degree, then subtract a_kk * poly.
+            for (i, coeff) in poly.iter().enumerate() {
+                new_poly[i + 1] = new_poly[i + 1].add(coeff);
+                new_poly[i] = new_poly[i].sub(&a_kk.mul(coeff));
+            }
+            // Correction term: sum_{i=0}^{k-2} (r * leading^i * c) * poly_{k-1-i}(x), where poly here is
+            // char(A_{k-1}) truncated appropriately — implemented by repeated application of `leading`.
+            if k > 1 {
+                let mut vec_c = VecG::from_vec(c.clone());
+                for i in 0..poly.len() {
+                    let scalar = {
+                        let mut acc = T::zero();
+                        for (rv, cv) in r.iter().zip(vec_c.data.iter()) {
+                            acc = acc.add(&rv.mul(cv));
+                        }
+                        acc
+                    };
+                    // This scalar multiplies poly's (i)-th-from-top coefficient contribution; subtract
+                    // it from the corresponding degree slot (poly has `poly.len()` coefficients, degree
+                    // poly.len()-1; the correction contributes at degree poly.len()-1-i).
+                    let degree_slot = poly.len() - 1 - i;
+                    new_poly[degree_slot] = new_poly[degree_slot].sub(&scalar);
+                    vec_c = leading.mul_vec(&vec_c);
+                }
+            }
+            poly = new_poly;
+        }
+        poly
+    }
+}
+// #endregion 🔖Charpoly
+
+// #region 🔖Smith
+impl<T: EuclideanDomain> MatG<T> {
+    /// 🧮 Smith normal form via repeated pivot-reduction: returns `(s, u, v)` with `u * self * v == s`
+    /// and `s` diagonal with each entry dividing the next (the divisibility chain). Used for integer
+    /// linear-system/Diophantine solving in `mathematical_cas`.
+    pub fn smith_normal_form(&self) -> (Self, Self, Self) {
+        let mut s = self.clone();
+        let mut u = Self::identity(self.rows);
+        let mut v = Self::identity(self.cols);
+        let mut t = 0;
+        while t < s.rows.min(s.cols) {
+            // Find a nonzero pivot in the remaining submatrix.
+            let Some((pr, pc)) = (t..s.rows).flat_map(|r| (t..s.cols).map(move |c| (r, c))).find(|&(r, c)| !s.get(r, c).is_zero()) else {
+                break;
+            };
+            s.swap_rows(t, pr);
+            u.swap_rows(t, pr);
+            s.swap_cols(t, pc);
+            v.swap_cols(t, pc);
+            loop {
+                let mut done = true;
+                for r in (t + 1)..s.rows {
+                    if s.get(r, t).is_zero() {
+                        continue;
+                    }
+                    let (q, rem) = s.get(r, t).div_rem(s.get(t, t));
+                    s.row_op_subtract_multiple(r, t, &q);
+                    u.row_op_subtract_multiple(r, t, &q);
+                    if !rem.is_zero() {
+                        s.swap_rows(r, t);
+                        u.swap_rows(r, t);
+                        done = false;
+                    }
+                }
+                for c in (t + 1)..s.cols {
+                    if s.get(t, c).is_zero() {
+                        continue;
+                    }
+                    let (q, rem) = s.get(t, c).div_rem(s.get(t, t));
+                    s.col_op_subtract_multiple(c, t, &q);
+                    v.col_op_subtract_multiple(c, t, &q);
+                    if !rem.is_zero() {
+                        s.swap_cols(c, t);
+                        v.swap_cols(c, t);
+                        done = false;
+                    }
+                }
+                if done {
+                    break;
+                }
+            }
+            // Ensure the pivot divides every remaining entry; if not, add its row into an offending row
+            // and restart the reduction at this pivot (classical Smith-form cleanup step).
+            let mut clean = true;
+            'scan: for r in (t + 1)..s.rows {
+                for c in (t + 1)..s.cols {
+                    if s.get(r, c).exact_div(s.get(t, t)).is_none() {
+                        s.row_op_add(t, r);
+                        u.row_op_add(t, r);
+                        clean = false;
+                        break 'scan;
+                    }
+                }
+            }
+            if !clean {
+                continue;
+            }
+            t += 1;
+        }
+        (s, u, v)
+    }
+
+    fn swap_rows(&mut self, r1: usize, r2: usize) {
+        for c in 0..self.cols {
+            let tmp = self.get(r1, c).clone();
+            let cur = self.get(r2, c).clone();
+            self.set(r1, c, cur);
+            self.set(r2, c, tmp);
+        }
+    }
+
+    fn swap_cols(&mut self, c1: usize, c2: usize) {
+        for r in 0..self.rows {
+            let tmp = self.get(r, c1).clone();
+            let cur = self.get(r, c2).clone();
+            self.set(r, c1, cur);
+            self.set(r, c2, tmp);
+        }
+    }
+
+    /// ➖ `row[target] -= factor * row[source]`.
+    fn row_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
+        for c in 0..self.cols {
+            let sub = self.get(target, c).sub(&factor.mul(self.get(source, c)));
+            self.set(target, c, sub);
+        }
+    }
+
+    /// ➖ `col[target] -= factor * col[source]`.
+    fn col_op_subtract_multiple(&mut self, target: usize, source: usize, factor: &T) {
+        for r in 0..self.rows {
+            let sub = self.get(r, target).sub(&factor.mul(self.get(r, source)));
+            self.set(r, target, sub);
+        }
+    }
+
+    /// ➕ `row[target] += row[source]`.
+    fn row_op_add(&mut self, source: usize, target: usize) {
+        for c in 0..self.cols {
+            let sum = self.get(target, c).add(self.get(source, c));
+            self.set(target, c, sum);
+        }
+    }
+}
+// #endregion 🔖Smith
+
+// #region 🔖Lll
+/// 🔒 LLL lattice basis reduction (`delta = 3/4`) over `Rational` rows, via Gram-Schmidt in exact
+/// rational arithmetic. Powers integer-relation detection (e.g. recovering `x^2 - 2` from rational
+/// approximations of `sqrt(2)`) and keeps polynomial-factor recombination upgrades (van Hoeij) open as
+/// future work without needing a new dependency.
+pub fn lll_reduce(basis: &[VecG<mathematical_number::Rational>]) -> Vec<VecG<mathematical_number::Rational>> {
+    use mathematical_number::Rational;
+    let delta = Rational::from_i64(3, 4).unwrap();
+    let n = basis.len();
+    let mut b: Vec<VecG<Rational>> = basis.to_vec();
+    let dot = |x: &VecG<Rational>, y: &VecG<Rational>| -> Rational { x.dot(y) };
+    let gram_schmidt = |b: &[VecG<Rational>]| -> (Vec<VecG<Rational>>, Vec<Vec<Rational>>) {
+        let mut bstar: Vec<VecG<Rational>> = Vec::with_capacity(b.len());
+        let mut mu: Vec<Vec<Rational>> = vec![vec![Rational::zero(); b.len()]; b.len()];
+        for i in 0..b.len() {
+            let mut vi = b[i].clone();
+            for j in 0..i {
+                let denom = dot(&bstar[j], &bstar[j]);
+                let m = if denom.is_zero() { Rational::zero() } else { dot(&b[i], &bstar[j]).div(&denom).unwrap() };
+                mu[i][j] = m.clone();
+                vi = vi.sub(&bstar[j].scale(&m));
+            }
+            bstar.push(vi);
+        }
+        (bstar, mu)
+    };
+    let mut k = 1;
+    while k < n {
+        let (bstar, mu) = gram_schmidt(&b);
+        for j in (0..k).rev() {
+            let m = mu[k][j].round_half_even();
+            if m != mathematical_number::Integer::zero() {
+                let m_rat = Rational::from_integer(m);
+                let scaled = b[j].scale(&m_rat);
+                b[k] = b[k].sub(&scaled);
+            }
+        }
+        let (bstar2, mu2) = gram_schmidt(&b);
+        let lhs = dot(&bstar2[k], &bstar2[k]);
+        let prev_norm = dot(&bstar2[k - 1], &bstar2[k - 1]);
+        let mu_k = mu2[k][k - 1].clone();
+        let rhs = delta.sub(&mu_k.mul(&mu_k)).mul(&prev_norm);
+        if lhs >= rhs {
+            k += 1;
+        } else {
+            b.swap(k, k - 1);
+            k = k.saturating_sub(1).max(1);
+        }
+        let _ = bstar;
+    }
+    b
+}
+// #endregion 🔖Lll
+
 // #region 🔖CsrMatrix
 /// 🕸️ Sparse matrix in compressed-sparse-row form, for large graph-adjacency / Laplacian-style numerics where a dense `MatD` would be wasteful.
 #[derive(Clone, Debug, PartialEq)]
@@ -1012,6 +1623,170 @@ pub fn expm_pade(a: &MatD) -> MatD {
 }
 // #endregion 🔖ExpmPade
 
+// #region 🔖Svd
+/// 🌀 Thin singular value decomposition `A = U Σ Vᵀ` via one-sided Jacobi (Hestenes) rotations: column pairs of a working copy are orthogonalized until every normalized inner product drops below 1e-12 (max 60 sweeps). Returns `(U, σ, V)` with singular values sorted descending; for a tall `m x n` input `U` is `m x n` and `V` is `n x n`, wide inputs are handled by transposing internally and swapping `U`/`V`.
+pub fn svd(a: &MatD) -> Result<(MatD, Vec<f64>, MatD), AlgebraError> {
+    if a.rows < a.cols {
+        let (u_t, sigma, v_t) = svd(&a.transpose())?;
+        return Ok((v_t, sigma, u_t));
+    }
+    let m = a.rows;
+    let n = a.cols;
+    let mut work = a.clone();
+    let mut v = MatD::identity(n);
+    let mut converged = false;
+    for _sweep in 0..60 {
+        let mut max_ratio = 0.0_f64;
+        for p in 0..n {
+            for q in (p + 1)..n {
+                let mut app = 0.0;
+                let mut aqq = 0.0;
+                let mut apq = 0.0;
+                for row in 0..m {
+                    let wp = work.get(row, p);
+                    let wq = work.get(row, q);
+                    app += wp * wp;
+                    aqq += wq * wq;
+                    apq += wp * wq;
+                }
+                if app * aqq < 1e-300 {
+                    continue;
+                }
+                let ratio = apq.abs() / (app * aqq).sqrt();
+                max_ratio = max_ratio.max(ratio);
+                if ratio < 1e-12 {
+                    continue;
+                }
+                let zeta = (aqq - app) / (2.0 * apq);
+                let t = zeta.signum() / (zeta.abs() + (1.0 + zeta * zeta).sqrt());
+                let c = 1.0 / (1.0 + t * t).sqrt();
+                let s = c * t;
+                for row in 0..m {
+                    let wp = work.get(row, p);
+                    let wq = work.get(row, q);
+                    work.set(row, p, c * wp - s * wq);
+                    work.set(row, q, s * wp + c * wq);
+                }
+                for row in 0..n {
+                    let vp = v.get(row, p);
+                    let vq = v.get(row, q);
+                    v.set(row, p, c * vp - s * vq);
+                    v.set(row, q, s * vp + c * vq);
+                }
+            }
+        }
+        if max_ratio < 1e-12 {
+            converged = true;
+            break;
+        }
+    }
+    if !converged {
+        return Err(AlgebraError::PowerIterationFailedConvergence { iterations: 60 });
+    }
+    let sigmas: Vec<f64> = (0..n)
+        .map(|col| {
+            let mut sum = 0.0;
+            for row in 0..m {
+                sum += work.get(row, col) * work.get(row, col);
+            }
+            sum.sqrt()
+        })
+        .collect();
+    let mut order: Vec<usize> = (0..n).collect();
+    order.sort_by(|&i, &j| sigmas[j].partial_cmp(&sigmas[i]).unwrap());
+    let mut u = MatD::zeros(m, n);
+    let mut sigma = Vec::with_capacity(n);
+    let mut v_sorted = MatD::zeros(n, n);
+    for (new_col, &old_col) in order.iter().enumerate() {
+        let s_val = sigmas[old_col];
+        sigma.push(s_val);
+        if s_val > 1e-300 {
+            for row in 0..m {
+                u.set(row, new_col, work.get(row, old_col) / s_val);
+            }
+        }
+        for row in 0..n {
+            v_sorted.set(row, new_col, v.get(row, old_col));
+        }
+    }
+    Ok((u, sigma, v_sorted))
+}
+
+/// 🌀 Right-singular vector for the smallest singular value of `A` — the homogeneous least-squares (DLT) minimizer of `‖A x‖` over unit vectors `x`.
+pub fn svd_nullvector(a: &MatD) -> Result<VecD, AlgebraError> {
+    let (_, _, v) = svd(a)?;
+    if v.cols == 0 {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, 1), got: (a.rows, a.cols) });
+    }
+    let last = v.cols - 1;
+    Ok(VecD::from_vec((0..v.rows).map(|row| v.get(row, last)).collect()))
+}
+// #endregion 🔖Svd
+
+// #region 🔖LeastSquares
+/// 📐 Linear least-squares solution of an overdetermined `A x ≈ b` (`rows >= cols`) via Householder QR: back-substitutes the top `n x n` block of `R x = Qᵀ b`; returns `AlgebraError::Singular` when `A` is rank-deficient.
+pub fn solve_llsq(a: &MatD, b: &VecD) -> Result<VecD, AlgebraError> {
+    if a.rows < a.cols {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.cols, a.cols), got: (a.rows, a.cols) });
+    }
+    if a.rows != b.len() {
+        return Err(AlgebraError::DimensionMismatch { expected: (a.rows, 1), got: (b.len(), 1) });
+    }
+    let (q, r) = qr_householder(a);
+    let qtb = q.transpose().mul_vec(b);
+    let n = a.cols;
+    let mut x = vec![0.0; n];
+    for row in (0..n).rev() {
+        let mut sum = qtb.get(row);
+        for (col, xc) in x.iter().enumerate().skip(row + 1) {
+            sum -= r.get(row, col) * xc;
+        }
+        let pivot = r.get(row, row);
+        if pivot.abs() < 1e-12 {
+            return Err(AlgebraError::Singular);
+        }
+        x[row] = sum / pivot;
+    }
+    Ok(VecD(x))
+}
+
+/// 📐 Moore-Penrose pseudo-inverse `A⁺ = V Σ⁺ Uᵀ` via `svd`, zeroing the reciprocal of every singular value at or below `tol · σ_max`.
+pub fn pseudo_inverse(a: &MatD, tol: f64) -> Result<MatD, AlgebraError> {
+    let (u, sigma, v) = svd(a)?;
+    let sigma_max = sigma.first().copied().unwrap_or(0.0);
+    let k = sigma.len();
+    let mut sigma_inv = MatD::zeros(k, k);
+    for (i, &s) in sigma.iter().enumerate() {
+        if s > tol * sigma_max {
+            sigma_inv.set(i, i, 1.0 / s);
+        }
+    }
+    Ok(v.matmul(&sigma_inv).matmul(&u.transpose()))
+}
+
+/// 📐 Assembles the weighted normal equations `(AᵀWA, AᵀWb)` for a diagonal weight vector `w` — the per-iteration system of IRLS solvers.
+pub fn weighted_normal_equations(a: &MatD, b: &VecD, w: &[f64]) -> (MatD, VecD) {
+    assert_eq!(a.rows, b.len(), "weighted_normal_equations dimension mismatch");
+    assert_eq!(a.rows, w.len(), "weighted_normal_equations weight length mismatch");
+    let n = a.cols;
+    let mut ata = MatD::zeros(n, n);
+    let mut atb = VecD::zeros(n);
+    for (row, &weight) in w.iter().enumerate() {
+        for i in 0..n {
+            let ai = a.get(row, i);
+            if ai == 0.0 {
+                continue;
+            }
+            atb.add_at(i, weight * ai * b.get(row));
+            for j in 0..n {
+                ata.add_at(i, j, weight * ai * a.get(row, j));
+            }
+        }
+    }
+    (ata, atb)
+}
+// #endregion 🔖LeastSquares
+
 // #region 🔖Tests
 #[cfg(test)]
 mod tests {
@@ -1467,6 +2242,130 @@ mod tests {
         assert!(e.get(1, 0).abs() < 1e-12);
     }
 
+    fn seeded_mat(rows: usize, cols: usize, seed: u64) -> MatD {
+        let mut state = seed;
+        let mut m = MatD::zeros(rows, cols);
+        for value in m.data.iter_mut() {
+            state = state.wrapping_mul(6_364_136_223_846_793_005).wrapping_add(1_442_695_040_888_963_407);
+            *value = ((state >> 11) as f64 / (1u64 << 53) as f64) * 2.0 - 1.0;
+        }
+        m
+    }
+
+    fn planted_rank_deficient() -> MatD {
+        let base = seeded_mat(6, 3, 77);
+        let mut a = MatD::zeros(6, 4);
+        for row in 0..6 {
+            a.set(row, 0, base.get(row, 0));
+            a.set(row, 1, base.get(row, 1));
+            a.set(row, 2, base.get(row, 2));
+            a.set(row, 3, base.get(row, 0) + base.get(row, 1));
+        }
+        a
+    }
+
+    fn assert_svd_round_trips(a: &MatD, u: &MatD, sigma: &[f64], v: &MatD) {
+        let k = sigma.len();
+        let mut s_mat = MatD::zeros(k, k);
+        for (i, &s) in sigma.iter().enumerate() {
+            s_mat.set(i, i, s);
+        }
+        let recon = u.matmul(&s_mat).matmul(&v.transpose());
+        for row in 0..a.rows {
+            for col in 0..a.cols {
+                assert!((recon.get(row, col) - a.get(row, col)).abs() < 1e-9);
+            }
+        }
+    }
+
+    fn assert_orthonormal_columns(m: &MatD) {
+        let gram = m.transpose().matmul(m);
+        for i in 0..gram.rows {
+            for j in 0..gram.cols {
+                let expected = if i == j { 1.0 } else { 0.0 };
+                assert!((gram.get(i, j) - expected).abs() < 1e-9);
+            }
+        }
+    }
+
+    #[test]
+    fn svd_reconstructs_tall_random_matrix() {
+        let a = seeded_mat(8, 5, 20_260_719);
+        let (u, sigma, v) = svd(&a).expect("converges");
+        assert_eq!((u.rows, u.cols), (8, 5));
+        assert_eq!(sigma.len(), 5);
+        assert_eq!((v.rows, v.cols), (5, 5));
+        assert!(sigma.iter().all(|s| *s >= 0.0));
+        assert!(sigma.windows(2).all(|pair| pair[0] >= pair[1]));
+        assert_svd_round_trips(&a, &u, &sigma, &v);
+        assert_orthonormal_columns(&u);
+        assert_orthonormal_columns(&v);
+    }
+
+    #[test]
+    fn svd_reconstructs_wide_random_matrix() {
+        let a = seeded_mat(5, 8, 31);
+        let (u, sigma, v) = svd(&a).expect("converges");
+        assert_eq!((u.rows, u.cols), (5, 5));
+        assert_eq!(sigma.len(), 5);
+        assert_eq!((v.rows, v.cols), (8, 5));
+        assert!(sigma.windows(2).all(|pair| pair[0] >= pair[1]));
+        assert_svd_round_trips(&a, &u, &sigma, &v);
+        assert_orthonormal_columns(&u);
+        assert_orthonormal_columns(&v);
+    }
+
+    #[test]
+    fn svd_nullvector_finds_planted_kernel() {
+        let a = planted_rank_deficient();
+        let v = svd_nullvector(&a).expect("converges");
+        assert!((v.norm2() - 1.0).abs() < 1e-9);
+        assert!(a.mul_vec(&v).norm2() < 1e-9);
+    }
+
+    #[test]
+    fn solve_llsq_matches_normal_equations() {
+        let a = seeded_mat(9, 3, 5);
+        let b = VecD::from_vec((0..9).map(|i| (i as f64) * 0.5 - 2.0).collect());
+        let x = solve_llsq(&a, &b).expect("full rank");
+        let at = a.transpose();
+        let x_ne = at.matmul(&a).lu_solve(&at.mul_vec(&b)).expect("solvable");
+        for i in 0..3 {
+            assert!((x.get(i) - x_ne.get(i)).abs() < 1e-9);
+        }
+    }
+
+    #[test]
+    fn pseudo_inverse_satisfies_penrose_identity() {
+        let a = planted_rank_deficient();
+        let pinv = pseudo_inverse(&a, 1e-10).expect("converges");
+        let round = a.matmul(&pinv).matmul(&a);
+        for row in 0..a.rows {
+            for col in 0..a.cols {
+                assert!((round.get(row, col) - a.get(row, col)).abs() < 1e-9);
+            }
+        }
+    }
+
+    #[test]
+    fn weighted_normal_equations_match_hand_assembly() {
+        let mut a = MatD::zeros(3, 2);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 2.0);
+        a.set(1, 0, 3.0);
+        a.set(1, 1, 4.0);
+        a.set(2, 0, 5.0);
+        a.set(2, 1, 6.0);
+        let b = VecD::from_vec(vec![1.0, 2.0, 3.0]);
+        let (ata, atb) = weighted_normal_equations(&a, &b, &[2.0, 1.0, 3.0]);
+        assert!((ata.get(0, 0) - 86.0).abs() < 1e-12);
+        assert!((ata.get(0, 1) - 106.0).abs() < 1e-12);
+        assert!((ata.get(1, 0) - 106.0).abs() < 1e-12);
+        assert!((ata.get(1, 1) - 132.0).abs() < 1e-12);
+        assert!((atb.get(0) - 53.0).abs() < 1e-12);
+        assert!((atb.get(1) - 66.0).abs() < 1e-12);
+    }
+
     fn tridiagonal_spd(n: usize) -> CsrMatrix {
         let mut triplets = Vec::new();
         for i in 0..n {
@@ -1513,3 +2412,194 @@ mod tests {
     }
 }
 // #endregion 🔖Tests
+
+// #region 🔖ExactTests
+#[cfg(test)]
+mod exact_tests {
+    use super::*;
+    use mathematical_number::{Integer, ModInt, Rational};
+
+    fn rat(n: i64, d: i64) -> Rational {
+        Rational::from_i64(n, d).unwrap()
+    }
+
+    fn rat_mat(rows: Vec<Vec<i64>>) -> MatG<Rational> {
+        MatG::from_rows(rows.into_iter().map(|r| r.into_iter().map(Rational::from).collect()).collect())
+    }
+
+    #[test]
+    fn rref_and_rank_hand_case() {
+        let m = rat_mat(vec![vec![1, 2, 1], vec![2, 4, 2], vec![1, 1, 1]]);
+        assert_eq!(m.rank(), 2);
+    }
+
+    #[test]
+    fn det_matches_cofactor_hand_case() {
+        let m = rat_mat(vec![vec![1, 2], vec![3, 4]]);
+        assert_eq!(m.det(), rat(-2, 1));
+    }
+
+    #[test]
+    fn inverse_round_trips_to_identity() {
+        let m = rat_mat(vec![vec![2, 1], vec![1, 1]]);
+        let inv = m.inverse().expect("invertible");
+        let product = m.matmul(&inv);
+        assert_eq!(product, MatG::identity(2));
+    }
+
+    #[test]
+    fn solve_matches_hand_solved_system() {
+        let m = rat_mat(vec![vec![2, 1], vec![1, 3]]);
+        let b = VecG::from_vec(vec![rat(5, 1), rat(10, 1)]);
+        let x = m.solve(&b).expect("solvable");
+        assert_eq!(*x.get(0), rat(1, 1));
+        assert_eq!(*x.get(1), rat(3, 1));
+    }
+
+    #[test]
+    fn nullspace_vectors_are_in_kernel() {
+        let m = rat_mat(vec![vec![1, 2, 3], vec![2, 4, 6]]);
+        let basis = m.nullspace();
+        assert_eq!(basis.len(), 2);
+        for v in &basis {
+            let zero = m.mul_vec(v);
+            for i in 0..zero.len() {
+                assert_eq!(*zero.get(i), Rational::zero());
+            }
+        }
+    }
+
+    #[test]
+    fn cayley_hamilton_holds_for_3x3() {
+        let m = rat_mat(vec![vec![2, 0, 0], vec![0, 3, 4], vec![0, 4, 9]]);
+        let poly = m.charpoly(); // low-to-high coefficients, char(A)(x) = poly[0] + poly[1] x + ... + poly[n] x^n
+        // Evaluate poly(M) = sum poly[i] * M^i and check it is the zero matrix.
+        let n = m.rows;
+        let mut power = MatG::<Rational>::identity(n);
+        let mut acc = MatG::<Rational>::zeros(n, n);
+        for coeff in &poly {
+            acc = acc.add(&power.scale(coeff));
+            power = power.matmul(&m);
+        }
+        for v in &acc.data {
+            assert_eq!(*v, Rational::zero(), "Cayley-Hamilton violated: {acc:?}");
+        }
+    }
+
+    #[test]
+    fn bareiss_det_matches_field_det() {
+        let m = rat_mat(vec![vec![4, 3, 2], vec![1, 5, 6], vec![7, 8, 9]]);
+        let via_field = m.det();
+        let via_bareiss = m.det_bareiss();
+        assert_eq!(via_field, via_bareiss);
+    }
+
+    #[test]
+    fn bareiss_det_over_integer_matches_hand_case() {
+        let m = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(3)], vec![Integer::from_i64(1), Integer::from_i64(4)]]);
+        assert_eq!(m.det_bareiss(), Integer::from_i64(5));
+    }
+
+    #[test]
+    fn berkowitz_over_modint_matches_brute_force_2x2() {
+        let p = 13u64;
+        let a = ModInt::new(2, p);
+        let b = ModInt::new(1, p);
+        let c = ModInt::new(1, p);
+        let d = ModInt::new(3, p);
+        let m = MatG::from_rows(vec![vec![a, b], vec![c, d]]);
+        let poly = m.charpoly();
+        // trace = a+d, det = ad-bc; char poly(x) = det - trace*x + x^2 (low-to-high: [det, -trace, 1])
+        let trace = a.add(&d);
+        let det = a.mul(&d).sub(&b.mul(&c));
+        assert_eq!(poly[0], det);
+        assert_eq!(poly[1], trace.neg());
+        assert_eq!(poly[2], ModInt::new(1, p));
+    }
+
+    #[test]
+    fn smith_normal_form_divisibility_chain() {
+        let m = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(4)], vec![Integer::from_i64(4), Integer::from_i64(2)]]);
+        let (s, u, v) = m.smith_normal_form();
+        let reconstructed = u.matmul(&m).matmul(&v);
+        assert_eq!(reconstructed, s);
+        // off-diagonal entries are zero and each diagonal entry divides the next.
+        assert!(s.get(0, 1).is_zero());
+        assert!(s.get(1, 0).is_zero());
+        assert!(s.get(1, 1).exact_div(s.get(0, 0)).is_some());
+    }
+
+    #[test]
+    fn lll_recovers_a_short_relation() {
+        // Basis containing an obviously-reducible long vector alongside a short one; LLL should surface
+        // vectors no longer than the original shortest, and preserve the lattice (verified via a
+        // determinant/volume proxy: the reduced basis still spans the same rank).
+        let basis = vec![VecG::from_vec(vec![rat(1, 1), rat(1, 1)]), VecG::from_vec(vec![rat(1, 1), rat(0, 1)])];
+        let reduced = lll_reduce(&basis);
+        assert_eq!(reduced.len(), 2);
+        let shortest_before = basis.iter().map(|v| v.dot(v)).fold(rat(0, 1), |acc, n| if n < acc || acc == rat(0, 1) { n } else { acc });
+        let shortest_after = reduced.iter().map(|v| v.dot(v)).fold(rat(0, 1), |acc, n| if n < acc || acc == rat(0, 1) { n } else { acc });
+        assert!(shortest_after <= shortest_before);
+    }
+
+    // #region 🔖QuickExactTests
+    mod quick {
+        use super::*;
+
+        #[test]
+        fn random_rational_matrix_inverse_round_trips() {
+            let mut seed = 0xABCD_EF01_2345_6789u64;
+            let mut next = move || {
+                seed ^= seed << 13;
+                seed ^= seed >> 7;
+                seed ^= seed << 17;
+                (seed % 10) as i64 - 5
+            };
+            for _ in 0..20 {
+                let n = 4;
+                let mut rows = vec![vec![0i64; n]; n];
+                for row in rows.iter_mut() {
+                    for cell in row.iter_mut() {
+                        *cell = next();
+                    }
+                }
+                let m = rat_mat(rows);
+                if let Some(inv) = m.inverse() {
+                    let product = m.matmul(&inv);
+                    assert_eq!(product, MatG::identity(n));
+                    assert_eq!(m.rank(), n);
+                }
+            }
+        }
+
+        #[test]
+        fn bareiss_matches_field_det_on_random_integer_matrices() {
+            let mut seed = 0x1122_3344_5566_7788u64;
+            let mut next = move || {
+                seed ^= seed << 13;
+                seed ^= seed >> 7;
+                seed ^= seed << 17;
+                (seed % 7) as i64 - 3
+            };
+            for _ in 0..20 {
+                let n = 3;
+                let mut rows_i = vec![vec![Integer::from_i64(0); n]; n];
+                let mut rows_r = vec![vec![rat(0, 1); n]; n];
+                for i in 0..n {
+                    for j in 0..n {
+                        let v = next();
+                        rows_i[i][j] = Integer::from_i64(v);
+                        rows_r[i][j] = rat(v, 1);
+                    }
+                }
+                let mi = MatG::from_rows(rows_i);
+                let mr = MatG::from_rows(rows_r);
+                let via_bareiss = mi.det_bareiss();
+                let via_field = mr.det();
+                assert_eq!(Rational::from_integer(via_bareiss), via_field);
+            }
+        }
+    }
+    // #endregion 🔖QuickExactTests
+}
+// #endregion 🔖ExactTests

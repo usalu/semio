@@ -1,0 +1,8 @@
+{
+  "name": "@semio-tech/remodel-engine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "nx run remodel-engineest"
+  }
+}

@@ -3,7 +3,7 @@
 use semio_framework_plugin::{SurfaceKind,
     build_graph_timeline_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
     tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor,
-    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HistoryView, OsMediaCapability, PanelGroup, PanelTreeBuilder,
+    AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HistoryView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
     ResourceKindSpec, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode,
     UiTreeItemNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
@@ -743,6 +743,10 @@ fn create_vcs_app() -> App {
                 component_kind: "vcs".into(),
                 dimension: "data".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+                schema: "vcs.demo".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("git-branch")
             .mode("edit", "Edit")

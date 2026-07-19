@@ -12,7 +12,7 @@ use semio_framework_plugin::{SurfaceKind,
     tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
     ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
+    Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
     UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -1723,6 +1723,10 @@ fn create_layout_app() -> App {
                 component_kind: "layout".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                schema: "layout.fixture".into(),
+                export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
             })
             .icon_id("layout")
             .mode("edit", "Edit")

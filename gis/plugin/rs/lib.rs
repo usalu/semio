@@ -324,29 +324,6 @@ pub(crate) mod domain {
         }
     }
     //#endregion 🔖DocumentVcs
-    
-    //#region 🔖OpenUrl
-    /** @emoji 🌐 Opens a URL in the system browser when available. */
-    pub fn open_url(url: &str) -> bool {
-        if url.trim().is_empty() {
-            return false;
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            use wasm_bindgen::JsValue;
-            return web_sys::window()
-                .and_then(|window| window.open_with_url(url).ok())
-                .flatten()
-                .is_some();
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            let _ = url;
-            eprintln!("[DEBUG] open_url native fallback: {url}");
-            false
-        }
-    }
-    //#endregion 🔖OpenUrl
 
     //#region 🔖DocumentVcs
     /// 🗄️ VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the
@@ -414,19 +391,20 @@ pub(crate) mod domain {
 pub mod app_2d {
     //! 🗺️ GIS 2D plugin — GIS map play app bundled as a hot-swappable WASM component.
 
-    use crate::domain::{empty_gis_map_projection, gis_map_descriptor_json, gis_map_document_from_descriptor_json, open_url, GisMapDocument, GisMapOp, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
+    use crate::domain::{empty_gis_map_projection, gis_map_descriptor_json, gis_map_document_from_descriptor_json, GisMapDocument, GisMapOp, MapFeature, MapFeaturePatch, GIS_MAP_SCHEMA};
     use framework_surface_tiled_map::{clamp_map_layer_weight, gis_map_layer_weight_slider_ids_json, gis_map_lod_scale_json, MapHost, GIS_MAP_LOD_MODE_AUTOMATIC};
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         app_labels, build_tiled_map_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action,
         MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
         ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt,
-        DocumentApp, DocumentView, DwgDrawing, DwgGeometry, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TiledMapScene,
+        DocumentApp, DocumentView, DwgDrawing, DwgGeometry, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec, TiledMapScene,
         UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, ViewState, WindowMeasure,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
         FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
+    use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use std::collections::{HashMap, HashSet};
@@ -1291,13 +1269,14 @@ pub mod app_2d {
                     ActionEmit::default()
                 }
                 "openSource" => {
+                    let mut emit = ActionEmit::default();
                     if let Some(feature_id) = args.and_then(|value| value.get("featureId")).and_then(|value| value.as_str()) {
                         let host = map_host_from(document, &self.runtime);
                         if let Some(url) = host.positions.get(feature_id).and_then(|row| row.source_url.as_deref()) {
-                            let _ = open_url(url);
+                            emit.effects.push(HostEffect::OpenExternalUrl { url: url.to_string() });
                         }
                     }
-                    ActionEmit::default()
+                    emit
                 }
                 "setLayerStrokeScale" => {
                     let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str());
@@ -1418,6 +1397,10 @@ pub mod app_2d {
                     component_kind: "gismap".into(),
                     dimension: "2d".into(),
                     media_capability: OsMediaCapability::MeshOnly,
+                    media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector },
+                    schema: "gis.map".into(),
+                    export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
+                    import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                 })
                 .icon_id("gis2d")
                 .mode("edit", "Edit")

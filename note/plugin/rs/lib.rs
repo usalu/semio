@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     build_ink_canvas_scene, is_de_locale, localized_label_map, resolve_labels, selection_ids,
     tree_item, tree_item_with_action,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, OsMediaCapability, ResourceKindSpec,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, MediaClass, MediaForm, MediaType, OsMediaCapability, ResourceKindSpec,
     InkCanvasScene, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, DwgDrawing, DwgGeometry,
     HostEffect, PanelTreeBuilder, UiFieldNode, UiInputNode,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, ViewState,
@@ -2265,6 +2265,10 @@ fn create_note_app() -> App {
                 component_kind: "note".into(),
                 dimension: "2d".into(),
                 media_capability: OsMediaCapability::MeshOnly,
+                media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Document },
+                schema: "note.document".into(),
+                export_formats: vec![],
+                import_formats: vec![],
             })
             .icon_id("note")
             .mode("edit", "Edit")

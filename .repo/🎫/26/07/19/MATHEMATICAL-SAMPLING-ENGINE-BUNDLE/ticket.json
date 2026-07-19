@@ -1,0 +1,13 @@
+{
+  "title": "Mathematical Sampling Engine Bundle",
+  "emoji": "🎰",
+  "status": "open",
+  "description": "Create mathematical/sampling: a full-blown, feature-rich, production-grade, model-agnostic LLM token-sampling engine in pure Rust as a single flattened crate mathematical_sampling (mathematical/sampling/rs/lib.rs), following the mathematical/random precedent (one lib.rs, #region markers, zero external deps besides path dep on mathematical_random). Scope: full processor pipeline (warpers: temperature/dynamic-temperature/top-k/top-p/min-p/typical/locally-typical/tail-free/epsilon/eta/top-a/rank-truncation/adaptive-truncation), penalties (repetition/presence/frequency/decaying/token-class/no-repeat-ngram/phrase), biases/masks (sparse/dense bias, allow/forbid, special-token suppression, position rules, bad-words, encouragement), length/forced-token controls, selection algorithms (greedy/multinomial/gumbel-max/gumbel-top-k), adaptive samplers (Mirostat v1/v2, entropy PID, repetition/confidence controllers), hand-rolled constraint engine (regex NFA/DFA, EBNF/Earley grammar, JSON mode, JSON-Schema subset, trie, must-include), stop-condition system with Aho-Corasick and streaming hold-back, splittable counter-based RNG with per-request/sequence/beam/candidate streams, per-sequence mutable state with fork/rollback/checkpoint/serialization, batch + continuous-batching support, search-based decoding (beam/diverse-beam/stochastic-beam/constrained-beam/best-of-n/contrastive/rejection sampling), exact speculative decoding preserving target distribution, logprobs/diagnostics, observability hooks, security/DoS limits, sharded-vocabulary sampling via a Collective trait with in-process reference impl, and an optional diffusion/continuous-noise module (noise schedules, Euler/Heun/LMS/DDIM/PLMS/DPM/DPM++/UniPC solvers, CFG guidance, img2img/inpaint). Zero external dependencies, hand-rolled JSON/regex/serialization, matching the mathematical/* purity precedent. Wire up project.json/package.json/script.ts, register in root Cargo.toml workspace members and .vscode/launch.json, and add minimal additive Rng::state/from_state accessors to mathematical/random/rs/lib.rs.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2148"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪62502759f8cd4feab56e28bba5fdb586"
+  ]
+}

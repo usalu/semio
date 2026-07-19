@@ -3810,8 +3810,11 @@ export function FrameworkOsShell({
           continue;
         }
         if ("navigate" in effect) {
-          console.warn("[DEBUG] navigate effect", effect.navigate.uri, new Error().stack?.split("\n").slice(1, 6).join(" | "));
           navigateHistory(effect.navigate.uri);
+          continue;
+        }
+        if ("openExternalUrl" in effect) {
+          window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
           continue;
         }
         if ("downloadMediaExport" in effect) {
@@ -4205,7 +4208,6 @@ export function FrameworkOsShell({
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
       const dispatchViewState = injectActiveUtility(targetSession.viewState);
-      console.warn("[DEBUG] dispatch action", JSON.stringify(action));
       return plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
