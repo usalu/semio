@@ -1,8 +1,6 @@
 //! ⚡ Imperative core module: side-effecting action operators.
 
-use neural_engine::{
-    channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value,
-};
+use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
 
 // #region 🔖LogPrint
 /// 📝 Writes a message to the effect log.
@@ -11,10 +9,7 @@ pub struct LogPrint;
 impl Operation for LogPrint {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let message = read_string(input, "message")?;
-        Ok(channel_output(
-            "message",
-            Dictionary::new().insert("text", Value::Atom(Atom::String(message))),
-        ))
+        Ok(channel_output("message", Dictionary::new().insert("text", Value::Atom(Atom::String(message)))))
     }
 }
 // #endregion 🔖LogPrint
@@ -40,11 +35,7 @@ impl Operation for StateIncrement {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let key = read_string(input, "key")?;
         let by = read_number(input, "by").unwrap_or(1.0);
-        let current = input
-            .get(&key)
-            .and_then(|v| v.as_atom())
-            .and_then(|a| a.as_f64())
-            .unwrap_or(0.0);
+        let current = input.get(&key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0);
         Ok(Dictionary::new().insert(key, Value::Atom(Atom::Decimal(current + by))))
     }
 }
@@ -57,30 +48,18 @@ pub struct WaitDelay;
 impl Operation for WaitDelay {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let ms = read_number(input, "ms").unwrap_or(0.0);
-        Ok(channel_output(
-            "delay",
-            Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(ms))),
-        ))
+        Ok(channel_output("delay", Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(ms)))))
     }
 }
 // #endregion 🔖WaitDelay
 
 // #region 🔖Helpers
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn string_channel(name: &str) -> ChannelSpec {
@@ -92,17 +71,7 @@ fn number_channel(name: &str) -> ChannelSpec {
 }
 
 fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "imperative".into(),
-        name: name.into(),
-        abbreviation: abbreviation.into(),
-        icon: "emoji:⚡".into(),
-        summary: summary.into(),
-        inputs,
-        outputs,
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:⚡".into(), summary: summary.into(), inputs, outputs, ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
@@ -111,54 +80,10 @@ fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<d
 
 /// 📦 Registers all imperative action operators.
 pub fn register(registry: &mut Registry) {
-    register_simple(
-        registry,
-        operator_info(
-            "log.print",
-            "Log Print",
-            "Log",
-            "Writes a message to the effect log",
-            vec![string_channel("message")],
-            vec![ChannelSpec::named("M", "Msg", "message", "Message")],
-        ),
-        Box::new(LogPrint),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "state.set",
-            "State Set",
-            "Set",
-            "Sets a scope key to a value",
-            vec![string_channel("key"), ChannelSpec::named("V", "Val", "value", "Value")],
-            vec![ChannelSpec::wildcard()],
-        ),
-        Box::new(StateSet),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "state.increment",
-            "State Increment",
-            "Inc",
-            "Increments a numeric scope key",
-            vec![string_channel("key"), number_channel("by")],
-            vec![ChannelSpec::wildcard()],
-        ),
-        Box::new(StateIncrement),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "wait.delay",
-            "Wait Delay",
-            "Wait",
-            "Records a delay side effect",
-            vec![number_channel("ms")],
-            vec![ChannelSpec::named("D", "Dly", "delay", "Delay")],
-        ),
-        Box::new(WaitDelay),
-    );
+    register_simple(registry, operator_info("log.print", "Log Print", "Log", "Writes a message to the effect log", vec![string_channel("message")], vec![ChannelSpec::named("M", "Msg", "message", "Message")]), Box::new(LogPrint));
+    register_simple(registry, operator_info("state.set", "State Set", "Set", "Sets a scope key to a value", vec![string_channel("key"), ChannelSpec::named("V", "Val", "value", "Value")], vec![ChannelSpec::wildcard()]), Box::new(StateSet));
+    register_simple(registry, operator_info("state.increment", "State Increment", "Inc", "Increments a numeric scope key", vec![string_channel("key"), number_channel("by")], vec![ChannelSpec::wildcard()]), Box::new(StateIncrement));
+    register_simple(registry, operator_info("wait.delay", "Wait Delay", "Wait", "Records a delay side effect", vec![number_channel("ms")], vec![ChannelSpec::named("D", "Dly", "delay", "Delay")]), Box::new(WaitDelay));
     registry.finalize();
 }
 
@@ -208,12 +133,7 @@ mod tests {
         let registry = module_registry();
         let raw = catalogue_json(&registry);
         let parsed: serde_json::Value = serde_json::from_str(&raw).expect("catalogue json");
-        let message = parsed["sections"][0]["items"]
-            .as_array()
-            .and_then(|items| items.iter().find(|item| item["kind"] == "log.print"))
-            .and_then(|item| item["inputs"].as_array())
-            .and_then(|inputs| inputs.first().cloned())
-            .expect("log.print inputs");
+        let message = parsed["sections"][0]["items"].as_array().and_then(|items| items.iter().find(|item| item["kind"] == "log.print")).and_then(|item| item["inputs"].as_array()).and_then(|inputs| inputs.first().cloned()).expect("log.print inputs");
         assert_eq!(message["name"], "message");
         assert_eq!(message["code"], "S");
     }
@@ -221,10 +141,7 @@ mod tests {
     #[test]
     fn state_increment_updates_counter() {
         let registry = module_registry();
-        let input = Dictionary::new()
-            .insert("key", Value::Atom(Atom::String("counter".into())))
-            .insert("by", Value::Atom(Atom::Decimal(2.0)))
-            .insert("counter", Value::Atom(Atom::Decimal(5.0)));
+        let input = Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(2.0))).insert("counter", Value::Atom(Atom::Decimal(5.0)));
         let output = registry.dispatch("state.increment", &input).expect("dispatch");
         let value = output.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
         assert_eq!(value, Some(7.0));

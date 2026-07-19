@@ -341,7 +341,7 @@ impl GraphHost {
     }
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
-        self.dag.label_overlay_paint_state_json()
+        self.dag.label_overlay_paint_state_json().map_err(|e| e.to_string())
     }
 
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64, zoom_gesture: bool) {
@@ -385,11 +385,11 @@ impl GraphHost {
     }
 
     pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
-        self.dag.align_selection(mode)
+        self.dag.align_selection(mode).map_err(|e| e.to_string())
     }
 
     pub fn fixture_json(&self) -> Result<String, String> {
-        self.dag.fixture_json()
+        self.dag.fixture_json().map_err(|e| e.to_string())
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {

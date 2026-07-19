@@ -1,8 +1,9 @@
 {
   "title": "Architect Absolute Feature Completeness",
   "emoji": "🏛️",
-  "status": "open",
+  "status": "closed",
   "description": "Absolute feature completeness: bullet-level typed fields for all 65 sections, real analysis/report/search/exchange/trace behavior, full plugin CRUD for all registers.",
+  "summary": "Architect absolute feature completeness delivered. Phase 1: expanded TraceKind (20 chains), FunctionKind and domain enums, ProjectDefinition/Governance/Relationship/Adjacency/§2–§20 entity fields, five new §48 registers (Assumption, ConstraintRecord, ComplianceRecord, ApprovalRecord, MeetingRecord), Program+ProgramOp wiring. Phase 2: full validate cross-refs, 21 AnalysisKind implementations with run_analysis_and_record, 21 ReportKind with true matrices and build_report_and_record, universal search with filters/history, kind-specific trace/impact, CSV/TSV exchange all registers with MergeStrategy, template tokens returning ProgramOp, status_summary all registers, adjacency conflict depth, outputs.rs §65 builders (37 program tests). Phase 3: plugin REGISTER_IDS all 66 registers, generic add/remove/patch CRUD, editable inspectors, trace viewer, formatted report tree, catalogue with all analysis/report/import/export/template/search, analysis/report persistence ops (11 plugin tests). Verified with CARGO_TARGET_DIR=/tmp/semio-architect-target.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2085"
   },

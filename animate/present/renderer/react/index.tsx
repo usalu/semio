@@ -5939,6 +5939,25 @@ const InteractionLayer: FC<{
 //#endregion 🔖Interaction
 
 //#region 🔖ArrangementSection
+function resolveSceneClipSrc(sceneHash: string): string {
+	return `scenes/${sceneHash}/scene.mp4`;
+}
+
+const AnimateSceneEmbed: FC<{ readonly sceneHash: string }> = ({ sceneHash }) => (
+	<div className="presentation-animate-scene" data-scene-hash={sceneHash}>
+		<video
+			className="presentation-media-video presentation-animate-scene__video"
+			src={resolveSceneClipSrc(sceneHash)}
+			controls
+			playsInline
+			muted
+			loop
+			preload="metadata"
+		/>
+		<canvas className="presentation-animate-scene__canvas" aria-hidden />
+	</div>
+);
+
 const ArrangementSection: FC<{
 	readonly presentation: Presentation;
 	readonly chapter: Chapter;
@@ -5987,8 +6006,10 @@ const ArrangementSection: FC<{
 				.map((entry) => entry.id),
 		[interactiveLayout.placements],
 	);
+	const sceneHash = renderSlide.metadata?.sceneHash ?? renderSlide.arrangement.metadata?.sceneHash;
 	const placements = (
 		<>
+			{sceneHash ? <AnimateSceneEmbed sceneHash={sceneHash} /> : null}
 			{interactiveLayout.rowBands.map((band) => (
 				<InteractiveRowBand key={band.id} id={band.id} frame={band.frame} tileIds={band.tileIds} />
 			))}

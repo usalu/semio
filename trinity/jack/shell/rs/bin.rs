@@ -6,6 +6,21 @@ use std::io::{self, BufRead, Write};
 use trinity_jack::{run, QueryResult};
 use trinity_ram::{Graph, PropertyValue};
 
+//#region ⚠️ Errors
+/// ⚠️ Trinity jack shell errors.
+#[derive(Debug, thiserror::Error)]
+enum TrinityJackShellError {
+    #[error("read {path}: {source}")]
+    ReadFixture { path: String, source: std::io::Error },
+    #[error(transparent)]
+    Graph(#[from] trinity_ram::TrinityRamError),
+    #[error("{0}")]
+    Query(String),
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+}
+//#endregion ⚠️ Errors
+
 fn main() {
     if let Err(err) = run_main() {
         eprintln!("trinity_jack_shell: {err}");
@@ -13,23 +28,23 @@ fn main() {
     }
 }
 
-fn run_main() -> Result<(), String> {
+fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
     let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/nakagin-capsule-tower.trinity.json");
-    let json = fs::read_to_string(fixture_path).map_err(|e| format!("read {fixture_path}: {e}"))?;
+    let json = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
     let mut graph = Graph::load_json(&json)?;
     graph.recompute_derived();
     println!("[DEBUG] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
     if args.len() > 2 {
         let query = args[2..].join(" ");
-        print_result(&run(&mut graph, &query)?);
+        print_result(&run(&mut graph, &query).map_err(TrinityJackShellError::Query)?);
         return Ok(());
     }
     let stdin = io::stdin();
     let mut stdout = io::stdout();
-    writeln!(stdout, "jack> trinity graph loaded ({})", graph.name).map_err(|e| e.to_string())?;
+    writeln!(stdout, "jack> trinity graph loaded ({})", graph.name)?;
     for line in stdin.lock().lines() {
-        let line = line.map_err(|e| e.to_string())?;
+        let line = line?;
         let trimmed = line.trim();
         if trimmed.is_empty() {
             continue;
@@ -39,7 +54,7 @@ fn run_main() -> Result<(), String> {
         }
         match run(&mut graph, trimmed) {
             Ok(result) => print_result(&result),
-            Err(err) => writeln!(stdout, "error: {err}").map_err(|e| e.to_string())?,
+            Err(err) => writeln!(stdout, "error: {err}")?,
         }
     }
     Ok(())

@@ -3,26 +3,16 @@
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
     flow_backed_node_graph_extras, flow_fixture_ops, flow_operator_catalogue_json,
-    FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    CameraJson, FlowFixture, FlowHost, FlowOp, Widget,
+    CameraJson, FlowFixture, FlowHost, FlowOp, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
 };
-use protocol::{
-    handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree,
-    selected_generation, GenerationPlayState,
-};
-use semio_framework_plugin::{SurfaceKind, PanelGroup,
-    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout,
-    is_de_locale, localized_label_map, resolve_labels,
-    tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
-    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
-    DocumentView,
-    NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode,
-    ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
-    FRAMEWORK_PANEL_TAB_DOCUMENT_ID,     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
+use protocol::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
+use semio_framework_plugin::{
+    build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
+    ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -49,10 +39,8 @@ const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
 
 /// 🧩 Built-in flow extensions: (id, name, actionId, actionTitle, effect).
-const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] = &[
-    ("auto-layout", "Auto Layout", "flow.extension.reorganize", "Reorganize Canvas", "reorganize"),
-    ("auto-evaluate", "Auto Evaluate", "flow.extension.evaluate", "Evaluate Fixture", "evaluate"),
-];
+const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
+    &[("auto-layout", "Auto Layout", "flow.extension.reorganize", "Reorganize Canvas", "reorganize"), ("auto-evaluate", "Auto Evaluate", "flow.extension.evaluate", "Evaluate Fixture", "evaluate")];
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -130,11 +118,7 @@ struct MediaGraphEdgeRecord {
 
 //#region 🔖DocumentHelpers
 fn flow_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: FLOW_PLAY_APP_ID.into(),
-        action: action.into(),
-        args,
-    }
+    ActionDescriptor { controller_id: FLOW_PLAY_APP_ID.into(), action: action.into(), args }
 }
 
 fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
@@ -164,11 +148,7 @@ fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHo
 
 /// 🌉 Runs a `FlowHost` mutation over the current document fixture and diffs the result into granular
 /// `FlowOp`s. `mutate` returns `true` if it changed the fixture; a non-mutating call yields no ops.
-fn host_ops(
-    fixture: &FlowFixture,
-    runtime: &FlowPlayRuntime,
-    mutate: impl FnOnce(&mut FlowHost) -> bool,
-) -> Vec<FlowOp> {
+fn host_ops(fixture: &FlowFixture, runtime: &FlowPlayRuntime, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOp> {
     let mut host = host_from_fixture(fixture, runtime);
     if !mutate(&mut host) {
         return Vec::new();
@@ -185,10 +165,7 @@ fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint
-        .split_once(':')
-        .map(|(node, port)| (node.to_string(), port.to_string()))
-        .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
 fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
@@ -202,24 +179,8 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node
-                .inputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| MediaGraphPortRecord {
-                    id: format!("{}:{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                })
-                .collect(),
-            outputs: node
-                .outputs()
-                .iter()
-                .filter(|port| port.visible)
-                .map(|port| MediaGraphPortRecord {
-                    id: format!("{}:{}", node.id, port.id),
-                    label: Some(port.label.clone()),
-                })
-                .collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
     let edges: Vec<MediaGraphEdgeRecord> = fixture
@@ -228,19 +189,10 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
         .map(|edge| {
             let (source_node_id, source_port_id) = split_endpoint(&edge.source);
             let (target_node_id, target_port_id) = split_endpoint(&edge.target);
-            MediaGraphEdgeRecord {
-                id: edge.id.clone(),
-                source_node_id,
-                source_port_id,
-                target_node_id,
-                target_port_id,
-            }
+            MediaGraphEdgeRecord { id: edge.id.clone(), source_node_id, source_port_id, target_node_id, target_port_id }
         })
         .collect();
-    (
-        serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()),
-    )
+    (serde_json::to_string(&nodes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&edges).unwrap_or_else(|_| "[]".into()))
 }
 
 fn widget_kind_label(widget: &Widget) -> &'static str {
@@ -260,7 +212,7 @@ fn widget_kind_label(widget: &Widget) -> &'static str {
 
 fn widget_tree_label(widget: &Widget) -> String {
     match widget {
-        Widget::Neuron { id, neuronKind, .. } => format!("{id} ({neuronKind})"),
+        Widget::Neuron { id, neuron_kind, .. } => format!("{id} ({neuron_kind})"),
         Widget::InputSlider { id, .. } => format!("{id} (slider)"),
         Widget::InputNote { id, .. } => format!("{id} (note)"),
         Widget::OutputPreview { id, .. } => format!("{id} (preview)"),
@@ -403,26 +355,10 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
     let widget_items: Vec<UiTreeItemNode> = fixture
         .widgets
         .iter()
-        .map(|widget| {
-            tree_item_with_action(
-                format!("flow-play-document.widget.{}", widget_id(widget)),
-                widget_tree_label(widget),
-                Some(widget_kind_label(widget).into()),
-                flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] }))),
-            )
-        })
+        .map(|widget| tree_item_with_action(format!("flow-play-document.widget.{}", widget_id(widget)), widget_tree_label(widget), Some(widget_kind_label(widget).into()), flow_action("setSelection", Some(json!({ "ids": [widget_id(widget)] })))))
         .collect();
-    let synapse_items: Vec<UiTreeItemNode> = fixture
-        .synapses
-        .iter()
-        .map(|synapse| {
-            tree_item_desc(
-                format!("flow-play-document.synapse.{}", synapse.id),
-                format!("{} → {}", synapse.from, synapse.to),
-                Some(format!("{} → {}", synapse.from_port, synapse.to_port)),
-            )
-        })
-        .collect();
+    let synapse_items: Vec<UiTreeItemNode> =
+        fixture.synapses.iter().map(|synapse| tree_item_desc(format!("flow-play-document.synapse.{}", synapse.id), format!("{} → {}", synapse.from, synapse.to), Some(format!("{} → {}", synapse.from_port, synapse.to_port)))).collect();
     PanelTreeBuilder::new("flow-play-document")
         .section_or_placeholder("flow-play-document.widgets", Some(labels.widgets.into()), true, widget_items, "(none)")
         .section_or_placeholder("flow-play-document.synapses", Some(labels.synapses.into()), false, synapse_items, "(none)")
@@ -432,20 +368,12 @@ fn build_document_tree(fixture: &FlowFixture, selected: &[String], labels: &Flow
 
 fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     let host = host_from_fixture(fixture, runtime);
-    let sections: Vec<Value> = host
-        .catalogue_json()
-        .ok()
-        .and_then(|raw| serde_json::from_str(&raw).ok())
-        .unwrap_or_default();
+    let sections: Vec<Value> = host.catalogue_json().ok().and_then(|raw| serde_json::from_str(&raw).ok()).unwrap_or_default();
     let tree_sections: Vec<UiTreeSectionNode> = sections
         .iter()
         .filter_map(|section| {
             let id = section.get("id")?.as_str()?.to_string();
-            let title = section
-                .get("title")
-                .and_then(|value| value.as_str())
-                .unwrap_or(&id)
-                .to_string();
+            let title = section.get("title").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
             let items: Vec<UiTreeItemNode> = section
                 .get("items")
                 .and_then(|value| value.as_array())
@@ -454,38 +382,15 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                         .iter()
                         .filter_map(|entry| {
                             let kind = entry.get("kind")?.as_str()?;
-                            let label = entry
-                                .get("name")
-                                .or_else(|| entry.get("abbreviation"))
-                                .and_then(|value| value.as_str())
-                                .unwrap_or(kind);
-                            let descriptor = if kind == "neuron" {
-                                flow_widget_descriptor(
-                                    "neuron",
-                                    entry.get("neuronKind").and_then(|value| value.as_str()),
-                                )
-                            } else {
-                                flow_widget_descriptor(kind, None)
-                            };
+                            let label = entry.get("name").or_else(|| entry.get("abbreviation")).and_then(|value| value.as_str()).unwrap_or(kind);
+                            let descriptor = if kind == "neuron" { flow_widget_descriptor("neuron", entry.get("neuronKind").and_then(|value| value.as_str())) } else { flow_widget_descriptor(kind, None) };
                             let action = flow_action("addWidget", Some(descriptor.clone()));
-                            Some(tree_item_with_action_draggable(
-                                format!("flow-play-catalogue.{id}.{kind}.{label}"),
-                                label,
-                                Some(kind.to_string()),
-                                action,
-                                &flow_widget_drag_json(&descriptor),
-                            ))
+                            Some(tree_item_with_action_draggable(format!("flow-play-catalogue.{id}.{kind}.{label}"), label, Some(kind.to_string()), action, &flow_widget_drag_json(&descriptor)))
                         })
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode {
-                loading: None,
-                id: format!("flow-play-catalogue.{id}"),
-                label: Some(title),
-                default_open: Some(true),
-                items,
-            })
+            Some(UiTreeSectionNode { loading: None, id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items })
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
@@ -514,29 +419,12 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
         .iter()
         .filter(|(id, ..)| runtime.extension_enabled.get(*id).copied().unwrap_or(false))
         .map(|(_, _, action_id, title, _)| {
-            tree_item_with_action(
-                format!("flow-play-extensions.action.{action_id}"),
-                flow_extension_action_title_label(action_id, title, labels),
-                Some((*action_id).into()),
-                flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))),
-            )
+            tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
         })
         .collect();
-    let mut sections = vec![UiTreeSectionNode {
-        loading: None,
-        id: "flow-play-extensions.installed".into(),
-        label: Some(labels.extensions.into()),
-        default_open: Some(false),
-        items: installed,
-    }];
+    let mut sections = vec![UiTreeSectionNode { loading: None, id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode {
-            loading: None,
-            id: "flow-play-extensions.actions".into(),
-            label: Some(labels.extension_actions.into()),
-            default_open: Some(false),
-            items: actions,
-        });
+        sections.push(UiTreeSectionNode { loading: None, id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
     }
     sections
 }
@@ -555,13 +443,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(
-                        format!("flow-play-catalogue.source.{kind}"),
-                        *label,
-                        Some((*kind).into()),
-                        flow_action("addWidget", Some(descriptor.clone())),
-                        &flow_widget_drag_json(&descriptor),
-                    )
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.source.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
         },
@@ -574,13 +456,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor("neuron", Some(kind));
-                    tree_item_with_action_draggable(
-                        format!("flow-play-catalogue.component.{kind}"),
-                        *label,
-                        Some((*kind).into()),
-                        flow_action("addWidget", Some(descriptor.clone())),
-                        &flow_widget_drag_json(&descriptor),
-                    )
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.component.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
         },
@@ -593,13 +469,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .iter()
                 .map(|(kind, label)| {
                     let descriptor = flow_widget_descriptor(kind, None);
-                    tree_item_with_action_draggable(
-                        format!("flow-play-catalogue.sink.{kind}"),
-                        *label,
-                        Some((*kind).into()),
-                        flow_action("addWidget", Some(descriptor.clone())),
-                        &flow_widget_drag_json(&descriptor),
-                    )
+                    tree_item_with_action_draggable(format!("flow-play-catalogue.sink.{kind}"), *label, Some((*kind).into()), flow_action("addWidget", Some(descriptor.clone())), &flow_widget_drag_json(&descriptor))
                 })
                 .collect(),
         },
@@ -608,16 +478,11 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
 
 fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiInspectorFieldGroup {
     let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() })
-        .chain(
-            serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json())
-                .unwrap_or_default()
-                .into_iter()
-                .filter_map(|lod| {
-                    let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
-                    let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-                    Some(UiSelectItem { value: id, label: name })
-                }),
-        )
+        .chain(serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
+            let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+            let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+            Some(UiSelectItem { value: id, label: name })
+        }))
         .collect();
     UiInspectorFieldGroup {
         id: "flow-play-inspector.canvas".into(),
@@ -627,13 +492,7 @@ fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabel
             UiNode::Field(UiFieldNode {
                 id: "flow-play-inspector.lod-mode".into(),
                 label: labels.lod_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {
-                    id: "flow-play-inspector.lod-mode.select".into(),
-                    value: runtime.lod_mode.clone(),
-                    items: lod_items,
-                    placeholder: None,
-                    on_change: flow_action("setLodMode", None),
-                })),
+                child: Box::new(UiNode::Select(UiSelectNode { id: "flow-play-inspector.lod-mode.select".into(), value: runtime.lod_mode.clone(), items: lod_items, placeholder: None, on_change: flow_action("setLodMode", None) })),
                 description: None,
                 required: None,
                 error: None,
@@ -665,10 +524,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
     if selected.is_empty() {
         return ui_inspector_groups_to_tree(&[canvas_settings_field_group(runtime, labels)]);
     }
-    let widgets: Vec<&Widget> = selected
-        .iter()
-        .filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id))
-        .collect();
+    let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
     if widgets.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             loading: None,
@@ -681,7 +537,15 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
     let widget_ids: Vec<String> = widgets.iter().map(|widget| widget_id(widget).to_string()).collect();
     let mut groups: Vec<UiInspectorFieldGroup> = Vec::new();
     if widgets.iter().all(|widget| matches!(widget, Widget::InputSlider { .. })) {
-        let mixed = ui_inspector_mixed_number(&widgets.iter().map(|widget| match widget { Widget::InputSlider { value, .. } => *value, _ => 0.0 }).collect::<Vec<_>>());
+        let mixed = ui_inspector_mixed_number(
+            &widgets
+                .iter()
+                .map(|widget| match widget {
+                    Widget::InputSlider { value, .. } => *value,
+                    _ => 0.0,
+                })
+                .collect::<Vec<_>>(),
+        );
         groups.push(UiInspectorFieldGroup {
             id: "flow-play-inspector.kind.inputSlider".into(),
             label: "inputSlider".into(),
@@ -708,7 +572,15 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
         });
     }
     if widgets.iter().all(|widget| matches!(widget, Widget::InputNote { .. })) {
-        let mixed = ui_inspector_mixed_text(&widgets.iter().map(|widget| match widget { Widget::InputNote { text, .. } => text.clone(), _ => String::new() }).collect::<Vec<_>>());
+        let mixed = ui_inspector_mixed_text(
+            &widgets
+                .iter()
+                .map(|widget| match widget {
+                    Widget::InputNote { text, .. } => text.clone(),
+                    _ => String::new(),
+                })
+                .collect::<Vec<_>>(),
+        );
         groups.push(UiInspectorFieldGroup {
             id: "flow-play-inspector.kind.inputNote".into(),
             label: "inputNote".into(),
@@ -735,11 +607,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
         });
     }
     let kind_mixed = ui_inspector_mixed_text(&widgets.iter().map(|widget| widget_kind_label(widget).to_string()).collect::<Vec<_>>());
-    let mut base_fields = vec![ui_inspector_readonly_field(
-        "flow-play-inspector.kind",
-        labels.kind,
-        if kind_mixed.placeholder.is_none() { widget_kind_label(widgets[0]).to_string() } else { "—".into() },
-    )];
+    let mut base_fields = vec![ui_inspector_readonly_field("flow-play-inspector.kind", labels.kind, if kind_mixed.placeholder.is_none() { widget_kind_label(widgets[0]).to_string() } else { "—".into() })];
     if widget_ids.len() == 1 {
         base_fields.insert(
             0,
@@ -764,12 +632,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &Fl
             }),
         );
     }
-    groups.push(UiInspectorFieldGroup {
-        id: "flow-play-inspector.base".into(),
-        label: labels.widget.into(),
-        default_open: None,
-        fields: base_fields,
-    });
+    groups.push(UiInspectorFieldGroup { id: "flow-play-inspector.base".into(), label: labels.widget.into(), default_open: None, fields: base_fields });
     ui_inspector_groups_to_tree(&groups)
 }
 //#endregion 🔖Panels
@@ -780,11 +643,7 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
     let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let fixture_json = serde_json::to_string(fixture).ok();
-    let selection_json = if runtime.selected_node_ids.is_empty() {
-        None
-    } else {
-        serde_json::to_string(&runtime.selected_node_ids).ok()
-    };
+    let selection_json = if runtime.selected_node_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_node_ids).ok() };
     let flow_extras = flow_backed_node_graph_extras(fixture, &runtime.lod_mode, runtime.proximity_distance);
     let context_menu_json = json!([{
         "id": "delete-selection",
@@ -812,11 +671,7 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
 
 fn render_compiled_dag(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> UiNode {
     let host = host_from_fixture(fixture, runtime);
-    build_text_editor_scene(
-        FLOW_PLAY_SURFACE_COMPILED,
-        FLOW_PLAY_APP_ID,
-        TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None),
-    )
+    build_text_editor_scene(FLOW_PLAY_SURFACE_COMPILED, FLOW_PLAY_APP_ID, TextEditorScene::base(host.compiled_wire_literal(), Some("wire".into()), None))
 }
 
 fn evaluate_generation_preview(fixture: &FlowFixture, runtime: &FlowPlayRuntime, values: &serde_json::Map<String, Value>) -> String {
@@ -841,12 +696,7 @@ fn refresh_generation_preview(fixture: &FlowFixture, runtime: &mut FlowPlayRunti
 }
 
 fn render_generate_generations(runtime: &FlowPlayRuntime) -> UiNode {
-    render_generations_tree(
-        FLOW_PLAY_APP_ID,
-        "flow-play-generate",
-        &runtime.generation.generations,
-        runtime.generation.selected_generation_id.as_deref(),
-    )
+    render_generations_tree(FLOW_PLAY_APP_ID, "flow-play-generate", &runtime.generation.generations, runtime.generation.selected_generation_id.as_deref())
 }
 
 fn render_generate_form(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> UiNode {
@@ -854,22 +704,11 @@ fn render_generate_form(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> UiN
     let Some(generation) = selected_generation(&runtime.generation) else {
         return ui_text("Add a generation to edit input values.");
     };
-    render_generation_form_body(
-        &spec,
-        &generation.values,
-        FLOW_PLAY_APP_ID,
-        "updateGenerationValues",
-        &generation.id,
-    )
+    render_generation_form_body(&spec, &generation.values, FLOW_PLAY_APP_ID, "updateGenerationValues", &generation.id)
 }
 
 fn render_generate_preview(runtime: &FlowPlayRuntime) -> UiNode {
-    let text = runtime
-        .generation
-        .preview_text
-        .as_deref()
-        .filter(|value| !value.is_empty())
-        .unwrap_or("(evaluate a generation to preview output)");
+    let text = runtime.generation.preview_text.as_deref().filter(|value| !value.is_empty()).unwrap_or("(evaluate a generation to preview output)");
     render_generation_preview_text(FLOW_PLAY_SURFACE_GENERATE_PREVIEW, FLOW_PLAY_APP_ID, text)
 }
 //#endregion 🔖Render
@@ -884,16 +723,8 @@ impl FlowPlayApp {
     /// 👁️ Parses the many selection-arg shapes (`ids`/`nodeIds` arrays or a single `nodeId`) into ids.
     fn parse_selection(args: Option<&Value>) -> Vec<String> {
         args.and_then(|value| value.get("ids").or_else(|| value.get("nodeIds")))
-            .and_then(|value| {
-                if value.is_array() {
-                    serde_json::from_value(value.clone()).ok()
-                } else {
-                    value.as_str().map(|id| vec![id.to_string()])
-                }
-            })
-            .or_else(|| {
-                args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()])
-            })
+            .and_then(|value| if value.is_array() { serde_json::from_value(value.clone()).ok() } else { value.as_str().map(|id| vec![id.to_string()]) })
+            .or_else(|| args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]))
             .unwrap_or_default()
     }
 
@@ -976,13 +807,7 @@ impl DocumentApp for FlowPlayApp {
         FlowFixture::default()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, FlowFixture>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<FlowOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> ActionEmit<FlowOp> {
         let fixture = doc.projection;
         match action {
             // 👁️ View/config actions — mutate runtime, emit no ops (never pollute undo).
@@ -1077,11 +902,7 @@ impl DocumentApp for FlowPlayApp {
                 ActionEmit::ops(ops)
             }
             "removeWidget" => {
-                let widget_id = args
-                    .and_then(|value| value.get("widgetId"))
-                    .or_else(|| args.and_then(|value| value.get("id")))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                let widget_id = args.and_then(|value| value.get("widgetId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(widget_id) = widget_id else {
                     return ActionEmit::default();
                 };
@@ -1103,11 +924,7 @@ impl DocumentApp for FlowPlayApp {
                 ActionEmit::ops(ops)
             }
             "disconnect" => {
-                let synapse_id = args
-                    .and_then(|value| value.get("synapseId"))
-                    .or_else(|| args.and_then(|value| value.get("edgeId")))
-                    .and_then(|value| value.as_str())
-                    .map(str::to_string);
+                let synapse_id = args.and_then(|value| value.get("synapseId")).or_else(|| args.and_then(|value| value.get("edgeId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(synapse_id) = synapse_id else {
                     return ActionEmit::default();
                 };
@@ -1141,10 +958,7 @@ impl DocumentApp for FlowPlayApp {
             }
             "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             "patchFlowWidgets" => {
-                let widget_ids: Vec<String> = args
-                    .and_then(|value| value.get("widgetIds"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-                    .unwrap_or_default();
+                let widget_ids: Vec<String> = args.and_then(|value| value.get("widgetIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let raw_value = args.and_then(|value| value.get("value")).cloned();
                 let next = Self::patched_widgets_fixture(fixture, &widget_ids, &field, raw_value.as_ref());
@@ -1381,7 +1195,7 @@ fn create_flow_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"))
     .program("flow", "Flow", "graph")
 }
 
@@ -1451,9 +1265,7 @@ mod tests {
     fn add_widget_emits_ops_and_grows_the_document() {
         let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
-        let result = app
-            .handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local"))
-            .expect("addWidget");
+        let result = app.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local")).expect("addWidget");
         assert!(!result.operations.is_empty(), "addWidget must emit ops");
         assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
     }
@@ -1462,22 +1274,13 @@ mod tests {
     fn undo_restores_fixture_after_add_widget() {
         let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
-        assert_undo_redo_round_trip(
-            &mut app,
-            "addWidget",
-            Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })),
-            |app| app.projection().expect("projection").widgets.len(),
-            before,
-            before + 1,
-        );
+        assert_undo_redo_round_trip(&mut app, "addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), |app| app.projection().expect("projection").widgets.len(), before, before + 1);
     }
 
     #[test]
     fn selection_is_view_state_and_emits_no_ops() {
         let mut app = new_app::<FlowPlayApp>();
-        let result = app
-            .handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local"))
-            .expect("setSelection");
+        let result = app.handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local")).expect("setSelection");
         assert!(result.operations.is_empty(), "selection must not produce document ops");
     }
 
@@ -1532,12 +1335,8 @@ mod tests {
     fn two_instances_converge_on_disjoint_edits() {
         let (mut instance_a, mut instance_b) = paired_apps::<FlowPlayApp>("mem://flow-convergence");
 
-        instance_a
-            .handle_action("renameFlowWidget", Some(&json!({ "oldId": "slider", "value": "input" })), &ViewState::default(), &meta("actor-a"))
-            .expect("a renames slider");
-        instance_b
-            .handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 10.0, "y": 10.0 })), &ViewState::default(), &meta("actor-b"))
-            .expect("b adds a note");
+        instance_a.handle_action("renameFlowWidget", Some(&json!({ "oldId": "slider", "value": "input" })), &ViewState::default(), &meta("actor-a")).expect("a renames slider");
+        instance_b.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 10.0, "y": 10.0 })), &ViewState::default(), &meta("actor-b")).expect("b adds a note");
 
         // A neutral history action always dispatches through the store, which pumps inbound ops first.
         instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");

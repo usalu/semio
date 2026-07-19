@@ -3,27 +3,19 @@
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::{apply_generation_op, invert_generation_op, GenerationOp, GenerationPlayState};
 use serde::{Deserialize, Serialize};
-use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
 
 //#region 🔖Document
 /// 🧾 Persistent procedural-3d document — the flow fixture plus the generation vocabulary state.
 /// Ephemeral view state (selection, sun, LOD, preview caches) lives in the plugin app struct.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Procedural3dDocument {
     pub fixture: FlowFixture,
     #[serde(default)]
     pub generation: GenerationPlayState,
-}
-
-impl Default for Procedural3dDocument {
-    fn default() -> Self {
-        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default() }
-    }
 }
 
 /// 🪪 A flow widget's stable id, across every widget variant (mirrors flow_core's private accessor).
@@ -200,31 +192,20 @@ impl Operation<Procedural3dDocument> for Procedural3dOp {
                 Some(index) => vec![Procedural3dOp::SetWidget { index, widget: fixture.widgets[index].clone() }],
                 None => vec![Procedural3dOp::RemoveWidget { id: widget_id(widget).to_string() }],
             },
-            Procedural3dOp::RemoveWidget { id } => widget_index(fixture, id)
-                .map(|index| vec![Procedural3dOp::SetWidget { index, widget: fixture.widgets[index].clone() }])
-                .unwrap_or_default(),
+            Procedural3dOp::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural3dOp::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
             Procedural3dOp::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
                 Some(index) => vec![Procedural3dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
                 None => vec![Procedural3dOp::RemoveSynapse { id: synapse.id.clone() }],
             },
-            Procedural3dOp::RemoveSynapse { id } => synapse_index(fixture, id)
-                .map(|index| vec![Procedural3dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }])
-                .unwrap_or_default(),
+            Procedural3dOp::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural3dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
             Procedural3dOp::SetLayout { id, .. } => match fixture.layout.get(id) {
                 Some(layout) => vec![Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() }],
                 None => vec![Procedural3dOp::RemoveLayout { id: id.clone() }],
             },
-            Procedural3dOp::RemoveLayout { id } => fixture
-                .layout
-                .get(id)
-                .map(|layout| vec![Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() }])
-                .unwrap_or_default(),
+            Procedural3dOp::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
             Procedural3dOp::SetCamera { .. } => vec![Procedural3dOp::SetCamera { camera: fixture.camera.clone() }],
             Procedural3dOp::SetSchema { .. } => vec![Procedural3dOp::SetSchema { schema: fixture.schema.clone() }],
-            Procedural3dOp::Generation(op) => invert_generation_op(&projection.generation, op)
-                .into_iter()
-                .map(Procedural3dOp::Generation)
-                .collect(),
+            Procedural3dOp::Generation(op) => invert_generation_op(&projection.generation, op).into_iter().map(Procedural3dOp::Generation).collect(),
         }
     }
 }
@@ -288,6 +269,7 @@ pub fn empty_procedural3d_projection() -> Procedural3dDocument {
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
+    use vcs::create_document_vcs_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -301,42 +283,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<Procedural3dDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Procedural3dEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Procedural3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Procedural3dStore::new(envelope)
                 }
-                None => Procedural3dStore::new(create_document_vcs_envelope(
-                    PROCEDURAL_3D_SCHEMA,
-                    "procedural3d",
-                    empty_procedural3d_projection(),
-                    None,
-                )),
+                None => Procedural3dStore::new(create_document_vcs_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -350,7 +317,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::apply_operation;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
 
     fn round_trip(projection: &Procedural3dDocument, op: &Procedural3dOp) -> Procedural3dDocument {
         let forward = apply_operation(projection, op);
@@ -364,45 +331,22 @@ mod tests {
 
     #[test]
     fn store_applies_widget_add() {
-        let mut store = Procedural3dStore::new(create_document_vcs_envelope(
-            PROCEDURAL_3D_SCHEMA,
-            "procedural3d",
-            empty_procedural3d_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Procedural3dOp::SetWidget {
-                    index: 3,
-                    widget: Widget::InputNote { id: "note-9".into(), text: String::new() },
-                }],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = Procedural3dStore::new(create_document_vcs_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Procedural3dOp::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         assert!(store.projection().expect("projection").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
     #[test]
     fn set_widget_round_trips() {
         let before = empty_procedural3d_projection();
-        let after = round_trip(
-            &before,
-            &Procedural3dOp::SetWidget {
-                index: 9,
-                widget: Widget::InputNote { id: "note-9".into(), text: String::new() },
-            },
-        );
+        let after = round_trip(&before, &Procedural3dOp::SetWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } });
         assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
     #[test]
     fn generation_op_round_trips() {
         let before = empty_procedural3d_projection();
-        let generation = protocol::FormGeneration {
-            id: "generation-1".into(),
-            name: "Generation 1".into(),
-            values: serde_json::Map::new(),
-        };
+        let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dOp::Generation(GenerationOp::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }

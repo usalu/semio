@@ -4,31 +4,31 @@ overview: "Bring `energy_engine` from a physics library with a thin ideal-loads 
 todos:
   - id: reopen-checklist
     content: Reopen ENERGY ticket; write leaf-level completeness checklist in ticket folder
-    status: in_progress
+    status: completed
   - id: model-schema
     content: Expand Model + validation for full HVAC/plant/AFN/secondary topology
-    status: pending
+    status: completed
   - id: kernel-rewrite
     content: "Rewrite kernel/sim: calendar, multi-rate loops, warmup, P-C coupling, precompute"
-    status: pending
+    status: completed
   - id: couple-envelope
     content: Wire CTF/FD envelope, fenestration, solar/shading, daylight into timestep
-    status: pending
+    status: completed
   - id: couple-zone-hvac
     content: Wire zone domain, AFN, controls, zone HVAC, air systems, plant, dispatch
-    status: pending
+    status: completed
   - id: couple-secondary
     content: Wire electrical, SHW, water, refrigeration, solar thermal, faults; actual meters
-    status: pending
+    status: completed
   - id: catalog-fill
     content: Fill remaining feature-tree catalog variants in existing modules
-    status: pending
+    status: completed
   - id: sizing-results
     content: Design-day sizing feedback; full summaries, metrics, economics post-pass
-    status: pending
+    status: completed
   - id: validate-close
     content: Conservation/BESTEST/140 tests; isolated cargo test; ticket_close
-    status: pending
+    status: completed
 isProject: false
 ---
 

@@ -2,9 +2,18 @@
 
 use norm_core::{AnnexChoice, CheckReport, CheckResult, ClauseId, Quantity};
 
+// #region 🔖NaDe
 pub mod na_de {
     pub use norm_en_1990::na_de::NaDe;
+
+    /// 🇩🇪 DIN EN 1992-1-1/NA: long-term concrete strength factor.
+    pub const ALPHA_CC: f64 = 0.85;
+
+    pub fn alpha_cc() -> f64 {
+        ALPHA_CC
+    }
 }
+// #endregion 🔖NaDe
 
 // #region 🔖Part1_1
 pub mod part_1_1 {
@@ -12,7 +21,7 @@ pub mod part_1_1 {
 
     /// 📐 Flexural resistance M_Rd [kNm] per EN 1992-1-1 §6.1.
     pub fn flexural_resistance_knm(f_ck: f64, b_mm: f64, d_mm: f64, a_s_mm2: f64, f_yk: f64) -> f64 {
-        let f_cd = 0.85 * f_ck / 1.5 / 1000.0;
+        let f_cd = na_de::alpha_cc() * f_ck / 1.5 / 1000.0;
         let f_yd = f_yk / 1.15 / 1000.0;
         let x = a_s_mm2 * f_yd / (0.8 * b_mm * f_cd);
         let z = d_mm - 0.4 * x;
@@ -26,6 +35,54 @@ pub mod part_1_1 {
         let v_min = 0.035 * k.powf(1.5) * f_ck.sqrt();
         let v_rd = (0.18 / 1.5) * k * (100.0 * rho_l * f_ck).sqrt() + 0.15 * sigma_cp;
         v_rd.max(v_min) * b_mm * d_mm / 1000.0
+    }
+
+    /// 🕳️ Punching shear strength v_Rd,max [MPa] per EN 1992-1-1 Eq. 6.50.
+    pub fn punching_v_rd_max_mpa(f_ck: f64) -> f64 {
+        let f_cd = na_de::alpha_cc() * f_ck / 1.5;
+        let nu = 0.6 * (1.0 - f_ck / 250.0);
+        0.5 * nu * f_cd
+    }
+
+    /// 🕳️ Punching shear resistance V_Rd,max [kN] around perimeter u_1.
+    pub fn punching_resistance_kn(f_ck: f64, u_1_mm: f64, d_mm: f64) -> f64 {
+        punching_v_rd_max_mpa(f_ck) * u_1_mm * d_mm / 1000.0
+    }
+
+    /// 🔁 Torsional resistance T_Rd [kNm] per EN 1992-1-1 §6.3.2 (thin-walled hollow section).
+    pub fn torsion_resistance_knm(f_ck: f64, a_k_mm2: f64, t_mm: f64) -> f64 {
+        let f_cd = na_de::alpha_cc() * f_ck / 1.5 / 1000.0;
+        let nu = 0.6 * (1.0 - f_ck / 250.0);
+        let alpha_cw = 1.0;
+        2.0 * nu * alpha_cw * f_cd * t_mm * a_k_mm2 / 1_000_000.0
+    }
+
+    /// 📏 Slenderness λ = l_0 / i.
+    pub fn slenderness_lambda(l_0_mm: f64, i_mm: f64) -> f64 {
+        l_0_mm / i_mm
+    }
+
+    /// 📏 Radius of gyration i [mm] from area and second moment.
+    pub fn radius_of_gyration_mm(a_mm2: f64, i_mm4: f64) -> f64 {
+        (i_mm4 / a_mm2).sqrt()
+    }
+
+    /// 🪟 Crack width w_k [mm] per EN 1992-1-1 Eq. 7.8.
+    pub fn crack_width_wk_mm(eps_sm: f64, eps_cm: f64, s_r_max_mm: f64) -> f64 {
+        (eps_sm - eps_cm).max(0.0) * s_r_max_mm
+    }
+
+    /// 🪟 Mean steel strain ε_sm per EN 1992-1-1 Eq. 7.9.
+    pub fn steel_strain_eps_sm(sigma_s_mpa: f64, rho_p_eff: f64, f_ct_eff_mpa: f64, e_s_mpa: f64) -> f64 {
+        let term = (f_ct_eff_mpa / rho_p_eff / e_s_mpa).max(0.6 * sigma_s_mpa / e_s_mpa);
+        (sigma_s_mpa / e_s_mpa) * (1.0 - term).max(0.4)
+    }
+
+    /// 📉 Immediate deflection δ [mm] of simply supported beam under UDL.
+    pub fn deflection_ss_udl_mm(w_kn_m: f64, span_m: f64, e_mpa: f64, i_mm4: f64) -> f64 {
+        let w = w_kn_m;
+        let l = span_m * 1000.0;
+        5.0 * w * l.powi(4) / (384.0 * e_mpa * i_mm4)
     }
 
     pub fn check_flexure(m_ed_knm: f64, m_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
@@ -47,6 +104,46 @@ pub mod part_1_1 {
             annex,
         )
     }
+
+    pub fn check_punching(v_ed_kn: f64, v_rd_kn: f64, annex: AnnexChoice) -> CheckResult {
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§6.4", "6.4"),
+            Quantity::force_kn(v_ed_kn),
+            Quantity::force_kn(v_rd_kn),
+            "punching shear ULS",
+            annex,
+        )
+    }
+
+    pub fn check_torsion(t_ed_knm: f64, t_rd_knm: f64, annex: AnnexChoice) -> CheckResult {
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§6.3", "6.3"),
+            Quantity::new(norm_core::QuantityKind::Moment, t_ed_knm * 1_000_000.0),
+            Quantity::new(norm_core::QuantityKind::Moment, t_rd_knm * 1_000_000.0),
+            "torsion ULS",
+            annex,
+        )
+    }
+
+    pub fn check_crack_width(w_k_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§7.3", "7.3"),
+            Quantity::length_m(w_k_mm / 1000.0),
+            Quantity::length_m(limit_mm / 1000.0),
+            "crack width SLS",
+            annex,
+        )
+    }
+
+    pub fn check_deflection(delta_mm: f64, limit_mm: f64, annex: AnnexChoice) -> CheckResult {
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-1-1", "§7.4", "7.4"),
+            Quantity::length_m(delta_mm / 1000.0),
+            Quantity::length_m(limit_mm / 1000.0),
+            "deflection SLS",
+            annex,
+        )
+    }
 }
 // #endregion 🔖Part1_1
 
@@ -54,12 +151,44 @@ pub mod part_1_1 {
 pub mod part_1_2 {
     use super::*;
 
-    pub fn check_fire_cover(cover_mm: f64, required_mm: f64) -> CheckResult {
+    /// 🏗️ Fire resistance rating.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum FireRating {
+        R30,
+        R60,
+        R90,
+    }
+
+    /// 🏗️ Structural element type for fire cover lookup.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    pub enum ElementType {
+        Slab,
+        Beam,
+        Column,
+    }
+
+    /// 🔥 Minimum axis distance a_min [mm] per EN 1992-1-2 Table 5.5 (simplified tabulated values).
+    pub fn min_axis_distance_mm(element: ElementType, rating: FireRating) -> f64 {
+        match (element, rating) {
+            (ElementType::Slab, FireRating::R30) => 10.0,
+            (ElementType::Slab, FireRating::R60) => 20.0,
+            (ElementType::Slab, FireRating::R90) => 30.0,
+            (ElementType::Beam, FireRating::R30) => 25.0,
+            (ElementType::Beam, FireRating::R60) => 35.0,
+            (ElementType::Beam, FireRating::R90) => 50.0,
+            (ElementType::Column, FireRating::R30) => 25.0,
+            (ElementType::Column, FireRating::R60) => 40.0,
+            (ElementType::Column, FireRating::R90) => 55.0,
+        }
+    }
+
+    pub fn check_fire_cover(cover_mm: f64, element: ElementType, rating: FireRating) -> CheckResult {
+        let required = min_axis_distance_mm(element, rating);
         CheckResult::from_utilization(
-            ClauseId::new("EN 1992-1-2", "§4", "4.2"),
+            ClauseId::new("EN 1992-1-2", "§4.2", "4.2"),
+            Quantity::length_m(required / 1000.0),
             Quantity::length_m(cover_mm / 1000.0),
-            Quantity::length_m(required_mm / 1000.0),
-            "fire cover",
+            "fire axis distance",
             AnnexChoice::De,
         )
     }
@@ -80,16 +209,42 @@ pub mod part_2 {
 pub mod part_3 {
     use super::*;
 
-    pub fn crack_width_wk_mm(eps_sm: f64, s_r_max_mm: f64) -> f64 {
+    /// 💧 Exposure class steel stress limit σ_s,lim [MPa] per EN 1992-3 Table 7.1N.
+    pub fn steel_stress_limit_mpa(exposure: &str) -> f64 {
+        match exposure {
+            "XC1" | "XC2" => 250.0,
+            "XC3" | "XC4" => 200.0,
+            "XD1" | "XD2" | "XD3" => 160.0,
+            "XS1" | "XS2" | "XS3" => 160.0,
+            _ => 200.0,
+        }
+    }
+
+    /// 🪟 Liquid-retaining crack width w_k [mm] with steel stress limit per EN 1992-3 §7.
+    pub fn crack_width_liquid_mm(sigma_s_mpa: f64, exposure: &str, s_r_max_mm: f64, e_s_mpa: f64) -> f64 {
+        let limit = steel_stress_limit_mpa(exposure);
+        let sigma_eff = sigma_s_mpa.min(limit);
+        let eps_sm = sigma_eff / e_s_mpa;
         eps_sm * s_r_max_mm
     }
 
-    pub fn check_crack_width(w_k: f64, limit: f64) -> CheckResult {
+    pub fn check_liquid_crack_width(w_k: f64, limit: f64) -> CheckResult {
         CheckResult::from_utilization(
             ClauseId::new("EN 1992-3", "§7", "7.1"),
             Quantity::length_m(w_k / 1000.0),
             Quantity::length_m(limit / 1000.0),
-            "crack width SLS",
+            "liquid retaining crack width SLS",
+            AnnexChoice::En,
+        )
+    }
+
+    pub fn check_steel_stress(sigma_s_mpa: f64, exposure: &str) -> CheckResult {
+        let limit = steel_stress_limit_mpa(exposure);
+        CheckResult::from_utilization(
+            ClauseId::new("EN 1992-3", "§7", "7.2"),
+            Quantity::stress_mpa(sigma_s_mpa),
+            Quantity::stress_mpa(limit),
+            "liquid retaining steel stress SLS",
             AnnexChoice::En,
         )
     }
@@ -128,121 +283,38 @@ pub fn check_rc_beam(
 }
 
 // #region 🔖Fem
-use fem_core::{
-    BeamStation, Dof, Element, ElementContext, ElementResult, MemberUdl, Model, Node, Support,
-};
-use mathematical_algebra::{MatD, VecD};
+use fem_core::{BeamEb2, Dof, MemberUdl, Model, Node, Support};
 
-struct NormBeamEb2 {
-    id: String,
-    start: String,
-    end: String,
-    e: f64,
-    area: f64,
-    iy: f64,
+fn max_beam_moment_knm(result: &fem_core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem_core::ElementResult::Beam { stations }) = result
+        .elements
+        .iter()
+        .find(|(id, _)| id == element_id)
+        .expect("beam element result")
+    else {
+        panic!("expected beam element result");
+    };
+    stations
+        .iter()
+        .map(|s| s.m.abs())
+        .fold(0.0_f64, f64::max)
+        / 1000.0
 }
 
-fn segment_geometry(ctx: &ElementContext) -> (f64, f64, f64) {
-    let p1 = ctx.positions[0];
-    let p2 = ctx.positions[1];
-    let dx = p2[0] - p1[0];
-    let dy = p2[1] - p1[1];
-    let l = (dx * dx + dy * dy).sqrt();
-    (l, dx / l, dy / l)
-}
-
-fn beam_transform(c: f64, s: f64) -> MatD {
-    let mut t = MatD::zeros(6, 6);
-    for block in 0..2 {
-        let o = block * 3;
-        t.set(o, o, c);
-        t.set(o, o + 1, s);
-        t.set(o + 1, o, -s);
-        t.set(o + 1, o + 1, c);
-        t.set(o + 2, o + 2, 1.0);
-    }
-    t
-}
-
-fn beam_local_stiffness(l: f64, axial_k: f64, bend_k: f64) -> MatD {
-    let mut k = MatD::zeros(6, 6);
-    k.set(0, 0, axial_k);
-    k.set(0, 3, -axial_k);
-    k.set(3, 0, -axial_k);
-    k.set(3, 3, axial_k);
-    let b = 12.0 * bend_k / l.powi(3);
-    let c = 6.0 * bend_k / (l * l);
-    let d = 4.0 * bend_k / l;
-    let e = 2.0 * bend_k / l;
-    for (i, j, v) in [
-        (1, 1, b),
-        (1, 2, c),
-        (1, 4, -b),
-        (1, 5, c),
-        (2, 1, c),
-        (2, 2, d),
-        (2, 4, -c),
-        (2, 5, e),
-        (4, 1, -b),
-        (4, 2, -c),
-        (4, 4, b),
-        (4, 5, -c),
-        (5, 1, c),
-        (5, 2, e),
-        (5, 4, -c),
-        (5, 5, d),
-    ] {
-        k.set(i, j, v);
-    }
-    k
-}
-
-impl Element for NormBeamEb2 {
-    fn id(&self) -> &str {
-        &self.id
-    }
-
-    fn node_ids(&self) -> Vec<String> {
-        vec![self.start.clone(), self.end.clone()]
-    }
-
-    fn dofs_per_node(&self) -> &[Dof] {
-        &[Dof::Tx, Dof::Ty, Dof::Rz]
-    }
-
-    fn stiffness_global(&self, ctx: &ElementContext) -> MatD {
-        let (l, c, s) = segment_geometry(ctx);
-        let k_local = beam_local_stiffness(l, self.e * self.area / l, self.e * self.iy / l);
-        let t = beam_transform(c, s);
-        t.transpose().matmul(&k_local).matmul(&t)
-    }
-
-    fn equivalent_nodal_loads(&self, ctx: &ElementContext, udl: &MemberUdl) -> Option<VecD> {
-        let (l, c, s) = segment_geometry(ctx);
-        let wy = -udl.wx * s + udl.wy * c;
-        Some(VecD::from_vec(vec![
-            0.0,
-            wy * l / 2.0,
-            wy * l * l / 12.0,
-            0.0,
-            wy * l / 2.0,
-            -wy * l * l / 12.0,
-        ]))
-    }
-
-    fn recover(&self, ctx: &ElementContext, u: &VecD, udl: Option<&MemberUdl>) -> ElementResult {
-        let (l, _, _) = segment_geometry(ctx);
-        let wy = udl.map(|u| u.wy).unwrap_or(0.0);
-        let m_mid = wy * l * l / 8.0 - (u.get(2) + u.get(5)) * 0.0;
-        ElementResult::Beam {
-            stations: vec![BeamStation {
-                x: l / 2.0,
-                n: 0.0,
-                v: wy * l / 2.0,
-                m: m_mid,
-            }],
-        }
-    }
+fn max_beam_shear_kn(result: &fem_core::StaticResult, element_id: &str) -> f64 {
+    let (_, fem_core::ElementResult::Beam { stations }) = result
+        .elements
+        .iter()
+        .find(|(id, _)| id == element_id)
+        .expect("beam element result")
+    else {
+        panic!("expected beam element result");
+    };
+    stations
+        .iter()
+        .map(|s| s.v.abs())
+        .fold(0.0_f64, f64::max)
+        / 1000.0
 }
 
 /// 🏗️ Solve a simply supported RC beam with `fem_core` and run EN 1992 ULS checks.
@@ -267,19 +339,20 @@ pub fn check_rc_beam_from_fem(
     });
     model.supports.push(Support {
         node_id: "n0".into(),
-        fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz],
+        fixed: vec![Dof::Tx, Dof::Ty],
     });
     model.supports.push(Support {
         node_id: "n1".into(),
         fixed: vec![Dof::Ty],
     });
-    model.elements.push(Box::new(NormBeamEb2 {
+    model.elements.push(Box::new(BeamEb2 {
         id: "b1".into(),
         start: "n0".into(),
         end: "n1".into(),
         e: 30e9,
         area: b_mm * d_mm / 1e6,
         iy: b_mm * d_mm.powi(3) / 12e12,
+        density: 2500.0,
     }));
     model.member_loads.push((
         "b1".into(),
@@ -291,9 +364,8 @@ pub fn check_rc_beam_from_fem(
     ));
 
     let result = fem_core::solve_linear_static(&model)?;
-    let m_ed_knm = udl_kn_m * span_m * span_m / 8.0;
-    let v_ed_kn = udl_kn_m * span_m / 2.0;
-    let _ = result;
+    let m_ed_knm = max_beam_moment_knm(&result, "b1");
+    let v_ed_kn = max_beam_shear_kn(&result, "b1");
 
     Ok(check_rc_beam(
         m_ed_knm,
@@ -317,6 +389,51 @@ mod tests {
     fn rc_beam_e2e() {
         let report = check_rc_beam(120.0, 80.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01, 200.0);
         assert!(!report.checks.is_empty());
+        assert!(report.checks[0].utilization > 0.0);
+    }
+
+    #[test]
+    fn punching_v_rd_max_c30() {
+        let v = part_1_1::punching_v_rd_max_mpa(30.0);
+        assert!((v - 4.488).abs() < 0.1);
+    }
+
+    #[test]
+    fn slenderness_column() {
+        let i = part_1_1::radius_of_gyration_mm(300_000.0, 2.25e9);
+        let lambda = part_1_1::slenderness_lambda(3000.0, i);
+        assert!((lambda - 34.6).abs() < 1.0);
+    }
+
+    #[test]
+    fn crack_width_wk() {
+        let eps_sm = part_1_1::steel_strain_eps_sm(200.0, 0.01, 2.9, 200_000.0);
+        let wk = part_1_1::crack_width_wk_mm(eps_sm, 0.0001, 300.0);
+        assert!(wk > 0.0 && wk < 0.5);
+    }
+
+    #[test]
+    fn deflection_ss_udl() {
+        let delta = part_1_1::deflection_ss_udl_mm(20.0, 6.0, 30_000.0, 1.875e9);
+        assert!((delta - 6.0).abs() < 0.5);
+    }
+
+    #[test]
+    fn fire_cover_beam_r60() {
+        let req = part_1_2::min_axis_distance_mm(part_1_2::ElementType::Beam, part_1_2::FireRating::R60);
+        assert!((req - 35.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn liquid_retaining_stress_limit() {
+        assert!((part_3::steel_stress_limit_mpa("XD1") - 160.0).abs() < 0.1);
+        let wk = part_3::crack_width_liquid_mm(220.0, "XD1", 250.0, 200_000.0);
+        assert!(wk < 0.25);
+    }
+
+    #[test]
+    fn na_de_alpha_cc() {
+        assert!((na_de::alpha_cc() - 0.85).abs() < 1e-9);
     }
 
     #[test]
@@ -324,5 +441,7 @@ mod tests {
         let report = check_rc_beam_from_fem(6.0, 20.0, 30.0, 300.0, 500.0, 2500.0, 500.0, 0.01)
             .expect("fem solve");
         assert!(!report.checks.is_empty());
+        let m_ed = report.checks[0].computed.value / 1_000_000.0;
+        assert!((m_ed - 90.0).abs() < 1.0);
     }
 }

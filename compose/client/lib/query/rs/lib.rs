@@ -1,6 +1,6 @@
 //! @emoji 🏛️ `architect` — Cypher-inspired compose query language: parse, plan GraphQL, execute via `Transport`.
 
-#![allow(clippy::too_many_lines)]
+#![allow(clippy::too_many_lines, reason = "planner/wasm_api export match arms enumerate every AST/Step variant inline; splitting them up would scatter one concept across helper fns for no clarity gain")]
 
 pub use api::{compile, parse, plan, run};
 pub use errors::ArchitectError;
@@ -220,7 +220,7 @@ mod parser {
     }
 
     fn value_literal(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((literal_value, map(delimited(ws(char('[')), separated_list0(ws(char(',')), value_literal), ws(char(']'))), |v| serde_json::Value::Array(v)), map(object_literal, |m| serde_json::Value::Object(m.into_iter().collect()))))(input)
+        alt((literal_value, map(delimited(ws(char('[')), separated_list0(ws(char(',')), value_literal), ws(char(']'))), serde_json::Value::Array), map(object_literal, |m| serde_json::Value::Object(m.into_iter().collect()))))(input)
     }
 
     fn primary_expr(input: &str) -> IResult<&str, Expr> {
@@ -282,18 +282,18 @@ mod parser {
     }
 
     fn and_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, parts) = separated_list1(kw("AND"), cmp_expr)(input)?;
+        let (rest, mut parts) = separated_list1(kw("AND"), cmp_expr)(input)?;
         if parts.len() == 1 {
-            Ok((rest, parts.into_iter().next().unwrap()))
+            Ok((rest, parts.pop().expect("len()==1 checked above")))
         } else {
             Ok((rest, Expr::And(parts)))
         }
     }
 
     fn or_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, parts) = separated_list1(kw("OR"), and_expr)(input)?;
+        let (rest, mut parts) = separated_list1(kw("OR"), and_expr)(input)?;
         if parts.len() == 1 {
-            Ok((rest, parts.into_iter().next().unwrap()))
+            Ok((rest, parts.pop().expect("len()==1 checked above")))
         } else {
             Ok((rest, Expr::Or(parts)))
         }
@@ -585,15 +585,15 @@ mod schema {
         EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "hasTypes", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
     ];
 
-    pub fn resolve_edge(from: Label, pred: Predicate, to: Label, rel: &RelPattern, forward: bool) -> Result<EdgeDef, String> {
+    pub fn resolve_edge(from: Label, pred: Predicate, to: Label, rel: &RelPattern, forward: bool) -> Result<EdgeDef, super::ArchitectError> {
         let mut matches: Vec<EdgeDef> = EDGES.iter().copied().filter(|e| e.from == from && e.pred == pred && e.to == to && edge_props_match(e, rel)).collect();
         if !forward {
             matches = EDGES.iter().copied().filter(|e| e.from == to && e.pred == pred && e.to == from && edge_props_match(e, rel)).collect();
         }
         match matches.len() {
-            0 => Err(format!("no edge {from:?}-{pred:?}->{to:?}")),
+            0 => Err(super::ArchitectError::Plan(format!("no edge {from:?}-{pred:?}->{to:?}"))),
             1 => Ok(matches[0]),
-            _ => Err(format!("ambiguous edge {from:?}-{pred:?}->{to:?}")),
+            _ => Err(super::ArchitectError::Plan(format!("ambiguous edge {from:?}-{pred:?}->{to:?}"))),
         }
     }
 
@@ -613,14 +613,14 @@ mod schema {
         true
     }
 
-    pub fn node_label(node: &NodePattern) -> Result<Label, String> {
-        let lab = node.label.as_deref().ok_or_else(|| "pattern node requires a label".to_string())?;
-        Label::parse(lab).ok_or_else(|| format!("unknown label {lab}"))
+    pub fn node_label(node: &NodePattern) -> Result<Label, super::ArchitectError> {
+        let lab = node.label.as_deref().ok_or_else(|| super::ArchitectError::Plan("pattern node requires a label".to_string()))?;
+        Label::parse(lab).ok_or_else(|| super::ArchitectError::Plan(format!("unknown label {lab}")))
     }
 
-    pub fn rel_predicate(rel: &RelPattern) -> Result<Predicate, String> {
-        let t = rel.types.first().ok_or_else(|| "relationship requires a predicate".to_string())?;
-        Predicate::parse(t).ok_or_else(|| format!("unknown predicate {t}"))
+    pub fn rel_predicate(rel: &RelPattern) -> Result<Predicate, super::ArchitectError> {
+        let t = rel.types.first().ok_or_else(|| super::ArchitectError::Plan("relationship requires a predicate".to_string()))?;
+        Predicate::parse(t).ok_or_else(|| super::ArchitectError::Plan(format!("unknown predicate {t}")))
     }
 
     pub fn entity_scalar_fields(label: Label) -> &'static [&'static str] {
@@ -663,9 +663,13 @@ mod schema {
         CallTarget { path: &["session", "store", "theKit", "save"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }" },
     ];
 
-    pub fn resolve_call(action_id: &str) -> Result<CallTarget, String> {
+    pub fn resolve_call(action_id: &str) -> Result<CallTarget, super::ArchitectError> {
         let parts: Vec<&str> = action_id.split('.').collect();
-        CALL_TARGETS.iter().copied().find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b)).ok_or_else(|| format!("unknown CALL target {action_id}"))
+        CALL_TARGETS
+            .iter()
+            .copied()
+            .find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b))
+            .ok_or_else(|| super::ArchitectError::Plan(format!("unknown CALL target {action_id}")))
     }
 
     pub fn call_variables(action_id: &str, args: &BTreeMap<String, serde_json::Value>) -> serde_json::Value {
@@ -709,11 +713,14 @@ mod transport {
         Msg(String),
     }
 
+    /// 🌊 Async result of [`Transport::subscribe`]: a stream of GraphQL payloads, or a transport-level failure.
+    pub type SubscribeResult = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>;
+
     /// @emoji 🌐 Async GraphQL IO boundary (native + wasm).
     pub trait Transport {
         fn execute(&self, kind: OpKind, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<Value, TransportError>> + '_>>;
 
-        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = Result<BoxStream<'static, Result<Value, TransportError>>, TransportError>> + '_>>;
+        fn subscribe(&self, doc: &str, variables: Value) -> Pin<Box<dyn Future<Output = SubscribeResult> + '_>>;
     }
 
     /// @emoji 🧪 In-memory transport for unit tests.
@@ -957,15 +964,15 @@ mod planner {
                     steps.push(Step::Unwind { source_var, alias: u.alias.clone(), where_expr: u.where_expr.clone() });
                 }
                 Clause::Call(c) => {
-                    let target = schema::resolve_call(&c.action_id).map_err(ArchitectError::Plan)?;
+                    let target = schema::resolve_call(&c.action_id)?;
                     steps.push(Step::Call { op: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.action_id, &c.args), yield_items: c.yield_items.clone() });
                 }
             }
         }
 
         if let Some(ret) = &q.return_clause {
-            if ret.order_by.is_some() {
-                steps.push(Step::Order { expr: ret.order_by.clone().unwrap() });
+            if let Some(order_by) = &ret.order_by {
+                steps.push(Step::Order { expr: order_by.clone() });
             }
             if let Some(n) = ret.limit {
                 steps.push(Step::Limit { n });
@@ -989,7 +996,7 @@ mod planner {
         }
         let anchor = nodes.iter().min_by_key(|n| selectivity(n)).ok_or_else(|| ArchitectError::Plan("no anchor".into()))?;
         let anchor_var = anchor.var_name.clone().unwrap_or_else(|| "__anchor".into());
-        let anchor_label = schema::node_label(anchor).map_err(ArchitectError::Plan)?;
+        let anchor_label = schema::node_label(anchor)?;
 
         let (document, paths) = build_graphql_document(pat, anchor_var.as_str(), anchor_label)?;
         let bind = BindSpec { anchor_var: anchor_var.clone(), anchor_label: anchor_label.gql_name().to_string(), paths };
@@ -1013,7 +1020,7 @@ mod planner {
         }
         match conjuncts.len() {
             0 => None,
-            1 => Some(conjuncts.pop().unwrap()),
+            1 => Some(conjuncts.pop().expect("len()==1 checked above")),
             _ => Some(Expr::And(conjuncts)),
         }
     }
@@ -1353,7 +1360,7 @@ mod executor {
         for anchor in anchors {
             let mut row = Row::new();
             row.insert(bind.anchor_var.clone(), anchor.clone());
-            for (var, _path) in &bind.paths {
+            for var in bind.paths.keys() {
                 if var == &bind.anchor_var {
                     continue;
                 }
@@ -1695,7 +1702,10 @@ mod wasm_api {
     pub async fn architect_run(query: &str, execute_fn: js_sys::Function, subscribe_fn: js_sys::Function) -> Result<JsValue, JsValue> {
         console_error_panic_hook::set_once();
         let transport = JsTransport::new(execute_fn, subscribe_fn);
-        api::run(query, &transport).await.map(|r| serde_wasm_bindgen::to_value(&r).unwrap()).map_err(|e| JsValue::from_str(&e.to_string()))
+        match api::run(query, &transport).await {
+            Ok(r) => serde_wasm_bindgen::to_value(&r).map_err(|e| JsValue::from_str(&e.to_string())),
+            Err(e) => Err(JsValue::from_str(&e.to_string())),
+        }
     }
 }
 
@@ -1720,7 +1730,7 @@ mod tests {
         serde_json::from_str(&std::fs::read_to_string(&path).expect("read architect.harness.kit.compose.json")).expect("parse harness kit")
     }
 
-    fn case_rows<'a>(doc: &'a serde_json::Value) -> &'a [serde_json::Value] {
+    fn case_rows(doc: &serde_json::Value) -> &[serde_json::Value] {
         doc["cases"].as_array().expect("cases array").as_slice()
     }
 

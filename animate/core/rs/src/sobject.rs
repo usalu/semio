@@ -3,7 +3,7 @@
 use crate::color::Color;
 use crate::updater::Updater;
 use mathematical_geometry::{append_shape_to_path, bounding_box, polygon_centroid, Affine, BezPath, PathEl, Point, Rect, Vec2};
-use kurbo::PathSeg;
+use kurbo::{ParamCurve, ParamCurveArclen, PathSeg, Shape};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 static SOBJECT_ID: AtomicU64 = AtomicU64::new(1);
@@ -262,11 +262,18 @@ pub fn trim_path_at_ratio(path: &BezPath, ratio: f64) -> BezPath {
     for seg in segments {
         let len = seg.arclen(0.25);
         if remaining >= len - 1e-9 {
-            seg.write_to(&mut out_k);
+            if out_k.is_empty() {
+                out_k.move_to(seg.start());
+            }
+            out_k.push(seg.as_path_el());
             remaining -= len;
         } else {
             let frac = (remaining / len).clamp(0.0, 1.0);
-            seg.subsegment(0.0, frac).write_to(&mut out_k);
+            let sub = seg.subsegment(0.0..frac);
+            if out_k.is_empty() {
+                out_k.move_to(sub.start());
+            }
+            out_k.push(sub.as_path_el());
             break;
         }
     }
@@ -659,6 +666,7 @@ impl Sobject for Group {
             opacity: self.opacity,
             parent_opacity: self.parent_opacity,
             transform: self.transform,
+            z_order: self.z_order,
             saved: None,
             target: None,
             updaters: self.updaters.clone(),

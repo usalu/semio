@@ -1,18 +1,22 @@
 //! 🌊 Flow core: widgets, neural evaluation, and DAG canvas host.
 
-pub use infinite_cavas as cavas;
 pub use infinite_board_port_directed_dag as dag;
+pub use infinite_cavas as cavas;
 pub use neural_engine as neural;
 
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync::OnceLock;
 
 use dag::{
-    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size, slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle,
-    DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle, IoPortSpec,
+    computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
+    slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle,
+    IoPortSpec,
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
-use neural::{channel_output, cluster_operator_info, compute_dirty_set, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND, OUTPUT_KIND};
+use neural::{
+    channel_output, cluster_operator_info, compute_dirty_set, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND,
+    OUTPUT_KIND,
+};
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Document
@@ -49,30 +53,42 @@ fn default_stepper_step() -> f64 {
     0.1
 }
 
-fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
-    match schema {
-        "vector" | "point" => vec![
-            StepperFieldSpec { key: "x".into(), value: 0.0 },
-            StepperFieldSpec { key: "y".into(), value: 0.0 },
-            StepperFieldSpec { key: "z".into(), value: 0.0 },
-        ],
-        _ => vec![],
-    }
+/// 📐 Stepper schemas with a dedicated field layout / port shape (anything else falls back to a generic scalar port).
+enum StepperSchemaKind {
+    Vector,
+    Point,
 }
 
-fn stepper_output_port(schema: &str) -> IoPortSpec {
-    match schema {
-        "vector" => IoPortSpec::named("V", "Vec", "vector", "Vector"),
-        "point" => IoPortSpec::named("P", "Pnt", "point", "Point"),
-        other => {
-            let code: String = other.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
-            let abbrev: String = other.chars().take(3).collect();
-            IoPortSpec::named(&code, &abbrev, other, other)
+impl StepperSchemaKind {
+    fn parse(schema: &str) -> Option<Self> {
+        match schema {
+            "vector" => Some(Self::Vector),
+            "point" => Some(Self::Point),
+            _ => None,
         }
     }
 }
 
-fn effective_stepper_fields<'a>(schema: &str, fields: &'a [StepperFieldSpec]) -> Vec<StepperFieldSpec> {
+fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
+    match StepperSchemaKind::parse(schema) {
+        Some(StepperSchemaKind::Vector | StepperSchemaKind::Point) => vec![StepperFieldSpec { key: "x".into(), value: 0.0 }, StepperFieldSpec { key: "y".into(), value: 0.0 }, StepperFieldSpec { key: "z".into(), value: 0.0 }],
+        None => vec![],
+    }
+}
+
+fn stepper_output_port(schema: &str) -> IoPortSpec {
+    match StepperSchemaKind::parse(schema) {
+        Some(StepperSchemaKind::Vector) => IoPortSpec::named("V", "Vec", "vector", "Vector"),
+        Some(StepperSchemaKind::Point) => IoPortSpec::named("P", "Pnt", "point", "Point"),
+        None => {
+            let code: String = schema.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
+            let abbrev: String = schema.chars().take(3).collect();
+            IoPortSpec::named(&code, &abbrev, schema, schema)
+        }
+    }
+}
+
+fn effective_stepper_fields(schema: &str, fields: &[StepperFieldSpec]) -> Vec<StepperFieldSpec> {
     if fields.is_empty() {
         default_stepper_fields_for_schema(schema)
     } else {
@@ -145,12 +161,34 @@ pub struct FlowNodeGui {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum NodeChrome {
-    Plain { #[serde(default = "default_neuron_preview")] preview: bool },
-    Slider { min: f64, max: f64, step: f64, #[serde(default = "default_slider_value")] value: f64 },
-    Stepper { schema: String, fields: Vec<StepperFieldSpec>, step: f64 },
-    Note { #[serde(default)] text: String },
-    Image { #[serde(default)] src: String },
-    Variable { name: String, schema: String },
+    Plain {
+        #[serde(default = "default_neuron_preview")]
+        preview: bool,
+    },
+    Slider {
+        min: f64,
+        max: f64,
+        step: f64,
+        #[serde(default = "default_slider_value")]
+        value: f64,
+    },
+    Stepper {
+        schema: String,
+        fields: Vec<StepperFieldSpec>,
+        step: f64,
+    },
+    Note {
+        #[serde(default)]
+        text: String,
+    },
+    Image {
+        #[serde(default)]
+        src: String,
+    },
+    Variable {
+        name: String,
+        schema: String,
+    },
 }
 
 /// 👁️ GUI-only preview binding.
@@ -160,9 +198,12 @@ pub struct FlowPreviewGui {
     pub id: String,
     pub source: Option<FlowChannelRef>,
     pub mode: String,
-    #[serde(default)] pub preview: Dictionary,
-    #[serde(default)] pub expanded: BTreeSet<String>,
-    #[serde(default)] pub layout: Option<WidgetLayout>,
+    #[serde(default)]
+    pub preview: Dictionary,
+    #[serde(default)]
+    pub expanded: BTreeSet<String>,
+    #[serde(default)]
+    pub layout: Option<WidgetLayout>,
 }
 
 /// 📡 Serializable channel reference.
@@ -206,7 +247,8 @@ pub struct SynapseSpec {
 pub enum Widget {
     Neuron {
         id: String,
-        neuronKind: String,
+        #[serde(rename = "neuronKind")]
+        neuron_kind: String,
         #[serde(default)]
         params: Dictionary,
         #[serde(default, alias = "input_ports")]
@@ -299,7 +341,7 @@ impl Default for FlowFixture {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             widgets: vec![
                 Widget::InputSlider { id: "slider".into(), value: 3.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-                Widget::Neuron { id: "add".into(), neuronKind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true },
+                Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true },
                 Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
             ],
             synapses: vec![
@@ -345,14 +387,14 @@ fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, Operato
         .widgets
         .iter()
         .filter_map(|w| match w {
-            Widget::Neuron { id, neuronKind, params, output_ports, .. } => {
+            Widget::Neuron { id, neuron_kind, params, output_ports, .. } => {
                 let mut params = params.clone();
                 if !output_ports.is_empty() {
                     params = params.insert("count", NeuralValue::Atom(Atom::Decimal(output_ports.len() as f64)));
-                } else if let Some(spec) = kind_infos.get(neuronKind).and_then(|info| info.variadic_output.as_ref()) {
+                } else if let Some(spec) = kind_infos.get(neuron_kind).and_then(|info| info.variadic_output.as_ref()) {
                     params = params.insert("count", NeuralValue::Atom(Atom::Decimal(spec.min as f64)));
                 }
-                Some(Neuron { id: id.clone(), kind: neuronKind.clone(), params, tree: None })
+                Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
             }
             Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
             Widget::InputStepper { id, schema, fields, .. } => {
@@ -365,12 +407,9 @@ fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, Operato
             }
             Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
             Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
-            Widget::Variable { id, name, schema } => Some(Neuron {
-                id: id.clone(),
-                kind: "core.variable".into(),
-                params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))),
-                tree: None,
-            }),
+            Widget::Variable { id, name, schema } => {
+                Some(Neuron { id: id.clone(), kind: "core.variable".into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))), tree: None })
+            }
             Widget::Cluster { id, name, tree, .. } => Some(Neuron { id: id.clone(), kind: CLUSTER_KIND.into(), params: Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))), tree: Some(Box::new(tree.clone())) }),
             _ => None,
         })
@@ -378,9 +417,6 @@ fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, Operato
     let synapses = fixture.synapses.iter().map(|s| Synapse { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect();
     Tree { neurons, synapses }
 }
-
-const FLOW_INPUT_PORTS_KEY: &str = "_flowInputPorts";
-const FLOW_OUTPUT_PORTS_KEY: &str = "_flowOutputPorts";
 
 impl Default for FlowDocument {
     fn default() -> Self {
@@ -404,118 +440,22 @@ impl Default for FlowDocument {
                     ("add".into(), FlowNodeGui { layout: WidgetLayout { x: 200.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: true } }),
                     ("out_sum".into(), FlowNodeGui { layout: WidgetLayout { x: 400.0, y: 0.0 }, chrome: NodeChrome::Plain { preview: false } }),
                 ]),
-                previews: vec![FlowPreviewGui { id: "preview".into(), source: Some(FlowChannelRef { neuron: "add".into(), channel: "sum".into() }), mode: "text".into(), preview: Dictionary::new(), expanded: BTreeSet::new(), layout: Some(WidgetLayout { x: 400.0, y: 0.0 }) }],
+                previews: vec![FlowPreviewGui {
+                    id: "preview".into(),
+                    source: Some(FlowChannelRef { neuron: "add".into(), channel: "sum".into() }),
+                    mode: "text".into(),
+                    preview: Dictionary::new(),
+                    expanded: BTreeSet::new(),
+                    layout: Some(WidgetLayout { x: 400.0, y: 0.0 }),
+                }],
             },
         }
     }
 }
 
-// #region DocumentHelpers
-fn document_synapse_specs(tree: &Tree) -> Vec<SynapseSpec> {
-    tree.synapses.iter().map(|s| SynapseSpec { id: s.id.clone(), from: s.from.clone(), to: s.to.clone(), from_port: s.from_port.clone(), to_port: s.to_port.clone() }).collect()
-}
-
-fn find_neuron<'a>(tree: &'a Tree, id: &str) -> Option<&'a Neuron> {
-    tree.neurons.iter().find(|n| n.id == id)
-}
-
-fn find_neuron_mut<'a>(tree: &'a mut Tree, id: &str) -> Option<&'a mut Neuron> {
-    tree.neurons.iter_mut().find(|n| n.id == id)
-}
-
-fn boundary_channel(neuron: &Neuron) -> String {
-    neuron.params.get("channel").and_then(|v| v.as_atom()).and_then(|a| a.as_str()).unwrap_or(neuron.id.as_str()).to_string()
-}
-
-fn stored_port_ids(params: &Dictionary, key: &str) -> Vec<String> {
-    let Some(dict) = params.get(key).and_then(|v| v.as_dictionary()) else {
-        return vec![];
-    };
-    let mut ids: Vec<_> = dict.keys().cloned().collect();
-    ids.sort();
-    ids
-}
-
-fn set_stored_port_ids(params: Dictionary, key: &str, ports: &[String]) -> Dictionary {
-    let mut list = Dictionary::new();
-    for port in ports {
-        list = list.insert(port, NeuralValue::Atom(Atom::String(port.clone())));
-    }
-    params.insert(key, NeuralValue::Dictionary(list))
-}
-
-fn neuron_input_port_ids(neuron: &Neuron, kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
-    let stored = stored_port_ids(&neuron.params, FLOW_INPUT_PORTS_KEY);
-    if !stored.is_empty() {
-        return stored;
-    }
-    default_neuron_input_ports(&neuron.kind, &[], kind_infos)
-}
-
-fn neuron_output_port_ids(neuron: &Neuron, kind_infos: &HashMap<String, OperatorInfo>) -> Vec<String> {
-    let stored = stored_port_ids(&neuron.params, FLOW_OUTPUT_PORTS_KEY);
-    if !stored.is_empty() {
-        return stored;
-    }
-    default_neuron_output_ports(&neuron.kind, &[], kind_infos)
-}
-
-fn neuron_preview_enabled(document: &FlowDocument, neuron_id: &str) -> bool {
-    document.ui.nodes.get(neuron_id).map(|node| match &node.chrome {
-        NodeChrome::Plain { preview } => *preview,
-        _ => true,
-    }).unwrap_or(true)
-}
-
-fn chrome_for_neuron(neuron: &Neuron) -> NodeChrome {
-    match neuron.kind.as_str() {
-        INPUT_KIND => {
-            let channel = boundary_channel(neuron);
-            match channel.as_str() {
-                "number" => NodeChrome::Slider { min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP, value: 3.0 },
-                "text" => NodeChrome::Note { text: String::new() },
-                "image" => NodeChrome::Image { src: String::new() },
-                "vector" | "point" => NodeChrome::Stepper { schema: channel.clone(), fields: default_stepper_fields_for_schema(&channel), step: default_stepper_step() },
-                name => NodeChrome::Variable { name: name.into(), schema: boundary_schema_from_params(&neuron.params) },
-            }
-        }
-        OUTPUT_KIND => NodeChrome::Plain { preview: false },
-        CLUSTER_KIND => NodeChrome::Plain { preview: true },
-        _ => NodeChrome::Plain { preview: true },
-    }
-}
-
-fn ensure_ui_node(document: &mut FlowDocument, neuron_id: &str) {
-    if document.ui.nodes.contains_key(neuron_id) {
-        return;
-    }
-    let layout = WidgetLayout { x: 0.0, y: 0.0 };
-    let chrome = find_neuron(&document.tree, neuron_id).map(chrome_for_neuron).unwrap_or(NodeChrome::Plain { preview: true });
-    document.ui.nodes.insert(neuron_id.to_string(), FlowNodeGui { layout, chrome });
-}
-
-fn dedupe_document_neurons(document: &mut FlowDocument) {
-    let mut seen = BTreeSet::new();
-    document.tree.neurons.retain(|neuron| seen.insert(neuron.id.clone()));
-}
-
-fn node_layout(document: &FlowDocument, id: &str) -> WidgetLayout {
-    document.ui.nodes.get(id).map(|n| n.layout.clone()).or_else(|| document.ui.previews.iter().find(|p| p.id == id).and_then(|p| p.layout.clone())).unwrap_or(WidgetLayout { x: 0.0, y: 0.0 })
-}
-
-fn set_node_layout(document: &mut FlowDocument, id: &str, layout: WidgetLayout) {
-    if let Some(preview) = document.ui.previews.iter_mut().find(|p| p.id == id) {
-        preview.layout = Some(layout.clone());
-    }
-    if let Some(node) = document.ui.nodes.get_mut(id) {
-        node.layout = layout;
-    }
-}
-// #endregion DocumentHelpers
-
 fn widget_label(widget: &Widget) -> String {
     match widget {
-        Widget::Neuron { neuronKind, .. } => neuronKind.clone(),
+        Widget::Neuron { neuron_kind, .. } => neuron_kind.clone(),
         Widget::InputSlider { .. } => "Slider".into(),
         Widget::InputStepper { schema, .. } => schema.clone(),
         Widget::InputNote { .. } => "Note".into(),
@@ -536,8 +476,8 @@ fn widget_label(widget: &Widget) -> String {
 
 fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> (String, String, String) {
     match widget {
-        Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind).map(|info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())).unwrap_or_else(|| {
-            let (name, abbreviation) = dag::normalize_node_display(neuronKind, neuronKind);
+        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).map(|info| (info.name.clone(), info.abbreviation.clone(), info.icon.clone())).unwrap_or_else(|| {
+            let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
             (name, abbreviation, String::new())
         }),
         Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
@@ -730,7 +670,7 @@ fn neuron_io_layout(neuron_id: &str, neuron_kind: &str, input_ports: &[String], 
 
 fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> (Vec<IoPortSpec>, Vec<IoPortSpec>, bool, bool) {
     match widget {
-        Widget::Neuron { id, neuronKind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuronKind, input_ports, output_ports, params, synapses, kind_infos),
+        Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos),
         Widget::InputSlider { .. } => (vec![], vec![IoPortSpec::named("N", "Num", "number", "Number")], false, false),
         Widget::InputStepper { schema, .. } => (vec![], vec![stepper_output_port(schema)], false, false),
         Widget::InputNote { .. } => (vec![], vec![IoPortSpec::named("T", "Txt", "text", "Text")], false, false),
@@ -768,8 +708,8 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
             (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(1, 1, false, false))
         }
         Widget::OutputPreview { preview, expanded, .. } => preview_widget_size(&dag_preview_content_from_dict(preview), expanded),
-        Widget::Neuron { id, neuronKind, params, input_ports, output_ports, .. } => {
-            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(id, neuronKind, input_ports, output_ports, params, synapses, kind_infos);
+        Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => {
+            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
             let (display_name, abbreviation, _) = widget_display_meta(widget, kind_infos);
             let (normalized_name, _) = normalize_node_display(&display_name, &abbreviation);
             (computation_node_width(&normalized_name, &inputs, &outputs), computation_node_height(inputs.len(), outputs.len(), variadic_inputs, variadic_outputs))
@@ -789,7 +729,7 @@ fn property_bag_from_dictionary(dict: &Dictionary) -> PropertyBag {
 
 fn widget_operator_kind(widget: &Widget) -> Option<String> {
     match widget {
-        Widget::Neuron { neuronKind, .. } => Some(neuronKind.clone()),
+        Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
         Widget::InputSlider { .. } => Some("core.number".into()),
         Widget::InputStepper { .. } => Some("core.stepper".into()),
         Widget::InputNote { .. } => Some("core.text".into()),
@@ -802,11 +742,11 @@ fn widget_operator_kind(widget: &Widget) -> Option<String> {
 
 fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> PropertyBag {
     match widget {
-        Widget::Neuron { neuronKind, params, output_ports, .. } => {
+        Widget::Neuron { neuron_kind, params, output_ports, .. } => {
             let mut bag = property_bag_from_dictionary(params);
             if !output_ports.is_empty() {
                 bag.insert("count".into(), PropertyValue::Number(output_ports.len() as f64));
-            } else if let Some(spec) = kind_infos.get(neuronKind).and_then(|info| info.variadic_output.as_ref()) {
+            } else if let Some(spec) = kind_infos.get(neuron_kind).and_then(|info| info.variadic_output.as_ref()) {
                 bag.insert("count".into(), PropertyValue::Number(spec.min as f64));
             }
             bag
@@ -854,34 +794,81 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
 
 fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, WidgetLayout>, synapses: &[SynapseSpec], kind_infos: &HashMap<String, OperatorInfo>) -> DagNodeSpec {
     let id = match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputStepper { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::OutputExport { id, .. } | Widget::Cluster { id, .. } => id.clone(),
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputStepper { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id.clone(),
     };
     let (width, height) = widget_node_size(widget, synapses, kind_infos);
     let (x, y) = layout.get(&id).map(|p| (p.x, p.y)).unwrap_or(((index as f64) * 200.0, 0.0));
     let (name, abbreviation, icon) = widget_display_meta(widget, kind_infos);
     let mut node = match widget {
-        Widget::Neuron { id: neuron_id, neuronKind, params, input_ports, output_ports, .. } => {
-            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuron_id, neuronKind, input_ports, output_ports, params, synapses, kind_infos);
+        Widget::Neuron { id: neuron_id, neuron_kind, params, input_ports, output_ports, .. } => {
+            let (inputs, outputs, variadic_inputs, variadic_outputs) = neuron_io_layout(neuron_id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos);
             DagNodeSpec::computation(id, name, abbreviation, icon, inputs, outputs, variadic_inputs, variadic_outputs, x, y, width, height)
         }
-        Widget::InputSlider { value, min, max, step, .. } => {
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") } }
-        }
+        Widget::InputSlider { value, min, max, step, .. } => DagNodeSpec {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            operator_kind: None,
+            properties: PropertyBag::new(),
+            kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") },
+        },
         Widget::InputStepper { schema, fields, step, .. } => {
             let effective = effective_stepper_fields(schema, fields);
             let dag_fields = effective.iter().map(|f| DagStepperField { key: f.key.clone(), label: f.key.clone(), value: f.value, step: *step }).collect();
             let output = stepper_output_port(schema);
             DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Stepper { fields: dag_fields, output } }
         }
-        Widget::InputNote { text, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } },
-        Widget::InputImage { src, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } },
-        Widget::OutputPreview { preview, expanded, .. } => {
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.clone(), input: IoPortSpec::named("", "", "", "PreviewInput") } }
+        Widget::InputNote { text, .. } => {
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } }
         }
-        Widget::OutputAction { action, .. } => DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Action { label: action.clone(), input: IoPortSpec::named("", "", "", "ActionInput") } },
+        Widget::InputImage { src, .. } => {
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Image { src: src.clone(), output: IoPortSpec::named("I", "Img", "image", "Image") } }
+        }
+        Widget::OutputPreview { preview, expanded, .. } => DagNodeSpec {
+            id,
+            name,
+            abbreviation,
+            icon,
+            x,
+            y,
+            width,
+            height,
+            operator_kind: None,
+            properties: PropertyBag::new(),
+            kind: DagNodeKind::Preview { content: dag_preview_content_from_dict(preview), expanded: expanded.clone(), input: IoPortSpec::named("", "", "", "PreviewInput") },
+        },
+        Widget::OutputAction { action, .. } => {
+            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Action { label: action.clone(), input: IoPortSpec::named("", "", "", "ActionInput") } }
+        }
         Widget::OutputExport { format, .. } => {
             let (display_name, abbreviation, _) = export_widget_display_meta(format);
-            DagNodeSpec { id, name: display_name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Export { label: format.to_uppercase(), format: format.clone(), input: IoPortSpec::named("", "", "", "ExportInput") } }
+            DagNodeSpec {
+                id,
+                name: display_name,
+                abbreviation,
+                icon,
+                x,
+                y,
+                width,
+                height,
+                operator_kind: None,
+                properties: PropertyBag::new(),
+                kind: DagNodeKind::Export { label: format.to_uppercase(), format: format.clone(), input: IoPortSpec::named("", "", "", "ExportInput") },
+            }
         }
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
@@ -980,21 +967,42 @@ fn format_preview_number(n: f64) -> String {
     }
 }
 
+/// 🗂️ Dictionary schema tags with dedicated preview rendering (anything else falls back to key-sniffing / a raw tree dump).
+enum DictSchemaKind {
+    Number,
+    Text,
+    Image,
+}
+
+impl DictSchemaKind {
+    fn parse(schema: &str) -> Option<Self> {
+        match schema {
+            "number" => Some(Self::Number),
+            "text" => Some(Self::Text),
+            "image" => Some(Self::Image),
+            _ => None,
+        }
+    }
+}
+
 fn dag_preview_content_from_dict(dict: &Dictionary) -> DagPreviewContent {
-    if dict.schema() == Some("number") {
-        if let Some(n) = dict.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()) {
-            return DagPreviewContent::Scalar { text: format_preview_number(n) };
+    match dict.schema().and_then(DictSchemaKind::parse) {
+        Some(DictSchemaKind::Number) => {
+            if let Some(n) = dict.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()) {
+                return DagPreviewContent::Scalar { text: format_preview_number(n) };
+            }
         }
-    }
-    if dict.schema() == Some("text") {
-        if let Some(t) = dict.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
-            return DagPreviewContent::Scalar { text: t.to_string() };
+        Some(DictSchemaKind::Text) => {
+            if let Some(t) = dict.get("value").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
+                return DagPreviewContent::Scalar { text: t.to_string() };
+            }
         }
-    }
-    if dict.schema() == Some("image") {
-        if let Some(src) = dict.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
-            return DagPreviewContent::Image { src: src.to_string() };
+        Some(DictSchemaKind::Image) => {
+            if let Some(src) = dict.get("dataUrl").and_then(|v| v.as_atom()).and_then(|a| a.as_str()) {
+                return DagPreviewContent::Image { src: src.to_string() };
+            }
         }
+        None => {}
     }
     if let Some(n) = dict.get("number").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()) {
         return DagPreviewContent::Scalar { text: format_preview_number(n) };
@@ -1041,7 +1049,8 @@ fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum WidgetDescriptor {
     Neuron {
-        neuronKind: String,
+        #[serde(rename = "neuronKind")]
+        neuron_kind: String,
         #[serde(default)]
         id: Option<String>,
     },
@@ -1123,9 +1132,14 @@ fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
 
 fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos: &HashMap<String, OperatorInfo>) -> Widget {
     match descriptor {
-        WidgetDescriptor::Neuron { neuronKind, .. } => {
-            Widget::Neuron { id, neuronKind: neuronKind.clone(), params: Dictionary::new(), input_ports: default_neuron_input_ports(neuronKind, &[], kind_infos), output_ports: default_neuron_output_ports(neuronKind, &[], kind_infos), preview: true }
-        }
+        WidgetDescriptor::Neuron { neuron_kind, .. } => Widget::Neuron {
+            id,
+            neuron_kind: neuron_kind.clone(),
+            params: Dictionary::new(),
+            input_ports: default_neuron_input_ports(neuron_kind, &[], kind_infos),
+            output_ports: default_neuron_output_ports(neuron_kind, &[], kind_infos),
+            preview: true,
+        },
         WidgetDescriptor::InputSlider { value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
             Widget::InputSlider { id, value, min, max, step }
@@ -1140,11 +1154,9 @@ fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos:
         WidgetDescriptor::OutputPreview { .. } => Widget::OutputPreview { id, preview: Dictionary::new(), expanded: BTreeSet::new() },
         WidgetDescriptor::OutputAction { action, .. } => Widget::OutputAction { id, action: if action.is_empty() { "log".into() } else { action.clone() } },
         WidgetDescriptor::OutputExport { format, .. } => Widget::OutputExport { id, format: if format.is_empty() { default_export_format() } else { format.clone() } },
-        WidgetDescriptor::Variable { name, schema, .. } => Widget::Variable {
-            id,
-            name: name.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_name),
-            schema: schema.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_schema),
-        },
+        WidgetDescriptor::Variable { name, schema, .. } => {
+            Widget::Variable { id, name: name.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_name), schema: schema.clone().filter(|value| !value.trim().is_empty()).unwrap_or_else(default_variable_schema) }
+        }
     }
 }
 // #endregion 🔖Widget
@@ -1180,7 +1192,7 @@ pub struct CatalogueSection {
 pub struct CatalogueItem {
     pub kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub neuronKind: Option<String>,
+    pub neuron_kind: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub action: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1198,10 +1210,10 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             title: "Inputs".into(),
             groups: vec![],
             items: vec![
-                CatalogueItem { kind: "inputSlider".into(), neuronKind: None, action: None, format: None, name: "Slider".into(), abbreviation: "Slider".into(), icon: "emoji:🎚️".into(), summary: "Number input".into() },
-                CatalogueItem { kind: "inputNote".into(), neuronKind: None, action: None, format: None, name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝".into(), summary: "Text input".into() },
-                CatalogueItem { kind: "inputImage".into(), neuronKind: None, action: None, format: None, name: "Image".into(), abbreviation: "Image".into(), icon: "emoji:🖼️".into(), summary: "Image input".into() },
-                CatalogueItem { kind: "variable".into(), neuronKind: None, action: None, format: None, name: "Variable".into(), abbreviation: "Variable".into(), icon: "emoji:🔣".into(), summary: "Named typed dictionary".into() },
+                CatalogueItem { kind: "inputSlider".into(), neuron_kind: None, action: None, format: None, name: "Slider".into(), abbreviation: "Slider".into(), icon: "emoji:🎚️".into(), summary: "Number input".into() },
+                CatalogueItem { kind: "inputNote".into(), neuron_kind: None, action: None, format: None, name: "Note".into(), abbreviation: "Note".into(), icon: "emoji:📝".into(), summary: "Text input".into() },
+                CatalogueItem { kind: "inputImage".into(), neuron_kind: None, action: None, format: None, name: "Image".into(), abbreviation: "Image".into(), icon: "emoji:🖼️".into(), summary: "Image input".into() },
+                CatalogueItem { kind: "variable".into(), neuron_kind: None, action: None, format: None, name: "Variable".into(), abbreviation: "Variable".into(), icon: "emoji:🔣".into(), summary: "Named typed dictionary".into() },
             ],
         },
         CatalogueSection {
@@ -1209,12 +1221,48 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             title: "Outputs".into(),
             groups: vec![],
             items: vec![
-                CatalogueItem { kind: "outputPreview".into(), neuronKind: None, action: None, format: None, name: "Preview".into(), abbreviation: "Preview".into(), icon: "emoji:👁️".into(), summary: "Preview dictionary".into() },
-                CatalogueItem { kind: "outputAction".into(), neuronKind: None, action: Some("log".into()), format: None, name: "Action".into(), abbreviation: "Action".into(), icon: "emoji:⚡".into(), summary: "Side-effect action".into() },
-                CatalogueItem { kind: "outputExport".into(), neuronKind: None, action: None, format: Some("svg".into()), name: "Export SVG".into(), abbreviation: "SVG".into(), icon: "emoji:📤".into(), summary: "Export connected value as SVG".into() },
-                CatalogueItem { kind: "outputExport".into(), neuronKind: None, action: None, format: Some("png".into()), name: "Export PNG".into(), abbreviation: "PNG".into(), icon: "emoji:📤".into(), summary: "Export connected value as PNG".into() },
-                CatalogueItem { kind: "outputExport".into(), neuronKind: None, action: None, format: Some("obj".into()), name: "Export OBJ".into(), abbreviation: "OBJ".into(), icon: "emoji:📤".into(), summary: "Export connected value as OBJ".into() },
-                CatalogueItem { kind: "outputExport".into(), neuronKind: None, action: None, format: Some("glb".into()), name: "Export GLB".into(), abbreviation: "GLB".into(), icon: "emoji:📤".into(), summary: "Export connected value as GLB".into() },
+                CatalogueItem { kind: "outputPreview".into(), neuron_kind: None, action: None, format: None, name: "Preview".into(), abbreviation: "Preview".into(), icon: "emoji:👁️".into(), summary: "Preview dictionary".into() },
+                CatalogueItem { kind: "outputAction".into(), neuron_kind: None, action: Some("log".into()), format: None, name: "Action".into(), abbreviation: "Action".into(), icon: "emoji:⚡".into(), summary: "Side-effect action".into() },
+                CatalogueItem {
+                    kind: "outputExport".into(),
+                    neuron_kind: None,
+                    action: None,
+                    format: Some("svg".into()),
+                    name: "Export SVG".into(),
+                    abbreviation: "SVG".into(),
+                    icon: "emoji:📤".into(),
+                    summary: "Export connected value as SVG".into(),
+                },
+                CatalogueItem {
+                    kind: "outputExport".into(),
+                    neuron_kind: None,
+                    action: None,
+                    format: Some("png".into()),
+                    name: "Export PNG".into(),
+                    abbreviation: "PNG".into(),
+                    icon: "emoji:📤".into(),
+                    summary: "Export connected value as PNG".into(),
+                },
+                CatalogueItem {
+                    kind: "outputExport".into(),
+                    neuron_kind: None,
+                    action: None,
+                    format: Some("obj".into()),
+                    name: "Export OBJ".into(),
+                    abbreviation: "OBJ".into(),
+                    icon: "emoji:📤".into(),
+                    summary: "Export connected value as OBJ".into(),
+                },
+                CatalogueItem {
+                    kind: "outputExport".into(),
+                    neuron_kind: None,
+                    action: None,
+                    format: Some("glb".into()),
+                    name: "Export GLB".into(),
+                    abbreviation: "GLB".into(),
+                    icon: "emoji:📤".into(),
+                    summary: "Export connected value as GLB".into(),
+                },
             ],
         },
         CatalogueSection {
@@ -1222,15 +1270,17 @@ fn static_catalogue_sections() -> Vec<CatalogueSection> {
             title: "Contract".into(),
             groups: vec![],
             items: vec![
-                CatalogueItem { kind: "neuron".into(), neuronKind: Some(INPUT_KIND.into()), action: None, format: None, name: "Input".into(), abbreviation: "In".into(), icon: "emoji:📥".into(), summary: "Cluster input contract channel".into() },
-                CatalogueItem { kind: "neuron".into(), neuronKind: Some(OUTPUT_KIND.into()), action: None, format: None, name: "Output".into(), abbreviation: "Out".into(), icon: "emoji:📤".into(), summary: "Cluster output contract channel".into() },
+                CatalogueItem { kind: "neuron".into(), neuron_kind: Some(INPUT_KIND.into()), action: None, format: None, name: "Input".into(), abbreviation: "In".into(), icon: "emoji:📥".into(), summary: "Cluster input contract channel".into() },
+                CatalogueItem {
+                    kind: "neuron".into(), neuron_kind: Some(OUTPUT_KIND.into()), action: None, format: None, name: "Output".into(), abbreviation: "Out".into(), icon: "emoji:📤".into(), summary: "Cluster output contract channel".into()
+                },
             ],
         },
     ]
 }
 
-fn merge_catalogue_sections(host_json: &str) -> Result<Vec<CatalogueSection>, String> {
-    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { serde_json::from_str(host_json).map_err(|e| e.to_string())? };
+fn merge_catalogue_sections(host_json: &str) -> Result<Vec<CatalogueSection>, FlowCoreError> {
+    let mut sections: Vec<CatalogueSection> = if host_json.trim().is_empty() { vec![] } else { serde_json::from_str(host_json)? };
     sections.extend(static_catalogue_sections());
     Ok(sections)
 }
@@ -1257,19 +1307,7 @@ pub fn flow_operator_catalogue_json() -> String {
             id: module.clone(),
             title: titleize_module(&module),
             groups: vec![],
-            items: items
-                .into_iter()
-                .map(|info| CatalogueItem {
-                    kind: "neuron".into(),
-                    neuronKind: Some(info.id),
-                    action: None,
-                    format: None,
-                    name: info.name,
-                    abbreviation: info.abbreviation,
-                    icon: info.icon,
-                    summary: info.summary,
-                })
-                .collect(),
+            items: items.into_iter().map(|info| CatalogueItem { kind: "neuron".into(), neuron_kind: Some(info.id), action: None, format: None, name: info.name, abbreviation: info.abbreviation, icon: info.icon, summary: info.summary }).collect(),
         })
         .collect();
     serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into())
@@ -1331,6 +1369,7 @@ fn flow_registry() -> &'static neural::Registry {
 // #endregion 🔖ModuleRegistry
 
 // #region 🔖EvalBridge
+#[cfg(target_arch = "wasm32")]
 fn parse_bridge_dictionary_json(result_json: &str) -> Result<Dictionary, EvalError> {
     if let Ok(dict) = serde_json::from_str::<Dictionary>(result_json) {
         return Ok(dict);
@@ -1359,9 +1398,13 @@ impl EvalBridge {
     }
 }
 
+/// 🔌 Native eval-bridge callback: operator kind id + input dictionary in, evaluated dictionary or `EvalError` out.
+#[cfg(not(target_arch = "wasm32"))]
+type EvalBridgeFn = dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send;
+
 #[cfg(not(target_arch = "wasm32"))]
 struct EvalBridge {
-    cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send>,
+    cb: Box<EvalBridgeFn>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -1378,7 +1421,7 @@ fn neural_value_to_json(value: &NeuralValue) -> serde_json::Value {
 }
 
 fn dictionary_to_json_object(dict: &Dictionary) -> serde_json::Map<String, serde_json::Value> {
-    dict.keys().map(|key| (key.clone(), neural_value_to_json(dict.get(key).expect("key")))).collect()
+    dict.keys().map(|key| (key.clone(), neural_value_to_json(dict.get(key).expect("key came from dict.keys(), so get(key) cannot miss")))).collect()
 }
 
 fn input_ports_json(dict: &Dictionary, kind_info: Option<&OperatorInfo>) -> serde_json::Map<String, serde_json::Value> {
@@ -1455,16 +1498,9 @@ fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to_port: &str
     }
 }
 
-fn widget_kind_info<'a>(widget: &Widget, kind_infos: &'a HashMap<String, OperatorInfo>) -> Option<&'a OperatorInfo> {
-    match widget {
-        Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind),
-        _ => None,
-    }
-}
-
 fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>) -> Option<OperatorInfo> {
     match widget {
-        Widget::Neuron { neuronKind, .. } => kind_infos.get(neuronKind).cloned(),
+        Widget::Neuron { neuron_kind, .. } => kind_infos.get(neuron_kind).cloned(),
         Widget::Variable { name, schema, .. } => {
             let (inputs, outputs) = variable_io_ports(name, schema);
             let info = OperatorInfo {
@@ -1487,15 +1523,11 @@ fn widget_operator_info(widget: &Widget, kind_infos: &HashMap<String, OperatorIn
 
 fn widget_to_inner_neuron(widget: &Widget) -> Option<Neuron> {
     match widget {
-        Widget::Neuron { id, neuronKind, params, .. } => Some(Neuron::with_kind(id, neuronKind, params.clone())),
+        Widget::Neuron { id, neuron_kind, params, .. } => Some(Neuron::with_kind(id, neuron_kind, params.clone())),
         Widget::InputSlider { id, value, .. } => Some(Neuron::with_kind(id, "core.number", Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))))),
         Widget::InputNote { id, text } => Some(Neuron::with_kind(id, "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))))),
         Widget::InputImage { id, src } => Some(Neuron::with_kind(id, "core.image", Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))))),
-        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(
-            id,
-            "core.variable",
-            Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))),
-        )),
+        Widget::Variable { id, name, schema } => Some(Neuron::with_kind(id, "core.variable", Dictionary::new().insert("name", NeuralValue::Atom(Atom::String(name.clone()))).insert("schema", NeuralValue::Atom(Atom::String(schema.clone()))))),
         _ => None,
     }
 }
@@ -1545,11 +1577,7 @@ fn unique_generated_boundary_name(prefix: &str, serial: &mut usize, used: &BTree
 }
 
 fn dictionary_schema_at_port(output: &Dictionary, port: &str) -> Option<String> {
-    let dict = if port.is_empty() {
-        output.clone()
-    } else {
-        output.get(port).and_then(|value| value.as_dictionary()).cloned()?
-    };
+    let dict = if port.is_empty() { output.clone() } else { output.get(port).and_then(|value| value.as_dictionary()).cloned()? };
     dict.schema().map(str::to_string)
 }
 
@@ -1578,29 +1606,47 @@ fn infer_port_schema(outputs: &HashMap<String, Dictionary>, kind_infos: &HashMap
     "dictionary".into()
 }
 
+/// 🧩 Built-in "core.*" neuron kinds recognized when reconstructing a widget from an evaluated neuron.
+enum CoreNeuronKind {
+    Number,
+    Text,
+    Image,
+    Variable,
+}
+
+impl CoreNeuronKind {
+    fn parse(kind: &str) -> Option<Self> {
+        match kind {
+            "core.number" => Some(Self::Number),
+            "core.text" => Some(Self::Text),
+            "core.image" => Some(Self::Image),
+            "core.variable" => Some(Self::Variable),
+            _ => None,
+        }
+    }
+}
+
 fn neuron_to_exploded_widget(neuron: &Neuron) -> Widget {
     match neuron.kind.as_str() {
-        INPUT_KIND => Widget::Variable {
-            id: neuron.id.clone(),
-            name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(),
-            schema: boundary_schema_from_params(&neuron.params),
-        },
-        OUTPUT_KIND => Widget::Variable {
-            id: neuron.id.clone(),
-            name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(),
-            schema: boundary_schema_from_params(&neuron.params),
-        },
-        "core.number" => {
-            Widget::InputSlider { id: neuron.id.clone(), value: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).unwrap_or(3.0), min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP }
+        INPUT_KIND => {
+            Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
         }
-        "core.text" => Widget::InputNote { id: neuron.id.clone(), text: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },
-        "core.image" => Widget::InputImage { id: neuron.id.clone(), src: neuron.params.get("dataUrl").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },
-        "core.variable" => Widget::Variable {
-            id: neuron.id.clone(),
-            name: neuron.params.get("name").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("value").into(),
-            schema: neuron.params.get("schema").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("dictionary").into(),
+        OUTPUT_KIND => {
+            Widget::Variable { id: neuron.id.clone(), name: neuron.params.get("channel").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or(neuron.id.as_str()).into(), schema: boundary_schema_from_params(&neuron.params) }
+        }
+        kind => match CoreNeuronKind::parse(kind) {
+            Some(CoreNeuronKind::Number) => {
+                Widget::InputSlider { id: neuron.id.clone(), value: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64()).unwrap_or(3.0), min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP }
+            }
+            Some(CoreNeuronKind::Text) => Widget::InputNote { id: neuron.id.clone(), text: neuron.params.get("value").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },
+            Some(CoreNeuronKind::Image) => Widget::InputImage { id: neuron.id.clone(), src: neuron.params.get("dataUrl").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("").into() },
+            Some(CoreNeuronKind::Variable) => Widget::Variable {
+                id: neuron.id.clone(),
+                name: neuron.params.get("name").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("value").into(),
+                schema: neuron.params.get("schema").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).unwrap_or("dictionary").into(),
+            },
+            None => Widget::Neuron { id: neuron.id.clone(), neuron_kind: neuron.kind.clone(), params: neuron.params.clone(), input_ports: vec![], output_ports: vec![], preview: neuron.kind != INPUT_KIND && neuron.kind != OUTPUT_KIND },
         },
-        _ => Widget::Neuron { id: neuron.id.clone(), neuronKind: neuron.kind.clone(), params: neuron.params.clone(), input_ports: vec![], output_ports: vec![], preview: neuron.kind != INPUT_KIND && neuron.kind != OUTPUT_KIND },
     }
 }
 
@@ -1649,16 +1695,6 @@ fn collect_geometry_handles_from_dictionary(dict: &Dictionary, handles: &mut Vec
             collect_geometry_handles_from_value(value, handles);
         }
     }
-}
-
-fn collect_live_geometry_handles(outputs: &HashMap<String, Dictionary>) -> Vec<String> {
-    let mut handles = Vec::new();
-    for dict in outputs.values() {
-        collect_geometry_handles_from_dictionary(dict, &mut handles);
-    }
-    handles.sort();
-    handles.dedup();
-    handles
 }
 
 fn collect_live_geometry_handles_from_channels(channels: &EvalChannels) -> Vec<String> {
@@ -1719,6 +1755,72 @@ struct FlowHistory {
     pending: Option<FlowFixture>,
 }
 // #endregion History
+
+// #region ⚠️ Errors
+/// 🧯 `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
+/// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
+/// identical to the `String` it replaces, so downstream `.to_string()` call sites (wasm_bindgen
+/// `JsValue` bridging, JSON error envelopes) are unaffected.
+#[derive(Debug, thiserror::Error)]
+pub enum FlowCoreError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error(transparent)]
+    Dag(#[from] dag::DagError),
+    #[error("widget id already exists: {0}")]
+    WidgetIdExists(String),
+    #[error("unknown widget: {0}")]
+    UnknownWidget(String),
+    #[error("unknown neuron widget: {0}")]
+    UnknownNeuronWidget(String),
+    #[error("{0} is not variadic")]
+    NotVariadicInput(String),
+    #[error("{0} is not variadic output")]
+    NotVariadicOutput(String),
+    #[error("{0} is not a neuron")]
+    NotNeuron(String),
+    #[error("widget is not a neuron: {0}")]
+    WidgetNotNeuron(String),
+    #[error("{0} reached max input ports")]
+    MaxInputPortsReached(String),
+    #[error("{0} reached max output ports")]
+    MaxOutputPortsReached(String),
+    #[error("unknown input port: {0}")]
+    UnknownInputPort(String),
+    #[error("unknown output port: {0}")]
+    UnknownOutputPort(String),
+    #[error("{widget} requires at least {min} inputs")]
+    MinInputPorts { widget: String, min: usize },
+    #[error("{widget} requires at least {min} outputs")]
+    MinOutputPorts { widget: String, min: usize },
+    #[error("{0} has no output port")]
+    NoOutputPort(String),
+    #[error("{0} has no input port")]
+    NoInputPort(String),
+    #[error("cannot connect widget to itself")]
+    SelfConnection,
+    #[error("cannot insert widget between itself")]
+    SelfInsertion,
+    #[error("connection would create cycle")]
+    CycleWouldBeCreated,
+    #[error("connection already exists")]
+    ConnectionAlreadyExists,
+    #[error("unknown synapse: {0}")]
+    UnknownSynapse(String),
+    #[error("unknown widget layout: {0}")]
+    UnknownWidgetLayout(String),
+    #[error("select at least two widgets to collapse")]
+    CollapseNeedsTwoWidgets,
+    #[error("selection contains unknown widgets")]
+    CollapseUnknownWidgets,
+    #[error("cannot collapse clusters")]
+    CollapseContainsClusters,
+    #[error("unknown cluster: {0}")]
+    UnknownCluster(String),
+    #[error("widget is not a cluster: {0}")]
+    WidgetNotCluster(String),
+}
+// #endregion ⚠️ Errors
 
 // #region 🔖FlowHost
 /// 🏠 Retained flow host: fixture, dag scene, evaluation cache.
@@ -1813,21 +1915,21 @@ impl FlowHost {
         self.touch_channel_eval();
     }
 
-    pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, String> {
-        serde_json::from_str(json).map_err(|e| e.to_string())
+    pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, FlowCoreError> {
+        Ok(serde_json::from_str(json)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
+    pub fn fixture_json(&self) -> Result<String, FlowCoreError> {
+        Ok(serde_json::to_string(&self.fixture)?)
     }
 
     pub fn document(&self) -> FlowDocument {
         self.fixture.to_document()
     }
 
-    pub fn catalogue_json(&self) -> Result<String, String> {
+    pub fn catalogue_json(&self) -> Result<String, FlowCoreError> {
         let sections = merge_catalogue_sections(&self.host_catalogue_json)?;
-        serde_json::to_string(&sections).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&sections)?)
     }
 
     pub fn set_host_catalogue_json(&mut self, json: &str) {
@@ -1840,7 +1942,7 @@ impl FlowHost {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub fn set_eval_bridge_fn(&mut self, cb: Box<dyn Fn(&str, &Dictionary) -> Result<Dictionary, EvalError> + Send>) {
+    pub fn set_eval_bridge_fn(&mut self, cb: Box<EvalBridgeFn>) {
         self.eval_bridge = Some(EvalBridge { cb });
     }
 
@@ -1849,7 +1951,7 @@ impl FlowHost {
         self.eval_bridge = Some(EvalBridge { cb });
     }
 
-    pub fn evaluate(&mut self) -> Result<String, String> {
+    pub fn evaluate(&mut self) -> Result<String, FlowCoreError> {
         self.evaluate_internal();
         Ok(self.last_eval_json.clone())
     }
@@ -1922,8 +2024,8 @@ impl FlowHost {
         }
     }
 
-    pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), String> {
-        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
+    pub fn set_ghost_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), FlowCoreError> {
+        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json)?;
         let id: String = "__ghost__".into();
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         let mut layout = BTreeMap::new();
@@ -1940,13 +2042,13 @@ impl FlowHost {
         self.dag.set_ghost_node(None);
     }
 
-    pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, String> {
+    pub fn add_widget(&mut self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, FlowCoreError> {
         self.begin_change();
         self.clear_ghost_widget();
-        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json).map_err(|e| e.to_string())?;
+        let descriptor: WidgetDescriptor = serde_json::from_str(descriptor_json)?;
         let id = descriptor_explicit_id(&descriptor).unwrap_or_else(|| self.next_widget_id(&descriptor));
         if self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id) {
-            return Err(format!("widget id already exists: {id}"));
+            return Err(FlowCoreError::WidgetIdExists(id));
         }
         let widget = widget_from_descriptor(&descriptor, id.clone(), &self.kind_infos);
         self.fixture.widgets.push(widget);
@@ -1956,12 +2058,12 @@ impl FlowHost {
         Ok(id)
     }
 
-    pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), String> {
+    pub fn remove_widget(&mut self, widget_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let before = self.fixture.widgets.len();
         self.fixture.widgets.retain(|w| widget_id_for(w) != widget_id);
         if self.fixture.widgets.len() == before {
-            return Err(format!("unknown widget: {widget_id}"));
+            return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
         self.fixture.layout.remove(widget_id);
         self.fixture.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
@@ -1970,38 +2072,38 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn move_widget(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), String> {
+    pub fn move_widget(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), FlowCoreError> {
         if !self.fixture.widgets.iter().any(|w| widget_id_for(w) == widget_id) {
-            return Err(format!("unknown widget: {widget_id}"));
+            return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         }
         self.fixture.layout.insert(widget_id.to_string(), WidgetLayout { x, y });
         self.dag.set_widget_position(widget_id, x, y)?;
         Ok(())
     }
 
-    pub fn connect(&mut self, from_id: &str, to_id: &str) -> Result<String, String> {
+    pub fn connect(&mut self, from_id: &str, to_id: &str) -> Result<String, FlowCoreError> {
         let from_port = first_output_port(from_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
         let to_port = first_input_port(to_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos);
         self.connect_ports(from_id, &from_port, to_id, &to_port)
     }
 
-    pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, String> {
+    pub fn connect_ports(&mut self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, FlowCoreError> {
         self.begin_change();
         if from_id == to_id {
-            return Err("cannot connect widget to itself".into());
+            return Err(FlowCoreError::SelfConnection);
         }
         if !widget_has_output(from_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
-            return Err(format!("{from_id} has no output port"));
+            return Err(FlowCoreError::NoOutputPort(from_id.to_string()));
         }
         if !widget_has_input(to_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
-            return Err(format!("{to_id} has no input port"));
+            return Err(FlowCoreError::NoInputPort(to_id.to_string()));
         }
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|s| (s.from.clone(), s.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
-            return Err("connection would create cycle".into());
+            return Err(FlowCoreError::CycleWouldBeCreated);
         }
         if self.fixture.synapses.iter().any(|s| s.from == from_id && s.from_port == from_port && s.to == to_id && s.to_port == to_port) {
-            return Err("connection already exists".into());
+            return Err(FlowCoreError::ConnectionAlreadyExists);
         }
         self.fixture.synapses.retain(|s| !(s.to == to_id && s.to_port == to_port));
         self.next_synapse_serial += 1;
@@ -2012,26 +2114,26 @@ impl FlowHost {
         Ok(synapse_id)
     }
 
-    pub fn add_input_port(&mut self, widget_id: &str, index: usize) -> Result<(), String> {
+    pub fn add_input_port(&mut self, widget_id: &str, index: usize) -> Result<(), FlowCoreError> {
         self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
             .iter()
             .find_map(|widget| match widget {
-                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                Widget::Neuron { id, neuron_kind, .. } if id == widget_id => Some(neuron_kind.clone()),
                 _ => None,
             })
-            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| format!("{widget_id} is not variadic"))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+            .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
+        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
-            return Err(format!("{widget_id} is not a neuron"));
+            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
         let mut ports = default_neuron_input_ports(&neuron_kind, input_ports, &self.kind_infos);
         if let Some(max) = spec.max {
             if ports.len() >= max {
-                return Err(format!("{widget_id} reached max input ports"));
+                return Err(FlowCoreError::MaxInputPortsReached(widget_id.to_string()));
             }
         }
         let insert_at = index.min(ports.len());
@@ -2052,28 +2154,28 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn remove_input_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), String> {
+    pub fn remove_input_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
             .iter()
             .find_map(|widget| match widget {
-                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                Widget::Neuron { id, neuron_kind, .. } if id == widget_id => Some(neuron_kind.clone()),
                 _ => None,
             })
-            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| format!("{widget_id} is not variadic"))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+            .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
+        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_input.clone()).ok_or_else(|| FlowCoreError::NotVariadicInput(widget_id.to_string()))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { input_ports, .. } = widget else {
-            return Err(format!("{widget_id} is not a neuron"));
+            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
         let ports = default_neuron_input_ports(&neuron_kind, input_ports, &self.kind_infos);
         if ports.len() <= spec.min {
-            return Err(format!("{widget_id} requires at least {} inputs", spec.min));
+            return Err(FlowCoreError::MinInputPorts { widget: widget_id.to_string(), min: spec.min });
         }
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
-            return Err(format!("unknown input port: {port_id}"));
+            return Err(FlowCoreError::UnknownInputPort(port_id.to_string()));
         };
         self.fixture.synapses.retain(|synapse| !(synapse.to == widget_id && synapse.to_port == port_id));
         for synapse in &mut self.fixture.synapses {
@@ -2094,26 +2196,26 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn add_output_port(&mut self, widget_id: &str, index: usize) -> Result<(), String> {
+    pub fn add_output_port(&mut self, widget_id: &str, index: usize) -> Result<(), FlowCoreError> {
         self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
             .iter()
             .find_map(|widget| match widget {
-                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                Widget::Neuron { id, neuron_kind, .. } if id == widget_id => Some(neuron_kind.clone()),
                 _ => None,
             })
-            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| format!("{widget_id} is not variadic output"))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+            .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
+        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
-            return Err(format!("{widget_id} is not a neuron"));
+            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
         let mut ports = default_neuron_output_ports(&neuron_kind, output_ports, &self.kind_infos);
         if let Some(max) = spec.max {
             if ports.len() >= max {
-                return Err(format!("{widget_id} reached max output ports"));
+                return Err(FlowCoreError::MaxOutputPortsReached(widget_id.to_string()));
             }
         }
         let insert_at = index.min(ports.len());
@@ -2134,28 +2236,28 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn remove_output_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), String> {
+    pub fn remove_output_port(&mut self, widget_id: &str, port_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let neuron_kind = self
             .fixture
             .widgets
             .iter()
             .find_map(|widget| match widget {
-                Widget::Neuron { id, neuronKind, .. } if id == widget_id => Some(neuronKind.clone()),
+                Widget::Neuron { id, neuron_kind, .. } if id == widget_id => Some(neuron_kind.clone()),
                 _ => None,
             })
-            .ok_or_else(|| format!("unknown neuron widget: {widget_id}"))?;
-        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| format!("{widget_id} is not variadic output"))?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+            .ok_or_else(|| FlowCoreError::UnknownNeuronWidget(widget_id.to_string()))?;
+        let spec = self.kind_infos.get(&neuron_kind).and_then(|info| info.variadic_output.clone()).ok_or_else(|| FlowCoreError::NotVariadicOutput(widget_id.to_string()))?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { output_ports, .. } = widget else {
-            return Err(format!("{widget_id} is not a neuron"));
+            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
         let ports = default_neuron_output_ports(&neuron_kind, output_ports, &self.kind_infos);
         if ports.len() <= spec.min {
-            return Err(format!("{widget_id} requires at least {} outputs", spec.min));
+            return Err(FlowCoreError::MinOutputPorts { widget: widget_id.to_string(), min: spec.min });
         }
         let Some(remove_index) = ports.iter().position(|port| port == port_id) else {
-            return Err(format!("unknown output port: {port_id}"));
+            return Err(FlowCoreError::UnknownOutputPort(port_id.to_string()));
         };
         self.fixture.synapses.retain(|synapse| !(synapse.from == widget_id && synapse.from_port == port_id));
         for synapse in &mut self.fixture.synapses {
@@ -2176,12 +2278,12 @@ impl FlowHost {
         Ok(())
     }
 
-    pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), String> {
+    pub fn disconnect(&mut self, synapse_id: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         let before = self.fixture.synapses.len();
         self.fixture.synapses.retain(|s| s.id != synapse_id);
         if self.fixture.synapses.len() == before {
-            return Err(format!("unknown synapse: {synapse_id}"));
+            return Err(FlowCoreError::UnknownSynapse(synapse_id.to_string()));
         }
         self.rebuild_dag();
         self.touch_channel_eval();
@@ -2190,29 +2292,29 @@ impl FlowHost {
 
     // #region GumballEditing
     /// 🔀 Splices `mid_id` between `anchor_id` and its downstream consumers on `anchor_out_port`.
-    pub fn insert_between(&mut self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), String> {
+    pub fn insert_between(&mut self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == anchor_id) {
-            return Err(format!("unknown widget: {anchor_id}"));
+            return Err(FlowCoreError::UnknownWidget(anchor_id.to_string()));
         }
         if !self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == mid_id) {
-            return Err(format!("unknown widget: {mid_id}"));
+            return Err(FlowCoreError::UnknownWidget(mid_id.to_string()));
         }
         if anchor_id == mid_id {
-            return Err("cannot insert widget between itself".into());
+            return Err(FlowCoreError::SelfInsertion);
         }
         if !widget_has_output(anchor_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
-            return Err(format!("{anchor_id} has no output port"));
+            return Err(FlowCoreError::NoOutputPort(anchor_id.to_string()));
         }
         if !widget_has_input(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
-            return Err(format!("{mid_id} has no input port"));
+            return Err(FlowCoreError::NoInputPort(mid_id.to_string()));
         }
         if !widget_has_output(mid_id, &self.fixture.widgets, &self.fixture.synapses, &self.kind_infos) {
-            return Err(format!("{mid_id} has no output port"));
+            return Err(FlowCoreError::NoOutputPort(mid_id.to_string()));
         }
         let existing: Vec<(String, String)> = self.fixture.synapses.iter().map(|synapse| (synapse.from.clone(), synapse.to.clone())).collect();
         if would_create_cycle(&existing, anchor_id, mid_id) {
-            return Err("connection would create cycle".into());
+            return Err(FlowCoreError::CycleWouldBeCreated);
         }
         let mid_has_input = self.fixture.synapses.iter().any(|synapse| synapse.to == mid_id);
         if !mid_has_input {
@@ -2237,9 +2339,9 @@ impl FlowHost {
     }
 
     /// ↔️ Shifts widgets to the right of `anchor_id` to open layout space for inserted nodes.
-    pub fn make_space(&mut self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), String> {
+    pub fn make_space(&mut self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let anchor_x = self.fixture.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| format!("unknown widget layout: {anchor_id}"))?;
+        let anchor_x = self.fixture.layout.get(anchor_id).map(|layout| layout.x).ok_or_else(|| FlowCoreError::UnknownWidgetLayout(anchor_id.to_string()))?;
         for (widget_id, layout) in &mut self.fixture.layout {
             if layout.x > anchor_x {
                 layout.x += dx;
@@ -2251,12 +2353,12 @@ impl FlowHost {
     }
 
     /// 🧬 Merges JSON params into a neuron widget for compact transform values.
-    pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), String> {
+    pub fn set_neuron_params(&mut self, widget_id: &str, params_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let patch: Dictionary = serde_json::from_str(params_json).map_err(|error| error.to_string())?;
-        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+        let patch: Dictionary = serde_json::from_str(params_json)?;
+        let widget = self.fixture.widgets.iter_mut().find(|widget| widget_id_for(widget) == widget_id).ok_or_else(|| FlowCoreError::UnknownWidget(widget_id.to_string()))?;
         let Widget::Neuron { params, .. } = widget else {
-            return Err(format!("{widget_id} is not a neuron"));
+            return Err(FlowCoreError::NotNeuron(widget_id.to_string()));
         };
         *params = params.merge(&patch);
         self.sync_dag_display_from_widgets();
@@ -2266,9 +2368,9 @@ impl FlowHost {
     // #endregion GumballEditing
 
     /// 🌳 Recomputes widget positions from the current graph using layered tree layout.
-    pub fn reorganize(&mut self, opts_json: &str) -> Result<(), String> {
+    pub fn reorganize(&mut self, opts_json: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
-        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(opts_json).map_err(|e| e.to_string())? };
+        let opts: DagLayoutOptions = if opts_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(opts_json)? };
         let theme = self.dag.canvas_theme;
         self.dag = DagHost::from_fixture_without_layout(self.build_dag_fixture_v1());
         self.dag.canvas_theme = theme;
@@ -2277,6 +2379,10 @@ impl FlowHost {
         Ok(())
     }
 
+    #[allow(
+        clippy::too_many_arguments,
+        reason = "pointer-event handler mirroring this file's other screen-space input methods (pointer_move_screen/pointer_up_screen/wheel_screen) — position + button + modifier-key flags is the natural shape for this UI event, not a bundling candidate on its own without also restructuring its siblings"
+    )]
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         if pan {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
@@ -2361,7 +2467,7 @@ impl FlowHost {
         cancelled
     }
 
-    pub fn delete_selection(&mut self) -> Result<(), String> {
+    pub fn delete_selection(&mut self) -> Result<(), FlowCoreError> {
         if !self.dag.has_selection() {
             return Ok(());
         }
@@ -2500,9 +2606,9 @@ impl FlowHost {
         }
     }
 
-    pub fn export_payload_json(&self, widget_id: &str) -> Result<String, String> {
+    pub fn export_payload_json(&self, widget_id: &str) -> Result<String, FlowCoreError> {
         let payload = self.export_payloads.get(widget_id).cloned().unwrap_or_default();
-        serde_json::to_string(&payload).map_err(|error| error.to_string())
+        Ok(serde_json::to_string(&payload)?)
     }
 
     /// 📤 Returns and clears a pending export control click from the last pointer hit.
@@ -2549,6 +2655,7 @@ impl FlowHost {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
     fn sync_dag_ghost(&mut self) {
         self.dag.set_ghost_node(self.ghost_node.clone());
     }
@@ -2613,7 +2720,7 @@ impl FlowHost {
     }
 
     /// 📐 Aligns or distributes the current multi-node selection.
-    pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+    pub fn align_selection(&mut self, mode: &str) -> Result<(), FlowCoreError> {
         self.begin_change();
         self.dag.align_selection(mode)?;
         self.sync_from_dag();
@@ -2660,12 +2767,12 @@ impl FlowHost {
     }
 
     /// 👁️ Toggles preview on a neuron widget.
-    pub fn toggle_preview(&mut self, widget_id: &str) -> Result<(), String> {
+    pub fn toggle_preview(&mut self, widget_id: &str) -> Result<(), FlowCoreError> {
         let Some(widget) = self.fixture.widgets.iter_mut().find(|w| widget_id_for(w) == widget_id) else {
-            return Err(format!("unknown widget: {widget_id}"));
+            return Err(FlowCoreError::UnknownWidget(widget_id.to_string()));
         };
         let Widget::Neuron { preview, .. } = widget else {
-            return Err(format!("widget is not a neuron: {widget_id}"));
+            return Err(FlowCoreError::WidgetNotNeuron(widget_id.to_string()));
         };
         *preview = !*preview;
         self.sync_preview_dimmed();
@@ -2729,13 +2836,7 @@ impl FlowHost {
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdge {
-                id: syn.id.clone(),
-                source: format!("{}:{}", syn.from, syn.from_port),
-                target: format!("{}:{}", syn.to, syn.to_port),
-                route_style: EdgeRouteStyle::default(),
-                properties: PropertyBag::new(),
-            })
+            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}:{}", syn.from, syn.from_port), target: format!("{}:{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             .collect();
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
@@ -2751,7 +2852,7 @@ impl FlowHost {
     fn next_widget_id(&mut self, descriptor: &WidgetDescriptor) -> String {
         self.next_widget_serial += 1;
         let prefix = match descriptor {
-            WidgetDescriptor::Neuron { neuronKind, .. } => neuronKind.replace('.', "_"),
+            WidgetDescriptor::Neuron { neuron_kind, .. } => neuron_kind.replace('.', "_"),
             WidgetDescriptor::InputSlider { .. } => "slider".into(),
             WidgetDescriptor::InputStepper { .. } => "stepper".into(),
             WidgetDescriptor::InputNote { .. } => "note".into(),
@@ -2802,12 +2903,12 @@ impl FlowHost {
         let _ = self.evaluate();
     }
 
-    pub fn stepper_overlay_state_json(&self) -> Result<String, String> {
-        self.dag.stepper_overlay_state_json()
+    pub fn stepper_overlay_state_json(&self) -> Result<String, FlowCoreError> {
+        Ok(self.dag.stepper_overlay_state_json()?)
     }
 
-    pub fn slider_overlay_state_json(&self) -> Result<String, String> {
-        self.dag.slider_overlay_state_json()
+    pub fn slider_overlay_state_json(&self) -> Result<String, FlowCoreError> {
+        Ok(self.dag.slider_overlay_state_json()?)
     }
 
     pub fn set_note_text(&mut self, widget_id: &str, text: &str) {
@@ -2878,9 +2979,9 @@ impl FlowHost {
         self.dag.set_note_caret_visible(visible);
     }
 
-    pub fn schemas_json(&self) -> Result<String, String> {
+    pub fn schemas_json(&self) -> Result<String, FlowCoreError> {
         let refs = flow_registry().schema_refs();
-        serde_json::to_string(&refs).map_err(|error| error.to_string())
+        Ok(serde_json::to_string(&refs)?)
     }
 
     pub fn set_variable_name(&mut self, widget_id: &str, name: &str) {
@@ -2942,16 +3043,12 @@ impl FlowHost {
             .unwrap_or_else(|| "—".into())
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.dag.set_canvas_theme_from_json(json)
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), FlowCoreError> {
+        Ok(self.dag.set_canvas_theme_from_json(json)?)
     }
 
     pub fn set_canvas_theme_dark(&mut self, dark: bool) {
-        self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark {
-            &ui_styling::BOARD_DARK
-        } else {
-            &ui_styling::BOARD_LIGHT
-        });
+        self.dag.canvas_theme = dag::CanvasPalette::from_board_palette(if dark { &ui_styling::BOARD_DARK } else { &ui_styling::BOARD_LIGHT });
     }
 
     pub fn paint_scene(&self, scene: &mut cavas::Scene, width: u32, height: u32, dpr: f64) {
@@ -2974,12 +3071,12 @@ impl FlowHost {
         self.dag.draw_lod_label()
     }
 
-    pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
-        self.dag.label_overlay_paint_state_json()
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, FlowCoreError> {
+        Ok(self.dag.label_overlay_paint_state_json()?)
     }
 
-    pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
-        self.dag.param_overlay_paint_state_json()
+    pub fn param_overlay_paint_state_json(&self) -> Result<String, FlowCoreError> {
+        Ok(self.dag.param_overlay_paint_state_json()?)
     }
 
     /// 💥 Returns and clears a pending cluster explode target from the last pointer hit.
@@ -2988,16 +3085,16 @@ impl FlowHost {
     }
 
     /// 🧩 Collapses the selected widgets into one cluster neuron.
-    pub fn collapse_selection(&mut self, selected_ids: &[String]) -> Result<String, String> {
+    pub fn collapse_selection(&mut self, selected_ids: &[String]) -> Result<String, FlowCoreError> {
         if selected_ids.len() < 2 {
-            return Err("select at least two widgets to collapse".into());
+            return Err(FlowCoreError::CollapseNeedsTwoWidgets);
         }
         let selected: BTreeSet<String> = selected_ids.iter().cloned().collect();
         if !selected.iter().all(|id| self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id)) {
-            return Err("selection contains unknown widgets".into());
+            return Err(FlowCoreError::CollapseUnknownWidgets);
         }
         if selected.iter().any(|id| self.fixture.widgets.iter().any(|widget| widget_id_for(widget) == id && matches!(widget, Widget::Cluster { .. }))) {
-            return Err("cannot collapse clusters".into());
+            return Err(FlowCoreError::CollapseContainsClusters);
         }
         self.begin_change();
         let mut crossing_external = Vec::new();
@@ -3055,21 +3152,12 @@ impl FlowHost {
             let to_selected = selected.contains(&synapse.to);
             if to_selected && !from_selected {
                 let inner_target = if boundary_variables.contains(&synapse.to) {
-                    self.fixture
-                        .synapses
-                        .iter()
-                        .find(|entry| entry.from == synapse.to && selected.contains(&entry.to))
-                        .map(|entry| (entry.to.clone(), entry.to_port.clone()))
-                        .unwrap_or_else(|| (synapse.to.clone(), synapse.to_port.clone()))
+                    self.fixture.synapses.iter().find(|entry| entry.from == synapse.to && selected.contains(&entry.to)).map(|entry| (entry.to.clone(), entry.to_port.clone())).unwrap_or_else(|| (synapse.to.clone(), synapse.to_port.clone()))
                 } else {
                     (synapse.to.clone(), synapse.to_port.clone())
                 };
                 let (channel, schema) = if let Some((name, schema)) = variable_widget_meta(&widgets, &synapse.to) {
-                    let schema = if schema.is_empty() {
-                        infer_port_schema(&outputs, &kind_infos, &widgets, &synapses_snapshot, &synapse.from, &synapse.from_port)
-                    } else {
-                        schema
-                    };
+                    let schema = if schema.is_empty() { infer_port_schema(&outputs, &kind_infos, &widgets, &synapses_snapshot, &synapse.from, &synapse.from_port) } else { schema };
                     (name, schema)
                 } else {
                     let channel = unique_generated_boundary_name("input", &mut input_serial, &used_channels);
@@ -3084,21 +3172,12 @@ impl FlowHost {
                 cluster_external.push(SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: String::new(), from_port: synapse.from_port.clone(), to_port: channel });
             } else if from_selected && !to_selected {
                 let inner_source = if boundary_variables.contains(&synapse.from) {
-                    self.fixture
-                        .synapses
-                        .iter()
-                        .find(|entry| entry.to == synapse.from && selected.contains(&entry.from))
-                        .map(|entry| (entry.from.clone(), entry.from_port.clone()))
-                        .unwrap_or_else(|| (synapse.from.clone(), synapse.from_port.clone()))
+                    self.fixture.synapses.iter().find(|entry| entry.to == synapse.from && selected.contains(&entry.from)).map(|entry| (entry.from.clone(), entry.from_port.clone())).unwrap_or_else(|| (synapse.from.clone(), synapse.from_port.clone()))
                 } else {
                     (synapse.from.clone(), synapse.from_port.clone())
                 };
                 let (channel, schema) = if let Some((name, schema)) = variable_widget_meta(&widgets, &synapse.from) {
-                    let schema = if schema.is_empty() {
-                        infer_port_schema(&outputs, &kind_infos, &widgets, &synapses_snapshot, &inner_source.0, &inner_source.1)
-                    } else {
-                        schema
-                    };
+                    let schema = if schema.is_empty() { infer_port_schema(&outputs, &kind_infos, &widgets, &synapses_snapshot, &inner_source.0, &inner_source.1) } else { schema };
                     (name, schema)
                 } else {
                     let channel = unique_generated_boundary_name("output", &mut output_serial, &used_channels);
@@ -3126,7 +3205,7 @@ impl FlowHost {
             tree: inner_tree,
             flow: FlowGui { camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: inner_layout.into_iter().map(|(id, layout)| (id, FlowNodeGui { layout, chrome: NodeChrome::Plain { preview: true } })).collect(), previews: vec![] },
         };
-        self.fixture.widgets.retain(|widget| !selected.contains(&widget_id_for(widget).to_string()));
+        self.fixture.widgets.retain(|widget| !selected.contains(widget_id_for(widget)));
         self.fixture.widgets.push(cluster);
         for id in &selected {
             self.fixture.layout.remove(id);
@@ -3146,10 +3225,10 @@ impl FlowHost {
     }
 
     /// 💥 Explodes a cluster back into its inner widgets.
-    pub fn explode_cluster(&mut self, cluster_id: &str) -> Result<(), String> {
-        let cluster_index = self.fixture.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| format!("unknown cluster: {cluster_id}"))?;
+    pub fn explode_cluster(&mut self, cluster_id: &str) -> Result<(), FlowCoreError> {
+        let cluster_index = self.fixture.widgets.iter().position(|widget| matches!(widget, Widget::Cluster { id, .. } if id == cluster_id)).ok_or_else(|| FlowCoreError::UnknownCluster(cluster_id.to_string()))?;
         let Widget::Cluster { tree, flow, .. } = self.fixture.widgets[cluster_index].clone() else {
-            return Err(format!("widget is not a cluster: {cluster_id}"));
+            return Err(FlowCoreError::WidgetNotCluster(cluster_id.to_string()));
         };
         let cluster_layout = self.fixture.layout.get(cluster_id).cloned().unwrap_or(WidgetLayout { x: 0.0, y: 0.0 });
         self.begin_change();
@@ -3302,7 +3381,16 @@ fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
 
 fn widget_id_for(widget: &Widget) -> &str {
     match widget {
-        Widget::Neuron { id, .. } | Widget::InputSlider { id, .. } | Widget::InputStepper { id, .. } | Widget::InputNote { id, .. } | Widget::InputImage { id, .. } | Widget::Variable { id, .. } | Widget::OutputPreview { id, .. } | Widget::OutputAction { id, .. } | Widget::OutputExport { id, .. } | Widget::Cluster { id, .. } => id,
+        Widget::Neuron { id, .. }
+        | Widget::InputSlider { id, .. }
+        | Widget::InputStepper { id, .. }
+        | Widget::InputNote { id, .. }
+        | Widget::InputImage { id, .. }
+        | Widget::Variable { id, .. }
+        | Widget::OutputPreview { id, .. }
+        | Widget::OutputAction { id, .. }
+        | Widget::OutputExport { id, .. }
+        | Widget::Cluster { id, .. } => id,
     }
 }
 
@@ -3392,7 +3480,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = loadFixtureJson)]
     pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-        let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
+        let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let mut inner = self.state.borrow_mut();
         inner.host.replace_fixture(fixture);
         Ok(())
@@ -3400,12 +3488,12 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = fixtureJson)]
     pub fn fixture_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = catalogueJson)]
     pub fn catalogue_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.catalogue_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.catalogue_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setEvalBridge)]
@@ -3425,27 +3513,27 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = addInputPort)]
     pub fn add_input_port(&self, widget_id: &str, index: u32) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.add_input_port(widget_id, index as usize).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.add_input_port(widget_id, index as usize).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = removeInputPort)]
     pub fn remove_input_port(&self, widget_id: &str, port_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.remove_input_port(widget_id, port_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.remove_input_port(widget_id, port_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = addOutputPort)]
     pub fn add_output_port(&self, widget_id: &str, index: u32) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.add_output_port(widget_id, index as usize).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.add_output_port(widget_id, index as usize).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = removeOutputPort)]
     pub fn remove_output_port(&self, widget_id: &str, port_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.remove_output_port(widget_id, port_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.remove_output_port(widget_id, port_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = connectPorts)]
     pub fn connect_ports(&self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, JsValue> {
-        self.state.borrow_mut().host.connect_ports(from_id, from_port, to_id, to_port).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.connect_ports(from_id, from_port, to_id, to_port).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = evaluate)]
@@ -3463,7 +3551,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = evaluateSync)]
     pub fn evaluate_sync(&self) -> Result<String, JsValue> {
-        self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = compiledWireLiteral)]
@@ -3546,18 +3634,18 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = togglePreview)]
     pub fn toggle_preview(&self, widget_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.toggle_preview(widget_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.toggle_preview(widget_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = collapseSelection)]
     pub fn collapse_selection(&self, ids_json: &str) -> Result<String, JsValue> {
         let ids: Vec<String> = serde_json::from_str(ids_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-        self.state.borrow_mut().host.collapse_selection(&ids).map_err(|err| JsValue::from_str(&err))
+        self.state.borrow_mut().host.collapse_selection(&ids).map_err(|err| JsValue::from_str(&err.to_string()))
     }
 
     #[wasm_bindgen(js_name = explodeCluster)]
     pub fn explode_cluster(&self, cluster_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.explode_cluster(cluster_id).map_err(|err| JsValue::from_str(&err))
+        self.state.borrow_mut().host.explode_cluster(cluster_id).map_err(|err| JsValue::from_str(&err.to_string()))
     }
 
     #[wasm_bindgen(js_name = takePendingExportClick)]
@@ -3567,7 +3655,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = exportPayloadJson)]
     pub fn export_payload_json(&self, widget_id: &str) -> Result<String, JsValue> {
-        self.state.borrow().host.export_payload_json(widget_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.export_payload_json(widget_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = takePendingClusterExplode)]
@@ -3587,12 +3675,12 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = stepperOverlayStateJson)]
     pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = sliderOverlayStateJson)]
     pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setNoteText)]
@@ -3642,7 +3730,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = schemasJson)]
     pub fn schemas_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.schemas_json().map_err(|error| JsValue::from_str(&error))
+        self.state.borrow().host.schemas_json().map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = setVariableName)]
@@ -3657,12 +3745,12 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = addWidget)]
     pub fn add_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<String, JsValue> {
-        self.state.borrow_mut().host.add_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.add_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = setGhostWidget)]
     pub fn set_ghost_widget(&self, descriptor_json: &str, world_x: f64, world_y: f64) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_ghost_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.set_ghost_widget(descriptor_json, world_x, world_y).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = clearGhostWidget)]
@@ -3672,37 +3760,37 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = removeWidget)]
     pub fn remove_widget(&self, widget_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.remove_widget(widget_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.remove_widget(widget_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = moveWidget)]
     pub fn move_widget(&self, widget_id: &str, x: f64, y: f64) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.move_widget(widget_id, x, y).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.move_widget(widget_id, x, y).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = insertBetween)]
     pub fn insert_between(&self, anchor_id: &str, anchor_out_port: &str, mid_id: &str, mid_in_port: &str, mid_out_port: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.insert_between(anchor_id, anchor_out_port, mid_id, mid_in_port, mid_out_port).map_err(|error| JsValue::from_str(&error))
+        self.state.borrow_mut().host.insert_between(anchor_id, anchor_out_port, mid_id, mid_in_port, mid_out_port).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = makeSpace)]
     pub fn make_space(&self, anchor_id: &str, dx: f64, dy: f64) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.make_space(anchor_id, dx, dy).map_err(|error| JsValue::from_str(&error))
+        self.state.borrow_mut().host.make_space(anchor_id, dx, dy).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = setNeuronParams)]
     pub fn set_neuron_params(&self, widget_id: &str, params_json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.set_neuron_params(widget_id, params_json).map_err(|error| JsValue::from_str(&error))
+        self.state.borrow_mut().host.set_neuron_params(widget_id, params_json).map_err(|error| JsValue::from_str(&error.to_string()))
     }
 
     #[wasm_bindgen(js_name = connect)]
     pub fn connect(&self, from_id: &str, to_id: &str) -> Result<String, JsValue> {
-        self.state.borrow_mut().host.connect(from_id, to_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.connect(from_id, to_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = disconnect)]
     pub fn disconnect(&self, synapse_id: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.disconnect(synapse_id).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.disconnect(synapse_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = undo)]
@@ -3773,12 +3861,12 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
     pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = paramOverlayPaintStateJson)]
     pub fn param_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.param_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow().host.param_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = attachCanvas)]
@@ -3828,7 +3916,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = reorganize)]
     pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.reorganize(options_json).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.reorganize(options_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = renderFrame)]
@@ -3837,6 +3925,7 @@ impl FlowSession {
     }
 
     #[wasm_bindgen(js_name = pointerDownScreen)]
+    #[allow(clippy::too_many_arguments, reason = "thin wasm_bindgen forwarder for FlowHost::pointer_down_screen's own justified-allow shape")]
     pub fn pointer_down_screen(&self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         self.state.borrow_mut().host.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, pan);
     }
@@ -3883,7 +3972,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = alignSelection)]
     pub fn align_selection(&self, mode: &str) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.align_selection(mode).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = preselectWidgetIdsJson)]
@@ -3898,7 +3987,7 @@ impl FlowSession {
 
     #[wasm_bindgen(js_name = deleteSelection)]
     pub fn delete_selection(&self) -> Result<(), JsValue> {
-        self.state.borrow_mut().host.delete_selection().map_err(|e| JsValue::from_str(&e))
+        self.state.borrow_mut().host.delete_selection().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = hasSelection)]
@@ -4008,10 +4097,11 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // #endregion 🔖WasmSession
 
 // #region 🔖DocumentVcs
-use vcs::{
-    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
-    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
-};
+#[cfg(any(test, target_arch = "wasm32"))]
+use vcs::create_document_vcs_envelope;
+#[cfg(test)]
+use vcs::DocumentVcsCommand;
+use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -4073,10 +4163,7 @@ where
 }
 
 /// ➕ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
-fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
-    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
-    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
-) {
+fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
     if let Some(next) = incoming {
         match target {
             Some(existing) => {
@@ -4165,14 +4252,8 @@ impl Operation<FlowFixture> for FlowOp {
 
     fn diff(&self, projection: &FlowFixture) -> FlowDiff {
         match self {
-            FlowOp::Widgets(op) => FlowDiff {
-                widgets: Some(collection_diff_from_op(&projection.widgets, op)),
-                ..Default::default()
-            },
-            FlowOp::Synapses(op) => FlowDiff {
-                synapses: Some(collection_diff_from_op(&projection.synapses, op)),
-                ..Default::default()
-            },
+            FlowOp::Widgets(op) => FlowDiff { widgets: Some(collection_diff_from_op(&projection.widgets, op)), ..Default::default() },
+            FlowOp::Synapses(op) => FlowDiff { synapses: Some(collection_diff_from_op(&projection.synapses, op)), ..Default::default() },
             FlowOp::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
             FlowOp::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
@@ -4182,12 +4263,7 @@ impl Operation<FlowFixture> for FlowOp {
         match self {
             FlowOp::Widgets(op) => vec![FlowOp::Widgets(invert_collection_op(&projection.widgets, op))],
             FlowOp::Synapses(op) => vec![FlowOp::Synapses(invert_collection_op(&projection.synapses, op))],
-            FlowOp::SetLayout { entries } => vec![FlowOp::SetLayout {
-                entries: entries
-                    .iter()
-                    .map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() })
-                    .collect(),
-            }],
+            FlowOp::SetLayout { entries } => vec![FlowOp::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() }).collect() }],
             FlowOp::SetFixture { .. } => vec![FlowOp::SetFixture { fixture: projection.clone() }],
         }
     }
@@ -4199,7 +4275,7 @@ impl Operation<FlowFixture> for FlowOp {
 /// The camera is intentionally excluded (it is plugin runtime state).
 pub fn flow_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOp> {
     let mut ops = Vec::new();
-    let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(|widget| widget_id_for(widget)).collect();
+    let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
     for widget in &before.widgets {
         let id = widget_id_for(widget);
         if !after_widget_ids.contains(id) {
@@ -4269,36 +4345,22 @@ mod flow_vcs_wasm {
         pub fn new(envelope_json: Option<String>) -> Result<FlowDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: FlowEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: FlowEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     FlowStore::new(envelope)
                 }
-                None => FlowStore::new(create_document_vcs_envelope(
-                    FLOW_DOCUMENT_SCHEMA,
-                    "flow",
-                    empty_flow_projection(),
-                    None,
-                )),
+                None => FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None)),
             };
-            Ok(Self {
-                store: RefCell::new(store),
-            })
+            Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
     }
 }
@@ -4306,9 +4368,7 @@ mod flow_vcs_wasm {
 // #region 🔖FormsBridge
 pub mod forms_bridge {
     use super::{effective_stepper_fields, FlowFixture, Widget};
-    use protocol::{
-        ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, ProtocolVectorField, PROTOCOL_DOCUMENT_SCHEMA,
-    };
+    use protocol::{ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, ProtocolVectorField, PROTOCOL_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
         let mut words = Vec::new();
@@ -4336,10 +4396,24 @@ pub mod forms_bridge {
         words.join(" ")
     }
 
+    /// 🔀 Schema aliases treated as a single-choice question when generating a protocol block (anything else is free text).
+    enum SchemaQuestionFamily {
+        Choice,
+    }
+
+    impl SchemaQuestionFamily {
+        fn parse(schema: &str) -> Option<Self> {
+            match schema.trim().to_ascii_lowercase().as_str() {
+                "enum" | "single" | "select" | "choice" => Some(Self::Choice),
+                _ => None,
+            }
+        }
+    }
+
     fn variable_question_kind(schema: &str) -> &'static str {
-        match schema.trim().to_ascii_lowercase().as_str() {
-            "enum" | "single" | "select" | "choice" => "single",
-            _ => "text",
+        match SchemaQuestionFamily::parse(schema) {
+            Some(SchemaQuestionFamily::Choice) => "single",
+            None => "text",
         }
     }
 
@@ -4383,16 +4457,7 @@ pub mod forms_bridge {
                     unit: None,
                     text: None,
                     options: None,
-                    fields: Some(
-                        effective
-                            .iter()
-                            .map(|field| ProtocolVectorField {
-                                key: field.key.clone(),
-                                label: Some(humanize_widget_label(&field.key)),
-                                value: Some(field.value),
-                            })
-                            .collect(),
-                    ),
+                    fields: Some(effective.iter().map(|field| ProtocolVectorField { key: field.key.clone(), label: Some(humanize_widget_label(&field.key)), value: Some(field.value) }).collect()),
                     schema: Some(schema.clone()),
                     src: None,
                     accept: None,
@@ -4447,14 +4512,7 @@ pub mod forms_bridge {
             }),
             Widget::Variable { id, name, schema, .. } => {
                 let kind = variable_question_kind(schema);
-                let options = if kind == "single" {
-                    Some(vec![ProtocolBlockOption {
-                        value: schema.clone(),
-                        label: humanize_widget_label(schema),
-                    }])
-                } else {
-                    None
-                };
+                let options = if kind == "single" { Some(vec![ProtocolBlockOption { value: schema.clone(), label: humanize_widget_label(schema) }]) } else { None };
                 Some(ProtocolBlock {
                     id: id.clone(),
                     label: humanize_widget_label(name),
@@ -4483,23 +4541,8 @@ pub mod forms_bridge {
     }
 
     pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> ProtocolSpec {
-        let blocks: Vec<ProtocolBlock> = fixture
-            .widgets
-            .iter()
-            .filter_map(widget_to_protocol_block)
-            .collect();
-        ProtocolSpec {
-            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
-            id: "flow-generate".into(),
-            version: "1".into(),
-            title: Some("Generate".into()),
-            steps: vec![ProtocolStep {
-                id: "inputs".into(),
-                title: "Inputs".into(),
-                description: None,
-                blocks,
-            }],
-        }
+        let blocks: Vec<ProtocolBlock> = fixture.widgets.iter().filter_map(widget_to_protocol_block).collect();
+        ProtocolSpec { schema: PROTOCOL_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![ProtocolStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
     }
 
     fn patch_stepper_fields(widget: &mut serde_json::Value, value: &serde_json::Value) {
@@ -4526,12 +4569,30 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn apply_generation_values_to_fixture(
-        fixture_json: &str,
-        values: &serde_json::Map<String, serde_json::Value>,
-    ) -> String {
-        let mut root: serde_json::Value =
-            serde_json::from_str(fixture_json).unwrap_or(serde_json::json!({}));
+    /// 🏷️ Widget "kind" tags recognized when patching a single generation value into a raw fixture-JSON widget.
+    enum WidgetPatchKind {
+        InputSlider,
+        InputStepper,
+        InputNote,
+        InputImage,
+        Variable,
+    }
+
+    impl WidgetPatchKind {
+        fn parse(kind: &str) -> Option<Self> {
+            match kind {
+                "inputSlider" => Some(Self::InputSlider),
+                "inputStepper" => Some(Self::InputStepper),
+                "inputNote" => Some(Self::InputNote),
+                "inputImage" => Some(Self::InputImage),
+                "variable" => Some(Self::Variable),
+                _ => None,
+            }
+        }
+    }
+
+    pub fn apply_generation_values_to_fixture(fixture_json: &str, values: &serde_json::Map<String, serde_json::Value>) -> String {
+        let mut root: serde_json::Value = serde_json::from_str(fixture_json).unwrap_or(serde_json::json!({}));
         let Some(widgets) = root.get_mut("widgets").and_then(|entry| entry.as_array_mut()) else {
             return fixture_json.to_string();
         };
@@ -4542,33 +4603,30 @@ pub mod forms_bridge {
             let Some(value) = values.get(id) else {
                 continue;
             };
-            let kind = widget
-                .get("kind")
-                .and_then(|entry| entry.as_str())
-                .unwrap_or_default();
-            match kind {
-                "inputSlider" => {
+            let kind = widget.get("kind").and_then(|entry| entry.as_str()).unwrap_or_default();
+            match WidgetPatchKind::parse(kind) {
+                Some(WidgetPatchKind::InputSlider) => {
                     if let Some(number) = value.as_f64() {
                         widget["value"] = serde_json::json!(number);
                     }
                 }
-                "inputStepper" => patch_stepper_fields(widget, value),
-                "inputNote" => {
+                Some(WidgetPatchKind::InputStepper) => patch_stepper_fields(widget, value),
+                Some(WidgetPatchKind::InputNote) => {
                     if let Some(text) = value.as_str() {
                         widget["text"] = serde_json::json!(text);
                     }
                 }
-                "inputImage" => {
+                Some(WidgetPatchKind::InputImage) => {
                     if let Some(src) = value.as_str() {
                         widget["src"] = serde_json::json!(src);
                     }
                 }
-                "variable" => {
+                Some(WidgetPatchKind::Variable) => {
                     if let Some(text) = value.as_str() {
                         widget["name"] = serde_json::json!(text);
                     }
                 }
-                _ => {}
+                None => {}
             }
         }
         serde_json::to_string(&root).unwrap_or_else(|_| fixture_json.to_string())
@@ -4602,10 +4660,7 @@ mod flow_vcs_tests {
         let with_widget = round_trip(&fixture, &add);
         assert_eq!(with_widget.widgets.len(), 1);
 
-        let patch = FlowOp::Widgets(CollectionOp::Patch {
-            id: "w1".into(),
-            patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() },
-        });
+        let patch = FlowOp::Widgets(CollectionOp::Patch { id: "w1".into(), patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() } });
         let patched = round_trip(&with_widget, &patch);
         assert!(matches!(&patched.widgets[0], Widget::InputNote { text, .. } if text == "renamed"));
 
@@ -4642,10 +4697,7 @@ mod flow_vcs_tests {
         let mut store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
         for y in [10.0, 20.0, 30.0] {
             store
-                .dispatch(DocumentVcsCommand::AmendLast {
-                    operations: vec![FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }],
-                    coalesce_key: Some("move-slider".into()),
-                })
+                .dispatch(DocumentVcsCommand::AmendLast { operations: vec![FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
                 .expect("drag tick");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
@@ -4743,22 +4795,23 @@ mod tests {
                 title: "Math".into(),
                 groups: vec![],
                 items: vec![
-                    CatalogueItem { kind: "neuron".into(), neuronKind: Some("math.add".into()), action: None, format: None, name: "Add".into(), abbreviation: "Add".into(), icon: "emoji:➕".into(), summary: "Sums two numbers".into() },
-                    CatalogueItem { kind: "neuron".into(), neuronKind: Some("math.passThrough".into()), action: None, format: None, name: "PassThrough".into(), abbreviation: "Pass".into(), icon: "emoji:➡️".into(), summary: "Forwards a number".into() },
+                    CatalogueItem { kind: "neuron".into(), neuron_kind: Some("math.add".into()), action: None, format: None, name: "Add".into(), abbreviation: "Add".into(), icon: "emoji:➕".into(), summary: "Sums two numbers".into() },
+                    CatalogueItem {
+                        kind: "neuron".into(),
+                        neuron_kind: Some("math.passThrough".into()),
+                        action: None,
+                        format: None,
+                        name: "PassThrough".into(),
+                        abbreviation: "Pass".into(),
+                        icon: "emoji:➡️".into(),
+                        summary: "Forwards a number".into(),
+                    },
                 ],
             }])
             .unwrap(),
         );
         host.evaluate_internal();
         host
-    }
-
-    fn widget_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
-        let node = host.dag.fixture.nodes.iter().find(|n| n.id == widget_id).expect("node");
-        let cam = Camera { x: host.fixture.camera.x, y: host.fixture.camera.y, zoom: host.fixture.camera.zoom };
-        let viewport = Viewport { width: host.viewport_w, height: host.viewport_h, dpr: host.viewport_dpr };
-        let screen = world_to_screen(&cam, &viewport, Point::new(node.x, node.y));
-        (screen.x, screen.y)
     }
 
     fn widget_slider_track_screen_point(host: &FlowHost, widget_id: &str) -> (f64, f64) {
@@ -4865,8 +4918,8 @@ mod tests {
 
     #[test]
     fn dirty_propagation_only_dispatches_affected_branch() {
-        use std::sync::Mutex as StdMutex;
         use std::sync::Arc;
+        use std::sync::Mutex as StdMutex;
         // Branch A (default fixture): slider -> add -> preview. Branch B (added here): a second,
         // disconnected slider -> passThrough, sharing no synapse with branch A.
         let calls: Arc<StdMutex<Vec<String>>> = Arc::new(StdMutex::new(Vec::new()));
@@ -4932,6 +4985,16 @@ mod tests {
         assert!(!host.outputs.is_empty());
     }
 
+    fn collect_live_geometry_handles(outputs: &HashMap<String, Dictionary>) -> Vec<String> {
+        let mut handles = Vec::new();
+        for dict in outputs.values() {
+            collect_geometry_handles_from_dictionary(dict, &mut handles);
+        }
+        handles.sort();
+        handles.dedup();
+        handles
+    }
+
     #[test]
     fn collect_live_geometry_handles_traverses_nested_dictionaries() {
         let mut outputs = HashMap::new();
@@ -4946,15 +5009,8 @@ mod tests {
         let mut outputs = HashMap::new();
         outputs.insert(
             "get".into(),
-            Dictionary::new().insert(
-                "value",
-                NeuralValue::Dictionary(
-                    Dictionary::with_schema("list").insert(
-                        "0",
-                        NeuralValue::Dictionary(Dictionary::with_schema("draw.drawing").insert("handle", NeuralValue::Atom(Atom::String("drawing-2".into())))),
-                    ),
-                ),
-            ),
+            Dictionary::new()
+                .insert("value", NeuralValue::Dictionary(Dictionary::with_schema("list").insert("0", NeuralValue::Dictionary(Dictionary::with_schema("draw.drawing").insert("handle", NeuralValue::Atom(Atom::String("drawing-2".into()))))))),
         );
         let channels = EvalChannels { outputs, inputs: HashMap::new() };
         assert_eq!(collect_live_drawing_handles_from_channels(&channels), vec![String::from("drawing-2")]);
@@ -5117,10 +5173,10 @@ mod tests {
         assert!(!document.tree.neurons.is_empty());
         let registry = neural::Registry::new();
         let evaluator = Evaluator::new(&registry);
-        let mut dispatch = |kind: &str, input: &Dictionary| test_math_bridge(kind, input);
+        let dispatch = |kind: &str, input: &Dictionary| test_math_bridge(kind, input);
         let mut seeds = HashMap::new();
         seeds.insert("slider".into(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(3.0)))));
-        let channels = evaluator.evaluate_channels_with(&document.tree, &seeds, &host.kind_infos, &mut dispatch).unwrap();
+        let channels = evaluator.evaluate_channels_with(&document.tree, &seeds, &host.kind_infos, &dispatch).unwrap();
         assert_eq!(channels.outputs.get("add").and_then(|d| d.get("sum")).and_then(|v| v.as_dictionary()).and_then(|d| d.get("value")).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(3.0));
     }
 
@@ -5151,10 +5207,7 @@ mod tests {
         host.set_canvas_theme_dark(true);
         let mut scene = cavas::Scene::new();
         host.paint_scene(&mut scene, 1280, 800, 1.0);
-        assert!(
-            scene.path_count() > 8,
-            "populated fixture should paint edges, handles, and node bodies under dark board theme"
-        );
+        assert!(scene.path_count() > 8, "populated fixture should paint edges, handles, and node bodies under dark board theme");
     }
 
     #[test]
@@ -5163,7 +5216,7 @@ mod tests {
         host.replace_fixture(FlowFixture {
             schema: "flow.fixture".into(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            widgets: vec![Widget::Neuron { id: "add".into(), neuronKind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
+            widgets: vec![Widget::Neuron { id: "add".into(), neuron_kind: "math.add".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: true }],
             synapses: vec![],
             layout: BTreeMap::new(),
         });
@@ -5181,7 +5234,16 @@ mod tests {
             groups: vec![CatalogueGroup {
                 id: "brep.primitives-3d".into(),
                 title: "Primitives 3D".into(),
-                items: vec![CatalogueItem { kind: "neuron".into(), neuronKind: Some("brep.prim3d.box".into()), action: None, format: None, name: "Box".into(), abbreviation: "Box".into(), icon: "emoji:📦".into(), summary: "Axis-aligned box".into() }],
+                items: vec![CatalogueItem {
+                    kind: "neuron".into(),
+                    neuron_kind: Some("brep.prim3d.box".into()),
+                    action: None,
+                    format: None,
+                    name: "Box".into(),
+                    abbreviation: "Box".into(),
+                    icon: "emoji:📦".into(),
+                    summary: "Axis-aligned box".into(),
+                }],
                 groups: vec![],
             }],
         }])
@@ -5189,7 +5251,7 @@ mod tests {
         let sections = merge_catalogue_sections(&host_json).unwrap();
         let brep = sections.iter().find(|section| section.id == "brep").expect("brep section");
         let prim3d = brep.groups.iter().find(|group| group.title == "Primitives 3D").expect("prim3d group");
-        assert_eq!(prim3d.items[0].neuronKind.as_deref(), Some("brep.prim3d.box"));
+        assert_eq!(prim3d.items[0].neuron_kind.as_deref(), Some("brep.prim3d.box"));
     }
 
     #[test]
@@ -5241,11 +5303,7 @@ mod tests {
     fn output_export_widget_catalogue_descriptor_and_payload() {
         let mut host = host_with_test_bridge();
         let sections = merge_catalogue_sections("").unwrap();
-        let exports: Vec<_> = sections
-            .iter()
-            .flat_map(|section| section.items.iter())
-            .filter(|item| item.kind == "outputExport")
-            .collect();
+        let exports: Vec<_> = sections.iter().flat_map(|section| section.items.iter()).filter(|item| item.kind == "outputExport").collect();
         assert_eq!(exports.len(), 4);
         assert!(exports.iter().any(|item| item.format.as_deref() == Some("svg")));
         let id = host.add_widget(r#"{"kind":"outputExport","format":"png"}"#, 120.0, 80.0).unwrap();
@@ -5318,7 +5376,7 @@ mod tests {
             widgets: vec![
                 Widget::InputSlider { id: "a".into(), value: 1.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
                 Widget::InputSlider { id: "b".into(), value: 2.0, min: FLOW_SLIDER_MIN, max: FLOW_SLIDER_MAX, step: FLOW_SLIDER_STEP },
-                Widget::Neuron { id: "merge".into(), neuronKind: "dictionary.merge".into(), params: Dictionary::new(), input_ports: vec!["0".into(), "1".into()], output_ports: vec![], preview: true },
+                Widget::Neuron { id: "merge".into(), neuron_kind: "dictionary.merge".into(), params: Dictionary::new(), input_ports: vec!["0".into(), "1".into()], output_ports: vec![], preview: true },
                 Widget::OutputPreview { id: "preview".into(), preview: Dictionary::new(), expanded: BTreeSet::new() },
             ],
             synapses: vec![
@@ -5736,9 +5794,9 @@ mod tests {
         let mut host = FlowHost::default();
         host.set_viewport(1280, 800, 1.0);
         host.fixture.widgets = vec![
-            Widget::Neuron { id: "sphere".into(), neuronKind: "brep.prim3d.sphere".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
-            Widget::Neuron { id: "torus".into(), neuronKind: "brep.prim3d.torus".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
-            Widget::Neuron { id: "cut".into(), neuronKind: "brep.bool.cut".into(), params: Dictionary::new(), input_ports: vec!["a".into(), "b".into()], output_ports: vec![], preview: true },
+            Widget::Neuron { id: "sphere".into(), neuron_kind: "brep.prim3d.sphere".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
+            Widget::Neuron { id: "torus".into(), neuron_kind: "brep.prim3d.torus".into(), params: Dictionary::new(), input_ports: vec![], output_ports: vec![], preview: false },
+            Widget::Neuron { id: "cut".into(), neuron_kind: "brep.bool.cut".into(), params: Dictionary::new(), input_ports: vec!["a".into(), "b".into()], output_ports: vec![], preview: true },
         ];
         host.fixture.synapses = vec![
             SynapseSpec { id: "e1".into(), from: "sphere".into(), to: "cut".into(), from_port: "solid".into(), to_port: "a".into() },
@@ -5808,9 +5866,9 @@ mod tests {
     fn dag_bridge_keeps_same_named_brep_input_and_output_distinct() {
         let mut host = FlowHost::default();
         host.fixture.widgets = vec![
-            Widget::Neuron { id: "extrude".into(), neuronKind: "brep.solid.extrude".into(), params: Dictionary::new(), input_ports: vec!["wire".into(), "vector".into()], output_ports: vec![], preview: true },
-            Widget::Neuron { id: "brep".into(), neuronKind: "brep.brep".into(), params: Dictionary::new(), input_ports: vec!["brep".into(), "vertex".into(), "edge".into(), "face".into()], output_ports: vec![], preview: true },
-            Widget::Neuron { id: "get".into(), neuronKind: "list.get".into(), params: Dictionary::new(), input_ports: vec!["list".into(), "index".into(), "wrap".into()], output_ports: vec!["0".into()], preview: true },
+            Widget::Neuron { id: "extrude".into(), neuron_kind: "brep.solid.extrude".into(), params: Dictionary::new(), input_ports: vec!["wire".into(), "vector".into()], output_ports: vec![], preview: true },
+            Widget::Neuron { id: "brep".into(), neuron_kind: "brep.brep".into(), params: Dictionary::new(), input_ports: vec!["brep".into(), "vertex".into(), "edge".into(), "face".into()], output_ports: vec![], preview: true },
+            Widget::Neuron { id: "get".into(), neuron_kind: "list.get".into(), params: Dictionary::new(), input_ports: vec!["list".into(), "index".into(), "wrap".into()], output_ports: vec!["0".into()], preview: true },
         ];
         host.fixture.synapses = vec![
             SynapseSpec { id: "e112".into(), from: "extrude".into(), to: "brep".into(), from_port: "solid".into(), to_port: "brep".into() },
@@ -5891,8 +5949,8 @@ mod tests {
         let slider_left = slider.x - slider.width * 0.5;
         let add_left = add.x - add.width * 0.5;
         assert!((slider_left - add_left).abs() < 1e-6, "left edges should match after alignLeft");
-        assert!(host.fixture.layout.get("slider").is_some());
-        assert!(host.fixture.layout.get("add").is_some());
+        assert!(host.fixture.layout.contains_key("slider"));
+        assert!(host.fixture.layout.contains_key("add"));
     }
 
     #[test]
@@ -6043,10 +6101,15 @@ mod tests {
         host.connect_ports(&variable_id, "width", "add", "a").unwrap();
         host.rebuild_dag();
         let cluster_id = host.collapse_selection(&[variable_id.clone(), "add".into()]).unwrap();
-        let cluster = host.fixture.widgets.iter().find_map(|widget| match widget {
-            Widget::Cluster { id, tree, .. } if id == &cluster_id => Some(tree.clone()),
-            _ => None,
-        }).expect("cluster");
+        let cluster = host
+            .fixture
+            .widgets
+            .iter()
+            .find_map(|widget| match widget {
+                Widget::Cluster { id, tree, .. } if id == &cluster_id => Some(tree.clone()),
+                _ => None,
+            })
+            .expect("cluster");
         let (inputs, _) = cluster.contract();
         assert!(inputs.iter().any(|port| port.name == "width"));
         host.explode_cluster(&cluster_id).unwrap();
@@ -6102,11 +6165,7 @@ mod tests {
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
         let eval_json = host.evaluate().expect("evaluate");
         let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
-        let solid = parsed
-            .get("extrude")
-            .and_then(|entry| entry.get("out"))
-            .and_then(|out| out.get("solid").or_else(|| out.get("S")))
-            .expect("extrude solid output");
+        let solid = parsed.get("extrude").and_then(|entry| entry.get("out")).and_then(|out| out.get("solid").or_else(|| out.get("S"))).expect("extrude solid output");
         assert_eq!(solid.get("$schema").and_then(|v| v.as_str()), Some("geometry"));
         assert_eq!(solid.get("kind").and_then(|v| v.as_str()), Some("solid"));
     }
@@ -6119,11 +6178,7 @@ mod tests {
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
         let eval_json = host.evaluate().expect("evaluate");
         let parsed: serde_json::Value = serde_json::from_str(&eval_json).expect("eval json");
-        let solid = parsed
-            .get("extrude")
-            .and_then(|entry| entry.get("out"))
-            .and_then(|out| out.get("solid").or_else(|| out.get("S")))
-            .expect("extrude solid output");
+        let solid = parsed.get("extrude").and_then(|entry| entry.get("out")).and_then(|out| out.get("solid").or_else(|| out.get("S"))).expect("extrude solid output");
         assert_eq!(solid.get("$schema").and_then(serde_json::Value::as_str), Some("geometry"));
         assert_eq!(solid.get("kind").and_then(serde_json::Value::as_str), Some("solid"));
         let handle = solid.get("handle").and_then(serde_json::Value::as_str).expect("solid handle");
@@ -6143,14 +6198,10 @@ mod tests {
 
     #[test]
     fn flow_fixture_to_form_spec_maps_input_widgets() {
-        use crate::forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec};
+        use crate::forms_bridge::flow_fixture_to_form_spec;
         let fixture = FlowFixture::default();
         let spec = flow_fixture_to_form_spec(&fixture);
-        let kinds: Vec<&str> = spec.steps[0]
-            .blocks
-            .iter()
-            .map(|question| question.kind.as_str())
-            .collect();
+        let kinds: Vec<&str> = spec.steps[0].blocks.iter().map(|question| question.kind.as_str()).collect();
         assert!(kinds.contains(&"slider"));
     }
 
@@ -6159,22 +6210,13 @@ mod tests {
         use crate::forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec};
         let fixture = FlowFixture::default();
         let spec = flow_fixture_to_form_spec(&fixture);
-        let slider_id = spec.steps[0]
-            .blocks
-            .iter()
-            .find(|question| question.kind == "slider")
-            .map(|question| question.id.clone())
-            .expect("slider question");
+        let slider_id = spec.steps[0].blocks.iter().find(|question| question.kind == "slider").map(|question| question.id.clone()).expect("slider question");
         let fixture_json = serde_json::to_string(&fixture).expect("fixture json");
         let mut values = serde_json::Map::new();
         values.insert(slider_id.clone(), serde_json::json!(8.0));
         let patched = apply_generation_values_to_fixture(&fixture_json, &values);
         let reparsed: serde_json::Value = serde_json::from_str(&patched).expect("patched json");
-        let slider = reparsed
-            .get("widgets")
-            .and_then(|widgets| widgets.as_array())
-            .and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str())))
-            .expect("slider widget");
+        let slider = reparsed.get("widgets").and_then(|widgets| widgets.as_array()).and_then(|widgets| widgets.iter().find(|widget| widget.get("id").and_then(|id| id.as_str()) == Some(slider_id.as_str()))).expect("slider widget");
         assert_eq!(slider.get("value").and_then(|value| value.as_f64()), Some(8.0));
     }
 }

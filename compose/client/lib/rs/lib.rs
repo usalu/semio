@@ -211,40 +211,40 @@ macro_rules! entity_input {
 #[macro_export]
 macro_rules! file_system_node_complex_methods {
     ($variant:ident) => {
-        pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+        pub async fn file_system_parent(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::parent(&iface).await)
         }
-        pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+        pub async fn file_system_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::children(&iface).await)
         }
-        pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+        pub async fn file_system_child(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::child(&iface, &id).await)
         }
-        pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_path(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::path(&iface).await)
         }
-        pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_name(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::name(&iface).await)
         }
-        pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn is_file_system_root(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
             let _ = ctx;
             Ok(matches!($crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone()), $crate::gql::interfaces::FileSystemNodeInterface::Kit(_)))
         }
-        pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+        pub async fn file_system_kind(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
             let _ = ctx;
             Ok($crate::gql::interfaces::file_system_vfs::kind(&$crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone())))
         }
-        pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn file_system_has_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
             let _ = ctx;
             let iface = $crate::gql::interfaces::FileSystemNodeInterface::$variant(self.clone());
             Ok($crate::gql::interfaces::file_system_vfs::has_children(&iface).await)
@@ -256,43 +256,43 @@ macro_rules! file_system_node_complex_methods {
 #[macro_export]
 macro_rules! file_system_node_object_methods {
     ($ty:ty, $node_for:path, $default_kind:ident) => {
-        pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+        pub async fn file_system_parent(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(None);
             };
             Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
         }
-        pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+        pub async fn file_system_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
             };
             Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
         }
-        pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+        pub async fn file_system_child(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(None);
             };
             Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
         }
-        pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_path(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(String::new());
             };
             Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
         }
-        pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+        pub async fn file_system_name(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(String::new());
             };
             Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
         }
-        pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn is_file_system_root(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
             Ok(matches!($node_for(self, ctx).await, Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))))
         }
-        pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+        pub async fn file_system_kind(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
             Ok($node_for(self, ctx).await.map(|node| $crate::gql::interfaces::file_system_vfs::kind(&node)).unwrap_or($crate::gql::interfaces::FileSystemNodeKind::$default_kind))
         }
-        pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+        pub async fn file_system_has_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
             let Some(node) = $node_for(self, ctx).await else {
                 return Ok(false);
             };
@@ -305,48 +305,48 @@ macro_rules! file_system_node_object_methods {
 #[macro_export]
 macro_rules! file_system_node_vfs_complex_ctx {
     ($ty:ty, $node_for:path) => {
-        #[crate::external_adapters::async_graphql::ComplexObject]
+        #[$crate::external_adapters::async_graphql::ComplexObject]
         impl $ty {
-            pub async fn file_system_parent(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+            pub async fn file_system_parent(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(None);
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::parent(&node).await)
             }
-            pub async fn file_system_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
+            pub async fn file_system_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeConnection> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok($crate::gql::interfaces::file_system_vfs::empty_connection());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::children(&node).await)
             }
-            pub async fn file_system_child(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
+            pub async fn file_system_child(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>, id: $crate::id::Id) -> $crate::external_adapters::async_graphql::Result<Option<$crate::gql::interfaces::FileSystemNodeInterface>> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(None);
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::child(&node, &id).await)
             }
-            pub async fn file_system_path(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+            pub async fn file_system_path(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(String::new());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::path(&node).await)
             }
-            pub async fn file_system_name(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<String> {
+            pub async fn file_system_name(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<String> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(String::new());
                 };
                 Ok($crate::gql::interfaces::file_system_vfs::name(&node).await)
             }
-            pub async fn is_file_system_root(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+            pub async fn is_file_system_root(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
                 Ok(matches!($node_for(self, ctx).await, Some($crate::gql::interfaces::FileSystemNodeInterface::Kit(_))))
             }
-            pub async fn file_system_kind(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
+            pub async fn file_system_kind(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<$crate::gql::interfaces::FileSystemNodeKind> {
                 Ok(match $node_for(self, ctx).await {
                     Some(node) => $crate::gql::interfaces::file_system_vfs::kind(&node),
                     None => $crate::gql::interfaces::FileSystemNodeKind::Kit,
                 })
             }
-            pub async fn file_system_has_children(&self, ctx: &crate::external_adapters::async_graphql::Context<'_>) -> crate::external_adapters::async_graphql::Result<bool> {
+            pub async fn file_system_has_children(&self, ctx: &$crate::external_adapters::async_graphql::Context<'_>) -> $crate::external_adapters::async_graphql::Result<bool> {
                 let Some(node) = $node_for(self, ctx).await else {
                     return Ok(false);
                 };
@@ -1452,7 +1452,7 @@ pub mod geom {
                 let mut queue: VecDeque<String> = VecDeque::new();
                 queue.push_back(root_id.to_string());
                 visited.insert(root_id.to_string());
-                let root_piece = piece_map.get(root_id).unwrap();
+                let root_piece = piece_map.get(root_id).expect("root_id is drawn from the same `pieces` list piece_map was populated from");
                 if let Some(pos) = piece_stored_position(root_piece).await {
                     if piece_is_fixed(root_piece).await {
                         piece_planes.insert(root_id.to_string(), pos.plane);
@@ -1467,14 +1467,14 @@ pub mod geom {
                 }
                 while let Some(current_id) = queue.pop_front() {
                     let current_plane = *piece_planes.get(&current_id).unwrap_or(&PlaneInput::default());
-                    let current_piece = piece_map.get(&current_id).unwrap().clone();
+                    let current_piece = piece_map.get(&current_id).expect("queue only ever holds ids sourced from piece_map/adjacency").clone();
                     let parent_center = piece_centers.get(&current_id).copied().unwrap_or_default();
                     for (neighbor_id, conn) in adjacency.get(&current_id).into_iter().flatten() {
                         if visited.contains(neighbor_id) {
                             continue;
                         }
                         visited.insert(neighbor_id.clone());
-                        let neighbor_piece = piece_map.get(neighbor_id).unwrap().clone();
+                        let neighbor_piece = piece_map.get(neighbor_id).expect("adjacency only links ids already verified present in piece_map").clone();
                         let parent_side = conn.parent.read().await.clone();
                         let child_side = conn.child.read().await.clone();
                         let (parent_piece_id, _child_piece_id) = (
@@ -1490,14 +1490,12 @@ pub mod geom {
                         let child_ty = neighbor_piece.is_type().await;
                         let parent_connector = resolve_connector(parent_ty.as_ref(), parent_side_ref.references_connector().await.as_ref().map(|c| &c.id), kit).await;
                         let child_connector = resolve_connector(child_ty.as_ref(), child_side_ref.references_connector().await.as_ref().map(|c| &c.id), kit).await;
-                        if parent_connector.is_none() || child_connector.is_none() {
+                        let (Some(parent_connector), Some(child_connector)) = (parent_connector, child_connector) else {
                             piece_planes.insert(neighbor_id.clone(), PlaneInput::default());
                             piece_centers.insert(neighbor_id.clone(), CoordinateInput::default());
                             queue.push_back(neighbor_id.clone());
                             continue;
-                        }
-                        let parent_connector = parent_connector.unwrap();
-                        let child_connector = child_connector.unwrap();
+                        };
                         let child_plane = compute_child_plane(current_plane, &parent_connector, &child_connector, conn).await;
                         piece_planes.insert(neighbor_id.clone(), child_plane);
                         let (_, parent_direction, parent_t) = connector_geom(&parent_connector).await;
@@ -1554,7 +1552,6 @@ pub mod geom {
 //#region 🪢 gql_relay
 
 /// 🪢 Relay `PageInfo` + connection shells for static GraphQL (edges, pageInfo, hash).
-#[allow(unused_macros)]
 pub mod gql_relay {
     use std::sync::Arc;
 
@@ -3873,7 +3870,7 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_typology.upgrade().map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
+                self.owner_typology.upgrade().map(crate::gql::interfaces::EntityInterface::Typology)
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -5243,7 +5240,7 @@ pub mod kit {
                 self.compute_hash().await
             }
             pub async fn owner(&self) -> Option<crate::gql::interfaces::EntityInterface> {
-                self.owner_typology.upgrade().map(|t| crate::gql::interfaces::EntityInterface::Typology(t))
+                self.owner_typology.upgrade().map(crate::gql::interfaces::EntityInterface::Typology)
             }
             pub async fn owns(&self) -> Option<crate::gql::interfaces::EntityConnectionInterface> {
                 Some(crate::gql::interfaces::empty_entity_connection())
@@ -7862,9 +7859,11 @@ pub mod vcs {
     //#region 🔖kit_vcs
     pub mod kit_vcs {
         use vcs::{
-            create_document_vcs_envelope, materialize_document_projection, DocumentVcsCommand, DocumentVcsEnvelope,
+            create_document_vcs_envelope, materialize_document_projection, DocumentVcsEnvelope,
             DocumentVcsStore, Operation as VcsOperation, OperationDiff,
         };
+        #[cfg(test)]
+        use vcs::DocumentVcsCommand;
         use crate::external_adapters::futures_lite::future::block_on;
         use crate::external_adapters::serde::{Deserialize, Serialize};
         use crate::external_adapters::serde_json::Value;
@@ -7882,7 +7881,7 @@ pub mod vcs {
                 block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
-                        .expect("overlay");
+                        .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
                     let kit = graph.mutable_kit.read().await.clone();
                     if let Some(diff) = wire_json_to_canonical_kit_diff(&self.0) {
                         let _ = kit.apply_diff(&crate::operation::KitDiff(diff)).await;
@@ -7920,12 +7919,12 @@ pub mod vcs {
                 block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
-                        .expect("overlay");
+                        .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
                     let kit = graph.mutable_kit.read().await.clone();
                     let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
-                        .expect("op");
-                    let diff = op.to_diff(&kit).await.expect("diff");
+                        .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
+                    let diff = op.to_diff(&kit).await.expect("VcsOperation::diff returns a bare value, not Result: a resolved op that fails to diff has no propagation path");
                     ComposeKitDiff(crate::kit_backbone::canonical_kit_diff_to_wire_json(&diff.0))
                 })
             }
@@ -7934,14 +7933,14 @@ pub mod vcs {
                 block_on(async {
                     let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(projection.0.clone())
                         .await
-                        .expect("overlay");
+                        .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
                     let kit = graph.mutable_kit.read().await.clone();
                     let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
-                        .expect("op");
+                        .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
                     op.to_backwards(&kit)
                         .await
-                        .expect("backwards")
+                        .expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved op that fails to invert has no propagation path")
                         .into_iter()
                         .map(|row| ComposeWireOperation::from_operation(&row))
                         .collect()
@@ -7978,8 +7977,8 @@ pub mod vcs {
             DocumentVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
-        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> KitSnapshot {
-            materialize_document_projection(envelope, applied).expect("materialize kit snapshot")
+        pub fn materialize_kit_snapshot(envelope: &KitSnapshotEnvelope, applied: &[String]) -> Result<KitSnapshot, vcs::VcsError> {
+            materialize_document_projection(envelope, applied)
         }
 
         #[cfg(test)]
@@ -8037,33 +8036,6 @@ pub mod vcs {
         pub the_kit_snapshot_store: std::sync::Mutex<kit_vcs::KitSnapshotStore>,
     }
 
-    impl Default for Graph {
-        fn default() -> Self {
-            Self {
-                id: Id::default(),
-                owner_session: RwLock::new(Weak::new()),
-                self_weak: std::sync::Mutex::new(Weak::new()),
-                initial_kit: RwLock::new(Arc::default()),
-                mutable_kit: RwLock::new(Arc::default()),
-                materialized_cache: RwLock::new(None),
-                alternatives: RwLock::new(Vec::new()),
-                checkpoints: RwLock::new(Vec::new()),
-                releases: RwLock::new(Vec::new()),
-                the_kit_parent_checkpoint: RwLock::new(Weak::new()),
-                the_kit_open_edit: RwLock::new(Weak::new()),
-                the_kit_saved_edits: RwLock::new(Vec::new()),
-                the_kit_redo_edits: RwLock::new(Vec::new()),
-                the_kit_unsaved_edits: RwLock::new(Vec::new()),
-                the_kit_workspace_seq: AtomicU64::new(0),
-                op_history: RwLock::new(Vec::new()),
-                the_kit_snapshot_store: std::sync::Mutex::new(kit_vcs::create_kit_snapshot_store(
-                    &Id::default(),
-                    crate::external_adapters::serde_json::Value::Object(Default::default()),
-                )),
-            }
-        }
-    }
-
     impl Graph {
         fn placeholder_kit_snapshot_store() -> kit_vcs::KitSnapshotStore {
             kit_vcs::create_kit_snapshot_store(
@@ -8081,7 +8053,7 @@ pub mod vcs {
                     owner_session: RwLock::new(Weak::new()),
                     self_weak: std::sync::Mutex::new(weak_self.clone()),
                     initial_kit: RwLock::new(Arc::default()),
-                    mutable_kit: RwLock::new(kit.clone()),
+                    mutable_kit: RwLock::new(kit),
                     materialized_cache: RwLock::new(None),
                     alternatives: RwLock::new(Vec::new()),
                     checkpoints: RwLock::new(Vec::new()),
@@ -8098,16 +8070,14 @@ pub mod vcs {
             });
             let baseline = g.mutable_kit.read().await.clone().deep_clone().await;
             *g.initial_kit.write().await = baseline.clone();
-            *g.mutable_kit.write().await = baseline.clone();
-            let snap = crate::kit_backbone::initial_kit_projection_value(&baseline).await;
-            *g.the_kit_snapshot_store.lock().expect("kit vcs store") =
-                kit_vcs::create_kit_snapshot_store(&g.id, snap);
+            *g.mutable_kit.write().await = baseline;
+            g.reseed_kit_snapshot_store_from_mutable_kit().await;
             g
         }
 
         /// @emoji 🔗 Upgrade `&Graph` to [`Arc`] via the cyclic weak slot (panics if weak is unset).
         pub fn arc_here(&self) -> Arc<Graph> {
-            self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph.self_weak upgrade")
+            self.self_weak.lock().ok().and_then(|slot| slot.upgrade()).expect("Graph::new is the only constructor and seeds self_weak via Arc::new_cyclic, so any live &Graph upgrades")
         }
 
         /// @emoji 🪪 Map persisted bundle anchor `the-kit` onto this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql) [`Workspace`](../../../schema/graphql/schema.golden.graphql) id ([`Graph::id`]).
@@ -8140,7 +8110,7 @@ pub mod vcs {
         pub async fn reseed_kit_snapshot_store_from_mutable_kit(self: &Arc<Self>) {
             let kit = self.mutable_kit.read().await.clone();
             let snap = crate::kit_backbone::initial_kit_projection_value(&kit).await;
-            *self.the_kit_snapshot_store.lock().expect("kit vcs store") = kit_vcs::create_kit_snapshot_store(&self.id, snap);
+            *self.the_kit_snapshot_store.lock().expect("the_kit_snapshot_store mutex poisoned by a prior panic") = kit_vcs::create_kit_snapshot_store(&self.id, snap);
         }
 
         /// @emoji 🧾 SDL `TheKit.savedChanges` — [`ChangeConnection`](../../../schema/graphql/schema.golden.graphql) for this graph's [`TheKit`](../../../schema/graphql/schema.golden.graphql).
@@ -8214,11 +8184,13 @@ pub mod vcs {
             let base = self.mutable_kit.read().await.clone();
             let mat = if ws == self.id {
                 let snap = {
-                    let store = self.the_kit_snapshot_store.lock().expect("kit vcs store");
+                    let store = self.the_kit_snapshot_store.lock().expect("the_kit_snapshot_store mutex poisoned by a prior panic");
                     kit_vcs::materialize_kit_snapshot(store.envelope(), store.applied_edit_ids())
                 };
                 let mat = base.deep_clone().await;
-                let _ = crate::kit_backbone::hydrate_kit_from_initial_projection_value(&mat, &snap.0).await;
+                if let Ok(snap) = snap {
+                    let _ = crate::kit_backbone::hydrate_kit_from_initial_projection_value(&mat, &snap.0).await;
+                }
                 mat
             } else {
                 base.deep_clone().await
@@ -8413,7 +8385,7 @@ pub mod vcs {
         }
 
         /// @emoji 🟢 Open a new unsaved [`Edit`] on `workspace_id` (SDL `unsavedChanges`).
-        pub async fn open_transaction(self: &Arc<Self>, workspace_id: &Id) -> Arc<Edit> {
+        pub async fn open_transaction(self: &Arc<Self>, workspace_id: &Id) -> Result<Arc<Edit>, ComposeError> {
             let tx_id = Id::new().await;
             if self.workspace_is_the_kit(workspace_id).await {
                 let _ = self.ensure_default_checkpoint_for_the_kit().await;
@@ -8421,14 +8393,17 @@ pub mod vcs {
                 let tx = Edit::with_id(EditOwner::TheKit(Arc::downgrade(self)), tx_id, seq).await;
                 self.the_kit_unsaved_edits.write().await.push(tx.clone());
                 *self.the_kit_open_edit.write().await = Arc::downgrade(&tx);
-                return tx;
+                return Ok(tx);
             }
-            let alt = self.workspace_alternative(workspace_id).await.expect("Workspace not found for open_transaction");
+            let alt = self
+                .workspace_alternative(workspace_id)
+                .await
+                .ok_or_else(|| ComposeError::not_found("Workspace", workspace_id.as_str()))?;
             let seq = alt.unsaved_edits.read().await.len() as i32;
             let tx = Edit::with_id(EditOwner::Alternative(Arc::downgrade(&alt)), tx_id, seq).await;
             alt.unsaved_edits.write().await.push(tx.clone());
             *alt.open_edit.write().await = Arc::downgrade(&tx);
-            tx
+            Ok(tx)
         }
 
         /// @emoji ✅ Commit an unsaved [`Edit`]: move it from `unsavedChanges` to `savedChanges` on that [`Workspace`](../../../schema/graphql/schema.golden.graphql).
@@ -11092,9 +11067,8 @@ pub mod operation {
     //#region 📡 commands
     /// 📡 Internal command envelope passed parent → child runtime over the work queue.
     #[derive(Clone, Debug)]
-    #[allow(clippy::large_enum_variant)]
     pub enum Command {
-        ApplyOperation { request_id: Id, workspace_id: Id, transaction_id: Id, operation: Operation },
+        ApplyOperation { request_id: Id, workspace_id: Id, transaction_id: Id, operation: Box<Operation> },
         BackboneAttach { request_id: Id, connection_uri: String },
         BackboneDetach { request_id: Id, connection_uri: String },
     }
@@ -11382,7 +11356,7 @@ pub mod kit_graph_engine {
                     pts.push((pos.center.u, pos.center.v));
                 }
             }
-            pts.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap().then_with(|| a.1.partial_cmp(&b.1).unwrap()));
+            pts.sort_by(|a, b| a.0.total_cmp(&b.0).then_with(|| a.1.total_cmp(&b.1)));
             by_design.insert(d.id.as_str().to_string(), pts);
         }
         let flattened: Vec<String> = by_design
@@ -12060,6 +12034,176 @@ pub mod kit_backbone {
         })
     }
 
+    //#region 🔖 wire_tags
+    /// 🏷️ Typed [`crate::operation::Scope`] wire-tag: parsed once from the incoming JSON key at [`kit_scope_from_json`]'s boundary, then matched exhaustively instead of scattering `&str` comparisons through the body.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ScopeTag {
+        Entity,
+        Tag,
+        Tags,
+        Concept,
+        Quality,
+        CreateTag,
+        CreateTags,
+        CreateConcept,
+        CreateQuality,
+        CreateFixedPiece,
+        PieceInDesign,
+        PiecesInDesign,
+        CreateDesign,
+        CreateType,
+        CreateFolder,
+        Design,
+        Type,
+    }
+
+    impl std::str::FromStr for ScopeTag {
+        type Err = ComposeError;
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(match s {
+                "Entity" => Self::Entity,
+                "Tag" => Self::Tag,
+                "Tags" => Self::Tags,
+                "Concept" => Self::Concept,
+                "Quality" => Self::Quality,
+                "CreateTag" => Self::CreateTag,
+                "CreateTags" => Self::CreateTags,
+                "CreateConcept" => Self::CreateConcept,
+                "CreateQuality" => Self::CreateQuality,
+                "CreateFixedPiece" => Self::CreateFixedPiece,
+                "PieceInDesign" => Self::PieceInDesign,
+                "PiecesInDesign" => Self::PiecesInDesign,
+                "CreateDesign" => Self::CreateDesign,
+                "CreateType" => Self::CreateType,
+                "CreateFolder" => Self::CreateFolder,
+                "Design" => Self::Design,
+                "Type" => Self::Type,
+                other => return Err(ComposeError::invalid(format!("unknown scope `{other}`"))),
+            })
+        }
+    }
+
+    /// 🏷️ Typed [`crate::operation::Input`] wire-tag: parsed once from the incoming JSON key at [`kit_input_from_json`]'s boundary, then matched exhaustively instead of scattering `&str` comparisons through the body.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum InputTag {
+        Name,
+        Description,
+        Icon,
+        Image,
+        Tag,
+        Tags,
+        Concept,
+        Quality,
+        FixedPiece,
+        Offset,
+        EntityScalars,
+        CreateFolder,
+        MoveToFolder,
+    }
+
+    impl std::str::FromStr for InputTag {
+        type Err = ComposeError;
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(match s {
+                "Name" => Self::Name,
+                "Description" => Self::Description,
+                "Icon" => Self::Icon,
+                "Image" => Self::Image,
+                "Tag" => Self::Tag,
+                "Tags" => Self::Tags,
+                "Concept" => Self::Concept,
+                "Quality" => Self::Quality,
+                "FixedPiece" => Self::FixedPiece,
+                "Offset" => Self::Offset,
+                "EntityScalars" => Self::EntityScalars,
+                "CreateFolder" => Self::CreateFolder,
+                "MoveToFolder" => Self::MoveToFolder,
+                other => return Err(ComposeError::invalid(format!("unknown input `{other}`"))),
+            })
+        }
+    }
+
+    /// 🏷️ Typed [`crate::operation::Operation`] wire-tag: parsed once from the incoming JSON key at [`kit_operation_from_step_json`]'s boundary, then matched exhaustively instead of scattering `&str` comparisons through the body.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum OperationKindTag {
+        RenameKit,
+        ChangeDescription,
+        ChangeIcon,
+        ChangeImage,
+        CreateTag,
+        CreateTags,
+        DeleteTag,
+        DeleteTags,
+        RenameTag,
+        CreateConcept,
+        DeleteConcept,
+        CreateQuality,
+        DeleteQuality,
+        CreateFixedPiece,
+        DeletePieceInDesign,
+        DragPieceInDesign,
+        DragPiecesInDesign,
+        FixPieceInDesign,
+        CreateDesign,
+        CreateType,
+        DeleteDesign,
+        DeleteType,
+        CreateFolder,
+        DeleteFolder,
+        MoveToFolder,
+    }
+
+    impl std::str::FromStr for OperationKindTag {
+        type Err = ComposeError;
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(match s {
+                "RenameKit" => Self::RenameKit,
+                "ChangeDescription" => Self::ChangeDescription,
+                "ChangeIcon" => Self::ChangeIcon,
+                "ChangeImage" => Self::ChangeImage,
+                "CreateTag" => Self::CreateTag,
+                "CreateTags" => Self::CreateTags,
+                "DeleteTag" => Self::DeleteTag,
+                "DeleteTags" => Self::DeleteTags,
+                "RenameTag" => Self::RenameTag,
+                "CreateConcept" => Self::CreateConcept,
+                "DeleteConcept" => Self::DeleteConcept,
+                "CreateQuality" => Self::CreateQuality,
+                "DeleteQuality" => Self::DeleteQuality,
+                "CreateFixedPiece" => Self::CreateFixedPiece,
+                "DeletePieceInDesign" => Self::DeletePieceInDesign,
+                "DragPieceInDesign" => Self::DragPieceInDesign,
+                "DragPiecesInDesign" => Self::DragPiecesInDesign,
+                "FixPieceInDesign" => Self::FixPieceInDesign,
+                "CreateDesign" => Self::CreateDesign,
+                "CreateType" => Self::CreateType,
+                "DeleteDesign" => Self::DeleteDesign,
+                "DeleteType" => Self::DeleteType,
+                "CreateFolder" => Self::CreateFolder,
+                "DeleteFolder" => Self::DeleteFolder,
+                "MoveToFolder" => Self::MoveToFolder,
+                other => return Err(ComposeError::invalid(format!("unknown kit operation `{other}`"))),
+            })
+        }
+    }
+
+    /// 🏷️ Typed stored-operation wire-tag: parsed once from the persisted `kind` string at [`kit_operation_from_stored`]'s boundary — `CreateFixedPiece` needs a freshly minted `piece_id` so it gets its own reconstruction path; every other stored kind falls back to the generic [`kit_operation_from_step_json`] shape.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum StoredOperationKind {
+        CreateFixedPiece,
+        Other,
+    }
+
+    impl From<&str> for StoredOperationKind {
+        fn from(kind: &str) -> Self {
+            match kind {
+                "createFixedPiece" => Self::CreateFixedPiece,
+                _ => Self::Other,
+            }
+        }
+    }
+    //#endregion 🔖 wire_tags
+
     fn kit_scope_from_json(v: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Scope, ComposeError> {
         use crate::operation::Scope;
         if let Some(s) = v.as_str() {
@@ -12070,10 +12214,10 @@ pub mod kit_backbone {
         let o = v.as_object().ok_or_else(|| ComposeError::invalid("scope object"))?;
         let (k, inner) = o.iter().next().ok_or_else(|| ComposeError::invalid("empty scope"))?;
         let m = inner.as_object().ok_or_else(|| ComposeError::invalid("scope inner"))?;
-        Ok(match k.as_str() {
-            "Entity" => Scope::Entity { entity_id: id_from_str(m.get("entity_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("entity_id"))?) },
-            "Tag" => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("tag_id"))?) },
-            "Tags" => {
+        Ok(match k.parse::<ScopeTag>()? {
+            ScopeTag::Entity => Scope::Entity { entity_id: id_from_str(m.get("entity_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("entity_id"))?) },
+            ScopeTag::Tag => Scope::Tag { tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("tag_id"))?) },
+            ScopeTag::Tags => {
                 let arr = m.get("tag_ids").and_then(|x| x.as_array()).ok_or_else(|| ComposeError::invalid("tag_ids"))?;
                 let mut tag_ids = Vec::with_capacity(arr.len());
                 for x in arr {
@@ -12081,14 +12225,14 @@ pub mod kit_backbone {
                 }
                 Scope::Tags { tag_ids }
             }
-            "Concept" => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("concept_id"))?) },
-            "Quality" => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("quality_id"))?) },
-            "CreateTag" => Scope::CreateTag {
+            ScopeTag::Concept => Scope::Concept { concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("concept_id"))?) },
+            ScopeTag::Quality => Scope::Quality { quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("quality_id"))?) },
+            ScopeTag::CreateTag => Scope::CreateTag {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 tag_id: id_from_str(m.get("tag_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("tag_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            "CreateTags" => Scope::CreateTags {
+            ScopeTag::CreateTags => Scope::CreateTags {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 tag_ids: m.get("tag_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
                 attribute_ids: m
@@ -12097,46 +12241,45 @@ pub mod kit_backbone {
                     .map(|outer| outer.iter().map(|inner| inner.as_array().map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default()).collect())
                     .unwrap_or_default(),
             },
-            "CreateConcept" => Scope::CreateConcept {
+            ScopeTag::CreateConcept => Scope::CreateConcept {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 concept_id: id_from_str(m.get("concept_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("concept_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            "CreateQuality" => Scope::CreateQuality {
+            ScopeTag::CreateQuality => Scope::CreateQuality {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 quality_id: id_from_str(m.get("quality_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("quality_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
                 benchmark_ids: m.get("benchmark_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            "CreateFixedPiece" => Scope::CreateFixedPiece {
+            ScopeTag::CreateFixedPiece => Scope::CreateFixedPiece {
                 design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
                 piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("piece_id"))?),
                 blueprint_id: id_from_str(m.get("blueprint_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("blueprint_id"))?),
                 attribute_ids: m.get("attribute_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            "PieceInDesign" => Scope::PieceInDesign {
+            ScopeTag::PieceInDesign => Scope::PieceInDesign {
                 design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
                 piece_id: id_from_str(m.get("piece_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("piece_id"))?),
             },
-            "PiecesInDesign" => Scope::PiecesInDesign {
+            ScopeTag::PiecesInDesign => Scope::PiecesInDesign {
                 design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
                 piece_ids: m.get("piece_ids").and_then(|x| x.as_array()).map(|a| a.iter().map(|x| id_from_str(x.as_str().unwrap_or(""))).collect()).unwrap_or_default(),
             },
-            "CreateDesign" => Scope::CreateDesign {
+            ScopeTag::CreateDesign => Scope::CreateDesign {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?),
             },
-            "CreateType" => Scope::CreateType {
+            ScopeTag::CreateType => Scope::CreateType {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("type_id"))?),
             },
-            "CreateFolder" => Scope::CreateFolder {
+            ScopeTag::CreateFolder => Scope::CreateFolder {
                 owner_id: id_from_str(m.get("owner_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("owner_id"))?),
                 folder_id: id_from_str(m.get("folder_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("folder_id"))?),
             },
-            "Design" => Scope::Design { design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?) },
-            "Type" => Scope::Type { type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("type_id"))?) },
-            other => return Err(ComposeError::invalid(format!("unknown scope `{other}`"))),
+            ScopeTag::Design => Scope::Design { design_id: id_from_str(m.get("design_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("design_id"))?) },
+            ScopeTag::Type => Scope::Type { type_id: id_from_str(m.get("type_id").and_then(|x| x.as_str()).ok_or_else(|| ComposeError::invalid("type_id"))?) },
         })
     }
 
@@ -12158,24 +12301,24 @@ pub mod kit_backbone {
         }
         let o = v.as_object().ok_or_else(|| ComposeError::invalid("input object"))?;
         let (k, inner) = o.iter().next().ok_or_else(|| ComposeError::invalid("empty input"))?;
-        Ok(match k.as_str() {
-            "Name" => {
+        Ok(match k.parse::<InputTag>()? {
+            InputTag::Name => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Name"))?;
                 Input::Name { name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string() }
             }
-            "Description" => {
+            InputTag::Description => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Description"))?;
                 Input::Description { description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
-            "Icon" => {
+            InputTag::Icon => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Icon"))?;
                 Input::Icon { icon: m.get("icon").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
-            "Image" => {
+            InputTag::Image => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("Image"))?;
                 Input::Image { image: m.get("image").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
-            "Tag" => {
+            InputTag::Tag => {
                 let m = inner.get("tag").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("tag"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Tag {
@@ -12188,7 +12331,7 @@ pub mod kit_backbone {
                     },
                 }
             }
-            "Tags" => {
+            InputTag::Tags => {
                 let arr = inner.get("tags").and_then(|x| x.as_array()).ok_or_else(|| ComposeError::invalid("tags"))?;
                 let mut tags = Vec::new();
                 for t in arr {
@@ -12204,7 +12347,7 @@ pub mod kit_backbone {
                 }
                 Input::Tags { tags }
             }
-            "Concept" => {
+            InputTag::Concept => {
                 let m = inner.get("concept").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("concept"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Concept {
@@ -12217,7 +12360,7 @@ pub mod kit_backbone {
                     },
                 }
             }
-            "Quality" => {
+            InputTag::Quality => {
                 let m = inner.get("quality").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("quality"))?;
                 let attrs = m.get("attributes").and_then(|x| x.as_array()).map(|a| a.iter().map(attribute_input_from_json).collect::<Result<Vec<_>, _>>()).transpose()?;
                 Input::Quality {
@@ -12232,16 +12375,16 @@ pub mod kit_backbone {
                     },
                 }
             }
-            "FixedPiece" => {
+            InputTag::FixedPiece => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("FixedPiece"))?;
                 let position = position_input_from_json(m.get("position").ok_or_else(|| ComposeError::invalid("position"))?)?;
                 Input::FixedPiece { position, name: m.get("name").and_then(|x| x.as_str()).map(|s| s.to_string()), description: m.get("description").and_then(|x| x.as_str()).map(|s| s.to_string()) }
             }
-            "Offset" => {
+            InputTag::Offset => {
                 let m = inner.get("offset").and_then(|x| x.as_object()).ok_or_else(|| ComposeError::invalid("offset"))?;
                 Input::Offset { offset: crate::geom::OffsetInput { u: m.get("u").and_then(|x| x.as_f64()).unwrap_or(0.0), v: m.get("v").and_then(|x| x.as_f64()).unwrap_or(0.0) } }
             }
-            "EntityScalars" => {
+            InputTag::EntityScalars => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("EntityScalars"))?;
                 Input::EntityScalars {
                     name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
@@ -12251,7 +12394,7 @@ pub mod kit_backbone {
                     unit: m.get("unit").and_then(|x| x.as_str()).map(|s| s.to_string()),
                 }
             }
-            "CreateFolder" => {
+            InputTag::CreateFolder => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("CreateFolder"))?;
                 Input::CreateFolder {
                     name: m.get("name").and_then(|x| x.as_str()).unwrap_or("").to_string(),
@@ -12261,11 +12404,10 @@ pub mod kit_backbone {
                     parent_folder_id: m.get("parent_folder_id").and_then(|x| x.as_str()).map(id_from_str),
                 }
             }
-            "MoveToFolder" => {
+            InputTag::MoveToFolder => {
                 let m = inner.as_object().ok_or_else(|| ComposeError::invalid("MoveToFolder"))?;
                 Input::MoveToFolder { folder_id: m.get("folder_id").and_then(|x| x.as_str()).map(id_from_str) }
             }
-            other => return Err(ComposeError::invalid(format!("unknown input `{other}`"))),
         })
     }
 
@@ -12276,33 +12418,32 @@ pub mod kit_backbone {
         let body = inner.as_object().ok_or_else(|| ComposeError::invalid("kit operation body"))?;
         let scope = kit_scope_from_json(body.get("scope").ok_or_else(|| ComposeError::invalid("scope"))?)?;
         let input = kit_input_from_json(body.get("input").ok_or_else(|| ComposeError::invalid("input"))?)?;
-        Ok(match k.as_str() {
-            "RenameKit" => Operation::RenameKit { scope, input },
-            "ChangeDescription" => Operation::ChangeDescription { scope, input },
-            "ChangeIcon" => Operation::ChangeIcon { scope, input },
-            "ChangeImage" => Operation::ChangeImage { scope, input },
-            "CreateTag" => Operation::CreateTag { scope, input },
-            "CreateTags" => Operation::CreateTags { scope, input },
-            "DeleteTag" => Operation::DeleteTag { scope, input },
-            "DeleteTags" => Operation::DeleteTags { scope, input },
-            "RenameTag" => Operation::RenameTag { scope, input },
-            "CreateConcept" => Operation::CreateConcept { scope, input },
-            "DeleteConcept" => Operation::DeleteConcept { scope, input },
-            "CreateQuality" => Operation::CreateQuality { scope, input },
-            "DeleteQuality" => Operation::DeleteQuality { scope, input },
-            "CreateFixedPiece" => Operation::CreateFixedPiece { scope, input },
-            "DeletePieceInDesign" => Operation::DeletePieceInDesign { scope, input },
-            "DragPieceInDesign" => Operation::DragPieceInDesign { scope, input },
-            "DragPiecesInDesign" => Operation::DragPiecesInDesign { scope, input },
-            "FixPieceInDesign" => Operation::FixPieceInDesign { scope, input },
-            "CreateDesign" => Operation::CreateDesign { scope, input },
-            "CreateType" => Operation::CreateType { scope, input },
-            "DeleteDesign" => Operation::DeleteDesign { scope, input },
-            "DeleteType" => Operation::DeleteType { scope, input },
-            "CreateFolder" => Operation::CreateFolder { scope, input },
-            "DeleteFolder" => Operation::DeleteFolder { scope, input },
-            "MoveToFolder" => Operation::MoveToFolder { scope, input },
-            other => return Err(ComposeError::invalid(format!("unknown kit operation `{other}`"))),
+        Ok(match k.parse::<OperationKindTag>()? {
+            OperationKindTag::RenameKit => Operation::RenameKit { scope, input },
+            OperationKindTag::ChangeDescription => Operation::ChangeDescription { scope, input },
+            OperationKindTag::ChangeIcon => Operation::ChangeIcon { scope, input },
+            OperationKindTag::ChangeImage => Operation::ChangeImage { scope, input },
+            OperationKindTag::CreateTag => Operation::CreateTag { scope, input },
+            OperationKindTag::CreateTags => Operation::CreateTags { scope, input },
+            OperationKindTag::DeleteTag => Operation::DeleteTag { scope, input },
+            OperationKindTag::DeleteTags => Operation::DeleteTags { scope, input },
+            OperationKindTag::RenameTag => Operation::RenameTag { scope, input },
+            OperationKindTag::CreateConcept => Operation::CreateConcept { scope, input },
+            OperationKindTag::DeleteConcept => Operation::DeleteConcept { scope, input },
+            OperationKindTag::CreateQuality => Operation::CreateQuality { scope, input },
+            OperationKindTag::DeleteQuality => Operation::DeleteQuality { scope, input },
+            OperationKindTag::CreateFixedPiece => Operation::CreateFixedPiece { scope, input },
+            OperationKindTag::DeletePieceInDesign => Operation::DeletePieceInDesign { scope, input },
+            OperationKindTag::DragPieceInDesign => Operation::DragPieceInDesign { scope, input },
+            OperationKindTag::DragPiecesInDesign => Operation::DragPiecesInDesign { scope, input },
+            OperationKindTag::FixPieceInDesign => Operation::FixPieceInDesign { scope, input },
+            OperationKindTag::CreateDesign => Operation::CreateDesign { scope, input },
+            OperationKindTag::CreateType => Operation::CreateType { scope, input },
+            OperationKindTag::DeleteDesign => Operation::DeleteDesign { scope, input },
+            OperationKindTag::DeleteType => Operation::DeleteType { scope, input },
+            OperationKindTag::CreateFolder => Operation::CreateFolder { scope, input },
+            OperationKindTag::DeleteFolder => Operation::DeleteFolder { scope, input },
+            OperationKindTag::MoveToFolder => Operation::MoveToFolder { scope, input },
         })
     }
 
@@ -12320,9 +12461,9 @@ pub mod kit_backbone {
     }
 
     pub(crate) async fn kit_operation_from_stored(kind: &str, input: &crate::external_adapters::serde_json::Value) -> Result<crate::operation::Operation, ComposeError> {
-        match kind {
-            "createFixedPiece" => stored_create_fixed_piece_operation(input).await,
-            _ => kit_operation_from_step_json(input),
+        match StoredOperationKind::from(kind) {
+            StoredOperationKind::CreateFixedPiece => stored_create_fixed_piece_operation(input).await,
+            StoredOperationKind::Other => kit_operation_from_step_json(input),
         }
     }
     //#endregion 🔖 dev_backbone_kit_operation_json
@@ -12507,10 +12648,10 @@ pub mod kit_backbone {
             root.insert("uri".into(), crate::external_adapters::serde_json::Value::String(v));
         }
         if let Some(ts) = kit.created.read().await.clone() {
-            root.insert("createdAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
+            root.insert("createdAt".into(), crate::external_adapters::serde_json::Value::String(ts.0));
         }
         if let Some(ts) = kit.updated.read().await.clone() {
-            root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0.clone()));
+            root.insert("updatedAt".into(), crate::external_adapters::serde_json::Value::String(ts.0));
         }
         let folders_items: Vec<crate::external_adapters::serde_json::Value> = {
             kit.folders
@@ -12638,7 +12779,7 @@ pub mod kit_backbone {
             let Some(fid) = crate::kit_backbone::json_entity_id_ref(folder_json) else {
                 continue;
             };
-            let name = folder_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string();
+            let name = folder_json.get("name").and_then(|v| v.as_str()).unwrap_or(fid).to_string();
             let path = folder_json.get("path").and_then(|v| v.as_str()).filter(|s| !s.is_empty()).map(|s| s.to_string()).unwrap_or_else(|| name.clone());
             folders_slot.push(crate::meta::Folder {
                 id: fid.into(),
@@ -12673,7 +12814,7 @@ pub mod kit_backbone {
             let hash = f_json.get("blobHash").and_then(|v| v.as_str()).or_else(|| f_json.get("hash").and_then(|v| v.as_str())).unwrap_or("").to_string();
             files_slot.push(crate::meta::File {
                 id: fid.into(),
-                name: f_json.get("name").and_then(|v| v.as_str()).unwrap_or(&fid).to_string(),
+                name: f_json.get("name").and_then(|v| v.as_str()).unwrap_or(fid).to_string(),
                 url,
                 mime: f_json.get("mime").and_then(|v| v.as_str()).map(|s| s.to_string()),
                 size: f_json.get("size").and_then(|v| v.as_i64()).map(|n| n as i32),
@@ -13094,6 +13235,7 @@ pub mod kit_backbone {
             let ini = g.mutable_kit.read().await.deep_clone().await;
             *g.initial_kit.write().await = ini;
         }
+        g.reseed_kit_snapshot_store_from_mutable_kit().await;
         Ok(g)
     }
     //#endregion 🔖 dev_backbone_initial_kit_projection
@@ -13531,6 +13673,7 @@ pub mod kit_backbone {
                 }
                 let ini = graph.mutable_kit.read().await.deep_clone().await;
                 *graph.initial_kit.write().await = ini;
+                graph.reseed_kit_snapshot_store_from_mutable_kit().await;
             }
             graph.invalidate_materialized_cache().await;
             graph.the_kit_workspace_seq.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -13699,12 +13842,31 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         Ok(())
     }
 
+    /// 🏷️ Typed `ChildStore.label` wire-tag, parsed once at [`db_file_for_child`]'s boundary instead of comparing `&'static str` inline.
+    #[cfg(not(target_arch = "wasm32"))]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ChildLabelTag {
+        Wip,
+        Auth,
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    impl std::str::FromStr for ChildLabelTag {
+        type Err = ComposeError;
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            Ok(match s {
+                "wip" => Self::Wip,
+                "auth" => Self::Auth,
+                other => return Err(ComposeError::invalid(format!("unknown child label `{other}` for local backbone"))),
+            })
+        }
+    }
+
     #[cfg(not(target_arch = "wasm32"))]
     fn db_file_for_child(compose_root: &Path, child_label: &'static str) -> Result<PathBuf, ComposeError> {
-        let name = match child_label {
-            "wip" => "wip.db",
-            "auth" => "authoritative.db",
-            other => return Err(ComposeError::invalid(format!("unknown child label `{other}` for local backbone"))),
+        let name = match child_label.parse::<ChildLabelTag>()? {
+            ChildLabelTag::Wip => "wip.db",
+            ChildLabelTag::Auth => "authoritative.db",
         };
         Ok(compose_root.join(name))
     }
@@ -13962,7 +14124,7 @@ pub mod event {
 
         /// 📣 The **only** `emit_event` in the entire crate. All other code paths must call this.
         pub async fn emit_event(&self, ev: Event) {
-            let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().unwrap().iter().map(|(p, t)| (p.clone(), t.clone())).collect();
+            let sinks: Vec<(Vec<String>, crate::external_adapters::async_channel::Sender<Event>)> = self.path_sinks.lock().expect("path_sinks mutex poisoned by a prior panic").iter().map(|(p, t)| (p.clone(), t.clone())).collect();
             for (paths, tx) in sinks {
                 if paths.is_empty() || ev.matches_watched_paths(&paths) {
                     let _ = tx.send(ev.clone()).await;
@@ -13980,7 +14142,7 @@ pub mod event {
         /// @emoji 🔔 Path-filtered channel: emits only [`Event`] values matching `watched` canonical paths.
         pub fn subscribe_paths(&self, watched: &[String]) -> crate::external_adapters::async_channel::Receiver<Event> {
             let (tx, rx) = crate::external_adapters::async_channel::unbounded();
-            self.path_sinks.lock().unwrap().push((watched.to_vec(), tx));
+            self.path_sinks.lock().expect("path_sinks mutex poisoned by a prior panic").push((watched.to_vec(), tx));
             rx
         }
     }
@@ -14198,6 +14360,7 @@ pub mod worker {
                 }
                 let ini = self.wip_graph.mutable_kit.read().await.deep_clone().await;
                 *self.wip_graph.initial_kit.write().await = ini;
+                self.wip_graph.reseed_kit_snapshot_store_from_mutable_kit().await;
             }
             self.wip_graph.invalidate_materialized_cache().await;
             self.wip_graph.the_kit_workspace_seq.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
@@ -14290,7 +14453,7 @@ pub mod worker {
 
         pub async fn apply(&self, cmd: Command) -> Result<(), ComposeError> {
             match cmd {
-                Command::ApplyOperation { request_id, workspace_id, transaction_id, operation } => self.apply_kit_operation(request_id, workspace_id, transaction_id, operation).await,
+                Command::ApplyOperation { request_id, workspace_id, transaction_id, operation } => self.apply_kit_operation(request_id, workspace_id, transaction_id, *operation).await,
                 Command::BackboneAttach { connection_uri, .. } => self.backbone.mount(&self.graph, self.label, &connection_uri).await,
                 Command::BackboneDetach { connection_uri, .. } => self.backbone.detach_matching(&connection_uri).await,
             }
@@ -14795,7 +14958,7 @@ pub mod gql {
                     FileSystemNodeInterface::Design(d) => {
                         if let Some(folder_id) = d.folder_id.read().await.clone() {
                             let kit = d.owner_kit().await?;
-                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            let folder = kit.folders.read().await.iter().find(|x| x.id == folder_id).cloned()?;
                             Some(FileSystemNodeInterface::Folder(folder))
                         } else {
                             d.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
@@ -14804,7 +14967,7 @@ pub mod gql {
                     FileSystemNodeInterface::Type(t) => {
                         if let Some(folder_id) = t.folder_id.read().await.clone() {
                             let kit = t.owner_kit().await?;
-                            let folder = kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned()?;
+                            let folder = kit.folders.read().await.iter().find(|x| x.id == folder_id).cloned()?;
                             Some(FileSystemNodeInterface::Folder(folder))
                         } else {
                             t.owner_typology.upgrade().map(FileSystemNodeInterface::Typology)
@@ -14813,7 +14976,7 @@ pub mod gql {
                     FileSystemNodeInterface::Typology(topo) => {
                         let kit = topo.owner_kit.upgrade()?;
                         if let Some(folder_id) = topo.folder_id.read().await.clone() {
-                            kit.folders.read().await.iter().find(|x| &x.id == &folder_id).cloned().map(FileSystemNodeInterface::Folder)
+                            kit.folders.read().await.iter().find(|x| x.id == folder_id).cloned().map(FileSystemNodeInterface::Folder)
                         } else {
                             Some(FileSystemNodeInterface::Kit(kit))
                         }
@@ -17232,7 +17395,7 @@ pub mod gql {
             let rt = ctx.data::<Arc<ParentStore>>()?;
             rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             let ws = rt.wip_graph.id.clone();
-            let tx = rt.wip_graph.open_transaction(&ws).await;
+            let tx = rt.wip_graph.open_transaction(&ws).await?;
             *rt.wip_kit_scope.write().await = Some((ws, tx.id.clone()));
             Ok(crate::operation::CommandResponse::ok_id(tx.id.clone()).await.into())
         }
@@ -17278,7 +17441,7 @@ pub mod gql {
             return crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await;
         }
         let request_id = Id::new().await;
-        rt.dispatch_wip_wait(Command::ApplyOperation { request_id, workspace_id, transaction_id, operation }).await
+        rt.dispatch_wip_wait(Command::ApplyOperation { request_id, workspace_id, transaction_id, operation: Box::new(operation) }).await
     }
 
     pub struct UnsavedChangeCommand {
@@ -17344,7 +17507,7 @@ pub mod gql {
                 return Ok(crate::operation::CommandResponse::fail_msg("change id mismatch for kit operation").await.into());
             }
             let request_id = Id::new().await;
-            let cmd = Command::ApplyOperation { request_id: request_id.clone(), workspace_id, transaction_id, operation: crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } } };
+            let cmd = Command::ApplyOperation { request_id: request_id.clone(), workspace_id, transaction_id, operation: Box::new(crate::operation::Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: new_name } }) };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
 
@@ -17374,7 +17537,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } },
+                operation: Box::new(crate::operation::Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id: tag_id.clone(), attribute_ids: Vec::new() }, input: Input::Tag { tag } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17413,7 +17576,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } },
+                operation: Box::new(crate::operation::Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id: concept_id.clone(), attribute_ids: Vec::new() }, input: Input::Concept { concept } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17468,7 +17631,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } },
+                operation: Box::new(crate::operation::Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id: quality_id.clone(), attribute_ids: Vec::new(), benchmark_ids: Vec::new() }, input: Input::Quality { quality } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17521,7 +17684,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } },
+                operation: Box::new(crate::operation::Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17574,7 +17737,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id }, input: Input::EntityScalars { name, description, icon, image, unit } },
+                operation: Box::new(crate::operation::Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id }, input: Input::EntityScalars { name, description, icon, image, unit } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17604,7 +17767,7 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateFolder { scope: Scope::CreateFolder { owner_id, folder_id }, input: Input::CreateFolder { name, path, description, icon, parent_folder_id } },
+                operation: Box::new(crate::operation::Operation::CreateFolder { scope: Scope::CreateFolder { owner_id, folder_id }, input: Input::CreateFolder { name, path, description, icon, parent_folder_id } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -17978,10 +18141,10 @@ pub mod gql {
                 request_id: request_id.clone(),
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::CreateFixedPiece {
+                operation: Box::new(crate::operation::Operation::CreateFixedPiece {
                     scope: Scope::CreateFixedPiece { design_id: self.design_id.clone(), piece_id, blueprint_id, attribute_ids: Vec::new() },
                     input: Input::FixedPiece { position, name, description },
-                },
+                }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -18076,7 +18239,7 @@ pub mod gql {
                 request_id,
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } },
+                operation: Box::new(crate::operation::Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id: self.design_id.clone(), piece_id: self.piece_id.clone() }, input: Input::Offset { offset } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -18131,7 +18294,7 @@ pub mod gql {
                 request_id,
                 workspace_id,
                 transaction_id,
-                operation: crate::operation::Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } },
+                operation: Box::new(crate::operation::Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id: self.design_id.clone(), piece_ids: self.piece_ids.clone() }, input: Input::Offset { offset } }),
             };
             Ok(rt.dispatch_wip_wait(cmd).await.into())
         }
@@ -18762,6 +18925,82 @@ pub mod kit_store_comprehensive_e2e {
         v.as_str().map(str::to_string).or_else(|| v.get("value").and_then(|inner| inner.as_str()).map(str::to_string))
     }
 
+    //#region 🔖 fixture_wire_tags
+    /// 🏷️ Typed replay-engine wire-tag, parsed once at [`kit_store_replay_golden_ops_on_graph`]'s boundary.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum ReplayEngineKind {
+        ApplyCreateFixedPiece,
+        KitGraphEngine,
+    }
+
+    impl std::str::FromStr for ReplayEngineKind {
+        type Err = String;
+        fn from_str(s: &str) -> Result<Self, String> {
+            Ok(match s {
+                "apply_create_fixed_piece" => Self::ApplyCreateFixedPiece,
+                "kit_graph_engine" => Self::KitGraphEngine,
+                other => return Err(format!("unknown replay engine: {other}")),
+            })
+        }
+    }
+
+    /// 🏷️ Typed backbone-kind wire-tag, parsed once at [`kit_store_replay_golden_ops_backbone`]'s boundary.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum BackboneKind {
+        DevJson,
+        LocalDotCompose,
+    }
+
+    impl std::str::FromStr for BackboneKind {
+        type Err = String;
+        fn from_str(s: &str) -> Result<Self, String> {
+            Ok(match s {
+                "devJson" => Self::DevJson,
+                "localDotCompose" => Self::LocalDotCompose,
+                other => return Err(format!("unknown backbone kind in comprehensive fixture: {other}")),
+            })
+        }
+    }
+
+    /// 🏷️ Typed comprehensive-fixture step-kind wire-tag, parsed once at [`kit_store_run_comprehensive_fixture_steps`]'s boundary.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum FixtureStepKind {
+        ReplayGoldenOps,
+        AssertGoldenInvariants,
+        Graphql,
+        SleepMs,
+    }
+
+    impl std::str::FromStr for FixtureStepKind {
+        type Err = String;
+        fn from_str(s: &str) -> Result<Self, String> {
+            Ok(match s {
+                "replayGoldenOps" => Self::ReplayGoldenOps,
+                "assertGoldenInvariants" => Self::AssertGoldenInvariants,
+                "graphql" => Self::Graphql,
+                "sleepMs" => Self::SleepMs,
+                other => return Err(format!("unknown comprehensive step kind: {other}")),
+            })
+        }
+    }
+
+    /// 🏷️ Typed comprehensive-fixture native-step-kind wire-tag, parsed once at [`kit_store_run_comprehensive_fixture_steps`]'s native-steps boundary.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    enum NativeStepKind {
+        ReplayGoldenOpsBackbone,
+    }
+
+    impl std::str::FromStr for NativeStepKind {
+        type Err = String;
+        fn from_str(s: &str) -> Result<Self, String> {
+            Ok(match s {
+                "replayGoldenOpsBackbone" => Self::ReplayGoldenOpsBackbone,
+                other => return Err(format!("unknown native comprehensive step kind: {other}")),
+            })
+        }
+    }
+    //#endregion 🔖 fixture_wire_tags
+
     async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &crate::external_adapters::serde_json::Value, engine: &str) {
         let workspace_id = g.id.clone();
         let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
@@ -18769,8 +19008,8 @@ pub mod kit_store_comprehensive_e2e {
         for rec in golden_ops {
             let kind = rec["kind"].as_str().expect("operation kind");
             let input = rec.get("input").expect("input");
-            match engine {
-                "apply_create_fixed_piece" => {
+            match engine.parse::<ReplayEngineKind>().unwrap_or_else(|e| panic!("{e}")) {
+                ReplayEngineKind::ApplyCreateFixedPiece => {
                     if kind != "createFixedPiece" {
                         panic!("unsupported golden operation kind: {kind}");
                     }
@@ -18781,12 +19020,11 @@ pub mod kit_store_comprehensive_e2e {
                     let description = input.get("description").and_then(|v| v.as_str()).map(|s| s.to_string());
                     g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
                 }
-                "kit_graph_engine" => {
+                ReplayEngineKind::KitGraphEngine => {
                     let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
                     let applied = crate::kit_graph_engine::apply_kit_operation(g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
                     assert!(applied.created_piece.is_some(), "expected piece for {kind}");
                 }
-                other => panic!("unknown replay engine: {other}"),
             }
         }
     }
@@ -18808,7 +19046,7 @@ pub mod kit_store_comprehensive_e2e {
                 centers.push([pv.center.u, pv.center.v]);
             }
         }
-        centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));
+        centers.sort_by(|a, b| a[0].total_cmp(&b[0]).then_with(|| a[1].total_cmp(&b[1])));
         assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
         let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
         assert_eq!(centers.len(), expect_centers.len(), "centers len");
@@ -18894,8 +19132,8 @@ pub mod kit_store_comprehensive_e2e {
 
     async fn kit_store_replay_golden_ops_backbone(ops_json: &crate::external_adapters::serde_json::Value, exp: &crate::external_adapters::serde_json::Value, backbone: &str) {
         let exp_fp = exp["projectionFingerprint"].as_str().expect("projectionFingerprint");
-        match backbone {
-            "devJson" => {
+        match backbone.parse::<BackboneKind>().unwrap_or_else(|e| panic!("{e}")) {
+            BackboneKind::DevJson => {
                 let dir = tempfile::tempdir().expect("temp dir");
                 let path = dir.path().join("dev-kit.json");
                 let g = crate::vcs::Graph::new().await;
@@ -18916,7 +19154,7 @@ pub mod kit_store_comprehensive_e2e {
                 let fp = crate::kit_graph_engine::projection_fingerprint_for_kit(kit_arc.as_ref()).await;
                 assert_eq!(fp, exp_fp, "devJson backbone fingerprint");
             }
-            "localDotCompose" => {
+            BackboneKind::LocalDotCompose => {
                 let dir = tempfile::tempdir().expect("temp dir");
                 let proj_root = dir.path().join("workspace");
                 std::fs::create_dir_all(&proj_root).expect("mkdir workspace");
@@ -18950,7 +19188,6 @@ pub mod kit_store_comprehensive_e2e {
                 let fp = crate::kit_graph_engine::projection_fingerprint_for_kit(kit_arc.as_ref()).await;
                 assert_eq!(fp, exp_fp, "localDotCompose backbone fingerprint");
             }
-            other => panic!("unknown backbone kind in comprehensive fixture: {other}"),
         }
     }
 
@@ -18962,36 +19199,34 @@ pub mod kit_store_comprehensive_e2e {
         let mut vars = std::collections::HashMap::new();
         let mut replayed = false;
         for step in fixture["steps"].as_array().expect("steps") {
-            match step["kind"].as_str().expect("kind") {
-                "replayGoldenOps" => {
+            match step["kind"].as_str().expect("kind").parse::<FixtureStepKind>().unwrap_or_else(|e| panic!("{e}")) {
+                FixtureStepKind::ReplayGoldenOps => {
                     let engine = step.get("engine").and_then(|e| e.as_str()).unwrap_or("kit_graph_engine");
                     kit_store_replay_golden_ops_on_graph(&rt.wip_graph, &ops_json, engine).await;
                     kit_store_assert_golden_invariants(&rt.wip_graph, &exp).await;
                     replayed = true;
                 }
-                "assertGoldenInvariants" => {
+                FixtureStepKind::AssertGoldenInvariants => {
                     assert!(replayed, "assertGoldenInvariants requires replayGoldenOps on the same store");
                     kit_store_assert_golden_invariants(&rt.wip_graph, &exp).await;
                 }
-                "graphql" => {
+                FixtureStepKind::Graphql => {
                     kit_store_run_comprehensive_graphql_step(step, store_id, &mut vars, schema).await;
                 }
-                "sleepMs" => {
+                FixtureStepKind::SleepMs => {
                     let ms = step.get("ms").and_then(|m| m.as_u64()).unwrap_or(150);
                     std::thread::sleep(std::time::Duration::from_millis(ms));
                 }
-                other => panic!("unknown comprehensive step kind: {other}"),
             }
         }
         assert!(replayed, "comprehensive fixture must replay golden ops on wip");
         if let Some(native_steps) = fixture.get("nativeSteps").and_then(|v| v.as_array()) {
             for step in native_steps {
-                match step["kind"].as_str().expect("native step kind") {
-                    "replayGoldenOpsBackbone" => {
+                match step["kind"].as_str().expect("native step kind").parse::<NativeStepKind>().unwrap_or_else(|e| panic!("{e}")) {
+                    NativeStepKind::ReplayGoldenOpsBackbone => {
                         let backbone = step["backbone"].as_str().expect("backbone");
                         kit_store_replay_golden_ops_backbone(&ops_json, &exp, backbone).await;
                     }
-                    other => panic!("unknown native comprehensive step kind: {other}"),
                 }
             }
         }
@@ -19309,14 +19544,14 @@ mod tests {
             let g = rt.wip_graph.clone();
             g.ensure_default_checkpoint_for_the_kit().await;
             let ws_a = g.id.clone();
-            let tx_a = g.open_transaction(&ws_a).await;
+            let tx_a = g.open_transaction(&ws_a).await.expect("open_transaction");
             let req = crate::id::Id::new().await;
             let _ = rt
                 .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req,
                     workspace_id: ws_a.clone(),
                     transaction_id: tx_a.id.clone(),
-                    operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
+                    operation: Box::new(crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } }),
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -19349,14 +19584,14 @@ mod tests {
             assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["initial"]["name"].as_str(), Some("the kit"));
             assert_eq!(vr["store"]["wip"]["checkpoints"]["edges"][0]["node"]["kit"]["name"].as_str(), Some("the kit"));
 
-            let tx_a2 = g.open_transaction(&ws_a).await;
+            let tx_a2 = g.open_transaction(&ws_a).await.expect("open_transaction");
             let req2 = crate::id::Id::new().await;
             let _ = rt
                 .dispatch_wip(crate::operation::Command::ApplyOperation {
                     request_id: req2,
                     workspace_id: ws_a.clone(),
                     transaction_id: tx_a2.id.clone(),
-                    operation: crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } },
+                    operation: Box::new(crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "Hello Bundle".into() } }),
                 })
                 .await;
             std::thread::sleep(std::time::Duration::from_millis(150));
@@ -19415,7 +19650,7 @@ mod tests {
             let g = std::sync::Arc::new(crate::vcs::Graph::new().await);
             g.ensure_default_checkpoint_for_the_kit().await;
             let ws = g.id.clone();
-            let tx = g.open_transaction(&ws).await;
+            let tx = g.open_transaction(&ws).await.expect("open_transaction");
             let forward = crate::operation::Operation::RenameKit { scope: crate::operation::Scope::Kit, input: crate::operation::Input::Name { name: "record-id-kit".into() } };
             g.record_operation_in_open_transaction(&ws, &tx.id, forward, vec![]).await.expect("record operation");
             let change = tx.changes.read().await.last().expect("change").clone();
@@ -19433,7 +19668,7 @@ mod tests {
             let g = &rt.wip_graph;
             g.ensure_default_checkpoint_for_the_kit().await;
             let workspace_id = g.id.clone();
-            let tx_a = g.open_transaction(&workspace_id).await;
+            let tx_a = g.open_transaction(&workspace_id).await.expect("open_transaction");
             assert_eq!(g.the_kit_open_edit.read().await.upgrade().map(|t| t.id.clone()), Some(tx_a.id.clone()));
             let ordered: Vec<crate::id::Id> = g.the_kit_unsaved_edits.read().await.iter().map(|t| t.id.clone()).collect();
             assert_eq!(ordered, vec![tx_a.id.clone()]);
@@ -19443,7 +19678,7 @@ mod tests {
             assert!(g.the_kit_unsaved_edits.read().await.is_empty());
             assert_eq!(g.the_kit_saved_edits.read().await.len(), 1);
 
-            let tx_b = g.open_transaction(&workspace_id).await;
+            let tx_b = g.open_transaction(&workspace_id).await.expect("open_transaction");
             g.abort_transaction(&workspace_id, &tx_b.id).await.expect("abort");
             assert!(g.the_kit_open_edit.read().await.upgrade().is_none());
             assert!(g.the_kit_unsaved_edits.read().await.is_empty());
@@ -20057,6 +20292,7 @@ mod tests {
         });
     }
 
+    #[test]
     fn hydrate_kit_family_ports_wire_connector_copatible_with_in_graphql() {
         block_on(async {
             let schema = crate::gql::build_schema().await;
@@ -20575,7 +20811,7 @@ mod tests {
 
             rt.wip_graph.ensure_default_checkpoint_for_the_kit().await;
             let workspace_id = rt.wip_graph.id.clone();
-            let tx = rt.wip_graph.open_transaction(&workspace_id).await;
+            let tx = rt.wip_graph.open_transaction(&workspace_id).await.expect("open_transaction");
 
             // Insert two pieces directly via the wip graph (no GraphQL plumbing).
             let position = crate::geom::PositionInput::default();
@@ -20679,7 +20915,7 @@ mod tests {
                     centers.push([pv.center.u, pv.center.v]);
                 }
             }
-            centers.sort_by(|a, b| a[0].partial_cmp(&b[0]).unwrap().then_with(|| a[1].partial_cmp(&b[1]).unwrap()));
+            centers.sort_by(|a, b| a[0].total_cmp(&b[0]).then_with(|| a[1].total_cmp(&b[1])));
             assert_eq!(total, inv["totalPieces"].as_u64().expect("totalPieces") as usize, "totalPieces");
             let expect_centers: Vec<[f64; 2]> = crate::external_adapters::serde_json::from_value(inv["sortedPieceCenters"].clone()).expect("sortedPieceCenters shape");
             assert_eq!(centers.len(), expect_centers.len(), "centers len");
@@ -20933,7 +21169,7 @@ mod tests {
     fn json_block_items_helpers_accept_block_lists() {
         let block = crate::external_adapters::serde_json::json!({"hash": crate::kit_backbone::KIT_BUNDLE_HASH_STUB,"items":[{"id":"b"}]});
         assert_eq!(crate::kit_backbone::json_block_items_ref(&block).unwrap()[0]["id"], "b");
-        let mut m = block.clone();
+        let mut m = block;
         assert!(crate::kit_backbone::json_block_items_mut(&mut m).unwrap()[0].get("id").is_some());
         let flat = crate::external_adapters::serde_json::json!([{"id":"a"}]);
         assert!(crate::kit_backbone::json_block_items_ref(&flat).is_none());
@@ -21378,7 +21614,7 @@ mod tests {
             assert_eq!(wip_design.has_pieces().await.len(), 180, "wip nakagin piece count");
             assert_eq!(wip_design.has_connections().await.len(), 179, "wip nakagin connection count");
             let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(json_v).await.expect("overlay");
-            let kit = graph.materialized_kit_for_workspace(&graph.id.clone()).await;
+            let kit = graph.materialized_kit_for_workspace(&graph.id).await;
             let design = kit
                 .design_by_external_id(&crate::id::Id::from("9a890dd4-0a9c-48ac-920a-9e62666465ef"))
                 .await

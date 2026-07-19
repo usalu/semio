@@ -1,0 +1,13 @@
+{
+  "title": "Expand EN 1998 and EN 1999 Norm Crates",
+  "emoji": "🌋",
+  "status": "open",
+  "description": "Expand norm/en/1998/rs/lib.rs and norm/en/1999/rs/lib.rs with full part coverage, na_de seismic zones, design spectrum, aluminium alloys, tests. Edit only these two files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2097"
+  },
+  "goal": "🎯norm",
+  "sessions": [
+    "⚪eb2d82c5caa2404f906a830cc80b4167"
+  ]
+}

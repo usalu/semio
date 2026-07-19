@@ -19,6 +19,7 @@ path = "lib.rs"
 
 [dependencies]
 animate_present = { path = "../../present/rs" }
+animate_video = { path = "../../video/rs" }
 vcs = { path = "../../../vcs/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }

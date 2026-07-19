@@ -1,9 +1,12 @@
 //! 🌐 Headless static-site compiler for animate present decks.
 
 use crate::PresentDeck;
+use animate_core::{AnimateConfig, QualityPreset};
+use animate_video::{render_scene, scene_for_hash, OutputFormat};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 /// 🚨 Static-site compilation failure.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -27,6 +30,37 @@ impl std::error::Error for PresentCompileError {}
 
 pub type Result<T> = std::result::Result<T, PresentCompileError>;
 
+/// 📦 Rendered scene clip paths for present sites and plugin export.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SceneAssetBundle {
+    pub scene_hash: String,
+    pub mp4: Option<PathBuf>,
+    pub last_frame: Option<PathBuf>,
+    pub subtitles: Option<PathBuf>,
+    pub sections: Option<PathBuf>,
+}
+
+/// 🎬 Renders one animate scene hash into `output_dir/scenes/{hash}`.
+pub fn compile_scene_to_assets(scene_hash: &str, output_dir: &Path) -> Result<SceneAssetBundle> {
+    let scene_dir = output_dir.join("scenes").join(scene_hash);
+    fs::create_dir_all(&scene_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
+    let config = AnimateConfig::from_quality(QualityPreset::Medium)
+        .with_output_dir(&scene_dir)
+        .with_media_dir(scene_dir.join("media"))
+        .with_subtitles_path(scene_dir.join("scene.srt"));
+    let scene = scene_for_hash(config.clone(), scene_hash);
+    let outputs = render_scene(scene, config, &[OutputFormat::Mp4, OutputFormat::LastFrame])
+        .map_err(|error| PresentCompileError::new(error))?;
+    Ok(SceneAssetBundle {
+        scene_hash: scene_hash.into(),
+        mp4: outputs.mp4,
+        last_frame: outputs.last_frame,
+        subtitles: Some(scene_dir.join("scene.srt")),
+        sections: outputs.sections,
+    })
+}
+
 /// 📦 Writes `index.html`, `styles.css`, `manifest.json`, and embedded deck JSON for a wgpu-ready site.
 pub fn compile_present_site(deck: &PresentDeck, output_dir: &Path) -> Result<()> {
     fs::create_dir_all(output_dir).map_err(|error| PresentCompileError::new(error.to_string()))?;
@@ -43,7 +77,7 @@ pub fn compile_present_site(deck: &PresentDeck, output_dir: &Path) -> Result<()>
         serde_json::to_string_pretty(&site_manifest(deck)).map_err(|error| PresentCompileError::new(error.to_string()))?,
     )
     .map_err(|error| PresentCompileError::new(error.to_string()))?;
-    fs::write(output_dir.join("player.js"), player_stub_js())
+    fs::write(output_dir.join("player.js"), player_boot_js())
         .map_err(|error| PresentCompileError::new(error.to_string()))?;
     Ok(())
 }
@@ -63,7 +97,8 @@ fn site_manifest(deck: &PresentDeck) -> serde_json::Value {
         "assets": {
             "deck": "deck.json",
             "styles": "styles.css",
-            "player": "player.js"
+            "player": "player.js",
+            "scenes": "scenes"
         }
     })
 }
@@ -119,20 +154,63 @@ fn styles_css() -> &'static str {
 "#
 }
 
-fn player_stub_js() -> &'static str {
+fn player_boot_js() -> &'static str {
     r#"const root = document.getElementById("animate-present-root");
 const canvas = document.getElementById("animate-present-canvas");
 const deckNode = document.getElementById("animate-present-deck");
 const deck = deckNode ? JSON.parse(deckNode.textContent || "{}") : {};
 
+function collectSceneClips(node, clips = {}) {
+  if (!node || typeof node !== "object") {
+    return clips;
+  }
+  const metadata = node.metadata;
+  if (metadata && typeof metadata.sceneHash === "string" && metadata.sceneHash.length > 0) {
+    clips[metadata.sceneHash] = `scenes/${metadata.sceneHash}/scene.mp4`;
+  }
+  if (Array.isArray(node.slides)) {
+    for (const slide of node.slides) {
+      collectSceneClips(slide, clips);
+    }
+  }
+  if (Array.isArray(node.sections)) {
+    for (const section of node.sections) {
+      collectSceneClips(section, clips);
+    }
+  }
+  if (Array.isArray(node.chapters)) {
+    for (const chapter of node.chapters) {
+      collectSceneClips(chapter, clips);
+    }
+  }
+  if (Array.isArray(node.sequences)) {
+    for (const sequence of node.sequences) {
+      collectSceneClips(sequence, clips);
+    }
+  }
+  if (Array.isArray(node.thoughts)) {
+    for (const thought of node.thoughts) {
+      collectSceneClips(thought, clips);
+    }
+  }
+  if (node.arrangement) {
+    collectSceneClips(node.arrangement, clips);
+  }
+  if (node.sceneHash) {
+    clips[node.sceneHash] = `scenes/${node.sceneHash}/scene.mp4`;
+  }
+  return clips;
+}
+
 async function bootAnimatePresentPlayer() {
   const wasmUrl = "/animate/plugin/wasm/animate_plugin_bg.wasm";
   const init = globalThis.AnimatePluginInit || globalThis.default;
+  const sceneClips = collectSceneClips(deck);
   if (typeof init !== "function") {
-  console.warn("[animate-present] wasm player stub waiting for animate plugin", { wasmUrl, deck });
+    console.warn("[animate-present] wasm player waiting for animate plugin", { wasmUrl, deck, sceneClips });
     return;
   }
-  await init({ canvas, deck, appId: "animate-present-play" });
+  await init({ canvas, deck, appId: "animate-present-play", sceneClips });
 }
 
 bootAnimatePresentPlayer().catch((error) => {
@@ -166,6 +244,8 @@ mod tests {
         let index = std::fs::read_to_string(output.join("index.html")).expect("index.html");
         assert!(index.contains("animate.present.deck"));
         assert!(index.contains("animate_plugin.js"));
+        let player = std::fs::read_to_string(output.join("player.js")).expect("player.js");
+        assert!(player.contains("sceneClips"));
         let manifest: serde_json::Value =
             serde_json::from_str(&std::fs::read_to_string(output.join("manifest.json")).expect("manifest")).expect("json");
         assert_eq!(manifest.get("schema").and_then(|v| v.as_str()), Some("animate.present.site"));
@@ -176,6 +256,16 @@ mod tests {
         let deck_file: PresentDeck =
             serde_json::from_str(&std::fs::read_to_string(output.join("deck.json")).expect("deck.json")).expect("deck");
         assert_eq!(deck_file.tiles.len(), 4);
+        let _ = std::fs::remove_dir_all(&output);
+    }
+
+    #[test]
+    fn compile_scene_to_assets_writes_mp4() {
+        let output = std::env::temp_dir().join(format!("animate-scene-assets-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&output);
+        let bundle = compile_scene_to_assets("demo123", &output).expect("compile scene");
+        assert_eq!(bundle.scene_hash, "demo123");
+        assert!(bundle.mp4.as_ref().is_some_and(|path| path.exists()));
         let _ = std::fs::remove_dir_all(&output);
     }
 }

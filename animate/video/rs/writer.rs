@@ -1,9 +1,42 @@
 use crate::render::OutputFormat;
-use animate_core::AnimateConfig;
+use animate_core::{AnimateConfig, SectionList};
 use image::{ImageBuffer, Rgba};
 use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+/// 🧹 Clears partial-movie cache directories from config.
+pub fn flush_partial_movie_cache(config: &AnimateConfig) -> Result<usize, String> {
+    crate::cache::PartialMovieCache::flush(&config.cache.partial_movie_dir)
+}
+
+/// 📝 Writes section timings as an SRT subtitle sidecar.
+pub fn write_sections_srt(sections: &SectionList, path: &Path) -> Result<(), String> {
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|err| format!("subtitle dir: {err}"))?;
+    }
+    let mut body = String::new();
+    for (index, section) in sections.sections.iter().enumerate() {
+        body.push_str(&(index + 1).to_string());
+        body.push('\n');
+        body.push_str(&format_srt_timestamp(section.start_time));
+        body.push_str(" --> ");
+        body.push_str(&format_srt_timestamp(section.end_time.max(section.start_time)));
+        body.push('\n');
+        body.push_str(&section.name);
+        body.push_str("\n\n");
+    }
+    fs::write(path, body).map_err(|err| format!("subtitle write: {err}"))
+}
+
+fn format_srt_timestamp(seconds: f64) -> String {
+    let total_ms = (seconds.max(0.0) * 1000.0).round() as u64;
+    let hours = total_ms / 3_600_000;
+    let minutes = (total_ms % 3_600_000) / 60_000;
+    let secs = (total_ms % 60_000) / 1000;
+    let millis = total_ms % 1000;
+    format!("{hours:02}:{minutes:02}:{secs:02},{millis:03}")
+}
 
 /// 📝 Partial-movie writer with FFmpeg concat and sidecar outputs.
 pub struct SceneFileWriter {
@@ -201,6 +234,15 @@ mod tests {
             .with_resolution(16, 16)
             .with_output_dir(&dir)
             .with_media_dir(dir.join("media"))
+    }
+
+    #[test]
+    fn writer_writes_srt_from_sections() {
+        let config = temp_config();
+        let sections = animate_core::SectionList::default();
+        let path = config.output_dir.join("scene.srt");
+        write_sections_srt(&sections, &path).expect("srt");
+        assert!(path.exists());
     }
 
     #[test]

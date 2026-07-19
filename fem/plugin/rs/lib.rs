@@ -4,13 +4,13 @@ use fem_core::{Dof, ElementResult};
 use semio_framework_plugin::{
     build_canvas_2d_scene, build_world_3d_scene, create_default_layout, ui_text, world3d_default_camera,
     world3d_default_selection_json, world3d_meshes_json_from_kinds, world3d_scene, AppLabelsOverlay, ActionArgDef,
-    ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HistoryView, SurfaceKind, UiNode, ViewState,
-    WorldSunConfig,
+    ActionArgOption, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HistoryView, SurfaceKind, UiNode,
+    ViewState, WorldSunConfig,
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
-// #region 🔖Constants
+//#region 🔖Constants
 const FEM2D_APP_ID: &str = "fem2d-play";
 const FEM2D_WINDOW_MODEL: &str = "fem2d-model";
 const FEM2D_WINDOW_RESULTS: &str = "fem2d-results";
@@ -40,9 +40,14 @@ const NODE_SIZE_3D: f64 = 0.05;
 const MEMBER_MARKER_SIZE_3D: f64 = 0.03;
 /// 🧊 Number of sphere markers interpolated along a member's length.
 const MEMBER_SEGMENTS_3D: usize = 5;
-// #endregion 🔖Constants
 
-// #region 🔖Shared
+/// 🎨 Blue→green→yellow→red banded ramp for von Mises stress contour fill colors, low to high.
+const VON_MISES_BANDS: [&str; 8] = ["#1d4ed8", "#2563eb", "#0ea5e9", "#22c55e", "#eab308", "#f97316", "#ef4444", "#b91c1c"];
+/// 🎨 Muted color for the mesh-edge preview overlay drawn under the model window's members.
+const MESH_EDGE_COLOR: &str = "#475569";
+//#endregion 🔖Constants
+
+//#region 🔖Shared
 /// 🪪 Finds the smallest `"{prefix}{n}"` id not already present in `existing`.
 fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> String {
     let ids: std::collections::HashSet<String> = existing.collect();
@@ -55,9 +60,64 @@ fn next_id(existing: impl Iterator<Item = String>, prefix: &str) -> String {
         i += 1;
     }
 }
-// #endregion 🔖Shared
 
-// #region 🔖Fem2dRender
+/// 🎨 Parses a `"#rrggbb"` hex color into 0..1 float components for a Canvas2d `fill.color` array.
+fn hex_to_rgb01(hex: &str) -> (f64, f64, f64) {
+    let h = hex.trim_start_matches('#');
+    let component = |slice: &str| u8::from_str_radix(slice, 16).unwrap_or(0) as f64 / 255.0;
+    (component(&h[0..2]), component(&h[2..4]), component(&h[4..6]))
+}
+
+/// 🌡️ Maps `value` within `[min, max]` onto one of `VON_MISES_BANDS`' 8 hex colors, low to high.
+fn von_mises_color(value: f64, min: f64, max: f64) -> &'static str {
+    let span = (max - min).max(1e-9);
+    let t = ((value - min) / span).clamp(0.0, 1.0);
+    let index = ((t * (VON_MISES_BANDS.len() - 1) as f64).round() as usize).min(VON_MISES_BANDS.len() - 1);
+    VON_MISES_BANDS[index]
+}
+
+/// 🌡️ A filled-triangle Canvas2d path layer (`segments` + `fill`, evenodd) for a contour cell —
+/// see `framework/renderer/react/components/canvas-2d-host.tsx`'s `buildScenePath`/`drawSceneNode`
+/// for the exact JSON shape this mirrors.
+fn filled_triangle_layer(id: String, p0: (f64, f64), p1: (f64, f64), p2: (f64, f64), color: &str, alpha: f64) -> Value {
+    let (r, g, b) = hex_to_rgb01(color);
+    json!({
+        "id": id,
+        "transform": [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+        "segments": [
+            { "kind": "move", "to": [p0.0, p0.1] },
+            { "kind": "line", "to": [p1.0, p1.1] },
+            { "kind": "line", "to": [p2.0, p2.1] },
+            { "kind": "close" },
+        ],
+        "fill": { "color": [r, g, b, alpha] },
+    })
+}
+
+/// 🌡️ A stress-contour legend: a small vertical stack of `VON_MISES_BANDS` swatches plus min/max text
+/// labels, anchored near the canvas origin.
+fn von_mises_legend_layers(min: f64, max: f64) -> Vec<Value> {
+    let mut layers = Vec::with_capacity(VON_MISES_BANDS.len() + 2);
+    for (i, color) in VON_MISES_BANDS.iter().enumerate() {
+        let y = 20.0 + i as f64 * 14.0;
+        layers.push(filled_triangle_layer(format!("legend-swatch-{i}-a"), (10.0, y), (26.0, y), (26.0, y + 14.0), color, 1.0));
+        layers.push(filled_triangle_layer(format!("legend-swatch-{i}-b"), (10.0, y), (26.0, y + 14.0), (10.0, y + 14.0), color, 1.0));
+    }
+    layers.push(json!({
+        "id": "legend-label-min",
+        "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 20.0 + VON_MISES_BANDS.len() as f64 * 14.0],
+        "text": { "content": format!("{min:.1} Pa"), "size": 11.0 },
+    }));
+    layers.push(json!({
+        "id": "legend-label-max",
+        "transform": [1.0, 0.0, 0.0, 1.0, 30.0, 28.0],
+        "text": { "content": format!("{max:.1} Pa"), "size": 11.0 },
+    }));
+    layers
+}
+//#endregion 🔖Shared
+
+//#region 🔖Fem2dRender
 fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
@@ -97,30 +157,29 @@ fn fem2d_structure_layers(doc: &fem_2d::Fem2dDocument, node_color: &str, line_co
     layers
 }
 
-fn render_fem2d_model(doc: &fem_2d::Fem2dDocument) -> UiNode {
-    let layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
-    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
-    build_canvas_2d_scene(FEM2D_BODY_MODEL, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+/// 🗺️ Every meshed region's triangles as `(element_id, [screen_p0, screen_p1, screen_p2])` — the
+/// element id matches `fem2d_solve`/`fem2d_solve_all`'s `Tri3Cst` ids (`"{region_id}_t{tri_index}"`),
+/// so callers can correlate a solved `ElementResult::Plane` back to on-screen triangle geometry. A
+/// mesh failure for one region silently yields fewer triangles rather than failing the whole render.
+fn fem2d_region_triangles(doc: &fem_2d::Fem2dDocument) -> Vec<(String, [(f64, f64); 3])> {
+    let mut out = Vec::new();
+    let Ok(meshes) = fem_2d::fem2d_mesh_preview(doc) else { return out };
+    for mesh in &meshes {
+        for (tri_index, tri) in mesh.tris.iter().enumerate() {
+            let id = format!("{}_t{}", mesh.region_id, tri_index);
+            let p0 = mesh.points[tri[0] as usize];
+            let p1 = mesh.points[tri[1] as usize];
+            let p2 = mesh.points[tri[2] as usize];
+            out.push((id, [screen_2d(p0[0], p0[1]), screen_2d(p1[0], p1[1]), screen_2d(p2[0], p2[1])]));
+        }
+    }
+    out
 }
 
-/// 📊 Results window: solved fresh on every render (see `Fem2dPlayApp` doc comment) — undeformed
-/// structure faintly, plus a deformed-shape polyline and (for beams) a moment-diagram polyline per
-/// element. v0 limitation: reaction values are not rendered as text labels.
-fn render_fem2d_results(doc: &fem_2d::Fem2dDocument) -> UiNode {
-    let Some(case) = doc.load_cases.first() else {
-        return ui_text("No load case defined");
-    };
-    let result = match fem_2d::fem2d_solve(doc, &case.id) {
-        Ok(result) => result,
-        Err(e) => return ui_text(format!("Analysis error: {e}")),
-    };
-
-    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
-    let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
-    for d in &result.displacements {
-        disp_map.insert(d.node_id.clone(), d.values);
-    }
-
+/// 🖼️ Every element's deformed-shape polyline (pink), given a node-id-keyed displacement map and a
+/// display scale — shared by the static, modal, and buckling results renders.
+fn fem2d_deformed_shape_layers(doc: &fem_2d::Fem2dDocument, disp_map: &HashMap<String, [f64; 6]>, deform_scale: f64) -> Vec<Value> {
+    let mut layers = Vec::new();
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
         let (Some(n1), Some(n2)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
@@ -128,17 +187,77 @@ fn render_fem2d_results(doc: &fem_2d::Fem2dDocument) -> UiNode {
         let (x1, y1) = screen_2d(n2.x, n2.y);
         let d1 = disp_map.get(&n1.id).copied().unwrap_or([0.0; 6]);
         let d2 = disp_map.get(&n2.id).copied().unwrap_or([0.0; 6]);
-        let dx0 = d1[Dof::Tx.index()] * DEFORM_SCALE_2D * SCALE_2D;
-        let dy0 = -d1[Dof::Ty.index()] * DEFORM_SCALE_2D * SCALE_2D;
-        let dx1 = d2[Dof::Tx.index()] * DEFORM_SCALE_2D * SCALE_2D;
-        let dy1 = -d2[Dof::Ty.index()] * DEFORM_SCALE_2D * SCALE_2D;
+        let dx0 = d1[Dof::Tx.index()] * deform_scale * SCALE_2D;
+        let dy0 = -d1[Dof::Ty.index()] * deform_scale * SCALE_2D;
+        let dx1 = d2[Dof::Tx.index()] * deform_scale * SCALE_2D;
+        let dy1 = -d2[Dof::Ty.index()] * deform_scale * SCALE_2D;
         layers.push(json!({
             "kind": "polyline",
             "id": format!("deformed-{}", fem_2d::element_id(element)),
             "points": [[x0 + dx0, y0 + dy0], [x1 + dx1, y1 + dy1]],
             "color": "#f472b6",
         }));
+    }
+    layers
+}
 
+fn render_fem2d_model(doc: &fem_2d::Fem2dDocument) -> UiNode {
+    let mut layers = fem2d_structure_layers(doc, "#38bdf8", "#94a3b8", "#f97316");
+    for (tri_index, (_, tri)) in fem2d_region_triangles(doc).iter().enumerate() {
+        let [(x0, y0), (x1, y1), (x2, y2)] = *tri;
+        layers.push(json!({
+            "kind": "polyline",
+            "id": format!("mesh-edge-{tri_index}"),
+            "points": [[x0, y0], [x1, y1], [x1, y1], [x2, y2], [x2, y2], [x0, y0]],
+            "color": MESH_EDGE_COLOR,
+        }));
+    }
+    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    build_canvas_2d_scene(FEM2D_BODY_MODEL, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+}
+
+/// 📊 Results window dispatcher — picks the static/modal/buckling render based on `display`.
+fn render_fem2d_results(doc: &fem_2d::Fem2dDocument, display: &ResultDisplay) -> UiNode {
+    match display.mode {
+        DisplayMode::Static => render_fem2d_results_static(doc, display.source_id.as_deref()),
+        DisplayMode::Modal(mode_index) => render_fem2d_results_modal(doc, mode_index),
+        DisplayMode::Buckling(mode_index) => render_fem2d_results_buckling(doc, display.source_id.as_deref(), mode_index),
+    }
+}
+
+/// 📊 Static results: undeformed structure faintly, plus a deformed-shape polyline, (for beams) a
+/// moment-diagram polyline, and (for meshed regions) a filled von-Mises stress contour per `Tri3Cst`
+/// element with a color-swatch legend. `source_id` selects a `fem2d_solve_all` case/combination id,
+/// falling back to the first load case when `None`/unknown (preserves v0's default behavior).
+/// v0 limitation: reaction values are not rendered as text labels.
+fn render_fem2d_results_static(doc: &fem_2d::Fem2dDocument, source_id: Option<&str>) -> UiNode {
+    let results = match fem_2d::fem2d_solve_all(doc) {
+        Ok(results) => results,
+        Err(e) => return ui_text(format!("Analysis error: {e}")),
+    };
+    let case_id = source_id
+        .filter(|id| results.contains_key(*id))
+        .map(str::to_string)
+        .or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+    let Some(case_id) = case_id else {
+        return ui_text("No load case defined");
+    };
+    let Some(result) = results.get(&case_id) else {
+        return ui_text(format!("Result not found: {case_id}"));
+    };
+
+    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
+    let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
+    for d in &result.displacements {
+        disp_map.insert(d.node_id.clone(), d.values);
+    }
+    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, DEFORM_SCALE_2D));
+
+    for element in &doc.elements {
+        let (start, end) = fem2d_element_endpoints(element);
+        let (Some(n1), Some(n2)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
+        let (x0, y0) = screen_2d(n1.x, n1.y);
+        let (x1, y1) = screen_2d(n2.x, n2.y);
         if let Some((_, ElementResult::Beam { stations })) = result.elements.iter().find(|(id, _)| id.as_str() == fem_2d::element_id(element)) {
             let model_length = ((n2.x - n1.x).powi(2) + (n2.y - n1.y).powi(2)).sqrt().max(1e-9);
             let dx = x1 - x0;
@@ -163,19 +282,119 @@ fn render_fem2d_results(doc: &fem_2d::Fem2dDocument) -> UiNode {
         }
     }
 
+    //#region 🔖StressContour
+    let region_tris = fem2d_region_triangles(doc);
+    let mut contour_cells: Vec<(&String, &[(f64, f64); 3], f64)> = Vec::new();
+    for (id, tri) in &region_tris {
+        if let Some((_, ElementResult::Plane { gauss })) = result.elements.iter().find(|(eid, _)| eid == id) {
+            if !gauss.is_empty() {
+                let avg = gauss.iter().map(|g| g.von_mises).sum::<f64>() / gauss.len() as f64;
+                contour_cells.push((id, tri, avg));
+            }
+        }
+    }
+    if !contour_cells.is_empty() {
+        let min = contour_cells.iter().map(|(_, _, v)| *v).fold(f64::INFINITY, f64::min);
+        let max = contour_cells.iter().map(|(_, _, v)| *v).fold(f64::NEG_INFINITY, f64::max);
+        for (id, tri, value) in &contour_cells {
+            let color = von_mises_color(*value, min, max);
+            layers.push(filled_triangle_layer(format!("contour-{id}"), tri[0], tri[1], tri[2], color, 0.85));
+        }
+        layers.extend(von_mises_legend_layers(min, max));
+    }
+    //#endregion 🔖StressContour
+
     let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
     build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
 }
-// #endregion 🔖Fem2dRender
 
-// #region 🔖Fem2dPlayApp
-/// 🧮 v0 design: results are never persisted or cached — `fem2d_solve` runs fresh inside `render()`
-/// whenever the results window is drawn. At v0 scale (≤10 nodes) this is cheap and correct-by-
-/// construction (no cache-invalidation bugs to get wrong). There is no `RunAnalysis` op: solving is a
-/// pure function of the document. The active load case is always `load_cases.first()`; a load-case
-/// switcher UI is future work.
+/// 📊 Modal mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
+/// polyline (scaled by `doc.analysis.deformation_scale`) and a frequency caption.
+fn render_fem2d_results_modal(doc: &fem_2d::Fem2dDocument, mode_index: usize) -> UiNode {
+    let (freq_hz, disp_map) = match fem_2d::fem2d_modal_mode_values(doc, mode_index) {
+        Ok(values) => values,
+        Err(e) => return ui_text(format!("Modal analysis error: {e}")),
+    };
+    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
+    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale));
+    layers.push(json!({
+        "id": "modal-caption",
+        "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
+        "text": { "content": format!("Mode {}: {freq_hz:.3} Hz", mode_index + 1), "size": 12.0 },
+    }));
+    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+}
+
+/// 📊 Buckling mode-shape overlay: undeformed structure faintly plus the selected mode's deformed-shape
+/// polyline (scaled by `doc.analysis.deformation_scale`) and a load-factor caption. `source_id` selects
+/// the reference load case, falling back to the first load case when `None`.
+fn render_fem2d_results_buckling(doc: &fem_2d::Fem2dDocument, source_id: Option<&str>, mode_index: usize) -> UiNode {
+    let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
+        return ui_text("No load case defined");
+    };
+    let (factor, disp_map) = match fem_2d::fem2d_buckling_mode_values(doc, &case_id, mode_index) {
+        Ok(values) => values,
+        Err(e) => return ui_text(format!("Buckling analysis error: {e}")),
+    };
+    let mut layers = fem2d_structure_layers(doc, "#334155", "#334155", "#334155");
+    layers.extend(fem2d_deformed_shape_layers(doc, &disp_map, doc.analysis.deformation_scale));
+    layers.push(json!({
+        "id": "buckling-caption",
+        "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0],
+        "text": { "content": format!("Buckling mode {}: factor {factor:.3}", mode_index + 1), "size": 12.0 },
+    }));
+    let layers_json = serde_json::to_string(&layers).unwrap_or_else(|_| "[]".into());
+    build_canvas_2d_scene(FEM2D_BODY_RESULTS, FEM2D_APP_ID, Canvas2dScene { camera_x: doc.camera.x, camera_y: doc.camera.y, zoom: doc.camera.zoom, layers_json })
+}
+//#endregion 🔖Fem2dRender
+
+//#region 🔖ResultDisplay
+/// 👁️ Ephemeral (non-document) view state selecting what the results window shows — which
+/// `fem2d_solve_all`/`fem3d_solve_all` case-or-combination id (`source_id`) and which `DisplayMode`.
+/// Mutated by the `setResultDisplay` VIEW action (`ActionEmit::default()`, no ops — never recorded in
+/// history) and lives directly on the app struct, per `DocumentApp::handle_action`'s `&mut self`.
+#[derive(Clone, Debug, Default)]
+struct ResultDisplay {
+    source_id: Option<String>,
+    mode: DisplayMode,
+}
+
+/// 👁️ Which analysis result the results window renders: the static solve, or the `n`-th modal/buckling
+/// mode shape (0-indexed).
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+enum DisplayMode {
+    #[default]
+    Static,
+    Modal(usize),
+    Buckling(usize),
+}
+
+/// 👁️ Parses `setResultDisplay`'s `{"sourceId"?, "mode": "static"|"modal"|"buckling", "modeIndex"?}`
+/// args into a `ResultDisplay` — unknown/missing `mode` falls back to `Static`.
+fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
+    let source_id = args.and_then(|v| v.get("sourceId")).and_then(Value::as_str).map(str::to_string);
+    let mode_index = args.and_then(|v| v.get("modeIndex")).and_then(Value::as_u64).unwrap_or(0) as usize;
+    let mode = match args.and_then(|v| v.get("mode")).and_then(Value::as_str) {
+        Some("modal") => DisplayMode::Modal(mode_index),
+        Some("buckling") => DisplayMode::Buckling(mode_index),
+        _ => DisplayMode::Static,
+    };
+    ResultDisplay { source_id, mode }
+}
+//#endregion 🔖ResultDisplay
+
+//#region 🔖Fem2dPlayApp
+/// 🧮 v0 design: results are never persisted or cached — `fem2d_solve`/`fem2d_solve_all` run fresh
+/// inside `render()` whenever the results window is drawn. At v0 scale (≤10 nodes) this is cheap and
+/// correct-by-construction (no cache-invalidation bugs to get wrong). There is no `RunAnalysis` op:
+/// solving is a pure function of the document. `result_display` is ephemeral view state (see
+/// `ResultDisplay`'s doc) — mutated by the `setResultDisplay` view action, defaulting to the first
+/// load case in `Static` mode.
 #[derive(Default)]
-struct Fem2dPlayApp;
+struct Fem2dPlayApp {
+    result_display: ResultDisplay,
+}
 
 impl DocumentApp for Fem2dPlayApp {
     type Projection = fem_2d::Fem2dDocument;
@@ -223,7 +442,7 @@ impl DocumentApp for Fem2dPlayApp {
                 if let (Some(name), Some(e)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("e")).and_then(Value::as_f64)) {
                     let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
                     let index = doc.projection.materials.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetMaterial { index, material: fem_2d::FemMaterial { id, name: name.into(), e } }]);
+                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetMaterial { index, material: fem_2d::FemMaterial { id, name: name.into(), e, nu: 0.3, rho: 7850.0 } }]);
                 }
             }
             "addSection" => {
@@ -251,7 +470,7 @@ impl DocumentApp for Fem2dPlayApp {
                     args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<Dof>(v.clone()).ok()),
                     args.and_then(|v| v.get("value")).and_then(Value::as_f64),
                 ) {
-                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new() });
+                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_2d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_2d::FemLoad::Nodal { id: load_id, node_id: node_id.into(), dof, value });
                     let index = doc.projection.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.projection.load_cases.len());
@@ -264,7 +483,7 @@ impl DocumentApp for Fem2dPlayApp {
                     args.and_then(|v| v.get("wx")).and_then(Value::as_f64),
                     args.and_then(|v| v.get("wy")).and_then(Value::as_f64),
                 ) {
-                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new() });
+                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_2d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_2d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_2d::FemLoad::MemberUdl { id: load_id, element_id: element_id.into(), wx, wy });
                     let index = doc.projection.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.projection.load_cases.len());
@@ -302,6 +521,9 @@ impl DocumentApp for Fem2dPlayApp {
                     return ActionEmit::amend(vec![fem_2d::Fem2dOp::SetCamera { camera: fem_2d::FemCamera { x, y, zoom } }], "camera");
                 }
             }
+            "setResultDisplay" => {
+                self.result_display = parse_result_display(args);
+            }
             _ => {}
         }
         ActionEmit::default()
@@ -310,7 +532,7 @@ impl DocumentApp for Fem2dPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, fem_2d::Fem2dDocument>, _view_state: &ViewState) -> UiNode {
         match body_key {
             FEM2D_BODY_MODEL => render_fem2d_model(doc.projection),
-            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection),
+            FEM2D_BODY_RESULTS => render_fem2d_results(doc.projection, &self.result_display),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -334,9 +556,9 @@ impl DocumentApp for Fem2dPlayApp {
         }
     }
 }
-// #endregion 🔖Fem2dPlayApp
+//#endregion 🔖Fem2dPlayApp
 
-// #region 🔖Fem2dTerminology
+//#region 🔖Fem2dTerminology
 struct Fem2dLabels {
     window_model: &'static str,
     window_results: &'static str,
@@ -367,12 +589,13 @@ fn fem2d_action_labels(is_de: bool) -> HashMap<String, String> {
         ("addMemberUdl", "Add Member UDL", "Streckenlast hinzufügen"),
         ("removeSelection", "Remove Selection", "Auswahl entfernen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setResultDisplay", "Set Result Display", "Ergebnisanzeige festlegen"),
     ];
     ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
-// #endregion 🔖Fem2dTerminology
+//#endregion 🔖Fem2dTerminology
 
-// #region 🔖Fem3dRender
+//#region 🔖Fem3dRender
 fn find_node_3d<'a>(nodes: &'a [fem_3d::FemNode], id: &str) -> Option<&'a fem_3d::FemNode> {
     nodes.iter().find(|n| n.id == id)
 }
@@ -395,17 +618,18 @@ fn lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
 
 /// 🧊 Builds World3d `instances_json`: one small box per node, plus a chain of small sphere markers
 /// interpolated along each member's length. `displacements` (node id -> 6-DOF values), when present,
-/// offsets every node position before building instances — used by the results window's deformed view.
-/// v0 simplification: members are approximated by interpolated sphere markers rather than an oriented
-/// extruded prism (a proper stretched/rotated box transform is future work).
-fn fem3d_instances_json(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>) -> String {
+/// offsets every node position (scaled by `deform_scale`) before building instances — used by the
+/// results window's deformed/mode-shape views. v0 simplification: members are approximated by
+/// interpolated sphere markers rather than an oriented extruded prism (a proper stretched/rotated box
+/// transform is future work).
+fn fem3d_instances_json(doc: &fem_3d::Fem3dDocument, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> String {
     let node_pos = |node: &fem_3d::FemNode| -> [f64; 3] {
         let mut p = [node.x, node.y, node.z];
         if let Some(map) = displacements {
             if let Some(d) = map.get(&node.id) {
-                p[0] += d[Dof::Tx.index()] * DEFORM_SCALE_3D;
-                p[1] += d[Dof::Ty.index()] * DEFORM_SCALE_3D;
-                p[2] += d[Dof::Tz.index()] * DEFORM_SCALE_3D;
+                p[0] += d[Dof::Tx.index()] * deform_scale;
+                p[1] += d[Dof::Ty.index()] * deform_scale;
+                p[2] += d[Dof::Tz.index()] * deform_scale;
             }
         }
         p
@@ -455,7 +679,7 @@ fn fem3d_camera_json(doc: &fem_3d::Fem3dDocument) -> String {
 
 fn render_fem3d_model(doc: &fem_3d::Fem3dDocument) -> UiNode {
     let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, None);
+    let instances_json = fem3d_instances_json(doc, None, DEFORM_SCALE_3D);
     build_world_3d_scene(
         FEM3D_BODY_MODEL,
         FEM3D_APP_ID,
@@ -463,35 +687,92 @@ fn render_fem3d_model(doc: &fem_3d::Fem3dDocument) -> UiNode {
     )
 }
 
-/// 📊 Results window: solved fresh on every render (see `Fem3dPlayApp` doc comment) — same node/member
-/// instances as the model window, offset by the solved displacements.
-fn render_fem3d_results(doc: &fem_3d::Fem3dDocument) -> UiNode {
-    let Some(case) = doc.load_cases.first() else {
+/// 📊 Results window dispatcher — picks the static/modal/buckling render based on `display`.
+fn render_fem3d_results(doc: &fem_3d::Fem3dDocument, display: &ResultDisplay) -> UiNode {
+    match display.mode {
+        DisplayMode::Static => render_fem3d_results_static(doc, display.source_id.as_deref()),
+        DisplayMode::Modal(mode_index) => render_fem3d_results_modal(doc, mode_index),
+        DisplayMode::Buckling(mode_index) => render_fem3d_results_buckling(doc, display.source_id.as_deref(), mode_index),
+    }
+}
+
+/// 📊 Static results: solved fresh on every render (see `Fem3dPlayApp` doc comment) — same node/member
+/// instances as the model window, offset by the solved displacements. `source_id` selects a
+/// `fem3d_solve_all` case/combination id, falling back to the first load case when `None`/unknown.
+fn render_fem3d_results_static(doc: &fem_3d::Fem3dDocument, source_id: Option<&str>) -> UiNode {
+    let results = match fem_3d::fem3d_solve_all(doc) {
+        Ok(results) => results,
+        Err(e) => return ui_text(format!("Analysis error: {e}")),
+    };
+    let case_id = source_id
+        .filter(|id| results.contains_key(*id))
+        .map(str::to_string)
+        .or_else(|| doc.load_cases.first().map(|c| c.id.clone()));
+    let Some(case_id) = case_id else {
         return ui_text("No load case defined");
     };
-    let result = match fem_3d::fem3d_solve(doc, &case.id) {
-        Ok(result) => result,
-        Err(e) => return ui_text(format!("Analysis error: {e}")),
+    let Some(result) = results.get(&case_id) else {
+        return ui_text(format!("Result not found: {case_id}"));
     };
     let mut disp_map: HashMap<String, [f64; 6]> = HashMap::new();
     for d in &result.displacements {
         disp_map.insert(d.node_id.clone(), d.values);
     }
     let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
-    let instances_json = fem3d_instances_json(doc, Some(&disp_map));
+    let instances_json = fem3d_instances_json(doc, Some(&disp_map), DEFORM_SCALE_3D);
     build_world_3d_scene(
         FEM3D_BODY_RESULTS,
         FEM3D_APP_ID,
         world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
     )
 }
-// #endregion 🔖Fem3dRender
 
-// #region 🔖Fem3dPlayApp
+/// 📊 Modal mode-shape overlay: instances offset by the selected mode's shape, scaled by
+/// `doc.analysis.deformation_scale`. v0 limitation: `World3dScene` has no text-caption field, so the
+/// frequency value isn't shown in-scene (unlike the 2D results window's caption layer).
+fn render_fem3d_results_modal(doc: &fem_3d::Fem3dDocument, mode_index: usize) -> UiNode {
+    let (_freq_hz, disp_map) = match fem_3d::fem3d_modal_mode_values(doc, mode_index) {
+        Ok(values) => values,
+        Err(e) => return ui_text(format!("Modal analysis error: {e}")),
+    };
+    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
+    let instances_json = fem3d_instances_json(doc, Some(&disp_map), doc.analysis.deformation_scale);
+    build_world_3d_scene(
+        FEM3D_BODY_RESULTS,
+        FEM3D_APP_ID,
+        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+    )
+}
+
+/// 📊 Buckling mode-shape overlay: instances offset by the selected mode's shape, scaled by
+/// `doc.analysis.deformation_scale`. `source_id` selects the reference load case, falling back to the
+/// first load case when `None`. Same caption limitation as `render_fem3d_results_modal`.
+fn render_fem3d_results_buckling(doc: &fem_3d::Fem3dDocument, source_id: Option<&str>, mode_index: usize) -> UiNode {
+    let Some(case_id) = source_id.map(str::to_string).or_else(|| doc.load_cases.first().map(|c| c.id.clone())) else {
+        return ui_text("No load case defined");
+    };
+    let (_factor, disp_map) = match fem_3d::fem3d_buckling_mode_values(doc, &case_id, mode_index) {
+        Ok(values) => values,
+        Err(e) => return ui_text(format!("Buckling analysis error: {e}")),
+    };
+    let meshes_json = world3d_meshes_json_from_kinds(&["box".to_string(), "sphere".to_string()]);
+    let instances_json = fem3d_instances_json(doc, Some(&disp_map), doc.analysis.deformation_scale);
+    build_world_3d_scene(
+        FEM3D_BODY_RESULTS,
+        FEM3D_APP_ID,
+        world3d_scene(fem3d_camera_json(doc), meshes_json, instances_json, world3d_default_selection_json(), &WorldSunConfig::default()),
+    )
+}
+//#endregion 🔖Fem3dRender
+
+//#region 🔖Fem3dPlayApp
 /// 🧮 v0 design: mirrors `Fem2dPlayApp` — results are recomputed fresh inside `render()`, no cache, no
-/// `RunAnalysis` op, active load case is always `load_cases.first()`.
+/// `RunAnalysis` op. `result_display` is ephemeral view state (see `ResultDisplay`'s doc), defaulting
+/// to the first load case in `Static` mode.
 #[derive(Default)]
-struct Fem3dPlayApp;
+struct Fem3dPlayApp {
+    result_display: ResultDisplay,
+}
 
 impl DocumentApp for Fem3dPlayApp {
     type Projection = fem_3d::Fem3dDocument;
@@ -557,7 +838,7 @@ impl DocumentApp for Fem3dPlayApp {
                 ) {
                     let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
                     let index = doc.projection.materials.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g } }]);
+                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g, rho: 7850.0 } }]);
                 }
             }
             "addSection" => {
@@ -587,7 +868,7 @@ impl DocumentApp for Fem3dPlayApp {
                     args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<Dof>(v.clone()).ok()),
                     args.and_then(|v| v.get("value")).and_then(Value::as_f64),
                 ) {
-                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_3d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new() });
+                    let mut load_case = doc.projection.load_cases.first().cloned().unwrap_or_else(|| fem_3d::FemLoadCase { id: "case-1".into(), name: "Load Case 1".into(), loads: Vec::new(), self_weight: false });
                     let load_id = next_id(load_case.loads.iter().map(|l| l.id.clone()), "l");
                     load_case.loads.push(fem_3d::FemNodalLoad { id: load_id, node_id: node_id.into(), dof, value });
                     let index = doc.projection.load_cases.iter().position(|lc| lc.id == load_case.id).unwrap_or(doc.projection.load_cases.len());
@@ -621,6 +902,9 @@ impl DocumentApp for Fem3dPlayApp {
                     return ActionEmit::amend(vec![fem_3d::Fem3dOp::SetCamera { camera: fem_3d::FemCamera { json: json_str.into() } }], "camera");
                 }
             }
+            "setResultDisplay" => {
+                self.result_display = parse_result_display(args);
+            }
             _ => {}
         }
         ActionEmit::default()
@@ -629,7 +913,7 @@ impl DocumentApp for Fem3dPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, fem_3d::Fem3dDocument>, _view_state: &ViewState) -> UiNode {
         match body_key {
             FEM3D_BODY_MODEL => render_fem3d_model(doc.projection),
-            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection),
+            FEM3D_BODY_RESULTS => render_fem3d_results(doc.projection, &self.result_display),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
@@ -653,9 +937,9 @@ impl DocumentApp for Fem3dPlayApp {
         }
     }
 }
-// #endregion 🔖Fem3dPlayApp
+//#endregion 🔖Fem3dPlayApp
 
-// #region 🔖Fem3dTerminology
+//#region 🔖Fem3dTerminology
 struct Fem3dLabels {
     window_model: &'static str,
     window_results: &'static str,
@@ -685,12 +969,13 @@ fn fem3d_action_labels(is_de: bool) -> HashMap<String, String> {
         ("addNodalLoad", "Add Nodal Load", "Knotenlast hinzufügen"),
         ("removeSelection", "Remove Selection", "Auswahl entfernen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setResultDisplay", "Set Result Display", "Ergebnisanzeige festlegen"),
     ];
     ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
-// #endregion 🔖Fem3dTerminology
+//#endregion 🔖Fem3dTerminology
 
-// #region 🔖Manifest
+//#region 🔖Manifest
 fn create_fem2d_app() -> App {
     App::from_builder(
         App::builder(FEM2D_APP_ID, "FEM 2D")
@@ -716,7 +1001,9 @@ fn create_fem2d_app() -> App {
             .operation("addNodalLoad", "Add Nodal Load")
             .operation("addMemberUdl", "Add Member UDL")
             .operation("removeSelection", "Remove Selection")
-            .operation("setCamera", "Set Camera"),
+            .operation("setCamera", "Set Camera")
+            .view_action("setResultDisplay", "Set Result Display")
+            .action_args("setResultDisplay", result_display_action_args()),
     )
     .example("default", "Default", include_str!("../../2d/example/default.fem2d.json"))
     .program("fem2d", "FEM 2D", "structure")
@@ -750,10 +1037,31 @@ fn create_fem3d_app() -> App {
             .operation("addSupport", "Add Support")
             .operation("addNodalLoad", "Add Nodal Load")
             .operation("removeSelection", "Remove Selection")
-            .operation("setCamera", "Set Camera"),
+            .operation("setCamera", "Set Camera")
+            .view_action("setResultDisplay", "Set Result Display")
+            .action_args("setResultDisplay", result_display_action_args()),
     )
     .example("default", "Default", include_str!("../../3d/example/default.fem3d.json"))
     .program("fem3d", "FEM 3D", "structure")
+}
+
+/// 📝 Shared `setResultDisplay` arg declarations for both apps' builders — `sourceId` (a case/
+/// combination id), `mode` (static/modal/buckling), and `modeIndex` (0-based, only meaningful for
+/// modal/buckling).
+fn result_display_action_args() -> Vec<ActionArgDef> {
+    vec![
+        ActionArgDef::text("sourceId", "Source"),
+        ActionArgDef::select(
+            "mode",
+            "Mode",
+            vec![
+                ActionArgOption::new("static", "Static"),
+                ActionArgOption::new("modal", "Modal"),
+                ActionArgOption::new("buckling", "Buckling"),
+            ],
+        ),
+        ActionArgDef::number("modeIndex", "Mode Index"),
+    ]
 }
 
 fn register_fem_exports() {}
@@ -763,9 +1071,9 @@ semio_framework_plugin::semio_plugin! {
     setup: register_fem_exports,
     apps: [ create_fem2d_app => Fem2dPlayApp, create_fem3d_app => Fem3dPlayApp ],
 }
-// #endregion 🔖Manifest
+//#endregion 🔖Manifest
 
-// #region 🔖Tests
+//#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -774,10 +1082,10 @@ mod tests {
         HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None }
     }
 
-    // #region 🔖RendersScenes
+    //#region 🔖RendersScenes
     #[test]
     fn renders_fem2d_model_scene() {
-        let app = Fem2dPlayApp;
+        let app = Fem2dPlayApp::default();
         let projection = fem_2d::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -788,7 +1096,7 @@ mod tests {
 
     #[test]
     fn renders_fem2d_results_scene() {
-        let app = Fem2dPlayApp;
+        let app = Fem2dPlayApp::default();
         let json_fixture = include_str!("../../2d/example/default.fem2d.json");
         let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
         let history = history_view();
@@ -800,7 +1108,7 @@ mod tests {
 
     #[test]
     fn renders_fem3d_model_scene() {
-        let app = Fem3dPlayApp;
+        let app = Fem3dPlayApp::default();
         let projection = fem_3d::empty_fem3d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -811,7 +1119,7 @@ mod tests {
 
     #[test]
     fn renders_fem3d_results_scene() {
-        let app = Fem3dPlayApp;
+        let app = Fem3dPlayApp::default();
         let json_fixture = include_str!("../../3d/example/default.fem3d.json");
         let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
         let history = history_view();
@@ -820,12 +1128,12 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("world-3d"));
     }
-    // #endregion 🔖RendersScenes
+    //#endregion 🔖RendersScenes
 
-    // #region 🔖AddNodeAction
+    //#region 🔖AddNodeAction
     #[test]
     fn add_node_action_emits_op_2d() {
-        let mut app = Fem2dPlayApp;
+        let mut app = Fem2dPlayApp::default();
         let projection = fem_2d::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -843,7 +1151,7 @@ mod tests {
 
     #[test]
     fn add_node_action_emits_op_3d() {
-        let mut app = Fem3dPlayApp;
+        let mut app = Fem3dPlayApp::default();
         let projection = fem_3d::empty_fem3d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -859,12 +1167,12 @@ mod tests {
             _ => panic!("expected SetNode"),
         }
     }
-    // #endregion 🔖AddNodeAction
+    //#endregion 🔖AddNodeAction
 
-    // #region 🔖SolverErrorSurfaced
+    //#region 🔖SolverErrorSurfaced
     #[test]
     fn results_window_surfaces_solver_error_without_panicking_2d() {
-        let app = Fem2dPlayApp;
+        let app = Fem2dPlayApp::default();
         let projection = fem_2d::empty_fem2d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
@@ -873,18 +1181,18 @@ mod tests {
 
     #[test]
     fn results_window_surfaces_solver_error_without_panicking_3d() {
-        let app = Fem3dPlayApp;
+        let app = Fem3dPlayApp::default();
         let projection = fem_3d::empty_fem3d_projection();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let _ = app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
     }
-    // #endregion 🔖SolverErrorSurfaced
+    //#endregion 🔖SolverErrorSurfaced
 
-    // #region 🔖ExampleFixtureRenders
+    //#region 🔖ExampleFixtureRenders
     #[test]
     fn example_fixture_renders_2d() {
-        let app = Fem2dPlayApp;
+        let app = Fem2dPlayApp::default();
         let json_fixture = include_str!("../../2d/example/default.fem2d.json");
         let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
         let history = history_view();
@@ -895,7 +1203,7 @@ mod tests {
 
     #[test]
     fn example_fixture_renders_3d() {
-        let app = Fem3dPlayApp;
+        let app = Fem3dPlayApp::default();
         let json_fixture = include_str!("../../3d/example/default.fem3d.json");
         let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
         let history = history_view();
@@ -903,6 +1211,99 @@ mod tests {
         let _ = app.render(FEM3D_BODY_MODEL, &doc, &ViewState::default());
         let _ = app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
     }
-    // #endregion 🔖ExampleFixtureRenders
+    //#endregion 🔖ExampleFixtureRenders
+
+    //#region 🔖MeshPreviewRender
+    #[test]
+    fn mesh_preview_renders_region_edges() {
+        let app = Fem2dPlayApp::default();
+        let json_fixture = include_str!("../../2d/example/default.fem2d.json");
+        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("mesh-edge-"), "expected mesh-edge preview layers in the model scene");
+    }
+    //#endregion 🔖MeshPreviewRender
+
+    //#region 🔖ResultDisplayAction
+    #[test]
+    fn set_result_display_is_a_view_action() {
+        let mut app = Fem2dPlayApp::default();
+        let json_fixture = include_str!("../../2d/example/default.fem2d.json");
+        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "sourceId": "dead", "mode": "modal", "modeIndex": 0 });
+        let emit = app.handle_action("setResultDisplay", Some(&args), &doc, &ViewState::default());
+        assert!(emit.ops.is_empty(), "setResultDisplay must not emit operations (it's ephemeral view state)");
+        assert_eq!(app.result_display.mode, DisplayMode::Modal(0));
+        assert_eq!(app.result_display.source_id.as_deref(), Some("dead"));
+    }
+    //#endregion 🔖ResultDisplayAction
+
+    //#region 🔖ContourRender
+    #[test]
+    fn results_window_renders_contour_for_region() {
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
+        let json_fixture = include_str!("../../2d/example/default.fem2d.json");
+        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
+        let json = serde_json::to_string(&node).unwrap();
+        // `layers_json` is itself a JSON string embedded inside `UiNode`'s own serialization, so its
+        // quotes come out backslash-escaped in `json` — match on the unescaped substrings instead.
+        assert!(json.contains("fill"), "expected filled-path contour layers for the region's Tri3Cst elements: {json}");
+        assert!(json.contains("contour-"), "expected contour-prefixed layer ids: {json}");
+    }
+    //#endregion 🔖ContourRender
+
+    //#region 🔖ModeShapeRender
+    #[test]
+    fn results_window_renders_modal_mode_shape() {
+        let app_2d = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let json_fixture_2d = include_str!("../../2d/example/default.fem2d.json");
+        let projection_2d: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture_2d).unwrap();
+        let history = history_view();
+        let doc_2d = DocumentView { projection: &projection_2d, history: &history };
+        let node_2d = app_2d.render(FEM2D_BODY_RESULTS, &doc_2d, &ViewState::default());
+        let json_2d = serde_json::to_string(&node_2d).unwrap();
+        assert!(json_2d.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json_2d}");
+        assert!(!json_2d.contains("Modal analysis error"), "unexpected modal error: {json_2d}");
+
+        let app_3d = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
+        let json_fixture_3d = include_str!("../../3d/example/default.fem3d.json");
+        let projection_3d: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture_3d).unwrap();
+        let doc_3d = DocumentView { projection: &projection_3d, history: &history };
+        let node_3d = app_3d.render(FEM3D_BODY_RESULTS, &doc_3d, &ViewState::default());
+        let json_3d = serde_json::to_string(&node_3d).unwrap();
+        assert!(json_3d.contains("world-3d"), "expected a valid world-3d scene, got: {json_3d}");
+        assert!(!json_3d.contains("Modal analysis error"), "unexpected modal error: {json_3d}");
+    }
+
+    #[test]
+    fn results_window_renders_buckling_mode_shape() {
+        let app_2d = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
+        let json_fixture_2d = include_str!("../../2d/example/default.fem2d.json");
+        let projection_2d: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture_2d).unwrap();
+        let history = history_view();
+        let doc_2d = DocumentView { projection: &projection_2d, history: &history };
+        let node_2d = app_2d.render(FEM2D_BODY_RESULTS, &doc_2d, &ViewState::default());
+        let json_2d = serde_json::to_string(&node_2d).unwrap();
+        assert!(json_2d.contains("canvas-2d"), "expected a valid canvas-2d scene, got: {json_2d}");
+        assert!(!json_2d.contains("Buckling analysis error"), "unexpected buckling error: {json_2d}");
+
+        let app_3d = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("point".into()), mode: DisplayMode::Buckling(0) } };
+        let json_fixture_3d = include_str!("../../3d/example/default.fem3d.json");
+        let projection_3d: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture_3d).unwrap();
+        let doc_3d = DocumentView { projection: &projection_3d, history: &history };
+        let node_3d = app_3d.render(FEM3D_BODY_RESULTS, &doc_3d, &ViewState::default());
+        let json_3d = serde_json::to_string(&node_3d).unwrap();
+        assert!(json_3d.contains("world-3d"), "expected a valid world-3d scene, got: {json_3d}");
+        assert!(!json_3d.contains("Buckling analysis error"), "unexpected buckling error: {json_3d}");
+    }
+    //#endregion 🔖ModeShapeRender
 }
-// #endregion 🔖Tests
+//#endregion 🧪Tests

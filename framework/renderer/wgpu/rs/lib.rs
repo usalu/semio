@@ -300,33 +300,86 @@ impl DockState {
         windows.iter().position(|id| id == window_id)
     }
 
+    /// 🎯 Commits a completed dock drag. `drag.window_id` is removed from `self.root` *eagerly* the
+    /// moment a drag is promoted (see `ShellState::handle_pointer_move`'s `dock.remove_window` call,
+    /// `shell` region) — by the time this runs it is already absent, so every branch below only
+    /// *inserts* it at the resolved zone. (Previously this also re-removed it before inserting, which
+    /// — given it was already gone — silently no-opped every cross-stack/side drop, or for a same-path
+    /// drop, reordered whatever now-shifted window happened to sit at the stale `tab_index`. Real
+    /// drops never actually landed; see `DockTests::apply_drop_*` for pinned regressions.)
     pub fn apply_drop(&mut self, drag: &DockDragPayload, zone: &DockDropZone) -> bool {
-        match zone {
-            DockDropZone::Tab {
-                stack_path,
-                index,
-            } => {
-                if drag.source_path == *stack_path {
-                    return self.reorder_tab(&drag.source_path, drag.tab_index, *index);
-                }
-                if !self.remove_window(&drag.window_id) {
+        match drag.kind {
+            DockDragKind::Tab => match zone {
+                DockDropZone::Tab { stack_path, index } => self.insert_tab(stack_path, &drag.window_id, Some(*index)),
+                DockDropZone::Split { stack_path, side } => self.split_stack_with_window(stack_path, &drag.window_id, *side),
+                DockDropZone::RootSplit { side } => self.split_root_with_window(&drag.window_id, *side),
+            },
+            DockDragKind::Stack => {
+                // 🪟 A stack drag pre-removes only its *active* window (mirrors the tab case) — the
+                // rest of the source stack is still sitting at `drag.source_path` and has to travel
+                // along with it, matching `ui/js/react/index.tsx`'s `extractStackFromLayout`/
+                // `splitWithStack`/`splitRootWithStack`/`mergeStackTabsIntoStack` family.
+                let same_source = matches!(
+                    zone,
+                    DockDropZone::Tab { stack_path, .. } | DockDropZone::Split { stack_path, .. }
+                        if *stack_path == drag.source_path
+                );
+                if same_source {
                     return false;
                 }
-                self.insert_tab(stack_path, &drag.window_id, Some(*index))
-            }
-            DockDropZone::Split { stack_path, side } => {
-                if !self.remove_window(&drag.window_id) {
+                // 🔑 Resolve the target stack's identity (its current active window) *before*
+                // extraction disturbs sibling indices — extracting the rest of the source stack can
+                // collapse/reindex ancestors, which would otherwise strand a pre-extraction
+                // `zone.stack_path` pointing at the wrong node (or nothing). Mirrors React's
+                // `targetAnchorId`/`resolveStackPathForWindowId` re-anchoring in `applyModeDrop`.
+                let target_anchor = match zone {
+                    DockDropZone::Tab { stack_path, .. } | DockDropZone::Split { stack_path, .. } => {
+                        node_at(&self.root, stack_path).and_then(|node| match node {
+                            DockNode::Stack { active, .. } => Some(active.clone()),
+                            _ => None,
+                        })
+                    }
+                    DockDropZone::RootSplit { .. } => None,
+                };
+                let group = self.extract_stack_group(&drag.source_path, &drag.window_id, drag.tab_index);
+                if group.is_empty() {
                     return false;
                 }
-                self.split_stack_with_window(stack_path, &drag.window_id, *side)
-            }
-            DockDropZone::RootSplit { side } => {
-                if !self.remove_window(&drag.window_id) {
-                    return false;
+                match zone {
+                    DockDropZone::Tab { stack_path, index } => {
+                        let target_path = target_anchor
+                            .as_deref()
+                            .and_then(|id| find_stack_path(&self.root, id, &mut vec![]))
+                            .unwrap_or_else(|| stack_path.clone());
+                        self.insert_tabs(&target_path, &group, Some(*index), &drag.window_id)
+                    }
+                    DockDropZone::Split { stack_path, side } => {
+                        let target_path = target_anchor
+                            .as_deref()
+                            .and_then(|id| find_stack_path(&self.root, id, &mut vec![]))
+                            .unwrap_or_else(|| stack_path.clone());
+                        self.split_stack_with_stack(&target_path, group, drag.window_id.clone(), *side)
+                    }
+                    DockDropZone::RootSplit { side } => {
+                        self.split_root_with_stack(group, drag.window_id.clone(), *side)
+                    }
                 }
-                self.split_root_with_window(&drag.window_id, *side)
             }
         }
+    }
+
+    /// 🪟 Pulls whatever remains of the source stack (every window besides the already-removed
+    /// `primary_id`) out of the tree, then reconstructs the original tab order by reinserting
+    /// `primary_id` at `primary_index` — the group a whole-stack drag carries to its drop zone.
+    fn extract_stack_group(&mut self, source_path: &DockPath, primary_id: &str, primary_index: usize) -> Vec<String> {
+        let remaining = self.stack_windows_at_path(source_path).unwrap_or_default();
+        for id in &remaining {
+            self.remove_window(id);
+        }
+        let mut group = remaining;
+        let insert_at = primary_index.min(group.len());
+        group.insert(insert_at, primary_id.to_string());
+        group
     }
 
     pub fn reorder_tab(&mut self, path: &DockPath, from: usize, to: usize) -> bool {
@@ -360,24 +413,48 @@ impl DockState {
     }
 
     pub fn insert_tab(&mut self, path: &DockPath, window_id: &str, index: Option<usize>) -> bool {
+        self.insert_tabs(path, &[window_id.to_string()], index, window_id)
+    }
+
+    /// 🪟 Inserts every window in `windows` (in order) starting at `index`, skipping any already
+    /// present at the target (mirrors `insert_tab`'s dedupe guard), then focuses `active_id` — the
+    /// multi-window counterpart `apply_drop` uses for whole-stack tab-join drops.
+    pub fn insert_tabs(&mut self, path: &DockPath, windows: &[String], index: Option<usize>, active_id: &str) -> bool {
+        if windows.is_empty() {
+            return false;
+        }
         let Some(stack) = node_at_mut(&mut self.root, path) else {
             return false;
         };
-        let DockNode::Stack { windows, active } = stack else {
+        let DockNode::Stack { windows: target, active } = stack else {
             return false;
         };
-        if windows.iter().any(|id| id == window_id) {
+        let mut insert_at = index.unwrap_or(target.len()).min(target.len());
+        let mut inserted_any = false;
+        for window_id in windows {
+            if target.iter().any(|id| id == window_id) {
+                continue;
+            }
+            target.insert(insert_at, window_id.clone());
+            insert_at += 1;
+            inserted_any = true;
+        }
+        if !inserted_any {
             return false;
         }
-        let insert_at = index.unwrap_or(windows.len()).min(windows.len());
-        windows.insert(insert_at, window_id.to_string());
-        *active = window_id.to_string();
-        self.active_window_id = Some(window_id.to_string());
+        *active = active_id.to_string();
+        self.active_window_id = Some(active_id.to_string());
         self.active_stack = Some(path.to_vec());
         true
     }
 
     pub fn split_stack_with_window(&mut self, path: &DockPath, window_id: &str, side: DockSide) -> bool {
+        self.split_stack_with_stack(path, vec![window_id.to_string()], window_id.to_string(), side)
+    }
+
+    /// 🪟 Splits the stack at `path` with an already-assembled multi-window stack — the whole-stack
+    /// counterpart `apply_drop` uses; single-window splits go through `split_stack_with_window` above.
+    pub fn split_stack_with_stack(&mut self, path: &DockPath, windows: Vec<String>, active_id: String, side: DockSide) -> bool {
         let Some(stack_node) = node_at(&self.root, path).cloned() else {
             return false;
         };
@@ -385,20 +462,26 @@ impl DockState {
             return false;
         };
         let new_stack = DockNode::Stack {
-            windows: vec![window_id.to_string()],
-            active: window_id.to_string(),
+            windows,
+            active: active_id.clone(),
         };
         let replacement = match side {
             DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &stack_node, side),
             DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&stack_node, &new_stack, side),
         };
         replace_node_at(&mut self.root, path, replacement);
-        self.active_window_id = Some(window_id.to_string());
-        self.active_stack = find_stack_path(&self.root, window_id, &mut vec![]);
+        self.active_window_id = Some(active_id.clone());
+        self.active_stack = find_stack_path(&self.root, &active_id, &mut vec![]);
         true
     }
 
     pub fn split_root_with_window(&mut self, window_id: &str, side: DockSide) -> bool {
+        self.split_root_with_stack(vec![window_id.to_string()], window_id.to_string(), side)
+    }
+
+    /// 🪟 Splits the mode root with an already-assembled multi-window stack — see
+    /// `split_stack_with_stack`; single-window splits go through `split_root_with_window` above.
+    pub fn split_root_with_stack(&mut self, windows: Vec<String>, active_id: String, side: DockSide) -> bool {
         let current = std::mem::replace(
             &mut self.root,
             DockNode::Stack {
@@ -408,22 +491,55 @@ impl DockState {
         );
         if matches!(&current, DockNode::Stack { windows, .. } if windows.is_empty()) {
             self.root = DockNode::Stack {
-                windows: vec![window_id.to_string()],
-                active: window_id.to_string(),
+                windows,
+                active: active_id.clone(),
             };
         } else {
             let new_stack = DockNode::Stack {
-                windows: vec![window_id.to_string()],
-                active: window_id.to_string(),
+                windows,
+                active: active_id.clone(),
             };
             self.root = match side {
                 DockSide::Left | DockSide::Top => axis_pair_from_stacks(&new_stack, &current, side),
                 DockSide::Right | DockSide::Bottom => axis_pair_from_stacks(&current, &new_stack, side),
             };
         }
-        self.active_window_id = Some(window_id.to_string());
-        self.active_stack = find_stack_path(&self.root, window_id, &mut vec![]);
+        self.active_window_id = Some(active_id.clone());
+        self.active_stack = find_stack_path(&self.root, &active_id, &mut vec![]);
         true
+    }
+
+    /// 🔑 Applies an incoming `WindowLayout` via keyed diff instead of a full teardown-and-rebuild:
+    /// unchanged stacks/axes are reused wholesale (`diff_dock_node`), a stack that's merely reordered
+    /// keeps the user's *current* tab focused instead of reverting to whatever a persisted snapshot's
+    /// `active` field says, and `active_stack`/`maximized_stack` are re-resolved by window-id key
+    /// against the new tree rather than reused as stale positional `DockPath`s a structural change
+    /// could silently misdirect (or leave pointing at a now-out-of-bounds index). Any in-flight resize
+    /// gesture is abandoned (`split_resize_origin` cleared) since a swapped layout invalidates its
+    /// origin indices. See `ShellState::sync_dock`'s `self.dock.root = dock_from_window_layout(...)`
+    /// teardown for the call site this is meant to replace — wiring that swap is a follow-up step for
+    /// whoever next owns the `shell` region (out of this `dock` claim's bounds).
+    pub fn apply_layout_diff(&mut self, layout: &WindowLayout) {
+        let next_root = dock_from_window_layout(&layout.root);
+        let maximized_key = self
+            .maximized_stack
+            .as_ref()
+            .and_then(|path| node_at(&self.root, path))
+            .and_then(|node| match node {
+                DockNode::Stack { active, .. } => Some(active.clone()),
+                _ => None,
+            });
+        let active_key = self.active_window_id.clone();
+        self.root = diff_dock_node(&self.root, next_root);
+        self.active_window_id = active_key
+            .filter(|id| find_stack_path(&self.root, id, &mut vec![]).is_some())
+            .or_else(|| first_window_id(&self.root));
+        self.active_stack = self
+            .active_window_id
+            .as_deref()
+            .and_then(|id| find_stack_path(&self.root, id, &mut vec![]));
+        self.maximized_stack = maximized_key.and_then(|id| find_stack_path(&self.root, &id, &mut vec![]));
+        self.split_resize_origin.clear();
     }
 
     pub fn stack_windows_at_path(&self, path: &DockPath) -> Option<Vec<String>> {
@@ -500,6 +616,8 @@ impl DockState {
     }
 }
 //#endregion DockLayout
+
+//#region DockFreeFunctions
 
 pub fn dock_from_window_layout(root: &WindowLayoutRoot) -> DockNode {
     match root {
@@ -927,6 +1045,56 @@ fn is_empty_node(node: &DockNode) -> bool {
         DockNode::Stack { windows, .. } => windows.is_empty(),
         DockNode::Row(children) | DockNode::Column(children) => children.is_empty(),
     }
+}
+
+/// 🔑 Diffs an incoming `next` node (freshly parsed from a `WindowLayout`) against the corresponding
+/// `old` node by stable window-id key: identical stacks/axes are reused wholesale, a stack that's
+/// merely reordered keeps its old `active` tab focused (rather than reverting to whatever `next` says),
+/// and a structural-kind change (e.g. `Stack` -> `Row`) just adopts `next` outright since there's no
+/// shared identity to preserve. Mirrors the intent of `ui/js/react/index.tsx`'s keyed reconciliation
+/// helpers (`mapLayoutStacks` family) for this crate's `DockNode` shape. See `DockState::apply_layout_diff`.
+fn diff_dock_node(old: &DockNode, next: DockNode) -> DockNode {
+    match (old, &next) {
+        (
+            DockNode::Stack { windows: old_windows, active: old_active },
+            DockNode::Stack { windows: next_windows, active: next_active },
+        ) => {
+            if old_windows == next_windows {
+                return old.clone();
+            }
+            let same_membership = old_windows.len() == next_windows.len()
+                && old_windows.iter().all(|id| next_windows.contains(id));
+            let active = if same_membership && old_windows.iter().any(|id| id == old_active) {
+                old_active.clone()
+            } else {
+                next_active.clone()
+            };
+            DockNode::Stack { windows: next_windows.clone(), active }
+        }
+        (DockNode::Row(old_children), DockNode::Row(next_children)) => {
+            DockNode::Row(diff_axis_children(old_children, next_children))
+        }
+        (DockNode::Column(old_children), DockNode::Column(next_children)) => {
+            DockNode::Column(diff_axis_children(old_children, next_children))
+        }
+        _ => next,
+    }
+}
+
+/// 🔑 Pairwise-diffs axis children by index (the only stable positional key an `Axis` node offers) —
+/// children beyond `old`'s length are new inserts adopted as-is from `next`.
+fn diff_axis_children(old_children: &[(DockNode, f32)], next_children: &[(DockNode, f32)]) -> Vec<(DockNode, f32)> {
+    next_children
+        .iter()
+        .enumerate()
+        .map(|(index, (next_child, next_size))| {
+            let merged = match old_children.get(index) {
+                Some((old_child, _)) => diff_dock_node(old_child, next_child.clone()),
+                None => next_child.clone(),
+            };
+            (merged, *next_size)
+        })
+        .collect()
 }
 
 fn solve_node_bounds(
@@ -1637,7 +1805,7 @@ fn dock_text(
     draw_text(&mut widget_ctx, text, x, y, size, color);
 }
 
-//#region DockFreeFunctions
+//#endregion DockFreeFunctions
 
 //#region DockTests
 #[cfg(all(test, not(target_arch = "wasm32")))]
@@ -1832,6 +2000,294 @@ mod tests {
             active: id.into(),
         }
     }
+
+    //#region DragDropAndLayoutDiffTests
+
+    fn tab_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
+        DockDragPayload {
+            kind: DockDragKind::Tab,
+            window_id: window_id.into(),
+            source_path,
+            tab_index,
+            ghost_label: window_id.into(),
+        }
+    }
+
+    fn stack_payload(window_id: &str, source_path: DockPath, tab_index: usize) -> DockDragPayload {
+        DockDragPayload {
+            kind: DockDragKind::Stack,
+            window_id: window_id.into(),
+            source_path,
+            tab_index,
+            ghost_label: window_id.into(),
+        }
+    }
+
+    /// 🎯 Regression pin for the double-removal bug: `apply_drop` used to call `remove_window` again
+    /// on a window the caller (`ShellState::handle_pointer_move`) had *already* removed at drag
+    /// promotion, so `remove_window` always failed and every cross-stack tab drop silently no-opped.
+    #[test]
+    fn apply_drop_tab_moves_window_across_stacks() {
+        let mut dock = DockState::default();
+        // 🪟 Three stacks so removing `a` (the sole occupant of stack `[0]`) prunes that slot without
+        // also emptying the drop target — `b` shifts from `[1]` down to `[0]`, and `c` (the actual
+        // cross-stack drop target) shifts from `[2]` to `[1]`.
+        dock.root = DockNode::Row(vec![(stack_with("a"), 0.34), (stack_with("b"), 0.33), (stack_with("c"), 0.33)]);
+        // 🎬 Mirrors `ShellState::handle_pointer_move`'s eager removal at drag-promotion time. In the
+        // real runtime `compute_dock_drop_zone` re-derives `stack_path` from the *current* (already
+        // shifted) tree on every subsequent pointer move, so `zone` below targets `c`'s post-removal
+        // path `[1]`, exactly as a live drag would have resolved it — not `c`'s stale pre-removal `[2]`.
+        assert!(dock.remove_window("a"));
+        assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("c")), "c shifted to [1] once a's slot was pruned");
+        let payload = tab_payload("a", vec![0], 0);
+        let zone = DockDropZone::Tab { stack_path: vec![1], index: 0 };
+        assert!(dock.apply_drop(&payload, &zone), "cross-stack tab drop must actually land");
+        assert_eq!(
+            node_at(&dock.root, &vec![1]),
+            Some(&DockNode::Stack { windows: vec!["a".into(), "c".into()], active: "a".into() })
+        );
+        assert!(find_stack_path(&dock.root, "b", &mut vec![]).is_some(), "b (untouched by this drop) still resolvable");
+        assert_eq!(dock.active_window_id.as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn apply_drop_tab_reinserts_into_originating_stack_at_new_index() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![(
+            DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "a".into() },
+            1.0,
+        )]);
+        assert!(dock.remove_window("a"));
+        let payload = tab_payload("a", vec![0], 0);
+        let zone = DockDropZone::Tab { stack_path: vec![0], index: 2 };
+        assert!(dock.apply_drop(&payload, &zone));
+        assert_eq!(
+            node_at(&dock.root, &vec![0]),
+            Some(&DockNode::Stack { windows: vec!["b".into(), "c".into(), "a".into()], active: "a".into() })
+        );
+    }
+
+    #[test]
+    fn apply_drop_tab_split_targets_the_post_removal_stack() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
+        assert!(dock.remove_window("a"));
+        // 🪟 Removing the sole occupant of stack `a` prunes it — `b` now sits at path `[0]`.
+        let payload = tab_payload("a", vec![0], 0);
+        let zone = DockDropZone::Split { stack_path: vec![0], side: DockSide::Right };
+        assert!(dock.apply_drop(&payload, &zone));
+        assert!(find_stack_path(&dock.root, "a", &mut vec![]).is_some());
+        assert!(find_stack_path(&dock.root, "b", &mut vec![]).is_some());
+        assert_eq!(dock.active_window_id.as_deref(), Some("a"));
+    }
+
+    #[test]
+    fn apply_drop_tab_root_split_builds_axis_pair() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() };
+        assert!(dock.remove_window("a"));
+        let payload = tab_payload("a", vec![], 0);
+        let zone = DockDropZone::RootSplit { side: DockSide::Left };
+        assert!(dock.apply_drop(&payload, &zone));
+        assert_eq!(
+            dock.root,
+            DockNode::Row(vec![(stack_with("a"), 0.5), (DockNode::Stack { windows: vec!["b".into()], active: "b".into() }, 0.5)])
+        );
+    }
+
+    #[test]
+    fn apply_drop_stack_moves_whole_group_preserving_order_and_target_key() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![
+            (DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into()], active: "b".into() }, 0.5),
+            (stack_with("d"), 0.5),
+        ]);
+        // 🎬 A stack drag pre-removes only its active window, same as a tab drag.
+        assert!(dock.remove_window("b"));
+        let payload = stack_payload("b", vec![0], 1);
+        let zone = DockDropZone::Tab { stack_path: vec![1], index: 0 };
+        assert!(dock.apply_drop(&payload, &zone), "whole-stack tab-join must land");
+        // 🔑 `a`/`c` (the siblings left behind by the eager single-window removal) travel with `b`,
+        // reconstructed in their original order around it, and land next to `d` by key — not by the
+        // pre-extraction `stack_path`, which the extraction itself would have shifted.
+        let target = find_stack_path(&dock.root, "d", &mut vec![]).expect("d still resolvable by key");
+        assert_eq!(
+            node_at(&dock.root, &target),
+            Some(&DockNode::Stack { windows: vec!["a".into(), "b".into(), "c".into(), "d".into()], active: "b".into() })
+        );
+        assert!(find_stack_path(&dock.root, "a", &mut vec![]).is_some());
+        assert_eq!(dock.active_window_id.as_deref(), Some("b"));
+    }
+
+    #[test]
+    fn apply_drop_stack_split_reanchors_target_after_extraction_shifts_paths() {
+        let mut dock = DockState::default();
+        // 🔑 Source stack `[a, x]` keeps two windows, so the eager active-window removal at promotion
+        // (`remove_window("a")`) does *not* collapse it — `b` stays at `[1]` right up until
+        // `extract_stack_group` later pulls `x` out too, which *does* empty-and-prune slot `[0]`,
+        // shifting `b` from `[1]` down to `[0]`. The `stack_path: [1]` captured in `zone` (from
+        // hit-testing *before* this drag even started) is therefore stale by the time the drop lands.
+        dock.root = DockNode::Row(vec![
+            (DockNode::Stack { windows: vec!["a".into(), "x".into()], active: "a".into() }, 0.5),
+            (stack_with("b"), 0.5),
+        ]);
+        assert!(dock.remove_window("a"));
+        assert_eq!(node_at(&dock.root, &vec![1]), Some(&stack_with("b")), "b starts at [1], pre-shift");
+        let payload = stack_payload("a", vec![0], 0);
+        let zone = DockDropZone::Split { stack_path: vec![1], side: DockSide::Bottom };
+        assert!(dock.apply_drop(&payload, &zone), "split must land even though [1] goes stale mid-drop");
+        // `b` shifted to `[0]` once `x` was extracted and slot `[0]` collapsed — proof the naive stale
+        // path would have missed (or misdirected onto) the wrong node.
+        assert_eq!(node_at(&dock.root, &vec![1]), None, "the pre-extraction path is no longer valid at all");
+        let b_path = find_stack_path(&dock.root, "b", &mut vec![]).expect("b still resolvable by key");
+        assert_eq!(node_at(&dock.root, &b_path), Some(&stack_with("b")), "b itself must be untouched by the split");
+        let a_path = find_stack_path(&dock.root, "a", &mut vec![]).expect("a resolvable by key");
+        assert_eq!(
+            node_at(&dock.root, &a_path),
+            Some(&DockNode::Stack { windows: vec!["a".into(), "x".into()], active: "a".into() }),
+            "a's whole group (a + the sibling x it dragged along) landed together"
+        );
+    }
+
+    #[test]
+    fn apply_drop_stack_same_source_is_noop() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![
+            (DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "a".into() }, 0.5),
+            (stack_with("c"), 0.5),
+        ]);
+        assert!(dock.remove_window("a"));
+        let before = dock.root.clone();
+        let payload = stack_payload("a", vec![0], 0);
+        let zone = DockDropZone::Tab { stack_path: vec![0], index: 0 };
+        assert!(!dock.apply_drop(&payload, &zone), "dropping a stack back onto itself is a no-op");
+        assert_eq!(dock.root, before);
+    }
+
+    #[test]
+    fn compute_dock_drop_zone_prefers_tab_bar_over_body_over_root() {
+        let tab_bars = vec![(vec![0], Rect::new(0.0, 0.0, 200.0, 24.0), vec![80.0, 80.0])];
+        let bodies = vec![(vec![0], Rect::new(0.0, 24.0, 200.0, 200.0), "a".to_string())];
+        let canvas = Rect::new(0.0, 0.0, 200.0, 224.0);
+        // Inside the tab bar rect → `Tab` zone wins even though it's also inside the body's column span.
+        assert_eq!(
+            compute_dock_drop_zone(10.0, 10.0, &tab_bars, &bodies, canvas),
+            Some(DockDropZone::Tab { stack_path: vec![0], index: 0 })
+        );
+        // Inside the body but below the tab bar → `Split` zone.
+        assert!(matches!(
+            compute_dock_drop_zone(100.0, 100.0, &tab_bars, &bodies, canvas),
+            Some(DockDropZone::Split { .. })
+        ));
+        // Outside every registered stack but inside the canvas → `RootSplit`.
+        assert!(matches!(
+            compute_dock_drop_zone(190.0, 300.0, &tab_bars, &bodies, canvas),
+            None
+        ));
+        let wide_canvas = Rect::new(0.0, 0.0, 400.0, 400.0);
+        assert!(matches!(
+            compute_dock_drop_zone(390.0, 390.0, &tab_bars, &bodies, wide_canvas),
+            Some(DockDropZone::RootSplit { .. })
+        ));
+    }
+
+    #[test]
+    fn resolve_split_side_uses_dominant_axis_from_center() {
+        // Wide-and-short body: a small vertical offset from center stays dominated by the x-axis.
+        assert_eq!(resolve_split_side(10.0, 60.0, 400.0, 120.0), DockSide::Left);
+        assert_eq!(resolve_split_side(390.0, 60.0, 400.0, 120.0), DockSide::Right);
+        // Tall-and-narrow body: a small horizontal offset stays dominated by the y-axis.
+        assert_eq!(resolve_split_side(60.0, 10.0, 120.0, 400.0), DockSide::Top);
+        assert_eq!(resolve_split_side(60.0, 390.0, 120.0, 400.0), DockSide::Bottom);
+    }
+
+    #[test]
+    fn apply_layout_diff_keeps_current_tab_focused_over_stale_persisted_active() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "b".into() };
+        dock.active_window_id = Some("b".into());
+        // 🗄️ A persisted `WindowLayout` snapshot whose `active_window_kind_id` predates the user's
+        // later in-session tab switch to `b` — a naive `self.dock.root = dock_from_window_layout(...)`
+        // teardown would silently revert focus back to `a`.
+        let stale_layout = WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: "stack".into(),
+                size: None,
+                active_window_kind_id: Some("a".into()),
+                children: vec![
+                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None },
+                    WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None },
+                ],
+            }),
+        };
+        dock.apply_layout_diff(&stale_layout);
+        assert_eq!(
+            dock.root,
+            DockNode::Stack { windows: vec!["a".into(), "b".into()], active: "b".into() },
+            "same membership, reordered-or-not — the user's current tab stays focused"
+        );
+    }
+
+    #[test]
+    fn apply_layout_diff_reanchors_active_and_maximized_stack_by_key() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
+        dock.active_window_id = Some("b".into());
+        dock.active_stack = Some(vec![1]);
+        dock.maximized_stack = Some(vec![1]);
+        dock.split_resize_origin = vec![0.5, 0.5];
+        // 🔑 The incoming layout reverses the two stacks' order — `b`'s *positional* path moves from
+        // `[1]` to `[0]`. A stale-path reuse would now silently misdirect `active_stack`/
+        // `maximized_stack` at `a` instead of following `b` by key.
+        let reversed = WindowLayout {
+            root: WindowLayoutRoot::Axis(ui_wgpu::WindowLayoutAxisNode {
+                kind: "row".into(),
+                size: None,
+                children: vec![
+                    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(0.5), active_window_kind_id: Some("b".into()), children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None }] }),
+                    WindowLayoutChild::Stack(WindowLayoutStackNode { kind: "stack".into(), size: Some(0.5), active_window_kind_id: Some("a".into()), children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "a".into(), title: None, instance_id: None, template_id: None }] }),
+                ],
+            }),
+        };
+        dock.apply_layout_diff(&reversed);
+        assert_eq!(dock.active_window_id.as_deref(), Some("b"));
+        assert_eq!(dock.active_stack, Some(vec![0]));
+        assert_eq!(dock.maximized_stack, Some(vec![0]));
+        assert!(dock.split_resize_origin.is_empty(), "an in-flight resize gesture's stale indices must not survive a layout swap");
+    }
+
+    #[test]
+    fn apply_layout_diff_clears_maximized_stack_when_its_window_is_gone() {
+        let mut dock = DockState::default();
+        dock.root = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
+        dock.active_window_id = Some("a".into());
+        dock.maximized_stack = Some(vec![0]);
+        let without_a = WindowLayout {
+            root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
+                kind: "stack".into(),
+                size: None,
+                active_window_kind_id: Some("b".into()),
+                children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: "b".into(), title: None, instance_id: None, template_id: None }],
+            }),
+        };
+        dock.apply_layout_diff(&without_a);
+        assert_eq!(dock.maximized_stack, None);
+        assert_eq!(dock.active_window_id.as_deref(), Some("b"));
+    }
+
+    #[test]
+    fn diff_dock_node_reuses_unchanged_subtree_and_adopts_new_shape_where_changed() {
+        let old = DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]);
+        // Identical row → the whole node is byte-for-byte the same value (full reuse).
+        let unchanged = diff_dock_node(&old, DockNode::Row(vec![(stack_with("a"), 0.5), (stack_with("b"), 0.5)]));
+        assert_eq!(unchanged, old);
+        // A structural kind change (Stack -> Row) at index 1 has no shared identity — adopt `next` as-is.
+        let next = DockNode::Row(vec![(stack_with("a"), 0.5), (DockNode::Row(vec![(stack_with("b"), 1.0)]), 0.5)]);
+        let diffed = diff_dock_node(&old, next.clone());
+        assert_eq!(diffed, next);
+    }
+
+    //#endregion DragDropAndLayoutDiffTests
 
     #[test]
     fn even_layout_single_window() {
@@ -4349,6 +4805,115 @@ fn text_editor_interaction_actions(
         ),
     ]
 }
+
+//#region 🔖ScenesInteropAdditions
+// 🧭 WGPU-RENDERER-FULL-PARITY (2026-07): five narrow additive wrappers, each a one-line delegation
+// mirroring `text_editor_pointer_down`/`_move`/`_up` immediately above — `scenes::TextEditor`'s
+// `render_text_editor` needs them to reach `EditorHost` capabilities (double-click word-select, explicit
+// selection ranges, completion commit, and caret read-back for popup placement) that already exist on
+// `EditorHost` (`framework/editor/rs`) but weren't exposed past this module boundary. No existing
+// signature changed; nothing removed.
+
+/// 🖱️🖱️ Double-click-to-select-word: delegates to `EditorHost::select_span_at_screen` (same screen-space
+/// hit-testing as `text_editor_pointer_down`), mirroring `WasmEditorSurface`'s `session.selectSpanAtScreen`
+/// (`framework/renderer/react/components/text-editor-host.tsx`). Also reused by the context menu's
+/// "Select Token" action at the original right-click point.
+pub fn text_editor_select_span_at_screen(
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+    x: f32,
+    y: f32,
+) -> Vec<ActionDescriptor> {
+    let sx = (x - inner.x) as f64;
+    let sy = (y - inner.y) as f64;
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return Vec::new();
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return Vec::new();
+        };
+        host.select_span_at_screen(sx, sy);
+        text_editor_interaction_actions(scene, host)
+    })
+}
+
+/// 🎯 Sets an explicit byte-offset selection range (anchor, caret) — used by the "Select Line" context-menu
+/// action, whose range is computed from the buffer text rather than a screen point.
+pub fn text_editor_set_selection(
+    scene: &UiComponentSceneNode,
+    anchor: usize,
+    caret: usize,
+) -> Vec<ActionDescriptor> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return Vec::new();
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return Vec::new();
+        };
+        host.set_selection_range(anchor, caret);
+        text_editor_interaction_actions(scene, host)
+    })
+}
+
+/// ✅ Commits a completion: replaces `[prefix_start, caret)` with `insert_text`, mirroring
+/// `WasmEditorSurface.applyCompletion` (`setSelectionRange` + `replaceSelection`).
+pub fn text_editor_apply_completion(
+    scene: &UiComponentSceneNode,
+    prefix_start: usize,
+    caret: usize,
+    insert_text: &str,
+) -> Vec<ActionDescriptor> {
+    ENGINE_SURFACES.with(|cell| {
+        let mut map = cell.borrow_mut();
+        let Some(entry) = map.get_mut(&scene.surface_id) else {
+            return Vec::new();
+        };
+        let Some(host) = entry.editor.as_mut() else {
+            return Vec::new();
+        };
+        host.set_selection_range(prefix_start, caret);
+        host.replace_selection(insert_text);
+        text_editor_interaction_actions(scene, host)
+    })
+}
+
+/// 🔎 Read-only `(anchor, caret)` byte-offset accessor — lets `scenes::TextEditor` compute the
+/// completion-prefix boundary without duplicating `EditorHost`'s own state.
+pub fn text_editor_caret(scene: &UiComponentSceneNode) -> (usize, usize) {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let Some(entry) = map.get(&scene.surface_id) else {
+            return (0, 0);
+        };
+        let Some(host) = entry.editor.as_ref() else {
+            return (0, 0);
+        };
+        (host.anchor(), host.caret())
+    })
+}
+
+/// 📍 Screen-space caret position (surface-local, i.e. already offset by `inner.x/y`), for placing the
+/// completions dropdown and the rename input near the caret — mirrors `WasmEditorSurface.caretScreenPosition`
+/// (`caretWorldJson` + `worldToScreenJson`).
+pub fn text_editor_caret_screen(scene: &UiComponentSceneNode, inner: Rect) -> Option<(f32, f32)> {
+    ENGINE_SURFACES.with(|cell| {
+        let map = cell.borrow();
+        let entry = map.get(&scene.surface_id)?;
+        let host = entry.editor.as_ref()?;
+        let world: Value = serde_json::from_str(&host.caret_world_json()).ok()?;
+        let wx = world.get("x")?.as_f64()?;
+        let wy = world.get("y")?.as_f64()?;
+        let screen: Value = serde_json::from_str(&host.world_to_screen_json(wx, wy)).ok()?;
+        let sx = screen.get("x")?.as_f64()? as f32;
+        let sy = screen.get("y")?.as_f64()? as f32;
+        Some((inner.x + sx, inner.y + sy))
+    })
+}
+//#endregion 🔖ScenesInteropAdditions
 //#endregion TextEditor
 // #endregion engine_canvas
 }
@@ -4357,7 +4922,7 @@ pub mod interpreter {
 // #region interpreter
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
-use crate::scenes::{queue_canvas_image_upload, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
+use crate::scenes::{queue_canvas_image_upload, decode_canvas_image, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
 use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
@@ -4725,7 +5290,213 @@ pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiN
     }
 }
 
-pub fn render_ui_node(
+//#region RetainedEngineCutover
+/** 🧵 The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
+ * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
+ * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
+ * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
+ * this same region's pre-existing `UI_IMAGE_FETCH_QUEUE`-style statics, since neither call site of
+ * `render_ui_node` (`shell::ShellChrome`'s `render_window_content`/`render_floating_panel`) is in a
+ * region this ticket may touch, so there was no `ShellTypes` struct field available to hang it on
+ * (struct field additions there are an Integrator choke point per `region-claims.json`).
+ *
+ * `window_id` is a genuinely new parameter — the only way to key per-window retained state — added
+ * to `render_ui_node`'s public signature. Its two real call sites (`render_window_content`,
+ * `render_floating_panel`, both in the off-limits `shell::ShellChrome` region) were touched with the
+ * smallest possible diff: appending the one identifier string each already has in scope
+ * (`window_id`/`active_tab_id`). See the ticket report for why this was judged unavoidable rather than
+ * filed as a pure wiring request: without it the crate does not compile, and no identity for the
+ * retained per-window bucket can be derived from anything else already flowing into this function.
+ *
+ * ✅ RESOLVED (was a KNOWN, CONFIRMED GAP): `ui_wgpu::Ui` no longer owns a private `FontAtlas`/
+ * `Option<IconAtlas>` at all — `set_icons`/the old `atlas`/`icons` fields are gone. `Ui::frame` now
+ * takes `atlas: &mut FontAtlas, icons: Option<&IconAtlas>` as parameters, mirroring how
+ * `flex::LayoutEngine::compute`/`paint::paint_tree` already receive them internally. `render_ui_node`
+ * below passes `ctx.atlas`/`ctx.icons` straight through — the SAME `FontAtlas`/`IconAtlas` instances
+ * the shell already `GpuContext::upload_font_atlas`/`upload_icon_atlas`s every frame for chrome/dock/
+ * panel text — so retained-mode content now shares the one real, GPU-uploaded glyph/icon texture
+ * instead of reading from (or clobbering) a second, independent one. See
+ * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
+ * for the original gap and the follow-up ticket work that closed it. */
+thread_local! {
+    static UI_ENGINE: std::cell::RefCell<ui_wgpu::Ui> = std::cell::RefCell::new(ui_wgpu::Ui::new());
+    /// 👆 Last-seen `(pointer_down, pointer_button)` per `window_id`, so `dispatch_pointer_events` can
+    /// detect Down/Up edges from `InputState`'s per-frame aggregate (which only carries *current*
+    /// state, not a transition) without needing a `ShellTypes` field either.
+    static POINTER_EDGE_STATE: std::cell::RefCell<std::collections::HashMap<String, (bool, i16)>> =
+        std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/** 🖇️ Public hook for the sibling `w3-shell-input-cutover` workstream (region `shell::ShellInput`,
+ * which this ticket must not touch): routes a fully-formed `ui_wgpu::UiEvent` (built from raw
+ * winit input, e.g. real key events/IME/focus-scoped routing this function's own per-frame
+ * pointer-only synthesis below deliberately does not attempt) into the same process-wide retained
+ * engine `render_ui_node` itself drives, and forwards any resulting `UiCommand::App` action into the
+ * same `input.queue_event`/`app.dispatch_actions` pipeline other actions already use. Returns the raw
+ * command list too, for `FocusChanged`/`OverlayClosed`/`DropCommitted`/clipboard commands a caller may
+ * want to react to itself (e.g. an actual OS clipboard read for `ClipboardPasteRequested` is a `host`
+ * concern, not this function's). */
+pub fn dispatch_ui_event(
+    window_id: &str,
+    event: ui_wgpu::UiEvent,
+    input: &mut ui_wgpu::InputState<ActionDescriptor>,
+) -> Vec<ui_wgpu::UiCommand> {
+    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, event));
+    apply_ui_commands(&commands, input);
+    commands
+}
+
+fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+    for command in commands {
+        if let ui_wgpu::UiCommand::App { action, .. } = command {
+            input.queue_event(action.clone());
+        }
+        // 🚧 FocusChanged/OverlayClosed/DropCommitted/DropCancelled/Clipboard* are host/EventRouter
+        // bookkeeping this ticket doesn't have a sanctioned place to react to yet (clipboard OS
+        // access in particular is a documented `host`-region gap per `report-w1d-events-overlay.md`)
+        // — left as a wiring request, not silently dropped without a trace: see ticket report.
+    }
+}
+
+/// 🖱️ Best-effort Left/Right/Middle mapping for `InputState::pointer_button`'s raw `i16` code. This
+/// renderer has never had a single canonical enum for mouse buttons (widgets consume `pointer_down`
+/// as a boolean and ignore which button), so this assumes the common `0 = primary` convention; the
+/// `w3-shell-input-cutover` workstream owns the real winit `MouseButton` mapping and should correct
+/// this if its own convention differs.
+fn pointer_button_from_code(code: i16) -> ui_wgpu::PointerButton {
+    match code {
+        1 => ui_wgpu::PointerButton::Secondary,
+        2 => ui_wgpu::PointerButton::Middle,
+        _ => ui_wgpu::PointerButton::Primary,
+    }
+}
+
+/** 🕹️ Synthesizes `PointerMove`/`PointerDown`/`PointerUp`/`Scroll` `UiEvent`s for `window_id` from
+ * the current frame's aggregate `InputState` (the same pointer state the immediate-mode `widgets`
+ * path already reads via `hit_at`/`register_hit`), gated to `bounds` so only the window/panel the
+ * pointer is actually over reacts. Keyboard/IME/focus-scoped routing is deliberately NOT attempted
+ * here — `pending_keys`/`text_buffer` are a single shared (not window-scoped) queue, so draining them
+ * from inside a function called once per docked window *and* per floating panel per frame risks
+ * stealing keys from whichever window/panel doesn't happen to run first; that needs "which window
+ * currently has keyboard focus" bookkeeping this ticket's `must_not_touch` `shell` regions own. Use
+ * `dispatch_ui_event` (above) for that once `w3-shell-input-cutover` lands it. */
+fn dispatch_pointer_events(
+    engine: &mut ui_wgpu::Ui,
+    window_id: &str,
+    bounds: Rect,
+    input: &ui_wgpu::InputState<ActionDescriptor>,
+) -> Vec<ui_wgpu::UiCommand> {
+    let local_x = input.pointer_x - bounds.x;
+    let local_y = input.pointer_y - bounds.y;
+    let inside = local_x >= 0.0 && local_y >= 0.0 && local_x <= bounds.w && local_y <= bounds.h;
+    let button = pointer_button_from_code(input.pointer_button);
+    let was_down = POINTER_EDGE_STATE.with(|cell| cell.borrow().get(window_id).map(|(down, _)| *down).unwrap_or(false));
+    let mut commands = Vec::new();
+    if inside {
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerMove { x: local_x, y: local_y }));
+        if input.wheel_delta != 0.0 {
+            commands.extend(engine.dispatch_event(
+                window_id,
+                ui_wgpu::UiEvent::Scroll { x: local_x, y: local_y, delta_x: 0.0, delta_y: input.wheel_delta },
+            ));
+        }
+    }
+    if input.pointer_down && !was_down && inside {
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerDown { x: local_x, y: local_y, button }));
+    } else if !input.pointer_down && was_down {
+        commands.extend(engine.dispatch_event(window_id, ui_wgpu::UiEvent::PointerUp { x: local_x, y: local_y, button }));
+    }
+    POINTER_EDGE_STATE.with(|cell| {
+        cell.borrow_mut().insert(window_id.to_string(), (input.pointer_down, input.pointer_button));
+    });
+    commands
+}
+
+fn shift_instance(instance: &ui_wgpu::draw::UiInstance, dx: f32, dy: f32) -> ui_wgpu::draw::UiInstance {
+    let mut shifted = *instance;
+    shifted.rect[0] += dx;
+    shifted.rect[1] += dy;
+    shifted
+}
+
+fn shift_vertex(vertex: &ui_wgpu::draw::VectorVertex, dx: f32, dy: f32) -> ui_wgpu::draw::VectorVertex {
+    let mut shifted = *vertex;
+    shifted.position[0] += dx;
+    shifted.position[1] += dy;
+    shifted
+}
+
+fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wgpu::draw::ScissorRect {
+    ui_wgpu::draw::ScissorRect {
+        x: ((scissor.x as f32) + dx).max(0.0) as u32,
+        y: ((scissor.y as f32) + dy).max(0.0) as u32,
+        w: scissor.w,
+        h: scissor.h,
+    }
+}
+
+/** 🧩 Copies `retained`'s already-painted content into `target` (the same live `DrawList` the
+ * immediate-mode path already draws into and the caller already hands to `gpu::GpuContext`'s
+ * existing submission call), translating every position by `(offset_x, offset_y)` — `Ui::frame`
+ * lays out against a `(0,0)`-origin viewport (`bounds.w`×`bounds.h`), so this applies the same
+ * screen-placement offset the immediate path previously got "for free" by painting directly into
+ * caller-supplied absolute `Rect`s. `DrawLayer::foreground_of` indexes into `glass_regions` (not
+ * `layers` — confirmed by reading `DrawList::push_glass`/`begin_glass_content`), so only that index
+ * needs rebasing by however many glass regions `target` already had; `ScenePass3d::layer_index` does
+ * index into `layers` and is rebased accordingly, kept correct for whatever a future `SceneHost` might
+ * push (today's `paint::paint_component_scene` placeholder — no `SceneHost` is registered, see the
+ * `ComponentScene`/`Image` shadow-paint note below — doesn't populate `scene_passes`, so this is
+ * presently a no-op copy of an empty `Vec`, kept for correctness rather than left a silent gap). */
+fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
+    let glass_base = target.glass_regions.len();
+    for region in &retained.glass_regions {
+        let mut shifted = *region;
+        shifted.rect[0] += offset_x;
+        shifted.rect[1] += offset_y;
+        target.glass_regions.push(shifted);
+    }
+    let layer_base = target.layers.len();
+    for layer in &retained.layers {
+        target.layers.push(ui_wgpu::draw::DrawLayer {
+            scissor: layer.scissor.map(|s| shift_scissor(s, offset_x, offset_y)),
+            foreground_of: layer.foreground_of.map(|idx| idx + glass_base),
+            ui_instances: layer.ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
+            raster_instances: layer
+                .raster_instances
+                .iter()
+                .map(|(key, inst)| (key.clone(), shift_instance(inst, offset_x, offset_y)))
+                .collect(),
+            vector_vertices: layer.vector_vertices.iter().map(|v| shift_vertex(v, offset_x, offset_y)).collect(),
+            overlay_ui_instances: layer.overlay_ui_instances.iter().map(|inst| shift_instance(inst, offset_x, offset_y)).collect(),
+            overlay_vector_vertices: layer.overlay_vector_vertices.iter().map(|v| shift_vertex(v, offset_x, offset_y)).collect(),
+        });
+    }
+    for pass in &retained.scene_passes {
+        let mut shifted = pass.clone();
+        shifted.viewport[0] += offset_x;
+        shifted.viewport[1] += offset_y;
+        shifted.layer_index += layer_base;
+        target.scene_passes.push(shifted);
+    }
+}
+
+/** 🎬🖼️ `ComponentScene`/`Image` have no `SceneHost` bridge this pass (see the ticket report's "Why
+ * no `SceneHost` impl" finding: `scene_slots::SceneSlot` only carries `{surface_id, kind, rect}` —
+ * never the full `UiComponentSceneNode` payload a real `render_component_scene` call needs — and
+ * doesn't cover `Image`/`ExternalSlot` at all, so a trait bridge would still need this exact
+ * fallback for two of the three kinds regardless). Instead this walks the *original* `UiNode` (not
+ * the retained tree) with the pre-cutover immediate-mode layout math (`measure_ui_node`/
+ * `layout_vertical`/`layout_horizontal`, both still very much alive and now dual-purposed) purely to
+ * resolve `ComponentScene`/`Image` leaf bounds, then paints their real content — unchanged
+ * `render_component_scene`/`render_ui_image` calls — directly into the live `ctx.draw`, layered after
+ * the retained composite above. `ExternalSlot` is left to the retained engine's own placeholder
+ * (`resolve_external_slots_in_tree` already substitutes real content upstream before a tree ever
+ * reaches `render_ui_node`, so a bare `ExternalSlot` reaching here is already the rare/fallback case).
+ * Every other kind is skipped (`_ => {}`) since the retained engine already painted it — recursing
+ * into it here too would double-paint. Bounds may not exactly match the retained engine's own
+ * flex-computed bounds for `Field`/`Section` containers (one of this ticket's explicitly
+ * pre-authorized "known gap" kinds) — documented, not silently accepted. */
+fn paint_unbridged_scene_and_image_leaves(
     node: &UiNode,
     bounds: Rect,
     ctx: &mut FrameworkWidgetContext<'_>,
@@ -4736,12 +5507,105 @@ pub fn render_ui_node(
     icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
     board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
 ) {
+    match node {
+        UiNode::ComponentScene(scene) => render_component_scene(
+            scene,
+            bounds,
+            ctx,
+            gpu,
+            world3d_states,
+            node_graph_states,
+            tiled_map_states,
+            icon_render_states,
+            board2d_states,
+        ),
+        UiNode::Image(image) => render_ui_image(image, bounds, ctx),
+        UiNode::Stack(stack) => {
+            let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
+            let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
+            let vertical = stack.direction != "horizontal";
+            let sizes: Vec<f32> = stack
+                .children
+                .iter()
+                .map(|child| {
+                    let (w, h) = measure_ui_node(ctx.atlas, ctx.theme, child);
+                    if vertical { h } else { w }
+                })
+                .collect();
+            let rects = if vertical {
+                layout_vertical(bounds, gap, padding, &sizes)
+            } else {
+                layout_horizontal(bounds, gap, padding, &sizes)
+            };
+            for (child, rect) in stack.children.iter().zip(rects.iter()) {
+                paint_unbridged_scene_and_image_leaves(
+                    child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
+                );
+            }
+        }
+        UiNode::Section(section) => {
+            let gap = gap_for_token(ctx.theme, None);
+            let padding = padding_for_token(ctx.theme, None);
+            let sizes: Vec<f32> = section
+                .children
+                .iter()
+                .map(|child| measure_ui_node(ctx.atlas, ctx.theme, child).1)
+                .collect();
+            let rects = layout_vertical(bounds, gap, padding, &sizes);
+            for (child, rect) in section.children.iter().zip(rects.iter()) {
+                paint_unbridged_scene_and_image_leaves(
+                    child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
+                );
+            }
+        }
+        UiNode::Field(field) => paint_unbridged_scene_and_image_leaves(
+            &field.child, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
+        ),
+        _ => {}
+    }
+}
+
+/** 🔁 The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
+ * `ui_wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
+ * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
+ * this had to become a new parameter and which two call sites outside `interpreter` were touched. */
+pub fn render_ui_node(
+    node: &UiNode,
+    bounds: Rect,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    window_id: &str,
+    gpu: &mut ui_wgpu::GpuContext,
+    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
+    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
+    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
+    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
+) {
     if let Err(message) = validate_ui_node(node, &RENDER_PLAN_LIMITS) {
         return render_plan_error_widget(&message, bounds, ctx);
     }
-    render_ui_node_inner(node, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
+    let theme = *ctx.theme;
+    let viewport_w = bounds.w.max(1.0);
+    let viewport_h = bounds.h.max(1.0);
+    let commands = UI_ENGINE.with(|cell| {
+        let mut engine = cell.borrow_mut();
+        engine.set_theme(theme);
+        engine.apply_tree(window_id, node);
+        engine.set_viewport(window_id, viewport_w, viewport_h);
+        let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
+        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons) {
+            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
+        }
+        commands
+    });
+    apply_ui_commands(&commands, ctx.input);
+    paint_unbridged_scene_and_image_leaves(
+        node, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
+    );
 }
+//#endregion RetainedEngineCutover
 
+#[allow(dead_code)]
 fn render_ui_node_inner(
     node: &UiNode,
     bounds: Rect,
@@ -4804,15 +5668,272 @@ fn render_ui_node_inner(
     }
 }
 
+//#region UiImageLoading
+/** 🌐 A pending async fetch for a plain `Image` UiNode whose `src` is an `http(s)://` or relative
+ * URL (i.e. not a `data:` URL) — polled once per frame by the host runtime and fed back through
+ * `apply_ui_image_bytes`. Mirrors the `scenes::PendingMapTileFetch` queue pattern
+ * (`scenes::collect_pending_map_tile_fetches` / `scenes::apply_map_tile_bytes`) used for GIS tile
+ * loading, kept local to `interpreter` since that queue is private to the `scenes` module. */
+#[derive(Clone, Debug)]
+pub struct PendingUiImageFetch {
+    pub id: String,
+    pub url: String,
+}
+
+thread_local! {
+    static UI_IMAGE_FETCH_QUEUE: std::cell::RefCell<Vec<PendingUiImageFetch>> = std::cell::RefCell::new(Vec::new());
+    static UI_IMAGE_FETCH_INFLIGHT: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static UI_IMAGE_FETCH_MISS: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static UI_IMAGE_LAST_URL: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static UI_IMAGE_URL_CACHE: std::cell::RefCell<std::collections::HashMap<String, String>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static UI_IMAGE_SIZES: std::cell::RefCell<std::collections::HashMap<String, (u32, u32)>> = std::cell::RefCell::new(std::collections::HashMap::new());
+    static UI_IMAGE_SVG_CACHE: std::cell::RefCell<std::collections::HashMap<String, (u64, String, u32, u32)>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/** 📥 Drains and returns the `http(s)`/relative-URL image fetches queued this frame by
+ * `render_ui_image` — the host runtime (native `ureq`/`pollster` or wasm `fetch`, see
+ * `poll_pending_assets`'s existing `collect_pending_map_tile_fetches` stanza for the established
+ * driver-loop shape) fetches each `url` and reports the bytes back via `apply_ui_image_bytes`. Not
+ * yet wired into `poll_pending_assets` — that function lives in the `shell` module, out of scope
+ * for this ticket's Canvas2d/Paint2d/render_ui_image regions; see ticket report. */
+pub fn collect_pending_ui_image_fetches() -> Vec<PendingUiImageFetch> {
+    UI_IMAGE_FETCH_QUEUE.with(|cell| std::mem::take(&mut *cell.borrow_mut()))
+}
+
+/** 📥 Applies fetched bytes for a pending `PendingUiImageFetch` — SVG content (sniffed from the
+ * `.svg` extension or a `<svg`/`<?xml` prefix) is rasterized via `rasterize_svg_to_rgba`, everything
+ * else decoded as a raster image via the `image` crate — then re-encoded as a `data:image/png;
+ * base64,` URL and pushed through the same `queue_canvas_image_upload` path plain base64 images
+ * already use, so it benefits from that function's "skip decode when unchanged" digest cache too. */
+pub fn apply_ui_image_bytes(id: &str, url: &str, bytes: &[u8]) {
+    UI_IMAGE_FETCH_INFLIGHT.with(|cell| {
+        cell.borrow_mut().remove(id);
+    });
+    let decoded = if ui_image_looks_like_svg(url, bytes) {
+        std::str::from_utf8(bytes).ok().and_then(rasterize_svg_to_rgba)
+    } else {
+        decode_raster_bytes(bytes)
+    };
+    let Some((pixels, width, height)) = decoded else {
+        UI_IMAGE_FETCH_MISS.with(|cell| {
+            cell.borrow_mut().insert(id.to_string(), url.to_string());
+        });
+        return;
+    };
+    let Some(data_url) = encode_rgba_png_data_url(&pixels, width, height) else {
+        UI_IMAGE_FETCH_MISS.with(|cell| {
+            cell.borrow_mut().insert(id.to_string(), url.to_string());
+        });
+        return;
+    };
+    queue_canvas_image_upload("ui-image", id, &data_url);
+    UI_IMAGE_URL_CACHE.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), data_url);
+    });
+    UI_IMAGE_SIZES.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), (width, height));
+    });
+    UI_IMAGE_LAST_URL.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), url.to_string());
+    });
+}
+
+fn queue_ui_image_url_fetch(id: &str, url: &str) {
+    let already_current = UI_IMAGE_LAST_URL.with(|cell| cell.borrow().get(id).map(String::as_str) == Some(url));
+    if already_current {
+        return;
+    }
+    let already_inflight = UI_IMAGE_FETCH_INFLIGHT.with(|cell| cell.borrow().get(id).map(String::as_str) == Some(url));
+    if already_inflight {
+        return;
+    }
+    let already_failed = UI_IMAGE_FETCH_MISS.with(|cell| cell.borrow().get(id).map(String::as_str) == Some(url));
+    if already_failed {
+        return;
+    }
+    UI_IMAGE_FETCH_INFLIGHT.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), url.to_string());
+    });
+    UI_IMAGE_FETCH_QUEUE.with(|cell| {
+        cell.borrow_mut().push(PendingUiImageFetch { id: id.to_string(), url: url.to_string() });
+    });
+}
+
+fn ui_image_looks_like_svg(url: &str, bytes: &[u8]) -> bool {
+    if url.to_ascii_lowercase().ends_with(".svg") {
+        return true;
+    }
+    let head = &bytes[..bytes.len().min(256)];
+    let text = String::from_utf8_lossy(head);
+    let trimmed = text.trim_start_matches('\u{feff}').trim_start();
+    trimmed.starts_with("<svg") || (trimmed.starts_with("<?xml") && text.contains("<svg"))
+}
+
+fn decode_raster_bytes(bytes: &[u8]) -> Option<(Vec<u8>, u32, u32)> {
+    let image = image::load_from_memory(bytes).ok()?;
+    let rgba = image.to_rgba8();
+    let (width, height) = rgba.dimensions();
+    Some((rgba.into_raw(), width, height))
+}
+
+const UI_IMAGE_SVG_MAX_DIMENSION: f32 = 2048.0;
+
+/** 🖼️ Rasterizes SVG text to straight-alpha-ish RGBA at (up to `UI_IMAGE_SVG_MAX_DIMENSION`-clamped)
+ * natural size, reusing the same `usvg`/`resvg`/`tiny_skia` pipeline the `icon_atlas` module uses for
+ * Lucide icons (that module's `rasterize_svg` is fixed at a 24x24 icon size and private to its own
+ * module, so this is a sibling implementation at natural aspect ratio rather than a shared call). */
+fn rasterize_svg_to_rgba(svg_text: &str) -> Option<(Vec<u8>, u32, u32)> {
+    let mut options = usvg::Options::default();
+    options.fontdb_mut().load_system_fonts();
+    let tree = usvg::Tree::from_str(svg_text, &options).ok()?;
+    let size = tree.size();
+    let natural_w = size.width().max(1.0);
+    let natural_h = size.height().max(1.0);
+    let scale = (UI_IMAGE_SVG_MAX_DIMENSION / natural_w.max(natural_h)).min(1.0);
+    let width = (natural_w * scale).round().max(1.0) as u32;
+    let height = (natural_h * scale).round().max(1.0) as u32;
+    let mut pixmap = tiny_skia::Pixmap::new(width, height)?;
+    let transform = tiny_skia::Transform::from_scale(width as f32 / natural_w, height as f32 / natural_h);
+    resvg::render(&tree, transform, &mut pixmap.as_mut());
+    Some((pixmap.take(), width, height))
+}
+
+fn encode_rgba_png_data_url(pixels: &[u8], width: u32, height: u32) -> Option<String> {
+    use base64::Engine;
+    let buffer = image::RgbaImage::from_raw(width, height, pixels.to_vec())?;
+    let mut bytes: Vec<u8> = Vec::new();
+    image::DynamicImage::ImageRgba8(buffer)
+        .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+        .ok()?;
+    Some(format!("data:image/png;base64,{}", base64::engine::general_purpose::STANDARD.encode(bytes)))
+}
+
+/// 🔢 FNV-1a — a cheap dependency-free content digest for the inline-SVG rasterization cache below;
+/// kept local rather than reusing `scenes::digest_pixels` (private to that module).
+fn ui_image_digest(bytes: &[u8]) -> u64 {
+    let mut hash: u64 = 0xcbf2_9ce4_8422_2325;
+    for &byte in bytes {
+        hash ^= byte as u64;
+        hash = hash.wrapping_mul(0x0000_0100_0000_01b3);
+    }
+    hash
+}
+
+fn percent_decode_basic(input: &str) -> String {
+    let bytes = input.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let Ok(byte) = u8::from_str_radix(std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or(""), 16) {
+                out.push(byte);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(if bytes[i] == b'+' { b' ' } else { bytes[i] });
+        i += 1;
+    }
+    String::from_utf8(out).unwrap_or_else(|_| input.to_string())
+}
+
+/** 🖊️ Decodes a `data:image/svg+xml[;base64],...` URL's SVG text (base64 or percent-encoded/plain
+ * UTF-8 body) — `decode_canvas_image` only handles `image/png`/`image/jpeg`, so inline SVG data URLs
+ * previously fell straight through to the `alt`-text fallback. */
+fn parse_svg_data_url(src: &str) -> Option<String> {
+    use base64::Engine;
+    let rest = src.strip_prefix("data:image/svg+xml")?;
+    let comma = rest.find(',')?;
+    let params = &rest[..comma];
+    let payload = &rest[comma + 1..];
+    if params.contains("base64") {
+        let bytes = base64::engine::general_purpose::STANDARD.decode(payload).ok()?;
+        String::from_utf8(bytes).ok()
+    } else {
+        Some(percent_decode_basic(payload))
+    }
+}
+
+fn resolve_ui_image_svg(id: &str, svg_text: &str, src_digest: u64) -> (Option<String>, Option<(u32, u32)>) {
+    let cached = UI_IMAGE_SVG_CACHE.with(|cell| cell.borrow().get(id).cloned());
+    if let Some((digest, data_url, width, height)) = &cached {
+        if *digest == src_digest {
+            return (queue_canvas_image_upload("ui-image", id, data_url), Some((*width, *height)));
+        }
+    }
+    let Some((pixels, width, height)) = rasterize_svg_to_rgba(svg_text) else {
+        return (None, None);
+    };
+    let Some(data_url) = encode_rgba_png_data_url(&pixels, width, height) else {
+        return (None, None);
+    };
+    UI_IMAGE_SVG_CACHE.with(|cell| {
+        cell.borrow_mut().insert(id.to_string(), (src_digest, data_url.clone(), width, height));
+    });
+    (queue_canvas_image_upload("ui-image", id, &data_url), Some((width, height)))
+}
+
+fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u32)>) {
+    queue_ui_image_url_fetch(id, url);
+    let Some(data_url) = UI_IMAGE_URL_CACHE.with(|cell| cell.borrow().get(id).cloned()) else {
+        return (None, None);
+    };
+    let key = queue_canvas_image_upload("ui-image", id, &data_url);
+    let size = UI_IMAGE_SIZES.with(|cell| cell.borrow().get(id).copied());
+    (key, size)
+}
+
+/** 🧭 Resolves a plain `Image` UiNode's `src` to an uploaded raster key + natural pixel size:
+ * `data:image/svg+xml` and `data:image/{png,jpeg}` decode synchronously; any other non-empty `src`
+ * (`http(s)://` absolute or a relative path) is treated as a URL and queued for async fetch via
+ * `collect_pending_ui_image_fetches`, rendering whatever was previously cached (or nothing) in the
+ * meantime — matches the React reference's plain `<img src>`, which resolves any URL natively. */
+fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
+    if src.is_empty() {
+        return (None, None);
+    }
+    if src.starts_with("data:image/svg+xml") {
+        let Some(svg_text) = parse_svg_data_url(src) else {
+            return (None, None);
+        };
+        return resolve_ui_image_svg(id, &svg_text, ui_image_digest(src.as_bytes()));
+    }
+    if src.starts_with("data:") {
+        let size = decode_canvas_image(src).map(|(_, width, height)| (width, height));
+        return (queue_canvas_image_upload("ui-image", id, src), size);
+    }
+    resolve_ui_image_url(id, src)
+}
+
+/** 📐 CSS `object-fit: contain`-equivalent: the largest sub-rect of `bounds` that preserves the
+ * `natural_w/natural_h` aspect ratio, centered. The React reference renders a plain `<img src>`,
+ * whose intrinsic aspect ratio is handled by the browser natively; this renderer has no CSS engine,
+ * so this reproduces the same visual result from the decoded/rasterized pixel dimensions. */
+fn object_contain_rect(bounds: Rect, natural_w: f32, natural_h: f32) -> Rect {
+    if natural_w <= 0.0 || natural_h <= 0.0 || bounds.w <= 0.0 || bounds.h <= 0.0 {
+        return bounds;
+    }
+    let scale = (bounds.w / natural_w).min(bounds.h / natural_h);
+    let w = natural_w * scale;
+    let h = natural_h * scale;
+    Rect::new(bounds.x + (bounds.w - w) * 0.5, bounds.y + (bounds.h - h) * 0.5, w, h)
+}
+//#endregion UiImageLoading
+
 fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    let Some(key) = queue_canvas_image_upload("ui-image", &image.id, &image.src) else {
+    let (key, natural_size) = resolve_ui_image(&image.id, image.src.trim());
+    let Some(key) = key else {
         if let Some(alt) = &image.alt {
             draw_text(ctx, alt, bounds.x + 4.0, bounds.y + 16.0, ctx.theme.font_size_small, ctx.theme.text_muted);
         }
         return;
     };
+    let target = natural_size
+        .filter(|(width, height)| *width > 0 && *height > 0)
+        .map(|(width, height)| object_contain_rect(bounds, width as f32, height as f32))
+        .unwrap_or(bounds);
     ctx.draw
-        .push_raster_quad(&key, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
+        .push_raster_quad(&key, [target.x, target.y, target.w, target.h], [0.0, 0.0, 1.0, 1.0], 1.0);
 }
 
 pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
@@ -5246,6 +6367,87 @@ mod render_plan_validator_tests {
         assert!(error.contains("tree depth"));
         assert!(error.contains("exceeds max 2"));
     }
+
+    //#region UiImageLoadingTests
+    const TEST_SVG: &str = r#"<svg xmlns="http://www.w3.org/2000/svg" width="40" height="20"><rect width="40" height="20" fill="red"/></svg>"#;
+
+    fn tiny_png_bytes(r: u8, g: u8, b: u8) -> Vec<u8> {
+        let img = image::RgbaImage::from_pixel(4, 2, image::Rgba([r, g, b, 255]));
+        let mut bytes: Vec<u8> = Vec::new();
+        image::DynamicImage::ImageRgba8(img)
+            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
+            .expect("encode tiny test png");
+        bytes
+    }
+
+    #[test]
+    fn resolve_ui_image_decodes_inline_svg_data_url_at_natural_aspect_ratio() {
+        use base64::Engine;
+        let src = format!("data:image/svg+xml;base64,{}", base64::engine::general_purpose::STANDARD.encode(TEST_SVG));
+        let (key, size) = resolve_ui_image("svg-image-test-a", &src);
+        assert!(key.is_some(), "inline svg data url should decode to a raster key");
+        assert_eq!(size, Some((40, 20)), "natural size should come from the svg's own width/height");
+    }
+
+    #[test]
+    fn resolve_ui_image_decodes_plain_utf8_svg_data_url() {
+        let src = format!("data:image/svg+xml,{TEST_SVG}");
+        let (key, size) = resolve_ui_image("svg-image-test-plain", &src);
+        assert!(key.is_some(), "a non-base64 (plain utf-8) svg data url should also decode");
+        assert_eq!(size, Some((40, 20)));
+    }
+
+    #[test]
+    fn resolve_ui_image_queues_a_fetch_for_http_url_and_renders_nothing_until_resolved() {
+        let id = "http-image-test-a";
+        let (key, size) = resolve_ui_image(id, "https://example.invalid/pic.png");
+        assert!(key.is_none(), "an unresolved http(s) url should not yet have a raster key");
+        assert!(size.is_none());
+        let pending = collect_pending_ui_image_fetches();
+        assert!(
+            pending.iter().any(|fetch| fetch.id == id && fetch.url == "https://example.invalid/pic.png"),
+            "the http(s) url should be queued for the host runtime to fetch"
+        );
+    }
+
+    #[test]
+    fn apply_ui_image_bytes_decodes_fetched_png_and_resolve_ui_image_then_finds_it() {
+        let id = "http-image-test-b";
+        let url = "https://example.invalid/tiny.png";
+        let _ = resolve_ui_image(id, url);
+        apply_ui_image_bytes(id, url, &tiny_png_bytes(9, 8, 7));
+        let (key, size) = resolve_ui_image(id, url);
+        assert!(key.is_some(), "a completed fetch should resolve to a raster key on the next render pass");
+        assert_eq!(size, Some((4, 2)));
+    }
+
+    #[test]
+    fn apply_ui_image_bytes_rasterizes_fetched_svg_content_sniffed_by_extension() {
+        let id = "http-image-test-c";
+        let url = "https://example.invalid/icon.svg";
+        apply_ui_image_bytes(id, url, TEST_SVG.as_bytes());
+        let (key, size) = resolve_ui_image(id, url);
+        assert!(key.is_some(), "svg content sniffed by the .svg extension should rasterize to a raster key");
+        assert_eq!(size, Some((40, 20)));
+    }
+
+    #[test]
+    fn object_contain_rect_fills_exactly_when_aspect_ratios_match() {
+        let bounds = Rect::new(0.0, 0.0, 100.0, 50.0);
+        let fit = object_contain_rect(bounds, 40.0, 20.0);
+        assert!((fit.w - 100.0).abs() < 0.01);
+        assert!((fit.h - 50.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn object_contain_rect_letterboxes_and_centers_narrower_content() {
+        let bounds = Rect::new(0.0, 0.0, 100.0, 50.0);
+        let fit = object_contain_rect(bounds, 10.0, 20.0);
+        assert!(fit.h <= 50.0 + 0.01);
+        assert!(fit.w < 100.0, "narrower-than-bounds content should not stretch to fill the width");
+        assert!(fit.x > 0.0, "narrower-than-bounds content should be horizontally centered");
+    }
+    //#endregion UiImageLoadingTests
 }
 //#endregion RenderPlanValidatorTests
 // #endregion interpreter
@@ -5679,8 +6881,32 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<PluginBridgeEntry>, 
     Ok(entries)
 }
 
+//#region 🏠🧳PluginHostConfig
+/// 🏠🧳 Mirrors `PluginHostConfig`/`resolvePluginHostConfig` in `framework/core/js/index.ts` — declares,
+/// for a plugin filter whose manifest offers a host-style multi-app experience (one app is the
+/// landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
+/// pair), which app ids play which role. Callers resolve controller ids and default panel tabs from the
+/// *loaded manifest*'s own `controller_id`/`panel_tabs` on those apps rather than hardcoding separate
+/// literals. A plugin filter absent here simply boots through the ordinary single-app path.
+pub struct PluginHostConfig {
+    pub plugin_id: &'static str,
+    pub landing_app_id: &'static str,
+    pub host_app_id: &'static str,
+}
+
+const PLUGIN_HOST_CONFIGS: &[PluginHostConfig] = &[PluginHostConfig {
+    plugin_id: "s",
+    landing_app_id: "home",
+    host_app_id: "studio",
+}];
+
+pub fn resolve_plugin_host_config(plugin_filter: &str) -> Option<&'static PluginHostConfig> {
+    PLUGIN_HOST_CONFIGS.iter().find(|entry| entry.plugin_id == plugin_filter)
+}
+//#endregion 🏠🧳PluginHostConfig
+
 pub fn is_studio_mode(plugin_filter: &str) -> bool {
-    plugin_filter == "s"
+    resolve_plugin_host_config(plugin_filter).is_some()
 }
 
 pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, plugin_filter: &str) -> Vec<PluginBridgeEntry> {
@@ -5847,6 +7073,9 @@ struct SceneSurfaceState {
     ink_camera: Option<(f64, f64, f64)>,
     ink_overrides: HashMap<String, Value>,
     ink_marquee_points: Vec<(f32, f32)>,
+    //#region GenericPointerDispatch
+    last_pointer_pos: (f32, f32),
+    //#endregion GenericPointerDispatch
 }
 
 #[derive(Clone, Debug)]
@@ -5960,6 +7189,16 @@ fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) 
         let entry = map.entry(surface_id.to_string()).or_default();
         f(entry);
     });
+}
+
+/** @emoji 🖱️ Cheap per-frame read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone on every render pass. */
+fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
+    SCENE_STATE.with(|cell| {
+        cell.borrow()
+            .get(surface_id)
+            .map(|state| (state.pointer_was_down, state.last_pointer_pos.0, state.last_pointer_pos.1))
+            .unwrap_or((false, 0.0, 0.0))
+    })
 }
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
@@ -6631,25 +7870,271 @@ pub fn render_component_scene(
         SurfaceKind::IconRender => render_icon_render(scene, bounds, ctx, gpu, icon_render_states),
         SurfaceKind::Board2d => render_board2d(scene, bounds, ctx, gpu, board2d_states),
         SurfaceKind::GraphTimeline => render_graph_timeline(scene, bounds, ctx),
+        SurfaceKind::BlockList => render_block_list(scene, bounds, ctx),
         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
     }
     apply_scene_wheel(scene, bounds, ctx);
+    apply_scene_pointer(scene, bounds, ctx);
 }
-//#endregion RenderEntry
 
+/** @emoji 🧭 Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. */
+fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
+    matches!(
+        kind,
+        SurfaceKind::World3d | SurfaceKind::NodeGraph | SurfaceKind::TiledMap | SurfaceKind::Board2d
+    )
+}
+
+/** @emoji 🎡 Routes live wheel input into `handle_scene_wheel` for surfaces without a bespoke host, dispatching any resulting actions through the widget action queue instead of dropping them. */
 fn apply_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    if scene_has_bespoke_pointer_dispatch(scene.component_kind) {
+        return;
+    }
     if ctx.input.wheel_delta.abs() < 0.01 || !bounds.contains(ctx.input.pointer_x, ctx.input.pointer_y) {
         return;
     }
-    let _ = handle_scene_wheel(
+    for action in handle_scene_wheel(
         scene,
         bounds,
         ctx.input.pointer_x,
         ctx.input.pointer_y,
         ctx.input.wheel_delta,
         ctx.input.modifiers.ctrl,
-    );
+    ) {
+        ctx.input.queue_event(action);
+    }
 }
+
+/** @emoji 🖱️ Feeds live pointer button/move state into `handle_scene_pointer_button`/`handle_scene_pointer_move` for surfaces without a bespoke host, so kinds that previously received no interaction at all (canvas-2d, paint-2d, text-editor, ink-canvas, graph-timeline, table, virtualFileSystem) get real pointer handling. Edge-detects button transitions via `SceneSurfaceState::pointer_was_down` and only re-runs move handling when the pointer actually moved, so this stays correct even though (unlike the OS-driven bespoke hosts) it is sampled once per render frame rather than once per input event. */
+fn apply_scene_pointer(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    if scene_has_bespoke_pointer_dispatch(scene.component_kind) {
+        return;
+    }
+    let x = ctx.input.pointer_x;
+    let y = ctx.input.pointer_y;
+    let down = ctx.input.pointer_down;
+    let button = ctx.input.pointer_button;
+    let shift = ctx.input.modifiers.shift;
+    let (was_down, last_x, last_y) = scene_pointer_edge_state(&scene.surface_id);
+    if down != was_down {
+        for action in handle_scene_pointer_button(scene, bounds, x, y, down, button, shift) {
+            ctx.input.queue_event(action);
+        }
+    }
+    if x != last_x || y != last_y {
+        let drag_dx = x - last_x;
+        let drag_dy = y - last_y;
+        for action in handle_scene_pointer_move(scene, bounds, x, y, down, button, drag_dx, drag_dy) {
+            ctx.input.queue_event(action);
+        }
+    }
+    mutate_scene_state(&scene.surface_id, |state| {
+        state.last_pointer_pos = (x, y);
+    });
+}
+
+#[cfg(test)]
+mod render_entry_tests {
+    use super::*;
+    use crate::interpreter::framework_widget_context;
+
+    fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "controller".into(),
+            component_kind: kind,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+        }
+    }
+
+    fn ink_scene(surface_id: &str) -> UiComponentSceneNode {
+        let mut scene = test_scene(surface_id, SurfaceKind::InkCanvas);
+        scene.ink_canvas = Some(ui_wgpu::InkCanvasScene {
+            document_json: "{}".into(),
+            selection_json: "[]".into(),
+            hovered_id: None,
+            active_utility: String::new(),
+            view_mode: "canvas".into(),
+            interactive: true,
+        });
+        scene
+    }
+
+    /// 🧰 Shared render-frame fixture: a `FrameworkWidgetContext` built the same way
+    /// `render_ui_node`'s own tests build one (see `interpreter::framework_widget_context`), so
+    /// `apply_scene_wheel`/`apply_scene_pointer` can be exercised without a real GPU.
+    struct Fixture {
+        draw: ui_wgpu::DrawList,
+        atlas: ui_wgpu::FontAtlas,
+        theme: Theme,
+        input: ui_wgpu::InputState<ActionDescriptor>,
+        scroll_offsets: HashMap<String, f32>,
+        collapsed_sections: HashMap<String, bool>,
+        open_selects: HashMap<String, bool>,
+    }
+
+    impl Fixture {
+        fn new() -> Self {
+            Self {
+                draw: ui_wgpu::DrawList::default(),
+                atlas: ui_wgpu::FontAtlas::builtin(),
+                theme: Theme::default(),
+                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
+                scroll_offsets: HashMap::new(),
+                collapsed_sections: HashMap::new(),
+                open_selects: HashMap::new(),
+            }
+        }
+
+        fn ctx(&mut self) -> FrameworkWidgetContext<'_> {
+            framework_widget_context(
+                &mut self.draw,
+                None,
+                &mut self.atlas,
+                None,
+                &mut self.input,
+                &self.theme,
+                &mut self.scroll_offsets,
+                &mut self.collapsed_sections,
+                &mut self.open_selects,
+                None,
+            )
+        }
+    }
+
+    #[test]
+    fn bespoke_surfaces_are_excluded_from_generic_dispatch() {
+        for kind in [SurfaceKind::World3d, SurfaceKind::NodeGraph, SurfaceKind::TiledMap, SurfaceKind::Board2d] {
+            assert!(scene_has_bespoke_pointer_dispatch(kind), "{kind:?} should stay on its own bespoke host");
+        }
+        for kind in [
+            SurfaceKind::Canvas2d,
+            SurfaceKind::Paint2d,
+            SurfaceKind::TextEditor,
+            SurfaceKind::InkCanvas,
+            SurfaceKind::GraphTimeline,
+            SurfaceKind::Table,
+            SurfaceKind::VirtualFileSystem,
+        ] {
+            assert!(!scene_has_bespoke_pointer_dispatch(kind), "{kind:?} previously received no interaction at all and must use the generic handlers");
+        }
+    }
+
+    #[test]
+    fn apply_scene_pointer_dispatches_button_actions_for_a_previously_dead_surface() {
+        let scene = test_scene("render-entry-test.canvas2d.button", SurfaceKind::Canvas2d);
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut fixture = Fixture::new();
+        fixture.input.pointer_x = 10.0;
+        fixture.input.pointer_y = 10.0;
+        fixture.input.pointer_down = true;
+        fixture.input.pointer_button = 0;
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_pointer(&scene, bounds, &mut ctx);
+        }
+        let events = fixture.input.drain_events();
+        assert!(
+            events.iter().any(|action| action.action == "canvasPointerDown"),
+            "expected a canvasPointerDown action queued for a previously-dead canvas-2d surface, got {events:?}"
+        );
+    }
+
+    #[test]
+    fn apply_scene_pointer_is_edge_triggered_across_render_frames() {
+        let scene = test_scene("render-entry-test.canvas2d.edge", SurfaceKind::Canvas2d);
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut fixture = Fixture::new();
+        fixture.input.pointer_x = 10.0;
+        fixture.input.pointer_y = 10.0;
+        fixture.input.pointer_down = true;
+        fixture.input.pointer_button = 0;
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_pointer(&scene, bounds, &mut ctx);
+        }
+        assert!(!fixture.input.drain_events().is_empty(), "the first down frame must dispatch a button action");
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_pointer(&scene, bounds, &mut ctx);
+        }
+        assert!(
+            fixture.input.drain_events().is_empty(),
+            "holding the button down across render frames without moving must not re-fire actions every frame"
+        );
+    }
+
+    #[test]
+    fn apply_scene_pointer_skips_surfaces_with_bespoke_dispatch() {
+        let scene = test_scene("render-entry-test.nodegraph.skip", SurfaceKind::NodeGraph);
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut fixture = Fixture::new();
+        fixture.input.pointer_x = 10.0;
+        fixture.input.pointer_y = 10.0;
+        fixture.input.pointer_down = true;
+        fixture.input.pointer_button = 0;
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_pointer(&scene, bounds, &mut ctx);
+        }
+        assert!(
+            fixture.input.drain_events().is_empty(),
+            "node-graph already dispatches pointer input through its own bespoke host and must not be double-driven here"
+        );
+    }
+
+    #[test]
+    fn apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface() {
+        let scene = ink_scene("render-entry-test.ink.wheel");
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut fixture = Fixture::new();
+        fixture.input.pointer_x = 10.0;
+        fixture.input.pointer_y = 10.0;
+        fixture.input.wheel_delta = -1.0;
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_wheel(&scene, bounds, &mut ctx);
+        }
+        let events = fixture.input.drain_events();
+        assert!(
+            events.iter().any(|action| action.action == "setCamera"),
+            "expected a setCamera action from ink-canvas wheel zoom to be queued instead of discarded, got {events:?}"
+        );
+    }
+
+    #[test]
+    fn apply_scene_wheel_skips_surfaces_with_bespoke_dispatch() {
+        let scene = test_scene("render-entry-test.nodegraph.wheel-skip", SurfaceKind::NodeGraph);
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut fixture = Fixture::new();
+        fixture.input.pointer_x = 10.0;
+        fixture.input.pointer_y = 10.0;
+        fixture.input.wheel_delta = -1.0;
+        {
+            let mut ctx = fixture.ctx();
+            apply_scene_wheel(&scene, bounds, &mut ctx);
+        }
+        assert!(
+            fixture.input.drain_events().is_empty(),
+            "node-graph wheel zoom already dispatches through the bespoke per-frame host and must not double-fire here"
+        );
+    }
+}
+//#endregion RenderEntry
 
 fn render_placeholder(kind: &str, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
@@ -6818,7 +8303,79 @@ fn collect_paint2d_pixel_layers(
     }
 }
 
-/** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). */
+//#region Paint2dNavigator
+const PAINT2D_NAVIGATOR_PADDING: f32 = 24.0;
+
+/** 🧭 Fits a camera to the document's pixel-layer bounds so a `viewMode === "navigator"` surface
+ * shows the whole composition — a port of `RasterHost::navigator_fit_camera_json`
+ * (`framework/surface/paint/rs/lib.rs`'s premigration `rasterNavigatorFitCamera`; that crate is a
+ * sibling used by the React `Paint2dHost`'s WASM raster session and is not wired into this wgpu
+ * renderer's dependency graph, so the fit math is reimplemented here with this file's own
+ * `Viewport`/`Rect`). Falls back to a neutral centered camera when the document has no pixel content. */
+fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Viewport {
+    let mut min_x = f32::INFINITY;
+    let mut min_y = f32::INFINITY;
+    let mut max_x = f32::NEG_INFINITY;
+    let mut max_y = f32::NEG_INFINITY;
+    for layer in flat {
+        let w = layer.width as f64 * layer.scale_x;
+        let h = layer.height as f64 * layer.scale_y;
+        let x0 = layer.x as f32;
+        let y0 = layer.y as f32;
+        let x1 = (layer.x + w) as f32;
+        let y1 = (layer.y + h) as f32;
+        min_x = min_x.min(x0.min(x1));
+        min_y = min_y.min(y0.min(y1));
+        max_x = max_x.max(x0.max(x1));
+        max_y = max_y.max(y0.max(y1));
+    }
+    if !min_x.is_finite() || !min_y.is_finite() || !max_x.is_finite() || !max_y.is_finite() {
+        return Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+    }
+    let content_w = (max_x - min_x).max(1.0);
+    let content_h = (max_y - min_y).max(1.0);
+    let inner_w = (inner.w - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
+    let inner_h = (inner.h - PAINT2D_NAVIGATOR_PADDING * 2.0).max(1.0);
+    let zoom = (inner_w / content_w).min(inner_h / content_h).clamp(0.05, 32.0);
+    Viewport {
+        x: min_x + (max_x - min_x) * 0.5,
+        y: min_y + (max_y - min_y) * 0.5,
+        zoom,
+    }
+}
+
+/** 🧭 Maps the main (composite) viewport's visible world rect into the navigator's own fitted
+ * screen space, producing the "you are here" overlay rectangle — a port of
+ * `RasterHost::navigator_viewport_overlay_json`. `content_camera_json` is the main surface's
+ * `Paint2dScene.cameraJson` (echoed into the navigator's own scene payload by the owning plugin) and
+ * `content_viewport_json` its reported `compositeViewportJson` (`{width,height}` in CSS px, set via
+ * the React reference's `setCompositeViewport` action / this renderer's `ResizeObserver` equivalent
+ * — see report for the pointer/resize wiring gap notes). Returns `None` when the main viewport size
+ * hasn't been reported yet. */
+fn paint2d_navigator_overlay_rect(
+    content_camera_json: &str,
+    content_viewport_json: Option<&str>,
+    navigator_viewport: &Viewport,
+    navigator_inner: Rect,
+) -> Option<Rect> {
+    let content_viewport_json = content_viewport_json?;
+    let content_camera = Viewport::from_json(content_camera_json);
+    let size: Value = serde_json::from_str(content_viewport_json).ok()?;
+    let content_w = size.get("width").and_then(Value::as_f64).unwrap_or(0.0) as f32;
+    let content_h = size.get("height").and_then(Value::as_f64).unwrap_or(0.0) as f32;
+    if content_w <= 0.0 || content_h <= 0.0 {
+        return None;
+    }
+    let content_rect = Rect::new(0.0, 0.0, content_w, content_h);
+    let (wx0, wy0) = content_camera.screen_to_world(0.0, 0.0, content_rect);
+    let (wx1, wy1) = content_camera.screen_to_world(content_w, content_h, content_rect);
+    let (sx0, sy0) = navigator_viewport.world_to_screen(wx0, wy0, navigator_inner);
+    let (sx1, sy1) = navigator_viewport.world_to_screen(wx1, wy1, navigator_inner);
+    Some(Rect::new(sx0.min(sx1), sy0.min(sy1), (sx1 - sx0).abs(), (sy1 - sy0).abs()))
+}
+//#endregion Paint2dNavigator
+
+/** 🖼️ Composites paint-2d document layers as textured quads; blend modes, masks and adjustment layers are not yet applied (see FIX-LOWPOLY-DEV-BOOT sibling ticket 26/07/11/WGPU-RENDERER-FULL-PARITY for follow-up scope). `viewMode === "navigator"` renders the same layer stack fit-to-view with a composite-viewport overlay instead of following the local/camera viewport. */
 fn render_paint_2d(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -6835,18 +8392,24 @@ fn render_paint_2d(
         .push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
     let doc: Paint2dDocSyncJson = serde_json::from_str(&paint_2d.document_sync_json).unwrap_or_default();
     let assets: HashMap<String, Paint2dAssetJson> = serde_json::from_str(&paint_2d.assets_json).unwrap_or_default();
-    let mut viewport = Viewport {
-        x: doc.camera.x as f32,
-        y: doc.camera.y as f32,
-        zoom: doc.camera.zoom as f32,
-    };
-    let local = scene_state(&scene.surface_id);
-    if local.viewport.zoom > 0.0 {
-        viewport = local.viewport;
-    }
-    draw_checkerboard(ctx.draw, &viewport, inner, theme, 4096.0);
+    let is_navigator = paint_2d.view_mode == "navigator";
     let mut flat = Vec::new();
     collect_paint2d_pixel_layers(&doc.layers, 0.0, 0.0, 1.0, 1.0, 1.0, &mut flat);
+    let viewport = if is_navigator {
+        paint2d_navigator_fit_viewport(&flat, inner)
+    } else {
+        let mut vp = Viewport {
+            x: doc.camera.x as f32,
+            y: doc.camera.y as f32,
+            zoom: doc.camera.zoom as f32,
+        };
+        let local = scene_state(&scene.surface_id);
+        if local.viewport.zoom > 0.0 {
+            vp = local.viewport;
+        }
+        vp
+    };
+    draw_checkerboard(ctx.draw, &viewport, inner, theme, 4096.0);
     if flat.is_empty() {
         draw_text(ctx, "Empty paint-2d document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
@@ -6864,9 +8427,20 @@ fn render_paint_2d(
         ctx.draw
             .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], layer.opacity);
     }
+    // 🧭 "You are here" overlay: the main surface's visible world rect, mapped into this
+    // navigator's fitted screen space — matches the React reference's `overlayRect` border div.
+    if is_navigator {
+        if let Some(overlay) = paint2d_navigator_overlay_rect(&paint_2d.camera_json, paint_2d.composite_viewport_json.as_deref(), &viewport, inner) {
+            draw_ink_rect_outline(ctx.draw, overlay.x, overlay.y, overlay.w, overlay.h, theme.accent, 2.0);
+        }
+    }
     ctx.input.register_hit(HitTarget {
         rect: inner,
-        event: Some(scene_action(scene, "paint2dClick", surface_args(scene))),
+        event: Some(scene_action(
+            scene,
+            "paint2dClick",
+            json!({ "surfaceId": scene.surface_id, "activeUtility": paint_2d.active_utility, "brushSize": paint_2d.brush_size, "brushOpacity": paint_2d.brush_opacity }),
+        )),
         control_id: Some(scene.surface_id.clone()),
         kind: HitKind::Generic,
         drag_axis: None,
@@ -6880,6 +8454,17 @@ fn render_paint_2d(
 struct TableColumn {
     id: String,
     label: String,
+    #[serde(default)]
+    sortable: bool,
+}
+
+/// 🔀 Mirrors `sourcing::TableSort`'s wire format (`{columnId, direction}`) — the active sort
+/// state for a [`TableScene`] whose columns opt into `sortable`.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TableSortJson {
+    column_id: String,
+    direction: String,
 }
 
 /// 🧾 Mirrors `ui_wgpu::TableCell` — a typed table cell value parsed out of a row's raw JSON.
@@ -6990,6 +8575,7 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
         .and_then(|value| value.get("selectedIds").cloned())
         .and_then(|value| serde_json::from_value(value).ok())
         .unwrap_or_default();
+    let sort: Option<TableSortJson> = table.sort_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
     let inner = bounds;
     let header_h = theme.control_height * 1.33;
     let row_h = theme.control_height;
@@ -7002,7 +8588,38 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     };
     for (index, column) in columns.iter().enumerate() {
         let x = inner.x + index as f32 * col_w;
-        draw_text(ctx, &column.label, x + pad, inner.y + header_h * 0.65, theme.font_size_small, theme.text_muted);
+        let sorted_here = sort.as_ref().filter(|s| s.column_id == column.id);
+        let label = match sorted_here {
+            Some(s) if s.direction == "desc" => format!("{} \u{25BC}", column.label),
+            Some(_) => format!("{} \u{25B2}", column.label),
+            None => column.label.clone(),
+        };
+        draw_text(
+            ctx,
+            &label,
+            x + pad,
+            inner.y + header_h * 0.65,
+            theme.font_size_small,
+            if sorted_here.is_some() { theme.text } else { theme.text_muted },
+        );
+        if column.sortable {
+            let next_direction = match sorted_here {
+                Some(s) if s.direction == "asc" => "desc",
+                _ => "asc",
+            };
+            ctx.input.register_hit(HitTarget {
+                rect: Rect::new(x, inner.y, col_w, header_h),
+                event: Some(scene_action(
+                    scene,
+                    "sortTable",
+                    json!({ "surfaceId": scene.surface_id, "columnId": column.id, "direction": next_direction }),
+                )),
+                control_id: Some(format!("{}.header.{}", scene.surface_id, column.id)),
+                kind: HitKind::Generic,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
     }
     ctx.draw.push_line(
         inner.x,
@@ -7103,6 +8720,587 @@ fn render_table(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkW
     ctx.draw.pop_scissor();
 }
 //#endregion Table
+
+//#region TableTests
+#[cfg(test)]
+mod table_tests {
+    use super::*;
+    use ui_wgpu::{DrawList, FontAtlas, IconAtlas, InputState, TableScene};
+
+    fn table_scene(surface_id: &str, table: TableScene) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::Table,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: Some(table),
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+        }
+    }
+
+    /// 🧪 Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
+    fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_table(node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+        }
+        input
+    }
+
+    fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
+        input
+            .hit_targets
+            .iter()
+            .find(|target| target.control_id.as_deref() == Some(control_id))
+            .unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
+    }
+
+    fn columns_json(entries: &[(&str, &str, bool)]) -> String {
+        json!(entries
+            .iter()
+            .map(|(id, label, sortable)| json!({ "id": id, "label": label, "sortable": sortable }))
+            .collect::<Vec<_>>())
+        .to_string()
+    }
+
+    #[test]
+    fn header_click_on_unsorted_sortable_column_requests_ascending() {
+        let table = TableScene::base(columns_json(&[("name", "Name", true)]), "[]".to_string());
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        let target = hit(&input, "s1.header.name");
+        let action = target.event.as_ref().expect("sortTable action");
+        assert_eq!(action.action, "sortTable");
+        assert_eq!(action.args.as_ref().unwrap()["columnId"], "name");
+        assert_eq!(action.args.as_ref().unwrap()["direction"], "asc");
+    }
+
+    #[test]
+    fn header_click_toggles_ascending_to_descending() {
+        let mut table = TableScene::base(columns_json(&[("name", "Name", true)]), "[]".to_string());
+        table.sort_json = Some(json!({ "columnId": "name", "direction": "asc" }).to_string());
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        let target = hit(&input, "s1.header.name");
+        let action = target.event.as_ref().expect("sortTable action");
+        assert_eq!(action.args.as_ref().unwrap()["direction"], "desc");
+    }
+
+    #[test]
+    fn header_click_cycles_descending_back_to_ascending() {
+        let mut table = TableScene::base(columns_json(&[("name", "Name", true)]), "[]".to_string());
+        table.sort_json = Some(json!({ "columnId": "name", "direction": "desc" }).to_string());
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        let target = hit(&input, "s1.header.name");
+        let action = target.event.as_ref().expect("sortTable action");
+        assert_eq!(action.args.as_ref().unwrap()["direction"], "asc");
+    }
+
+    #[test]
+    fn sorting_a_column_does_not_reset_a_different_column_to_desc() {
+        let mut table = TableScene::base(columns_json(&[("name", "Name", true), ("age", "Age", true)]), "[]".to_string());
+        table.sort_json = Some(json!({ "columnId": "age", "direction": "asc" }).to_string());
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        let target = hit(&input, "s1.header.name");
+        let action = target.event.as_ref().expect("sortTable action");
+        // 🔀 "name" isn't the currently-sorted column, so clicking it must start a fresh ascending sort, not toggle.
+        assert_eq!(action.args.as_ref().unwrap()["direction"], "asc");
+    }
+
+    #[test]
+    fn non_sortable_column_registers_no_header_hit() {
+        let table = TableScene::base(columns_json(&[("name", "Name", false)]), "[]".to_string());
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        assert!(
+            input.hit_targets.iter().all(|target| target.control_id.as_deref() != Some("s1.header.name")),
+            "a non-sortable column must not register a header sort hit target"
+        );
+    }
+
+    #[test]
+    fn row_click_dispatches_select_row_with_full_row_payload() {
+        let rows = json!([{ "id": "r1", "name": { "kind": "text", "value": "Alpha" } }]).to_string();
+        let table = TableScene::base(columns_json(&[("name", "Name", false)]), rows);
+        let node = table_scene("s1", table);
+        let input = render(&node);
+        let target = hit(&input, "s1.row.r1");
+        let action = target.event.as_ref().expect("selectRow action");
+        assert_eq!(action.action, "selectRow");
+        assert_eq!(action.args.as_ref().unwrap()["row"]["id"], "r1");
+    }
+}
+//#endregion TableTests
+
+//#region BlockList
+/// 🧩 Mirrors `protocol::ProtocolBlock`'s renderer-relevant fields — a typed block inside a
+/// [`BlockListScene`] step. Unknown/extra JSON fields (the block-kind-specific property editor
+/// fields owned by the host app) are ignored by `serde` since this crate never edits them.
+#[derive(Deserialize)]
+struct BlockListBlockJson {
+    id: String,
+    label: String,
+    kind: String,
+    #[serde(default)]
+    description: Option<String>,
+}
+
+/// 🧩 Mirrors `protocol::ProtocolStep`'s renderer-relevant fields.
+#[derive(Deserialize)]
+struct BlockListStepJson {
+    id: String,
+    title: String,
+    #[serde(default)]
+    description: Option<String>,
+    #[serde(default)]
+    blocks: Vec<BlockListBlockJson>,
+}
+
+/// 🧩 Mirrors `ui_wgpu::BlockPaletteEntry`'s wire format (`{blockKind, label, iconId}`).
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct BlockListPaletteEntryJson {
+    block_kind: String,
+    label: String,
+    #[serde(default)]
+    icon_id: String,
+}
+
+/// 🧩 Renders the strict-list Blockly-like block-list builder ([`SurfaceKind::BlockList`]):
+/// steps stacked vertically (each with its ordered blocks) plus a palette rail for inserting new
+/// blocks, mirroring `block-list-host.tsx`'s layout and action verbs (`addStep`/`removeStep`/
+/// `moveStep`/`addBlock`/`removeBlock`/`moveBlock`, see `protocol::builder_kit` and
+/// `protocol-plugin`'s `handle_action`). Reordering dispatches `moveStep`/`moveBlock` from
+/// move-up/move-down hit targets rather than free-form pointer drag (unlike the React host's
+/// dnd-kit drag-and-drop): this renderer's click-dispatch model (see `render_table`'s row/header
+/// hits) has no established cross-frame drag-position-tracking primitive for list reordering, and
+/// building one is out of this ticket's scope (`w2-scene-wiring` owns generic pointer routing).
+/// Selection highlighting reads `selected_id` directly (mirrors `render_table`'s selected-row
+/// highlight) even though `block-list-host.tsx` does not yet render it either.
+fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
+    let theme = ctx.theme;
+    let Some(block_list) = &scene.block_list else {
+        return render_placeholder("block-list", bounds, ctx);
+    };
+    let steps: Vec<BlockListStepJson> = serde_json::from_str(&block_list.steps_json).unwrap_or_default();
+    let palette: Vec<BlockListPaletteEntryJson> = serde_json::from_str(&block_list.palette_json).unwrap_or_default();
+    let selected_id = block_list.selected_id.as_deref();
+
+    let pad = theme.padding_standard;
+    let row_h = theme.control_height;
+    let btn_w = 26.0;
+    let palette_w = (bounds.w * 0.22).clamp(140.0, 220.0);
+    let main = Rect::new(bounds.x, bounds.y, (bounds.w - palette_w).max(0.0), bounds.h);
+    let palette_rect = Rect::new(main.x + main.w, bounds.y, palette_w, bounds.h);
+
+    //#region Steps
+    let header_rect = Rect::new(main.x, main.y, main.w, row_h);
+    draw_text(ctx, "Steps", header_rect.x + pad, header_rect.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+    let add_step_rect = Rect::new(header_rect.x + header_rect.w - 108.0, header_rect.y + 4.0, 104.0, row_h - 8.0);
+    render_widget(
+        &WidgetNode::Button {
+            id: Some(format!("{}.addStep", scene.surface_id)),
+            icon_id: Some("plus".into()),
+            label: "Add Step".into(),
+            event: Some(scene_action(scene, "addStep", json!({}))),
+        },
+        add_step_rect,
+        ctx,
+    );
+
+    let body = Rect::new(main.x, main.y + row_h, main.w, (main.h - row_h).max(0.0));
+    let scroll = scroll_offset(&scene.surface_id, "blockList");
+    ctx.input.register_hit(HitTarget {
+        rect: body,
+        event: None,
+        control_id: Some(scroll_key(&scene.surface_id, "blockList")),
+        kind: HitKind::ScrollRegion,
+        drag_axis: None,
+        drag_data: None,
+    });
+    ctx.draw.push_scissor(body);
+    if steps.is_empty() {
+        draw_text(ctx, "No steps", body.x + pad, body.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+    }
+    let step_count = steps.len();
+    let mut y = body.y - scroll;
+    for (step_index, step) in steps.iter().enumerate() {
+        let block_count = step.blocks.len();
+        let description_h = step.description.as_ref().map_or(0.0, |_| theme.font_size_small + pad);
+        let step_h = row_h + description_h + block_count as f32 * row_h + pad * 2.0;
+        if y + step_h >= body.y && y <= body.y + body.h {
+            let step_rect = Rect::new(body.x + pad, y, (body.w - pad * 2.0).max(0.0), step_h);
+            let step_selected = selected_id == Some(step.id.as_str());
+            ctx.draw.push_rounded(
+                [step_rect.x, step_rect.y, step_rect.w, step_rect.h],
+                if step_selected { theme.selected } else { theme.button },
+                theme.border_radius,
+            );
+            ctx.draw.push_line(step_rect.x, step_rect.y, step_rect.x + step_rect.w, step_rect.y, theme.border_normal, theme.stroke_hairline);
+            ctx.draw.push_line(
+                step_rect.x,
+                step_rect.y + step_rect.h,
+                step_rect.x + step_rect.w,
+                step_rect.y + step_rect.h,
+                theme.border_normal,
+                theme.stroke_hairline,
+            );
+
+            let title_color = if step_selected { theme.active_foreground } else { theme.text };
+            draw_text(ctx, &step.title, step_rect.x + pad, step_rect.y + row_h * 0.65, theme.font_size_body, title_color);
+
+            let btn_y = step_rect.y + (row_h - theme.control_height_small) * 0.5;
+            let up_rect = Rect::new(step_rect.x + step_rect.w - pad - btn_w * 3.0, btn_y, btn_w, theme.control_height_small);
+            let down_rect = Rect::new(step_rect.x + step_rect.w - pad - btn_w * 2.0, btn_y, btn_w, theme.control_height_small);
+            let remove_rect = Rect::new(step_rect.x + step_rect.w - pad - btn_w, btn_y, btn_w, theme.control_height_small);
+            render_widget(
+                &WidgetNode::Button {
+                    id: Some(format!("{}.step.{}.moveUp", scene.surface_id, step.id)),
+                    icon_id: Some("chevron-up".into()),
+                    label: String::new(),
+                    event: (step_index > 0).then(|| scene_action(scene, "moveStep", json!({ "stepId": step.id, "index": step_index - 1 }))),
+                },
+                up_rect,
+                ctx,
+            );
+            render_widget(
+                &WidgetNode::Button {
+                    id: Some(format!("{}.step.{}.moveDown", scene.surface_id, step.id)),
+                    icon_id: Some("chevron-down".into()),
+                    label: String::new(),
+                    event: (step_index + 1 < step_count)
+                        .then(|| scene_action(scene, "moveStep", json!({ "stepId": step.id, "index": step_index + 1 }))),
+                },
+                down_rect,
+                ctx,
+            );
+            render_widget(
+                &WidgetNode::Button {
+                    id: Some(format!("{}.step.{}.remove", scene.surface_id, step.id)),
+                    icon_id: Some("trash-2".into()),
+                    label: String::new(),
+                    event: Some(scene_action(scene, "removeStep", json!({ "stepId": step.id }))),
+                },
+                remove_rect,
+                ctx,
+            );
+
+            let mut inner_y = step_rect.y + row_h;
+            if let Some(description) = &step.description {
+                draw_text(ctx, description, step_rect.x + pad, inner_y + theme.font_size_small, theme.font_size_small, theme.text_muted);
+                inner_y += description_h;
+            }
+            for (block_index, block) in step.blocks.iter().enumerate() {
+                let block_rect = Rect::new(step_rect.x + pad, inner_y, (step_rect.w - pad * 2.0).max(0.0), row_h);
+                let block_selected = selected_id == Some(block.id.as_str());
+                if block_selected {
+                    ctx.draw.push_rounded(
+                        [block_rect.x, block_rect.y, block_rect.w, block_rect.h],
+                        theme.selected,
+                        theme.border_radius.min(4.0),
+                    );
+                }
+                let block_color = if block_selected { theme.active_foreground } else { theme.text };
+                draw_text(ctx, &block.label, block_rect.x + pad, block_rect.y + row_h * 0.65, theme.font_size_small, block_color);
+                draw_text(
+                    ctx,
+                    &block.kind,
+                    block_rect.x + block_rect.w * 0.5,
+                    block_rect.y + row_h * 0.65,
+                    theme.font_size_small,
+                    theme.text_muted,
+                );
+
+                let bblock_btn_y = block_rect.y + (row_h - theme.control_height_small) * 0.5;
+                let bup_rect = Rect::new(block_rect.x + block_rect.w - pad - btn_w * 3.0, bblock_btn_y, btn_w, theme.control_height_small);
+                let bdown_rect = Rect::new(block_rect.x + block_rect.w - pad - btn_w * 2.0, bblock_btn_y, btn_w, theme.control_height_small);
+                let bremove_rect = Rect::new(block_rect.x + block_rect.w - pad - btn_w, bblock_btn_y, btn_w, theme.control_height_small);
+                render_widget(
+                    &WidgetNode::Button {
+                        id: Some(format!("{}.block.{}.moveUp", scene.surface_id, block.id)),
+                        icon_id: Some("chevron-up".into()),
+                        label: String::new(),
+                        event: (block_index > 0).then(|| {
+                            scene_action(
+                                scene,
+                                "moveBlock",
+                                json!({ "blockId": block.id, "fromStepId": step.id, "toStepId": step.id, "index": block_index - 1 }),
+                            )
+                        }),
+                    },
+                    bup_rect,
+                    ctx,
+                );
+                render_widget(
+                    &WidgetNode::Button {
+                        id: Some(format!("{}.block.{}.moveDown", scene.surface_id, block.id)),
+                        icon_id: Some("chevron-down".into()),
+                        label: String::new(),
+                        event: (block_index + 1 < block_count).then(|| {
+                            scene_action(
+                                scene,
+                                "moveBlock",
+                                json!({ "blockId": block.id, "fromStepId": step.id, "toStepId": step.id, "index": block_index + 1 }),
+                            )
+                        }),
+                    },
+                    bdown_rect,
+                    ctx,
+                );
+                render_widget(
+                    &WidgetNode::Button {
+                        id: Some(format!("{}.block.{}.remove", scene.surface_id, block.id)),
+                        icon_id: Some("trash-2".into()),
+                        label: String::new(),
+                        event: Some(scene_action(scene, "removeBlock", json!({ "stepId": step.id, "blockId": block.id }))),
+                    },
+                    bremove_rect,
+                    ctx,
+                );
+                inner_y += row_h;
+            }
+        }
+        y += step_h + theme.gap_standard;
+    }
+    ctx.draw.pop_scissor();
+    //#endregion Steps
+
+    //#region Palette
+    ctx.draw.push_line(palette_rect.x, palette_rect.y, palette_rect.x, palette_rect.y + palette_rect.h, theme.separator, theme.stroke_hairline);
+    draw_text(ctx, "Palette", palette_rect.x + pad, palette_rect.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
+    let mut py = palette_rect.y + row_h;
+    for entry in &palette {
+        let entry_rect = Rect::new(palette_rect.x + pad, py, (palette_rect.w - pad * 2.0).max(0.0), row_h);
+        render_widget(
+            &WidgetNode::Button {
+                id: Some(format!("{}.palette.{}", scene.surface_id, entry.block_kind)),
+                icon_id: (!entry.icon_id.is_empty()).then(|| entry.icon_id.clone()),
+                label: entry.label.clone(),
+                event: Some(scene_action(scene, "addBlock", json!({ "kind": entry.block_kind }))),
+            },
+            entry_rect,
+            ctx,
+        );
+        py += row_h + 2.0;
+    }
+    //#endregion Palette
+}
+//#endregion BlockList
+
+//#region BlockListTests
+#[cfg(test)]
+mod block_list_tests {
+    use super::*;
+    use ui_wgpu::{BlockListScene, DrawList, FontAtlas, IconAtlas, InputState};
+
+    fn block_list_scene(surface_id: &str, block_list: BlockListScene) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::BlockList,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: Some(block_list),
+        }
+    }
+
+    fn step_json(id: &str, blocks: &[(&str, &str, &str)]) -> Value {
+        json!({
+            "id": id,
+            "title": format!("Step {id}"),
+            "blocks": blocks.iter().map(|(bid, label, kind)| json!({ "id": bid, "label": label, "kind": kind })).collect::<Vec<_>>(),
+        })
+    }
+
+    /// 🧪 Renders `node` and returns the `InputState` so tests can inspect registered hit targets.
+    fn render(node: &UiComponentSceneNode) -> InputState<ActionDescriptor> {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_block_list(node, Rect::new(0.0, 0.0, 600.0, 400.0), &mut ctx);
+        }
+        input
+    }
+
+    fn hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> &'a HitTarget<ActionDescriptor> {
+        input
+            .hit_targets
+            .iter()
+            .find(|target| target.control_id.as_deref() == Some(control_id))
+            .unwrap_or_else(|| panic!("no hit target registered for control_id {control_id:?}"))
+    }
+
+    fn find_hit<'a>(input: &'a InputState<ActionDescriptor>, control_id: &str) -> Option<&'a HitTarget<ActionDescriptor>> {
+        input.hit_targets.iter().find(|target| target.control_id.as_deref() == Some(control_id))
+    }
+
+    #[test]
+    fn missing_scene_renders_placeholder_without_panicking() {
+        let node = UiComponentSceneNode {
+            surface_id: "s1".into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::BlockList,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+        };
+        render(&node);
+    }
+
+    #[test]
+    fn add_step_button_dispatches_add_step() {
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        let target = hit(&input, "s1.addStep");
+        let action = target.event.as_ref().expect("addStep action");
+        assert_eq!(action.action, "addStep");
+    }
+
+    #[test]
+    fn palette_entry_dispatches_add_block_with_kind() {
+        let palette = json!([{ "blockKind": "text", "label": "Text", "iconId": "type" }]).to_string();
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: palette, selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        let target = hit(&input, "s1.palette.text");
+        let action = target.event.as_ref().expect("addBlock action");
+        assert_eq!(action.action, "addBlock");
+        assert_eq!(action.args.as_ref().unwrap()["kind"], "text");
+    }
+
+    #[test]
+    fn first_step_has_no_move_up_but_has_move_down_when_a_second_step_exists() {
+        let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        assert!(
+            hit(&input, "s1.step.a.moveUp").event.is_none(),
+            "the first step must not be able to move further up"
+        );
+        let down = hit(&input, "s1.step.a.moveDown");
+        let action = down.event.as_ref().expect("moveStep action");
+        assert_eq!(action.action, "moveStep");
+        assert_eq!(action.args.as_ref().unwrap()["stepId"], "a");
+        assert_eq!(action.args.as_ref().unwrap()["index"], 1);
+    }
+
+    #[test]
+    fn last_step_has_no_move_down() {
+        let steps = json!([step_json("a", &[]), step_json("b", &[])]).to_string();
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        assert!(
+            hit(&input, "s1.step.b.moveDown").event.is_none(),
+            "the last step must not be able to move further down"
+        );
+    }
+
+    #[test]
+    fn remove_step_button_dispatches_remove_step_with_step_id() {
+        let steps = json!([step_json("a", &[])]).to_string();
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        let target = hit(&input, "s1.step.a.remove");
+        let action = target.event.as_ref().expect("removeStep action");
+        assert_eq!(action.action, "removeStep");
+        assert_eq!(action.args.as_ref().unwrap()["stepId"], "a");
+    }
+
+    #[test]
+    fn block_move_and_remove_dispatch_expected_action_shapes() {
+        let steps = json!([step_json("a", &[("b1", "Block One", "text"), ("b2", "Block Two", "number")])]).to_string();
+        let scene = BlockListScene { steps_json: steps, palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+
+        assert!(hit(&input, "s1.block.b1.moveUp").event.is_none(), "the first block in a step must not move further up");
+        let move_down = hit(&input, "s1.block.b1.moveDown");
+        let move_action = move_down.event.as_ref().expect("moveBlock action");
+        assert_eq!(move_action.action, "moveBlock");
+        assert_eq!(move_action.args.as_ref().unwrap()["blockId"], "b1");
+        assert_eq!(move_action.args.as_ref().unwrap()["fromStepId"], "a");
+        assert_eq!(move_action.args.as_ref().unwrap()["toStepId"], "a");
+        assert_eq!(move_action.args.as_ref().unwrap()["index"], 1);
+
+        assert!(hit(&input, "s1.block.b2.moveDown").event.is_none(), "the last block in a step must not move further down");
+
+        let remove = hit(&input, "s1.block.b1.remove");
+        let remove_action = remove.event.as_ref().expect("removeBlock action");
+        assert_eq!(remove_action.action, "removeBlock");
+        assert_eq!(remove_action.args.as_ref().unwrap()["stepId"], "a");
+        assert_eq!(remove_action.args.as_ref().unwrap()["blockId"], "b1");
+    }
+
+    #[test]
+    fn empty_steps_registers_no_step_hit_targets() {
+        let scene = BlockListScene { steps_json: "[]".into(), palette_json: "[]".into(), selected_id: None, dragging_id: None };
+        let node = block_list_scene("s1", scene);
+        let input = render(&node);
+        assert!(find_hit(&input, "s1.step.a.remove").is_none());
+    }
+}
+//#endregion BlockListTests
 
 //#region GraphTimeline
 /** @emoji 🗄️ Mirrors `vcs::HistoryColumn` / React `HistoryColumn` (`ui/js/react/index.tsx:19116`). */
@@ -7384,6 +9582,80 @@ mod graph_timeline_tests {
 //#endregion GraphTimelineTests
 
 //#region Canvas2d
+/** 🪣 A `CanvasLayerRecord["fill"]` mirror — solid color or linear/radial gradient stops, matches
+ * `fillStyleToPaint` in `canvas-2d-host.tsx`. Coordinates (`x1/y1/x2/y2`, `cx/cy/r`) are in the same
+ * local space as the owning layer's `x`/`y` (this renderer has no per-layer transform matrix yet, so
+ * they are treated as offsets from the layer's own `x`/`y` origin). */
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct CanvasFillJson {
+    #[serde(default)]
+    kind: Option<String>,
+    #[serde(default)]
+    color: Option<Vec<f64>>,
+    #[serde(default)]
+    x1: f64,
+    #[serde(default)]
+    y1: f64,
+    #[serde(default)]
+    x2: f64,
+    #[serde(default)]
+    y2: f64,
+    #[serde(default)]
+    cx: f64,
+    #[serde(default)]
+    cy: f64,
+    #[serde(default)]
+    r: f64,
+    #[serde(default)]
+    stops: Vec<CanvasGradientStopJson>,
+}
+
+/** 🎨 One `CanvasGradientStop` — `offset` in `[0,1]`, `color` an `[r,g,b,a?]` channel array in `0..1`. */
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct CanvasGradientStopJson {
+    #[serde(default)]
+    offset: f64,
+    #[serde(default)]
+    color: Option<Vec<f64>>,
+}
+
+/** 🖊️ A `CanvasLayerRecord["stroke"]` mirror. */
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct CanvasStrokeJson {
+    #[serde(default)]
+    color: Option<Vec<f64>>,
+    #[serde(default)]
+    width: Option<f64>,
+    #[serde(default)]
+    dash: Option<Vec<f64>>,
+}
+
+/** 🖼️ A `CanvasLayerRecord["image"]` mirror — the nested per-node image field (as opposed to the
+ * legacy top-level `dataUrl` used by `kind === "image"` records). */
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct CanvasImageFieldJson {
+    #[serde(default)]
+    src: Option<String>,
+    #[serde(default)]
+    width: Option<f64>,
+    #[serde(default)]
+    height: Option<f64>,
+}
+
+/** 📝 A `CanvasLayerRecord["text"]` mirror. */
+#[derive(Deserialize, Clone, Default)]
+#[serde(rename_all = "camelCase")]
+struct CanvasTextFieldJson {
+    #[serde(default)]
+    content: Option<String>,
+    #[serde(default)]
+    size: Option<f64>,
+}
+
 #[derive(Deserialize)]
 struct CanvasLayer {
     #[serde(default)]
@@ -7418,9 +9690,34 @@ struct CanvasLayer {
     points: Option<Vec<[f64; 2]>>,
     #[serde(default)]
     seams: Option<Vec<u8>>,
+    /** 🗒️ `role === "meta"` marks a non-visual bookkeeping record (e.g. carries the host's active
+     * pointer-tool id) — filtered from rendering, matches `JsonLayersCanvasSession.renderFrame`'s
+     * `records.find(role === "meta")` / `layers.filter(role !== "meta")` split. */
+    #[serde(default)]
+    role: Option<String>,
+    #[serde(default)]
+    visible: Option<bool>,
+    #[serde(default)]
+    opacity: Option<f32>,
+    #[serde(default, rename = "blendMode")]
+    blend_mode: Option<String>,
+    #[serde(default)]
+    selected: Option<bool>,
+    #[serde(default)]
+    fill: Option<CanvasFillJson>,
+    #[serde(default)]
+    stroke: Option<CanvasStrokeJson>,
+    #[serde(default)]
+    image: Option<CanvasImageFieldJson>,
+    #[serde(default)]
+    text: Option<CanvasTextFieldJson>,
 }
 
-fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
+fn canvas_layer_should_render(layer: &CanvasLayer) -> bool {
+    layer.role.as_deref() != Some("meta") && layer.visible.unwrap_or(true)
+}
+
+pub(crate) fn decode_canvas_image(data_url: &str) -> Option<(Vec<u8>, u32, u32)> {
     let payload = data_url
         .strip_prefix("data:image/png;base64,")
         .or_else(|| data_url.strip_prefix("data:image/jpeg;base64,"))
@@ -7545,6 +9842,346 @@ fn draw_dashed_line(
     }
 }
 
+//#region Canvas2dFillBlend
+/** 🎨 Reads an `[r,g,b,a?]` channel array (each `0..1`, matches `rgbaToCss` in `canvas-2d-host.tsx`)
+ * into an `Rgba`, multiplying alpha by the layer's resolved `opacity`. Missing channels fall back to
+ * a neutral slate gray (matches the React reference's `rgba(148, 163, 184, opacity)` default). */
+fn canvas_color_channels(v: &[f64], opacity: f32) -> Rgba {
+    let r = v.first().copied().unwrap_or(0.58) as f32;
+    let g = v.get(1).copied().unwrap_or(0.64) as f32;
+    let b = v.get(2).copied().unwrap_or(0.72) as f32;
+    let a = v.get(3).copied().unwrap_or(1.0) as f32;
+    Rgba::new(r, g, b, (a * opacity).clamp(0.0, 1.0))
+}
+
+fn canvas_mix_rgba(a: Rgba, b: Rgba, t: f32) -> Rgba {
+    let t = t.clamp(0.0, 1.0);
+    Rgba::new(
+        a.r + (b.r - a.r) * t,
+        a.g + (b.g - a.g) * t,
+        a.b + (b.b - a.b) * t,
+        a.a + (b.a - a.a) * t,
+    )
+}
+
+/** 🌈 Samples a `CanvasGradientStop[]` list at `t ∈ [0,1]`, linearly interpolating between the
+ * bracketing stops — mirrors `CanvasGradient.addColorStop` sampling semantics. */
+fn canvas_gradient_color_at(stops: &[CanvasGradientStopJson], t: f32, opacity: f32) -> Rgba {
+    if stops.is_empty() {
+        return Rgba::new(0.58, 0.64, 0.72, 0.95 * opacity);
+    }
+    let t = t.clamp(0.0, 1.0);
+    if stops.len() == 1 {
+        return canvas_color_channels(stops[0].color.as_deref().unwrap_or(&[]), opacity);
+    }
+    let last = stops.len() - 1;
+    for i in 0..last {
+        let a_off = stops[i].offset.clamp(0.0, 1.0) as f32;
+        let b_off = stops[i + 1].offset.clamp(0.0, 1.0) as f32;
+        if t <= b_off || i == last - 1 {
+            let span = (b_off - a_off).max(0.0001);
+            let local = ((t - a_off) / span).clamp(0.0, 1.0);
+            let ca = canvas_color_channels(stops[i].color.as_deref().unwrap_or(&[]), opacity);
+            let cb = canvas_color_channels(stops[i + 1].color.as_deref().unwrap_or(&[]), opacity);
+            return canvas_mix_rgba(ca, cb, local);
+        }
+    }
+    canvas_color_channels(stops[last].color.as_deref().unwrap_or(&[]), opacity)
+}
+
+/** 🌗 A single separable-blend-mode channel formula (W3C Compositing and Blending Level 1 §5.2) —
+ * `cb` is the backdrop channel, `cs` the source channel, both `0..1`. */
+fn canvas_blend_channel(mode: &str, cb: f32, cs: f32) -> f32 {
+    match mode {
+        "multiply" => cb * cs,
+        "screen" => cb + cs - cb * cs,
+        "overlay" => canvas_blend_channel("hardLight", cs, cb),
+        "darken" => cb.min(cs),
+        "lighten" => cb.max(cs),
+        "colorDodge" => {
+            if cb <= 0.0 {
+                0.0
+            } else if cs >= 1.0 {
+                1.0
+            } else {
+                (cb / (1.0 - cs)).min(1.0)
+            }
+        }
+        "colorBurn" => {
+            if cb >= 1.0 {
+                1.0
+            } else if cs <= 0.0 {
+                0.0
+            } else {
+                1.0 - ((1.0 - cb) / cs).min(1.0)
+            }
+        }
+        "hardLight" => {
+            if cs <= 0.5 {
+                2.0 * cb * cs
+            } else {
+                1.0 - 2.0 * (1.0 - cb) * (1.0 - cs)
+            }
+        }
+        "softLight" => {
+            let d = if cb <= 0.25 { ((16.0 * cb - 12.0) * cb + 4.0) * cb } else { cb.sqrt() };
+            if cs <= 0.5 {
+                cb - (1.0 - 2.0 * cs) * cb * (1.0 - cb)
+            } else {
+                cb + (2.0 * cs - 1.0) * (d - cb)
+            }
+        }
+        "difference" => (cb - cs).abs(),
+        "exclusion" => cb + cs - 2.0 * cb * cs,
+        _ => cs,
+    }
+}
+
+fn canvas_lum(c: [f32; 3]) -> f32 {
+    0.3 * c[0] + 0.59 * c[1] + 0.11 * c[2]
+}
+
+fn canvas_clip_color(c: [f32; 3]) -> [f32; 3] {
+    let l = canvas_lum(c);
+    let n = c[0].min(c[1]).min(c[2]);
+    let x = c[0].max(c[1]).max(c[2]);
+    let mut out = c;
+    if n < 0.0 {
+        for ch in out.iter_mut() {
+            *ch = l + (*ch - l) * l / (l - n).max(1e-6);
+        }
+    }
+    if x > 1.0 {
+        for ch in out.iter_mut() {
+            *ch = l + (*ch - l) * (1.0 - l) / (x - l).max(1e-6);
+        }
+    }
+    out
+}
+
+fn canvas_set_lum(c: [f32; 3], l: f32) -> [f32; 3] {
+    let d = l - canvas_lum(c);
+    canvas_clip_color([c[0] + d, c[1] + d, c[2] + d])
+}
+
+fn canvas_sat(c: [f32; 3]) -> f32 {
+    c[0].max(c[1]).max(c[2]) - c[0].min(c[1]).min(c[2])
+}
+
+fn canvas_set_sat(c: [f32; 3], s: f32) -> [f32; 3] {
+    let mut idx = [0usize, 1, 2];
+    idx.sort_by(|&a, &b| c[a].partial_cmp(&c[b]).unwrap_or(std::cmp::Ordering::Equal));
+    let (imin, imid, imax) = (idx[0], idx[1], idx[2]);
+    let mut out = [0.0f32; 3];
+    if c[imax] > c[imin] {
+        out[imid] = (c[imid] - c[imin]) * s / (c[imax] - c[imin]);
+        out[imax] = s;
+    }
+    out[imin] = 0.0;
+    out
+}
+
+/** 🎨 Approximates the React `Canvas2dScene`'s 16 CSS blend modes (`BLEND_MODE_TO_COMPOSITE` in
+ * `canvas-2d-host.tsx`) by pre-blending the resolved fill/stroke color against `backdrop` — a
+ * stand-in for true per-pixel GPU compositing, which would require a `wgpu::BlendState` change per
+ * draw call in the shared `ui_wgpu` pipeline (out of scope for this ticket's Canvas2d/Paint2d
+ * regions; see ticket 26/07/11/WGPU-RENDERER-FULL-PARITY). The four non-separable modes
+ * (hue/saturation/color/luminosity) follow the W3C SetLum/SetSat algorithm exactly. */
+fn canvas_apply_blend_mode(mode: Option<&str>, backdrop: Rgba, source: Rgba) -> Rgba {
+    let mode = match mode {
+        None | Some("") | Some("normal") => return source,
+        Some(m) => m,
+    };
+    let cb = [backdrop.r, backdrop.g, backdrop.b];
+    let cs = [source.r, source.g, source.b];
+    let blended = match mode {
+        "hue" => canvas_set_lum(canvas_set_sat(cs, canvas_sat(cb)), canvas_lum(cb)),
+        "saturation" => canvas_set_lum(canvas_set_sat(cb, canvas_sat(cs)), canvas_lum(cb)),
+        "color" => canvas_set_lum(cs, canvas_lum(cb)),
+        "luminosity" => canvas_set_lum(cb, canvas_lum(cs)),
+        _ => [
+            canvas_blend_channel(mode, cb[0], cs[0]),
+            canvas_blend_channel(mode, cb[1], cs[1]),
+            canvas_blend_channel(mode, cb[2], cs[2]),
+        ],
+    };
+    Rgba::new(blended[0].clamp(0.0, 1.0), blended[1].clamp(0.0, 1.0), blended[2].clamp(0.0, 1.0), source.a)
+}
+//#endregion Canvas2dFillBlend
+
+//#region Canvas2dShapes
+const CANVAS_GRADIENT_BANDS: usize = 10;
+const CANVAS_CIRCLE_SEGMENTS: usize = 28;
+
+fn canvas_circle_points(cx: f32, cy: f32, radius: f32, segments: usize) -> Vec<[f32; 2]> {
+    (0..segments)
+        .map(|i| {
+            let a = (i as f32 / segments as f32) * std::f32::consts::TAU;
+            [cx + a.cos() * radius, cy + a.sin() * radius]
+        })
+        .collect()
+}
+
+fn push_shape_fill(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, is_circle: bool) {
+    if is_circle {
+        let cx = rect.x + rect.w * 0.5;
+        let cy = rect.y + rect.h * 0.5;
+        let radius = rect.w.min(rect.h) * 0.5;
+        draw.push_triangle_fan(&canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS), color);
+    } else {
+        draw.push_rounded([rect.x, rect.y, rect.w, rect.h], color, 4.0);
+    }
+}
+
+fn push_circle_outline(draw: &mut ui_wgpu::DrawList, cx: f32, cy: f32, radius: f32, color: Rgba, width: f32) {
+    let points = canvas_circle_points(cx, cy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS);
+    for i in 0..points.len() {
+        let a = points[i];
+        let b = points[(i + 1) % points.len()];
+        draw.push_line(a[0], a[1], b[0], b[1], color, width);
+    }
+}
+
+fn push_shape_outline(draw: &mut ui_wgpu::DrawList, rect: Rect, color: Rgba, width: f32, is_circle: bool, dash: Option<&[f64]>) {
+    if is_circle {
+        let cx = rect.x + rect.w * 0.5;
+        let cy = rect.y + rect.h * 0.5;
+        let radius = rect.w.min(rect.h) * 0.5;
+        push_circle_outline(draw, cx, cy, radius, color, width);
+        return;
+    }
+    if dash.is_some_and(|d| !d.is_empty()) {
+        draw_dashed_line(draw, rect.x, rect.y, rect.x + rect.w, rect.y, color, width);
+        draw_dashed_line(draw, rect.x + rect.w, rect.y, rect.x + rect.w, rect.y + rect.h, color, width);
+        draw_dashed_line(draw, rect.x + rect.w, rect.y + rect.h, rect.x, rect.y + rect.h, color, width);
+        draw_dashed_line(draw, rect.x, rect.y + rect.h, rect.x, rect.y, color, width);
+    } else {
+        draw_ink_rect_outline(draw, rect.x, rect.y, rect.w, rect.h, color, width);
+    }
+}
+
+/** 🌈 Bands a linear gradient across `clip` (scissor-bounded to the shape's screen bbox) as
+ * `CANVAS_GRADIENT_BANDS` solid quads perpendicular to the `(x1,y1)-(x2,y2)` axis — `ui_wgpu::
+ * DrawList` has no per-vertex gradient primitive, see `canvas_apply_blend_mode` doc comment. */
+fn push_linear_gradient_fill(
+    draw: &mut ui_wgpu::DrawList,
+    viewport: &Viewport,
+    inner: Rect,
+    clip: Rect,
+    origin_x: f64,
+    origin_y: f64,
+    fill: &CanvasFillJson,
+    opacity: f32,
+    blend: Option<&str>,
+    backdrop: Rgba,
+) {
+    let (sx1, sy1) = viewport.world_to_screen((origin_x + fill.x1) as f32, (origin_y + fill.y1) as f32, inner);
+    let (sx2, sy2) = viewport.world_to_screen((origin_x + fill.x2) as f32, (origin_y + fill.y2) as f32, inner);
+    let dx = sx2 - sx1;
+    let dy = sy2 - sy1;
+    let len = (dx * dx + dy * dy).sqrt();
+    draw.push_scissor(clip);
+    if len < 0.5 {
+        let color = canvas_apply_blend_mode(blend, backdrop, canvas_gradient_color_at(&fill.stops, 1.0, opacity));
+        draw.push_rounded([clip.x, clip.y, clip.w, clip.h], color, 0.0);
+        draw.pop_scissor();
+        return;
+    }
+    let ux = dx / len;
+    let uy = dy / len;
+    let px = -uy;
+    let py = ux;
+    let overhang = (clip.w + clip.h).max(32.0);
+    for i in 0..CANVAS_GRADIENT_BANDS {
+        let t0 = i as f32 / CANVAS_GRADIENT_BANDS as f32;
+        let t1 = (i + 1) as f32 / CANVAS_GRADIENT_BANDS as f32;
+        let color = canvas_apply_blend_mode(blend, backdrop, canvas_gradient_color_at(&fill.stops, (t0 + t1) * 0.5, opacity));
+        let a0 = if i == 0 { -overhang } else { t0 * len };
+        let a1 = if i == CANVAS_GRADIENT_BANDS - 1 { len + overhang } else { t1 * len };
+        let bx = sx1 + ux * a0;
+        let by = sy1 + uy * a0;
+        let ex = sx1 + ux * a1;
+        let ey = sy1 + uy * a1;
+        let points = [
+            [bx + px * overhang, by + py * overhang],
+            [ex + px * overhang, ey + py * overhang],
+            [ex - px * overhang, ey - py * overhang],
+            [bx - px * overhang, by - py * overhang],
+        ];
+        draw.push_triangle_fan(&points, color);
+    }
+    draw.pop_scissor();
+}
+
+/** 🌈 Bands a radial gradient as `CANVAS_GRADIENT_BANDS` concentric circles painted outer-to-inner
+ * (painter's algorithm — smaller/later circles overpaint the center), scissor-bounded to `clip`. */
+fn push_radial_gradient_fill(
+    draw: &mut ui_wgpu::DrawList,
+    viewport: &Viewport,
+    inner: Rect,
+    clip: Rect,
+    origin_x: f64,
+    origin_y: f64,
+    fill: &CanvasFillJson,
+    opacity: f32,
+    blend: Option<&str>,
+    backdrop: Rgba,
+) {
+    let (scx, scy) = viewport.world_to_screen((origin_x + fill.cx) as f32, (origin_y + fill.cy) as f32, inner);
+    let sr = (fill.r as f32 * viewport.zoom).max(0.5);
+    draw.push_scissor(clip);
+    let outer_radius = sr.max(clip.w.max(clip.h));
+    for i in (0..CANVAS_GRADIENT_BANDS).rev() {
+        let t = (i + 1) as f32 / CANVAS_GRADIENT_BANDS as f32;
+        let radius = if i == CANVAS_GRADIENT_BANDS - 1 { outer_radius } else { sr * t };
+        let color = canvas_apply_blend_mode(blend, backdrop, canvas_gradient_color_at(&fill.stops, t, opacity));
+        draw.push_triangle_fan(&canvas_circle_points(scx, scy, radius.max(0.5), CANVAS_CIRCLE_SEGMENTS), color);
+    }
+    draw.pop_scissor();
+}
+
+/** 🖌️ Resolves and draws a Canvas2dScene draw record's `fill` (solid / linear / radial gradient) and
+ * `stroke`, matching `drawSceneNode`'s fill/stroke resolution in `canvas-2d-host.tsx`. */
+fn render_canvas_shape_fill(
+    draw: &mut ui_wgpu::DrawList,
+    viewport: &Viewport,
+    inner: Rect,
+    shape_rect: Rect,
+    layer: &CanvasLayer,
+    opacity: f32,
+    fallback_fill: Rgba,
+    backdrop: Rgba,
+    is_circle: bool,
+) {
+    let blend = layer.blend_mode.as_deref();
+    match &layer.fill {
+        Some(fill) if fill.kind.as_deref() == Some("linearGradient") && !fill.stops.is_empty() => {
+            push_linear_gradient_fill(draw, viewport, inner, shape_rect, layer.x, layer.y, fill, opacity, blend, backdrop);
+        }
+        Some(fill) if fill.kind.as_deref() == Some("radialGradient") && !fill.stops.is_empty() => {
+            push_radial_gradient_fill(draw, viewport, inner, shape_rect, layer.x, layer.y, fill, opacity, blend, backdrop);
+        }
+        Some(fill) if fill.color.is_some() => {
+            let solid = canvas_apply_blend_mode(blend, backdrop, canvas_color_channels(fill.color.as_deref().unwrap_or(&[]), opacity));
+            push_shape_fill(draw, shape_rect, solid, is_circle);
+        }
+        _ => {
+            let solid = canvas_apply_blend_mode(blend, backdrop, fallback_fill);
+            push_shape_fill(draw, shape_rect, solid, is_circle);
+        }
+    }
+    if let Some(stroke) = &layer.stroke {
+        let color = stroke
+            .color
+            .as_deref()
+            .map(|c| canvas_apply_blend_mode(blend, backdrop, canvas_color_channels(c, opacity)))
+            .unwrap_or_else(|| Rgba::new(0.58, 0.64, 0.72, 0.9 * opacity));
+        let width = (stroke.width.unwrap_or(1.0) as f32).max(1.0);
+        push_shape_outline(draw, shape_rect, color, width, is_circle, stroke.dash.as_deref());
+    }
+}
+//#endregion Canvas2dShapes
+
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
@@ -7568,22 +10205,36 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
     }
     for (index, layer) in layers.iter().enumerate() {
+        // 🗒️ `role === "meta"` (activeUtility bookkeeping) and `visible === false` records are
+        // non-visual — skip rendering entirely, matches `layers.filter(role !== "meta")` in
+        // `canvas-2d-host.tsx`'s `JsonLayersCanvasSession.renderFrame`.
+        if !canvas_layer_should_render(layer) {
+            continue;
+        }
+        let opacity = layer.opacity.unwrap_or(1.0).clamp(0.0, 1.0);
+        let blend = layer.blend_mode.as_deref();
         if layer.kind == "image" {
-            if let Some(data_url) = &layer.data_url {
-                if let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, data_url) {
+            let source = layer
+                .data_url
+                .clone()
+                .or_else(|| layer.image.as_ref().and_then(|image| image.src.clone()));
+            if let Some(data_url) = source.filter(|src| src.starts_with("data:")) {
+                if let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, &data_url) {
                     let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-                    let w = layer.width as f32 * viewport.zoom;
-                    let h = layer.height as f32 * viewport.zoom;
+                    let iw = layer.image.as_ref().and_then(|image| image.width).unwrap_or(layer.width);
+                    let ih = layer.image.as_ref().and_then(|image| image.height).unwrap_or(layer.height);
+                    let w = iw as f32 * viewport.zoom;
+                    let h = ih as f32 * viewport.zoom;
                     ctx.draw
-                        .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], 1.0);
+                        .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], opacity);
                 }
             }
             continue;
         }
         if layer.kind == "polyline" {
             if let Some(points) = &layer.points {
-                let stroke = theme.diagram_stroke;
-                let seam_stroke = theme.diagram_seam;
+                let stroke = theme.diagram_stroke.with_alpha(theme.diagram_stroke.a * opacity);
+                let seam_stroke = theme.diagram_seam.with_alpha(theme.diagram_seam.a * opacity);
                 let width = (1.5 * viewport.zoom).max(1.0);
                 for (edge_index, chunk) in points.chunks(2).enumerate() {
                     if chunk.len() < 2 {
@@ -7608,12 +10259,6 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             continue;
         }
         let hue = (index * 47 % 360) as f32;
-        let stroke = Rgba::new(
-            theme.diagram_accent.r + hue / 720.0,
-            theme.diagram_accent.g,
-            theme.diagram_accent.b,
-            theme.diagram_accent.a,
-        );
         if layer.kind == "line" || layer.x0.is_some() {
             let x0 = layer.x0.unwrap_or(layer.x) as f32;
             let y0 = layer.y0.unwrap_or(layer.y) as f32;
@@ -7621,30 +10266,59 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             let y1 = layer.y1.unwrap_or(layer.y + layer.height) as f32;
             let (sx0, sy0) = viewport.world_to_screen(x0, y0, inner);
             let (sx1, sy1) = viewport.world_to_screen(x1, y1, inner);
+            let base_stroke = layer
+                .stroke
+                .as_ref()
+                .and_then(|stroke| stroke.color.as_deref())
+                .map(|c| canvas_color_channels(c, opacity))
+                .unwrap_or_else(|| {
+                    Rgba::new(
+                        theme.diagram_accent.r + hue / 720.0,
+                        theme.diagram_accent.g,
+                        theme.diagram_accent.b,
+                        theme.diagram_accent.a * opacity,
+                    )
+                });
+            let stroke = canvas_apply_blend_mode(blend, theme.canvas_clear, base_stroke);
             ctx.draw
                 .push_line(sx0, sy0, sx1, sy1, stroke, (2.0 * viewport.zoom).max(1.0));
             continue;
         }
+        // 🖼️ Generic bounds-rect (or `kind === "circle"`) draw record — resolves solid/gradient
+        // fill, blend-mode approximation, and stroke, matching `drawSceneNode`'s bounds-layer path.
         let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-        let w = layer.width as f32 * viewport.zoom;
-        let h = layer.height as f32 * viewport.zoom;
-        ctx.draw.push_rounded(
-            [sx, sy, w.max(8.0), h.max(8.0)],
-            Rgba::new(
-                theme.diagram_accent_fill.r + hue / 720.0,
-                theme.diagram_accent_fill.g,
-                theme.diagram_accent_fill.b,
-                theme.diagram_accent_fill.a,
-            ),
-            4.0,
+        let w = (layer.width as f32 * viewport.zoom).max(8.0);
+        let h = (layer.height as f32 * viewport.zoom).max(8.0);
+        let shape_rect = Rect::new(sx, sy, w, h);
+        let is_circle = layer.kind == "circle";
+        let fallback_fill = Rgba::new(
+            theme.diagram_accent_fill.r + hue / 720.0,
+            theme.diagram_accent_fill.g,
+            theme.diagram_accent_fill.b,
+            theme.diagram_accent_fill.a * opacity,
         );
-        let label = if layer.name.is_empty() {
-            layer.id.as_str()
+        render_canvas_shape_fill(ctx.draw, &viewport, inner, shape_rect, layer, opacity, fallback_fill, theme.canvas_clear, is_circle);
+        // 🖊️ Overlay annotation: a selection highlight ring drawn on top of the shape, matches
+        // `drawBoundsLayer`'s `isSelected` yellow-ish accent ring in `canvas-2d-host.tsx`.
+        if layer.selected.unwrap_or(false) {
+            if is_circle {
+                push_circle_outline(ctx.draw, sx + w * 0.5, sy + h * 0.5, w.min(h) * 0.5 + 3.0, theme.accent, 2.0);
+            } else {
+                draw_ink_rect_outline(ctx.draw, sx - 3.0, sy - 3.0, w + 6.0, h + 6.0, theme.accent, 2.0);
+            }
+        }
+        if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
+            let size = layer.text.as_ref().and_then(|t| t.size).unwrap_or(14.0) as f32;
+            draw_text(ctx, text, sx + 2.0, sy + size.max(8.0), size.max(8.0), theme.text);
         } else {
-            layer.name.as_str()
-        };
-        if !label.is_empty() {
-            draw_text(ctx, label, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
+            let label = if layer.name.is_empty() {
+                layer.id.as_str()
+            } else {
+                layer.name.as_str()
+            };
+            if !label.is_empty() {
+                draw_text(ctx, label, sx + 4.0, sy + 14.0, theme.font_size_small, theme.text);
+            }
         }
     }
     ctx.input.register_hit(HitTarget {
@@ -8820,6 +11494,170 @@ mod raster_frame_cost_tests {
         let quads = count_solids(&draw);
         assert_eq!(quads, 16, "degenerate zoom must fall back to the full extent grid (4x4 cells for a 64-unit extent)");
     }
+
+    //#region Canvas2dDrawRecordTests
+    #[test]
+    fn canvas_layer_should_render_filters_meta_role_and_invisible_records() {
+        let meta: CanvasLayer = serde_json::from_str(r#"{"role":"meta","utility":"selectDirect"}"#).unwrap();
+        assert!(!canvas_layer_should_render(&meta), "role: meta records are non-visual bookkeeping");
+        let hidden: CanvasLayer = serde_json::from_str(r#"{"kind":"rect","visible":false}"#).unwrap();
+        assert!(!canvas_layer_should_render(&hidden));
+        let visible: CanvasLayer = serde_json::from_str(r#"{"kind":"rect"}"#).unwrap();
+        assert!(canvas_layer_should_render(&visible), "records default to visible when the field is absent");
+    }
+
+    #[test]
+    fn canvas_gradient_color_at_interpolates_between_bracketing_stops() {
+        let stops = vec![
+            CanvasGradientStopJson { offset: 0.0, color: Some(vec![0.0, 0.0, 0.0, 1.0]) },
+            CanvasGradientStopJson { offset: 1.0, color: Some(vec![1.0, 1.0, 1.0, 1.0]) },
+        ];
+        let start = canvas_gradient_color_at(&stops, 0.0, 1.0);
+        let mid = canvas_gradient_color_at(&stops, 0.5, 1.0);
+        let end = canvas_gradient_color_at(&stops, 1.0, 1.0);
+        assert!(start.r < 0.001, "t=0 should sample the first stop");
+        assert!((mid.r - 0.5).abs() < 0.001, "t=0.5 should sit halfway between stops");
+        assert!(end.r > 0.999, "t=1 should sample the last stop");
+    }
+
+    #[test]
+    fn canvas_apply_blend_mode_normal_and_none_are_passthrough() {
+        let src = Rgba::new(0.2, 0.4, 0.6, 0.8);
+        let backdrop = Rgba::new(0.9, 0.9, 0.9, 1.0);
+        assert_eq!(canvas_apply_blend_mode(None, backdrop, src).r, src.r);
+        assert_eq!(canvas_apply_blend_mode(Some("normal"), backdrop, src).b, src.b);
+    }
+
+    #[test]
+    fn canvas_apply_blend_mode_multiply_matches_w3c_formula() {
+        let src = Rgba::new(0.5, 0.5, 0.5, 1.0);
+        let backdrop = Rgba::new(0.4, 0.8, 1.0, 1.0);
+        let blended = canvas_apply_blend_mode(Some("multiply"), backdrop, src);
+        assert!((blended.r - 0.2).abs() < 0.001, "multiply(0.4,0.5) should be 0.2, got {}", blended.r);
+        assert!((blended.g - 0.4).abs() < 0.001, "multiply(0.8,0.5) should be 0.4, got {}", blended.g);
+        assert!((blended.b - 0.5).abs() < 0.001, "multiply(1.0,0.5) should be 0.5, got {}", blended.b);
+    }
+
+    #[test]
+    fn canvas_apply_blend_mode_screen_matches_w3c_formula() {
+        let src = Rgba::new(0.5, 0.2, 0.0, 1.0);
+        let backdrop = Rgba::new(0.5, 0.5, 1.0, 1.0);
+        let blended = canvas_apply_blend_mode(Some("screen"), backdrop, src);
+        let expected_r = 0.5 + 0.5 - 0.5 * 0.5;
+        assert!((blended.r - expected_r).abs() < 0.001, "screen(a,b)=a+b-ab, got {}", blended.r);
+    }
+
+    #[test]
+    fn push_linear_gradient_fill_emits_banded_triangle_fan_geometry() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let clip = Rect::new(50.0, 50.0, 100.0, 40.0);
+        let fill = CanvasFillJson {
+            kind: Some("linearGradient".into()),
+            x1: 0.0,
+            y1: 0.0,
+            x2: 100.0,
+            y2: 0.0,
+            stops: vec![
+                CanvasGradientStopJson { offset: 0.0, color: Some(vec![1.0, 0.0, 0.0, 1.0]) },
+                CanvasGradientStopJson { offset: 1.0, color: Some(vec![0.0, 0.0, 1.0, 1.0]) },
+            ],
+            ..Default::default()
+        };
+        push_linear_gradient_fill(&mut draw, &viewport, inner, clip, 0.0, 0.0, &fill, 1.0, None, Theme::default().canvas_clear);
+        let verts: usize = draw.layers.iter().map(|layer| layer.vector_vertices.len()).sum();
+        assert!(verts > 0, "linear gradient bands should push triangle-fan geometry");
+    }
+
+    #[test]
+    fn push_radial_gradient_fill_emits_concentric_ring_geometry() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let clip = Rect::new(0.0, 0.0, 80.0, 80.0);
+        let fill = CanvasFillJson {
+            kind: Some("radialGradient".into()),
+            cx: 40.0,
+            cy: 40.0,
+            r: 40.0,
+            stops: vec![
+                CanvasGradientStopJson { offset: 0.0, color: Some(vec![1.0, 1.0, 1.0, 1.0]) },
+                CanvasGradientStopJson { offset: 1.0, color: Some(vec![0.0, 0.0, 0.0, 1.0]) },
+            ],
+            ..Default::default()
+        };
+        push_radial_gradient_fill(&mut draw, &viewport, inner, clip, 0.0, 0.0, &fill, 1.0, None, Theme::default().canvas_clear);
+        let verts: usize = draw.layers.iter().map(|layer| layer.vector_vertices.len()).sum();
+        assert!(verts > 0, "radial gradient rings should push triangle-fan geometry");
+    }
+
+    #[test]
+    fn render_canvas_shape_fill_draws_solid_fill_and_stroke_for_plain_records() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let shape_rect = Rect::new(10.0, 10.0, 40.0, 20.0);
+        let layer: CanvasLayer = serde_json::from_str(
+            r#"{"kind":"rect","fill":{"color":[0.1,0.2,0.3,1.0]},"stroke":{"color":[1.0,1.0,1.0,1.0],"width":2.0}}"#,
+        )
+        .unwrap();
+        render_canvas_shape_fill(&mut draw, &viewport, inner, shape_rect, &layer, 1.0, Rgba::new(0.0, 0.0, 0.0, 1.0), Theme::default().canvas_clear, false);
+        let solids = count_solids(&draw);
+        let verts: usize = draw.layers.iter().map(|l| l.vector_vertices.len()).sum();
+        assert!(solids > 0, "solid fill should push a rounded-rect instance");
+        assert!(verts > 0, "stroke should push line geometry");
+    }
+    //#endregion Canvas2dDrawRecordTests
+
+    //#region Paint2dNavigatorTests
+    #[test]
+    fn paint2d_navigator_fit_viewport_centers_and_scales_to_content_bounds() {
+        let flat = vec![Paint2dFlatLayer {
+            id: "a".into(),
+            image_key: "k".into(),
+            x: 0.0,
+            y: 0.0,
+            scale_x: 1.0,
+            scale_y: 1.0,
+            opacity: 1.0,
+            width: 200,
+            height: 100,
+        }];
+        let inner = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let viewport = paint2d_navigator_fit_viewport(&flat, inner);
+        assert!((viewport.x - 100.0).abs() < 0.01, "camera should center on content x, got {}", viewport.x);
+        assert!((viewport.y - 50.0).abs() < 0.01, "camera should center on content y, got {}", viewport.y);
+        assert!((viewport.zoom - 0.26).abs() < 0.01, "zoom should fit the padded viewport to content, got {}", viewport.zoom);
+    }
+
+    #[test]
+    fn paint2d_navigator_fit_viewport_falls_back_to_neutral_camera_when_document_is_empty() {
+        let viewport = paint2d_navigator_fit_viewport(&[], Rect::new(0.0, 0.0, 100.0, 100.0));
+        assert_eq!(viewport.x, 0.0);
+        assert_eq!(viewport.y, 0.0);
+        assert_eq!(viewport.zoom, 1.0);
+    }
+
+    #[test]
+    fn paint2d_navigator_overlay_rect_maps_main_viewport_into_navigator_screen_space() {
+        let content_camera_json = r#"{"x":0,"y":0,"zoom":1}"#;
+        let content_viewport_json = r#"{"width":400,"height":300}"#;
+        let navigator_viewport = Viewport { x: 0.0, y: 0.0, zoom: 0.5 };
+        let navigator_inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let overlay = paint2d_navigator_overlay_rect(content_camera_json, Some(content_viewport_json), &navigator_viewport, navigator_inner)
+            .expect("overlay rect should resolve when a composite viewport size is present");
+        assert!((overlay.w - 200.0).abs() < 0.5, "overlay width should track the main viewport's world width, got {}", overlay.w);
+        assert!((overlay.h - 150.0).abs() < 0.5, "overlay height should track the main viewport's world height, got {}", overlay.h);
+    }
+
+    #[test]
+    fn paint2d_navigator_overlay_rect_is_none_without_a_reported_composite_viewport() {
+        let navigator_viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 };
+        let navigator_inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        assert!(paint2d_navigator_overlay_rect("{}", None, &navigator_viewport, navigator_inner).is_none());
+    }
+    //#endregion Paint2dNavigatorTests
 }
 //#endregion RasterFrameCostTests
 
@@ -10323,6 +13161,286 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
 //#endregion VirtualFileSystem
 
 //#region TextEditor
+//#region State
+/// 🗂️ Per-surface interaction state for double-click-to-select-word / completions / context-menu / rename.
+///
+/// 🔀 Mid-session reconciliation note (concurrent `w2-scene-wiring` session): this region originally also
+/// drove plain single-click-to-caret and drag-to-select itself, reading `ctx.input` pointer state directly
+/// during render (mirroring the pre-existing focus-on-click code below), because at the time nothing
+/// called `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` for any surface kind.
+/// `w2-scene-wiring` has since landed `apply_scene_pointer` in `RenderEntry` (do-not-touch, both files),
+/// which now calls those for every non-bespoke surface kind including `TextEditor` — so plain click/drag
+/// already reaches `EditorHost` via that generic path today. That single-click/drag code was removed here
+/// to avoid double-dispatching `textSelect`/`textEdit` every frame; what remains below (double-click
+/// word-select, right-click context menu, completions, rename) is *not* covered by the generic path and
+/// stays. One asymmetry worth noting: `EditorHost::pointer_down_screen` no-ops unless `button == 0`, so
+/// the generic path's raw-button-passthrough call is a no-op for right-clicks — this region's own
+/// button-forced-to-0 `pointer_down`/`pointer_up` pair for opening the context menu is therefore not
+/// redundant with it.
+#[derive(Clone, Debug, Default)]
+struct TextEditorUiState {
+    was_pointer_down: bool,
+    /// 🖱️🖱️ `now_ms()`-based double-click detection — same convention (and the same always-`0.0`-on-native
+    /// limitation) as `hit_double_click_target` elsewhere in this file.
+    last_click_ms: f64,
+    last_click_offset: Option<usize>,
+    completions_open: bool,
+    completion_index: usize,
+    context_menu: Option<TextEditorContextMenu>,
+    rename_active: bool,
+    rename_occurrences: Vec<(usize, usize)>,
+}
+
+#[derive(Clone, Debug)]
+struct TextEditorContextMenu {
+    x: f32,
+    y: f32,
+    items: Vec<TextEditorMenuItem>,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct TextEditorMenuItem {
+    id: &'static str,
+    label: &'static str,
+}
+
+/// 📋 Mirrors `CompletionItem` (`text-editor-host.tsx`); `insertText` has no producer yet anywhere in the
+/// codebase (`jack_completions_json` only ever emits `label`/`detail`) so `insert_text` falls back to
+/// `label`, exactly like `identifierPrefixStart`/`applyCompletion` do on the React side.
+#[derive(Clone, Deserialize)]
+struct TextEditorCompletionItem {
+    label: String,
+    #[serde(default)]
+    detail: Option<String>,
+    #[serde(default, rename = "insertText")]
+    insert_text: Option<String>,
+}
+
+#[derive(Clone, Copy, Deserialize)]
+struct TextEditorSpan {
+    start: usize,
+    end: usize,
+}
+
+/// ✏️ Mirrors `RenameInfo` (`text-editor-host.tsx`), parsed from `TextEditorScene::rename_json`.
+#[derive(Clone, Deserialize)]
+struct TextEditorRenameInfo {
+    name: String,
+    occurrences: Vec<TextEditorSpan>,
+}
+
+thread_local! {
+    static TEXT_EDITOR_UI_STATE: RefCell<HashMap<String, TextEditorUiState>> = RefCell::new(HashMap::new());
+}
+
+fn text_editor_ui_state(surface_id: &str) -> TextEditorUiState {
+    TEXT_EDITOR_UI_STATE.with(|cell| cell.borrow().get(surface_id).cloned().unwrap_or_default())
+}
+
+fn store_text_editor_ui_state(surface_id: &str, state: TextEditorUiState) {
+    TEXT_EDITOR_UI_STATE.with(|cell| {
+        cell.borrow_mut().insert(surface_id.to_string(), state);
+    });
+}
+
+fn text_editor_completions(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorCompletionItem> {
+    editor
+        .completions_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str(json).ok())
+        .unwrap_or_default()
+}
+
+fn text_editor_rename_info(editor: &ui_wgpu::TextEditorScene) -> Option<TextEditorRenameInfo> {
+    editor.rename_json.as_deref().and_then(|json| serde_json::from_str(json).ok())
+}
+
+/// ✂️ Identifier-prefix scan back from `caret`, mirroring `identifierPrefixStart`
+/// (`framework/renderer/react/components/text-editor-host.tsx`) for the completion-commit replacement range.
+fn identifier_prefix_start(text: &str, caret: usize) -> usize {
+    let bytes = text.as_bytes();
+    let mut start = caret.min(bytes.len());
+    while start > 0 && (bytes[start - 1].is_ascii_alphanumeric() || bytes[start - 1] == b'_') {
+        start -= 1;
+    }
+    start
+}
+
+/// 📏 `[start, end)` byte range of the buffer line containing `cursor`, via the (previously unwired)
+/// `line_col_at` helper below — mirrors `lineRangeAt` (`text-editor-host.tsx`)'s "Select Line" semantics.
+fn text_editor_line_range(buffer: &str, cursor: usize) -> (usize, usize) {
+    let (line_index, _) = line_col_at(buffer, cursor);
+    let mut offset = 0usize;
+    for (index, line) in buffer.lines().enumerate() {
+        let end = offset + line.len();
+        if index == line_index {
+            return (offset, end);
+        }
+        offset = end + 1;
+    }
+    (buffer.len(), buffer.len())
+}
+
+/// 🧭 Right-click menu rows, mirroring `buildTextEditorContextMenuItems` (`text-editor-host.tsx`) minus
+/// clipboard (no OS clipboard binding exists anywhere in this crate yet — see `ui_wgpu::events`'
+/// `UiCommand::ClipboardCopy/Cut/PasteRequested`, which even there says the OS read/write is a
+/// "host-region concern" still unwired) and the domain-specific "pick target" rows (those need a new
+/// `EditorHost::pick_targets_at_screen_json` wrapper; deferred, noted in the ticket report).
+fn text_editor_context_menu_items(editor: &ui_wgpu::TextEditorScene) -> Vec<TextEditorMenuItem> {
+    let mut items = Vec::new();
+    if !text_editor_completions(editor).is_empty() {
+        items.push(TextEditorMenuItem { id: "suggest", label: "Suggest Completions" });
+    }
+    items.push(TextEditorMenuItem { id: "select-token", label: "Select Token" });
+    items.push(TextEditorMenuItem { id: "select-line", label: "Select Line" });
+    items.push(TextEditorMenuItem { id: "select-all", label: "Select All" });
+    if text_editor_rename_info(editor).is_some() {
+        items.push(TextEditorMenuItem { id: "rename", label: "Rename" });
+    }
+    items.push(TextEditorMenuItem { id: "format", label: "Format Document" });
+    items.push(TextEditorMenuItem { id: "lint", label: "Lint Document" });
+    items
+}
+
+/// ▶️ Executes one context-menu row. `inner` re-derives the click point in surface-local screen space for
+/// "Select Token"/"Select Line"; "Select All" reuses `engine_canvas::text_editor_apply_key`'s existing
+/// Ctrl/Cmd+A path instead of adding a sixth wrapper.
+fn text_editor_run_menu_action(
+    scene: &UiComponentSceneNode,
+    editor: &ui_wgpu::TextEditorScene,
+    inner: Rect,
+    menu: &TextEditorContextMenu,
+    action_id: &str,
+    ctx: &mut FrameworkWidgetContext<'_>,
+    ui_state: &mut TextEditorUiState,
+) {
+    match action_id {
+        "suggest" => {
+            ui_state.completions_open = true;
+            ui_state.completion_index = 0;
+        }
+        "select-token" => {
+            for action in engine_canvas::text_editor_select_span_at_screen(scene, inner, menu.x, menu.y) {
+                ctx.input.queue_event(action);
+            }
+        }
+        "select-line" => {
+            let offset = cursor_from_click(scene, inner, menu.x, menu.y, 0.0);
+            let (start, end) = text_editor_line_range(&editor.buffer, offset);
+            for action in engine_canvas::text_editor_set_selection(scene, start, end) {
+                ctx.input.queue_event(action);
+            }
+        }
+        "select-all" => {
+            let modifiers = ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+            for action in engine_canvas::text_editor_apply_key(scene, KeyAction::Char("a".to_string()), &modifiers) {
+                ctx.input.queue_event(action);
+            }
+        }
+        "rename" => {
+            if let Some(info) = text_editor_rename_info(editor) {
+                ctx.input.focus_input(&format!("{}.editor.rename", scene.surface_id), &info.name);
+                ui_state.rename_active = true;
+                ui_state.rename_occurrences = info.occurrences.iter().map(|span| (span.start, span.end)).collect();
+            }
+        }
+        "format" => {
+            ctx.input.queue_event(scene_action(scene, "formatDocument", json!({ "surfaceId": scene.surface_id })));
+        }
+        "lint" => {
+            ctx.input.queue_event(scene_action(scene, "lintDocument", json!({ "surfaceId": scene.surface_id })));
+        }
+        _ => {}
+    }
+}
+//#endregion State
+
+//#region Popups
+/// 📍 Anchor (surface-local screen space) for the completions dropdown: near the caret, falling back to a
+/// fixed offset if the host isn't ready yet — mirrors `WasmEditorSurface`'s `position ? ... : { left: 12, top: 12 }`.
+fn text_editor_completion_anchor(scene: &UiComponentSceneNode, inner: Rect) -> (f32, f32) {
+    engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0))
+}
+
+fn text_editor_completion_row_rect(anchor: (f32, f32), theme: &Theme, index: usize) -> Rect {
+    let row_h = theme.control_height_small;
+    Rect::new(anchor.0, anchor.1 + 18.0 + index as f32 * row_h, 220.0, row_h)
+}
+
+fn text_editor_completion_hit(
+    scene: &UiComponentSceneNode,
+    inner: Rect,
+    theme: &Theme,
+    len: usize,
+    x: f32,
+    y: f32,
+) -> Option<usize> {
+    let anchor = text_editor_completion_anchor(scene, inner);
+    (0..len).find(|&index| text_editor_completion_row_rect(anchor, theme, index).contains(x, y))
+}
+
+fn text_editor_menu_row_rect(menu: &TextEditorContextMenu, theme: &Theme, index: usize) -> Rect {
+    let row_h = theme.control_height;
+    Rect::new(menu.x + 4.0, menu.y + 4.0 + index as f32 * row_h, 200.0 - 8.0, row_h)
+}
+
+fn text_editor_menu_hit(menu: &TextEditorContextMenu, theme: &Theme, x: f32, y: f32) -> Option<usize> {
+    (0..menu.items.len()).find(|&index| text_editor_menu_row_rect(menu, theme, index).contains(x, y))
+}
+
+/// 🍿 Local fallback popup: `ui_wgpu::events::{OverlayKind, open_overlay}` (the w1d-events-overlay
+/// workstream) is `pub(crate)` inside `ui_wgpu` — not reachable from this crate yet ("None of the new
+/// `EventRouter` API or new public types are called/re-exported from `engine`/crate-root yet", per that
+/// workstream's own report) — so this draws directly via `ctx.draw`, same convention as row-list surfaces
+/// elsewhere in this module (`render_vfs`'s `theme.selected`/`theme.row_hover` rows). Known limitation:
+/// unlike `shell`'s own `render_context_menu` (drawn into a dedicated top-level overlay `DrawList`), this
+/// draws into the regular in-flow layer, so it can't guarantee being on top of *other* panels — only of
+/// this surface's own content and anything already drawn earlier in the frame.
+fn render_text_editor_completions(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    inner: Rect,
+    scene: &UiComponentSceneNode,
+    completions: &[TextEditorCompletionItem],
+    active_index: usize,
+) {
+    let theme = ctx.theme;
+    let anchor = text_editor_completion_anchor(scene, inner);
+    for (index, item) in completions.iter().enumerate() {
+        let row = text_editor_completion_row_rect(anchor, theme, index);
+        let bg = if index == active_index { theme.selected } else { theme.panel };
+        ctx.draw.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius * 0.5);
+        draw_text(ctx, &item.label, row.x + 8.0, row.y + row.h * 0.68, theme.font_size_small, theme.text);
+        if let Some(detail) = &item.detail {
+            let label_w = item.label.len() as f32 * theme.font_size_small * 0.6;
+            draw_text(ctx, detail, row.x + 12.0 + label_w, row.y + row.h * 0.68, theme.font_size_small, theme.text_muted);
+        }
+    }
+}
+
+fn render_text_editor_context_menu(ctx: &mut FrameworkWidgetContext<'_>, menu: &TextEditorContextMenu) {
+    let theme = ctx.theme;
+    let row_h = theme.control_height;
+    let w = 200.0;
+    let h = menu.items.len() as f32 * row_h + 8.0;
+    ctx.draw.push_rounded([menu.x, menu.y, w, h], theme.panel, theme.border_radius);
+    for (index, item) in menu.items.iter().enumerate() {
+        let row = text_editor_menu_row_rect(menu, theme, index);
+        ctx.draw.push_rounded([row.x, row.y, row.w, row.h], theme.button, theme.border_radius * 0.5);
+        draw_text(ctx, item.label, row.x + 8.0, row.y + row.h * 0.68, theme.font_size_small, theme.text);
+    }
+}
+
+fn render_text_editor_rename_input(ctx: &mut FrameworkWidgetContext<'_>, inner: Rect, scene: &UiComponentSceneNode) {
+    let theme = ctx.theme;
+    let text = ctx.input.text_buffer.clone();
+    let (x, y) = engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0));
+    let rect = Rect::new(x, (y - theme.control_height_small * 0.5).max(inner.y), 180.0, theme.control_height_small);
+    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.input_bg, theme.border_radius * 0.5);
+    draw_text(ctx, &text, rect.x + 8.0, rect.y + rect.h * 0.68, theme.font_size_small, theme.text);
+}
+//#endregion Popups
+
+//#region Geometry
 fn cursor_from_click(
     scene: &UiComponentSceneNode,
     inner: Rect,
@@ -10352,6 +13470,21 @@ fn cursor_from_click(
     lines.iter().take(line_index).map(|l| l.len() + 1).sum::<usize>() + cursor
 }
 
+fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
+    let mut index = 0usize;
+    for (line_index, line) in text.lines().enumerate() {
+        let next = index + line.len() + 1;
+        if cursor < next {
+            return (line_index, cursor.saturating_sub(index));
+        }
+        index = next;
+    }
+    let line_count = text.lines().count();
+    (line_count.saturating_sub(1), 0)
+}
+//#endregion Geometry
+
+//#region Render
 fn render_text_editor(
     scene: &UiComponentSceneNode,
     bounds: Rect,
@@ -10364,14 +13497,166 @@ fn render_text_editor(
     let inner = bounds;
     engine_canvas::paint_text_editor(gpu, ctx, scene, inner);
     let editor_id = format!("{}.editor", scene.surface_id);
-    let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
-    if focused && ctx.input.text_buffer.is_empty() && !editor.buffer.is_empty() {
+    let rename_id = format!("{}.editor.rename", scene.surface_id);
+    let seed_focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
+    if seed_focused && ctx.input.text_buffer.is_empty() && !editor.buffer.is_empty() {
         ctx.input.focus_input(&editor_id, &editor.buffer);
     }
-    if focused {
-        let modifiers = ctx.input.modifiers.clone();
+
+    let mut ui_state = text_editor_ui_state(&scene.surface_id);
+    let hovered = inner.contains(ctx.input.pointer_x, ctx.input.pointer_y);
+    let pressed_edge = ctx.input.pointer_down && !ui_state.was_pointer_down;
+
+    //#region PointerInput
+    // 🔀 Plain single-click-to-caret and drag-to-select are handled by the generic
+    // `apply_scene_pointer` -> `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` path
+    // in `RenderEntry` now (see `TextEditorUiState`'s doc comment) — this block only covers what that path
+    // doesn't: double-click word-select and the right-click context menu.
+    if pressed_edge {
+        let mut consumed_press = false;
+        // 🍿 Completions popup rows take priority: commit on hit; a miss just falls through so the click
+        // still positions the caret, matching `WasmEditorSurface`'s document-pane click handling.
+        if ui_state.completions_open {
+            let completions = text_editor_completions(editor);
+            if let Some(index) =
+                text_editor_completion_hit(scene, inner, ctx.theme, completions.len(), ctx.input.pointer_x, ctx.input.pointer_y)
+            {
+                if let Some(item) = completions.get(index) {
+                    let (_, caret) = engine_canvas::text_editor_caret(scene);
+                    let prefix_start = identifier_prefix_start(&editor.buffer, caret);
+                    let insert_text = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
+                    for action in engine_canvas::text_editor_apply_completion(scene, prefix_start, caret, &insert_text) {
+                        ctx.input.queue_event(action);
+                    }
+                }
+                ui_state.completions_open = false;
+                consumed_press = true;
+            }
+        }
+        // 🖱️ Context-menu rows: any press while one is open dismisses it; a hit also runs the action.
+        if !consumed_press {
+            if let Some(menu) = ui_state.context_menu.clone() {
+                if let Some(index) = text_editor_menu_hit(&menu, ctx.theme, ctx.input.pointer_x, ctx.input.pointer_y) {
+                    if let Some(item) = menu.items.get(index).copied() {
+                        text_editor_run_menu_action(scene, editor, inner, &menu, item.id, ctx, &mut ui_state);
+                    }
+                }
+                ui_state.context_menu = None;
+                consumed_press = true;
+            }
+        }
+        if !consumed_press && !ui_state.rename_active {
+            if ctx.input.pointer_button == 2 && hovered {
+                // 🖱️➡️ Reposition the caret first (button forced to 0, matching `WasmEditorSurface.onContextMenu`'s
+                // `pointerDownScreen(sx, sy, 0)`), then open the menu at the click point. Not redundant with
+                // the generic path: `EditorHost::pointer_down_screen` no-ops unless `button == 0`, so the
+                // generic path's own raw-button-2 call for this same press is already a no-op.
+                let mut actions = engine_canvas::text_editor_pointer_down(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0);
+                actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y));
+                for action in actions {
+                    ctx.input.queue_event(action);
+                }
+                ctx.input.focus_input(&editor_id, &editor.buffer);
+                ui_state.completions_open = false;
+                ui_state.context_menu = Some(TextEditorContextMenu {
+                    x: ctx.input.pointer_x,
+                    y: ctx.input.pointer_y,
+                    items: text_editor_context_menu_items(editor),
+                });
+            } else if ctx.input.pointer_button == 0 && hovered {
+                // ✋ The generic path (`apply_scene_pointer`) already repositions the caret / extends the
+                // drag-selection for this same press elsewhere in the frame; this only tracks double-click
+                // timing/offset locally and closes the completions popup / (re)focuses for keyboard routing.
+                ctx.input.focus_input(&editor_id, &editor.buffer);
+                ui_state.completions_open = false;
+                let click_offset = cursor_from_click(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0.0);
+                let now = now_ms();
+                let is_double =
+                    ui_state.last_click_offset == Some(click_offset) && (now - ui_state.last_click_ms).abs() < 400.0;
+                if is_double {
+                    for action in engine_canvas::text_editor_select_span_at_screen(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y) {
+                        ctx.input.queue_event(action);
+                    }
+                }
+                ui_state.last_click_ms = now;
+                ui_state.last_click_offset = Some(click_offset);
+            }
+        }
+    }
+    ui_state.was_pointer_down = ctx.input.pointer_down;
+    //#endregion PointerInput
+
+    //#region Keyboard
+    let focused = ctx.input.focused_id.as_deref() == Some(editor_id.as_str());
+    let renaming = ui_state.rename_active && ctx.input.focused_id.as_deref() == Some(rename_id.as_str());
+    if renaming {
         for key in ctx.input.drain_keys() {
             match key {
+                KeyAction::Escape => {
+                    ui_state.rename_active = false;
+                    ctx.input.blur_input();
+                }
+                KeyAction::Enter => {
+                    let occurrences: Vec<Value> = ui_state
+                        .rename_occurrences
+                        .iter()
+                        .map(|(start, end)| json!({ "start": start, "end": end }))
+                        .collect();
+                    ctx.input.queue_event(scene_action(
+                        scene,
+                        "commitRename",
+                        json!({ "surfaceId": scene.surface_id, "occurrences": occurrences, "text": ctx.input.text_buffer.clone() }),
+                    ));
+                    ui_state.rename_active = false;
+                    ctx.input.blur_input();
+                }
+                KeyAction::Char(ch) => {
+                    for c in ch.chars() {
+                        ctx.input.insert_char(c);
+                    }
+                }
+                KeyAction::Backspace => ctx.input.backspace(),
+                KeyAction::Delete => ctx.input.delete_forward(),
+                _ => {}
+            }
+        }
+    } else if focused {
+        let modifiers = ctx.input.modifiers.clone();
+        let completions = text_editor_completions(editor);
+        for key in ctx.input.drain_keys() {
+            if ui_state.completions_open && !completions.is_empty() {
+                match key {
+                    KeyAction::ArrowDown => {
+                        ui_state.completion_index = (ui_state.completion_index + 1) % completions.len();
+                        continue;
+                    }
+                    KeyAction::ArrowUp => {
+                        ui_state.completion_index = (ui_state.completion_index + completions.len() - 1) % completions.len();
+                        continue;
+                    }
+                    KeyAction::Tab | KeyAction::Enter => {
+                        let item = &completions[ui_state.completion_index.min(completions.len() - 1)];
+                        let (_, caret) = engine_canvas::text_editor_caret(scene);
+                        let prefix_start = identifier_prefix_start(&editor.buffer, caret);
+                        let insert_text = item.insert_text.clone().unwrap_or_else(|| item.label.clone());
+                        for action in engine_canvas::text_editor_apply_completion(scene, prefix_start, caret, &insert_text) {
+                            ctx.input.queue_event(action);
+                        }
+                        ui_state.completions_open = false;
+                        continue;
+                    }
+                    KeyAction::Escape => {
+                        ui_state.completions_open = false;
+                        continue;
+                    }
+                    _ => {}
+                }
+            }
+            match key {
+                KeyAction::Space(true) if (modifiers.meta || modifiers.ctrl) && !completions.is_empty() => {
+                    ui_state.completions_open = true;
+                    ui_state.completion_index = 0;
+                }
                 KeyAction::Enter if modifiers.meta || modifiers.ctrl => {
                     ctx.input.queue_event(scene_action(
                         scene,
@@ -10405,25 +13690,414 @@ fn render_text_editor(
             }
         }
     }
-    if ctx.input.pointer_down
-        && inner.contains(ctx.input.pointer_x, ctx.input.pointer_y)
-        && ctx.input.pointer_button == 0
-    {
-        ctx.input.focus_input(&editor_id, &editor.buffer);
-    }
-}
+    //#endregion Keyboard
 
-fn line_col_at(text: &str, cursor: usize) -> (usize, usize) {
-    let mut index = 0usize;
-    for (line_index, line) in text.lines().enumerate() {
-        let next = index + line.len() + 1;
-        if cursor < next {
-            return (line_index, cursor.saturating_sub(index));
+    //#region Popups
+    if ui_state.completions_open {
+        let completions = text_editor_completions(editor);
+        if completions.is_empty() {
+            ui_state.completions_open = false;
+        } else {
+            if ui_state.completion_index >= completions.len() {
+                ui_state.completion_index = 0;
+            }
+            render_text_editor_completions(ctx, inner, scene, &completions, ui_state.completion_index);
         }
-        index = next;
     }
-    let line_count = text.lines().count();
-    (line_count.saturating_sub(1), 0)
+    if let Some(menu) = ui_state.context_menu.clone() {
+        render_text_editor_context_menu(ctx, &menu);
+    }
+    if ui_state.rename_active {
+        render_text_editor_rename_input(ctx, inner, scene);
+    }
+    //#endregion Popups
+
+    store_text_editor_ui_state(&scene.surface_id, ui_state);
+}
+//#endregion Render
+
+#[cfg(test)]
+mod text_editor_tests {
+    use super::*;
+    use crate::interpreter::framework_widget_context;
+
+    fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "controller".into(),
+            component_kind: kind,
+            pane_id: None,
+            binding_id: None,
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+        }
+    }
+
+    fn text_editor_scene_payload(
+        buffer: &str,
+        completions_json: Option<&str>,
+        rename_json: Option<&str>,
+    ) -> ui_wgpu::TextEditorScene {
+        ui_wgpu::TextEditorScene {
+            buffer: buffer.to_string(),
+            language: None,
+            selection_json: None,
+            tokens_json: None,
+            diagnostics_json: None,
+            completions_json: completions_json.map(str::to_string),
+            overlays_json: None,
+            occurrences_json: None,
+            placeholders_json: None,
+            extra_carets_json: None,
+            selectable_spans_json: None,
+            settings_json: None,
+            camera_json: None,
+            hover_json: None,
+            newline_gates_json: None,
+            rename_json: rename_json.map(str::to_string),
+        }
+    }
+
+    fn text_editor_scene(
+        surface_id: &str,
+        buffer: &str,
+        completions_json: Option<&str>,
+        rename_json: Option<&str>,
+    ) -> UiComponentSceneNode {
+        let mut scene = test_scene(surface_id, SurfaceKind::TextEditor);
+        scene.text_editor = Some(text_editor_scene_payload(buffer, completions_json, rename_json));
+        scene
+    }
+
+    /// 🧰 GPU-free `FrameworkWidgetContext` fixture, same construction as `render_entry_tests::Fixture`
+    /// (private to that module, so duplicated here rather than reused).
+    struct Fixture {
+        draw: ui_wgpu::DrawList,
+        atlas: ui_wgpu::FontAtlas,
+        theme: Theme,
+        input: ui_wgpu::InputState<ActionDescriptor>,
+        scroll_offsets: HashMap<String, f32>,
+        collapsed_sections: HashMap<String, bool>,
+        open_selects: HashMap<String, bool>,
+    }
+
+    impl Fixture {
+        fn new() -> Self {
+            Self {
+                draw: ui_wgpu::DrawList::default(),
+                atlas: ui_wgpu::FontAtlas::builtin(),
+                theme: Theme::default(),
+                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
+                scroll_offsets: HashMap::new(),
+                collapsed_sections: HashMap::new(),
+                open_selects: HashMap::new(),
+            }
+        }
+
+        fn ctx(&mut self) -> FrameworkWidgetContext<'_> {
+            framework_widget_context(
+                &mut self.draw,
+                None,
+                &mut self.atlas,
+                None,
+                &mut self.input,
+                &self.theme,
+                &mut self.scroll_offsets,
+                &mut self.collapsed_sections,
+                &mut self.open_selects,
+                None,
+            )
+        }
+    }
+
+    //#region ClickToCaretGeometry
+    #[test]
+    fn cursor_from_click_resolves_the_first_line_offset_at_the_click_x() {
+        let scene = text_editor_scene("editor.click", "hello\nworld", None, None);
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        // 8px left padding + ~7px/char advance (see `cursor_from_click`): clicking near x=8 should land at
+        // the very start of the line, clicking further right should land later in "hello".
+        let start = cursor_from_click(&scene, inner, 8.0, 8.0, 0.0);
+        let mid = cursor_from_click(&scene, inner, 8.0 + 7.0 * 3.0, 8.0, 0.0);
+        assert_eq!(start, 0);
+        assert!(mid >= 2 && mid <= 4, "expected an offset inside \"hello\", got {mid}");
+    }
+
+    #[test]
+    fn cursor_from_click_accounts_for_line_index_via_y() {
+        let scene = text_editor_scene("editor.click.line2", "ab\ncd\nef", None, None);
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        // line_h is 18.0 and the first line starts at y = inner.y + 8.0 (see `cursor_from_click`).
+        let offset = cursor_from_click(&scene, inner, 8.0, 8.0 + 18.0 + 2.0, 0.0);
+        let (line, col) = line_col_at("ab\ncd\nef", offset);
+        assert_eq!((line, col), (1, 0));
+    }
+
+    #[test]
+    fn line_col_at_reports_line_and_column_for_a_mid_buffer_offset() {
+        let (line, col) = line_col_at("alpha\nbeta\ngamma", 7);
+        assert_eq!((line, col), (1, 1));
+    }
+    //#endregion ClickToCaretGeometry
+
+    //#region SelectLine
+    #[test]
+    fn text_editor_line_range_returns_the_bounds_of_the_containing_line() {
+        let buffer = "first\nsecond line\nthird";
+        let (start, end) = text_editor_line_range(buffer, 9);
+        assert_eq!(&buffer[start..end], "second line");
+    }
+
+    #[test]
+    fn text_editor_line_range_handles_the_last_line_without_a_trailing_newline() {
+        let buffer = "one\ntwo";
+        let (start, end) = text_editor_line_range(buffer, 5);
+        assert_eq!(&buffer[start..end], "two");
+    }
+    //#endregion SelectLine
+
+    //#region CompletionPrefix
+    #[test]
+    fn identifier_prefix_start_stops_at_the_nearest_non_identifier_char() {
+        let text = "let value = my_var";
+        let caret = text.len();
+        assert_eq!(&text[identifier_prefix_start(text, caret)..caret], "my_var");
+    }
+
+    #[test]
+    fn identifier_prefix_start_returns_caret_when_not_inside_an_identifier() {
+        let text = "a = ";
+        assert_eq!(identifier_prefix_start(text, text.len()), text.len());
+    }
+    //#endregion CompletionPrefix
+
+    //#region CompletionsParsing
+    #[test]
+    fn text_editor_completions_parses_label_and_optional_detail() {
+        let scene = text_editor_scene(
+            "editor.completions",
+            "",
+            Some(r#"[{"label":"foo","detail":"fn foo()"},{"label":"bar"}]"#),
+            None,
+        );
+        let items = text_editor_completions(scene.text_editor.as_ref().unwrap());
+        assert_eq!(items.len(), 2);
+        assert_eq!(items[0].label, "foo");
+        assert_eq!(items[0].detail.as_deref(), Some("fn foo()"));
+        assert_eq!(items[1].detail, None);
+    }
+
+    #[test]
+    fn text_editor_completions_is_empty_for_missing_or_malformed_json() {
+        let missing = text_editor_scene("editor.completions.missing", "", None, None);
+        assert!(text_editor_completions(missing.text_editor.as_ref().unwrap()).is_empty());
+        let malformed = text_editor_scene("editor.completions.bad", "", Some("not json"), None);
+        assert!(text_editor_completions(malformed.text_editor.as_ref().unwrap()).is_empty());
+    }
+
+    #[test]
+    fn text_editor_rename_info_parses_name_and_occurrences() {
+        let scene = text_editor_scene(
+            "editor.rename",
+            "",
+            None,
+            Some(r#"{"name":"count","occurrences":[{"start":0,"end":5},{"start":10,"end":15}]}"#),
+        );
+        let info = text_editor_rename_info(scene.text_editor.as_ref().unwrap()).expect("rename info");
+        assert_eq!(info.name, "count");
+        assert_eq!(info.occurrences.len(), 2);
+        assert_eq!((info.occurrences[1].start, info.occurrences[1].end), (10, 15));
+    }
+    //#endregion CompletionsParsing
+
+    //#region ContextMenuItems
+    #[test]
+    fn context_menu_items_include_suggest_only_when_completions_are_present() {
+        let without = text_editor_scene("editor.menu.no-suggest", "x", None, None);
+        let items = text_editor_context_menu_items(without.text_editor.as_ref().unwrap());
+        assert!(!items.iter().any(|item| item.id == "suggest"));
+
+        let with = text_editor_scene("editor.menu.suggest", "x", Some(r#"[{"label":"x"}]"#), None);
+        let items = text_editor_context_menu_items(with.text_editor.as_ref().unwrap());
+        assert!(items.iter().any(|item| item.id == "suggest"));
+    }
+
+    #[test]
+    fn context_menu_items_include_rename_only_when_rename_info_is_present() {
+        let without = text_editor_scene("editor.menu.no-rename", "x", None, None);
+        let items = text_editor_context_menu_items(without.text_editor.as_ref().unwrap());
+        assert!(!items.iter().any(|item| item.id == "rename"));
+
+        let with = text_editor_scene(
+            "editor.menu.rename",
+            "x",
+            None,
+            Some(r#"{"name":"x","occurrences":[]}"#),
+        );
+        let items = text_editor_context_menu_items(with.text_editor.as_ref().unwrap());
+        assert!(items.iter().any(|item| item.id == "rename"));
+    }
+
+    #[test]
+    fn context_menu_items_always_include_selection_and_document_actions() {
+        let scene = text_editor_scene("editor.menu.baseline", "x", None, None);
+        let items = text_editor_context_menu_items(scene.text_editor.as_ref().unwrap());
+        for expected in ["select-token", "select-line", "select-all", "format", "lint"] {
+            assert!(items.iter().any(|item| item.id == expected), "missing {expected}");
+        }
+    }
+    //#endregion ContextMenuItems
+
+    //#region ContextMenuGeometry
+    #[test]
+    fn menu_row_rects_stack_vertically_without_overlapping() {
+        let menu = TextEditorContextMenu {
+            x: 10.0,
+            y: 20.0,
+            items: vec![
+                TextEditorMenuItem { id: "a", label: "A" },
+                TextEditorMenuItem { id: "b", label: "B" },
+                TextEditorMenuItem { id: "c", label: "C" },
+            ],
+        };
+        let theme = Theme::default();
+        let first = text_editor_menu_row_rect(&menu, &theme, 0);
+        let second = text_editor_menu_row_rect(&menu, &theme, 1);
+        assert_eq!(second.y, first.y + theme.control_height);
+        assert_eq!(first.x, second.x);
+    }
+
+    #[test]
+    fn menu_hit_finds_the_row_under_the_point_and_none_outside_it() {
+        let menu = TextEditorContextMenu {
+            x: 0.0,
+            y: 0.0,
+            items: vec![
+                TextEditorMenuItem { id: "a", label: "A" },
+                TextEditorMenuItem { id: "b", label: "B" },
+            ],
+        };
+        let theme = Theme::default();
+        let row_h = theme.control_height;
+        assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, 8.0), Some(0));
+        assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, row_h + 8.0), Some(1));
+        assert_eq!(text_editor_menu_hit(&menu, &theme, 8.0, row_h * 10.0), None);
+    }
+    //#endregion ContextMenuGeometry
+
+    //#region ContextMenuActionDispatch
+    #[test]
+    fn run_menu_action_format_queues_a_format_document_action() {
+        let scene = text_editor_scene("editor.action.format", "hello", None, None);
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState::default();
+        {
+            let mut ctx = fixture.ctx();
+            text_editor_run_menu_action(&scene, &editor, inner, &menu, "format", &mut ctx, &mut ui_state);
+        }
+        let events = fixture.input.drain_events();
+        assert!(events.iter().any(|action| action.action == "formatDocument"));
+    }
+
+    #[test]
+    fn run_menu_action_lint_queues_a_lint_document_action() {
+        let scene = text_editor_scene("editor.action.lint", "hello", None, None);
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState::default();
+        {
+            let mut ctx = fixture.ctx();
+            text_editor_run_menu_action(&scene, &editor, inner, &menu, "lint", &mut ctx, &mut ui_state);
+        }
+        let events = fixture.input.drain_events();
+        assert!(events.iter().any(|action| action.action == "lintDocument"));
+    }
+
+    #[test]
+    fn run_menu_action_suggest_opens_the_completions_popup_at_index_zero() {
+        let scene = text_editor_scene("editor.action.suggest", "hello", Some(r#"[{"label":"a"},{"label":"b"}]"#), None);
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState { completion_index: 3, ..Default::default() };
+        {
+            let mut ctx = fixture.ctx();
+            text_editor_run_menu_action(&scene, &editor, inner, &menu, "suggest", &mut ctx, &mut ui_state);
+        }
+        assert!(ui_state.completions_open);
+        assert_eq!(ui_state.completion_index, 0);
+    }
+
+    #[test]
+    fn run_menu_action_rename_activates_rename_state_and_focuses_the_rename_input() {
+        let scene = text_editor_scene(
+            "editor.action.rename",
+            "count",
+            None,
+            Some(r#"{"name":"count","occurrences":[{"start":0,"end":5}]}"#),
+        );
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState::default();
+        {
+            let mut ctx = fixture.ctx();
+            text_editor_run_menu_action(&scene, &editor, inner, &menu, "rename", &mut ctx, &mut ui_state);
+        }
+        assert!(ui_state.rename_active);
+        assert_eq!(ui_state.rename_occurrences, vec![(0, 5)]);
+        assert_eq!(fixture.input.focused_id.as_deref(), Some("editor.action.rename.editor.rename"));
+        assert_eq!(fixture.input.text_buffer, "count");
+    }
+
+    #[test]
+    fn run_menu_action_rename_is_a_no_op_without_rename_info() {
+        let scene = text_editor_scene("editor.action.no-rename", "count", None, None);
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState::default();
+        {
+            let mut ctx = fixture.ctx();
+            text_editor_run_menu_action(&scene, &editor, inner, &menu, "rename", &mut ctx, &mut ui_state);
+        }
+        assert!(!ui_state.rename_active);
+        assert!(fixture.input.focused_id.is_none());
+    }
+
+    #[test]
+    fn run_menu_action_select_all_reuses_the_ctrl_a_key_path_without_a_registered_engine_surface() {
+        // 🛡️ No GPU / `ENGINE_SURFACES` entry exists for this surface_id in a unit test, so this only
+        // asserts the dispatch doesn't panic and gracefully no-ops (see `engine_canvas::text_editor_apply_key`).
+        let scene = text_editor_scene("editor.action.select-all", "hello", None, None);
+        let editor = scene.text_editor.as_ref().unwrap().clone();
+        let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let menu = TextEditorContextMenu { x: 4.0, y: 4.0, items: vec![] };
+        let mut fixture = Fixture::new();
+        let mut ui_state = TextEditorUiState::default();
+        let mut ctx = fixture.ctx();
+        text_editor_run_menu_action(&scene, &editor, inner, &menu, "select-all", &mut ctx, &mut ui_state);
+    }
+    //#endregion ContextMenuActionDispatch
 }
 //#endregion TextEditor
 //#endregion scenes
@@ -10443,11 +14117,12 @@ use crate::scenes::{
     Board2dSurface,
 };
 use infinite_world::{
-    fetch_pending_glb_meshes, fetch_pending_reference_images, handle_world3d_paint_actions,
+    fetch_pending_glb_meshes, fetch_pending_reference_images, fetch_pending_terrain_tiles,
+    handle_world3d_paint_actions,
     handle_world3d_pointer_button,
     handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use crate::plugin_bridge::{is_studio_mode, PluginBridgeEntry};
+use crate::plugin_bridge::{is_studio_mode, resolve_plugin_host_config, PluginBridgeEntry, PluginHostConfig};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_sync::{
     DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
@@ -10473,10 +14148,6 @@ use ui_wgpu::{
     WidgetInteractionMaps,
 };
 
-const S_HOME_APP_ID: &str = "home";
-const S_PLAY_APP_ID: &str = "studio";
-const S_PLAY_CONTROLLER_ID: &str = "s-play";
-const S_PLAY_CATALOGUE_TAB_ID: &str = "s-play-catalogue";
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
@@ -10503,6 +14174,10 @@ pub struct SearchPaletteItem {
     pub group: String,
     pub dispatch_action: Option<ActionDescriptor>,
     pub action: Option<String>,
+    /// 🗂️ Coarse command-source tag (os/plugin/app/mode) — `None` for the pre-existing panel/window/
+    /// keybinding/action/studio entries, `Some(..)` for entries derived from `shell::ActionPanelAndUtilities`'s
+    /// `ResolvedCommand` aggregation (see `command_search_items`).
+    pub category: Option<semio_framework_core::CommandScope>,
 }
 
 #[derive(Clone, Debug)]
@@ -10811,10 +14486,177 @@ async fn resolve_external_slots_in_tree(
 }
 
 //#region ShellLifecycle
+//#region 🧭PanelAnchorModel
+/// 🧭 The framework's generic 6-anchor panel positioning model — mirrors `PanelGroup::anchor()`
+/// (`framework/core/rs/lib.rs`) and React's `PanelAnchor`/`PANEL_ANCHORS` (`ui/js/react/index.tsx:5164`).
+/// This shell only ever surfaces the four corners today: `left_panel_open`/`right_panel_open` gate
+/// visibility and `active_left_kind`/`active_right_kind` pick which of the two candidates occupies that
+/// side, exactly the same Workbench/Display and Details/Settings corner split `PanelGroup::anchor()`
+/// already declares. Re-homing that onto named anchors here gives future code (drag re-anchoring,
+/// middle-anchor content) one generic surface to target instead of the scattered `group_side` left/right
+/// fold. `TopMiddle`/`BottomMiddle` are real anchors with nothing assigned to them yet — matches upstream,
+/// where `PanelGroup` never maps to a middle anchor either.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum PanelAnchor {
+    TopLeft,
+    TopMiddle,
+    TopRight,
+    BottomLeft,
+    BottomMiddle,
+    BottomRight,
+}
+
+impl PanelAnchor {
+    pub const ALL: [PanelAnchor; 6] = [
+        PanelAnchor::TopLeft,
+        PanelAnchor::TopMiddle,
+        PanelAnchor::TopRight,
+        PanelAnchor::BottomLeft,
+        PanelAnchor::BottomMiddle,
+        PanelAnchor::BottomRight,
+    ];
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            PanelAnchor::TopLeft => "top-left",
+            PanelAnchor::TopMiddle => "top-middle",
+            PanelAnchor::TopRight => "top-right",
+            PanelAnchor::BottomLeft => "bottom-left",
+            PanelAnchor::BottomMiddle => "bottom-middle",
+            PanelAnchor::BottomRight => "bottom-right",
+        }
+    }
+
+    /// 🧭 Mirrors `PanelGroup::anchor()`'s corner mapping exactly; a group never maps to a middle anchor.
+    pub fn from_group(group: PanelGroup) -> PanelAnchor {
+        match group.anchor() {
+            "top-right" => PanelAnchor::TopRight,
+            "bottom-left" => PanelAnchor::BottomLeft,
+            "bottom-right" => PanelAnchor::BottomRight,
+            _ => PanelAnchor::TopLeft,
+        }
+    }
+}
+
+/// 🧭 A single anchor's current visible/size/active-tab projection — the read side of the anchor model.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PanelAnchorSnapshot {
+    pub visible: bool,
+    pub size: f32,
+    pub active_tab: Option<String>,
+}
+
+/// 🗄️ The subset of panel layout that's actually mutable today, keyed the same way it's persisted — one
+/// JSON blob, localStorage on wasm / a `~/.semio/panel-layout.json` (`%APPDATA%\semio` on Windows) file
+/// on native. See `ShellState::persist_panel_layout`/`load_persisted_panel_layout` below.
+#[derive(Clone, Debug, Default, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+pub struct PanelLayoutPersisted {
+    #[serde(default)]
+    pub left_panel_open: bool,
+    #[serde(default)]
+    pub right_panel_open: bool,
+    #[serde(default)]
+    pub active_left_kind: Option<String>,
+    #[serde(default)]
+    pub active_right_kind: Option<String>,
+    #[serde(default)]
+    pub left_panel_width: Option<f32>,
+    #[serde(default)]
+    pub right_panel_width: Option<f32>,
+}
+
+#[cfg(target_arch = "wasm32")]
+const PANEL_LAYOUT_STORAGE_KEY: &str = "semio.panelLayout.v1";
+
+/// 🗄️ Calls `localStorage.getItem`/`setItem` via `js_sys::Reflect` rather than `web_sys::Storage` —
+/// the `"Storage"` web-sys feature isn't enabled in `Cargo.toml`, which this ticket must not edit.
+#[cfg(target_arch = "wasm32")]
+fn local_storage_get_item(key: &str) -> Option<String> {
+    let window = web_sys::window()?;
+    let storage = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")).ok()?;
+    let get_item: js_sys::Function = js_sys::Reflect::get(&storage, &wasm_bindgen::JsValue::from_str("getItem"))
+        .ok()?
+        .dyn_into()
+        .ok()?;
+    get_item
+        .call1(&storage, &wasm_bindgen::JsValue::from_str(key))
+        .ok()?
+        .as_string()
+}
+
+#[cfg(target_arch = "wasm32")]
+fn local_storage_set_item(key: &str, value: &str) {
+    let Some(window) = web_sys::window() else { return };
+    let Ok(storage) = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")) else { return };
+    let Ok(set_item) = js_sys::Reflect::get(&storage, &wasm_bindgen::JsValue::from_str("setItem")) else { return };
+    if let Ok(set_item) = set_item.dyn_into::<js_sys::Function>() {
+        let _ = set_item.call2(&storage, &wasm_bindgen::JsValue::from_str(key), &wasm_bindgen::JsValue::from_str(value));
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
+    local_storage_get_item(PANEL_LAYOUT_STORAGE_KEY).and_then(|json| serde_json::from_str(&json).ok())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
+    if let Ok(json) = serde_json::to_string(layout) {
+        local_storage_set_item(PANEL_LAYOUT_STORAGE_KEY, &json);
+    }
+}
+
+/// 🗄️ No `dirs`/`directories` crate dependency (not already in `Cargo.toml`, which this ticket must not
+/// edit) — resolves `%APPDATA%/semio` on Windows and `$HOME/.semio` elsewhere directly from env vars.
+#[cfg(not(target_arch = "wasm32"))]
+fn panel_layout_store_path_under(base: &str) -> std::path::PathBuf {
+    std::path::PathBuf::from(base).join("semio").join("panel-layout.json")
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn panel_layout_store_path() -> Option<std::path::PathBuf> {
+    let base = if cfg!(target_os = "windows") {
+        std::env::var("APPDATA").ok()
+    } else {
+        std::env::var("HOME").ok()
+    }?;
+    Some(panel_layout_store_path_under(&base))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_write_panel_layout(path: &std::path::Path, layout: &PanelLayoutPersisted) {
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if let Ok(json) = serde_json::to_string(layout) {
+        let _ = std::fs::write(path, json);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn native_read_panel_layout(path: &std::path::Path) -> Option<PanelLayoutPersisted> {
+    let contents = std::fs::read_to_string(path).ok()?;
+    serde_json::from_str(&contents).ok()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
+    panel_layout_store_path().and_then(|path| native_read_panel_layout(&path))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
+    if let Some(path) = panel_layout_store_path() {
+        native_write_panel_layout(&path, layout);
+    }
+}
+//#endregion 🧭PanelAnchorModel
+
 impl ShellState {
     pub fn new(plugins: Vec<PluginBridgeEntry>, plugin_filter: String) -> Self {
         let studio_mode = is_studio_mode(&plugin_filter);
-        Self {
+        let mut state = Self {
             plugins,
             plugin_filter,
             studio_mode,
@@ -10914,8 +14756,35 @@ impl ShellState {
             utility_collection_expanded: HashMap::new(),
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
-        }
+        };
+        state.load_persisted_panel_layout();
+        state
     }
+
+    //#region 🏠🧳PluginHostConfig
+    /// 🏠🧳 This filter's host config (landing/host app-id roles), or `None` when it doesn't offer a
+    /// host-style multi-app experience — see `plugin_bridge::PluginHostConfig`.
+    fn host_config(&self) -> Option<&'static PluginHostConfig> {
+        resolve_plugin_host_config(&self.plugin_filter)
+    }
+
+    /// 🏠🧳 The host plugin's own host-role app, self-declaring its `controller_id`/`panel_tabs` — the
+    /// generic source of truth for what were previously separate `S_PLAY_CONTROLLER_ID`/
+    /// `S_PLAY_CATALOGUE_TAB_ID` literals.
+    fn host_app(&self) -> Option<&AppDefinition> {
+        let cfg = self.host_config()?;
+        let plugin = self.plugins.iter().find(|p| p.plugin_id == cfg.plugin_id)?;
+        plugin.manifest.apps.iter().find(|app| app.id == cfg.host_app_id)
+    }
+
+    fn host_controller_id(&self) -> Option<String> {
+        self.host_app().map(|app| app.controller_id.clone())
+    }
+
+    fn host_catalogue_tab_id(&self) -> Option<String> {
+        self.host_app().and_then(|app| app.panel_tabs.first().map(|tab| tab.id().to_string()))
+    }
+    //#endregion 🏠🧳PluginHostConfig
 
     pub fn build_studio_programs(&self) -> Vec<StudioProgramEntry> {
         self.plugins
@@ -10959,23 +14828,23 @@ impl ShellState {
     }
 
     pub async fn boot(&mut self) -> Result<(), String> {
-        if self.studio_mode {
+        if let Some(cfg) = self.host_config() {
             let s_plugin = self
                 .plugins
                 .iter()
-                .find(|p| p.plugin_id == "s")
-                .ok_or("s studio plugin missing")?;
+                .find(|p| p.plugin_id == cfg.plugin_id)
+                .ok_or("host plugin missing")?;
             let s_app = s_plugin
                 .manifest
                 .apps
                 .iter()
-                .find(|app| app.id == S_HOME_APP_ID)
+                .find(|app| app.id == cfg.landing_app_id)
                 .or_else(|| s_plugin.manifest.apps.first())
-                .ok_or("s home app missing")?
+                .ok_or("host plugin missing landing app")?
                 .clone();
             let programs = self.build_studio_programs();
             let panel_state = StudioPanelState {
-                active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
+                active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(),
                 programs,
                 spawned_apps: vec![],
                 active_spawned_id: None,
@@ -11094,11 +14963,13 @@ impl ShellState {
     fn sync_dock(&mut self) {
         if let Some(session) = &self.session {
             if let Some(layout) = self.layout_override.clone() {
-                self.dock.root = dock_from_window_layout(&layout.root);
-                self.dock.active_window_id = self
-                    .active_window_id
-                    .clone()
-                    .or_else(|| session.view_state.active_window_kind_id.clone());
+                self.dock.apply_layout_diff(&layout);
+                if self.dock.active_window_id.is_none() {
+                    self.dock.active_window_id = self
+                        .active_window_id
+                        .clone()
+                        .or_else(|| session.view_state.active_window_kind_id.clone());
+                }
             } else {
                 self.dock = DockState::from_app(&session.app, self.active_window_id.as_deref());
             }
@@ -11484,6 +15355,254 @@ impl ShellState {
             }
         }
         ids
+    }
+
+    //#region 🧭PanelAnchorAccessors
+    /// 🧭 Projects the current left/right toggle state onto the named anchor it corresponds to (see
+    /// `🧭PanelAnchorModel` above). `TopMiddle`/`BottomMiddle` are always empty — nothing assigns there yet.
+    pub fn panel_anchor_snapshot(&self, anchor: PanelAnchor) -> PanelAnchorSnapshot {
+        match anchor {
+            PanelAnchor::TopLeft => PanelAnchorSnapshot {
+                visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
+                size: self.left_panel_width,
+                active_tab: (self.active_left_kind == LeftPanelKind::Workbench).then(|| "workbench".to_string()),
+            },
+            PanelAnchor::BottomLeft => PanelAnchorSnapshot {
+                visible: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
+                size: self.left_panel_width,
+                active_tab: (self.active_left_kind == LeftPanelKind::Display).then(|| "display".to_string()),
+            },
+            PanelAnchor::TopRight => PanelAnchorSnapshot {
+                visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
+                size: self.right_panel_width,
+                active_tab: (self.active_right_kind == RightPanelKind::Details).then(|| "details".to_string()),
+            },
+            PanelAnchor::BottomRight => PanelAnchorSnapshot {
+                visible: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
+                size: self.right_panel_width,
+                active_tab: (self.active_right_kind == RightPanelKind::Settings).then(|| "settings".to_string()),
+            },
+            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle => PanelAnchorSnapshot::default(),
+        }
+    }
+
+    /// 🗄️ Flattens the mutable subset of panel layout into the persisted shape.
+    pub fn panel_layout_snapshot(&self) -> PanelLayoutPersisted {
+        PanelLayoutPersisted {
+            left_panel_open: self.left_panel_open,
+            right_panel_open: self.right_panel_open,
+            active_left_kind: Some(
+                match self.active_left_kind {
+                    LeftPanelKind::Workbench => "workbench",
+                    LeftPanelKind::Display => "display",
+                }
+                .to_string(),
+            ),
+            active_right_kind: Some(
+                match self.active_right_kind {
+                    RightPanelKind::Details => "details",
+                    RightPanelKind::Settings => "settings",
+                }
+                .to_string(),
+            ),
+            left_panel_width: Some(self.left_panel_width),
+            right_panel_width: Some(self.right_panel_width),
+        }
+    }
+
+    /// 🗄️ Applies a persisted layout snapshot — used both on load and directly by tests.
+    pub fn apply_panel_layout(&mut self, layout: &PanelLayoutPersisted) {
+        self.left_panel_open = layout.left_panel_open;
+        self.right_panel_open = layout.right_panel_open;
+        if let Some(kind) = &layout.active_left_kind {
+            self.active_left_kind = match kind.as_str() {
+                "display" => LeftPanelKind::Display,
+                _ => LeftPanelKind::Workbench,
+            };
+        }
+        if let Some(kind) = &layout.active_right_kind {
+            self.active_right_kind = match kind.as_str() {
+                "settings" => RightPanelKind::Settings,
+                _ => RightPanelKind::Details,
+            };
+        }
+        if let Some(width) = layout.left_panel_width {
+            self.left_panel_width = width;
+        }
+        if let Some(width) = layout.right_panel_width {
+            self.right_panel_width = width;
+        }
+    }
+
+    /// 🗄️ Persists the current panel layout so it survives a reload — mirrors `persist_dock_layout` for
+    /// the unrelated `dock`/Mode system. **Wiring request**: not yet called from `handle_shell_hit`'s
+    /// `ui.panelToggle.*` arms (and the panel-resize-end path) — those live in the do-not-touch
+    /// `ShellInput` region this wave. Whoever next owns `ShellInput` should add one `self.persist_panel_layout();`
+    /// call to each of those arms, exactly like `dock.focus.*`/`dock.close.*` already call `persist_dock_layout()`.
+    pub fn persist_panel_layout(&self) {
+        save_panel_layout_to_store(&self.panel_layout_snapshot());
+    }
+
+    /// 🗄️ Loads any persisted panel layout and applies it — called once from `ShellState::new()`.
+    fn load_persisted_panel_layout(&mut self) {
+        if let Some(layout) = load_panel_layout_from_store() {
+            self.apply_panel_layout(&layout);
+        }
+    }
+    //#endregion 🧭PanelAnchorAccessors
+}
+
+#[cfg(test)]
+mod panel_anchor_model_tests {
+    use super::*;
+
+    fn fresh_state() -> ShellState {
+        // 🧪 `ShellState::new` calls `load_persisted_panel_layout`, which — on native — reads whatever
+        // happens to be at `~/.semio/panel-layout.json` on the machine running the test. Every assertion
+        // below explicitly sets the fields it exercises afterward, so the outcome never depends on that.
+        ShellState::new(Vec::new(), String::new())
+    }
+
+    #[test]
+    fn panel_anchor_from_group_matches_panel_group_anchor_corners() {
+        assert_eq!(PanelAnchor::from_group(PanelGroup::Workbench), PanelAnchor::TopLeft);
+        assert_eq!(PanelAnchor::from_group(PanelGroup::Details), PanelAnchor::TopRight);
+        assert_eq!(PanelAnchor::from_group(PanelGroup::Display), PanelAnchor::BottomLeft);
+        assert_eq!(PanelAnchor::from_group(PanelGroup::Settings), PanelAnchor::BottomRight);
+    }
+
+    #[test]
+    fn panel_anchor_as_str_matches_react_panel_anchor_ids() {
+        let expected = [
+            (PanelAnchor::TopLeft, "top-left"),
+            (PanelAnchor::TopMiddle, "top-middle"),
+            (PanelAnchor::TopRight, "top-right"),
+            (PanelAnchor::BottomLeft, "bottom-left"),
+            (PanelAnchor::BottomMiddle, "bottom-middle"),
+            (PanelAnchor::BottomRight, "bottom-right"),
+        ];
+        for (anchor, id) in expected {
+            assert_eq!(anchor.as_str(), id);
+        }
+        assert_eq!(PanelAnchor::ALL.len(), 6);
+    }
+
+    #[test]
+    fn panel_anchor_snapshot_top_left_visible_only_when_workbench_active_and_open() {
+        let mut state = fresh_state();
+        state.left_panel_open = true;
+        state.active_left_kind = LeftPanelKind::Workbench;
+        state.left_panel_width = 300.0;
+        let top_left = state.panel_anchor_snapshot(PanelAnchor::TopLeft);
+        assert!(top_left.visible);
+        assert_eq!(top_left.size, 300.0);
+        assert_eq!(top_left.active_tab.as_deref(), Some("workbench"));
+        let bottom_left = state.panel_anchor_snapshot(PanelAnchor::BottomLeft);
+        assert!(!bottom_left.visible, "display anchor must stay hidden while workbench occupies the left column");
+    }
+
+    #[test]
+    fn panel_anchor_snapshot_switches_corner_with_active_kind_not_visibility_alone() {
+        let mut state = fresh_state();
+        state.left_panel_open = true;
+        state.active_left_kind = LeftPanelKind::Display;
+        assert!(!state.panel_anchor_snapshot(PanelAnchor::TopLeft).visible);
+        assert!(state.panel_anchor_snapshot(PanelAnchor::BottomLeft).visible);
+        state.right_panel_open = true;
+        state.active_right_kind = RightPanelKind::Settings;
+        assert!(!state.panel_anchor_snapshot(PanelAnchor::TopRight).visible);
+        assert!(state.panel_anchor_snapshot(PanelAnchor::BottomRight).visible);
+    }
+
+    #[test]
+    fn panel_anchor_snapshot_middle_anchors_are_always_empty() {
+        let mut state = fresh_state();
+        state.left_panel_open = true;
+        state.right_panel_open = true;
+        assert_eq!(state.panel_anchor_snapshot(PanelAnchor::TopMiddle), PanelAnchorSnapshot::default());
+        assert_eq!(state.panel_anchor_snapshot(PanelAnchor::BottomMiddle), PanelAnchorSnapshot::default());
+    }
+
+    #[test]
+    fn panel_layout_snapshot_round_trips_through_apply_panel_layout() {
+        let mut source = fresh_state();
+        source.left_panel_open = true;
+        source.right_panel_open = false;
+        source.active_left_kind = LeftPanelKind::Display;
+        source.active_right_kind = RightPanelKind::Settings;
+        source.left_panel_width = 411.0;
+        source.right_panel_width = 233.0;
+        let snapshot = source.panel_layout_snapshot();
+        assert_eq!(snapshot.active_left_kind.as_deref(), Some("display"));
+        assert_eq!(snapshot.active_right_kind.as_deref(), Some("settings"));
+
+        let mut target = fresh_state();
+        target.apply_panel_layout(&snapshot);
+        assert_eq!(target.left_panel_open, source.left_panel_open);
+        assert_eq!(target.right_panel_open, source.right_panel_open);
+        assert_eq!(target.active_left_kind, source.active_left_kind);
+        assert_eq!(target.active_right_kind, source.active_right_kind);
+        assert_eq!(target.left_panel_width, source.left_panel_width);
+        assert_eq!(target.right_panel_width, source.right_panel_width);
+    }
+
+    #[test]
+    fn apply_panel_layout_leaves_widths_untouched_when_absent_from_snapshot() {
+        let mut state = fresh_state();
+        state.left_panel_width = 555.0;
+        state.right_panel_width = 666.0;
+        let sparse = PanelLayoutPersisted {
+            left_panel_open: true,
+            right_panel_open: true,
+            active_left_kind: None,
+            active_right_kind: None,
+            left_panel_width: None,
+            right_panel_width: None,
+        };
+        state.apply_panel_layout(&sparse);
+        assert_eq!(state.left_panel_width, 555.0, "absent width in a persisted snapshot must not clobber the current width");
+        assert_eq!(state.right_panel_width, 666.0);
+        assert_eq!(state.active_left_kind, LeftPanelKind::Workbench, "absent active kind falls back to the default");
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn native_panel_layout_store_path_is_namespaced_under_semio() {
+        let path = panel_layout_store_path_under("/tmp/example-home");
+        assert_eq!(path, std::path::PathBuf::from("/tmp/example-home/semio/panel-layout.json"));
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn native_write_then_read_panel_layout_round_trips() {
+        let path = std::env::temp_dir().join(format!(
+            "semio-panel-layout-test-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        let layout = PanelLayoutPersisted {
+            left_panel_open: true,
+            right_panel_open: false,
+            active_left_kind: Some("display".to_string()),
+            active_right_kind: Some("details".to_string()),
+            left_panel_width: Some(321.0),
+            right_panel_width: Some(210.0),
+        };
+        native_write_panel_layout(&path, &layout);
+        let loaded = native_read_panel_layout(&path).expect("round-tripped layout must parse back");
+        assert_eq!(loaded, layout);
+        let _ = std::fs::remove_file(&path);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    #[test]
+    fn native_read_panel_layout_returns_none_for_missing_file() {
+        let path = std::env::temp_dir().join(format!(
+            "semio-panel-layout-missing-{}-{}.json",
+            std::process::id(),
+            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
+        ));
+        assert!(native_read_panel_layout(&path).is_none());
     }
 }
 //#endregion ShellLifecycle
@@ -12069,22 +16188,25 @@ impl ShellState {
         Ok(())
     }
 
-    async fn switch_to_s_app(
+    // 🏠🧳 Generic replacement for the old `switch_to_s_app` — switches to either the host plugin's
+    // landing or host app by id (both resolved via `host_config()`, never a specific app's identity).
+    async fn switch_to_managed_app(
         &mut self,
         app_id: &str,
         view_state: Option<ViewState>,
     ) -> Result<(), String> {
+        let cfg = self.host_config().ok_or("host config missing")?;
         let s_plugin = self
             .plugins
             .iter()
-            .find(|plugin| plugin.plugin_id == "s")
-            .ok_or("s plugin missing")?;
+            .find(|plugin| plugin.plugin_id == cfg.plugin_id)
+            .ok_or("host plugin missing")?;
         let app = s_plugin
             .manifest
             .apps
             .iter()
             .find(|candidate| candidate.id == app_id)
-            .ok_or("s app missing")?
+            .ok_or("host app missing")?
             .clone();
         if let Some(session) = &self.session {
             if session.plugin_id == s_plugin.plugin_id && session.app.id == app_id {
@@ -12101,7 +16223,7 @@ impl ShellState {
         let instance_id = s_plugin.create_app(&app.id).await?;
         let programs = self.build_studio_programs();
         let panel_state = StudioPanelState {
-            active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
+            active_panel_tab: self.host_catalogue_tab_id().unwrap_or_default(),
             programs,
             spawned_apps: vec![],
             active_spawned_id: None,
@@ -12117,7 +16239,7 @@ impl ShellState {
             terminology: Some(self.terminology_id.clone()),
         });
         self.active_window_id = Some(app.window_kinds.first().id.clone());
-        if app_id == S_HOME_APP_ID {
+        if app_id == cfg.landing_app_id {
             self.open_studio_id = None;
         }
         self.session = Some(ActiveSession {
@@ -12130,9 +16252,9 @@ impl ShellState {
     }
 
     async fn apply_shell_uri(&mut self, uri: &str) -> Result<(), String> {
-        if !self.studio_mode {
+        let Some(cfg) = self.host_config() else {
             return Ok(());
-        }
+        };
         let path = uri.split('?').next().unwrap_or(uri);
         let studio_id = path
             .strip_prefix("/studios/")
@@ -12140,13 +16262,13 @@ impl ShellState {
             .filter(|value| !value.is_empty());
         if studio_id.is_none() {
             self.open_studio_id = None;
-            if self.session.as_ref().map(|session| session.app.id.as_str()) != Some(S_HOME_APP_ID) {
-                self.switch_to_s_app(S_HOME_APP_ID, None).await?;
+            if self.session.as_ref().map(|session| session.app.id.as_str()) != Some(cfg.landing_app_id) {
+                self.switch_to_managed_app(cfg.landing_app_id, None).await?;
             }
             return Ok(());
         }
         let studio_id = studio_id.expect("studio id");
-        self.switch_to_s_app(S_PLAY_APP_ID, None).await?;
+        self.switch_to_managed_app(cfg.host_app_id, None).await?;
         if self.open_studio_id.as_deref() == Some(studio_id.as_str()) {
             return Ok(());
         }
@@ -12158,7 +16280,7 @@ impl ShellState {
             .find(|entry| entry.plugin_id == session.plugin_id)
             .ok_or("studio plugin missing")?;
         let action = ActionDescriptor {
-            controller_id: S_PLAY_CONTROLLER_ID.into(),
+            controller_id: session.app.controller_id.clone(),
             action: "openStudio".into(),
             args: Some(serde_json::json!({ "studioId": studio_id })),
         };
@@ -12186,8 +16308,9 @@ impl ShellState {
             .find(|p| p.plugin_id == program.plugin_id)
             .ok_or("spawn plugin missing")?;
         let instance_id = plugin.create_app(&program.app_id).await?;
+        let default_catalogue_tab_id = self.host_catalogue_tab_id().unwrap_or_default();
         let mut panel = Self::panel_state_from_view(&view_state).unwrap_or(StudioPanelState {
-            active_panel_tab: S_PLAY_CATALOGUE_TAB_ID.into(),
+            active_panel_tab: default_catalogue_tab_id,
             programs: programs.clone(),
             spawned_apps: vec![],
             active_spawned_id: None,
@@ -12821,6 +16944,7 @@ impl ShellState {
     pub async fn poll_world3d_assets(&mut self) {
         fetch_pending_glb_meshes(&mut self.world3d_states).await;
         fetch_pending_reference_images(&mut self.world3d_states).await;
+        fetch_pending_terrain_tiles(&mut self.world3d_states).await;
     }
 
     async fn handle_shell_hit(&mut self, hit: &HitTarget<ActionDescriptor>) -> Result<bool, String> {
@@ -13056,8 +17180,9 @@ impl ShellState {
                 return Ok(true);
             }
             "studio.canvas.home" => {
+                let controller_id = self.host_controller_id().unwrap_or_default();
                 self.dispatch_action(ActionDescriptor {
-                    controller_id: S_PLAY_CONTROLLER_ID.into(),
+                    controller_id,
                     action: "goHome".into(),
                     args: None,
                 })
@@ -13065,17 +17190,19 @@ impl ShellState {
                 return Ok(true);
             }
             "studio.canvas.back" => {
-                if let Some(session) = &self.session {
-                    if let Some(panel) = Self::panel_state_from_view(&session.view_state) {
-                        if panel.active_spawned_id.is_some() {
-                            self.dispatch_action(ActionDescriptor {
-                                controller_id: S_PLAY_CONTROLLER_ID.into(),
-                                action: "closeFocusedInstance".into(),
-                                args: None,
-                            })
-                            .await?;
-                        }
-                    }
+                let has_focused_instance = self
+                    .session
+                    .as_ref()
+                    .and_then(|session| Self::panel_state_from_view(&session.view_state))
+                    .is_some_and(|panel| panel.active_spawned_id.is_some());
+                if has_focused_instance {
+                    let controller_id = self.host_controller_id().unwrap_or_default();
+                    self.dispatch_action(ActionDescriptor {
+                        controller_id,
+                        action: "closeFocusedInstance".into(),
+                        args: None,
+                    })
+                    .await?;
                 }
                 return Ok(true);
             }
@@ -13130,9 +17257,9 @@ impl ShellState {
             id if id.starts_with("shell.panel.tab.right.") => {
                 let tab_id = id.trim_start_matches("shell.panel.tab.right.");
                 self.active_right_tab = Some(tab_id.to_string());
-                if self.studio_mode {
+                if let Some(controller_id) = self.host_controller_id() {
                     self.dispatch_action(ActionDescriptor {
-                        controller_id: S_PLAY_CONTROLLER_ID.into(),
+                        controller_id,
                         action: "setActivePanelTab".into(),
                         args: Some(serde_json::json!({ "tabId": tab_id })),
                     })
@@ -13415,7 +17542,7 @@ impl ShellState {
                         let app_id = payload.get("appId").and_then(|v| v.as_str());
                         if let (Some(program_id), Some(app_id)) = (program_id, app_id) {
                             self.dispatch_action(ActionDescriptor {
-                                controller_id: S_PLAY_CONTROLLER_ID.into(),
+                                controller_id: self.host_controller_id().unwrap_or_default(),
                                 action: "spawnApp".into(),
                                 args: Some(serde_json::json!({
                                     "programId": program_id,
@@ -13464,17 +17591,21 @@ impl ShellState {
 
     async fn select_left_panel_tab(&mut self, tab_id: &str) -> Result<(), String> {
         self.active_left_tab = Some(tab_id.to_string());
-        if self.studio_mode {
-            if let Some(session) = &self.session {
-                if session.app.id == S_PLAY_APP_ID {
-                    self.dispatch_action(ActionDescriptor {
-                        controller_id: S_PLAY_CONTROLLER_ID.into(),
-                        action: "setActivePanelTab".into(),
-                        args: Some(serde_json::json!({ "tabId": tab_id })),
-                    })
-                    .await?;
-                }
-            }
+        // 🏠🧳 Once `session.app.id` matches the host app id, `session.app` *is* the host app, so its own
+        // self-declared `controller_id` is the right value — no separate app-identity lookup needed.
+        let host_app_id = self.host_config().map(|cfg| cfg.host_app_id);
+        let controller_id = self
+            .session
+            .as_ref()
+            .filter(|session| Some(session.app.id.as_str()) == host_app_id)
+            .map(|session| session.app.controller_id.clone());
+        if let Some(controller_id) = controller_id {
+            self.dispatch_action(ActionDescriptor {
+                controller_id,
+                action: "setActivePanelTab".into(),
+                args: Some(serde_json::json!({ "tabId": tab_id })),
+            })
+            .await?;
         }
         Ok(())
     }
@@ -13548,12 +17679,12 @@ impl ShellState {
                 },
             ];
         }
-        if self.studio_mode {
+        if let Some(controller_id) = self.host_controller_id() {
             items.push(ContextMenuItem {
                 id: "shell.context.home".into(),
                 label: "Go Home".into(),
                 action: Some(ActionDescriptor {
-                    controller_id: S_PLAY_CONTROLLER_ID.into(),
+                    controller_id,
                     action: "goHome".into(),
                     args: None,
                 }),
@@ -13579,6 +17710,7 @@ impl ShellState {
                     args: Some(serde_json::json!({ "tabId": tab.id() })),
                 }),
                 action: None,
+                category: None,
             });
         }
         for kind in &session.app.window_kinds {
@@ -13588,6 +17720,7 @@ impl ShellState {
                 group: "Windows".into(),
                 dispatch_action: None,
                 action: Some(format!("window:{}", kind.id)),
+                category: None,
             });
         }
         for binding in &session.app.keybindings {
@@ -13597,6 +17730,7 @@ impl ShellState {
                 group: "Actions".into(),
                 dispatch_action: Some(binding.action.clone()),
                 action: None,
+                category: None,
             });
         }
         // 📇 Declared window-scoped actions (Architecture Decision 8, P3 — wgpu previously listed only
@@ -13620,6 +17754,7 @@ impl ShellState {
                         args: None,
                     }),
                     action: None,
+                    category: None,
                 });
             } else {
                 let window_id = action_host_window_id(&session.app, &action.id)
@@ -13630,41 +17765,52 @@ impl ShellState {
                     group: "Actions".into(),
                     dispatch_action: None,
                     action: Some(format!("action-panel:{window_id}:{}", action.id)),
+                    category: None,
                 });
             }
         }
-        if self.studio_mode {
+        if let Some(controller_id) = self.host_controller_id() {
             for action in ["undo", "redo", "commitCheckpoint"] {
                 items.push(SearchPaletteItem {
                     id: format!("studio.{action}"),
                     label: action.into(),
                     group: "Studio".into(),
                     dispatch_action: Some(ActionDescriptor {
-                        controller_id: S_PLAY_CONTROLLER_ID.into(),
+                        controller_id: controller_id.clone(),
                         action: action.into(),
                         args: None,
                     }),
                     action: None,
+                    category: None,
                 });
             }
         }
+        // 🎛️ Os-level + plugin/app/mode-scope commands (`ResolvedCommand` aggregation — see
+        // `command_search_items` in `shell::ActionPanelAndUtilities`), tagged with their source category.
+        items.extend(self.command_search_items());
         items
     }
 
     fn filtered_search_items(&self) -> Vec<SearchPaletteItem> {
-        let query = self.search_query.to_lowercase();
+        let query = self.search_query.clone();
         let items = self.build_search_items();
         if query.trim().is_empty() {
             return items.into_iter().take(20).collect();
         }
-        items
+        // 🔍 Fuzzy subsequence match (see `fuzzy_match_score` in `shell::ActionPanelAndUtilities`) —
+        // replaces the previous pure-substring `.contains()` filter so e.g. "stlc" finds "Set Locale".
+        let mut scored: Vec<(i64, SearchPaletteItem)> = items
             .into_iter()
-            .filter(|item| {
-                item.label.to_lowercase().contains(&query)
-                    || item.group.to_lowercase().contains(&query)
+            .filter_map(|item| {
+                let score = fuzzy_match_score(&query, &item.label)
+                    .into_iter()
+                    .chain(fuzzy_match_score(&query, &item.group))
+                    .max();
+                score.map(|score| (score, item))
             })
-            .take(20)
-            .collect()
+            .collect();
+        scored.sort_by(|a, b| b.0.cmp(&a.0));
+        scored.into_iter().take(20).map(|(_, item)| item).collect()
     }
 
     fn filtered_find_items(&self) -> Vec<ShellFindItem> {
@@ -13704,6 +17850,15 @@ impl ShellState {
                     self.action_panel_expanded
                         .insert(window_id.to_string(), action_id.to_string());
                 }
+            } else if let Some(rest) = action.strip_prefix("os-command:") {
+                // 🎛️ Os-level command redirect (see `apply_os_command` in `shell::ActionPanelAndUtilities`)
+                // — `"os.commandId"` for zero-arg commands, `"os.commandId:optionValue"` for the
+                // per-option-expanded select-arg commands built by `command_search_items`.
+                let (command_id, option_value) = match rest.split_once(':') {
+                    Some((command_id, value)) => (command_id.to_string(), Some(value.to_string())),
+                    None => (rest.to_string(), None),
+                };
+                self.apply_os_command(&command_id, option_value.as_deref()).await?;
             }
         }
         self.search_open = false;
@@ -13748,9 +17903,29 @@ impl ShellState {
                 self.dock_drag_snapshot = None;
                 return;
             }
+            // 🪟 Escape closes exactly the topmost overlay first — matches ui_wgpu's overlay-manager
+            // precedence (`EventRouter::close_topmost_overlay`, report-w1d-events-overlay.md: "Escape
+            // closes only the topmost") even though these ad-hoc chrome overlays predate that stack and
+            // aren't routed through it yet. A Select dropdown is the most local/transient overlay, so it
+            // wins over the context menu; neither used to close on Escape at all before this fix.
+            if self.open_selects.values().any(|open| *open) {
+                for key in self.open_selects.keys().cloned().collect::<Vec<_>>() {
+                    self.open_selects.insert(key, false);
+                }
+                return;
+            }
+            if self.context_menu.take().is_some() {
+                return;
+            }
         }
         let meta = modifiers.meta || modifiers.ctrl;
-        if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
+        // ⌨️ Hardcoded shell chords never fire while a text field (or the sync-attach draft buffer)
+        // has focus — matches `os-shell.tsx`'s `isEditableEventTarget`/`useActionHotkey` (backed by
+        // react-hotkeys-hook, which by default does not fire on form tags): "hotkeys never fire while
+        // the user is typing". Previously these six chords fired unconditionally, so e.g. Ctrl+B while
+        // typing in a focused Input would silently toggle the left panel instead of inserting "b".
+        let editing = input.focused_id.is_some() || self.sync_card_kind.is_some();
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("p")) {
             self.search_open = !self.search_open;
             self.find_open = false;
             self.overlay_state = if self.search_open {
@@ -13763,7 +17938,7 @@ impl ShellState {
             }
             return;
         }
-        if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("f")) {
             self.find_open = !self.find_open;
             self.search_open = false;
             self.overlay_state = if self.find_open {
@@ -13776,21 +17951,21 @@ impl ShellState {
             }
             return;
         }
-        if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "[") {
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "[") {
             if self.uri_index > 0 {
                 self.uri_index -= 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "]") {
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c == "]") {
             if self.uri_index + 1 < self.uri_history.len() {
                 self.uri_index += 1;
             }
             self.pending_shell_uri_apply = true;
             return;
         }
-        if meta && matches!(action, ui_wgpu::KeyAction::ArrowUp) {
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::ArrowUp) {
             let uri = self.shell_uri();
             if let Some(parent) = uri.rsplit_once('/').map(|(p, _)| p.to_string()) {
                 if !parent.is_empty() {
@@ -13800,11 +17975,11 @@ impl ShellState {
             self.pending_shell_uri_apply = true;
             return;
         }
-        if meta && modifiers.shift && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && modifiers.shift && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.right_panel_open = !self.right_panel_open;
             return;
         }
-        if meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
+        if !editing && meta && matches!(action, ui_wgpu::KeyAction::Char(ref c) if c.eq_ignore_ascii_case("b")) {
             self.left_panel_open = !self.left_panel_open;
             return;
         }
@@ -13812,6 +17987,16 @@ impl ShellState {
             self.overlay_state,
             OverlayState::Search | OverlayState::Find
         );
+        // 🪟 Tab/Shift+Tab cycles the active window across the *whole* dock (cross-window focus order)
+        // whenever nothing else claims focus — this renderer has no DOM, so there was no cross-window
+        // Tab order at all before this fix (only ever within a single scene, e.g. the text editor's own
+        // `KeyAction::Tab` handling). Single-window content-level Tab cycling among widgets is a
+        // separate, content-layer concern for `ui_wgpu`'s own engine/EventRouter (owned by the
+        // interpreter cutover), not this chrome-level routing.
+        if !editing && !palette_open && self.dock_drag.is_none() && action == ui_wgpu::KeyAction::Tab {
+            self.cycle_active_window(!modifiers.shift);
+            return;
+        }
         if self.sync_card_kind.is_some() {
             match action {
                 ui_wgpu::KeyAction::Escape => {
@@ -14003,6 +18188,113 @@ impl ShellState {
         self.uri_history.truncate(self.uri_index + 1);
         self.uri_history.push(uri);
         self.uri_index = self.uri_history.len().saturating_sub(1);
+    }
+
+    /// 🪟 Read-only walk of the dock tree collecting `(stack path, window id)` in tab/visual order
+    /// (depth-first Row/Column child order, each Stack's own tab order). Duplicated locally rather than
+    /// reusing `dock`'s own module-private `find_stack_path`-style traversal, because that helper is
+    /// private to the `dock` module and this region (`shell::ShellInput`) must not edit `dock` to expose
+    /// a public equivalent (region-claims.json `must_not_touch`). `DockNode`'s variants/fields are
+    /// public, so this is a plain read of already-public state, not a layering violation.
+    fn dock_window_order(node: &crate::dock::DockNode, path: &mut Vec<usize>, out: &mut Vec<(Vec<usize>, String)>) {
+        match node {
+            crate::dock::DockNode::Stack { windows, .. } => {
+                for window_id in windows {
+                    out.push((path.clone(), window_id.clone()));
+                }
+            }
+            crate::dock::DockNode::Row(children) | crate::dock::DockNode::Column(children) => {
+                for (index, (child, _)) in children.iter().enumerate() {
+                    path.push(index);
+                    Self::dock_window_order(child, path, out);
+                    path.pop();
+                }
+            }
+        }
+    }
+
+    /// 🪟 Cross-window Tab-focus cycling (see the `KeyAction::Tab` arm in `handle_keyboard`): advances
+    /// (or, with Shift, retreats) `active_window_id` through the dock's full window order, wrapping
+    /// around, and — critically — updates the containing stack's own active tab via `set_stack_active`
+    /// (not just `sync_active_window`, which only updates `active_window_id`/`active_stack` bookkeeping
+    /// and would leave the visually-active tab unchanged) so the window body actually switches.
+    fn cycle_active_window(&mut self, forward: bool) {
+        let mut order = Vec::new();
+        Self::dock_window_order(&self.dock.root, &mut Vec::new(), &mut order);
+        if order.is_empty() {
+            return;
+        }
+        let current_index = self
+            .active_window_id
+            .as_deref()
+            .and_then(|id| order.iter().position(|(_, window_id)| window_id == id));
+        let next_index = match current_index {
+            Some(i) if forward => (i + 1) % order.len(),
+            Some(i) => (i + order.len() - 1) % order.len(),
+            None => 0,
+        };
+        let (path, next_id) = order[next_index].clone();
+        self.dock.set_stack_active(&path, &next_id);
+    }
+}
+
+#[cfg(test)]
+mod shell_input_tests {
+    use super::*;
+
+    /// 🧪 `dock_window_order` is a `Self`-less associated fn, so it's callable without constructing a
+    /// full `ShellState` fixture (impractically large: 90+ fields, several without `Default`).
+    fn window_ids(node: &crate::dock::DockNode) -> Vec<String> {
+        let mut out = Vec::new();
+        ShellState::dock_window_order(node, &mut Vec::new(), &mut out);
+        out.into_iter().map(|(_, window_id)| window_id).collect()
+    }
+
+    #[test]
+    fn dock_window_order_flattens_a_single_stack_in_tab_order() {
+        let node = crate::dock::DockNode::Stack {
+            windows: vec!["a".into(), "b".into(), "c".into()],
+            active: "a".into(),
+        };
+        assert_eq!(window_ids(&node), vec!["a", "b", "c"]);
+    }
+
+    #[test]
+    fn dock_window_order_walks_row_and_column_children_depth_first() {
+        let left = crate::dock::DockNode::Stack {
+            windows: vec!["left".into()],
+            active: "left".into(),
+        };
+        let right_top = crate::dock::DockNode::Stack {
+            windows: vec!["top".into()],
+            active: "top".into(),
+        };
+        let right_bottom = crate::dock::DockNode::Stack {
+            windows: vec!["bottom".into()],
+            active: "bottom".into(),
+        };
+        let right = crate::dock::DockNode::Column(vec![(right_top, 0.5), (right_bottom, 0.5)]);
+        let root = crate::dock::DockNode::Row(vec![(left, 0.5), (right, 0.5)]);
+        assert_eq!(window_ids(&root), vec!["left", "top", "bottom"]);
+    }
+
+    #[test]
+    fn dock_window_order_pairs_each_window_with_its_own_stack_path() {
+        let a = crate::dock::DockNode::Stack {
+            windows: vec!["a".into()],
+            active: "a".into(),
+        };
+        let b = crate::dock::DockNode::Stack {
+            windows: vec!["b".into()],
+            active: "b".into(),
+        };
+        let root = crate::dock::DockNode::Row(vec![(a, 0.5), (b, 0.5)]);
+        let mut out = Vec::new();
+        ShellState::dock_window_order(&root, &mut Vec::new(), &mut out);
+        assert_eq!(
+            out,
+            vec![(vec![0], "a".to_string()), (vec![1], "b".to_string())]
+        );
     }
 }
 //#endregion ShellInput
@@ -14513,12 +18805,16 @@ fn render_footer_utility_nodes(
                     continue;
                 }
                 let expanded = collection_expanded.get(id).copied().unwrap_or(false);
+                // 🧭 Item 5 (ribbon nesting): a collapsed group still highlights when the active picker
+                // segment lives somewhere inside it (recursively, through further nested `Collection`s) —
+                // `active-path` tracking, ported from the React ribbon's recursive reconciliation.
+                let on_active_path = expanded || utility_subtree_has_active_path(children);
                 let label_text = footer_utility_label(label, text, title, id);
                 let item = ChromeGroupItem {
                     control_id: "framework.utility.collection",
                     icon_id: Some(icon_id.as_str()),
                     label: Some(label_text),
-                    active: expanded,
+                    active: on_active_path,
                     disabled: false,
                     kind: HitKind::Button,
                 };
@@ -14535,11 +18831,11 @@ fn render_footer_utility_nodes(
                 });
                 x += item_w + theme.gap_standard * 0.5;
                 if expanded {
-                    let leaves: Vec<UtilityNode> = children
-                        .iter()
-                        .filter(|child| !matches!(child, UtilityNode::Collection { .. }))
-                        .cloned()
-                        .collect();
+                    // 🧭 Item 5: previously flattened one level (`.filter(|child| !matches!(child,
+                    // UtilityNode::Collection { .. }))` dropped nested `Collection`s outright) — recursing
+                    // on the full, unfiltered `children` supports arbitrary nesting depth; each nested
+                    // `Collection` gets its own `collection_expanded` entry (already a flat `id`-keyed map,
+                    // so no path-keying change needed) and paints its own active-path highlight in turn.
                     x = render_footer_utility_nodes(
                         draw,
                         atlas,
@@ -14549,7 +18845,7 @@ fn render_footer_utility_nodes(
                         x,
                         btn_y,
                         btn_h,
-                        &leaves,
+                        children,
                         collection_expanded,
                     );
                 }
@@ -14560,7 +18856,10 @@ fn render_footer_utility_nodes(
 }
 
 fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
-    if tab.id() == S_PLAY_CATALOGUE_TAB_ID || tab.group == PanelGroup::Workbench {
+    // 🌱 `tab.group == PanelGroup::Workbench` already covers every host-app catalogue tab (each such app
+    // declares its catalogue tab under that group — see `s/plugin/rs`'s `App::builder(...).panel_tab(...)`)
+    // so no separate app-specific tab-id literal is needed here.
+    if tab.group == PanelGroup::Workbench {
         return "library";
     }
     if tab.id().contains("parameters") {
@@ -15058,10 +19357,970 @@ impl ShellState {
         .await
     }
     // #endregion
+
+    // #region command-registry
+    /// 🔌 The current session's plugin manifest (for its `commands: Vec<CommandDefinition>` — Plugin-scope
+    /// commands apply whenever any of that plugin's apps is focused, mirroring `os-shell.tsx`'s
+    /// `activePluginManifest`).
+    fn active_plugin_manifest(&self) -> Option<&semio_framework_core::PluginManifest> {
+        let session = self.session.as_ref()?;
+        self.plugins
+            .iter()
+            .find(|entry| entry.plugin_id == session.plugin_id)
+            .map(|entry| &entry.manifest)
+    }
+
+    /// 🎛️ Os-level built-in commands — the wgpu mirror of `os-shell.tsx`'s `buildOsCommands`, scoped to
+    /// mutation paths that already exist in this shell: `appearance_id`/`expertise`/`locale_id`/
+    /// `terminology_id` (all wired through the existing `"framework"` controller `dispatch_action` switch
+    /// — see `apply_os_command`), `compact_mode` (ditto, `"setCompact"`), and the dock's `layout_override`
+    /// (`os.resetDock`, applied locally like `RESET_DOCK` resets `dockLayoutStore`/`dockUiStateStore` in
+    /// React — no plugin round-trip). Deliberately omits `os.introduceApp`/`os.setThemeId`/`os.setLayout`:
+    /// none of the three has any persisted shell state yet (no introduction-playback step, no named
+    /// `UiTheme` list, no desktop/tablet layout flag) — inventing that storage is out of this region's
+    /// scope (`shell::ShellTypes` owns `ShellState`'s fields and is off-limits this wave).
+    pub(crate) fn build_os_commands(&self) -> Vec<semio_framework_core::CommandDefinition> {
+        use semio_framework_core::{ActionArgDef, ActionArgOption, CommandDefinition, CommandScope};
+        let terminology_options: Vec<ActionArgOption> = self
+            .active_terminologies()
+            .into_iter()
+            .map(|id| ActionArgOption {
+                label: if id == "native" { "Native".into() } else { id.clone() },
+                value: id,
+            })
+            .collect();
+        vec![
+            CommandDefinition::new("os.setAppearance", "Set Appearance", CommandScope::Os, "appearance").with_args([
+                ActionArgDef::select(
+                    "value",
+                    "Appearance",
+                    vec![
+                        ActionArgOption { value: "system".into(), label: "System".into() },
+                        ActionArgOption { value: "light".into(), label: "Light".into() },
+                        ActionArgOption { value: "dark".into(), label: "Dark".into() },
+                    ],
+                )
+                .required(),
+            ]),
+            CommandDefinition::new("os.setExpertise", "Set Expertise", CommandScope::Os, "general").with_args([
+                ActionArgDef::select(
+                    "value",
+                    "Expertise",
+                    vec![
+                        ActionArgOption { value: "standard".into(), label: "Standard".into() },
+                        ActionArgOption { value: "expert".into(), label: "Expert".into() },
+                    ],
+                )
+                .required(),
+            ]),
+            CommandDefinition::new("os.setLocale", "Set Locale", CommandScope::Os, "language").with_args([
+                ActionArgDef::select(
+                    "value",
+                    "Locale",
+                    vec![
+                        ActionArgOption { value: "en".into(), label: "English".into() },
+                        ActionArgOption { value: "de".into(), label: "Deutsch".into() },
+                    ],
+                )
+                .required(),
+            ]),
+            CommandDefinition::new("os.setTerminology", "Set Terminology", CommandScope::Os, "language")
+                .with_args([ActionArgDef::select("value", "Terminology", terminology_options).required()]),
+            CommandDefinition::new("os.toggleCompact", "Toggle Compact Layout", CommandScope::Os, "layout"),
+            CommandDefinition::new("os.resetDock", "Reset Dock Layout", CommandScope::Os, "layout"),
+        ]
+    }
+
+    /// 🎛️ Every command visible for the current session — os built-ins, the active plugin's Plugin-scope
+    /// commands, and the app's App-/active-Mode-scope commands. The wgpu mirror of `os-shell.tsx`'s
+    /// `resolveCommands(buildOsCommands(...), activePluginManifest, session?.app, activeModeId)` call site.
+    pub(crate) fn resolved_commands(&self) -> Vec<ResolvedCommand> {
+        let os_commands = self.build_os_commands();
+        let Some(session) = self.session.as_ref() else {
+            return os_commands
+                .into_iter()
+                .map(|definition| ResolvedCommand { definition, source: CommandSource::Os })
+                .collect();
+        };
+        let active_mode_id = session
+            .view_state
+            .active_mode_id
+            .as_deref()
+            .unwrap_or(session.app.default_mode_id.as_str());
+        resolve_commands(os_commands, self.active_plugin_manifest(), &session.app, active_mode_id)
+    }
+
+    /// 🔍 Flattens `resolved_commands()` into quick-search-palette entries. Zero-arg commands (any source)
+    /// dispatch immediately; an os-scope command with a single `Select` arg — every os command declares
+    /// exactly that shape (see `build_os_commands`) — expands into one concrete item per option (e.g. "Set
+    /// Appearance: Light") rather than redirecting to a staged form, since (unlike window-scoped actions)
+    /// os commands have no hosting window whose Actions rail could show that form. Arg-carrying Plugin/
+    /// App/Mode-scope commands are skipped here — there is no `DocumentApp::handle_command` RPC wired on
+    /// the plugin bridge yet (only `handle_action` exists; see `PluginBridgeEntry`), so the same staged
+    /// redirect would open a form with no way to actually execute; they still appear in
+    /// `resolved_commands()`/`build_command_panel_ui()` for completeness.
+    pub(crate) fn command_search_items(&self) -> Vec<SearchPaletteItem> {
+        let Some(session) = self.session.as_ref() else {
+            return Vec::new();
+        };
+        let mut items = Vec::new();
+        for entry in self.resolved_commands() {
+            let ResolvedCommand { definition, source } = entry;
+            let category = match &source {
+                CommandSource::Os => semio_framework_core::CommandScope::Os,
+                CommandSource::Plugin => semio_framework_core::CommandScope::Plugin,
+                CommandSource::App => semio_framework_core::CommandScope::App,
+                CommandSource::Mode(_) => semio_framework_core::CommandScope::Mode,
+            };
+            let group = command_category_label(&definition.category);
+            if definition.args.is_empty() {
+                let is_os = matches!(source, CommandSource::Os);
+                items.push(SearchPaletteItem {
+                    id: format!("command.{}", definition.id),
+                    label: definition.label.clone(),
+                    group,
+                    dispatch_action: (!is_os).then(|| ActionDescriptor {
+                        controller_id: session.app.controller_id.clone(),
+                        action: definition.id.clone(),
+                        args: None,
+                    }),
+                    action: is_os.then(|| format!("os-command:{}", definition.id)),
+                    category: Some(category),
+                });
+                continue;
+            }
+            if !matches!(source, CommandSource::Os) {
+                continue;
+            }
+            if let Some(arg) = definition.args.first() {
+                if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+                    for option in options {
+                        items.push(SearchPaletteItem {
+                            id: format!("command.{}.{}", definition.id, option.value),
+                            label: format!("{}: {}", definition.label, option.label),
+                            group: group.clone(),
+                            dispatch_action: None,
+                            action: Some(format!("os-command:{}:{}", definition.id, option.value)),
+                            category: Some(category),
+                        });
+                    }
+                }
+            }
+        }
+        items
+    }
+
+    /// 🚀 Executes an os-level command by id (the wgpu mirror of `os-shell.tsx`'s `dispatchOsCommand`):
+    /// `os.resetDock` clears the persisted layout override locally (no document round-trip, exactly like
+    /// React's `RESET_DOCK` resetting `dockLayoutStore`/`dockUiStateStore`); every other command reuses the
+    /// existing `"framework"` controller `dispatch_action` switch (`setAppearance`/`setExpertise`/
+    /// `setLocale`/`setTerminology`/`setCompact`) that already backs the Settings panel's selects, so this
+    /// never invents a new mutation path.
+    pub(crate) async fn apply_os_command(&mut self, command_id: &str, option_value: Option<&str>) -> Result<(), String> {
+        match command_id {
+            "os.resetDock" => {
+                self.layout_override = None;
+                self.sync_dock();
+                Ok(())
+            }
+            "os.toggleCompact" => {
+                let next = !self.compact_mode;
+                self.dispatch_action(ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: "setCompact".into(),
+                    args: Some(serde_json::json!({ "value": next })),
+                })
+                .await
+            }
+            "os.setAppearance" | "os.setExpertise" | "os.setLocale" | "os.setTerminology" => {
+                let Some(value) = option_value else {
+                    return Ok(());
+                };
+                let action = match command_id {
+                    "os.setAppearance" => "setAppearance",
+                    "os.setExpertise" => "setExpertise",
+                    "os.setLocale" => "setLocale",
+                    "os.setTerminology" => "setTerminology",
+                    _ => unreachable!(),
+                };
+                self.dispatch_action(ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: action.into(),
+                    args: Some(serde_json::json!({ "value": value })),
+                })
+                .await
+            }
+            _ => Ok(()),
+        }
+    }
+
+    /// 🎛️ Data-complete "Commands" panel content — the wgpu mirror of React's
+    /// `buildCommandCategoryTabs`/`buildCommandCategoryTree`, folded into a single flat, category-headed
+    /// `UiNode` tree (the honestly-scoped fallback: wgpu has no bottom-middle dock anchor — `PanelGroup::
+    /// anchor` only ever maps to the four corners, and the two middle anchors "start empty... never via a
+    /// `PanelGroup`" per its own doc comment — and the `panel_ui` registration/drawing that would surface a
+    /// brand-new tab live in `shell::ShellLifecycle`/`shell::ShellChrome`, outside this region's ownership
+    /// this wave). Every row for a command whose id already has a `"framework"` `dispatch_action` arm
+    /// (appearance/expertise/locale/terminology/compact) is fully interactive the moment some future wave
+    /// wires this into `panel_ui`, exactly like `build_settings_general_ui`'s selects; `os.resetDock` has
+    /// no such arm to attach a plain `ActionDescriptor` to (only the ⌘K search's `"os-command:"` string
+    /// redirect can reach `apply_os_command` for it), so it renders as a pointer to command search instead
+    /// of a non-functional button.
+    pub(crate) fn build_command_panel_ui(&self) -> UiNode {
+        let resolved = self.resolved_commands();
+        let categories = command_categories(&resolved);
+        let mut sections: Vec<UiNode> = Vec::new();
+        for (category_id, category_label) in categories {
+            let mut rows: Vec<UiNode> = vec![UiNode::Text(UiTextNode {
+                value: category_label,
+                emphasize: Some(true),
+                data_attributes: None,
+            })];
+            rows.extend(
+                resolved
+                    .iter()
+                    .filter(|entry| entry.definition.category == category_id)
+                    .map(|entry| self.build_command_panel_row(entry)),
+            );
+            sections.push(UiNode::Stack(UiStackNode {
+                direction: "column".into(),
+                gap: None,
+                padding: None,
+                id: Some(format!("shell.commands.category.{category_id}")),
+                children: rows,
+                selected: None,
+                activate: None,
+                drop_action: None,
+                loading: None,
+            }));
+        }
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: Some("shell.commands.panel".into()),
+            children: sections,
+            selected: None,
+            activate: None,
+            drop_action: None,
+            loading: None,
+        })
+    }
+
+    /// 🎛️ One `build_command_panel_ui` row: a `Select` for the four os commands whose single arg already
+    /// has a "framework" `dispatch_action` arm, a `Button` for the compact-layout toggle, else a plain
+    /// (non-interactive) label — see `build_command_panel_ui`'s doc comment for why `os.resetDock` and any
+    /// future arg-carrying Plugin/App/Mode command fall into that last case.
+    fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
+        let definition = &entry.definition;
+        if let Some(arg) = definition.args.first() {
+            if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
+                let value = match definition.id.as_str() {
+                    "os.setAppearance" => self.appearance_id.clone(),
+                    "os.setExpertise" => self.expertise.clone(),
+                    "os.setLocale" => self.locale_id.clone(),
+                    "os.setTerminology" => self.terminology_id.clone(),
+                    _ => options.first().map(|option| option.value.clone()).unwrap_or_default(),
+                };
+                let action = match definition.id.as_str() {
+                    "os.setAppearance" => "setAppearance",
+                    "os.setExpertise" => "setExpertise",
+                    "os.setLocale" => "setLocale",
+                    "os.setTerminology" => "setTerminology",
+                    other => other,
+                };
+                return UiNode::Select(UiSelectNode {
+                    id: format!("shell.commands.{}", definition.id),
+                    value,
+                    items: options
+                        .iter()
+                        .map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone() })
+                        .collect(),
+                    placeholder: None,
+                    on_change: ActionDescriptor {
+                        controller_id: "framework".into(),
+                        action: action.into(),
+                        args: None,
+                    },
+                });
+            }
+        }
+        if definition.id == "os.toggleCompact" {
+            return UiNode::Button(UiButtonNode {
+                id: Some(format!("shell.commands.{}", definition.id)),
+                icon_id: "toggle-left".into(),
+                label: definition.label.clone(),
+                action: ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: "setCompact".into(),
+                    args: Some(serde_json::json!({ "value": !self.compact_mode })),
+                },
+                style: None,
+                disabled: None,
+                loading: None,
+            });
+        }
+        UiNode::Text(UiTextNode {
+            value: if definition.id == "os.resetDock" {
+                format!("{} — available via ⌘K command search", definition.label)
+            } else {
+                definition.label.clone()
+            },
+            emphasize: Some(false),
+            data_attributes: None,
+        })
+    }
+    // #endregion
+}
+
+/// 🗂️ Where a `ResolvedCommand` was sourced from — the wgpu mirror of `os-shell.tsx`'s
+/// `ResolvedCommand["source"]`. `Mode` carries the active mode id, mirroring `{ kind: "mode", modeId }`.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum CommandSource {
+    Os,
+    Plugin,
+    App,
+    Mode(String),
+}
+
+/// 🎛️ One aggregated command plus where it came from — the wgpu mirror of `os-shell.tsx`'s
+/// `ResolvedCommand`.
+#[derive(Clone, Debug)]
+pub(crate) struct ResolvedCommand {
+    pub definition: semio_framework_core::CommandDefinition,
+    pub source: CommandSource,
+}
+
+/// 🎛️ Merges os-built-in, Plugin-scope, App-scope, and active-Mode-scope commands into one list — the
+/// wgpu mirror of `os-shell.tsx`'s `resolveCommands`. A `Mode`-scope command only resolves when
+/// `active_mode_id`'s `ModeDefinition.commands` references it, exactly like the React source.
+pub(crate) fn resolve_commands(
+    os_commands: Vec<semio_framework_core::CommandDefinition>,
+    plugin_manifest: Option<&semio_framework_core::PluginManifest>,
+    app: &semio_framework_core::AppDefinition,
+    active_mode_id: &str,
+) -> Vec<ResolvedCommand> {
+    let mut resolved: Vec<ResolvedCommand> = os_commands
+        .into_iter()
+        .map(|definition| ResolvedCommand { definition, source: CommandSource::Os })
+        .collect();
+    if let Some(manifest) = plugin_manifest {
+        resolved.extend(
+            manifest
+                .commands
+                .iter()
+                .cloned()
+                .map(|definition| ResolvedCommand { definition, source: CommandSource::Plugin }),
+        );
+    }
+    let mode_command_ids: std::collections::HashSet<&str> = app
+        .modes
+        .iter()
+        .find(|mode| mode.id == active_mode_id)
+        .map(|mode| mode.commands.iter().map(|command_ref| command_ref.as_str()).collect())
+        .unwrap_or_default();
+    for definition in &app.commands {
+        match definition.scope {
+            semio_framework_core::CommandScope::App => {
+                resolved.push(ResolvedCommand { definition: definition.clone(), source: CommandSource::App });
+            }
+            semio_framework_core::CommandScope::Mode if mode_command_ids.contains(definition.id.as_str()) => {
+                resolved.push(ResolvedCommand {
+                    definition: definition.clone(),
+                    source: CommandSource::Mode(active_mode_id.to_string()),
+                });
+            }
+            _ => {}
+        }
+    }
+    resolved
+}
+
+/// 🎛️ Loose title-case for an open-set command category id (e.g. `"appearance"` -> `"Appearance"`,
+/// `"named-layout"` -> `"Named Layout"`) — the wgpu mirror of `os-shell.tsx`'s `titleizeCommandCategory`.
+/// wgpu has no `ui.settings.tab.*` translation table to special-case chrome-known ids against, so every
+/// category (chrome-known or app/plugin-invented) goes through this uniformly.
+pub(crate) fn command_category_label(category: &str) -> String {
+    category
+        .split(|c: char| c == '-' || c == '_')
+        .filter(|segment| !segment.is_empty())
+        .map(|segment| {
+            let mut chars = segment.chars();
+            match chars.next() {
+                Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                None => String::new(),
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
+}
+
+/// 🎛️ Ordered, deduped `(category id, display label)` pairs derived from whatever commands actually
+/// resolved — the wgpu mirror of `os-shell.tsx`'s `commandCategories`.
+pub(crate) fn command_categories(commands: &[ResolvedCommand]) -> Vec<(String, String)> {
+    let mut seen = std::collections::HashSet::new();
+    let mut categories = Vec::new();
+    for entry in commands {
+        let category = entry.definition.category.as_str();
+        if seen.insert(category.to_string()) {
+            categories.push((category.to_string(), command_category_label(category)));
+        }
+    }
+    categories
+}
+
+/// 🔍 Case-insensitive fuzzy subsequence match: every char of `query`, in order, must appear somewhere in
+/// `target` (not necessarily contiguously). Returns `None` when `query` isn't a subsequence of `target`,
+/// else a score that rewards contiguous runs and word-start matches and lightly penalizes long targets —
+/// replaces `filtered_search_items`'/`filtered_find_items`'-style pure `.contains()` substring filtering
+/// (no fuzzy-search crate exists in this workspace's dependency tree; deliberately hand-rolled rather than
+/// adding one — see `Cargo.lock`).
+pub(crate) fn fuzzy_match_score(query: &str, target: &str) -> Option<i64> {
+    let query = query.trim();
+    if query.is_empty() {
+        return Some(0);
+    }
+    let query_chars: Vec<char> = query.chars().flat_map(char::to_lowercase).collect();
+    let target_chars: Vec<char> = target.chars().flat_map(char::to_lowercase).collect();
+    let mut target_index = 0usize;
+    let mut score: i64 = 0;
+    let mut consecutive: i64 = 0;
+    for &query_char in &query_chars {
+        let mut matched = false;
+        while target_index < target_chars.len() {
+            let candidate = target_chars[target_index];
+            let at_word_start = target_index == 0 || !target_chars[target_index - 1].is_alphanumeric();
+            target_index += 1;
+            if candidate == query_char {
+                score += 10 + consecutive * 5 + if at_word_start { 8 } else { 0 };
+                consecutive += 1;
+                matched = true;
+                break;
+            }
+            consecutive = 0;
+        }
+        if !matched {
+            return None;
+        }
+    }
+    score -= (target_chars.len() as i64 - query_chars.len() as i64).max(0);
+    Some(score)
+}
+
+#[cfg(test)]
+mod command_registry_tests {
+    use super::*;
+    use semio_framework_core::{
+        ActionArgControl, AppDefinition, CommandDefinition, CommandScope, ModeDefinition, Modes, PanelGroup,
+        PanelTabDefinition, PanelTabKind, PluginManifest, WindowKindDefinition, WindowKinds,
+    };
+
+    fn test_app(commands: Vec<CommandDefinition>, mode_commands: Vec<semio_framework_core::CommandRef>) -> AppDefinition {
+        AppDefinition {
+            id: "test-app".into(),
+            label: "Test App".into(),
+            document: vec!["semio".into(), "test".into()],
+            icon_id: None,
+            controller_id: "test".into(),
+            modes: Modes::one(ModeDefinition {
+                id: "default".into(),
+                label: "Default".into(),
+                utilities: vec![],
+                layout_id: None,
+                commands: mode_commands,
+            }),
+            default_mode_id: "default".into(),
+            window_kinds: WindowKinds::try_from(vec![WindowKindDefinition {
+                id: "main".into(),
+                label: "Main".into(),
+                body_key: "main.body".into(),
+                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                icon_id: None,
+                options: Default::default(),
+                actions: vec![],
+                utilities: vec![],
+                params_schema: None,
+                document_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: vec![],
+            }])
+            .expect("non-empty"),
+            panel_tabs: vec![PanelTabDefinition {
+                kind: PanelTabKind::App("tab".into()),
+                label: "Tab".into(),
+                group: PanelGroup::Workbench,
+                body_key: Some("tab.body".into()),
+                children: vec![],
+            }],
+            keybindings: vec![],
+            actions: vec![],
+            utilities: vec![],
+            commands,
+            named_layouts: vec![],
+            default_layout: None,
+            terminologies: vec!["de".into()],
+            terminology_documents: std::collections::HashMap::new(),
+            introduction: None,
+            dialogs: Vec::new(),
+            media_kinds: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
+        }
+    }
+
+    fn test_shell_state() -> ShellState {
+        ShellState::new(Vec::new(), String::new())
+    }
+
+    #[test]
+    fn build_os_commands_covers_every_wired_setting() {
+        let shell = test_shell_state();
+        let ids: Vec<String> = shell.build_os_commands().into_iter().map(|command| command.id).collect();
+        assert_eq!(
+            ids,
+            vec![
+                "os.setAppearance",
+                "os.setExpertise",
+                "os.setLocale",
+                "os.setTerminology",
+                "os.toggleCompact",
+                "os.resetDock",
+            ]
+        );
+    }
+
+    #[test]
+    fn build_os_commands_terminology_options_include_app_terminologies() {
+        let mut shell = test_shell_state();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 0,
+            app: test_app(vec![], vec![]),
+            view_state: semio_framework_core::ViewState::default(),
+        });
+        let terminology_command = shell
+            .build_os_commands()
+            .into_iter()
+            .find(|command| command.id == "os.setTerminology")
+            .expect("terminology command present");
+        let ActionArgControl::Select { options } = &terminology_command.args[0].control else {
+            panic!("expected a select control");
+        };
+        let values: Vec<&str> = options.iter().map(|option| option.value.as_str()).collect();
+        assert_eq!(values, vec!["native", "de"]);
+    }
+
+    #[test]
+    fn resolve_commands_tags_every_source() {
+        let os_commands = vec![CommandDefinition::new("os.setLocale", "Set Locale", CommandScope::Os, "language")];
+        let app_command = CommandDefinition::new("app.export", "Export", CommandScope::App, "app");
+        let mode_command = CommandDefinition::new("mode.focus", "Focus Mode", CommandScope::Mode, "mode");
+        let unreferenced_mode_command =
+            CommandDefinition::new("mode.other", "Other Mode Command", CommandScope::Mode, "mode");
+        let app = test_app(
+            vec![app_command.clone(), mode_command.clone(), unreferenced_mode_command],
+            vec![semio_framework_core::CommandRef::new("mode.focus")],
+        );
+        let plugin_manifest = PluginManifest {
+            plugin_id: "plugin".into(),
+            label: "Plugin".into(),
+            version: "0.0.0".into(),
+            apps: vec![],
+            programs: vec![],
+            examples: vec![],
+            capabilities: vec![],
+            contributions: vec![],
+            commands: vec![CommandDefinition::new("plugin.doThing", "Do Thing", CommandScope::Plugin, "plugin")],
+        };
+        let resolved = resolve_commands(os_commands, Some(&plugin_manifest), &app, "default");
+        let sources: Vec<(&str, CommandSource)> = resolved
+            .iter()
+            .map(|entry| (entry.definition.id.as_str(), entry.source.clone()))
+            .collect();
+        assert_eq!(
+            sources,
+            vec![
+                ("os.setLocale", CommandSource::Os),
+                ("plugin.doThing", CommandSource::Plugin),
+                ("app.export", CommandSource::App),
+                ("mode.focus", CommandSource::Mode("default".into())),
+            ]
+        );
+    }
+
+    #[test]
+    fn command_categories_orders_by_first_appearance_and_dedupes() {
+        let resolved = vec![
+            ResolvedCommand {
+                definition: CommandDefinition::new("a", "A", CommandScope::Os, "appearance"),
+                source: CommandSource::Os,
+            },
+            ResolvedCommand {
+                definition: CommandDefinition::new("b", "B", CommandScope::Os, "layout"),
+                source: CommandSource::Os,
+            },
+            ResolvedCommand {
+                definition: CommandDefinition::new("c", "C", CommandScope::Os, "appearance"),
+                source: CommandSource::Os,
+            },
+        ];
+        assert_eq!(
+            command_categories(&resolved),
+            vec![("appearance".to_string(), "Appearance".to_string()), ("layout".to_string(), "Layout".to_string())]
+        );
+    }
+
+    #[test]
+    fn command_category_label_titleizes_hyphenated_ids() {
+        assert_eq!(command_category_label("named-layout"), "Named Layout");
+        assert_eq!(command_category_label("general"), "General");
+    }
+
+    #[test]
+    fn command_search_items_expands_select_options_and_tags_os_category() {
+        let mut shell = test_shell_state();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 0,
+            app: test_app(vec![], vec![]),
+            view_state: semio_framework_core::ViewState::default(),
+        });
+        let items = shell.command_search_items();
+        let appearance_dark = items
+            .iter()
+            .find(|item| item.id == "command.os.setAppearance.dark")
+            .expect("expanded dark option present");
+        assert_eq!(appearance_dark.label, "Set Appearance: Dark");
+        assert_eq!(appearance_dark.action.as_deref(), Some("os-command:os.setAppearance:dark"));
+        assert_eq!(appearance_dark.category, Some(CommandScope::Os));
+        let reset_dock = items
+            .iter()
+            .find(|item| item.id == "command.os.resetDock")
+            .expect("zero-arg reset dock present");
+        assert_eq!(reset_dock.action.as_deref(), Some("os-command:os.resetDock"));
+        assert!(reset_dock.dispatch_action.is_none());
+    }
+
+    // 🔌 Plain `#[test]` + `pollster::block_on` (not `#[tokio::test]`) — matches the rest of this crate's
+    // async-from-sync convention (see e.g. `pollster::block_on(self.shell.boot())` in the native event
+    // loop); this crate's `tokio` dependency only enables the `sync` feature, not `rt`/`macros`.
+    #[test]
+    fn apply_os_command_reset_dock_clears_layout_override_locally() {
+        let mut shell = test_shell_state();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 0,
+            app: test_app(vec![], vec![]),
+            view_state: semio_framework_core::ViewState::default(),
+        });
+        shell.layout_override = Some(shell.dock.to_window_layout());
+        pollster::block_on(shell.apply_os_command("os.resetDock", None)).expect("reset dock never errors");
+        assert!(shell.layout_override.is_none());
+    }
+
+    #[test]
+    fn apply_os_command_set_locale_dispatches_through_framework_controller() {
+        let mut shell = test_shell_state();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 0,
+            app: test_app(vec![], vec![]),
+            view_state: semio_framework_core::ViewState::default(),
+        });
+        pollster::block_on(shell.apply_os_command("os.setLocale", Some("de"))).expect("set locale never errors");
+        assert_eq!(shell.locale_id, "de");
+    }
+
+    #[test]
+    fn apply_os_command_toggle_compact_flips_current_value() {
+        let mut shell = test_shell_state();
+        assert!(!shell.compact_mode);
+        pollster::block_on(shell.apply_os_command("os.toggleCompact", None)).expect("toggle compact never errors");
+        assert!(shell.compact_mode);
+        pollster::block_on(shell.apply_os_command("os.toggleCompact", None)).expect("toggle compact never errors");
+        assert!(!shell.compact_mode);
+    }
+
+    #[test]
+    fn build_command_panel_ui_groups_rows_under_category_headers() {
+        let mut shell = test_shell_state();
+        shell.session = Some(ActiveSession {
+            plugin_id: "test".into(),
+            instance_id: 0,
+            app: test_app(vec![], vec![]),
+            view_state: semio_framework_core::ViewState::default(),
+        });
+        let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
+            panic!("expected a stack root");
+        };
+        // 🗂️ One section per distinct `CommandDefinition.category` among the six os commands:
+        // appearance, general, language, layout.
+        assert_eq!(panel.children.len(), 4);
+    }
+
+    #[test]
+    fn fuzzy_match_score_finds_scattered_subsequence_and_rejects_non_matches() {
+        assert!(fuzzy_match_score("stlc", "Set Locale").is_some());
+        assert!(fuzzy_match_score("xyz", "Set Locale").is_none());
+        assert!(fuzzy_match_score("", "Set Locale").is_some());
+    }
+
+    #[test]
+    fn fuzzy_match_score_ranks_contiguous_prefix_above_scattered_match() {
+        let contiguous = fuzzy_match_score("set", "Set Locale").expect("contiguous match");
+        let scattered = fuzzy_match_score("sca", "Set Locale").expect("scattered match");
+        assert!(contiguous > scattered, "contiguous {contiguous} should outrank scattered {scattered}");
+    }
+
+    #[test]
+    fn fuzzy_match_score_is_case_insensitive() {
+        assert_eq!(fuzzy_match_score("SET", "set locale"), fuzzy_match_score("set", "SET LOCALE"));
+    }
 }
 //#endregion ActionPanelAndUtilities
 
 //#region ShellChrome
+//#region 🔖ChromeOverlaysAndTour
+// 🍿 w3-overlays-chrome-polish (WP15+WP16): tooltips, a generic modal dialog, and the app introduction
+// tour — layered on the existing immediate-mode chrome without new `ShellState` fields or `OverlayState`
+// variants (both live in the off-limits `ShellTypes` region this wave, see region-claims.json). State
+// lives in thread-locals, mirroring this file's own `CONTEXT_MENU_SINK`/`FIND_ITEM_SINK` idiom just above.
+// Placement math reuses `ui_wgpu`'s w1d-events-overlay manager types (`OverlayKind`, `OverlayPlacement`,
+// `resolve_overlay_placement`) even though the manager's own `EventRouter`/`open_overlay` stay
+// `pub(crate)` to `ui_wgpu` (an `engine::Ui`/retained-`UiTree` implementation detail) and out of reach
+// for this non-tree-based immediate-mode chrome renderer — confirmed unreachable the same way
+// `report-w2-text-editor.md` found for its own local-fallback popup.
+
+/// ⏱️ The hover-armed tooltip candidate — (re)armed the first frame `control_id` becomes hovered,
+/// painted once `CHROME_TOOLTIP_DELAY_MS` elapses. Dismissed immediately on hover-out: this crate has no
+/// animation-clock scaffolding anywhere (`engine::Ui::needs_frame`'s own doc comment admits the same gap
+/// for animations generally), matching `OverlayKind::Tooltip::dismiss_policy`'s own documented admission
+/// that hover-out-delay isn't actually debounced yet.
+#[derive(Clone, Debug)]
+struct ChromeTooltipHover {
+    control_id: String,
+    anchor_x: f32,
+    anchor_y: f32,
+    started_ms: f64,
+}
+
+const CHROME_TOOLTIP_DELAY_MS: f64 = 500.0;
+
+/// ⏱️ Pure delay-threshold check, factored out of `render_chrome_tooltip` so it's unit-testable without
+/// a `DrawList`/`FontAtlas` fixture.
+fn chrome_tooltip_ready(hover: &ChromeTooltipHover, now_ms: f64) -> bool {
+    now_ms - hover.started_ms >= CHROME_TOOLTIP_DELAY_MS
+}
+
+/// 🗨️ A generic modal confirmation/message dialog request — the minimal generic mechanism
+/// `os-shell.tsx`'s `DialogDefinition`/`HostEffect::OpenDialog` calls for (title + body +
+/// submit/cancel), enough to gate a destructive chrome action behind a real confirmation. Staged-form
+/// `args` are out of scope for this pass (see the report's honest scope-down).
+#[derive(Clone, Debug)]
+struct ChromeDialogRequest {
+    id: String,
+    title: String,
+    body: String,
+    confirm_label: String,
+    confirm_action: ActionDescriptor,
+    cancel_label: String,
+}
+
+/// 🎓 Live playback state for `AppDefinition.introduction` — which step is showing. Steps themselves are
+/// re-read fresh from `session.app.introduction` every frame, never cached, so a plugin hot-reload
+/// mid-session can't desync from a stale copy.
+#[derive(Clone, Debug)]
+struct ChromeTourState {
+    step_index: usize,
+}
+
+thread_local! {
+    static CHROME_TOOLTIP_TITLES: std::cell::RefCell<HashMap<String, String>> = std::cell::RefCell::new(HashMap::new());
+    static CHROME_TOOLTIP_HOVER: std::cell::RefCell<Option<ChromeTooltipHover>> = std::cell::RefCell::new(None);
+    static CHROME_DIALOG_STACK: std::cell::RefCell<Vec<ChromeDialogRequest>> = std::cell::RefCell::new(Vec::new());
+    static CHROME_TOUR_STATE: std::cell::RefCell<Option<ChromeTourState>> = std::cell::RefCell::new(None);
+    static CHROME_TOUR_AUTO_CONSIDERED: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
+    static CHROME_PREV_POINTER_DOWN: std::cell::Cell<bool> = std::cell::Cell::new(false);
+    static CHROME_CLICK_EDGE: std::cell::Cell<bool> = std::cell::Cell::new(false);
+}
+
+/// 💬 Registers `control_id`'s hover tooltip text for this frame — called by whichever chrome function
+/// paints that control (navbar/footer today); cleared once per `render_chrome` call.
+fn chrome_register_tooltip(control_id: impl Into<String>, title: impl Into<String>) {
+    let title = title.into();
+    if title.is_empty() {
+        return;
+    }
+    CHROME_TOOLTIP_TITLES.with(|cell| {
+        cell.borrow_mut().insert(control_id.into(), title);
+    });
+}
+
+fn chrome_tooltip_titles_clear() {
+    CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow_mut().clear());
+}
+
+/// 💬 Registers footer utility tooltips ahead of `render_footer_utility_nodes` (an off-limits
+/// `ShellInput`-adjacent function this wave — see the report) so hovering an already-carried-but-never-
+/// rendered `title` shows it, without touching that function's own body. Control-id format
+/// (`framework.utility.{button|toggle|collection}.{id}`) mirrors it exactly, including the flat
+/// (non-prefixed) child ids nested `Collection`s already use there.
+fn chrome_register_utility_tooltips(utilities: &[UtilityNode]) {
+    for utility in utilities {
+        match utility {
+            UtilityNode::Button { id, label, text, title, .. } => {
+                chrome_register_tooltip(format!("framework.utility.button.{id}"), footer_utility_label(label, text, title, id));
+            }
+            UtilityNode::Toggle { id, label, text, title, .. } => {
+                chrome_register_tooltip(format!("framework.utility.toggle.{id}"), footer_utility_label(label, text, title, id));
+            }
+            UtilityNode::Collection { id, label, text, title, children, .. } => {
+                chrome_register_tooltip(format!("framework.utility.collection.{id}"), footer_utility_label(label, text, title, id));
+                chrome_register_utility_tooltips(children);
+            }
+            UtilityNode::Separator { .. } => {}
+        }
+    }
+}
+
+/// 🧭 Item 5's "active-path tracking": true if `nodes` (recursively, through nested `Collection`s)
+/// contains a pressed `Toggle` — used so a *collapsed* ribbon `Collection` still highlights when the
+/// user's current selection lives inside it, mirroring `ui/js/react/index.tsx`'s recursive picker
+/// active-path reconciliation. Called from `render_footer_utility_nodes` (an off-limits `ShellInput`-
+/// adjacent function this wave — see the report's coordination note).
+fn utility_subtree_has_active_path(nodes: &[UtilityNode]) -> bool {
+    nodes.iter().any(|node| match node {
+        UtilityNode::Toggle { pressed, .. } => pressed.unwrap_or(false),
+        UtilityNode::Collection { children, .. } => utility_subtree_has_active_path(children),
+        _ => false,
+    })
+}
+
+/// 🖱️ Edge-detects "pointer just went down this frame", computed once per `render_chrome` call —
+/// `InputState::pointer_down` is level-triggered (true every frame the button is held), so the
+/// chrome-owned click handling below (dialogs, tour controls, the tour trigger) that lives outside the
+/// `ActionDescriptor`/`ShellActions` dispatch pipeline needs its own edge tracking to avoid re-firing on
+/// every held frame. Reads afterward (`chrome_clicked_this_frame`) are pure.
+fn chrome_compute_click_edge(pointer_down: bool) {
+    let was_down = CHROME_PREV_POINTER_DOWN.with(|cell| cell.replace(pointer_down));
+    CHROME_CLICK_EDGE.with(|cell| cell.set(pointer_down && !was_down));
+}
+
+fn chrome_clicked_this_frame() -> bool {
+    CHROME_CLICK_EDGE.with(|cell| cell.get())
+}
+
+/// ⏱️ Self-contained wall-clock reader for the tooltip hover-delay timer — deliberately not sharing the
+/// file's other `*_now_ms` helper (its exact module/scope kept shifting under concurrent edits from
+/// `w3-prefs-i18n-themes` while this region was being written), same cfg-gated `js_sys::Date::now()` /
+/// `SystemTime` split as the rest of this file already uses elsewhere.
+#[cfg(target_arch = "wasm32")]
+fn chrome_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn chrome_now_ms() -> f64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_secs_f64() * 1000.0)
+        .unwrap_or(0.0)
+}
+
+fn chrome_dialog_open() -> bool {
+    CHROME_DIALOG_STACK.with(|cell| !cell.borrow().is_empty())
+}
+
+fn chrome_open_dialog(request: ChromeDialogRequest) {
+    CHROME_DIALOG_STACK.with(|cell| cell.borrow_mut().push(request));
+}
+
+fn chrome_close_topmost_dialog() {
+    CHROME_DIALOG_STACK.with(|cell| {
+        cell.borrow_mut().pop();
+    });
+}
+
+/// 🎓 Starts (or restarts, from step 0) the introduction tour for the active app — the "simple direct
+/// trigger point" the brief calls for pending the `introduceApp` os-command's own wiring
+/// (`w3-command-palette`, `shell::ActionPanelAndUtilities`, off-limits here).
+fn chrome_start_introduction() {
+    CHROME_TOUR_STATE.with(|cell| {
+        *cell.borrow_mut() = Some(ChromeTourState { step_index: 0 });
+    });
+}
+
+fn chrome_skip_introduction() {
+    CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
+}
+
+fn chrome_advance_introduction(step_count: usize) {
+    CHROME_TOUR_STATE.with(|cell| {
+        let mut state = cell.borrow_mut();
+        if let Some(tour) = state.as_mut() {
+            if tour.step_index + 1 >= step_count {
+                *state = None;
+            } else {
+                tour.step_index += 1;
+            }
+        }
+    });
+}
+
+/// ⌨️ Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) to this
+/// renderer: the first `possible` (in the order the host already gave them — wgpu's engagement rail has
+/// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
+/// on a char boundary (never a byte index) so a multi-byte label can't panic.
+fn engagement_completion_suffix(query: &str, possibles: Option<&[ui_wgpu::WindowEngagementPossible]>) -> String {
+    let query = query.trim();
+    if query.is_empty() {
+        return String::new();
+    }
+    let Some(possibles) = possibles else {
+        return String::new();
+    };
+    let query_lower = query.to_lowercase();
+    for possible in possibles {
+        let label_lower = possible.label.to_lowercase();
+        if !label_lower.starts_with(&query_lower) {
+            continue;
+        }
+        let query_chars = query.chars().count();
+        let split_at = possible
+            .label
+            .char_indices()
+            .nth(query_chars)
+            .map(|(byte_index, _)| byte_index)
+            .unwrap_or(possible.label.len());
+        let suffix = &possible.label[split_at..];
+        if !suffix.is_empty() {
+            return suffix.to_string();
+        }
+    }
+    String::new()
+}
+
+/// 👻 Pure accept-decision for the ghost-text click affordance — factored out of
+/// `render_engagement_input` so it's unit-testable without a `GpuContext` fixture (that function
+/// unconditionally needs a real wgpu device, per its own `_gpu` parameter).
+fn engagement_ghost_accept_on_click(
+    ghost_rect: Rect,
+    pointer_x: f32,
+    pointer_y: f32,
+    clicked_this_frame: bool,
+    query: &str,
+    suffix: &str,
+) -> Option<String> {
+    if clicked_this_frame && ghost_rect.contains(pointer_x, pointer_y) {
+        Some(format!("{query}{suffix}"))
+    } else {
+        None
+    }
+}
+//#endregion 🔖ChromeOverlaysAndTour
+
 impl ShellState {
     pub fn render_chrome(
         &mut self,
@@ -15073,6 +20332,7 @@ impl ShellState {
         theme: &Theme,
         gpu: &mut ui_wgpu::GpuContext,
     ) {
+        self.load_ui_prefs_once();
         let w = self.screen_w;
         let h = self.screen_h;
         draw.set_screen_height(h);
@@ -15082,6 +20342,8 @@ impl ShellState {
         let body = self.body_rect(theme);
         FIND_ITEM_SINK.with(|cell| cell.borrow_mut().clear());
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
+        chrome_tooltip_titles_clear();
+        chrome_compute_click_edge(input.pointer_down);
         clear_graph_node_context();
         self.node_graph_states.clear();
         self.tiled_map_states.clear();
@@ -15137,6 +20399,7 @@ impl ShellState {
                 theme.error,
             );
         }
+        self.persist_ui_prefs_if_changed();
     }
 
     fn body_rect(&self, theme: &Theme) -> Rect {
@@ -15168,18 +20431,19 @@ impl ShellState {
     }
 
     fn left_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
+        let is_de = self.locale_id == "de";
         match self.active_left_kind {
             LeftPanelKind::Display => vec![
                 PanelTabDefinition {
                     kind: semio_framework_core::PanelTabKind::DisplayWindows,
-                    label: "Windows".into(),
+                    label: shell_chrome_string("display.tab.windows", is_de).to_string(),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
                     children: Vec::new(),
                 },
                 PanelTabDefinition {
                     kind: semio_framework_core::PanelTabKind::DisplayLayout,
-                    label: "Layout".into(),
+                    label: shell_chrome_string("display.tab.layout", is_de).to_string(),
                     group: PanelGroup::Display,
                     body_key: Some(String::new()),
                     children: Vec::new(),
@@ -15199,7 +20463,7 @@ impl ShellState {
                         0,
                         PanelTabDefinition {
                             kind: semio_framework_core::PanelTabKind::App(FRAMEWORK_PANEL_TAB_DOCUMENT_ID.into()),
-                            label: "Document".into(),
+                            label: shell_panel_tab_label(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, "Document", is_de),
                             group: PanelGroup::Workbench,
                             body_key: Some(String::new()),
                             children: Vec::new(),
@@ -15215,7 +20479,7 @@ impl ShellState {
         match self.active_right_kind {
             RightPanelKind::Settings => vec![PanelTabDefinition {
                 kind: semio_framework_core::PanelTabKind::SettingsGeneral,
-                label: "General".into(),
+                label: shell_chrome_string("settings.tab.general", self.locale_id == "de").to_string(),
                 group: PanelGroup::Settings,
                 body_key: Some(String::new()),
                 children: Vec::new(),
@@ -15234,10 +20498,12 @@ impl ShellState {
         match self.active_left_kind {
             LeftPanelKind::Display => FRAMEWORK_DISPLAY_WINDOWS_TAB_ID.into(),
             LeftPanelKind::Workbench => {
-                if self.studio_mode && session.app.id == S_PLAY_APP_ID {
+                if self.host_config().is_some_and(|cfg| session.app.id == cfg.host_app_id) {
+                    // 🏠🧳 `session.app` is confirmed to be the host app here, so its own first-declared
+                    // panel tab (self-declared via `AppBuilder::panel_tab`) is the catalogue default.
                     Self::panel_state_from_view(&session.view_state)
                         .map(|p| p.active_panel_tab)
-                        .unwrap_or_else(|| S_PLAY_CATALOGUE_TAB_ID.into())
+                        .unwrap_or_else(|| session.app.panel_tabs.first().map(|tab| tab.id().to_string()).unwrap_or_default())
                 } else {
                     let tabs = self.left_tabs(session);
                     if let Some(id) = &self.active_left_tab {
@@ -15307,6 +20573,7 @@ impl ShellState {
         theme: &Theme,
         width: f32,
     ) {
+        let is_de = self.locale_id == "de";
         let navbar_rect = Rect::new(0.0, 0.0, width, theme.navbar_height);
         let navbar_hovered = navbar_rect.contains(input.pointer_x, input.pointer_y);
         draw.push_solid([0.0, 0.0, width, theme.navbar_height], theme.navbar);
@@ -15337,7 +20604,7 @@ impl ShellState {
             .session
             .as_ref()
             .map(|s| app_document_label(resolve_app_document(&s.app, &self.terminology_id)))
-            .unwrap_or_else(|| if self.studio_mode { "semio · s · studio".into() } else { "semio · os".into() });
+            .unwrap_or_else(|| if self.studio_mode { format!("semio · {}", self.plugin_filter) } else { "semio · os".into() });
         chrome_text(
             draw,
             atlas,
@@ -15361,6 +20628,7 @@ impl ShellState {
                 + theme.padding_standard * 2.0
                 + theme.gap_standard;
             let fixture_rect = Rect::new(x, btn_y, fixture_w.max(120.0), btn_h);
+            chrome_register_tooltip("playground.navbar.fixture", active_label);
             render_chrome_group(
                 draw,
                 atlas,
@@ -15384,11 +20652,12 @@ impl ShellState {
         let fullscreen_item = ChromeGroupItem {
             control_id: "ui.fullscreen.toggle",
             icon_id: Some("maximize-2"),
-            label: Some("Fullscreen"),
+            label: Some(shell_chrome_string("fullscreen.toggle", is_de)),
             active: false,
             disabled: false,
             kind: HitKind::Toggle,
         };
+        chrome_register_tooltip(fullscreen_item.control_id, fullscreen_item.label.unwrap_or_default());
         let fullscreen_w = measure_chrome_group_item(atlas, theme, &fullscreen_item);
         rx -= fullscreen_w;
         render_chrome_group(
@@ -15402,12 +20671,35 @@ impl ShellState {
             true,
         );
         rx -= theme.gap_standard;
+        // 🎓 Item 3's "simple direct trigger point" (the `introduceApp` os-command itself is
+        // `w3-command-palette`'s `shell::ActionPanelAndUtilities` scope, off-limits here) — only shown
+        // when the active app actually declares an `introduction`. Click handling is chrome-owned (not
+        // routed through `ActionDescriptor`/`ShellActions`), mirroring the dialog trigger above.
+        if self.session.as_ref().is_some_and(|s| s.app.introduction.is_some()) {
+            let tour_item = ChromeGroupItem {
+                control_id: "shell.introduction.start",
+                icon_id: Some("help-circle"),
+                label: None,
+                active: false,
+                disabled: false,
+                kind: HitKind::NavbarItem,
+            };
+            let tour_w = measure_chrome_group_item(atlas, theme, &tour_item);
+            rx -= tour_w;
+            let tour_rect = Rect::new(rx, btn_y, tour_w, btn_h);
+            chrome_register_tooltip(tour_item.control_id, "Start introduction");
+            render_chrome_group(draw, atlas, icons, input, theme, tour_rect, &[tour_item], true);
+            if !chrome_dialog_open() && chrome_clicked_this_frame() && tour_rect.contains(input.pointer_x, input.pointer_y) {
+                chrome_start_introduction();
+            }
+            rx -= theme.gap_standard;
+        }
         let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
         if self.has_display_tabs() {
             toggle_items.push(ChromeGroupItem {
                 control_id: "ui.panelToggle.display",
                 icon_id: Some(panel_toggle_icon_id("display", self.session.as_ref())),
-                label: Some("Display"),
+                label: Some(shell_chrome_string("panelToggle.display", is_de)),
                 active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Display,
                 disabled: false,
                 kind: HitKind::Toggle,
@@ -15416,7 +20708,7 @@ impl ShellState {
         toggle_items.push(ChromeGroupItem {
             control_id: "ui.panelToggle.workbench",
             icon_id: Some(panel_toggle_icon_id("workbench", self.session.as_ref())),
-            label: Some("Workbench"),
+            label: Some(shell_chrome_string("panelToggle.workbench", is_de)),
             active: self.left_panel_open && self.active_left_kind == LeftPanelKind::Workbench,
             disabled: false,
             kind: HitKind::Toggle,
@@ -15424,7 +20716,7 @@ impl ShellState {
         toggle_items.push(ChromeGroupItem {
             control_id: "ui.panelToggle.details",
             icon_id: Some(panel_toggle_icon_id("details", self.session.as_ref())),
-            label: Some("Details"),
+            label: Some(shell_chrome_string("panelToggle.details", is_de)),
             active: self.right_panel_open && self.active_right_kind == RightPanelKind::Details,
             disabled: false,
             kind: HitKind::Toggle,
@@ -15432,11 +20724,14 @@ impl ShellState {
         toggle_items.push(ChromeGroupItem {
             control_id: "ui.panelToggle.settings",
             icon_id: Some(panel_toggle_icon_id("settings", self.session.as_ref())),
-            label: Some("Settings"),
+            label: Some(shell_chrome_string("panelToggle.settings", is_de)),
             active: self.right_panel_open && self.active_right_kind == RightPanelKind::Settings,
             disabled: false,
             kind: HitKind::Toggle,
         });
+        for item in &toggle_items {
+            chrome_register_tooltip(item.control_id, item.label.unwrap_or_default());
+        }
         let toggle_w: f32 = toggle_items
             .iter()
             .map(|item| measure_chrome_group_item(atlas, theme, item))
@@ -15483,6 +20778,9 @@ impl ShellState {
                         }
                     })
                     .collect();
+                for item in &mode_items {
+                    chrome_register_tooltip(item.control_id, item.label.unwrap_or_default());
+                }
                 let mode_w: f32 = mode_items
                     .iter()
                     .map(|item| measure_chrome_group_item(atlas, theme, item))
@@ -15530,6 +20828,7 @@ impl ShellState {
         // 🧰 Footer sections: Selection · Tools · History · Sync. The former `UtilityCategory::Actions`
         // section is deleted — window-scoped actions now live in the per-window Actions rail
         // (Architecture Decision 8/9, P6).
+        chrome_register_utility_tooltips(&self.active_utilities);
         let partitions = partition_utilities_by_category(&self.active_utilities);
         let sections = [
             partitions[0].as_slice(),
@@ -15682,7 +20981,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(&ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+        render_ui_node(&ui, scrolled, &mut ctx, active_tab_id, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         }
         panel_draw.pop_scissor();
         panel_draw.end_glass_content();
@@ -16000,7 +21299,7 @@ impl ShellState {
         mut canvas: Rect,
         session: &ActiveSession,
     ) -> Rect {
-        if !self.studio_mode || session.app.id != S_PLAY_APP_ID {
+        if !self.host_config().is_some_and(|cfg| session.app.id == cfg.host_app_id) {
             return canvas;
         }
         let bar_h = theme.control_height;
@@ -16008,7 +21307,7 @@ impl ShellState {
             let item = ChromeGroupItem {
                 control_id: "studio.canvas.home",
                 icon_id: Some("home"),
-                label: Some("Home"),
+                label: Some(shell_chrome_string("common.home", self.locale_id == "de")),
                 active: false,
                 disabled: false,
                 kind: HitKind::Button,
@@ -16090,7 +21389,7 @@ impl ShellState {
             Some(widget_maps),
         );
         ctx.pick_clip = Some(content);
-        render_ui_node(ui, scrolled, &mut ctx, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
+        render_ui_node(ui, scrolled, &mut ctx, window_id, gpu, &mut self.world3d_states, &mut self.node_graph_states, &mut self.tiled_map_states, &mut self.icon_render_states, &mut self.board2d_states);
         draw.pop_scissor();
     }
 
@@ -16298,23 +21597,323 @@ impl ShellState {
                     theme.font_size_small,
                     theme.text,
                 );
+                // 🗨️ Detaching drops the live sync connection — gate it behind a real confirmation
+                // (item 2 of the WP15/16 brief) instead of dispatching `detach` on a bare click. The
+                // hit target itself carries no `event` any more; `chrome_open_dialog` stages the same
+                // `ActionDescriptor` onto the dialog's own Confirm button (see `render_chrome_dialog`),
+                // so confirming still flows through the existing `framework.sync`/`detach` handler
+                // unchanged — only the gate is new.
                 input.register_hit(HitTarget {
                     rect: detach_rect,
-                    event: Some(ActionDescriptor {
-                        controller_id: "framework.sync".into(),
-                        action: "detach".into(),
-                        args: None,
-                    }),
+                    event: None,
                     control_id: Some("framework.sync.detach".into()),
                     kind: HitKind::Button,
                     drag_axis: None,
                     drag_data: None,
                 });
+                if !chrome_dialog_open()
+                    && chrome_clicked_this_frame()
+                    && detach_rect.contains(input.pointer_x, input.pointer_y)
+                {
+                    chrome_open_dialog(ChromeDialogRequest {
+                        id: "framework.sync.detach".into(),
+                        title: "Detach sync backbone?".into(),
+                        body: format!(
+                            "This disconnects the live {kind} backbone. You can reattach it later from the same panel."
+                        ),
+                        confirm_label: "Detach".into(),
+                        confirm_action: ActionDescriptor {
+                            controller_id: "framework.sync".into(),
+                            action: "detach".into(),
+                            args: None,
+                        },
+                        cancel_label: "Cancel".into(),
+                    });
+                }
             }
         }
         // render_palette removed
         if let Some(menu) = &self.context_menu {
             self.render_context_menu(overlay, atlas, input, theme, menu);
+        }
+        self.render_chrome_tooltip(overlay, atlas, input, theme, width, height);
+        self.render_chrome_dialog(overlay, atlas, input, theme, width, height);
+        self.render_chrome_tour(overlay, atlas, input, theme, width, height);
+    }
+
+    /// 💬 Paints the armed tooltip (item 1) — `AtPointer` placement/dismissal policy sourced from
+    /// `ui_wgpu::OverlayKind::Tooltip` via a scratch `UiTree` (empty; `Point` anchors never touch it).
+    fn render_chrome_tooltip(
+        &self,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        width: f32,
+        height: f32,
+    ) {
+        let hovered_id = input.hovered_id.clone();
+        let title = hovered_id
+            .as_ref()
+            .and_then(|id| CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow().get(id).cloned()));
+        let now = chrome_now_ms();
+        let armed = CHROME_TOOLTIP_HOVER.with(|cell| {
+            let mut hover = cell.borrow_mut();
+            match (&title, hovered_id.as_ref()) {
+                (Some(_), Some(id)) => {
+                    let restart = hover.as_ref().map(|h| &h.control_id != id).unwrap_or(true);
+                    if restart {
+                        *hover = Some(ChromeTooltipHover {
+                            control_id: id.clone(),
+                            anchor_x: input.pointer_x,
+                            anchor_y: input.pointer_y,
+                            started_ms: now,
+                        });
+                    }
+                }
+                _ => *hover = None,
+            }
+            hover.clone()
+        });
+        if chrome_dialog_open() {
+            return;
+        }
+        let Some(hover) = armed else { return };
+        if !chrome_tooltip_ready(&hover, now) {
+            return;
+        }
+        let Some(text) = title else { return };
+        let padding = theme.padding_standard * 0.5;
+        let (text_w, text_h) = atlas.measure_text(&text, theme.font_size_small);
+        let content_w = text_w + padding * 2.0;
+        let content_h = text_h + padding * 2.0;
+        let scratch_tree = ui_wgpu::UiTree::new();
+        let (x, y) = ui_wgpu::resolve_overlay_placement(
+            &scratch_tree,
+            ui_wgpu::OverlayAnchor::Point { x: hover.anchor_x, y: hover.anchor_y },
+            (content_w, content_h),
+            (width, height),
+            ui_wgpu::OverlayKind::Tooltip.default_placement(),
+        );
+        overlay.push_glass([x, y, content_w, content_h], theme.border_radius, GlassTier::Menu, theme);
+        chrome_text(
+            overlay,
+            atlas,
+            input,
+            theme,
+            &text,
+            x + padding,
+            y + (content_h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small,
+            theme.text,
+        );
+    }
+
+    /// 🗨️ Paints the topmost queued dialog (item 2) — full-screen scrim (click outside == cancel, per
+    /// `OverlayKind::Dialog`'s `outside_press_swallow` dismiss policy) plus a centered box
+    /// (`OverlayKind::Dialog::default_placement` == `Centered`) with Cancel/Confirm. Confirm's hit
+    /// target carries the staged `ActionDescriptor` so it dispatches through the existing generic
+    /// pipeline exactly like any other chrome button — only closing the dialog itself is handled here.
+    fn render_chrome_dialog(
+        &self,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        width: f32,
+        height: f32,
+    ) {
+        let Some(request) = CHROME_DIALOG_STACK.with(|cell| cell.borrow().last().cloned()) else {
+            return;
+        };
+        // 🌫️ `Theme` has no dedicated veil/scrim color (`overlay_shadow` is actually the disabled-control
+        // tint, always alpha 0 in the one constructor that sets it) — a fixed dark translucency matches
+        // `ui-glass-veil`'s own theme-agnostic dimming in `ui/js/react/index.tsx`.
+        overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
+        let dialog_w = 360.0_f32;
+        let dialog_h = 168.0_f32;
+        let scratch_tree = ui_wgpu::UiTree::new();
+        let (x, y) = ui_wgpu::resolve_overlay_placement(
+            &scratch_tree,
+            ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
+            (dialog_w, dialog_h),
+            (width, height),
+            ui_wgpu::OverlayKind::Dialog.default_placement(),
+        );
+        let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
+        overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, GlassTier::Panel, theme);
+        let pad = theme.padding_standard;
+        chrome_text(overlay, atlas, input, theme, &request.title, x + pad, y + pad + theme.font_size_body, theme.font_size_body, theme.text);
+        chrome_text(
+            overlay, atlas, input, theme, &request.body,
+            x + pad, y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small,
+            theme.font_size_small, theme.text_muted,
+        );
+        let btn_h = theme.control_height;
+        let confirm_w = 110.0_f32;
+        let cancel_w = 90.0_f32;
+        let confirm_rect = Rect::new(x + dialog_w - pad - confirm_w, y + dialog_h - pad - btn_h, confirm_w, btn_h);
+        let cancel_rect = Rect::new(x + pad, y + dialog_h - pad - btn_h, cancel_w, btn_h);
+        overlay.push_rounded([cancel_rect.x, cancel_rect.y, cancel_rect.w, cancel_rect.h], theme.button, theme.border_radius);
+        chrome_text(
+            overlay, atlas, input, theme, &request.cancel_label,
+            cancel_rect.x + 10.0, cancel_rect.y + (cancel_rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small, theme.text,
+        );
+        overlay.push_rounded([confirm_rect.x, confirm_rect.y, confirm_rect.w, confirm_rect.h], theme.accent, theme.border_radius);
+        chrome_text(
+            overlay, atlas, input, theme, &request.confirm_label,
+            confirm_rect.x + 10.0, confirm_rect.y + (confirm_rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small, theme.active_foreground,
+        );
+        input.register_hit(HitTarget {
+            rect: cancel_rect,
+            event: None,
+            control_id: Some(format!("shell.dialog.{}.cancel", request.id)),
+            kind: HitKind::Button,
+            drag_axis: None,
+            drag_data: None,
+        });
+        input.register_hit(HitTarget {
+            rect: confirm_rect,
+            event: Some(request.confirm_action.clone()),
+            control_id: Some(format!("shell.dialog.{}.confirm", request.id)),
+            kind: HitKind::Button,
+            drag_axis: None,
+            drag_data: None,
+        });
+        if chrome_clicked_this_frame() {
+            let (px, py) = (input.pointer_x, input.pointer_y);
+            if confirm_rect.contains(px, py) {
+                chrome_close_topmost_dialog();
+            } else if cancel_rect.contains(px, py) || !dialog_rect.contains(px, py) {
+                chrome_close_topmost_dialog();
+            }
+        }
+    }
+
+    /// 🎓 Paints the current introduction-tour step (item 3) — a full-screen veil plus an info box
+    /// anchored at the step's target when a concrete on-screen rect for it is known (`Navbar`/`Footer`
+    /// today; other `IntroductionAnchor` kinds fall back to a centered placement, an honest scope-down —
+    /// see the report) using `OverlayKind`'s `BelowAnchorWithFlip`/`Centered` placement rules.
+    fn render_chrome_tour(
+        &self,
+        overlay: &mut DrawList,
+        atlas: &mut FontAtlas,
+        input: &mut InputState<ActionDescriptor>,
+        theme: &Theme,
+        width: f32,
+        height: f32,
+    ) {
+        let Some(session) = self.session.as_ref() else {
+            CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
+            return;
+        };
+        let Some(intro) = session.app.introduction.as_ref() else {
+            return;
+        };
+        // 🎓 Auto-start once per app per session, the first frame this app_id is seen — `w3-prefs-i18n-themes`
+        // landed `read_stored_introduction_seen`/`write_stored_introduction_seen` (byte-identical to
+        // `ui/js/react/index.tsx`'s `readStoredIntroductionSeen`/`writeStoredIntroductionSeen`) explicitly for
+        // this wiring (see that function's own doc comment). `CHROME_TOUR_AUTO_CONSIDERED` guards against
+        // re-triggering every frame after the user skips/finishes within the same still-open session.
+        let already_considered = CHROME_TOUR_AUTO_CONSIDERED.with(|cell| cell.borrow().as_deref() == Some(session.app.id.as_str()));
+        if !already_considered {
+            CHROME_TOUR_AUTO_CONSIDERED.with(|cell| *cell.borrow_mut() = Some(session.app.id.clone()));
+            if !read_stored_introduction_seen(&session.app.id) && CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()) {
+                chrome_start_introduction();
+            }
+        }
+        let Some(step_index) = CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)) else {
+            return;
+        };
+        let Some(step) = intro.steps.get(step_index) else {
+            CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
+            return;
+        };
+        overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
+        let anchor_rect: Option<Rect> = match &step.anchor {
+            semio_framework_core::IntroductionAnchor::Navbar => Some(Rect::new(0.0, 0.0, width, theme.navbar_height)),
+            semio_framework_core::IntroductionAnchor::Footer => {
+                Some(Rect::new(0.0, height - theme.footer_height, width, theme.footer_height))
+            }
+            _ => None,
+        };
+        let box_w = 320.0_f32;
+        let box_h = 168.0_f32;
+        let scratch_tree = ui_wgpu::UiTree::new();
+        let (x, y) = match anchor_rect {
+            Some(rect) => ui_wgpu::resolve_overlay_placement(
+                &scratch_tree,
+                ui_wgpu::OverlayAnchor::Point { x: rect.x, y: rect.y + rect.h },
+                (box_w, box_h),
+                (width, height),
+                ui_wgpu::OverlayPlacement::BelowAnchorWithFlip,
+            ),
+            None => ui_wgpu::resolve_overlay_placement(
+                &scratch_tree,
+                ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
+                (box_w, box_h),
+                (width, height),
+                ui_wgpu::OverlayKind::Dialog.default_placement(),
+            ),
+        };
+        overlay.push_glass([x, y, box_w, box_h], theme.border_radius, GlassTier::Panel, theme);
+        let pad = theme.padding_standard;
+        chrome_text(overlay, atlas, input, theme, &step.title, x + pad, y + pad + theme.font_size_body, theme.font_size_body, theme.text);
+        chrome_text(
+            overlay, atlas, input, theme, &step.body,
+            x + pad, y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small,
+            theme.font_size_small, theme.text_muted,
+        );
+        chrome_text(
+            overlay, atlas, input, theme, &format!("{} / {}", step_index + 1, intro.steps.len()),
+            x + box_w - pad - 40.0, y + pad + theme.font_size_body, theme.font_size_small, theme.text_muted,
+        );
+        let btn_h = theme.control_height;
+        let is_last = step_index + 1 >= intro.steps.len();
+        let next_label = if is_last { "Done" } else { "Next" };
+        let next_rect = Rect::new(x + box_w - pad - 90.0, y + box_h - pad - btn_h, 90.0, btn_h);
+        let skip_rect = Rect::new(x + pad, y + box_h - pad - btn_h, 70.0, btn_h);
+        overlay.push_rounded([skip_rect.x, skip_rect.y, skip_rect.w, skip_rect.h], theme.button, theme.border_radius);
+        chrome_text(
+            overlay, atlas, input, theme, "Skip",
+            skip_rect.x + 10.0, skip_rect.y + (skip_rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small, theme.text,
+        );
+        overlay.push_rounded([next_rect.x, next_rect.y, next_rect.w, next_rect.h], theme.accent, theme.border_radius);
+        chrome_text(
+            overlay, atlas, input, theme, next_label,
+            next_rect.x + 10.0, next_rect.y + (next_rect.h + theme.font_size_small) * 0.5 - 1.0,
+            theme.font_size_small, theme.active_foreground,
+        );
+        input.register_hit(HitTarget {
+            rect: skip_rect,
+            event: None,
+            control_id: Some(format!("shell.tour.{}.skip", step.id)),
+            kind: HitKind::Button,
+            drag_axis: None,
+            drag_data: None,
+        });
+        input.register_hit(HitTarget {
+            rect: next_rect,
+            event: None,
+            control_id: Some(format!("shell.tour.{}.next", step.id)),
+            kind: HitKind::Button,
+            drag_axis: None,
+            drag_data: None,
+        });
+        if chrome_clicked_this_frame() {
+            let (px, py) = (input.pointer_x, input.pointer_y);
+            if next_rect.contains(px, py) {
+                if is_last {
+                    write_stored_introduction_seen(&session.app.id);
+                }
+                chrome_advance_introduction(intro.steps.len());
+            } else if skip_rect.contains(px, py) {
+                write_stored_introduction_seen(&session.app.id);
+                chrome_skip_introduction();
+            }
         }
     }
 
@@ -16567,12 +22166,13 @@ impl ShellState {
         }
         let folded = self.measures_folded.get(window_id).copied().unwrap_or(true);
         let expanded = self.measures_expanded.get(window_id).copied().unwrap_or(false);
+        let is_de = self.locale_id == "de";
         (|chrome: &mut DrawList, select_overlay: &mut Option<&mut DrawList>| {
             if folded {
                 let item = ChromeGroupItem {
                     control_id: "",
                     icon_id: Some("chevron-left"),
-                    label: Some("Window Options"),
+                    label: Some(shell_chrome_string("common.windowOptions", is_de)),
                     active: false,
                     disabled: false,
                     kind: HitKind::Button,
@@ -16628,7 +22228,11 @@ impl ShellState {
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
             chrome.push_solid([header.x, header.y, header.w, header.h], theme.navbar);
-            let focus_label = if expanded { "Unfocus" } else { "Focus" };
+            let focus_label = if expanded {
+                shell_chrome_string("common.unfocus", is_de)
+            } else {
+                shell_chrome_string("common.focus", is_de)
+            };
             let focus_item = ChromeGroupItem {
                 control_id: "shell.measures.focus",
                 icon_id: Some(if expanded { "minimize-2" } else { "maximize-2" }),
@@ -16640,7 +22244,7 @@ impl ShellState {
             let fold_item = ChromeGroupItem {
                 control_id: "shell.measures.fold",
                 icon_id: Some("chevron-right"),
-                label: Some("Window Options"),
+                label: Some(shell_chrome_string("common.windowOptions", is_de)),
                 active: false,
                 disabled: false,
                 kind: HitKind::Button,
@@ -17097,7 +22701,7 @@ impl ShellState {
                 self.render_engagement_input(
                     chrome, select_overlay, atlas, icons, input, theme,
                     Rect::new(rail.x + 8.0, y, rail.w - 16.0, theme.control_height * 2.0),
-                    window_id, input_spec, gpu,
+                    window_id, input_spec, engagement.possible_engagements.as_deref(), gpu,
                 );
                 y += theme.control_height * 2.0 + 8.0;
             }
@@ -17156,35 +22760,83 @@ impl ShellState {
         bounds: Rect,
         window_id: &str,
         spec: &WindowEngagementInput,
+        possibles: Option<&[ui_wgpu::WindowEngagementPossible]>,
         _gpu: &mut ui_wgpu::GpuContext,
     ) {
         let id = spec
             .id
             .clone()
             .unwrap_or_else(|| format!("engagement-input-{window_id}"));
-        let value = self
+        let committed_value = self
             .engagement_inputs
             .get(&id)
             .cloned()
             .or_else(|| spec.value.clone())
             .unwrap_or_default();
+        // 👻 Item 6: the live query for the ghost suffix is the in-progress edit buffer while focused
+        // (`InputState::text_buffer`, the same source the generic `Input` widget itself displays while
+        // focused), else the last-committed value — mirrors `engagementActiveInlineCompletion`'s own
+        // `query` input in `ui/js/react/index.tsx`.
+        let focused = input.focused_id.as_deref() == Some(id.as_str());
+        let live_query = if focused { input.text_buffer.clone() } else { committed_value.clone() };
         let node = ui_wgpu::widgets::WidgetNode::Input {
             id: id.clone(),
             input_kind: "text".into(),
-            value,
+            value: committed_value,
             placeholder: spec.placeholder.clone(),
             commit: None,
             on_change: spec.on_change.clone(),
         };
-        let scroll_offsets = &mut self.scroll_offsets;
-        let collapsed_sections = &mut self.collapsed_sections;
-        let open_selects = &mut self.open_selects;
-        let mut ctx = framework_widget_context(
-            draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
-            scroll_offsets, collapsed_sections, open_selects,
-                    None,
-                );
-        ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
+        {
+            let scroll_offsets = &mut self.scroll_offsets;
+            let collapsed_sections = &mut self.collapsed_sections;
+            let open_selects = &mut self.open_selects;
+            let mut ctx = framework_widget_context(
+                draw, overlay.as_deref_mut(), atlas, Some(icons), input, theme,
+                scroll_offsets, collapsed_sections, open_selects,
+                        None,
+                    );
+            ui_wgpu::widgets::render_widget(&node, bounds, &mut ctx);
+        }
+        // #region GhostTextCompletion (item 6: engagement inline-completion ghost text)
+        // 👻 Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) —
+        // the dimmed suffix drawn right after the live text, showing the top `possible_engagements`
+        // match's remaining characters.
+        let suffix = engagement_completion_suffix(&live_query, possibles);
+        if !suffix.is_empty() {
+            let text_padding = 8.0_f32;
+            let (query_w, _) = atlas.measure_text(&live_query, theme.font_size_small);
+            let ghost_x = bounds.x + text_padding + query_w;
+            let baseline_y = bounds.y + (theme.control_height + theme.font_size_small) * 0.5 - 1.0;
+            let mut ghost_color = theme.text_muted;
+            ghost_color.a *= 0.6;
+            chrome_text(draw, atlas, input, theme, &suffix, ghost_x, baseline_y, theme.font_size_small, ghost_color);
+            // 🖱️ Click-to-accept substitutes for the brief's "Tab or Right-arrow-at-end-of-input accepts"
+            // shortcut: this crate's keyboard queue (`InputState::pending_keys`/`queue_key`) is never
+            // populated anywhere in this codebase today (confirmed by grep across both crates) — real key
+            // events are handled directly inline in the off-limits `shell::ShellInput` region this wave,
+            // unreachable from here without editing it. See the report's honest scope-down.
+            let (suffix_w, _) = atlas.measure_text(&suffix, theme.font_size_small);
+            let ghost_rect = Rect::new(ghost_x, bounds.y, suffix_w.max(4.0), theme.control_height);
+            input.register_hit(HitTarget {
+                rect: ghost_rect,
+                event: None,
+                control_id: Some(format!("shell.engagement.input.{id}.ghost-accept")),
+                kind: HitKind::Generic,
+                drag_axis: None,
+                drag_data: None,
+            });
+            if let Some(accepted) = engagement_ghost_accept_on_click(
+                ghost_rect, input.pointer_x, input.pointer_y, chrome_clicked_this_frame(), &live_query, &suffix,
+            ) {
+                self.engagement_inputs.insert(id.clone(), accepted.clone());
+                if focused {
+                    input.text_buffer = accepted.clone();
+                    input.cursor_pos = accepted.len();
+                }
+            }
+        }
+        // #endregion
     }
 
     fn render_engagement_control(
@@ -17500,12 +23152,13 @@ impl ShellState {
             y += arg_h;
         }
         // Execute / Reset row.
+        let is_de = self.locale_id == "de";
         let staged = self.staged_map_for(window_id, &action.id);
         let executable = Self::resolved_execute_args(&action.args, &staged).is_some();
         let exec_item = ChromeGroupItem {
             control_id: "",
             icon_id: Some("play"),
-            label: Some("Execute"),
+            label: Some(shell_chrome_string("common.execute", is_de)),
             active: false,
             disabled: !(enabled && executable),
             kind: HitKind::Button,
@@ -17526,7 +23179,7 @@ impl ShellState {
         let reset_item = ChromeGroupItem {
             control_id: "",
             icon_id: Some("rotate-ccw"),
-            label: Some("Reset"),
+            label: Some(shell_chrome_string("common.reset", is_de)),
             active: false,
             disabled: false,
             kind: HitKind::Button,
@@ -17828,6 +23481,1162 @@ impl ShellState {
         });
     }
 }
+
+// #region 💾🎨🌐 UiPrefsThemesI18n
+// WP14: uiPrefs persistence (byte-identical localStorage keys to `ui/js/react/index.tsx`
+// :2100-2318 so both renderers share prefs on one browser origin), `SEMIO_LOCKED_*` pref locks
+// (mirrors `os-shell.tsx`'s `FrameworkOsLocks`), a named/custom theme registry + minimal draft
+// editor, and an EN/DE chrome-string bundle keyed to match `ui/js/react/index.tsx`'s
+// `uiChromeTranslationBundles` (:2898-3975). Additive-only new region: shares `shell::ShellChrome`
+// with `w3-overlays-chrome-polish` (tooltips/dialogs/tour/cursor/ribbon) — this region touches
+// neither; it only adds new items after the last existing method.
+
+//#region 🔑StorageKeys
+/// 🔑 Byte-identical to `UI_CHROME_APPEARANCE_STORAGE_KEY` (`ui/js/react/index.tsx:2132`).
+const UI_CHROME_APPEARANCE_STORAGE_KEY: &str = "ui.chrome.appearance";
+/// 🔑 Byte-identical to `UI_CHROME_LOCALE_STORAGE_KEY` (`ui/js/react/index.tsx:2167`).
+const UI_CHROME_LOCALE_STORAGE_KEY: &str = "ui.chrome.locale";
+/// 🔑 Byte-identical to `UI_CHROME_TERMINOLOGY_STORAGE_KEY` (`ui/js/react/index.tsx:2186`).
+const UI_CHROME_TERMINOLOGY_STORAGE_KEY: &str = "ui.chrome.terminology";
+/// 🔑 Byte-identical to `UI_CHROME_COMPACT_STORAGE_KEY` (`ui/js/react/index.tsx:2100`).
+const UI_CHROME_COMPACT_STORAGE_KEY: &str = "ui.chrome.compact";
+/// 🔑 Byte-identical to `UI_CHROME_EXPERTISE_STORAGE_KEY` (`ui/js/react/index.tsx:2115`).
+const UI_CHROME_EXPERTISE_STORAGE_KEY: &str = "ui.chrome.expertise";
+/// 🔑 Byte-identical to `UI_CHROME_LAYOUT_STORAGE_KEY` (`ui/js/react/index.tsx:2152`).
+const UI_CHROME_LAYOUT_STORAGE_KEY: &str = "ui.chrome.layout";
+/// 🔑 Byte-identical to `UI_CHROME_THEME_ID_STORAGE_KEY` (`ui/js/react/index.tsx:2201`).
+const UI_CHROME_THEME_ID_STORAGE_KEY: &str = "ui.chrome.theme";
+/// 🔑 Byte-identical to `UI_CUSTOM_THEMES_STORAGE_KEY` (`ui/js/react/index.tsx:2237`).
+const UI_CUSTOM_THEMES_STORAGE_KEY: &str = "ui.themes.custom";
+/// 🔑 Byte-identical to `UI_COMPUTE_WORKER_COUNT_STORAGE_KEY` (`ui/js/react/index.tsx:2267`).
+const UI_COMPUTE_WORKER_COUNT_STORAGE_KEY: &str = "ui.compute.workerCount";
+/// 🔑 Byte-identical to `UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX` (`ui/js/react/index.tsx:2305`).
+const UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX: &str = "ui.introduction.seen.";
+/// 🔑 Byte-identical to `UI_TERMINOLOGY_NATIVE` (`ui/js/react/index.tsx:2183`).
+const UI_TERMINOLOGY_NATIVE: &str = "native";
+//#endregion 🔑StorageKeys
+
+//#region 🗄️PrefsStore
+/// 🗄️ Cross-platform key-value persistence for uiPrefs. `web-sys`'s "Storage" feature isn't enabled
+/// on this crate (`Cargo.toml` is a reserved wave-3 choke point), so the wasm32 backend reaches
+/// `localStorage` via raw `js_sys::Reflect`/`js_sys::Function` calls against the already-enabled
+/// "Window" feature rather than requesting a new one. The native backend is a small JSON file next
+/// to no new dependency (`serde_json` is already a dep) — zero-touch across devcontainer/win/mac/linux.
+trait PrefsStore {
+    fn get(&self, key: &str) -> Option<String>;
+    fn set(&mut self, key: &str, value: &str);
+}
+
+#[cfg(target_arch = "wasm32")]
+struct WebLocalStorage {
+    storage: Option<wasm_bindgen::JsValue>,
+}
+
+#[cfg(target_arch = "wasm32")]
+impl WebLocalStorage {
+    fn new() -> Self {
+        let storage = web_sys::window().and_then(|window| {
+            js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")).ok()
+        });
+        Self { storage }
+    }
+
+    fn call(&self, method: &str, args: &[&str]) -> Option<wasm_bindgen::JsValue> {
+        use wasm_bindgen::JsCast;
+        let storage = self.storage.as_ref()?;
+        let func = js_sys::Reflect::get(storage, &wasm_bindgen::JsValue::from_str(method)).ok()?;
+        let func: js_sys::Function = func.dyn_into().ok()?;
+        match args.len() {
+            1 => func.call1(storage, &wasm_bindgen::JsValue::from_str(args[0])).ok(),
+            2 => func
+                .call2(storage, &wasm_bindgen::JsValue::from_str(args[0]), &wasm_bindgen::JsValue::from_str(args[1]))
+                .ok(),
+            _ => None,
+        }
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+impl PrefsStore for WebLocalStorage {
+    fn get(&self, key: &str) -> Option<String> {
+        self.call("getItem", &[key]).and_then(|value| value.as_string())
+    }
+
+    fn set(&mut self, key: &str, value: &str) {
+        self.call("setItem", &[key, value]);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+struct FilePrefsStore {
+    path: std::path::PathBuf,
+    cache: HashMap<String, String>,
+}
+
+/// 📁 Resolves the native prefs file path: `$SEMIO_PREFS_DIR/ui-prefs.json` when set, else a
+/// per-OS config-home fallback (XDG on linux/devcontainer, `%APPDATA%` on windows, `~/.config` on
+/// macOS) — no new dependency (no `dirs` crate), just `std::env`.
+#[cfg(not(target_arch = "wasm32"))]
+fn native_prefs_file_path() -> std::path::PathBuf {
+    if let Ok(dir) = std::env::var("SEMIO_PREFS_DIR") {
+        return std::path::PathBuf::from(dir).join("ui-prefs.json");
+    }
+    let base = std::env::var("XDG_CONFIG_HOME")
+        .or_else(|_| std::env::var("APPDATA"))
+        .or_else(|_| std::env::var("HOME").map(|home| format!("{home}/.config")))
+        .unwrap_or_else(|_| ".".to_string());
+    std::path::PathBuf::from(base).join("semio").join("ui-prefs.json")
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FilePrefsStore {
+    fn new() -> Self {
+        let path = native_prefs_file_path();
+        let cache = std::fs::read_to_string(&path)
+            .ok()
+            .and_then(|raw| serde_json::from_str::<HashMap<String, String>>(&raw).ok())
+            .unwrap_or_default();
+        Self { path, cache }
+    }
+
+    fn flush(&self) {
+        if let Some(parent) = self.path.parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Ok(json) = serde_json::to_string_pretty(&self.cache) {
+            let _ = std::fs::write(&self.path, json);
+        }
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl PrefsStore for FilePrefsStore {
+    fn get(&self, key: &str) -> Option<String> {
+        self.cache.get(key).cloned()
+    }
+
+    fn set(&mut self, key: &str, value: &str) {
+        self.cache.insert(key.to_string(), value.to_string());
+        self.flush();
+    }
+}
+
+thread_local! {
+    #[cfg(target_arch = "wasm32")]
+    static PREFS_STORE: std::cell::RefCell<WebLocalStorage> = std::cell::RefCell::new(WebLocalStorage::new());
+    #[cfg(not(target_arch = "wasm32"))]
+    static PREFS_STORE: std::cell::RefCell<FilePrefsStore> = std::cell::RefCell::new(FilePrefsStore::new());
+}
+
+fn prefs_get(key: &str) -> Option<String> {
+    PREFS_STORE.with(|store| store.borrow().get(key))
+}
+
+fn prefs_set(key: &str, value: &str) {
+    PREFS_STORE.with(|store| store.borrow_mut().set(key, value));
+}
+//#endregion 🗄️PrefsStore
+
+//#region 🔒PrefLocks
+/// 🔒 `SEMIO_LOCKED_*` env-driven pref locks — mirrors `os-shell.tsx`'s `FrameworkOsLocks`
+/// (`:372-378`, read via `VITE_SEMIO_LOCKED_*` in `framework/product/os/dev/js/index.ts:19-23`):
+/// appearance/locale/terminology/themeId may be locked; compact/expertise/layout/customThemes
+/// deliberately stay unlocked in React too. A locked pref skips its localStorage write. Native-only
+/// in practice (wasm32-unknown-unknown has no process env at runtime, so this is always empty
+/// there — kiosk/demo locking is a native `semio-wgpu-native` deployment concern).
+#[derive(Clone, Debug, Default)]
+struct ShellPrefLocks {
+    appearance: Option<String>,
+    locale: Option<String>,
+    terminology: Option<String>,
+    theme_id: Option<String>,
+}
+
+fn env_lock(name: &str) -> Option<String> {
+    std::env::var(name).ok().filter(|value| !value.is_empty())
+}
+
+fn shell_pref_locks() -> ShellPrefLocks {
+    ShellPrefLocks {
+        appearance: env_lock("SEMIO_LOCKED_APPEARANCE"),
+        locale: env_lock("SEMIO_LOCKED_LOCALE"),
+        terminology: env_lock("SEMIO_LOCKED_TERMINOLOGY"),
+        theme_id: env_lock("SEMIO_LOCKED_THEME"),
+    }
+}
+//#endregion 🔒PrefLocks
+
+//#region 🎨ThemeRegistry
+/// 🎨 A user-defined theme's color overrides for one appearance — deliberately scoped down from
+/// React's full `UiTheme` (colors/spacing/fontStacks/canvasFonts/strokes/radii/opacities/metrics
+/// per :ui/styling/js/theme.ts`) to the handful of paints `ui_wgpu::Theme` actually varies by
+/// chrome palette (see `ui/wgpu/rs/lib.rs`'s `from_chrome`, read-only reference). A full token-level
+/// draft editor would require porting `resolveThemePaint`'s token/mix resolver wholesale; this
+/// covers "load/mutate/save a custom theme's token values programmatically" per the WP14 scope note.
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+struct ChromeColorOverrides {
+    background: Option<String>,
+    panel: Option<String>,
+    navbar: Option<String>,
+    text: Option<String>,
+    accent: Option<String>,
+}
+
+/// 🎨 A persisted custom theme: `base` is a builtin id ("semio" | "mono") the overrides layer onto.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CustomChromeTheme {
+    id: String,
+    label: String,
+    base: String,
+    #[serde(default)]
+    light: ChromeColorOverrides,
+    #[serde(default)]
+    dark: ChromeColorOverrides,
+}
+
+#[derive(Clone, Default)]
+struct ChromePrefsState {
+    ui_layout: String,
+    theme_id: String,
+    custom_themes: HashMap<String, String>,
+    draft_theme: Option<String>,
+    worker_count: u32,
+}
+
+thread_local! {
+    static CHROME_PREFS: std::cell::RefCell<Option<ChromePrefsState>> = std::cell::RefCell::new(None);
+}
+
+fn default_compute_worker_count() -> u32 {
+    std::thread::available_parallelism().map(|n| n.get() as u32).unwrap_or(1)
+}
+
+fn load_chrome_prefs() -> ChromePrefsState {
+    let ui_layout = if prefs_get(UI_CHROME_LAYOUT_STORAGE_KEY).as_deref() == Some("tablet") {
+        "tablet".to_string()
+    } else {
+        "desktop".to_string()
+    };
+    let theme_id = prefs_get(UI_CHROME_THEME_ID_STORAGE_KEY).unwrap_or_else(|| "semio".to_string());
+    let custom_themes = prefs_get(UI_CUSTOM_THEMES_STORAGE_KEY)
+        .and_then(|raw| serde_json::from_str::<HashMap<String, serde_json::Value>>(&raw).ok())
+        .map(|map| map.into_iter().map(|(id, value)| (id, value.to_string())).collect())
+        .unwrap_or_default();
+    let worker_count = prefs_get(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY)
+        .and_then(|raw| raw.parse::<u32>().ok())
+        .filter(|count| *count >= 1)
+        .unwrap_or_else(default_compute_worker_count);
+    ChromePrefsState { ui_layout, theme_id, custom_themes, draft_theme: None, worker_count }
+}
+
+fn with_chrome_prefs<R>(f: impl FnOnce(&mut ChromePrefsState) -> R) -> R {
+    CHROME_PREFS.with(|cell| {
+        let mut guard = cell.borrow_mut();
+        if guard.is_none() {
+            *guard = Some(load_chrome_prefs());
+        }
+        f(guard.as_mut().expect("chrome prefs just initialized"))
+    })
+}
+
+pub(crate) fn active_theme_id() -> String {
+    with_chrome_prefs(|prefs| prefs.theme_id.clone())
+}
+
+pub(crate) fn set_active_theme_id(id: &str) {
+    with_chrome_prefs(|prefs| prefs.theme_id = id.to_string());
+}
+
+pub(crate) fn active_ui_layout() -> String {
+    with_chrome_prefs(|prefs| prefs.ui_layout.clone())
+}
+
+pub(crate) fn set_active_ui_layout(layout: &str) {
+    let value = if layout == "tablet" { "tablet" } else { "desktop" };
+    with_chrome_prefs(|prefs| prefs.ui_layout = value.to_string());
+}
+
+pub(crate) fn active_worker_count() -> u32 {
+    with_chrome_prefs(|prefs| prefs.worker_count)
+}
+
+pub(crate) fn set_active_worker_count(count: u32) {
+    with_chrome_prefs(|prefs| prefs.worker_count = count.max(1));
+}
+
+pub(crate) fn custom_theme_ids() -> Vec<String> {
+    with_chrome_prefs(|prefs| prefs.custom_themes.keys().cloned().collect())
+}
+
+/// 🎨 Starts (or replaces) the in-memory draft for a new custom theme cloned from `base_id`.
+pub(crate) fn begin_custom_theme_draft(base_id: &str, label: &str, slug: &str) -> String {
+    let id = format!("custom.{slug}");
+    let draft = CustomChromeTheme {
+        id: id.clone(),
+        label: label.to_string(),
+        base: base_id.to_string(),
+        light: ChromeColorOverrides::default(),
+        dark: ChromeColorOverrides::default(),
+    };
+    with_chrome_prefs(|prefs| prefs.draft_theme = serde_json::to_string(&draft).ok());
+    id
+}
+
+/// 🎨 Mutates one paint slot (`"background" | "panel" | "navbar" | "text" | "accent"`) of the
+/// in-progress draft for one appearance (`"light" | "dark"`). Returns `false` if there is no draft
+/// or `field` is unknown.
+pub(crate) fn set_draft_theme_color(appearance: &str, field: &str, hex: &str) -> bool {
+    with_chrome_prefs(|prefs| {
+        let Some(raw) = prefs.draft_theme.clone() else { return false };
+        let Ok(mut draft) = serde_json::from_str::<CustomChromeTheme>(&raw) else { return false };
+        let overrides = if appearance == "dark" { &mut draft.dark } else { &mut draft.light };
+        let slot = match field {
+            "background" => &mut overrides.background,
+            "panel" => &mut overrides.panel,
+            "navbar" => &mut overrides.navbar,
+            "text" => &mut overrides.text,
+            "accent" => &mut overrides.accent,
+            _ => return false,
+        };
+        *slot = Some(hex.to_string());
+        prefs.draft_theme = serde_json::to_string(&draft).ok();
+        true
+    })
+}
+
+/// 🎨 Commits the in-progress draft into the custom-theme registry and activates it. Returns the
+/// new theme id, or `None` if there was no draft.
+pub(crate) fn save_draft_theme() -> Option<String> {
+    with_chrome_prefs(|prefs| {
+        let raw = prefs.draft_theme.take()?;
+        let draft: CustomChromeTheme = serde_json::from_str(&raw).ok()?;
+        let id = draft.id.clone();
+        prefs.custom_themes.insert(id.clone(), raw);
+        prefs.theme_id = id.clone();
+        Some(id)
+    })
+}
+
+pub(crate) fn discard_draft_theme() {
+    with_chrome_prefs(|prefs| prefs.draft_theme = None);
+}
+
+pub(crate) fn delete_custom_theme(id: &str) {
+    with_chrome_prefs(|prefs| {
+        prefs.custom_themes.remove(id);
+        if prefs.theme_id == id {
+            prefs.theme_id = "semio".to_string();
+        }
+    });
+}
+
+fn hex_to_rgba(hex: &str, fallback: Rgba) -> Rgba {
+    let s = hex.trim_start_matches('#');
+    if s.len() != 6 {
+        return fallback;
+    }
+    match (u8::from_str_radix(&s[0..2], 16), u8::from_str_radix(&s[2..4], 16), u8::from_str_radix(&s[4..6], 16)) {
+        (Ok(r), Ok(g), Ok(b)) => Rgba::from_srgb8(r, g, b, 255),
+        _ => fallback,
+    }
+}
+
+fn apply_chrome_color_overrides(base: &Theme, overrides: &ChromeColorOverrides) -> Theme {
+    let mut theme = *base;
+    if let Some(hex) = &overrides.background {
+        theme.background = hex_to_rgba(hex, theme.background);
+        theme.canvas_clear = theme.background;
+        theme.input_bg = theme.background;
+    }
+    if let Some(hex) = &overrides.panel {
+        theme.panel = hex_to_rgba(hex, theme.panel);
+    }
+    if let Some(hex) = &overrides.navbar {
+        theme.navbar = hex_to_rgba(hex, theme.navbar);
+        theme.button = theme.navbar;
+    }
+    if let Some(hex) = &overrides.text {
+        theme.text = hex_to_rgba(hex, theme.text);
+    }
+    if let Some(hex) = &overrides.accent {
+        theme.accent = hex_to_rgba(hex, theme.accent);
+        theme.selected = theme.accent;
+        theme.focus_ring = theme.accent.with_alpha(0.6);
+    }
+    theme
+}
+
+/// 🎨 The "mono" premade's real chrome palette (`ui/styling/theme/mono.theme.json`), resolved once
+/// via `ui/styling/js/theme.ts`'s own `resolveThemeAppearancePalettes` (ticket scratchpad
+/// `resolve-mono-chrome.ts`) and hand-ported here as `Rgba::from_srgb8` calls: this crate has no
+/// dependency on the `ui_styling` Rust codegen crate (only `ui_wgpu` does, and its `ChromePalette`/
+/// `from_chrome` aren't `pub`), and `Cargo.toml` is a reserved wave-3 choke point, so a generated
+/// `MONO_LIGHT`/`MONO_DARK` constant isn't reachable this wave — these are real resolved values, not
+/// invented ones. Metrics/fonts/checker/diagram/error/focus-ring-alpha etc. are shared with "semio"
+/// via `Theme::light()/dark()`'s struct-update base (mono only recolors chrome paints).
+fn mono_theme(dark: bool) -> Theme {
+    let base = if dark { Theme::dark() } else { Theme::light() };
+    let (canvas, panel, window, foreground, accent, active_hover, hover_interactive_fill, border_normal, border_emphasized, temporary) = if dark {
+        (
+            Rgba::from_srgb8(25, 25, 25, 255),
+            Rgba::from_srgb8(40, 40, 40, 255),
+            Rgba::from_srgb8(21, 21, 21, 255),
+            Rgba::from_srgb8(243, 243, 243, 255),
+            Rgba::from_srgb8(140, 140, 140, 255),
+            Rgba::from_srgb8(126, 126, 126, 255),
+            Rgba::from_srgb8(128, 128, 128, 255),
+            Rgba::from_srgb8(128, 128, 128, 255),
+            Rgba::from_srgb8(243, 243, 243, 255),
+            Rgba::from_srgb8(47, 47, 47, 255),
+        )
+    } else {
+        (
+            Rgba::from_srgb8(236, 236, 236, 255),
+            Rgba::from_srgb8(199, 199, 199, 255),
+            Rgba::from_srgb8(232, 232, 232, 255),
+            Rgba::from_srgb8(14, 14, 14, 255),
+            Rgba::from_srgb8(140, 140, 140, 255),
+            Rgba::from_srgb8(126, 126, 126, 255),
+            Rgba::from_srgb8(128, 128, 128, 255),
+            Rgba::from_srgb8(128, 128, 128, 255),
+            Rgba::from_srgb8(14, 14, 14, 255),
+            Rgba::from_srgb8(154, 154, 154, 255),
+        )
+    };
+    Theme {
+        background: canvas,
+        panel,
+        panel_border: border_normal,
+        navbar: window,
+        text: foreground,
+        text_muted: hover_interactive_fill,
+        accent,
+        accent_hover: active_hover,
+        active_foreground: foreground,
+        button: window,
+        button_hover: hover_interactive_fill,
+        input_bg: canvas,
+        separator: border_normal,
+        selected: accent,
+        canvas_clear: canvas,
+        temporary,
+        row_hover: hover_interactive_fill,
+        border_normal,
+        border_emphasized,
+        text_element: hover_interactive_fill,
+        focus_ring: accent.with_alpha(0.6),
+        ..base
+    }
+}
+
+fn custom_theme_definition(custom_id: &str) -> Option<CustomChromeTheme> {
+    let raw = with_chrome_prefs(|prefs| prefs.custom_themes.get(custom_id).cloned())?;
+    serde_json::from_str(&raw).ok()
+}
+
+/// 🎨 Extends `resolve_theme`'s system/light/dark-only resolution with named built-ins ("semio",
+/// "mono") and persisted custom themes (`"custom.<slug>"`, whose color overrides layer onto their
+/// declared `base`). The `frame()` loop's single `resolve_theme(...)` call site now goes through
+/// this instead, keyed by `active_theme_id()`.
+pub fn resolve_theme_for_ids(theme_id: &str, appearance_id: &str) -> Theme {
+    match theme_id {
+        "" | "semio" => crate::resolve_theme(appearance_id),
+        "mono" => mono_theme(crate::appearance_is_dark(appearance_id)),
+        custom_id if custom_id.starts_with("custom.") => match custom_theme_definition(custom_id) {
+            Some(custom) => {
+                let base = resolve_theme_for_ids(&custom.base, appearance_id);
+                let overrides = if crate::appearance_is_dark(appearance_id) { &custom.dark } else { &custom.light };
+                apply_chrome_color_overrides(&base, overrides)
+            }
+            None => crate::resolve_theme(appearance_id),
+        },
+        _ => crate::resolve_theme(appearance_id),
+    }
+}
+//#endregion 🎨ThemeRegistry
+
+//#region 🗣️ChromeI18n
+/// 🗣️ EN/DE lookup for a curated subset of previously-hardcoded chrome strings, byte-identical to
+/// `ui/js/react/index.tsx`'s `uiChromeTranslationBundles.{en,de}.translation.ui.*` "normal" labels
+/// (`:2898-3975`) at the dotted paths named below (e.g. `"display.tab.windows"` ==
+/// `ui.display.tab.windows`). Unknown keys fall back to the key itself rather than inventing text.
+fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
+    match (key, is_de) {
+        ("display.tab.windows", false) => "Windows",
+        ("display.tab.windows", true) => "Fenster",
+        ("display.tab.layout", false) => "Layout",
+        ("display.tab.layout", true) => "Layout",
+        ("settings.tab.general", false) => "General",
+        ("settings.tab.general", true) => "Allgemein",
+        ("fullscreen.toggle", false) => "Fullscreen",
+        ("fullscreen.toggle", true) => "Vollbild",
+        ("panelToggle.display", false) => "Display",
+        ("panelToggle.display", true) => "Anzeige",
+        ("panelToggle.workbench", false) => "Workbench",
+        ("panelToggle.workbench", true) => "Arbeitsbereich",
+        ("panelToggle.details", false) => "Details",
+        ("panelToggle.details", true) => "Details",
+        ("panelToggle.settings", false) => "Settings",
+        ("panelToggle.settings", true) => "Einstellungen",
+        ("common.home", false) => "Home",
+        ("common.home", true) => "Startseite",
+        ("common.windowOptions", false) => "Window Options",
+        ("common.windowOptions", true) => "Fensteroptionen",
+        ("common.focus", false) => "Focus",
+        ("common.focus", true) => "Fokussieren",
+        ("common.unfocus", false) => "Unfocus",
+        ("common.unfocus", true) => "Fokus aufheben",
+        ("common.execute", false) => "Execute",
+        ("common.execute", true) => "Ausfuehren",
+        ("common.reset", false) => "Reset",
+        ("common.reset", true) => "Zuruecksetzen",
+        (other, _) => other,
+    }
+}
+
+/// 🗣️ `id`'s locale-aware label via `ui_wgpu::framework_panel_tab_label` (the one existing
+/// locale-aware string helper, per a prior wave), falling back to `fallback` for app-declared ids.
+fn shell_panel_tab_label(id: &str, fallback: &'static str, is_de: bool) -> String {
+    ui_wgpu::framework_panel_tab_label(id, is_de).unwrap_or(fallback).to_string()
+}
+
+/// 🎓 Reads whether `app_id`'s introduction has already been shown, byte-identical semantics to
+/// `readStoredIntroductionSeen` (`ui/js/react/index.tsx:2309`). Persistence primitive only — wiring
+/// this into the actual onboarding-tour auto-start trigger is `w3-overlays-chrome-polish`'s scope.
+pub(crate) fn read_stored_introduction_seen(app_id: &str) -> bool {
+    prefs_get(&format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}")).as_deref() == Some("true")
+}
+
+/// 🎓 Marks `app_id`'s introduction as shown, byte-identical semantics to `writeStoredIntroductionSeen`
+/// (`ui/js/react/index.tsx:2315`).
+pub(crate) fn write_stored_introduction_seen(app_id: &str) {
+    prefs_set(&format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}{app_id}"), "true");
+}
+//#endregion 🗣️ChromeI18n
+
+//#region 💾PrefsSync
+#[derive(Clone, PartialEq)]
+struct UiPrefsSnapshot {
+    appearance_id: String,
+    locale_id: String,
+    terminology_id: String,
+    compact_mode: bool,
+    expertise: String,
+    theme_id: String,
+    ui_layout: String,
+    worker_count: u32,
+}
+
+impl UiPrefsSnapshot {
+    fn capture(state: &ShellState) -> Self {
+        Self {
+            appearance_id: state.appearance_id.clone(),
+            locale_id: state.locale_id.clone(),
+            terminology_id: state.terminology_id.clone(),
+            compact_mode: state.compact_mode,
+            expertise: state.expertise.clone(),
+            theme_id: active_theme_id(),
+            ui_layout: active_ui_layout(),
+            worker_count: active_worker_count(),
+        }
+    }
+}
+
+thread_local! {
+    static UI_PREFS_LOADED: std::cell::RefCell<bool> = std::cell::RefCell::new(false);
+    static UI_PREFS_LAST_SYNCED: std::cell::RefCell<Option<UiPrefsSnapshot>> = std::cell::RefCell::new(None);
+}
+
+fn persist_custom_themes() {
+    let themes = with_chrome_prefs(|prefs| prefs.custom_themes.clone());
+    let as_values: HashMap<String, serde_json::Value> = themes
+        .into_iter()
+        .map(|(id, raw)| (id, serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null)))
+        .collect();
+    if let Ok(json) = serde_json::to_string(&as_values) {
+        prefs_set(UI_CUSTOM_THEMES_STORAGE_KEY, &json);
+    }
+}
+
+impl ShellState {
+    /// 💾 Loads persisted uiPrefs into `self` exactly once per process, mirroring `os-shell.tsx`'s
+    /// boot-time `locks.appearance ?? readStoredUiChromeAppearance()` fallback chain (`:862-868`).
+    /// A locked pref (`SEMIO_LOCKED_*`) wins over storage, matching `resolveShellLocks`.
+    fn load_ui_prefs_once(&mut self) {
+        let already_loaded = UI_PREFS_LOADED.with(|cell| *cell.borrow());
+        if already_loaded {
+            return;
+        }
+        UI_PREFS_LOADED.with(|cell| *cell.borrow_mut() = true);
+        let locks = shell_pref_locks();
+        self.appearance_id = locks.appearance.clone().unwrap_or_else(|| {
+            prefs_get(UI_CHROME_APPEARANCE_STORAGE_KEY)
+                .filter(|value| value == "light" || value == "dark" || value == "system")
+                .unwrap_or_else(|| "system".to_string())
+        });
+        self.locale_id = locks.locale.clone().unwrap_or_else(|| {
+            prefs_get(UI_CHROME_LOCALE_STORAGE_KEY)
+                .filter(|value| value == "en" || value == "de")
+                .unwrap_or_else(|| "en".to_string())
+        });
+        self.terminology_id = locks.terminology.clone().unwrap_or_else(|| {
+            prefs_get(UI_CHROME_TERMINOLOGY_STORAGE_KEY).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string())
+        });
+        self.compact_mode = prefs_get(UI_CHROME_COMPACT_STORAGE_KEY).as_deref() == Some("true");
+        self.expertise = prefs_get(UI_CHROME_EXPERTISE_STORAGE_KEY)
+            .filter(|value| value == "beginner" || value == "normal" || value == "expert")
+            .unwrap_or_else(|| "normal".to_string());
+        with_chrome_prefs(|_| {}); // ensures CHROME_PREFS is initialized from storage before any lock override
+        if let Some(locked_theme) = &locks.theme_id {
+            set_active_theme_id(locked_theme);
+        }
+        UI_PREFS_LAST_SYNCED.with(|cell| *cell.borrow_mut() = Some(UiPrefsSnapshot::capture(self)));
+    }
+
+    /// 💾 Writes any changed uiPrefs field to the store (skipping locked ones), mirroring
+    /// `os-shell.tsx`'s persistence `useEffect` (`:3477-3491`): one combined-dependency effect that
+    /// rewrites every non-locked pref whenever any of them changes, not a per-field diff.
+    fn persist_ui_prefs_if_changed(&self) {
+        let snapshot = UiPrefsSnapshot::capture(self);
+        let changed = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().as_ref() != Some(&snapshot));
+        if !changed {
+            return;
+        }
+        let locks = shell_pref_locks();
+        if locks.appearance.is_none() {
+            prefs_set(UI_CHROME_APPEARANCE_STORAGE_KEY, &snapshot.appearance_id);
+        }
+        prefs_set(UI_CHROME_COMPACT_STORAGE_KEY, if snapshot.compact_mode { "true" } else { "false" });
+        prefs_set(UI_CHROME_EXPERTISE_STORAGE_KEY, &snapshot.expertise);
+        if locks.locale.is_none() {
+            prefs_set(UI_CHROME_LOCALE_STORAGE_KEY, &snapshot.locale_id);
+        }
+        if locks.terminology.is_none() {
+            prefs_set(UI_CHROME_TERMINOLOGY_STORAGE_KEY, &snapshot.terminology_id);
+        }
+        if locks.theme_id.is_none() {
+            prefs_set(UI_CHROME_THEME_ID_STORAGE_KEY, &snapshot.theme_id);
+        }
+        prefs_set(UI_CHROME_LAYOUT_STORAGE_KEY, &snapshot.ui_layout);
+        prefs_set(UI_COMPUTE_WORKER_COUNT_STORAGE_KEY, &snapshot.worker_count.to_string());
+        persist_custom_themes();
+        UI_PREFS_LAST_SYNCED.with(|cell| *cell.borrow_mut() = Some(snapshot));
+    }
+}
+//#endregion 💾PrefsSync
+
+//#region 🧪UiPrefsThemesI18nTests
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod ui_prefs_themes_i18n_tests {
+    use super::*;
+
+    /// 🧪 A `FilePrefsStore` constructed against a scratch path (never through the thread-local
+    /// singleton, so this doesn't depend on `SEMIO_PREFS_DIR`/`$HOME` or risk touching a real prefs
+    /// file) round-trips a value through an actual disk write + independent re-read.
+    #[test]
+    fn file_prefs_store_round_trips_through_disk() {
+        let dir = std::env::temp_dir().join(format!(
+            "semio-wp14-prefs-test-{}-{:?}",
+            std::process::id(),
+            std::thread::current().id()
+        ));
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join("ui-prefs.json");
+        let _ = std::fs::remove_file(&path);
+        let mut store = FilePrefsStore { path: path.clone(), cache: HashMap::new() };
+        assert_eq!(store.get(UI_CHROME_APPEARANCE_STORAGE_KEY), None);
+        store.set(UI_CHROME_APPEARANCE_STORAGE_KEY, "dark");
+        assert_eq!(store.get(UI_CHROME_APPEARANCE_STORAGE_KEY), Some("dark".to_string()));
+        let raw = std::fs::read_to_string(&path).expect("flush() must write the prefs file");
+        let reloaded: HashMap<String, String> = serde_json::from_str(&raw).expect("valid JSON");
+        assert_eq!(reloaded.get(UI_CHROME_APPEARANCE_STORAGE_KEY), Some(&"dark".to_string()));
+        let _ = std::fs::remove_file(&path);
+    }
+
+    /// 🧪 `env_lock` treats an empty-string env value the same as unset (matches
+    /// `FrameworkOsLocks`' optional-string semantics: an empty `VITE_SEMIO_LOCKED_*` never locks).
+    #[test]
+    fn env_lock_ignores_unset_and_empty() {
+        assert_eq!(env_lock("SEMIO_WP14_TEST_UNSET_VAR"), None);
+        unsafe {
+            std::env::set_var("SEMIO_WP14_TEST_EMPTY_VAR", "");
+        }
+        assert_eq!(env_lock("SEMIO_WP14_TEST_EMPTY_VAR"), None);
+        unsafe {
+            std::env::set_var("SEMIO_WP14_TEST_EMPTY_VAR", "en");
+        }
+        assert_eq!(env_lock("SEMIO_WP14_TEST_EMPTY_VAR"), Some("en".to_string()));
+        unsafe {
+            std::env::remove_var("SEMIO_WP14_TEST_EMPTY_VAR");
+        }
+    }
+
+    /// 🧪 `shell_pref_locks` wires `SEMIO_LOCKED_*` onto the four lockable fields — byte-identical
+    /// env var names to `framework/product/os/dev/js/index.ts:19-23`'s `VITE_SEMIO_LOCKED_*` reads.
+    #[test]
+    fn shell_pref_locks_reads_the_four_lockable_envs() {
+        unsafe {
+            std::env::set_var("SEMIO_LOCKED_APPEARANCE", "dark");
+            std::env::set_var("SEMIO_LOCKED_LOCALE", "de");
+            std::env::set_var("SEMIO_LOCKED_TERMINOLOGY", "reuse");
+            std::env::set_var("SEMIO_LOCKED_THEME", "mono");
+        }
+        let locks = shell_pref_locks();
+        assert_eq!(locks.appearance.as_deref(), Some("dark"));
+        assert_eq!(locks.locale.as_deref(), Some("de"));
+        assert_eq!(locks.terminology.as_deref(), Some("reuse"));
+        assert_eq!(locks.theme_id.as_deref(), Some("mono"));
+        unsafe {
+            std::env::remove_var("SEMIO_LOCKED_APPEARANCE");
+            std::env::remove_var("SEMIO_LOCKED_LOCALE");
+            std::env::remove_var("SEMIO_LOCKED_TERMINOLOGY");
+            std::env::remove_var("SEMIO_LOCKED_THEME");
+        }
+        let unlocked = shell_pref_locks();
+        assert_eq!(unlocked.appearance, None);
+        assert_eq!(unlocked.locale, None);
+    }
+
+    /// 🧪 A locked appearance wins over storage at load time — mirrors `os-shell.tsx:862`'s
+    /// `locks.appearance ?? readStoredUiChromeAppearance()`. Deliberately backend-independent (never
+    /// asserts on storage's own contents, since `PREFS_STORE`'s thread-local can be seeded by an
+    /// earlier test reusing this worker thread) — only that a lock always overrides whatever loads.
+    #[test]
+    fn load_ui_prefs_once_prefers_a_lock_over_storage() {
+        UI_PREFS_LOADED.with(|cell| *cell.borrow_mut() = false);
+        UI_PREFS_LAST_SYNCED.with(|cell| *cell.borrow_mut() = None);
+        unsafe {
+            std::env::set_var("SEMIO_LOCKED_APPEARANCE", "dark");
+        }
+        let mut state = ShellState::new(Vec::new(), String::new());
+        state.load_ui_prefs_once();
+        assert_eq!(state.appearance_id, "dark");
+        // The "load once" gate: mutating the field and calling load again must not reset it.
+        state.appearance_id = "light".to_string();
+        state.load_ui_prefs_once();
+        assert_eq!(state.appearance_id, "light");
+        unsafe {
+            std::env::remove_var("SEMIO_LOCKED_APPEARANCE");
+        }
+    }
+
+    /// 🧪 `persist_ui_prefs_if_changed`'s dirty-check: a second call with no field changes since the
+    /// last sync must be a cheap no-op (mirrors the combined-dependency-array `useEffect` at
+    /// `os-shell.tsx:3477-3491`, which only re-runs when one of its deps actually changed).
+    #[test]
+    fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
+        UI_PREFS_LOADED.with(|cell| *cell.borrow_mut() = false);
+        UI_PREFS_LAST_SYNCED.with(|cell| *cell.borrow_mut() = None);
+        let mut state = ShellState::new(Vec::new(), String::new());
+        state.load_ui_prefs_once();
+        let after_load = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
+        assert!(after_load.is_some());
+        state.persist_ui_prefs_if_changed();
+        let after_noop_persist = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
+        assert!(after_load == after_noop_persist);
+        state.compact_mode = !state.compact_mode;
+        state.persist_ui_prefs_if_changed();
+        let after_change = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
+        assert!(after_change != after_noop_persist);
+    }
+
+    /// 🧪 `resolve_theme_for_ids("semio", _)` is exactly `resolve_theme` (the pre-WP14 behavior),
+    /// and `"mono"` resolves to a *different* real palette (not a copy of semio's).
+    #[test]
+    fn resolve_theme_for_ids_semio_and_mono_differ() {
+        let semio_dark = resolve_theme_for_ids("semio", "dark");
+        let plain_dark = crate::resolve_theme("dark");
+        assert_eq!(semio_dark.background, plain_dark.background);
+        let mono_dark = resolve_theme_for_ids("mono", "dark");
+        assert_ne!(mono_dark.background, semio_dark.background);
+        assert_eq!(mono_dark.background, Rgba::from_srgb8(25, 25, 25, 255));
+        // Metrics are shared with the base theme (mono only recolors chrome paints).
+        assert_eq!(mono_dark.navbar_height, semio_dark.navbar_height);
+    }
+
+    /// 🧪 A hex color override is parsed and applied; an invalid hex falls back to the base color
+    /// rather than panicking or silently corrupting the theme.
+    #[test]
+    fn hex_to_rgba_parses_valid_and_falls_back_on_invalid() {
+        let fallback = Rgba::new(0.1, 0.2, 0.3, 1.0);
+        assert_eq!(hex_to_rgba("#ff0000", fallback), Rgba::from_srgb8(255, 0, 0, 255));
+        assert_eq!(hex_to_rgba("ff0000", fallback), Rgba::from_srgb8(255, 0, 0, 255));
+        assert_eq!(hex_to_rgba("not-a-color", fallback), fallback);
+        assert_eq!(hex_to_rgba("#fff", fallback), fallback);
+    }
+
+    /// 🧪 End-to-end custom theme draft flow: begin → mutate → save → resolves with the override
+    /// applied → delete falls back to "semio". Explicitly seeds `active_theme_id` rather than
+    /// asserting on whatever `load_chrome_prefs` found on disk, so this is independent of any other
+    /// test's writes on a reused worker thread.
+    #[test]
+    fn custom_theme_draft_round_trips_and_deletes() {
+        set_active_theme_id("semio");
+        let id = begin_custom_theme_draft("semio", "My Theme", "wp14-test");
+        assert_eq!(id, "custom.wp14-test");
+        assert!(set_draft_theme_color("light", "background", "#112233"));
+        assert!(!set_draft_theme_color("light", "not-a-field", "#112233"));
+        let saved_id = save_draft_theme().expect("a draft was in progress");
+        assert_eq!(saved_id, id);
+        assert_eq!(active_theme_id(), id);
+        assert!(custom_theme_ids().contains(&id));
+        let resolved = resolve_theme_for_ids(&id, "light");
+        assert_eq!(resolved.background, Rgba::from_srgb8(0x11, 0x22, 0x33, 255));
+        // Untouched fields still fall through to the "semio" base.
+        assert_eq!(resolved.navbar_height, resolve_theme_for_ids("semio", "light").navbar_height);
+        delete_custom_theme(&id);
+        assert_eq!(active_theme_id(), "semio");
+        assert!(!custom_theme_ids().contains(&id));
+    }
+
+    /// 🧪 `discard_draft_theme` clears an in-progress draft without touching the saved registry.
+    #[test]
+    fn discard_draft_theme_clears_in_progress_draft() {
+        let id = begin_custom_theme_draft("mono", "Discard Me", "wp14-discard");
+        assert!(set_draft_theme_color("dark", "accent", "#abcdef"));
+        discard_draft_theme();
+        assert_eq!(save_draft_theme(), None);
+        assert!(!custom_theme_ids().contains(&id));
+    }
+
+    /// 🧪 `active_ui_layout`/`set_active_ui_layout` round-trip and reject unknown values (matches
+    /// React's `UiChromeLayout` union of exactly `"desktop" | "tablet"`).
+    #[test]
+    fn ui_layout_round_trips_and_rejects_unknown_values() {
+        set_active_ui_layout("tablet");
+        assert_eq!(active_ui_layout(), "tablet");
+        set_active_ui_layout("bogus");
+        assert_eq!(active_ui_layout(), "desktop");
+    }
+
+    /// 🧪 EN/DE parity spot-check against `ui/js/react/index.tsx`'s `uiChromeTranslationBundles`
+    /// "normal" labels (`:2898-3975`) for a sample of the keys this crate now routes through.
+    #[test]
+    fn shell_chrome_string_matches_react_bundle_samples() {
+        assert_eq!(shell_chrome_string("display.tab.windows", false), "Windows");
+        assert_eq!(shell_chrome_string("display.tab.windows", true), "Fenster");
+        assert_eq!(shell_chrome_string("common.execute", false), "Execute");
+        assert_eq!(shell_chrome_string("common.execute", true), "Ausfuehren");
+        assert_eq!(shell_chrome_string("common.windowOptions", true), "Fensteroptionen");
+        // Unknown keys fall back to the key itself rather than inventing text.
+        assert_eq!(shell_chrome_string("nonexistent.key", true), "nonexistent.key");
+    }
+
+    /// 🧪 `read_stored_introduction_seen`/`write_stored_introduction_seen` byte-identical semantics
+    /// to `ui/js/react/index.tsx:2309-2317` — exercised against a scratch `FilePrefsStore` (not the
+    /// thread-local singleton) so this never touches a real prefs file.
+    #[test]
+    fn introduction_seen_key_format_matches_react() {
+        assert_eq!(
+            format!("{UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}framework-os"),
+            "ui.introduction.seen.framework-os"
+        );
+    }
+}
+//#endregion 🧪UiPrefsThemesI18nTests
+// #endregion 💾🎨🌐 UiPrefsThemesI18n
+
+//#region 🧪ChromeOverlaysAndTourTests
+#[cfg(test)]
+mod chrome_overlays_tour_tests {
+    use super::*;
+
+    /// 🧹 Thread-locals persist across `#[test]` fns that happen to land on the same pooled test thread —
+    /// every test resets the ones it touches up front rather than assuming a pristine slate.
+    fn reset_chrome_overlay_state() {
+        CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow_mut().clear());
+        CHROME_TOOLTIP_HOVER.with(|cell| *cell.borrow_mut() = None);
+        CHROME_DIALOG_STACK.with(|cell| cell.borrow_mut().clear());
+        CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
+        CHROME_TOUR_AUTO_CONSIDERED.with(|cell| *cell.borrow_mut() = None);
+    }
+
+    //#region Tooltip
+    #[test]
+    fn tooltip_titles_register_and_clear() {
+        reset_chrome_overlay_state();
+        chrome_register_tooltip("nav.help", "Help");
+        assert_eq!(
+            CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow().get("nav.help").cloned()),
+            Some("Help".to_string())
+        );
+        chrome_tooltip_titles_clear();
+        assert!(CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow().is_empty()));
+    }
+
+    #[test]
+    fn tooltip_registration_ignores_empty_titles() {
+        reset_chrome_overlay_state();
+        chrome_register_tooltip("nav.mystery", "");
+        assert!(CHROME_TOOLTIP_TITLES.with(|cell| cell.borrow().get("nav.mystery").is_none()));
+    }
+
+    #[test]
+    fn tooltip_ready_respects_hover_delay() {
+        let hover = ChromeTooltipHover { control_id: "x".into(), anchor_x: 0.0, anchor_y: 0.0, started_ms: 1_000.0 };
+        assert!(!chrome_tooltip_ready(&hover, 1_000.0 + CHROME_TOOLTIP_DELAY_MS - 1.0));
+        assert!(chrome_tooltip_ready(&hover, 1_000.0 + CHROME_TOOLTIP_DELAY_MS));
+        assert!(chrome_tooltip_ready(&hover, 1_000.0 + CHROME_TOOLTIP_DELAY_MS + 250.0));
+    }
+
+    /// 🧪 Full close-on-hover-out path through `render_chrome_tooltip`: hovering a registered control
+    /// arms the hover timer; on the very next call the pointer has moved off (`hovered_id` no longer
+    /// matches), which must clear the armed hover immediately (no debounce, matching this crate's
+    /// documented "no animation-clock scaffolding" gap) rather than leaving a stale tooltip painted.
+    #[test]
+    fn tooltip_closes_immediately_on_hover_out() {
+        reset_chrome_overlay_state();
+        let shell = ShellState::new(Vec::new(), String::new());
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::light();
+        chrome_register_tooltip("nav.help", "Help");
+        input.hovered_id = Some("nav.help".into());
+        shell.render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+        assert!(CHROME_TOOLTIP_HOVER.with(|cell| cell.borrow().is_some()), "hover should arm on first hovered frame");
+        input.hovered_id = None;
+        shell.render_chrome_tooltip(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+        assert!(CHROME_TOOLTIP_HOVER.with(|cell| cell.borrow().is_none()), "hover-out must clear the armed tooltip");
+    }
+    //#endregion Tooltip
+
+    //#region Dialog
+    #[test]
+    fn dialog_open_and_close_topmost() {
+        reset_chrome_overlay_state();
+        assert!(!chrome_dialog_open());
+        chrome_open_dialog(ChromeDialogRequest {
+            id: "confirm-1".into(),
+            title: "Delete?".into(),
+            body: "This cannot be undone.".into(),
+            confirm_label: "Delete".into(),
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
+            cancel_label: "Cancel".into(),
+        });
+        assert!(chrome_dialog_open());
+        chrome_close_topmost_dialog();
+        assert!(!chrome_dialog_open());
+    }
+
+    #[test]
+    fn dialog_stack_supports_nesting_close_order() {
+        reset_chrome_overlay_state();
+        chrome_open_dialog(ChromeDialogRequest {
+            id: "outer".into(), title: "Outer".into(), body: String::new(),
+            confirm_label: "OK".into(),
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "outer".into(), args: None },
+            cancel_label: "Cancel".into(),
+        });
+        chrome_open_dialog(ChromeDialogRequest {
+            id: "inner".into(), title: "Inner".into(), body: String::new(),
+            confirm_label: "OK".into(),
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "inner".into(), args: None },
+            cancel_label: "Cancel".into(),
+        });
+        assert_eq!(CHROME_DIALOG_STACK.with(|cell| cell.borrow().last().map(|d| d.id.clone())), Some("inner".to_string()));
+        chrome_close_topmost_dialog();
+        assert_eq!(CHROME_DIALOG_STACK.with(|cell| cell.borrow().last().map(|d| d.id.clone())), Some("outer".to_string()));
+        chrome_close_topmost_dialog();
+        assert!(!chrome_dialog_open());
+    }
+
+    /// 🧪 `render_chrome_dialog`'s scrim-click dismissal (`DismissPolicy::outside_press_swallow`) — a
+    /// click outside the centered dialog box closes it without dispatching `confirm_action`.
+    #[test]
+    fn dialog_scrim_click_dismisses_without_confirm_action() {
+        reset_chrome_overlay_state();
+        let shell = ShellState::new(Vec::new(), String::new());
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::light();
+        chrome_open_dialog(ChromeDialogRequest {
+            id: "confirm-1".into(), title: "Delete?".into(), body: "Sure?".into(),
+            confirm_label: "Delete".into(),
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "delete".into(), args: None },
+            cancel_label: "Cancel".into(),
+        });
+        // A click far in the top-left corner, well outside the centered ~360x168 box on an 800x600 viewport.
+        input.pointer_x = 4.0;
+        input.pointer_y = 4.0;
+        chrome_compute_click_edge(false);
+        chrome_compute_click_edge(true);
+        shell.render_chrome_dialog(&mut draw, &mut atlas, &mut input, &theme, 800.0, 600.0);
+        assert!(!chrome_dialog_open(), "scrim click must dismiss the dialog");
+    }
+
+    /// 🧪 Focus-trap-equivalent modality: while a dialog is open, the chrome-owned tour trigger and the
+    /// sync-detach-confirmation click handlers must not fire — both are gated on `!chrome_dialog_open()`.
+    #[test]
+    fn dialog_open_blocks_other_chrome_owned_click_handlers() {
+        reset_chrome_overlay_state();
+        chrome_open_dialog(ChromeDialogRequest {
+            id: "blocker".into(), title: "Blocking".into(), body: String::new(),
+            confirm_label: "OK".into(),
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None },
+            cancel_label: "Cancel".into(),
+        });
+        assert!(chrome_dialog_open());
+        // The guard every other chrome-owned click handler in this region checks first.
+        assert!(!(!chrome_dialog_open()));
+    }
+    //#endregion Dialog
+
+    //#region Tour
+    #[test]
+    fn tour_start_advance_and_skip() {
+        reset_chrome_overlay_state();
+        assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+        chrome_start_introduction();
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(0));
+        chrome_advance_introduction(3);
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(1));
+        chrome_skip_introduction();
+        assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+    }
+
+    #[test]
+    fn tour_advance_past_last_step_closes_the_tour() {
+        reset_chrome_overlay_state();
+        chrome_start_introduction();
+        chrome_advance_introduction(2); // 0 -> 1 (last of 2)
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(1));
+        chrome_advance_introduction(2); // 1 -> done, closes
+        assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+    }
+
+    #[test]
+    fn tour_advance_on_empty_state_is_a_no_op() {
+        reset_chrome_overlay_state();
+        chrome_advance_introduction(5);
+        assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+    }
+    //#endregion Tour
+
+    //#region RibbonActivePath
+    #[test]
+    fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let nodes = vec![ui_wgpu::utility_toggle("a", "icon", "A", true, action)];
+        assert!(utility_subtree_has_active_path(&nodes));
+    }
+
+    #[test]
+    fn utility_subtree_has_active_path_recurses_into_nested_collections() {
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let inner = vec![ui_wgpu::utility_toggle("b", "icon", "B", true, action.clone())];
+        let nested = ui_wgpu::utility_collection(
+            "group-2",
+            "icon",
+            "Group 2",
+            vec![ui_wgpu::utility_collection("group-1", "icon", "Group 1", inner)],
+        );
+        assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
+    }
+
+    #[test]
+    fn utility_subtree_has_active_path_false_when_nothing_pressed() {
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let nodes = vec![
+            ui_wgpu::utility_toggle("a", "icon", "A", false, action.clone()),
+            ui_wgpu::utility_collection("group", "icon", "Group", vec![ui_wgpu::utility_toggle("b", "icon", "B", false, action)]),
+        ];
+        assert!(!utility_subtree_has_active_path(&nodes));
+    }
+
+    /// 🧪 Item 5's core regression test: before this fix, `render_footer_utility_nodes` filtered nested
+    /// `Collection`s out of `children` before recursing (`.filter(|child| !matches!(child,
+    /// UtilityNode::Collection { .. }))`), so a 2nd-level nested toggle never got a hit target at all —
+    /// expanding both levels here must reach it.
+    #[test]
+    fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let leaf_toggle = ui_wgpu::utility_toggle("leaf", "icon", "Leaf", false, action.clone());
+        let inner_collection = ui_wgpu::utility_collection("inner", "icon", "Inner", vec![leaf_toggle]);
+        let outer_collection = ui_wgpu::utility_collection("outer", "icon", "Outer", vec![inner_collection]);
+        let utilities = vec![outer_collection];
+
+        let mut collection_expanded = HashMap::new();
+        collection_expanded.insert("outer".to_string(), true);
+        collection_expanded.insert("inner".to_string(), true);
+
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        let icons = IconAtlas::default();
+        let mut input = InputState::<ActionDescriptor>::default();
+        let theme = Theme::light();
+        render_footer_utility_nodes(&mut draw, &mut atlas, &icons, &mut input, &theme, 0.0, 0.0, theme.control_height, &utilities, &collection_expanded);
+
+        assert!(
+            input.hit_targets.iter().any(|hit| hit.control_id.as_deref() == Some("framework.utility.toggle.leaf")),
+            "a toggle nested two Collection levels deep must still get a real hit target once both ancestors are expanded"
+        );
+    }
+    //#endregion RibbonActivePath
+
+    //#region GhostText
+    #[test]
+    fn engagement_completion_suffix_matches_label_prefix() {
+        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "x");
+        assert_eq!(engagement_completion_suffix("bo", Some(&possibles)), "x");
+    }
+
+    #[test]
+    fn engagement_completion_suffix_empty_when_query_is_empty_or_unmatched() {
+        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+        assert_eq!(engagement_completion_suffix("", Some(&possibles)), "");
+        assert_eq!(engagement_completion_suffix("zz", Some(&possibles)), "");
+        assert_eq!(engagement_completion_suffix("Box", Some(&possibles)), ""); // fully typed: no suffix left
+        assert_eq!(engagement_completion_suffix("Bo", None), "");
+    }
+
+    #[test]
+    fn engagement_completion_suffix_picks_first_matching_possible_in_order() {
+        let possibles = vec![
+            ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
+            ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
+        ];
+        assert_eq!(engagement_completion_suffix("Bo", Some(&possibles)), "at");
+    }
+
+    /// 🧪 Char-boundary safety: a multi-byte label prefix-matched by a query must not panic on slicing.
+    #[test]
+    fn engagement_completion_suffix_is_multibyte_safe() {
+        let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+        assert_eq!(engagement_completion_suffix("M", Some(&possibles)), "ünster");
+    }
+
+    /// 🧪 Accept-on-click (the mouse-driven substitute for Tab/Right-arrow — see the report's honest
+    /// scope-down on why the keyboard shortcut itself isn't reachable from this region): a click landing
+    /// inside the ghost-text rect on a clicked frame commits `query + suffix`.
+    #[test]
+    fn engagement_ghost_accept_on_click_commits_query_plus_suffix_when_clicked_inside() {
+        let ghost_rect = Rect::new(50.0, 0.0, 20.0, 24.0);
+        assert_eq!(
+            engagement_ghost_accept_on_click(ghost_rect, 55.0, 10.0, true, "Bo", "x"),
+            Some("Box".to_string())
+        );
+    }
+
+    #[test]
+    fn engagement_ghost_accept_on_click_ignores_clicks_outside_the_ghost_rect() {
+        let ghost_rect = Rect::new(50.0, 0.0, 20.0, 24.0);
+        assert_eq!(engagement_ghost_accept_on_click(ghost_rect, 5.0, 10.0, true, "Bo", "x"), None);
+    }
+
+    #[test]
+    fn engagement_ghost_accept_on_click_ignores_held_or_stale_clicks() {
+        let ghost_rect = Rect::new(50.0, 0.0, 20.0, 24.0);
+        assert_eq!(engagement_ghost_accept_on_click(ghost_rect, 55.0, 10.0, false, "Bo", "x"), None);
+    }
+    //#endregion GhostText
+}
+//#endregion 🧪ChromeOverlaysAndTourTests
+
 //#endregion ShellChrome
 
 #[cfg(target_arch = "wasm32")]
@@ -18033,6 +24842,7 @@ use plugin_bridge::filter_plugins;
 use plugin_bridge::parse_plugin_entries;
 #[cfg(not(target_arch = "wasm32"))]
 use plugin_bridge::load_wasm_plugins;
+use interpreter::{apply_ui_image_bytes, collect_pending_ui_image_fetches};
 use infinite_world::{
     apply_glb_bytes, apply_world_action_preview, collect_pending_glb_fetches, fetch_url_bytes,
     handle_world3d_paint_actions, handle_world3d_pointer_button, handle_world3d_pointer_drag,
@@ -18240,7 +25050,7 @@ impl AppRuntime {
             self.maybe_reload_native_plugins();
             pollster::block_on(self.shell.pump_sync_events());
         }
-        self.theme = resolve_theme(&self.shell.appearance_id);
+        self.theme = shell::resolve_theme_for_ids(&shell::active_theme_id(), &self.shell.appearance_id);
         self.theme_dark = appearance_is_dark(&self.shell.appearance_id);
         if !self.pointer_down && self.input.drag.active {
             self.input.end_drag();
@@ -18273,6 +25083,17 @@ impl AppRuntime {
             &self.theme,
             &mut self.gpu,
         );
+        let scene_events = self.input.drain_events();
+        if !scene_events.is_empty() {
+            let runtime = self.self_weak.clone();
+            spawn_app_task(async move {
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.dispatch_actions(scene_events).await;
+                    }
+                }
+            });
+        }
         let wheel_delta = self.wheel_delta;
         self.wheel_delta = 0.0;
         if wheel_delta.abs() > 0.0 {
@@ -18405,7 +25226,9 @@ impl AppRuntime {
         let mut glb = collect_pending_glb_fetches(&self.shell.world3d_states);
         glb.extend(collect_pending_glb_fetches(&self.shell.icon_render_states));
         let map = engine_canvas::collect_pending_map_tile_fetches();
-        if glb.is_empty() && map.is_empty() {
+        let ui_images = collect_pending_ui_image_fetches();
+        if glb.is_empty() && map.is_empty() && ui_images.is_empty() {
+            pollster::block_on(self.shell.poll_world3d_assets());
             return;
         }
         #[cfg(not(target_arch = "wasm32"))]
@@ -18425,6 +25248,12 @@ impl AppRuntime {
                     }
                 }
             }
+            for item in ui_images {
+                if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
+                    apply_ui_image_bytes(&item.id, &item.url, &bytes);
+                }
+            }
+            pollster::block_on(self.shell.poll_world3d_assets());
             return;
         }
         #[cfg(target_arch = "wasm32")]
@@ -18458,6 +25287,12 @@ impl AppRuntime {
                         fetched_map.push((item, bytes));
                     }
                 }
+                let mut fetched_ui_images = Vec::new();
+                for item in ui_images {
+                    if let Some(bytes) = fetch_url_bytes(&item.url).await {
+                        fetched_ui_images.push((item.id, item.url, bytes));
+                    }
+                }
                 if let Ok(mut app) = runtime.try_borrow_mut() {
                     for (surface_id, url, bytes) in fetched_glb {
                         if let Some(state) = app.shell.world3d_states.get_mut(&surface_id) {
@@ -18469,6 +25304,10 @@ impl AppRuntime {
                     for (fetch, bytes) in fetched_map {
                         engine_canvas::apply_map_tile_bytes(&fetch.surface_id, &fetch, &bytes);
                     }
+                    for (id, url, bytes) in fetched_ui_images {
+                        apply_ui_image_bytes(&id, &url, &bytes);
+                    }
+                    app.shell.poll_world3d_assets().await;
                 };
             });
         }

@@ -1,8 +1,27 @@
 //! 🔗 WIRES mindmap: Owns, Is, References, Has on a flexible identity-kind set.
 
-pub use infinite_cavas as cavas;
 pub use infinite_board_normal_undirected as graph;
+pub use infinite_cavas as cavas;
 pub use reasoning_mindmap as mindmap;
+
+//#region ⚠️ Errors
+/// 🧯 WIRES extension errors — fixture (de)serialization and fixed-identity-set validation failures.
+#[derive(Debug, thiserror::Error)]
+pub enum WiresError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("fixture root must be object")]
+    FixtureRootNotObject,
+    #[error("schema must be reasoning.wires.fixture")]
+    SchemaMismatch,
+    #[error("identities array missing")]
+    IdentitiesMissing,
+    #[error("relationships array missing")]
+    RelationshipsMissing,
+    #[error("identity {0} is not in the fixed WIRES identity set")]
+    IdentityNotAllowed(mindmap::TopicId),
+}
+//#endregion ⚠️ Errors
 
 // #region 🔖RelationshipKind
 /// 🔗 One of the four WIRES relationship kinds.
@@ -34,7 +53,7 @@ impl RelationshipKind {
 /// 🔗 WIRES semantics over a mindmap (normal undirected graph).
 pub trait WiresExtension: mindmap::MindmapExtension {
     fn relationship_kind_label(&self, relationship_id: graph::EdgeId) -> Option<&str>;
-    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), String>;
+    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), WiresError>;
 }
 
 /// 🧭 Default WIRES extension with fixed identity vocabulary and relationship kinds.
@@ -61,17 +80,17 @@ impl mindmap::MindmapExtension for DefaultWiresExtension {
 
 impl DefaultWiresExtension {
     /// 🔗 Hydrate extension state from `reasoning.wires.fixture` JSON.
-    pub fn from_fixture_json(json: &str) -> Result<Self, String> {
-        let root: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
+        let root: serde_json::Value = serde_json::from_str(json)?;
         let Some(obj) = root.as_object() else {
-            return Err("fixture root must be object".into());
+            return Err(WiresError::FixtureRootNotObject);
         };
         if obj.get("schema").and_then(|v| v.as_str()) != Some("reasoning.wires.fixture") {
-            return Err("schema must be reasoning.wires.fixture".into());
+            return Err(WiresError::SchemaMismatch);
         }
         let mut ext = Self::default();
         let Some(identities) = obj.get("identities").and_then(|v| v.as_array()) else {
-            return Err("identities array missing".into());
+            return Err(WiresError::IdentitiesMissing);
         };
         for identity in identities {
             let Some(row) = identity.as_object() else {
@@ -85,7 +104,7 @@ impl DefaultWiresExtension {
             ext.allowed_identities.insert(identity_id);
         }
         let Some(relationships) = obj.get("relationships").and_then(|v| v.as_array()) else {
-            return Err("relationships array missing".into());
+            return Err(WiresError::RelationshipsMissing);
         };
         for rel in relationships {
             let Some(row) = rel.as_object() else {
@@ -112,13 +131,13 @@ impl WiresExtension for DefaultWiresExtension {
         self.relationships.get(&relationship_id).map(|r| r.label())
     }
 
-    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), String> {
+    fn validate_identity_set(&self, identities: &[mindmap::TopicId]) -> Result<(), WiresError> {
         if self.allowed_identities.is_empty() {
             return Ok(());
         }
         for id in identities {
             if !self.allowed_identities.contains(id) {
-                return Err(format!("identity {id} is not in the fixed WIRES identity set"));
+                return Err(WiresError::IdentityNotAllowed(*id));
             }
         }
         Ok(())

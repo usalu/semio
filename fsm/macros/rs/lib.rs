@@ -129,17 +129,7 @@ mod analyze {
                 return Err(syn::Error::new(name.span(), format!("duplicate state name `{key}`")));
             }
             let idx = self.nodes.len();
-            self.nodes.push(NodeIr {
-                name: key.clone(),
-                kind,
-                parent: Some(parent),
-                initial: None,
-                children: Vec::new(),
-                entry_actions: Vec::new(),
-                exit_actions: Vec::new(),
-                invokes: Vec::new(),
-                timers: Vec::new(),
-            });
+            self.nodes.push(NodeIr { name: key.clone(), kind, parent: Some(parent), initial: None, children: Vec::new(), entry_actions: Vec::new(), exit_actions: Vec::new(), invokes: Vec::new(), timers: Vec::new() });
             self.names.insert(key, idx);
             self.nodes[parent].children.push(idx);
             Ok(idx)
@@ -168,15 +158,7 @@ mod analyze {
                 self.timer_counter += 1;
                 self.nodes[idx].timers.push((timer_id, after.delay_ms));
                 let action = after.action.clone().map(|a| self.intern_action(a));
-                self.pending.push(PendingTransition {
-                    source: idx,
-                    trigger: PendingTrigger::Timer(timer_id),
-                    guard: None,
-                    target_name: after.target.to_string(),
-                    target_span: after.target.span(),
-                    internal: false,
-                    action,
-                });
+                self.pending.push(PendingTransition { source: idx, trigger: PendingTrigger::Timer(timer_id), guard: None, target_name: after.target.to_string(), target_span: after.target.span(), internal: false, action });
             }
             self.push_on_transitions(idx, &ast.transitions);
             self.push_always_transitions(idx, &ast.always);
@@ -203,14 +185,8 @@ mod analyze {
             }
 
             if matches!(self.nodes[idx].kind, NodeKindIr::Compound) {
-                let initial_name = ast
-                    .initial
-                    .clone()
-                    .ok_or_else(|| syn::Error::new(name.span(), format!("compound state `{name}` needs `initial: <child>;`")))?;
-                let initial_idx = *self
-                    .names
-                    .get(&initial_name.to_string())
-                    .ok_or_else(|| syn::Error::new(initial_name.span(), format!("unknown initial state `{initial_name}`")))?;
+                let initial_name = ast.initial.clone().ok_or_else(|| syn::Error::new(name.span(), format!("compound state `{name}` needs `initial: <child>;`")))?;
+                let initial_idx = *self.names.get(&initial_name.to_string()).ok_or_else(|| syn::Error::new(initial_name.span(), format!("unknown initial state `{initial_name}`")))?;
                 self.nodes[idx].initial = Some(initial_idx);
             }
             if let Some(h_idx) = history_idx {
@@ -230,15 +206,7 @@ mod analyze {
             }
             if let Some((target, action)) = ast.on_done {
                 let action_idx = action.map(|a| self.intern_action(a));
-                self.pending.push(PendingTransition {
-                    source: idx,
-                    trigger: PendingTrigger::Done,
-                    guard: None,
-                    target_name: target.to_string(),
-                    target_span: target.span(),
-                    internal: false,
-                    action: action_idx,
-                });
+                self.pending.push(PendingTransition { source: idx, trigger: PendingTrigger::Done, guard: None, target_name: target.to_string(), target_span: target.span(), internal: false, action: action_idx });
             }
             Ok(idx)
         }
@@ -255,15 +223,7 @@ mod analyze {
             for on in transitions {
                 let guard = on.guard.clone().map(|g| self.intern_guard(g));
                 let action = on.action.clone().map(|a| self.intern_action(a));
-                self.pending.push(PendingTransition {
-                    source,
-                    trigger: PendingTrigger::Event(on.event.clone()),
-                    guard,
-                    target_name: on.target.to_string(),
-                    target_span: on.target.span(),
-                    internal: on.internal,
-                    action,
-                });
+                self.pending.push(PendingTransition { source, trigger: PendingTrigger::Event(on.event.clone()), guard, target_name: on.target.to_string(), target_span: on.target.span(), internal: on.internal, action });
             }
         }
 
@@ -271,15 +231,7 @@ mod analyze {
             for al in always {
                 let guard = al.guard.clone().map(|g| self.intern_guard(g));
                 let action = al.action.clone().map(|a| self.intern_action(a));
-                self.pending.push(PendingTransition {
-                    source,
-                    trigger: PendingTrigger::Eventless,
-                    guard,
-                    target_name: al.target.to_string(),
-                    target_span: al.target.span(),
-                    internal: false,
-                    action,
-                });
+                self.pending.push(PendingTransition { source, trigger: PendingTrigger::Eventless, guard, target_name: al.target.to_string(), target_span: al.target.span(), internal: false, action });
             }
         }
     }
@@ -353,27 +305,8 @@ mod analyze {
     //#region 🔖Entry
 
     pub fn analyze(ast: MachineAst) -> syn::Result<Ir> {
-        let mut az = Analyzer {
-            nodes: Vec::new(),
-            names: HashMap::new(),
-            guards: Vec::new(),
-            actions: Vec::new(),
-            outputs: Vec::new(),
-            pending: Vec::new(),
-            invoke_counter: 0,
-            timer_counter: 0,
-        };
-        az.nodes.push(NodeIr {
-            name: "root".to_string(),
-            kind: NodeKindIr::Compound,
-            parent: None,
-            initial: None,
-            children: Vec::new(),
-            entry_actions: Vec::new(),
-            exit_actions: Vec::new(),
-            invokes: Vec::new(),
-            timers: Vec::new(),
-        });
+        let mut az = Analyzer { nodes: Vec::new(), names: HashMap::new(), guards: Vec::new(), actions: Vec::new(), outputs: Vec::new(), pending: Vec::new(), invoke_counter: 0, timer_counter: 0 };
+        az.nodes.push(NodeIr { name: "root".to_string(), kind: NodeKindIr::Compound, parent: None, initial: None, children: Vec::new(), entry_actions: Vec::new(), exit_actions: Vec::new(), invokes: Vec::new(), timers: Vec::new() });
         az.names.insert("root".to_string(), 0);
 
         for child in ast.children {
@@ -390,57 +323,30 @@ mod analyze {
             }
         }
 
-        let initial_idx = *az
-            .names
-            .get(&ast.initial.to_string())
-            .ok_or_else(|| syn::Error::new(ast.initial.span(), format!("unknown initial state `{}`", ast.initial)))?;
+        let initial_idx = *az.names.get(&ast.initial.to_string()).ok_or_else(|| syn::Error::new(ast.initial.span(), format!("unknown initial state `{}`", ast.initial)))?;
         az.nodes[0].initial = Some(initial_idx);
 
         let mut transitions = Vec::new();
         for p in az.pending {
-            let target_idx = *az
-                .names
-                .get(&p.target_name)
-                .ok_or_else(|| syn::Error::new(p.target_span, format!("unknown transition target `{}`", p.target_name)))?;
+            let target_idx = *az.names.get(&p.target_name).ok_or_else(|| syn::Error::new(p.target_span, format!("unknown transition target `{}`", p.target_name)))?;
             let trigger = match p.trigger {
                 PendingTrigger::Event(ident) => {
-                    let event_idx = ast
-                        .event_variants
-                        .iter()
-                        .position(|v| v.name() == &ident)
-                        .ok_or_else(|| syn::Error::new(ident.span(), format!("unknown event variant `{ident}`")))?;
+                    let event_idx = ast.event_variants.iter().position(|v| v.name() == &ident).ok_or_else(|| syn::Error::new(ident.span(), format!("unknown event variant `{ident}`")))?;
                     TriggerIr::Event(event_idx)
                 }
                 PendingTrigger::Eventless => TriggerIr::Eventless,
                 PendingTrigger::Done => TriggerIr::Done(p.source),
                 PendingTrigger::Timer(id) => TriggerIr::Timer(id),
             };
-            transitions.push(TransitionIr {
-                source: p.source,
-                trigger,
-                guard: p.guard,
-                targets: vec![target_idx],
-                internal: p.internal,
-                actions: p.action.into_iter().collect(),
-            });
+            transitions.push(TransitionIr { source: p.source, trigger, guard: p.guard, targets: vec![target_idx], internal: p.internal, actions: p.action.into_iter().collect() });
         }
 
         let make_output = match (ast.output_from_context, az.outputs.len()) {
             (Some(ident), 0) => Some(ident),
             (None, 0) => None,
             (None, 1) => Some(az.outputs[0].clone()),
-            (None, _) => {
-                return Err(syn::Error::new(
-                    ast.name.span(),
-                    "at most one `final` state may declare `output:`; use machine-level `output_from_context:` for more complex cases",
-                ))
-            }
-            (Some(_), _) => {
-                return Err(syn::Error::new(
-                    ast.name.span(),
-                    "declare output via either machine-level `output_from_context:` or a single `final { output: .. }`, not both",
-                ))
-            }
+            (None, _) => return Err(syn::Error::new(ast.name.span(), "at most one `final` state may declare `output:`; use machine-level `output_from_context:` for more complex cases")),
+            (Some(_), _) => return Err(syn::Error::new(ast.name.span(), "declare output via either machine-level `output_from_context:` or a single `final { output: .. }`, not both")),
         };
 
         let fingerprint = compute_fingerprint(&az.nodes, &transitions, &ast.event_variants);
@@ -1168,9 +1074,7 @@ mod parse {
                     content.parse::<Token![final]>()?;
                     children.push(StateItemAst::Final(parse_final(&content)?));
                 } else {
-                    return Err(content.error(
-                        "expected context/event/input/output/effect/context_from_input/output_from_context/initial/state/parallel/final",
-                    ));
+                    return Err(content.error("expected context/event/input/output/effect/context_from_input/output_from_context/initial/state/parallel/final"));
                 }
             }
 

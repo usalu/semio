@@ -2126,14 +2126,15 @@ use semio_framework_plugin::{PanelGroup,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, DocumentApp, DocumentView, MeshData, OsMediaCapability, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, OsMediaCapability, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
-    UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput,
+    ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
     WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeshImporter,
+    is_de_locale, localized_label_map, selection_ids, tree_item, PanelTreeBuilder,
 };
 use semio_framework_core::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
@@ -2450,7 +2451,7 @@ impl Default for CadPlayRuntime {
 /// @emoji 🎛️ Ephemeral read/render view assembled per call from the store's materialized
 /// `CadScene` projection and the app's `CadPlayRuntime` view-state. Replaces the old persisted play
 /// envelope: its embedded history/undo stacks are now owned by the wrapping `VcsDocumentApp`'s
-/// `DocumentVcsStore`, and its runtime view-state lives directly on the `CadApp` struct.
+/// `DocumentVcsStore`, and its runtime view-state lives directly on the `CadPlayApp` struct.
 struct CadPlayView {
     document: CadScene,
     runtime: CadPlayRuntime,
@@ -2586,11 +2587,11 @@ fn camera_json(camera: &CadCamera) -> String {
     ui_wgpu::world3d_camera_json(camera.position, camera.target, camera.fov)
 }
 
+/// 🎯 Wraps the SDK's `selection_ids` core `"ids"`-array extraction with a fallback-to-current-selection
+/// when the arg is absent/empty — cad's own addition on top of the shared core.
 fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .filter(|ids: &Vec<String>| !ids.is_empty())
-        .unwrap_or_else(|| fallback.to_vec())
+    let ids = selection_ids(args);
+    if ids.is_empty() { fallback.to_vec() } else { ids }
 }
 
 //#region 🔖PaneHelpers
@@ -3368,9 +3369,12 @@ const CAD_LABELS_REUSE_DE: CadLabels = CadLabels {
 };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+/// Two-dimensional (locale × terminology) label selection doesn't fit the SDK's `LocaleLabels`/`app_labels!`
+/// (locale-only, one struct type per resolution), so this stays hand-rolled — reusing `is_de_locale` for
+/// the locale half instead of duplicating its `starts_with("de")` check.
 fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
     let terminology = view_state.terminology.as_deref().unwrap_or("native");
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+    let is_de = is_de_locale(view_state);
     match (terminology, is_de) {
         ("reuse", true) => &CAD_LABELS_REUSE_DE,
         ("reuse", false) => &CAD_LABELS_REUSE_EN,
@@ -3393,13 +3397,74 @@ fn typology_label(typology: &'static str, labels: &CadLabels) -> &'static str {
 }
 //#endregion 🔖Terminology
 
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_cad_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
+    localized_label_map(is_de, &[
+        ("addObject", "Add Object", "Objekt hinzufuegen"),
+        ("patchObject", "Patch Object", "Objekt aktualisieren"),
+        ("patchSelection", "Patch Selection", "Auswahl aktualisieren"),
+        ("deleteObject", "Delete Object", "Objekt loeschen"),
+        ("duplicateObject", "Duplicate Object", "Objekt duplizieren"),
+        ("addNode", "Add Node", "Knoten hinzufuegen"),
+        ("renameNode", "Rename Node", "Knoten umbenennen"),
+        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+        ("applyTransformation", "Apply Transformation", "Transformation anwenden"),
+        ("importCadFile", "Import CAD File", "CAD-Datei importieren"),
+        ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
+        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
+        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldHover", "World Hover", "Welt-Hover"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
+        ("referenceHover", "Reference Hover", "Referenz-Hover"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswaehlen"),
+        ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
+        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
+        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrueckt"),
+        ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
+        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("saveSelected", "Save Selected", "Auswahl speichern"),
+        ("saveInPlay", "Save In Play", "Im Play speichern"),
+        ("saveCurrent", "Save Current", "Aktuelles speichern"),
+        ("loadRawRequest", "Load Raw Request", "Rohanfrage laden"),
+    ])
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_cad_app`.
+fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
+    localized_label_map(is_de, &[
+        ("move", "Move", "Verschieben"),
+        ("rotate", "Rotate", "Drehen"),
+        ("scale", "Scale", "Skalieren"),
+    ])
+}
+//#endregion 🔖CommandLabels
+
 //#region 🔖Panels
 fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> UiTreeItemNode {
     let primitive_items: Vec<UiTreeItemNode> = object
         .primitives
         .iter()
         .map(|primitive| {
-            let mut item = tree_item_with_action(
+            let mut item = cad_tree_item(
                 format!("cad-primitive:{id_suffix}:{}:{}", object.id, primitive.primitive_id),
                 format!("{}: {}", primitive.slot, primitive.primitive_id),
                 Some("hexagon"),
@@ -3417,7 +3482,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
             item
         })
         .collect();
-    let mut item = tree_item_with_action(
+    let mut item = cad_tree_item(
         format!("cad-object:{id_suffix}:{}", object.id),
         object.label.clone(),
         Some("box"),
@@ -3467,7 +3532,7 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
 }
 
 fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiTreeItemNode {
-    let mut item = tree_item_with_action(
+    let mut item = cad_tree_item(
         format!("cad-reference:{model_definition_id}:{}", reference.id),
         reference.id.clone(),
         Some("image"),
@@ -3516,62 +3581,23 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
     item
 }
 
-fn tree_item_with_action(
-    id: impl Into<String>,
-    label: impl Into<String>,
-    icon_id: Option<&str>,
-    action: ActionDescriptor,
-) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: icon_id.map(str::to_string),
-        selected: None,
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-        loading: None,
-    }
+/// 🌳 Cad's tree items carry an icon rather than the SDK `tree_item_with_action`'s description slot, so
+/// this stays a thin app-specific wrapper — built on the SDK's bare `tree_item` rather than hand-rolling
+/// the full `UiTreeItemNode` struct literal.
+fn cad_tree_item(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+    let mut item = tree_item(id, label);
+    item.icon_id = icon_id.map(str::to_string);
+    item.action = Some(action);
+    item
 }
 
-fn pane_document_section(label: &str, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> UiTreeSectionNode {
-    UiTreeSectionNode {
-        id: format!("cad-play-document.{id_suffix}"),
-        label: Some(label.into()),
-        default_open: Some(true),
-        items: objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect(),
-        loading: None,
-    }
-}
-
-fn references_section(model_definition_id: &str, references: &[CadReference], labels: &CadLabels) -> UiTreeSectionNode {
-    UiTreeSectionNode {
-        id: format!("cad-play-document.references.{model_definition_id}"),
-        label: Some(labels.references.into()),
-        default_open: Some(false),
-        items: if references.is_empty() {
-            vec![tree_item_with_action(
-                format!("cad-play-document.references.{model_definition_id}.empty"),
-                labels.none_placeholder,
-                None,
-                cad_action("noop", None),
-            )]
-        } else {
-            references
-                .iter()
-                .map(|reference| reference_tree_item(model_definition_id, reference, labels))
-                .collect()
-        },
-        loading: None,
-    }
+/// 🗂️ The `document.references_by_model_definition_id` lookup repeated once per pane in `build_document_tree`.
+fn references_for<'a>(document: &'a CadScene, model_definition_id: &str) -> &'a [CadReference] {
+    document
+        .references_by_model_definition_id
+        .get(model_definition_id)
+        .map(|rows| rows.as_slice())
+        .unwrap_or(&[])
 }
 
 fn document_tree_selected_ids(document: &CadScene, runtime: &CadPlayRuntime) -> Option<Vec<String>> {
@@ -3627,13 +3653,36 @@ fn document_tree_highlighted_ids(document: &CadScene, runtime: &CadPlayRuntime) 
     })
 }
 
+/// 🌳 One pane's object section: namespaced by `id_suffix`, always expanded.
+fn document_pane_section(label: &str, id_suffix: &str, objects: &[CadObject], labels: &CadLabels) -> (String, Option<String>, bool, Vec<UiTreeItemNode>) {
+    (
+        format!("cad-play-document.{id_suffix}"),
+        Some(label.into()),
+        true,
+        objects.iter().map(|object| object_tree_item(id_suffix, object, labels)).collect(),
+    )
+}
+
+/// 🌳 One pane's references section: collapsed by default, "(none)"-placeholder when empty.
+fn document_references_section(document: &CadScene, model_definition_id: &str, labels: &CadLabels) -> (String, Option<String>, bool, Vec<UiTreeItemNode>) {
+    (
+        format!("cad-play-document.references.{model_definition_id}"),
+        Some(labels.references.into()),
+        false,
+        references_for(document, model_definition_id)
+            .iter()
+            .map(|reference| reference_tree_item(model_definition_id, reference, labels))
+            .collect(),
+    )
+}
+
 fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
     let node_items: Vec<UiTreeItemNode> = envelope
         .document
         .nodes
         .iter()
         .map(|node| {
-            tree_item_with_action(
+            cad_tree_item(
                 format!("cad-node:{}", node.id),
                 node.label.clone(),
                 Some("git-branch"),
@@ -3641,80 +3690,45 @@ fn build_document_tree(envelope: &CadPlayView, labels: &CadLabels) -> UiNode {
             )
         })
         .collect();
-    let mut sections = vec![
-        pane_document_section(labels.pane_shape, "shape", &envelope.document.objects, labels),
-        references_section(
-            CAD_MODEL_DEFINITION_SHAPE,
-            envelope
-                .document
-                .references_by_model_definition_id
-                .get(CAD_MODEL_DEFINITION_SHAPE)
-                .map(|rows| rows.as_slice())
-                .unwrap_or(&[]),
-            labels,
-        ),
-        pane_document_section(labels.pane_building, "building", &envelope.document.building_objects, labels),
-        references_section(
-            CAD_MODEL_DEFINITION_BUILDING,
-            envelope
-                .document
-                .references_by_model_definition_id
-                .get(CAD_MODEL_DEFINITION_BUILDING)
-                .map(|rows| rows.as_slice())
-                .unwrap_or(&[]),
-            labels,
-        ),
-        pane_document_section(labels.pane_energy, "energy", &envelope.document.energy_objects, labels),
-        references_section(
-            CAD_MODEL_DEFINITION_ENERGY,
-            envelope
-                .document
-                .references_by_model_definition_id
-                .get(CAD_MODEL_DEFINITION_ENERGY)
-                .map(|rows| rows.as_slice())
-                .unwrap_or(&[]),
-            labels,
-        ),
-        pane_document_section(
-            labels.pane_structure_classic,
-            "structure-classic",
-            &envelope.document.structure_classic_objects,
-            labels,
-        ),
-        references_section(
-            CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
-            envelope
-                .document
-                .references_by_model_definition_id
-                .get(CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC)
-                .map(|rows| rows.as_slice())
-                .unwrap_or(&[]),
-            labels,
-        ),
-        UiTreeSectionNode {
-            id: "cad-play-document.nodes".into(),
-            label: Some(labels.nodes.into()),
-            default_open: Some(true),
-            items: node_items,
-            loading: None,
-        },
-    ];
-    let _ = &mut sections;
-    UiNode::Tree(UiTreeNode {
-        sections,
-        selected_ids: document_tree_selected_ids(&envelope.document, &envelope.runtime),
-        highlighted_ids: document_tree_highlighted_ids(&envelope.document, &envelope.runtime),
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+
+    let (shape_id, shape_label, shape_open, shape_items) = document_pane_section(labels.pane_shape, "shape", &envelope.document.objects, labels);
+    let (shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items) = document_references_section(&envelope.document, CAD_MODEL_DEFINITION_SHAPE, labels);
+    let (building_id, building_label, building_open, building_items) = document_pane_section(labels.pane_building, "building", &envelope.document.building_objects, labels);
+    let (building_refs_id, building_refs_label, building_refs_open, building_refs_items) = document_references_section(&envelope.document, CAD_MODEL_DEFINITION_BUILDING, labels);
+    let (energy_id, energy_label, energy_open, energy_items) = document_pane_section(labels.pane_energy, "energy", &envelope.document.energy_objects, labels);
+    let (energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items) = document_references_section(&envelope.document, CAD_MODEL_DEFINITION_ENERGY, labels);
+    let (structure_id, structure_label, structure_open, structure_items) = document_pane_section(
+        labels.pane_structure_classic,
+        "structure-classic",
+        &envelope.document.structure_classic_objects,
+        labels,
+    );
+    let (structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items) = document_references_section(&envelope.document, CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC, labels);
+
+    let mut builder = PanelTreeBuilder::new("cad-play-document")
+        .section(shape_id, shape_label, shape_open, shape_items)
+        .section_or_placeholder(shape_refs_id, shape_refs_label, shape_refs_open, shape_refs_items, labels.none_placeholder)
+        .section(building_id, building_label, building_open, building_items)
+        .section_or_placeholder(building_refs_id, building_refs_label, building_refs_open, building_refs_items, labels.none_placeholder)
+        .section(energy_id, energy_label, energy_open, energy_items)
+        .section_or_placeholder(energy_refs_id, energy_refs_label, energy_refs_open, energy_refs_items, labels.none_placeholder)
+        .section(structure_id, structure_label, structure_open, structure_items)
+        .section_or_placeholder(structure_refs_id, structure_refs_label, structure_refs_open, structure_refs_items, labels.none_placeholder)
+        .section("cad-play-document.nodes", Some(labels.nodes.into()), true, node_items);
+    if let Some(ids) = document_tree_selected_ids(&envelope.document, &envelope.runtime) {
+        builder = builder.selected(ids);
+    }
+    if let Some(ids) = document_tree_highlighted_ids(&envelope.document, &envelope.runtime) {
+        builder = builder.highlighted(ids);
+    }
+    builder.build()
 }
 
 fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = TYPOLOGY_CATALOG
         .iter()
         .map(|entry| {
-            tree_item_with_action(
+            cad_tree_item(
                 format!("cad-play-catalogue.{}", entry.typology),
                 typology_label(entry.typology, labels),
                 Some(entry.icon),
@@ -3722,20 +3736,9 @@ fn build_catalogue_tree(labels: &CadLabels) -> UiNode {
             )
         })
         .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "cad-play-catalogue.typologies".into(),
-            label: Some(labels.typologies.into()),
-            default_open: Some(true),
-            items,
-            loading: None,
-        }],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+    PanelTreeBuilder::new("cad-play-catalogue")
+        .section("cad-play-catalogue.typologies", Some(labels.typologies.into()), true, items)
+        .build()
 }
 
 fn build_properties_panel(envelope: &CadPlayView, labels: &CadLabels, active_utility: &str) -> UiNode {
@@ -4484,17 +4487,17 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
     true
 }
 
-//#region 🔖CadApp
+//#region 🔖CadPlayApp
 /// @emoji 📐 The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
 /// `DocumentVcsStore<CadScene, CadOp>`; only ephemeral view-state (selection, hover, engagement
 /// session, transform utility, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
 /// intercepted and dispatched by the wrapper — no manual arms or keybindings.
 #[derive(Default)]
-struct CadApp {
+struct CadPlayApp {
     runtime: CadPlayRuntime,
 }
 
-impl DocumentApp for CadApp {
+impl DocumentApp for CadPlayApp {
     type Projection = CadScene;
     type Op = CadOp;
 
@@ -5103,91 +5106,21 @@ impl DocumentApp for CadApp {
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = cad_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (CAD_PLAY_WINDOW_SHAPE.to_string(), labels.pane_shape.to_string()),
-                (CAD_PLAY_WINDOW_BUILDING.to_string(), labels.pane_building.to_string()),
-                (CAD_PLAY_WINDOW_ENERGY.to_string(), labels.pane_energy.to_string()),
-                (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), labels.pane_structure_classic.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::new(),
-            mode_labels: std::collections::HashMap::from([("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string())]),
-            action_labels: cad_action_labels(is_de),
-            utility_labels: cad_utility_labels(is_de),
-            example_labels: std::collections::HashMap::from([
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(CAD_PLAY_WINDOW_SHAPE, labels.pane_shape)
+            .window_kind_label(CAD_PLAY_WINDOW_BUILDING, labels.pane_building)
+            .window_kind_label(CAD_PLAY_WINDOW_ENERGY, labels.pane_energy)
+            .window_kind_label(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, labels.pane_structure_classic)
+            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+            .action_labels(cad_action_labels(is_de))
+            .utility_labels(cad_utility_labels(is_de))
+            .example_labels(HashMap::from([
                 (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig Geschnittener Betonwald Links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
-            ]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+            ]))
     }
 }
-//#endregion 🔖CadApp
-
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_cad_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addObject", "Add Object", "Objekt hinzufuegen"),
-        ("patchObject", "Patch Object", "Objekt aktualisieren"),
-        ("patchSelection", "Patch Selection", "Auswahl aktualisieren"),
-        ("deleteObject", "Delete Object", "Objekt loeschen"),
-        ("duplicateObject", "Duplicate Object", "Objekt duplizieren"),
-        ("addNode", "Add Node", "Knoten hinzufuegen"),
-        ("renameNode", "Rename Node", "Knoten umbenennen"),
-        ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-        ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-        ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-        ("applyTransformation", "Apply Transformation", "Transformation anwenden"),
-        ("importCadFile", "Import CAD File", "CAD-Datei importieren"),
-        ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
-        ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
-        ("worldHover", "World Hover", "Welt-Hover"),
-        ("setHover", "Set Hover", "Hover festlegen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-        ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
-        ("referenceHover", "Reference Hover", "Referenz-Hover"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswaehlen"),
-        ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
-        ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-        ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
-        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrueckt"),
-        ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
-        ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-        ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
-        ("saveSelected", "Save Selected", "Auswahl speichern"),
-        ("saveInPlay", "Save In Play", "Im Play speichern"),
-        ("saveCurrent", "Save Current", "Aktuelles speichern"),
-        ("loadRawRequest", "Load Raw Request", "Rohanfrage laden"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_cad_app`.
-fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("move", "Move", "Verschieben"),
-        ("rotate", "Rotate", "Drehen"),
-        ("scale", "Scale", "Skalieren"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-//#endregion 🔖CommandLabels
+//#endregion 🔖CadPlayApp
 
 //#region 🔖Manifest
 /// @emoji 🪟 One quadrant of the quad layout: a stack holding a single window kind.
@@ -5416,7 +5349,7 @@ fn register_cad_exports() {
 semio_framework_plugin::semio_plugin! {
     id: "cad", label: "CAD", version: "0.1.0",
     setup: register_cad_exports,
-    apps: [ create_cad_app => CadApp ],
+    apps: [ create_cad_app => CadPlayApp ],
 }
 //#endregion 🔖Manifest
 
@@ -5430,11 +5363,11 @@ mod tests {
 
     //#region 🔖Harness
     fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
+        semio_framework_plugin::testkit::meta(actor)
     }
 
-    fn new_app() -> VcsDocumentApp<CadApp> {
-        VcsDocumentApp::new(CadApp::default())
+    fn new_app() -> VcsDocumentApp<CadPlayApp> {
+        semio_framework_plugin::testkit::new_app::<CadPlayApp>()
     }
 
     fn empty_history() -> HistoryView {
@@ -5447,9 +5380,9 @@ mod tests {
         }
     }
 
-    /// 🕹️ Drives one action against a bare `CadApp` (unwrapped) so tests can inspect ephemeral
+    /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
     /// runtime view-state and the emitted operations directly.
-    fn drive(app: &mut CadApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOp> {
+    fn drive(app: &mut CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOp> {
         let history = empty_history();
         let doc = DocumentView { projection: scene, history: &history };
         app.handle_action(action, args.as_ref(), &doc, &ViewState::default())
@@ -5541,7 +5474,7 @@ mod tests {
     //#region 🔖Render
     #[test]
     fn renders_world_scene_for_each_pane() {
-        let app = CadApp::default();
+        let app = CadPlayApp::default();
         let scene = forest_play_scene();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
@@ -5643,7 +5576,7 @@ mod tests {
     //#region 🔖ViewState
     #[test]
     fn gumball_fields_present_when_selection_active() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
         let selection = world_selection_json(&scene, &app.runtime, "rotate");
@@ -5661,7 +5594,7 @@ mod tests {
 
     #[test]
     fn active_utility_flows_from_view_state_into_scene() {
-        let app = CadApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
@@ -5709,7 +5642,7 @@ mod tests {
 
     #[test]
     fn sun_measures_registered_for_all_four_panes_and_default_off() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         assert!(!app.runtime.sun.enabled, "sun must be off by default");
         let scene = default_document();
         let history = empty_history();
@@ -5731,7 +5664,7 @@ mod tests {
     fn world_pick_selects_visible_object_by_index() {
         // The Shape pane's fixture object is a single hexagonal-cut solid (one object), so this
         // exercises worldPick-by-index against the Building pane, which has multiple objects.
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = forest_play_scene();
         let building_visible: Vec<_> = scene.building_objects.iter().filter(|object| object.visible).collect();
         assert!(building_visible.len() > 1);
@@ -5832,7 +5765,7 @@ mod tests {
 
     #[test]
     fn cad_labels_translate_document_tree_panes_in_german() {
-        let app = CadApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
@@ -5850,7 +5783,7 @@ mod tests {
 
     #[test]
     fn cad_labels_translate_catalogue_typologies_in_german() {
-        let app = CadApp::default();
+        let app = CadPlayApp::default();
         let scene = default_document();
         let history = empty_history();
         let doc = DocumentView { projection: &scene, history: &history };
@@ -5870,7 +5803,7 @@ mod tests {
     //#region 🔖Operations
     #[test]
     fn add_object_action_appends_object_and_selects_it() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&mut app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
         assert_eq!(emit.ops.len(), 1);
@@ -5901,7 +5834,7 @@ mod tests {
 
     #[test]
     fn derive_transformation_populates_energy_pane() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let mut scene = default_document();
         scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
         let emit = drive(&mut app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
@@ -5914,7 +5847,7 @@ mod tests {
 
     #[test]
     fn forest_transformation_uses_live_shape_pane() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let mut scene = forest_play_scene();
         let fixture_energy_ids: Vec<String> = scene.energy_objects.iter().map(|object| object.id.clone()).collect();
         assert!(!fixture_energy_ids.is_empty(), "forest fixture should have energy objects");
@@ -5933,7 +5866,7 @@ mod tests {
 
     #[test]
     fn save_selected_emits_download_effect() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         app.runtime.selected_object_ids = vec!["object-box-1".into()];
         let emit = drive(&mut app, &scene, "saveSelected", None);
@@ -5950,7 +5883,7 @@ mod tests {
 
     #[test]
     fn load_raw_request_emits_file_open_effect() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let emit = drive(&mut app, &default_document(), "loadRawRequest", None);
         match &emit.effects[0] {
             HostEffect::RequestFileOpen { import_action, read_as, .. } => {
@@ -5965,7 +5898,7 @@ mod tests {
     //#region 🔖Engagement
     #[test]
     fn engagement_starts_box_interaction_session() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         app.runtime.engagement_input = "b".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
@@ -5974,7 +5907,7 @@ mod tests {
 
     #[test]
     fn world_pointer_move_updates_live_preview_without_committing_or_emitting_ops() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         app.runtime.engagement_input = "b".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
@@ -5988,7 +5921,7 @@ mod tests {
 
     #[test]
     fn engagement_repeat_last_restarts_the_last_finalized_interaction() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let mut scene = default_document();
         app.runtime.engagement_input = "b".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
@@ -6052,7 +5985,7 @@ mod tests {
 
     #[test]
     fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         let file_text = json!({
             "schema": "spatial.model",
@@ -6083,7 +6016,7 @@ mod tests {
 
     #[test]
     fn import_cad_file_action_imports_obj_by_extension() {
-        let mut app = CadApp::default();
+        let mut app = CadPlayApp::default();
         let scene = default_document();
         let obj_text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n";
         let obj_data_url = format!(
@@ -6108,13 +6041,14 @@ mod tests {
     fn undo_redo_round_trips_added_object_through_wrapper() {
         let mut app = new_app();
         let before = app.projection().expect("projection").objects.len();
-        app.handle_action("addObject", Some(&json!({ "typology": "spatial.shape.primitive.box" })), &ViewState::default(), &meta("local"))
-            .expect("add object");
-        assert_eq!(app.projection().expect("projection").objects.len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").objects.len(), before);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").objects.len(), before + 1);
+        semio_framework_plugin::testkit::assert_undo_redo_round_trip(
+            &mut app,
+            "addObject",
+            Some(&json!({ "typology": "spatial.shape.primitive.box" })),
+            |app| app.projection().expect("projection").objects.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[test]

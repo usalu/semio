@@ -1,9 +1,9 @@
 //! 🎞️ Animate present plugin — tile play app bundled as a hot-swappable WASM component.
 
 use animate_present::{
-    build_tile_morph_prompt, clamp_tile_crop, default_present_deck, parse_grid_engagement,
-    populate_tile_drafts_from_grid, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
-    FigureTileGridSeedSpec, FigureTileSource, PresentDeck, PresentOp, PRESENT_DECK_SCHEMA,
+    build_tile_morph_prompt, clamp_tile_crop, compile_scene_to_assets, default_present_deck, parse_grid_engagement,
+    populate_tile_drafts_from_grid, export_video_from_scene, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
+    FigureTileGridSeedSpec, FigureTileSource, PresentDeck, PresentOp, PresentScene, PRESENT_DECK_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind, PanelGroup, ActionArgDef, ActionArgOption, HostEffect,
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
@@ -82,6 +82,12 @@ fn valid_tile_ids(deck: &PresentDeck, ids: Vec<String>) -> Vec<String> {
     ids.into_iter().filter(|id| valid.contains(id.as_str())).collect()
 }
 //#endregion 🔖Runtime
+
+//#region 🔖VideoExport
+fn export_video_from_deck(scene: &PresentScene, output_dir: &str) -> Result<Vec<animate_present::SceneAssetBundle>, String> {
+    export_video_from_scene(scene, std::path::Path::new(output_dir))
+}
+//#endregion 🔖VideoExport
 
 //#region 🔖CanvasLayers
 #[derive(Serialize)]
@@ -734,6 +740,30 @@ impl DocumentApp for AnimatePresentPlayApp {
                 ActionEmit::ops(vec![PresentOp::SetTiles { tiles: Vec::new() }])
             }
             "copyPrompt" => ActionEmit::effect(tile_morph_prompt_effect(deck)),
+            "exportVideoFromDeck" => {
+                let output_dir = args
+                    .and_then(|value| value.get("outputDir"))
+                    .and_then(|value| value.as_str())
+                    .unwrap_or("output/animate-video");
+                let scene = args
+                    .and_then(|value| value.get("scene"))
+                    .and_then(|value| serde_json::from_value::<PresentScene>(value.clone()).ok())
+                    .unwrap_or_else(|| PresentScene::empty("Deck export"));
+                match export_video_from_deck(&scene, output_dir) {
+                    Ok(bundles) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: "animate-video-export.json".into(),
+                        mime_type: "application/json".into(),
+                        data: serde_json::to_string_pretty(&bundles).unwrap_or_else(|_| "[]".into()),
+                        encoding: None,
+                    }),
+                    Err(error) => ActionEmit::effect(HostEffect::DownloadMediaExport {
+                        filename: "animate-video-export-error.txt".into(),
+                        mime_type: "text/plain".into(),
+                        data: error,
+                        encoding: None,
+                    }),
+                }
+            }
             "engagementInput" => {
                 if let Some(value) = args.and_then(|v| v.get("value")).and_then(|v| v.as_str()) {
                     self.runtime.engagement_input = value.into();
@@ -900,6 +930,7 @@ fn create_animate_present_app() -> App {
             .operation("engagementSubmit", "Engagement Submit")
             // 🐚 Host side-effect — exports the generated tile-morph prompt to the user (no document mutation).
             .shell_action("copyPrompt", "Copy Prompt")
+            .shell_action("exportVideoFromDeck", "Export Video From Deck")
             // 👁️ Ephemeral view state — selection, engagement draft.
             .view_action("setSelectedIds", "Set Selected Ids")
             .view_action("engagementInput", "Engagement Input")

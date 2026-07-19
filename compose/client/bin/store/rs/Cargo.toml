@@ -13,6 +13,7 @@ path = "bin.rs"
 compose = { path = "../../../lib/rs" }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.149"
+thiserror = "2.0.18"
 futures-lite = "2.6.0"
 async-broadcast = "0.7"
 async-channel = "2"

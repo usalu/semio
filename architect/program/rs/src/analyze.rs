@@ -273,7 +273,7 @@ fn analyze_demand(program: &Program) -> AnalysisResult {
         findings: program
             .schedules
             .iter()
-            .map(|s| format!("schedule {} — {}", s.header.name, s.header.status))
+            .map(|s| format!("schedule {} — {:?}", s.header.name, s.header.status))
             .collect(),
         metrics: vec![AnalysisMetric {
             name: "peak_occupancy".into(),
@@ -389,6 +389,7 @@ fn analyze_risk(program: &Program) -> AnalysisResult {
 
 fn risk_score(level: &RiskLevel) -> f64 {
     match level {
+        RiskLevel::Negligible => 0.5,
         RiskLevel::Low => 1.0,
         RiskLevel::Medium => 2.0,
         RiskLevel::High => 3.0,

@@ -1,5 +1,14 @@
 //! 👯 Puzzle 5d brush/fill precompute and document VCS on `vcs`.
 
+//#region ⚠️ Errors
+/// 🧯 Puzzle 5d precompute session errors — delegates entirely to `puzzle_3d`'s own precompute-session error.
+#[derive(Debug, thiserror::Error)]
+pub enum Puzzle5dError {
+    #[error(transparent)]
+    Puzzle3d(#[from] puzzle_3d::Puzzle3dError),
+}
+//#endregion ⚠️ Errors
+
 //#region 🔖BrushEngine
 pub use puzzle_3d::BrushPlacePayload;
 
@@ -7,17 +16,19 @@ pub struct Puzzle5dPrecomputeSession {
     inner: puzzle_3d::Puzzle3dPrecomputeSession,
 }
 
+impl Default for Puzzle5dPrecomputeSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Puzzle5dPrecomputeSession {
     pub fn new() -> Self {
-        Self {
-            inner: puzzle_3d::Puzzle3dPrecomputeSession::new(),
-        }
+        Self { inner: puzzle_3d::Puzzle3dPrecomputeSession::new() }
     }
 
-    pub fn set_scene(&mut self, json: &str) -> Result<(), String> {
-        self.inner
-            .set_scene(json)
-            .map_err(|error| format!("{error:?}"))
+    pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle5dError> {
+        Ok(self.inner.set_scene(json)?)
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
@@ -44,12 +55,12 @@ impl Puzzle5dPrecomputeSession {
         self.inner.fill_progress()
     }
 
-    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
-        self.inner.apply_brush_placement_rust(payload_json)
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
+        Ok(self.inner.apply_brush_placement_rust(payload_json)?)
     }
 
-    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
-        self.inner.apply_fill_count_rust(count)
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
+        Ok(self.inner.apply_fill_count_rust(count)?)
     }
 }
 //#endregion 🔖BrushEngine
@@ -75,9 +86,11 @@ pub fn puzzle5d_grip_kinds_compatible(source_kind: &str, target_kind: &str) -> b
 // 🧩 Puzzle 5d document VCS on `vcs`: granular JSON-document operations over the bare document
 // projection (parts keyed by id, camera + scalar fields) with a whole-document fallback, so
 // disjoint edits converge instead of clobbering.
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+#[cfg(any(test, target_arch = "wasm32"))]
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PUZZLE_5D_SCHEMA: &str = "puzzle.5d";
 
@@ -271,42 +284,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<Puzzle5dDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Puzzle5dEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Puzzle5dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Puzzle5dStore::new(envelope)
                 }
-                None => Puzzle5dStore::new(create_document_vcs_envelope(
-                    PUZZLE_5D_SCHEMA,
-                    "puzzle5d",
-                    empty_puzzle5d_projection(),
-                    None,
-                )),
+                None => Puzzle5dStore::new(create_document_vcs_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -323,18 +321,8 @@ mod tests {
 
     #[test]
     fn puzzle5d_document_vcs_replays_granular_ops() {
-        let mut store = Puzzle5dStore::new(create_document_vcs_envelope(
-            PUZZLE_5D_SCHEMA,
-            "puzzle5d",
-            empty_puzzle5d_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle5dOp::UpsertItem { collection: "parts".into(), item: serde_json::json!({ "id": "p1" }) }],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = Puzzle5dStore::new(create_document_vcs_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", empty_puzzle5d_projection(), None));
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Puzzle5dOp::UpsertItem { collection: "parts".into(), item: serde_json::json!({ "id": "p1" }) }], description: None }).expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.get("parts").and_then(|value| value.as_array()).map(Vec::len), Some(1));
     }

@@ -269,6 +269,10 @@ pub fn sample_program() -> Program {
         security_zone: None,
         flexibility_notes: Vec::new(),
         growth_allocation: None,
+        circulation_role: None,
+        visibility_level: None,
+        adjacency_preferences: Vec::new(),
+        environmental_zone: None,
     });
     program.elements.push(ProgramElement {
         header: EntityHeader::new(waiting_id.clone(), "Waiting"),
@@ -293,6 +297,10 @@ pub fn sample_program() -> Program {
         security_zone: None,
         flexibility_notes: Vec::new(),
         growth_allocation: None,
+        circulation_role: None,
+        visibility_level: None,
+        adjacency_preferences: Vec::new(),
+        environmental_zone: None,
     });
 
     let stakeholder_id = EntityId::new_serial("stakeholder");

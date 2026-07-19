@@ -4,6 +4,19 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+//#region ⚠️ Errors
+/// 🧯 Puzzle 3d precompute session errors — JSON (de)serialization and brush/fill session state failures.
+#[derive(Debug, thiserror::Error)]
+pub enum Puzzle3dError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("brush placement rejected")]
+    BrushPlacementRejected,
+    #[error("fill session unavailable")]
+    FillSessionUnavailable,
+}
+//#endregion ⚠️ Errors
+
 //#region 🔒GeometryAdapter
 /// 🔒 Thin wrappers over `nalgebra`/`parry3d` — the one interface boundary this crate depends on.
 
@@ -90,7 +103,7 @@ impl Rotation3d {
     fn from_ijkw(i: f32, j: f32, k: f32, w: f32) -> Self {
         Self(nalgebra::UnitQuaternion::from_quaternion(nalgebra::Quaternion::new(w, i, j, k)))
     }
-    fn to_ijkw(&self) -> (f32, f32, f32, f32) {
+    fn to_ijkw(self) -> (f32, f32, f32, f32) {
         let q = self.0.quaternion();
         (q.i, q.j, q.k, q.w)
     }
@@ -128,11 +141,7 @@ struct CollisionShape(parry3d::shape::SharedShape);
 impl CollisionShape {
     fn from_triangle_mesh(vertices: &[Point3d], indices: Vec<[u32; 3]>) -> Self {
         let verts: Vec<nalgebra::Point3<f32>> = vertices.iter().map(|p| p.0).collect();
-        let mesh = parry3d::shape::TriMesh::with_flags(
-            verts,
-            indices,
-            parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES,
-        );
+        let mesh = parry3d::shape::TriMesh::with_flags(verts, indices, parry3d::shape::TriMeshFlags::ORIENTED | parry3d::shape::TriMeshFlags::MERGE_DUPLICATE_VERTICES);
         Self(parry3d::shape::SharedShape::new(mesh))
     }
     fn contains_point(&self, pose: &Pose3d, point: &Point3d) -> bool {
@@ -148,7 +157,6 @@ fn shapes_intersect(pose_a: &Pose3d, a: &CollisionShape, pose_b: &Pose3d, b: &Co
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 use wasm_bindgen::prelude::*;
 
-const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
 const SURFACE_CONTACT_MAX_AABB_VOLUME: f64 = 1e-4;
 const BRUSH_COLLISION_MESH_MIN_EXTENT: f64 = 2.0;
 const BRUSH_PLACEMENT_PARALLEL_TOLERANCE: f64 = 1e-6;
@@ -246,8 +254,10 @@ struct CableKindCatalog {
     default_attraction_kind: Option<String>,
 }
 
+/// 🗂️ The compile-time-catalog side of a scene: object/vortex/cable kind rows, reachable through
+/// `apply_brush_placement_to_fixture`'s public signature.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct KindCatalogBundle {
+pub struct KindCatalogBundle {
     #[serde(default)]
     objects: Vec<ObjectKind>,
     #[serde(default)]
@@ -311,8 +321,10 @@ struct WorldVolumeProps {
     scale: Option<serde_json::Value>,
 }
 
+/// 🏗️ A puzzle-3d scene's object/attraction/target-volume state, reachable through
+/// `apply_brush_placement_to_fixture`'s public signature.
 #[derive(Debug, Clone, Serialize, Deserialize)]
-struct Fixture {
+pub struct Fixture {
     #[serde(default)]
     attractions: Vec<AttractionProps>,
     #[serde(default)]
@@ -393,7 +405,6 @@ pub struct FillBuildProgress {
 
 #[derive(Debug, Clone)]
 struct AttractionVortexContext {
-    object_id: String,
     object_kind: Option<String>,
     vortex_kind: Option<String>,
 }
@@ -559,7 +570,7 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
     let mut verts: Vec<Point3d> = Vec::with_capacity(positions.len() / 3);
     let mut min = Point3d::new(f32::INFINITY, f32::INFINITY, f32::INFINITY);
     let mut max = Point3d::new(f32::NEG_INFINITY, f32::NEG_INFINITY, f32::NEG_INFINITY);
-    for chunk in positions.chunks_exact(3) {
+    for chunk in positions.as_chunks::<3>().0 {
         let rp = Point3d::new(chunk[0], chunk[1], chunk[2]);
         verts.push(rp);
         min = min.inf(&rp);
@@ -570,8 +581,8 @@ fn collision_body_from_buffers(positions: &[f32], indices: &[u32]) -> Option<Col
         return None;
     }
     let mut tris: Vec<[u32; 3]> = Vec::with_capacity(indices.len() / 3);
-    for chunk in indices.chunks_exact(3) {
-        tris.push([chunk[0], chunk[1], chunk[2]]);
+    for chunk in indices.as_chunks::<3>().0 {
+        tris.push(*chunk);
     }
     let shape = CollisionShape::from_triangle_mesh(&verts, tris);
     Some(CollisionBody { parts: vec![CollisionMeshPart { shape, local_pose: Pose3d::identity() }], local_bounds_min: min, local_bounds_max: max })
@@ -704,11 +715,7 @@ fn solid_overlap_volume(a: &CollisionBody, world_a: &Pose3d, b: &CollisionBody, 
         let ry = (state as f64) / (u32::MAX as f64);
         state = state.wrapping_mul(1664525).wrapping_add(1013904223);
         let rz = (state as f64) / (u32::MAX as f64);
-        let p = Point3d::new(
-            imin.x() + (imax.x() - imin.x()) * rx as f32,
-            imin.y() + (imax.y() - imin.y()) * ry as f32,
-            imin.z() + (imax.z() - imin.z()) * rz as f32,
-        );
+        let p = Point3d::new(imin.x() + (imax.x() - imin.x()) * rx as f32, imin.y() + (imax.y() - imin.y()) * ry as f32, imin.z() + (imax.z() - imin.z()) * rz as f32);
         if point_inside_body(a, world_a, p) && point_inside_body(b, world_b, p) {
             inside_both += 1;
             if (inside_both as f64 / sample_count as f64) * box_vol > overlap_budget {
@@ -964,7 +971,7 @@ fn brush_compatible_candidates(target: &AttractionVortexContext, catalogs: &Kind
             if stack_bottom_target && !brush_stack_mate_pair(source_vk, target_vk) {
                 continue;
             }
-            let attracting = AttractionVortexContext { object_id: "__brush__".to_string(), object_kind: Some(kind.id.clone()), vortex_kind: Some(source_vk.to_string()) };
+            let attracting = AttractionVortexContext { object_kind: Some(kind.id.clone()), vortex_kind: Some(source_vk.to_string()) };
             if !vortices_attraction_compatible_for_drag(&attracting, target, rules, catalogs) {
                 continue;
             }
@@ -1117,22 +1124,21 @@ fn order_brush_fill_compatible_candidates(
     cross
 }
 
-fn brush_preview_from_candidate(
-    target_full_id: &str,
-    candidate: &BrushCompatibleCandidate,
-    target: &AttractionVortexContext,
-    target_world_position: Vec3,
-    target_world_direction: Vec3,
+/// 🎯 A target vortex's world-space pose, bundled so `brush_preview_from_candidate` stays under clippy's arg-count limit.
+#[derive(Clone, Copy)]
+struct TargetVortexWorld {
+    position: Vec3,
+    direction: Vec3,
     reference_orientation: Option<Quat>,
-    catalogs: &KindCatalogBundle,
-    fixture: &Fixture,
-) -> Option<BrushPreviewState> {
+}
+
+fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibleCandidate, target: &AttractionVortexContext, world: TargetVortexWorld, catalogs: &KindCatalogBundle, fixture: &Fixture) -> Option<BrushPreviewState> {
     let kind = catalog_object_kind_by_id(catalogs, &candidate.object_kind_id)?;
     let template = kind.vortices.get(candidate.source_vortex_index)?;
     let mesh_url = resolve_object_kind_mesh_url(&candidate.object_kind_id, catalogs, fixture)?;
     let source_vk = template.vortex_kind.as_deref().unwrap_or("");
     let use_host = brush_placement_uses_host_orientation(target, source_vk, &candidate.object_kind_id);
-    let (origin, orientation) = compute_brush_placement_pose(template.position, template.direction.unwrap_or([0.0, 0.0, -1.0]), &kind.scale, target_world_position, target_world_direction, reference_orientation, use_host);
+    let (origin, orientation) = compute_brush_placement_pose(template.position, template.direction.unwrap_or([0.0, 0.0, -1.0]), &kind.scale, world.position, world.direction, world.reference_orientation, use_host);
     Some(BrushPreviewState { target_vortex_full_id: target_full_id.to_string(), object_kind_id: kind.id.clone(), source_vortex_index: candidate.source_vortex_index, mesh_url, origin, orientation, scale: kind.scale.clone() })
 }
 
@@ -1162,11 +1168,20 @@ impl FillBuilder {
                 }
             }
         }
-        Self { base: base.clone(), fixture: base, applied_count: 0, sequence: Vec::new(), appended_objects: Vec::new(), appended_attractions: Vec::new(), placed, candidate_cache: HashMap::new(), seed_object_ids, rng_state: seed, stalled: false, max_count: FILL_COUNT_MAX }
-    }
-
-    fn rng(&mut self) -> f64 {
-        fill_rng(&mut self.rng_state)
+        Self {
+            base: base.clone(),
+            fixture: base,
+            applied_count: 0,
+            sequence: Vec::new(),
+            appended_objects: Vec::new(),
+            appended_attractions: Vec::new(),
+            placed,
+            candidate_cache: HashMap::new(),
+            seed_object_ids,
+            rng_state: seed,
+            stalled: false,
+            max_count: FILL_COUNT_MAX,
+        }
     }
 
     fn progress(&self) -> FillBuildProgress {
@@ -1215,11 +1230,11 @@ impl Puzzle3dEngine {
         }
     }
 
-    fn set_scene(&mut self, json: &str) -> Result<(), String> {
+    fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
         if self.scene_json.as_deref() == Some(json) {
             return Ok(());
         }
-        let scene: SceneConfig = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let scene: SceneConfig = serde_json::from_str(json)?;
         self.scene = Some(scene);
         self.scene_json = Some(json.to_string());
         self.rebuild_queue();
@@ -1274,7 +1289,7 @@ impl Puzzle3dEngine {
         let Some((position, direction)) = vortex_world_from_object(host, vortex_index) else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         };
-        let target_ctx = AttractionVortexContext { object_id: host.id.clone(), object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
+        let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
         let host_id = host.id.clone();
         let placed: Vec<PlacedCollisionEntry> = scene
             .fixture
@@ -1292,7 +1307,8 @@ impl Puzzle3dEngine {
         let mut free = Vec::new();
         let mut unknown_pending = false;
         for candidate in candidates {
-            let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, position, direction, host.orientation, catalogs, &scene.fixture) else {
+            let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
+            let Some(preview) = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, catalogs, &scene.fixture) else {
                 continue;
             };
             if !self.meshes.contains_key(&preview.mesh_url) {
@@ -1326,7 +1342,7 @@ impl Puzzle3dEngine {
         let Some((host, _, vortex)) = target_obj else {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         };
-        let target_ctx = AttractionVortexContext { object_id: host.id.clone(), object_kind: host.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone() };
+        let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: vortex.vortex_kind.clone() };
         if !brush_target_vortex_allows_suggestion(vortex.vortex_kind.as_deref(), &scene.weights) {
             return BrushCollisionFreeResult { free: vec![], unknown_pending: false };
         }
@@ -1337,24 +1353,12 @@ impl Puzzle3dEngine {
 
     pub fn brush_preview_json(&self, target_full_id: &str, candidate_index: usize) -> Option<String> {
         let scene = self.scene.as_ref()?;
-        let result = self
-            .brush_cache
-            .get(target_full_id)
-            .cloned()
-            .unwrap_or_else(|| self.compute_brush_cache_entry(target_full_id));
+        let result = self.brush_cache.get(target_full_id).cloned().unwrap_or_else(|| self.compute_brush_cache_entry(target_full_id));
         if result.free.is_empty() {
             return None;
         }
         let candidate = &result.free[candidate_index % result.free.len()];
-        let catalogs = scene
-            .kind_catalogs
-            .as_ref()
-            .cloned()
-            .unwrap_or(KindCatalogBundle {
-                objects: vec![],
-                vortices: vec![],
-                cables: vec![],
-            });
+        let catalogs = scene.kind_catalogs.as_ref().cloned().unwrap_or(KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] });
         let target_obj = scene.fixture.objects.iter().find_map(|object| {
             object.vortices.iter().enumerate().find_map(|(index, vortex)| {
                 let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
@@ -1367,21 +1371,9 @@ impl Puzzle3dEngine {
         })?;
         let (host, vortex_index) = target_obj;
         let (position, direction) = vortex_world_from_object(host, vortex_index)?;
-        let target_ctx = AttractionVortexContext {
-            object_id: host.id.clone(),
-            object_kind: host.object_kind.clone(),
-            vortex_kind: host.vortices[vortex_index].vortex_kind.clone(),
-        };
-        let preview = brush_preview_from_candidate(
-            target_full_id,
-            candidate,
-            &target_ctx,
-            position,
-            direction,
-            host.orientation,
-            &catalogs,
-            &scene.fixture,
-        )?;
+        let target_ctx = AttractionVortexContext { object_kind: host.object_kind.clone(), vortex_kind: host.vortices[vortex_index].vortex_kind.clone() };
+        let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
+        let preview = brush_preview_from_candidate(target_full_id, candidate, &target_ctx, world, &catalogs, &scene.fixture)?;
         serde_json::to_string(&preview).ok()
     }
 
@@ -1450,7 +1442,7 @@ impl Puzzle3dEngine {
             let Some((position, direction)) = vortex_world_from_object(host, target.vortex_index) else {
                 continue;
             };
-            let target_ctx = AttractionVortexContext { object_id: target.object_id.clone(), object_kind: target.object_kind.clone(), vortex_kind: target.vortex_kind.clone() };
+            let target_ctx = AttractionVortexContext { object_kind: target.object_kind.clone(), vortex_kind: target.vortex_kind.clone() };
             let key = format!("{}\u{1}{}", target.object_kind.as_deref().unwrap_or(""), target.vortex_kind.as_deref().unwrap_or(""));
             let compatible = fill.candidate_cache.entry(key).or_insert_with(|| brush_compatible_candidates(&target_ctx, &catalogs, &kind_compatibility, &host_rules)).clone();
             if compatible.is_empty() {
@@ -1461,7 +1453,8 @@ impl Puzzle3dEngine {
                 continue;
             }
             for candidate in &ordered_candidates {
-                let Some(preview) = brush_preview_from_candidate(&target.full_id, candidate, &target_ctx, position, direction, host.orientation, &catalogs, &fill.fixture) else {
+                let world = TargetVortexWorld { position, direction, reference_orientation: host.orientation };
+                let Some(preview) = brush_preview_from_candidate(&target.full_id, candidate, &target_ctx, world, &catalogs, &fill.fixture) else {
                     continue;
                 };
                 if !self.meshes.contains_key(&preview.mesh_url) {
@@ -1491,13 +1484,16 @@ impl Puzzle3dEngine {
                 if next_fixture.objects.len() == fill.fixture.objects.len() {
                     continue;
                 }
-                let placed_object = next_fixture.objects.last().cloned().unwrap();
+                // 🔒 Infallible: the length check above proves `apply_brush_placement_to_fixture` actually
+                // appended (rather than returning `fixture.clone()` unchanged), and it only ever appends
+                // exactly one object together with exactly one attraction, never one without the other.
+                let placed_object = next_fixture.objects.last().cloned().expect("objects grew, so last() is Some");
                 if let Some(mesh_url) = resolve_object_kind_mesh_url(placed_object.object_kind.as_deref().unwrap_or(""), &catalogs, &next_fixture) {
                     if self.meshes.contains_key(&mesh_url) {
                         fill.placed.push(PlacedCollisionEntry { object_id: placed_object.id.clone(), mesh_url, world: pose_isometry(placed_object.origin, placed_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &placed_object.scale) });
                     }
                 }
-                let new_attraction = next_fixture.attractions.last().cloned().unwrap();
+                let new_attraction = next_fixture.attractions.last().cloned().expect("attractions grew alongside objects, so last() is Some");
                 fill.fixture = next_fixture;
                 fill.sequence.push(payload);
                 fill.appended_objects.push(placed_object);
@@ -1614,6 +1610,13 @@ pub struct Puzzle3dPrecomputeSession {
 }
 
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+impl Default for Puzzle3dPrecomputeSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 impl Puzzle3dPrecomputeSession {
     #[wasm_bindgen(constructor)]
@@ -1622,7 +1625,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn set_scene(&mut self, json: &str) -> Result<(), JsValue> {
-        self.engine.set_scene(json).map_err(|e| JsValue::from_str(&e))
+        self.engine.set_scene(json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
@@ -1655,20 +1658,13 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, JsValue> {
-        let payload: BrushPlacePayload =
-            serde_json::from_str(payload_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-        let fixture = self
-            .engine
-            .apply_brush_placement(&payload)
-            .ok_or_else(|| JsValue::from_str("brush placement rejected"))?;
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let fixture = self.engine.apply_brush_placement(&payload).ok_or_else(|| JsValue::from_str("brush placement rejected"))?;
         serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     pub fn apply_fill_count(&mut self, count: u32) -> Result<String, JsValue> {
-        let fixture = self
-            .engine
-            .apply_fill_count(count as usize)
-            .ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
+        let fixture = self.engine.apply_fill_count(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
         serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
@@ -1681,6 +1677,8 @@ pub struct Puzzle3dPrecomputeSession {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const DEFAULT_OVERLAP_BUDGET: f64 = 0.02;
 
     /// 🔗 Keeps the example fixture's scene-authored kind catalog in sync with the compile-time `puzzle3d-default` manifest.
     #[test]
@@ -1814,14 +1812,7 @@ mod tests {
             vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
             cables: vec![],
         };
-        let payload = BrushPlacePayload {
-            target_vortex_full_id: "host:v0".to_string(),
-            object_kind_id: "Placed".to_string(),
-            source_vortex_index: 0,
-            origin: [1.0, 2.0, 3.0],
-            orientation: [0.0, 0.0, 0.0, 1.0],
-            scale: None,
-        };
+        let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
         assert_eq!(next.attractions.len(), 1, "brush placement should append exactly one attraction");
         let attraction = &next.attractions[0];
@@ -1847,14 +1838,7 @@ mod tests {
             vortices: vec![VortexKindCatalog { id: "port-a".to_string(), default_cable_kind: None }, VortexKindCatalog { id: "port-b".to_string(), default_cable_kind: None }],
             cables: vec![],
         };
-        let payload = BrushPlacePayload {
-            target_vortex_full_id: "host:v0".to_string(),
-            object_kind_id: "Placed".to_string(),
-            source_vortex_index: 0,
-            origin: [1.0, 2.0, 3.0],
-            orientation: [0.0, 0.0, 0.0, 1.0],
-            scale: None,
-        };
+        let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".to_string(), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [1.0, 2.0, 3.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let mut fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
         let mut ids = std::collections::HashSet::new();
         for i in 0..8 {
@@ -1916,10 +1900,7 @@ mod tests {
 
         // A genuinely different scene (different object count) must still rebuild.
         let mut scene: serde_json::Value = serde_json::from_str(&json).unwrap();
-        scene["fixture"]["objects"]
-            .as_array_mut()
-            .unwrap()
-            .push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [] }));
+        scene["fixture"]["objects"].as_array_mut().unwrap().push(serde_json::json!({ "id": "extra", "objectKind": "Host", "meshUrl": "/test/host.glb", "origin": [5.0, 0.0, 0.0], "orientation": [0.0, 0.0, 0.0, 1.0], "vortices": [] }));
         let changed_json = serde_json::to_string(&scene).unwrap();
         engine.set_scene(&changed_json).expect("set_scene with a genuinely different scene should succeed");
         assert_ne!(engine.queue.len(), queue_len_after_step, "a changed scene must rebuild the queue");
@@ -1927,15 +1908,8 @@ mod tests {
 
     #[test]
     fn decreasing_fill_count_preserves_prefix_and_replans_tail() {
-        let object = |id: &str| FixtureObject {
-            id: id.to_string(),
-            object_kind: Some("Placed".to_string()),
-            mesh_url: Some("/test/placed.glb".to_string()),
-            origin: [0.0, 0.0, 0.0],
-            orientation: Some([0.0, 0.0, 0.0, 1.0]),
-            scale: None,
-            vortices: vec![],
-        };
+        let object =
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -1983,12 +1957,19 @@ mod tests {
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+impl Default for Puzzle3dPrecomputeSession {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
 impl Puzzle3dPrecomputeSession {
     pub fn new() -> Self {
         Self { engine: Puzzle3dEngine::new() }
     }
 
-    pub fn set_scene(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
         self.engine.set_scene(json)
     }
 
@@ -2021,22 +2002,15 @@ impl Puzzle3dPrecomputeSession {
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 
-    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, String> {
-        let payload: BrushPlacePayload =
-            serde_json::from_str(payload_json).map_err(|e| e.to_string())?;
-        let fixture = self
-            .engine
-            .apply_brush_placement(&payload)
-            .ok_or_else(|| "brush placement rejected".to_string())?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle3dError> {
+        let payload: BrushPlacePayload = serde_json::from_str(payload_json)?;
+        let fixture = self.engine.apply_brush_placement(&payload).ok_or(Puzzle3dError::BrushPlacementRejected)?;
+        Ok(serde_json::to_string(&fixture)?)
     }
 
-    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, String> {
-        let fixture = self
-            .engine
-            .apply_fill_count(count as usize)
-            .ok_or_else(|| "fill session unavailable".to_string())?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+    pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
+        let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+        Ok(serde_json::to_string(&fixture)?)
     }
 }
 
@@ -2044,7 +2018,9 @@ impl Puzzle3dPrecomputeSession {
 // 🧩 Puzzle 3d document VCS on `vcs`: granular JSON-document operations over the bare fixture
 // projection (objects/attractions/targetVolumes/references keyed by id, camera + scalar fields)
 // with a whole-document fallback, so disjoint edits converge instead of clobbering.
-use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+#[cfg(any(test, all(target_arch = "wasm32", not(target_env = "p2"))))]
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
@@ -2062,10 +2038,23 @@ pub enum Puzzle3dOp {
     /// 📍 `index` only matters when `item`'s id is absent from the collection (a fresh insert): it then
     /// inserts at that position instead of appending, so undoing a `RemoveItem`/updating over a fresh
     /// insert restores the original array order rather than shuffling the item to the end.
-    UpsertItem { collection: String, item: serde_json::Value, #[serde(default, skip_serializing_if = "Option::is_none")] index: Option<usize> },
-    RemoveItem { collection: String, id: String },
-    SetField { key: String, value: serde_json::Value },
-    ReplaceDocument { document: serde_json::Value },
+    UpsertItem {
+        collection: String,
+        item: serde_json::Value,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        index: Option<usize>,
+    },
+    RemoveItem {
+        collection: String,
+        id: String,
+    },
+    SetField {
+        key: String,
+        value: serde_json::Value,
+    },
+    ReplaceDocument {
+        document: serde_json::Value,
+    },
 }
 
 /// 🧮 An ordered list of granular ops replayed over the projection; coalesced edits concatenate.
@@ -2252,42 +2241,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<Puzzle3dDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Puzzle3dEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Puzzle3dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Puzzle3dStore::new(envelope)
                 }
-                None => Puzzle3dStore::new(create_document_vcs_envelope(
-                    PUZZLE_3D_SCHEMA,
-                    "puzzle3d",
-                    empty_puzzle3d_projection(),
-                    None,
-                )),
+                None => Puzzle3dStore::new(create_document_vcs_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -2304,18 +2278,8 @@ mod puzzle3d_vcs_tests {
 
     #[test]
     fn puzzle3d_document_vcs_replays_granular_ops() {
-        let mut store = Puzzle3dStore::new(create_document_vcs_envelope(
-            PUZZLE_3D_SCHEMA,
-            "puzzle3d",
-            empty_puzzle3d_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle3dOp::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }), index: None }],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = Puzzle3dStore::new(create_document_vcs_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Puzzle3dOp::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }), index: None }], description: None }).expect("apply");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.get("objects").and_then(|value| value.as_array()).map(Vec::len), Some(1));
     }

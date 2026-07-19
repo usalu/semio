@@ -359,10 +359,16 @@ export interface Participant {
 //#endregion 🔖Participant
 
 //#region 🔖Scope
+/** @emoji 🗂 Optional scene clip metadata for animate video exports. */
+export interface ArrangementMetadata {
+	readonly sceneHash?: string;
+}
+
 /** @emoji 🗂 Optional participant and embodiment registries on a presentation artifact and its children. */
 export interface ArtifactScope {
 	readonly participants?: readonly Participant[];
 	readonly embodiments?: readonly Embodiment[];
+	readonly metadata?: ArrangementMetadata;
 }
 
 /** @emoji 🔍 Merged participant and embodiment maps for resolving dispositions. */
@@ -1034,6 +1040,7 @@ export interface RenderSlide {
 	readonly arrangement: Arrangement;
 	/** @emoji ↔️ reveal.js `data-auto-animate-id` shared by consecutive morph-linked slides in one run. */
 	readonly autoAnimateId?: string;
+	readonly metadata?: ArrangementMetadata;
 }
 
 function transitionUsesMorph(transition: Transition | undefined): boolean {
@@ -1096,6 +1103,7 @@ export function expandThoughtSlides(thought: Thought): readonly RenderSlide[] {
 				name: slide.arrangement.name,
 				arrangement: slide.arrangement,
 				autoAnimateId,
+				metadata: slide.arrangement.metadata,
 			});
 		}
 		index = runEnd + 1;

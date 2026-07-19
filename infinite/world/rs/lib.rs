@@ -1,6 +1,7 @@
 //! 🌐 Application-neutral 3D world canvas: mesh loading, orbit camera, picking, and marquee selection.
 
 use base64::Engine;
+use framework_surface_terrain::TerrainSessionCore;
 use kernel_3d_scene::{
     aabb_intersects_frustum, axis_rotate_angle, frustum_planes, grid_placement_anchor, gumball_extent, gumball_eye, gumball_project_ray_onto_axis, interpolate_mesh_uv, lod_from_camera_distance, lod_progressive_grid_layers,
     marquee_is_crossing_from_path, pick_closest_mesh_url, quat_from_basis, ray_aabb_slab, ray_pick_instance, ray_pick_mesh_detail, ray_plane_point, ray_segment_distance, rotate_vector, screen_select_components, screen_select_instances,
@@ -11,7 +12,7 @@ use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, UiComponentSceneNode, WidgetContext};
+use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
 
 //#region SceneRecords
 fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
@@ -213,6 +214,120 @@ struct WorldInteractionRecord {
     active_utility: Option<String>,
     hovered_vortex_full_id: Option<String>,
 }
+
+//#region Environment
+/// ☀️ Directional sun light — `enabled` gates whether `azimuth`/`elevation` (degrees, horizontal
+/// coordinate system) replace the renderer's default `light_dir`; `intensity`/`color` have no
+/// representable channel in `ScenePass3d` (single direction vector, no color/intensity) yet.
+#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct WorldEnvironmentSunRecord {
+    enabled: Option<bool>,
+    azimuth: Option<f64>,
+    elevation: Option<f64>,
+    #[allow(dead_code)] // 🔌 no per-light intensity channel in ScenePass3d yet; wiring gap, see report.
+    intensity: Option<f64>,
+    #[allow(dead_code)] // 🔌 no per-light color channel in ScenePass3d yet; wiring gap, see report.
+    color: Option<String>,
+}
+
+/// 💡 Ambient light — parsed for scene-shape completeness; `ScenePass3d` has no ambient
+/// color/intensity channel to apply it to (wiring gap, see report).
+#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+struct WorldEnvironmentAmbientRecord {
+    intensity: Option<f64>,
+    color: Option<String>,
+}
+
+/// 🌑 Shadow toggle — dead in the React reference too (no shadow-map consumer there either);
+/// kept for scene-shape completeness only.
+#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+#[allow(dead_code)]
+struct WorldEnvironmentShadowRecord {
+    enabled: Option<bool>,
+    opacity: Option<f64>,
+    softness: Option<f64>,
+}
+
+/// 🎨 Neutral-instance material override — `color` becomes the base-color fallback for instances
+/// without an explicit per-instance color (mirrors the React reference's "only applies when the
+/// instance isn't selected/hovered" rule, since Rust's selection/hover highlighting is a separate
+/// boolean layered on top rather than a color premix). `metalness`/`roughness`/`emissive*` have no
+/// PBR channel on `Instance3d` yet (wiring gap, see report).
+#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct WorldEnvironmentMaterialRecord {
+    color: Option<String>,
+    #[allow(dead_code)]
+    metalness: Option<f64>,
+    #[allow(dead_code)]
+    roughness: Option<f64>,
+    #[allow(dead_code)]
+    emissive: Option<String>,
+    #[allow(dead_code)]
+    emissive_intensity: Option<f64>,
+}
+
+/// 🌍 `World3dScene.environmentJson` mirror — see `world-3d-host.tsx`'s `WorldEnvironmentRecord`.
+/// Only `background` (canvas clear color), `sun` (light direction), and `material.color` (neutral
+/// instance base-color fallback) are representable in this renderer today; the rest is parsed for
+/// forward-compat and documented per-field above.
+#[derive(Clone, Debug, Deserialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct WorldEnvironmentRecord {
+    background: Option<String>,
+    ambient: Option<WorldEnvironmentAmbientRecord>,
+    sun: Option<WorldEnvironmentSunRecord>,
+    shadow: Option<WorldEnvironmentShadowRecord>,
+    material: Option<WorldEnvironmentMaterialRecord>,
+}
+//#endregion Environment
+
+//#region TerrainStyle
+/// 🌐⛰️ `World3dScene.terrainJson` mirror — GIS-3D terrain style/source descriptor consumed by
+/// `WorldTerrainLayer` in the React reference. `color_ramp`/`min_zoom`/`max_zoom` are parsed but
+/// not branched on, mirroring the React reference (single hardcoded hypsometric ramp; zoom bounds
+/// fixed inside `framework_surface_terrain::tiles`) — not a gap, a faithful match of upstream.
+#[derive(Clone, Debug, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase")]
+struct WorldTerrainStyle {
+    tile_url_template: String,
+    #[serde(default)]
+    project_origin_lon: f64,
+    #[serde(default)]
+    project_origin_lat: f64,
+    #[serde(default = "default_terrain_exaggeration")]
+    exaggeration: f64,
+    #[serde(default = "default_terrain_color_ramp")]
+    #[allow(dead_code)]
+    color_ramp: String,
+    #[serde(default = "default_terrain_min_zoom")]
+    #[allow(dead_code)]
+    min_zoom: u32,
+    #[serde(default = "default_terrain_max_zoom")]
+    #[allow(dead_code)]
+    max_zoom: u32,
+}
+
+fn default_terrain_exaggeration() -> f64 {
+    1.0
+}
+
+fn default_terrain_color_ramp() -> String {
+    "hypsometric".into()
+}
+
+fn default_terrain_min_zoom() -> u32 {
+    6
+}
+
+fn default_terrain_max_zoom() -> u32 {
+    14
+}
+//#endregion TerrainStyle
 //#endregion SceneRecords
 
 //#region World3dState
@@ -289,6 +404,16 @@ pub struct World3dState {
     resolved_lod_pick: Option<f64>,
     scene_lod_json: Option<String>,
     scene_chunking_json: Option<String>,
+    environment: WorldEnvironmentRecord,
+    scene_environment_json: Option<String>,
+    terrain_style: Option<WorldTerrainStyle>,
+    scene_terrain_json: Option<String>,
+    terrain_applied_signature: Option<(String, f64, f64, f64)>,
+    terrain_session: TerrainSessionCore,
+    terrain_visible_tiles: HashSet<(u32, u32, u32)>,
+    terrain_built_tiles: HashSet<(u32, u32, u32)>,
+    pending_terrain_tile_urls: HashMap<String, (u32, u32, u32)>,
+    right_press_point: Option<[f32; 2]>,
 }
 
 impl World3dState {
@@ -366,6 +491,16 @@ impl World3dState {
             resolved_lod_pick: None,
             scene_lod_json: None,
             scene_chunking_json: None,
+            environment: WorldEnvironmentRecord::default(),
+            scene_environment_json: None,
+            terrain_style: None,
+            scene_terrain_json: None,
+            terrain_applied_signature: None,
+            terrain_session: TerrainSessionCore::default(),
+            terrain_visible_tiles: HashSet::new(),
+            terrain_built_tiles: HashSet::new(),
+            pending_terrain_tile_urls: HashMap::new(),
+            right_press_point: None,
         }
     }
 }
@@ -571,7 +706,8 @@ fn rebuild_instance_draws(state: &mut World3dState, scene_lod: f64) {
         state.instance_positions.insert(instance.id.clone(), position);
         let scale = instance.scale.map(|value| [value[0] as f32, value[1] as f32, value[2] as f32]).unwrap_or([1.0, 1.0, 1.0]);
         let rotation = instance.rotation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
-        let mut color = parse_color(instance.color.as_deref().unwrap_or("#94a3b8"));
+        let neutral_default_color = state.environment.material.as_ref().and_then(|material| material.color.as_deref()).unwrap_or("#94a3b8");
+        let mut color = parse_color(instance.color.as_deref().unwrap_or(neutral_default_color));
         if let Some(mesh) = state.meshes.get(&physical_mesh_id) {
             if mesh.has_vertex_colors() {
                 let mut avg = [0.0f32; 3];
@@ -600,6 +736,253 @@ fn rebuild_instance_draws(state: &mut World3dState, scene_lod: f64) {
     state.draws = grouped.into_iter().map(|(mesh_key, instances)| SceneDraw3d { mesh_key: mesh_key.clone(), mesh_version: *state.mesh_versions.get(&mesh_key).unwrap_or(&0), instances }).collect();
 }
 //#endregion LodGrid
+
+//#region Environment
+/// ☀️🎨 Resolves the renderer's scene-pass light direction from `environment.sun` when the sun is
+/// explicitly enabled (horizontal coordinate system, see https://en.wikipedia.org/wiki/Horizontal_coordinate_system,
+/// matching `sunPositionFromAzimuthElevation` in `ui/js/react/index.tsx`), else keeps the default.
+fn environment_light_dir(environment: &WorldEnvironmentRecord) -> [f32; 3] {
+    const DEFAULT_LIGHT_DIR: [f32; 3] = [0.4, 0.6, 0.8];
+    let Some(sun) = environment.sun.as_ref() else {
+        return DEFAULT_LIGHT_DIR;
+    };
+    if sun.enabled != Some(true) {
+        return DEFAULT_LIGHT_DIR;
+    }
+    let azimuth = sun.azimuth.unwrap_or(45.0).to_radians();
+    let elevation = sun.elevation.unwrap_or(35.0).to_radians();
+    let direction = Vec3::new((elevation.cos() * azimuth.cos()) as f32, (elevation.cos() * azimuth.sin()) as f32, elevation.sin() as f32);
+    if direction.length() < 1e-6 {
+        DEFAULT_LIGHT_DIR
+    } else {
+        direction.normalize().to_array()
+    }
+}
+
+/// 🖼️ Resolves the canvas clear color from `environment.background`, falling back to the ambient
+/// theme clear color when absent or `"transparent"` (mirrors `isTransparentWorldBackground`).
+fn environment_clear_color(environment: &WorldEnvironmentRecord, theme_clear: Rgba) -> Rgba {
+    let Some(background) = environment.background.as_deref() else {
+        return theme_clear;
+    };
+    if background.eq_ignore_ascii_case("transparent") {
+        return theme_clear;
+    }
+    let [r, g, b, a] = parse_color(background);
+    Rgba::new(r, g, b, a)
+}
+//#endregion Environment
+
+//#region Terrain
+/// 🧮 Elevation-band count for terrain tile shading — `Instance3d`/`World3dVertex` carry no
+/// per-vertex color channel (wiring gap, see report), so the continuous hypsometric ramp from the
+/// React reference is approximated by bucketing each tile's triangles into flat-colored bands by
+/// their (per-tile-normalized) average elevation, reusing the same per-color-bucket technique as
+/// `append_component_face_translucent_overlays`.
+const TERRAIN_COLOR_BANDS: usize = 10;
+
+#[derive(Deserialize)]
+struct TerrainVisibleTileRow {
+    z: u32,
+    x: u32,
+    y: u32,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct TerrainTileMeshPayload {
+    positions: Vec<f32>,
+    normals: Vec<f32>,
+    indices: Vec<u32>,
+    uvs: Vec<f32>,
+}
+
+fn terrain_tile_url(template: &str, z: u32, x: u32, y: u32) -> String {
+    template.replace("{z}", &z.to_string()).replace("{x}", &x.to_string()).replace("{y}", &y.to_string())
+}
+
+fn terrain_band_mesh_key(surface_id: &str, z: u32, x: u32, y: u32, band: usize) -> String {
+    format!("terrain:{surface_id}:{z}:{x}:{y}:{band}")
+}
+
+/// 🎨 Vertical hypsometric ramp — same stops as `getHypsometricTexture` in `world-terrain-layer.tsx`
+/// (green low ground -> tan -> grey -> white peaks), sampled at a band's center elevation ratio.
+fn hypsometric_color(t: f32) -> [f32; 4] {
+    let stops: [(f32, [f32; 3]); 4] = [
+        (0.0, [0x4b as f32 / 255.0, 0x6b as f32 / 255.0, 0x3a as f32 / 255.0]),
+        (0.5, [0xa6 as f32 / 255.0, 0x8a as f32 / 255.0, 0x5b as f32 / 255.0]),
+        (0.85, [0x8f as f32 / 255.0, 0x8f as f32 / 255.0, 0x8f as f32 / 255.0]),
+        (1.0, [1.0, 1.0, 1.0]),
+    ];
+    let t = t.clamp(0.0, 1.0);
+    for window in stops.windows(2) {
+        let (t0, c0) = window[0];
+        let (t1, c1) = window[1];
+        if t <= t1 {
+            let f = if (t1 - t0).abs() < 1e-6 { 0.0 } else { (t - t0) / (t1 - t0) };
+            return [c0[0] + (c1[0] - c0[0]) * f, c0[1] + (c1[1] - c0[1]) * f, c0[2] + (c1[2] - c0[2]) * f, 1.0];
+        }
+    }
+    [1.0, 1.0, 1.0, 1.0]
+}
+
+/// 🪣 Buckets one elevation band's triangles out of a decoded terrain-tile mesh payload into a
+/// standalone (re-indexed) `Mesh3d`, or `None` if the band is empty for this tile.
+fn build_terrain_band_mesh(mesh: &TerrainTileMeshPayload, band: usize, band_count: usize) -> Option<Mesh3d> {
+    let band_count_f = band_count as f32;
+    let mut positions = Vec::new();
+    let mut normals = Vec::new();
+    let mut indices = Vec::new();
+    for tri in mesh.indices.as_chunks::<3>().0 {
+        let elevations: [f32; 3] = tri.map(|index| mesh.uvs.get(index as usize * 2 + 1).copied().unwrap_or(0.0));
+        let average = (elevations[0] + elevations[1] + elevations[2]) / 3.0;
+        let tri_band = ((average * band_count_f) as usize).min(band_count - 1);
+        if tri_band != band {
+            continue;
+        }
+        let base = (positions.len() / 3) as u32;
+        for &vertex_index in tri {
+            let i = vertex_index as usize * 3;
+            let Some(position) = mesh.positions.get(i..i + 3) else { continue };
+            let normal = mesh.normals.get(i..i + 3).unwrap_or(&[0.0, 0.0, 1.0]);
+            positions.extend_from_slice(position);
+            normals.extend_from_slice(normal);
+        }
+        indices.extend_from_slice(&[base, base + 1, base + 2]);
+    }
+    if positions.is_empty() {
+        None
+    } else {
+        Some(Mesh3d::from_buffers(positions, normals, indices))
+    }
+}
+
+/// 🔄 GPU-free half of `apply_terrain_style_if_changed`: applies `state.terrain_style` to the tile
+/// session and purges cached tile meshes from CPU-side maps whenever the tile source, project
+/// origin, or exaggeration changes (their old positions/heights are baked into cached geometry and
+/// would otherwise render stale). Returns the mesh keys the caller must also evict from the GPU.
+fn apply_terrain_style_if_changed_state(state: &mut World3dState) -> Vec<String> {
+    let signature = state.terrain_style.as_ref().map(|style| (style.tile_url_template.clone(), style.project_origin_lon, style.project_origin_lat, style.exaggeration));
+    if signature == state.terrain_applied_signature {
+        return Vec::new();
+    }
+    let prefix = format!("terrain:{}:", state.surface_id);
+    let stale_keys: Vec<String> = state.meshes.keys().filter(|key| key.starts_with(&prefix)).cloned().collect();
+    for key in &stale_keys {
+        state.meshes.remove(key);
+        state.mesh_versions.remove(key);
+    }
+    let visible = std::mem::take(&mut state.terrain_visible_tiles);
+    for (z, x, y) in visible {
+        state.terrain_session.evict_terrain_tile(z, x, y);
+    }
+    state.terrain_built_tiles.clear();
+    state.pending_terrain_tile_urls.clear();
+    if let Some(style) = &state.terrain_style {
+        state.terrain_session.set_project_origin(style.project_origin_lon, style.project_origin_lat);
+        state.terrain_session.set_exaggeration(style.exaggeration);
+    }
+    state.terrain_applied_signature = signature;
+    stale_keys
+}
+
+fn apply_terrain_style_if_changed(state: &mut World3dState, gpu: &mut GpuContext) {
+    for key in apply_terrain_style_if_changed_state(state) {
+        gpu.evict_mesh(&key);
+    }
+}
+
+/// 🏔️ One terrain band's resolved GPU draw inputs: mesh key/version (already present in
+/// `state.meshes`/`state.mesh_versions`) plus the flat hypsometric color for that band.
+struct TerrainBandDraw {
+    mesh_key: String,
+    mesh_version: u64,
+    color: [f32; 4],
+}
+
+/// 🏔️ GPU-free half of `sync_terrain`: asks `TerrainSessionCore` which DEM tiles are visible for
+/// the current camera, evicts (CPU-side) tiles that scrolled out of view, queues byte-fetches for
+/// tiles not yet uploaded (see `fetch_pending_terrain_tiles`), and builds/caches banded meshes for
+/// tiles whose elevation data is already available. Returns the bands to draw this frame plus the
+/// mesh keys the caller must evict from the GPU.
+fn sync_terrain_state(state: &mut World3dState, camera: &Camera3d) -> (Vec<TerrainBandDraw>, Vec<String>) {
+    let Some(style) = state.terrain_style.clone() else {
+        return (Vec::new(), Vec::new());
+    };
+    let camera_json = json!({
+        "position": [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
+        "target": [camera.target.x as f64, camera.target.y as f64, camera.target.z as f64],
+    })
+    .to_string();
+    let visible_json = state.terrain_session.visible_terrain_tiles_json(&camera_json);
+    let visible_rows: Vec<TerrainVisibleTileRow> = serde_json::from_str(&visible_json).unwrap_or_default();
+    let visible_set: HashSet<(u32, u32, u32)> = visible_rows.iter().map(|row| (row.z, row.x, row.y)).collect();
+
+    let stale: Vec<(u32, u32, u32)> = state.terrain_visible_tiles.iter().copied().filter(|key| !visible_set.contains(key)).collect();
+    let mut evicted_mesh_keys = Vec::new();
+    for (z, x, y) in stale {
+        state.terrain_session.evict_terrain_tile(z, x, y);
+        state.terrain_built_tiles.remove(&(z, x, y));
+        for band in 0..TERRAIN_COLOR_BANDS {
+            let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
+            state.meshes.remove(&mesh_key);
+            state.mesh_versions.remove(&mesh_key);
+            evicted_mesh_keys.push(mesh_key);
+        }
+    }
+    state.pending_terrain_tile_urls.retain(|_, tile| visible_set.contains(tile));
+    state.terrain_visible_tiles = visible_set.clone();
+
+    let mut band_draws = Vec::new();
+    for (z, x, y) in visible_set {
+        if !state.terrain_built_tiles.contains(&(z, x, y)) {
+            let mesh_json = state.terrain_session.terrain_tile_mesh_json(z, x, y);
+            if mesh_json == "null" {
+                state.pending_terrain_tile_urls.insert(terrain_tile_url(&style.tile_url_template, z, x, y), (z, x, y));
+            } else if let Ok(mesh_payload) = serde_json::from_str::<TerrainTileMeshPayload>(&mesh_json) {
+                for band in 0..TERRAIN_COLOR_BANDS {
+                    if let Some(band_mesh) = build_terrain_band_mesh(&mesh_payload, band, TERRAIN_COLOR_BANDS) {
+                        store_mesh(state, terrain_band_mesh_key(&state.surface_id, z, x, y, band), band_mesh);
+                    }
+                }
+                state.terrain_built_tiles.insert((z, x, y));
+            }
+        }
+        for band in 0..TERRAIN_COLOR_BANDS {
+            let mesh_key = terrain_band_mesh_key(&state.surface_id, z, x, y, band);
+            if !state.meshes.contains_key(&mesh_key) {
+                continue;
+            }
+            let mesh_version = *state.mesh_versions.get(&mesh_key).unwrap_or(&0);
+            let band_center = (band as f32 + 0.5) / TERRAIN_COLOR_BANDS as f32;
+            band_draws.push(TerrainBandDraw { mesh_key, mesh_version, color: hypsometric_color(band_center) });
+        }
+    }
+    (band_draws, evicted_mesh_keys)
+}
+
+/// 🏔️ Per-frame terrain sync entry point used by `render_world_3d` — see `sync_terrain_state` for
+/// the (unit-testable) tile-visibility/meshing/fetch-queueing logic this wraps with GPU upload and
+/// eviction calls.
+fn sync_terrain(state: &mut World3dState, gpu: &mut GpuContext, camera: &Camera3d) -> Vec<SceneDraw3d> {
+    let (band_draws, evicted_mesh_keys) = sync_terrain_state(state, camera);
+    for key in evicted_mesh_keys {
+        gpu.evict_mesh(&key);
+    }
+    band_draws
+        .into_iter()
+        .filter_map(|band| {
+            let mesh = state.meshes.get(&band.mesh_key)?;
+            gpu.ensure_mesh(&band.mesh_key, band.mesh_version, &mesh.positions, &mesh.normals, &mesh.indices);
+            Some(SceneDraw3d {
+                mesh_key: band.mesh_key.clone(),
+                mesh_version: band.mesh_version,
+                instances: vec![Instance3d { id: format!("terrain-{}", band.mesh_key), model: Mat4::identity(), color: band.color, selected: false, hovered: false }],
+            })
+        })
+        .collect()
+}
+//#endregion Terrain
 
 //#region Gumball
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -937,8 +1320,11 @@ fn append_component_face_translucent_overlays(state: &mut World3dState, gpu: &mu
             let hovered = instance_hovered_component_id(state, &instance.id);
             for (tri_index, tri) in mesh.indices.as_chunks::<3>().0.iter().enumerate() {
                 let id = mesh_face_id(mesh, tri_index);
+                // 🎚️ Opacity ordering (selected > hovered > marquee-preview) mirrors the React
+                // reference's face-overlay stack (0.62 / 0.48 / 0.36); preview previously matched
+                // hovered's 0.48 exactly, collapsing the intended ranking.
                 let color = if preview.contains(&id) {
-                    [1.0, 0.85, 0.35, 0.48]
+                    [1.0, 0.85, 0.35, 0.36]
                 } else if hovered.as_deref() == Some(id.as_str()) {
                     [0.35, 0.75, 1.0, 0.48]
                 } else if selected.contains(&id) {
@@ -1288,6 +1674,10 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         state.scene_engagement_preview_json = None;
         state.scene_lod_json = None;
         state.scene_chunking_json = None;
+        state.scene_environment_json = None;
+        state.environment = WorldEnvironmentRecord::default();
+        state.scene_terrain_json = None;
+        state.terrain_style = None;
         return;
     };
     let unchanged = state.scene_camera_json.as_deref() == Some(world.camera_json.as_str())
@@ -1302,7 +1692,9 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
         && state.scene_interaction_json.as_deref() == world.interaction_json.as_deref()
         && state.scene_engagement_preview_json.as_deref() == world.engagement_preview_json.as_deref()
         && state.scene_lod_json.as_deref() == world.lod_json.as_deref()
-        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref();
+        && state.scene_chunking_json.as_deref() == world.chunking_json.as_deref()
+        && state.scene_environment_json.as_deref() == world.environment_json.as_deref()
+        && state.scene_terrain_json.as_deref() == world.terrain_json.as_deref();
     if unchanged {
         return;
     }
@@ -1320,8 +1712,12 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.scene_engagement_preview_json = world.engagement_preview_json.clone();
     state.scene_lod_json = world.lod_json.clone();
     state.scene_chunking_json = world.chunking_json.clone();
+    state.scene_environment_json = world.environment_json.clone();
+    state.scene_terrain_json = world.terrain_json.clone();
     state.lod = world.lod_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_else(default_lod_record);
     state.chunking = world.chunking_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
+    state.environment = world.environment_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
+    state.terrain_style = world.terrain_json.as_deref().and_then(|json| serde_json::from_str(json).ok());
     state.vortices = world.vortices_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
     state.attractions = world.attractions_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
     state.target_volumes = world.target_volumes_json.as_deref().and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
@@ -1440,6 +1836,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     let theme = ctx.theme;
     state.pick_bounds = ctx.pick_clip.unwrap_or(bounds);
     sync_world3d_state(state, scene, bounds);
+    apply_terrain_style_if_changed(state, gpu);
     let current_lod = scene_lod(state);
     let lod_changed = state.resolved_lod_pick.is_none_or(|previous| (previous - current_lod).abs() > WORLD_LOD_EPSILON);
     if lod_changed {
@@ -1449,8 +1846,10 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     apply_runtime_draw_flags(state);
     apply_gumball_preview(state);
     let inner = bounds;
-    ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], theme.canvas_clear);
+    ctx.draw.push_solid([inner.x, inner.y, inner.w, inner.h], environment_clear_color(&state.environment, theme.canvas_clear));
     let camera = state.orbit.to_camera();
+    let light_dir = environment_light_dir(&state.environment);
+    let terrain_draws = sync_terrain(state, gpu, &camera);
     update_visible_chunks(state, camera.position);
     let aspect = (inner.w / inner.h.max(1.0)).max(0.1);
     let view_proj = camera.view_proj(aspect);
@@ -1546,13 +1945,15 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
     let mut translucent_draws = Vec::new();
     append_component_face_translucent_overlays(state, gpu, &mut translucent_draws);
     if let Some(preview) = state.brush_preview.clone() {
-        if let Some(mesh_url) = preview.mesh_url.as_deref() {
-            let mesh_id = mesh_id_from_url(mesh_url);
+        // 👻 Mirrors `BrushPreviewGhost`: renders whenever `origin` is present, regardless of
+        // `meshUrl` — a translucent unit box is the fallback ghost when there's no mesh URL (or
+        // its GLB hasn't resolved into `state.meshes` yet), not "nothing at all".
+        if let Some(origin) = preview.origin {
+            let mesh_id = brush_preview_mesh_id(preview.mesh_url.as_deref());
             if !state.meshes.contains_key(&mesh_id) {
                 let primitive = mesh_from_kind("box");
                 store_mesh(state, mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
             }
-            let origin = preview.origin.unwrap_or([0.0, 0.0, 0.0]);
             let rotation = preview.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
             let scale = preview_scale(preview.scale.as_ref());
             let mesh_version = *state.mesh_versions.get(&mesh_id).unwrap_or(&0);
@@ -1605,10 +2006,11 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         append_gumball_geometry(&mut line_vertices, &mut translucent_draws, state, &camera, &state.meshes, &state.mesh_versions);
     }
     culled_draws.extend(extra_draws);
+    culled_draws.extend(terrain_draws);
     ctx.draw.push_scene_pass(ScenePass3d {
         viewport: [inner.x, inner.y, inner.w, inner.h],
         view_proj: view_proj.to_cols_array(),
-        light_dir: [0.4, 0.6, 0.8],
+        light_dir,
         draws: culled_draws,
         line_draws: if line_vertices.is_empty() { Vec::new() } else { vec![LineDraw3d { vertices: line_vertices }] },
         translucent_draws,
@@ -1734,6 +2136,7 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         if button == 2 {
             state.marquee_active = false;
             state.marquee_points.clear();
+            state.right_press_point = Some([x, y]);
         }
         return None;
     }
@@ -1803,8 +2206,42 @@ pub fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, d
         }
         return pick_select_action(state, x, y, inner, shift, ctrl);
     }
-    if button == 1 || button == 2 {
+    if button == 2 {
+        // 🖱️ A right-drag (orbit-via-right-button, see `handle_world3d_pointer_drag`) must not
+        // also pop a context menu — only a right-*click* (no meaningful movement since press)
+        // resolves+dispatches a context-menu target, mirroring the React reference's
+        // `onContextMenu` (which only fires on a genuine click, not a drag-then-release).
+        let is_click = state.right_press_point.map(|start| { let dx = x - start[0]; let dy = y - start[1]; (dx * dx + dy * dy).sqrt() <= CLICK_DRAG_THRESHOLD_PX }).unwrap_or(true);
+        state.right_press_point = None;
+        if is_click {
+            if let Some((kind, id)) = resolve_world_context_menu_target(state) {
+                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "contextMenuAt".into(), args: Some(json!({ "surfaceId": state.surface_id, "kind": kind, "id": id })) });
+            }
+        }
         return Some(orbit_camera_action(state));
+    }
+    if button == 1 {
+        return Some(orbit_camera_action(state));
+    }
+    None
+}
+
+/// 🖱️📋 Resolves which entity a right-click context menu targets, in the React reference's exact
+/// priority order — `resolveWorldContextMenuTarget` in `world-3d-host.tsx`: a hovered vortex wins
+/// first, then a hovered mesh component (vertex/edge/face — reported as kind `"object"`, the
+/// component's owning instance, matching the React source's own naming), then a hovered reference
+/// image plane; `None` (no context menu) if nothing is currently hovered.
+fn resolve_world_context_menu_target(state: &World3dState) -> Option<(&'static str, String)> {
+    if let Some(vortex_id) = state.hovered_vortex_id.clone() {
+        return Some(("vortex", vortex_id));
+    }
+    if state.hovered_component_mode.is_some() {
+        if let Some(object_id) = state.hovered_component_object_id.clone() {
+            return Some(("object", object_id));
+        }
+    }
+    if let Some(reference_id) = state.local_hover_id.as_deref().and_then(|hovered| hovered.strip_prefix("reference:")) {
+        return Some(("reference", reference_id.to_string()));
     }
     None
 }
@@ -1979,7 +2416,10 @@ fn pick_hover_action(state: &mut World3dState, x: f32, y: f32, inner: Rect) -> O
         state.local_hover_id = None;
         return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "setHover".into(), args: None });
     }
-    let hit = pick_instance_at(state, x, y, inner);
+    // 🖼️ Falls back to reference-image plane hit-testing when no mesh instance is under the
+    // cursor — mirrors React's `hoveredId` covering both mesh instances and `"reference:"`-prefixed
+    // reference planes (see `resolveWorldContextMenuTarget`'s reference tier).
+    let hit = pick_instance_at(state, x, y, inner).or_else(|| pick_reference_at(state, x, y, inner).map(|url| format!("reference:{url}")));
     if state.local_hover_id == hit {
         return None;
     }
@@ -2402,6 +2842,44 @@ fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<
     best.map(|(_, id)| id)
 }
 
+/// 🖼️ Ray-vs-quad hit test against visible reference-image planes, returning the closest hit
+/// reference's `url` (used as its hover/context-menu identifier, since `WorldReferenceRecord` has
+/// no separate id field). References are flat rectangles lying in the local XY plane (normal +Z,
+/// width along X, height along Y) centered at `origin` — matching this renderer's Z-up convention.
+fn pick_reference_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
+    let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;
+    let camera = state.orbit.to_camera();
+    let aspect = (viewport.w / viewport.h.max(1.0)).max(0.1);
+    let (origin, dir) = camera.ray_from_screen(aspect, local_x, local_y, viewport.w, viewport.h);
+    let plane_normal = Vec3::new(0.0, 0.0, 1.0);
+    let mut best: Option<(f32, String)> = None;
+    for reference in &state.references {
+        if reference.hidden.unwrap_or(false) {
+            continue;
+        }
+        let Some(url) = reference.url.as_deref() else {
+            continue;
+        };
+        let plane_position = reference.origin.unwrap_or([0.0, 0.0, 0.0]);
+        let plane_origin = Vec3::new(plane_position[0] as f32, plane_position[1] as f32, plane_position[2] as f32);
+        let width = reference.width_world.unwrap_or(1.0) as f32;
+        let image_aspect = state.reference_aspect.get(url).copied().unwrap_or(1.0);
+        let height = width / image_aspect.max(0.01);
+        let Some(hit) = ray_plane_point(origin, dir, plane_origin, plane_normal) else {
+            continue;
+        };
+        let offset = hit.sub(plane_origin);
+        if offset.x.abs() > width * 0.5 || offset.y.abs() > height * 0.5 {
+            continue;
+        }
+        let distance = origin.sub(hit).length();
+        if best.as_ref().is_none_or(|(best_distance, _)| distance < *best_distance) {
+            best = Some((distance, url.to_string()));
+        }
+    }
+    best.map(|(_, url)| url)
+}
+
 fn object_world_position(state: &World3dState, object_id: &str) -> Option<[f32; 3]> {
     for draw in &state.draws {
         for instance in &draw.instances {
@@ -2445,6 +2923,12 @@ fn preview_scale(scale: Option<&serde_json::Value>) -> [f32; 3] {
         Some(serde_json::Value::Array(values)) if values.len() >= 3 => [values[0].as_f64().unwrap_or(1.0) as f32, values[1].as_f64().unwrap_or(1.0) as f32, values[2].as_f64().unwrap_or(1.0) as f32],
         _ => [1.0, 1.0, 1.0],
     }
+}
+
+/// 👻 Mesh key for `BrushPreviewGhost`: the real GLB's resolved id when a `meshUrl` is given
+/// (loaded lazily, same as any other mesh), else the shared "box" primitive fallback ghost.
+fn brush_preview_mesh_id(mesh_url: Option<&str>) -> String {
+    mesh_url.map(mesh_id_from_url).unwrap_or_else(|| "box".to_string())
 }
 
 fn append_box_wireframe(lines: &mut Vec<LineVertex3d>, origin: [f64; 3], orientation: [f64; 4], scale: [f64; 3], color: [f32; 4]) {
@@ -2603,6 +3087,43 @@ pub async fn fetch_pending_reference_images(states: &mut HashMap<String, World3d
 
 #[cfg(not(target_arch = "wasm32"))]
 pub async fn fetch_pending_reference_images(_states: &mut HashMap<String, World3dState>) {}
+
+//#region TerrainFetch
+#[derive(Clone, Debug)]
+pub struct PendingTerrainTileFetch {
+    pub surface_id: String,
+    pub url: String,
+    pub z: u32,
+    pub x: u32,
+    pub y: u32,
+}
+
+pub fn collect_pending_terrain_tile_fetches(states: &HashMap<String, World3dState>) -> Vec<PendingTerrainTileFetch> {
+    let mut pending = Vec::new();
+    for (surface_id, state) in states {
+        for (url, &(z, x, y)) in &state.pending_terrain_tile_urls {
+            pending.push(PendingTerrainTileFetch { surface_id: surface_id.clone(), url: url.clone(), z, x, y });
+        }
+    }
+    pending
+}
+
+/// 🏔️📡 Byte-fetch companion to `sync_terrain`'s tile-visibility bookkeeping — mirrors
+/// `fetch_pending_glb_meshes`/`fetch_pending_reference_images`. Needs a call from the renderer's
+/// async poll loop (alongside those two) to actually run; see report for the exact wiring request.
+pub async fn fetch_pending_terrain_tiles(states: &mut HashMap<String, World3dState>) {
+    let pending = collect_pending_terrain_tile_fetches(states);
+    for item in pending {
+        let Some(bytes) = fetch_url_bytes(&item.url).await else {
+            continue;
+        };
+        if let Some(state) = states.get_mut(&item.surface_id) {
+            state.terrain_session.upload_elevation_tile(item.z, item.x, item.y, &bytes);
+            state.pending_terrain_tile_urls.remove(&item.url);
+        }
+    }
+}
+//#endregion TerrainFetch
 
 #[cfg(test)]
 mod tests {
@@ -3064,4 +3585,180 @@ mod tests {
         append_lod_grid_lines(&mut lines, 2.0, 10.0, Vec3::ZERO, [0.5, 0.5, 0.5, 1.0]);
         assert!(!lines.is_empty());
     }
+
+    //#region EnvironmentTests
+    #[test]
+    fn environment_clear_color_uses_opaque_background() {
+        let environment = WorldEnvironmentRecord { background: Some("#112233".into()), ..Default::default() };
+        let theme_clear = Rgba::new(0.0, 0.0, 0.0, 1.0);
+        let clear = environment_clear_color(&environment, theme_clear);
+        assert!((clear.r - (0x11 as f32 / 255.0)).abs() < 1e-3);
+        assert!((clear.g - (0x22 as f32 / 255.0)).abs() < 1e-3);
+        assert!((clear.b - (0x33 as f32 / 255.0)).abs() < 1e-3);
+    }
+
+    #[test]
+    fn environment_clear_color_falls_back_when_transparent_or_absent() {
+        let theme_clear = Rgba::new(0.1, 0.2, 0.3, 1.0);
+        let transparent = WorldEnvironmentRecord { background: Some("transparent".into()), ..Default::default() };
+        let absent = WorldEnvironmentRecord::default();
+        assert_eq!(environment_clear_color(&transparent, theme_clear).r, theme_clear.r);
+        assert_eq!(environment_clear_color(&absent, theme_clear).r, theme_clear.r);
+    }
+
+    #[test]
+    fn environment_light_dir_uses_sun_direction_only_when_enabled() {
+        let disabled = WorldEnvironmentRecord { sun: Some(WorldEnvironmentSunRecord { enabled: Some(false), azimuth: Some(90.0), elevation: Some(0.0), ..Default::default() }), ..Default::default() };
+        assert_eq!(environment_light_dir(&disabled), [0.4, 0.6, 0.8]);
+
+        let enabled = WorldEnvironmentRecord { sun: Some(WorldEnvironmentSunRecord { enabled: Some(true), azimuth: Some(90.0), elevation: Some(0.0), ..Default::default() }), ..Default::default() };
+        let dir = environment_light_dir(&enabled);
+        // azimuth=90, elevation=0 -> pure +Y direction (cos(0)*cos(90)=~0, cos(0)*sin(90)=1, sin(0)=0).
+        assert!(dir[0].abs() < 1e-3);
+        assert!((dir[1] - 1.0).abs() < 1e-3);
+        assert!(dir[2].abs() < 1e-3);
+    }
+
+    #[test]
+    fn rebuild_instance_draws_applies_environment_material_color_as_neutral_default() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.environment = WorldEnvironmentRecord { material: Some(WorldEnvironmentMaterialRecord { color: Some("#ff0000".into()), ..Default::default() }), ..Default::default() };
+        state.parsed_instances = vec![WorldInstanceRecord { id: "obj-1".into(), mesh_id: Some("box".into()), position: Some([0.0, 0.0, 0.0]), ..Default::default() }];
+        rebuild_instance_draws(&mut state, 1.0);
+        let instance = &state.draws.iter().find(|draw| draw.mesh_key == "box").expect("box draw").instances[0];
+        assert!((instance.color[0] - 1.0).abs() < 1e-3);
+        assert!(instance.color[1].abs() < 1e-3);
+    }
+    //#endregion EnvironmentTests
+
+    //#region TerrainTests
+    #[test]
+    fn hypsometric_color_matches_reference_stops() {
+        let low = hypsometric_color(0.0);
+        assert!((low[0] - 0x4b as f32 / 255.0).abs() < 1e-3);
+        let peak = hypsometric_color(1.0);
+        assert!((peak[0] - 1.0).abs() < 1e-3);
+        assert!((peak[1] - 1.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn build_terrain_band_mesh_buckets_by_average_elevation() {
+        // Two triangles, 6 verts (no sharing, to keep each triangle's average elevation exact):
+        // triangle 0 is flat at elevation ratio 0.0, triangle 1 is flat at elevation ratio 1.0.
+        let mesh = TerrainTileMeshPayload {
+            positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 2.0, 0.0, 10.0, 3.0, 0.0, 10.0, 2.0, 1.0, 10.0],
+            normals: vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0],
+            indices: vec![0, 1, 2, 3, 4, 5],
+            uvs: vec![0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 1.0, 0.5, 1.0, 0.5, 1.0],
+        };
+        let low_band = build_terrain_band_mesh(&mesh, 0, TERRAIN_COLOR_BANDS);
+        assert!(low_band.is_some(), "triangle 0 (all-zero elevation) should fall in band 0");
+        let high_band = build_terrain_band_mesh(&mesh, TERRAIN_COLOR_BANDS - 1, TERRAIN_COLOR_BANDS);
+        assert!(high_band.is_some(), "triangle 1 (all-one elevation) should fall in the top band");
+        let empty_band = build_terrain_band_mesh(&mesh, 5, TERRAIN_COLOR_BANDS);
+        assert!(empty_band.is_none(), "no triangle should land in a middle band for this fixture");
+    }
+
+    #[test]
+    fn terrain_tile_url_substitutes_z_x_y() {
+        assert_eq!(terrain_tile_url("/dem/{z}/{x}/{y}.png", 12, 34, 56), "/dem/12/34/56.png");
+    }
+
+    #[test]
+    fn sync_terrain_state_queues_fetch_for_uncached_tile_and_builds_after_upload() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 9.7382, project_origin_lat: 52.3759, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+        apply_terrain_style_if_changed_state(&mut state);
+        let camera = Camera3d { position: Vec3::new(0.0, 0.0, 300.0), target: Vec3::ZERO, up: Vec3::new(0.0, 0.0, 1.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 1000.0 };
+        let (band_draws, evicted) = sync_terrain_state(&mut state, &camera);
+        assert!(band_draws.is_empty(), "no elevation data uploaded yet, nothing to draw");
+        assert!(evicted.is_empty(), "nothing was cached yet, nothing to evict");
+        assert!(!state.pending_terrain_tile_urls.is_empty(), "an uncached visible tile should be queued for byte-fetch");
+
+        let (_, &(z, x, y)) = state.pending_terrain_tile_urls.iter().next().expect("a pending tile");
+        let value = (100.0_f64 + 32768.0).round() as i64;
+        let r = ((value >> 8) & 0xff) as u8;
+        let g = (value - ((r as i64) << 8)).clamp(0, 255) as u8;
+        let mut image = image::RgbaImage::new(256, 256);
+        for pixel in image.pixels_mut() {
+            *pixel = image::Rgba([r, g, 0, 255]);
+        }
+        let mut bytes = Vec::new();
+        image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
+        assert!(state.terrain_session.upload_elevation_tile(z, x, y, &bytes));
+
+        let (band_draws_after_upload, _) = sync_terrain_state(&mut state, &camera);
+        assert!(!band_draws_after_upload.is_empty(), "an uploaded tile should produce at least one banded draw");
+    }
+
+    #[test]
+    fn apply_terrain_style_if_changed_state_purges_stale_meshes_on_origin_change() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 0.0, project_origin_lat: 0.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+        assert!(apply_terrain_style_if_changed_state(&mut state).is_empty(), "first application has nothing to purge");
+        let mesh_key = terrain_band_mesh_key(&state.surface_id, 10, 1, 2, 0);
+        store_mesh(&mut state, mesh_key, Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2]));
+        state.terrain_style = Some(WorldTerrainStyle { tile_url_template: "/dem/{z}/{x}/{y}.png".into(), project_origin_lon: 5.0, project_origin_lat: 5.0, exaggeration: 1.0, color_ramp: "hypsometric".into(), min_zoom: 6, max_zoom: 14 });
+        let purged = apply_terrain_style_if_changed_state(&mut state);
+        assert_eq!(purged.len(), 1, "an origin change should purge the previously-cached terrain mesh");
+        assert!(state.meshes.is_empty());
+    }
+    //#endregion TerrainTests
+
+    //#region BrushPreviewTests
+    #[test]
+    fn brush_preview_mesh_id_falls_back_to_box_without_mesh_url() {
+        assert_eq!(brush_preview_mesh_id(None), "box");
+        assert_eq!(brush_preview_mesh_id(Some("/assets/tower.glb")), mesh_id_from_url("/assets/tower.glb"));
+    }
+    //#endregion BrushPreviewTests
+
+    //#region ContextMenuTests
+    #[test]
+    fn resolve_world_context_menu_target_prioritizes_vortex_over_object_over_reference() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.local_hover_id = Some("reference:site-plan.png".into());
+        assert_eq!(resolve_world_context_menu_target(&state), Some(("reference", "site-plan.png".to_string())));
+
+        state.hovered_component_mode = Some("face".into());
+        state.hovered_component_object_id = Some("obj-1".into());
+        assert_eq!(resolve_world_context_menu_target(&state), Some(("object", "obj-1".to_string())));
+
+        state.hovered_vortex_id = Some("vortex-1".into());
+        assert_eq!(resolve_world_context_menu_target(&state), Some(("vortex", "vortex-1".to_string())));
+    }
+
+    #[test]
+    fn resolve_world_context_menu_target_is_none_without_any_hover() {
+        let state = World3dState::new("surface-1".into(), "controller-1".into());
+        assert_eq!(resolve_world_context_menu_target(&state), None);
+    }
+
+    #[test]
+    fn right_click_dispatches_context_menu_at_for_hovered_vortex() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        state.hovered_vortex_id = Some("vortex-1".into());
+        handle_world3d_pointer_button(&mut state, 200.0, 200.0, true, 2, &PointerModifiers::default());
+        let action = handle_world3d_pointer_button(&mut state, 200.0, 200.0, false, 2, &PointerModifiers::default()).expect("right click should dispatch");
+        assert_eq!(action.action, "contextMenuAt");
+        let args = action.args.expect("args");
+        assert_eq!(args["kind"], json!("vortex"));
+        assert_eq!(args["id"], json!("vortex-1"));
+    }
+
+    #[test]
+    fn right_drag_does_not_dispatch_context_menu_even_with_a_hovered_vortex() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        let inner = Rect { x: 0.0, y: 0.0, w: 400.0, h: 400.0 };
+        state.bounds = inner;
+        state.pick_bounds = inner;
+        state.hovered_vortex_id = Some("vortex-1".into());
+        handle_world3d_pointer_button(&mut state, 200.0, 200.0, true, 2, &PointerModifiers::default());
+        let action = handle_world3d_pointer_button(&mut state, 260.0, 260.0, false, 2, &PointerModifiers::default()).expect("right release should still sync camera");
+        assert_eq!(action.action, "setCamera", "a right-drag should fall back to the orbit camera sync, not open a context menu");
+    }
+    //#endregion ContextMenuTests
 }

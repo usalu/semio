@@ -250,9 +250,9 @@ pub enum ZoneEquipmentType {
     WaterToAirHp,
 }
 
-/// 🌀 Air loop configuration.
+/// 🌀 Air loop configuration reference in model.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct AirLoop {
+pub struct ModelAirLoop {
     pub id: EntityId,
     pub name: String,
     pub supply_node_id: u32,
@@ -437,12 +437,12 @@ pub enum FaultType {
 pub struct OutputVariableSpec {
     pub name: String,
     pub key: String,
-    pub reporting_frequency: ReportingFrequency,
+    pub reporting_frequency: OutputReportFrequency,
 }
 
-/// 📊 Reporting frequency.
+/// 📊 Output reporting frequency.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub enum ReportingFrequency {
+pub enum OutputReportFrequency {
     Timestep,
     Hourly,
     Daily,
@@ -555,7 +555,7 @@ pub struct Model {
     pub setpoint_managers: Vec<SetpointManager>,
     pub ideal_loads: Vec<IdealLoadsSystem>,
     pub zone_equipment: Vec<ZoneEquipmentAssignment>,
-    pub air_loops: Vec<AirLoop>,
+    pub air_loops: Vec<ModelAirLoop>,
     pub plant_loops: Vec<PlantLoopConfig>,
     pub outdoor_air_systems: Vec<OutdoorAirSystem>,
     pub infiltrations: Vec<Infiltration>,

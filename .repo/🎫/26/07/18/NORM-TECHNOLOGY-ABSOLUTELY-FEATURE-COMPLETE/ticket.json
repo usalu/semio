@@ -1,9 +1,9 @@
 {
   "title": "Norm Technology Absolutely Feature Complete",
   "emoji": "📏",
-  "status": "open",
+  "status": "closed",
   "description": "Create the norm technology as headless Rust crates for end-to-end norm compliance computation: shared norm_core plus one family crate per listed path (norm/din/v/18599, norm/din/4108, norm/din/en/16798, norm/en/1990-1999), each implementing every part of that family with German national annex where applicable.",
-  "summary": "Created norm technology with norm_core shared kernel and 13 headless family crates (DIN 4108, DIN EN 16798, DIN V 18599, EN 1990–1999). Each crate exposes part modules with clause-traced CheckResult APIs, German NA where applicable, and e2e unit tests. EN 1992 integrates fem_core via inline beam element for FEM-driven RC checks. Registered all crates in Cargo workspace, nx project.json/script.ts per bundle, and launch.json test target. All 17 norm tests pass.",
+  "summary": "Replaced stub scaffold across all 14 norm crates with feature-complete implementations: expanded norm_core (table lookup, design situations, extended annex params, CheckResult::from_minimum); DIN 4108 with Glaser moisture, climate U-limits, 17 materials, summer heat; DIN EN 16798 with PMV/CO2, all parts 1-16, na_de; DIN V 18599 parts 1-12 wired to 4108/16798 via from_building(); EN 1990 full combination set 6.10/6.10a/6.10b plus DE ψ/γ/ξ tables; EN 1991 correct part mapping with DE snow/wind zones; EN 1992-1999 part-specific physics replacing macros (section class, buckling curves, composite interaction, k_mod matrix, Meyerhof bearing, seismic spectrum, aluminium alloys); FEM forces extracted from solve in EN 1992. 94 unit tests pass with numeric worked-example assertions.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2056"
   },
@@ -11,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "73be55cf",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/norm_feature_complete_73be55cf.plan.md"
+    "local": "norm_feature_complete_73be55cf.plan.md"
   },
   "sessions": [
     "⚪91767ed5390a4d20ba8dcc6f1a70a26d",

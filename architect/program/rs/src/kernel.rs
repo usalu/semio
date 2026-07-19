@@ -42,7 +42,7 @@ impl PartialOrd for EntityId {
 
 // #region 🔖Priority
 /// @emoji 🎚️ Relative importance band for requirements, relationships, and entities.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum Priority {
   Mandatory,
@@ -57,7 +57,7 @@ pub enum Priority {
 
 // #region 🔖LifecycleStatus
 /// @emoji 🔄 Lifecycle and workflow status for register entities.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum LifecycleStatus {
   #[default]

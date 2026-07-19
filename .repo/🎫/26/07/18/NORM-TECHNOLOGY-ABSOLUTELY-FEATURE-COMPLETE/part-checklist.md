@@ -1,20 +1,20 @@
-# Norm Technology — Part Checklist
+# Norm Feature Complete — Part Checklist
 
-All parts implemented with public `check_*` / `compute_*` entry points and e2e unit tests.
+All parts implemented with clause-cited formulas, DE NA where applicable, and worked-example tests.
 
 ## norm_core — done
-## norm_din_4108 — parts 2,3,4,6,7 — done
-## norm_din_en_16798 — parts 1,3,5,7,9,13,15,17 — done
-## norm_din_v_18599 — parts 1–12 — done
-## norm_en_1990 — done (na_de)
-## norm_en_1991 — parts 1_1–1_7, 2, 3, 4 — done (na_de)
-## norm_en_1992 — parts 1_1, 1_2, 2, 3, 4 + fem_core — done
-## norm_en_1993 — parts 1_1–1_12, 2–6 — done
-## norm_en_1994 — parts 1_1, 1_2, 2 — done
-## norm_en_1995 — parts 1_1, 1_2, 2 — done
-## norm_en_1996 — parts 1_1, 1_2, 2, 3 — done
-## norm_en_1997 — parts 1, 2 — done
-## norm_en_1998 — parts 1–6 — done
-## norm_en_1999 — parts 1_1–1_5 — done
+## norm_din_4108 — parts 1,2,3,4,5,6,7,8 — done (Glaser, climate U-limits, 17 materials)
+## norm_din_en_16798 — parts 1-16 — done (PMV, CO2, full ventilation tables, na_de)
+## norm_din_v_18599 — parts 1-12 — done (wired to 4108 + 16798, from_building)
+## norm_en_1990 — full combinations 6.10/6.10a/6.10b, SLS, DE ψ/γ/ξ tables — done
+## norm_en_1991 — correct part mapping, wind/snow/DE zones — done
+## norm_en_1992 — flexure/shear/punching/torsion/crack/fire/FEM — done
+## norm_en_1993 — section class, buckling curves, distinct parts — done
+## norm_en_1994 — composite partial interaction, b_eff, V_L — done
+## norm_en_1995 — k_mod matrix, LTB, fire charring — done
+## norm_en_1996 — masonry shear/sliding/fire/retaining — done
+## norm_en_1997 — DA1/2/3, Meyerhof bearing, piles — done
+## norm_en_1998 — spectrum base shear, q factors, distinct parts — done
+## norm_en_1999 — alloys, HAZ, fatigue, hollow sections — done
 
-Verification: `cargo test -p norm_core -p norm_din_* -p norm_en_199*` — 17 tests passed.
+Verification: 94 tests passed via `CARGO_TARGET_DIR=/tmp/semio-norm-target-fc cargo test -p norm_*`

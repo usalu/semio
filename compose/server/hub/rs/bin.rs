@@ -57,18 +57,13 @@ mod domain {
         // 📭FieldPatch
 
         use super::*;
-        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Serialize, Deserialize, Default)]
         #[serde(tag = "op", content = "value")]
         pub enum FieldPatch<T> {
+            #[default]
             NoChange,
             Set(T),
             Clear,
-        }
-
-        impl<T> Default for FieldPatch<T> {
-            fn default() -> Self {
-                Self::NoChange
-            }
         }
 
         impl<T> FieldPatch<T> {
@@ -77,17 +72,12 @@ mod domain {
             }
         }
 
-        #[derive(Debug, Clone, Serialize, Deserialize)]
+        #[derive(Debug, Clone, Serialize, Deserialize, Default)]
         #[serde(tag = "op", content = "value")]
         pub enum RequiredFieldPatch<T> {
+            #[default]
             NoChange,
             Set(T),
-        }
-
-        impl<T> Default for RequiredFieldPatch<T> {
-            fn default() -> Self {
-                Self::NoChange
-            }
         }
 
         impl<T> RequiredFieldPatch<T> {
@@ -269,7 +259,6 @@ mod lookback {
     // Specs: Named lookback points define retention boundaries for kit history. Each token maps to seconds.
     // Summary: Configurable lookback points for historical kit snapshot retention and auto-compaction.
 
-    use super::*;
     pub const LOOKBACK_POINTS: &[(&str, i64)] = &[("1min", 60), ("5min", 300), ("10min", 600), ("30min", 1800), ("1h", 3600), ("5h", 18000), ("1d", 86400), ("3d", 259200), ("7d", 604800), ("1mo", 2592000), ("6mo", 15552000), ("1y", 31536000)];
 
     pub fn lookback_seconds(token: &str) -> Option<i64> {
@@ -819,7 +808,7 @@ mod error {
                 SessionError::Database(_) | SessionError::Internal(_) => (StatusCode::INTERNAL_SERVER_ERROR, "internal", self.to_string()),
             };
             let body = ErrorBody { error: error.to_string(), detail };
-            (status, axum::Json(body)).into_response()
+            (status, Json(body)).into_response()
         }
     }
 } // 🎼Error
@@ -831,34 +820,37 @@ mod schema {
     // Summary: SQL schema creation and migration for the session backend.
 
     use super::*;
-    pub async fn run_migrations(pool: &PgPool) {
-        create_schemas(pool).await;
-        create_enums(pool).await;
-        create_runtime_tables(pool).await;
-        create_core_tables(pool).await;
-        create_compose_tables(pool).await;
-        create_history_tables(pool).await;
+    pub async fn run_migrations(pool: &PgPool) -> Result<(), SessionError> {
+        create_schemas(pool).await?;
+        create_enums(pool).await?;
+        create_runtime_tables(pool).await?;
+        create_core_tables(pool).await?;
+        create_compose_tables(pool).await?;
+        create_history_tables(pool).await?;
         tracing::info!("database migrations complete");
+        Ok(())
     }
 
-    async fn create_schemas(pool: &PgPool) {
+    async fn create_schemas(pool: &PgPool) -> Result<(), SessionError> {
         for schema in &["runtime", "core", "history", "compose"] {
-            sqlx_core::query::query(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema)).execute(pool).await.expect("failed to create schema");
+            sqlx_core::query::query(&format!("CREATE SCHEMA IF NOT EXISTS {}", schema)).execute(pool).await?;
         }
+        Ok(())
     }
 
-    async fn create_enums(pool: &PgPool) {
+    async fn create_enums(pool: &PgPool) -> Result<(), SessionError> {
         let stmts = [
             "DO $$ BEGIN CREATE TYPE lifecycle_status AS ENUM ('active', 'tombstoned'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
             "DO $$ BEGIN CREATE TYPE session_status AS ENUM ('active', 'passivated', 'closed'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
             "DO $$ BEGIN CREATE TYPE command_status AS ENUM ('pending', 'accepted', 'rejected'); EXCEPTION WHEN duplicate_object THEN NULL; END $$",
         ];
         for s in &stmts {
-            sqlx_core::query::query(s).execute(pool).await.expect("failed to create enum");
+            sqlx_core::query::query(s).execute(pool).await?;
         }
+        Ok(())
     }
 
-    async fn create_runtime_tables(pool: &PgPool) {
+    async fn create_runtime_tables(pool: &PgPool) -> Result<(), SessionError> {
         sqlx_core::query::query(
             "CREATE TABLE IF NOT EXISTS runtime.session (
             session_id UUID PRIMARY KEY, root_kit_id UUID NOT NULL,
@@ -869,8 +861,7 @@ mod schema {
         )",
         )
         .execute(pool)
-        .await
-        .expect("runtime.session");
+        .await?;
 
         sqlx_core::query::query(
             "CREATE TABLE IF NOT EXISTS runtime.share_token (
@@ -885,8 +876,7 @@ mod schema {
         )",
         )
         .execute(pool)
-        .await
-        .expect("runtime.share_token");
+        .await?;
 
         sqlx_core::query::query(
             "CREATE TABLE IF NOT EXISTS runtime.session_command (
@@ -899,8 +889,7 @@ mod schema {
         )",
         )
         .execute(pool)
-        .await
-        .expect("runtime.session_command");
+        .await?;
 
         sqlx_core::query::query(
             "CREATE TABLE IF NOT EXISTS runtime.property_clock (
@@ -911,38 +900,43 @@ mod schema {
         )",
         )
         .execute(pool)
-        .await
-        .expect("runtime.property_clock");
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_tables(pool: &PgPool) {
-        create_core_kit(pool).await;
-        create_core_author(pool).await;
-        create_core_location(pool).await;
-        create_core_folder(pool).await;
-        create_core_file(pool).await;
-        create_core_tag(pool).await;
-        create_core_concept(pool).await;
-        create_core_port(pool).await;
-        create_core_quality(pool).await;
-        create_core_type(pool).await;
-        create_core_connector(pool).await;
-        create_core_representation(pool).await;
-        create_core_prop(pool).await;
-        create_core_attribute(pool).await;
-        create_core_design(pool).await;
-        create_core_layer(pool).await;
-        create_core_piece(pool).await;
-        create_core_group(pool).await;
-        create_core_connection(pool).await;
-        create_core_stat(pool).await;
+    async fn create_core_tables(pool: &PgPool) -> Result<(), SessionError> {
+        create_core_kit(pool).await?;
+        create_core_author(pool).await?;
+        create_core_location(pool).await?;
+        create_core_folder(pool).await?;
+        create_core_file(pool).await?;
+        create_core_tag(pool).await?;
+        create_core_concept(pool).await?;
+        create_core_port(pool).await?;
+        create_core_quality(pool).await?;
+        create_core_type(pool).await?;
+        create_core_connector(pool).await?;
+        create_core_representation(pool).await?;
+        create_core_prop(pool).await?;
+        create_core_attribute(pool).await?;
+        create_core_design(pool).await?;
+        create_core_layer(pool).await?;
+        create_core_piece(pool).await?;
+        create_core_group(pool).await?;
+        create_core_connection(pool).await?;
+        create_core_stat(pool).await?;
+        Ok(())
     }
 
-    async fn exec(pool: &PgPool, sql: &str, name: &str) {
-        sqlx_core::query::query(sql).execute(pool).await.expect(name);
+    async fn exec(pool: &PgPool, sql: &str, name: &str) -> Result<(), SessionError> {
+        sqlx_core::query::query(sql).execute(pool).await.map_err(|e| {
+            tracing::error!(target: "compose_hub", "migration {name} failed: {e}");
+            SessionError::Database(e)
+        })?;
+        Ok(())
     }
 
-    async fn create_core_kit(pool: &PgPool) {
+    async fn create_core_kit(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.kit (
@@ -952,10 +946,11 @@ mod schema {
     )",
             "core.kit",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_author(pool: &PgPool) {
+    async fn create_core_author(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.author (
@@ -964,10 +959,11 @@ mod schema {
     )",
             "core.author",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_location(pool: &PgPool) {
+    async fn create_core_location(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.location (
@@ -976,10 +972,11 @@ mod schema {
     )",
             "core.location",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_folder(pool: &PgPool) {
+    async fn create_core_folder(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.folder (
@@ -989,10 +986,11 @@ mod schema {
     )",
             "core.folder",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_file(pool: &PgPool) {
+    async fn create_core_file(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.file (
@@ -1002,10 +1000,11 @@ mod schema {
     )",
             "core.file",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_tag(pool: &PgPool) {
+    async fn create_core_tag(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.tag (
@@ -1014,10 +1013,11 @@ mod schema {
     )",
             "core.tag",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_concept(pool: &PgPool) {
+    async fn create_core_concept(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.concept (
@@ -1026,10 +1026,11 @@ mod schema {
     )",
             "core.concept",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_port(pool: &PgPool) {
+    async fn create_core_port(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.port (
@@ -1038,7 +1039,7 @@ mod schema {
     )",
             "core.port",
         )
-        .await;
+        .await?;
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.port_compatibility (
@@ -1047,10 +1048,11 @@ mod schema {
     )",
             "core.port_compatibility",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_quality(pool: &PgPool) {
+    async fn create_core_quality(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.quality (
@@ -1060,10 +1062,11 @@ mod schema {
     )",
             "core.quality",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_type(pool: &PgPool) {
+    async fn create_core_type(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.type_entity (
@@ -1074,10 +1077,11 @@ mod schema {
     )",
             "core.type_entity",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_connector(pool: &PgPool) {
+    async fn create_core_connector(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.connector (
@@ -1092,10 +1096,11 @@ mod schema {
     )",
             "core.connector",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_representation(pool: &PgPool) {
+    async fn create_core_representation(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.representation (
@@ -1105,10 +1110,11 @@ mod schema {
     )",
             "core.representation",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_prop(pool: &PgPool) {
+    async fn create_core_prop(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.prop (
@@ -1118,10 +1124,11 @@ mod schema {
     )",
             "core.prop",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_attribute(pool: &PgPool) {
+    async fn create_core_attribute(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.attribute (
@@ -1131,10 +1138,11 @@ mod schema {
     )",
             "core.attribute",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_design(pool: &PgPool) {
+    async fn create_core_design(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.design (
@@ -1146,10 +1154,11 @@ mod schema {
     )",
             "core.design",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_layer(pool: &PgPool) {
+    async fn create_core_layer(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.layer (
@@ -1159,10 +1168,11 @@ mod schema {
     )",
             "core.layer",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_piece(pool: &PgPool) {
+    async fn create_core_piece(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.piece (
@@ -1180,10 +1190,11 @@ mod schema {
     )",
             "core.piece",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_group(pool: &PgPool) {
+    async fn create_core_group(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.group_entity (
@@ -1193,7 +1204,7 @@ mod schema {
     )",
             "core.group_entity",
         )
-        .await;
+        .await?;
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.group_piece (
@@ -1202,10 +1213,11 @@ mod schema {
     )",
             "core.group_piece",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_connection(pool: &PgPool) {
+    async fn create_core_connection(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.connection (
@@ -1220,10 +1232,11 @@ mod schema {
     )",
             "core.connection",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_core_stat(pool: &PgPool) {
+    async fn create_core_stat(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS core.stat (
@@ -1233,10 +1246,11 @@ mod schema {
     )",
             "core.stat",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_compose_tables(pool: &PgPool) {
+    async fn create_compose_tables(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS compose.person (
@@ -1247,7 +1261,7 @@ mod schema {
     )",
             "compose.person",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1259,7 +1273,7 @@ mod schema {
     )",
             "compose.cursor",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1273,7 +1287,7 @@ mod schema {
     )",
             "compose.look",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1283,7 +1297,7 @@ mod schema {
     )",
             "compose.selection_piece",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1293,10 +1307,11 @@ mod schema {
     )",
             "compose.selection_design",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 
-    async fn create_history_tables(pool: &PgPool) {
+    async fn create_history_tables(pool: &PgPool) -> Result<(), SessionError> {
         exec(
             pool,
             "CREATE TABLE IF NOT EXISTS history.domain_commit (
@@ -1308,7 +1323,7 @@ mod schema {
     )",
             "history.domain_commit",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1321,7 +1336,7 @@ mod schema {
     )",
             "history.kit_snapshot",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1333,7 +1348,7 @@ mod schema {
     )",
             "history.entity_change_log",
         )
-        .await;
+        .await?;
 
         exec(
             pool,
@@ -1345,7 +1360,8 @@ mod schema {
     )",
             "history.compaction_config",
         )
-        .await;
+        .await?;
+        Ok(())
     }
 } // 🎞️Schema
 pub use schema::*;
@@ -1356,8 +1372,8 @@ mod persistence {
     // Summary: PostgreSQL persistence: pool creation, session CRUD, snapshot loading.
 
     use super::*;
-    pub async fn create_pool(database_url: &str) -> PgPool {
-        PgPoolOptions::new().max_connections(20).connect(database_url).await.expect("failed to connect to PostgreSQL")
+    pub async fn create_pool(database_url: &str) -> Result<PgPool, SessionError> {
+        Ok(PgPoolOptions::new().max_connections(20).connect(database_url).await?)
     }
 
     pub fn session_kit_id(kit_json: &serde_json::Value) -> Result<Uuid, SessionError> {
@@ -1365,11 +1381,11 @@ mod persistence {
         Uuid::parse_str(id).map_err(|err| SessionError::Validation(format!("invalid kit id '{id}': {err}")))
     }
 
-    fn session_kit_name<'a>(kit_json: &'a serde_json::Value) -> Result<&'a str, SessionError> {
+    pub fn session_kit_name(kit_json: &serde_json::Value) -> Result<&str, SessionError> {
         kit_json.get("name").and_then(|value| value.as_str()).filter(|value| !value.trim().is_empty()).ok_or_else(|| SessionError::Validation("kit snapshot must include string name".into()))
     }
 
-    fn session_kit_string(kit_json: &serde_json::Value, field: &str) -> Option<String> {
+    pub fn session_kit_string(kit_json: &serde_json::Value, field: &str) -> Option<String> {
         kit_json.get(field).and_then(|value| value.as_str()).map(|value| value.to_string())
     }
 
@@ -1779,18 +1795,29 @@ mod persistence {
         Ok(())
     }
 
-    pub async fn record_command(pool: &PgPool, session_id: Uuid, command_id: Uuid, client_id: Uuid, request_id: Uuid, base_version: DomainVersion, command_kind: &str, actor_person_id: Uuid) -> Result<bool, SessionError> {
+    /// 🧾 Params for [`record_command`]: bundled to keep the fn under clippy's arg-count limit.
+    pub struct CommandRecord {
+        pub session_id: Uuid,
+        pub command_id: Uuid,
+        pub client_id: Uuid,
+        pub request_id: Uuid,
+        pub base_version: DomainVersion,
+        pub command_kind: String,
+        pub actor_person_id: Uuid,
+    }
+
+    pub async fn record_command(pool: &PgPool, cmd: &CommandRecord) -> Result<bool, SessionError> {
         let result = sqlx_core::query::query(
             "INSERT INTO runtime.session_command (command_id, session_id, client_id, request_id, base_domain_version, command_kind, actor_person_id)
          VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (session_id, client_id, request_id) DO NOTHING",
         )
-        .bind(command_id)
-        .bind(session_id)
-        .bind(client_id)
-        .bind(request_id)
-        .bind(base_version)
-        .bind(command_kind)
-        .bind(actor_person_id)
+        .bind(cmd.command_id)
+        .bind(cmd.session_id)
+        .bind(cmd.client_id)
+        .bind(cmd.request_id)
+        .bind(cmd.base_version)
+        .bind(cmd.command_kind.as_str())
+        .bind(cmd.actor_person_id)
         .execute(pool)
         .await?;
         Ok(result.rows_affected() > 0)
@@ -2262,7 +2289,7 @@ mod persistence {
                 for d in designs.iter_mut() {
                     if d.get("id").and_then(|g| g.as_str()) == Some(design_id) {
                         if let Some(arr) = d.get_mut(key).and_then(|v| v.as_array_mut()) {
-                            arr.push(item.clone());
+                            arr.push(item);
                         } else {
                             d[key] = serde_json::json!([item]);
                         }
@@ -2377,7 +2404,7 @@ mod persistence {
             }
             // Delete change logs that are fully covered by snapshots
             // Keep logs newer than the oldest lookback boundary
-            let oldest_seconds = LOOKBACK_POINTS.last().map(|(_, s)| *s).unwrap_or(31536000);
+            let oldest_seconds = LOOKBACK_POINTS.last().map_or(31536000, |(_, s)| *s);
             let oldest_version = get_version_at_time(pool, session_id, oldest_seconds).await?;
             if let Some(ov) = oldest_version {
                 if ov > 0 {
@@ -2463,7 +2490,19 @@ mod actor {
         async fn handle_domain_command(&mut self, envelope: CommandEnvelope, command: DomainCommand) -> Result<CommandResult, SessionError> {
             let session_id = self.state.session_id.0;
             let cmd_id = envelope.command_id.0;
-            let is_new = record_command(&self.pool, session_id, cmd_id, envelope.client_id.0, envelope.request_id.0, envelope.base_domain_version, &format!("{:?}", command), envelope.actor_person_id.0).await?;
+            let is_new = record_command(
+                &self.pool,
+                &CommandRecord {
+                    session_id,
+                    command_id: cmd_id,
+                    client_id: envelope.client_id.0,
+                    request_id: envelope.request_id.0,
+                    base_version: envelope.base_domain_version,
+                    command_kind: format!("{:?}", command),
+                    actor_person_id: envelope.actor_person_id.0,
+                },
+            )
+            .await?;
             if !is_new {
                 return Ok(CommandResult::IdempotentDuplicate);
             }
@@ -2975,7 +3014,7 @@ mod api {
         let session_id = Uuid::now_v7();
         let kit_id = Uuid::now_v7();
         let owner_token = create_session(&state.pool, session_id, kit_id, &req.kit_name, req.kit.as_ref()).await?;
-        let response_kit_id = req.kit.as_ref().map(crate::persistence::session_kit_id).transpose()?.unwrap_or(kit_id);
+        let response_kit_id = req.kit.as_ref().map(session_kit_id).transpose()?.unwrap_or(kit_id);
         Ok(Json(CreateSessionResponse { session_id, kit_id: response_kit_id, owner_token }))
     }
 
@@ -3331,6 +3370,17 @@ mod admin {
 
     //#endregion 🔖AdminRows
 
+    //#region 🔖AdminQueryRowShapes
+    // Named sqlx_core::query_as row tuples: clippy::type_complexity flags the raw tuples inline.
+    type SessionRow = (Uuid, Uuid, String, i64, i64, OffsetDateTime, OffsetDateTime);
+    type KitDetailRow = (Uuid, String, Option<String>, Option<String>, String);
+    type PersonDetailRow = (Uuid, String, Option<String>, Option<String>, bool, OffsetDateTime);
+    type ShareTokenDetailRow = (Uuid, String, Option<String>, Option<Uuid>, Option<String>, OffsetDateTime, Option<OffsetDateTime>);
+    type KitRow = (Uuid, Uuid, String, Option<String>, Option<String>, String);
+    type PersonRow = (Uuid, Uuid, String, Option<String>, Option<String>, bool, OffsetDateTime);
+    type ShareTokenRow = (Uuid, Uuid, String, Option<String>, Option<Uuid>, Option<String>, OffsetDateTime, Option<OffsetDateTime>);
+    //#endregion 🔖AdminQueryRowShapes
+
     //#region 🔖AdminQueries
 
     pub async fn load_admin_overview(pool: &PgPool, directory: &SessionDirectory, started_at: Instant) -> Result<AdminOverview, SessionError> {
@@ -3362,7 +3412,7 @@ mod admin {
     }
 
     pub async fn load_admin_sessions(pool: &PgPool, directory: &SessionDirectory) -> Result<Vec<AdminSessionRow>, SessionError> {
-        let rows: Vec<(Uuid, Uuid, String, i64, i64, time::OffsetDateTime, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        let rows: Vec<SessionRow> = sqlx_core::query_as::query_as(
             "SELECT session_id, root_kit_id, status::text, domain_version, compose_version, created_at, updated_at
          FROM runtime.session ORDER BY created_at DESC",
         )
@@ -3373,14 +3423,14 @@ mod admin {
             .into_iter()
             .map(|r| {
                 let is_activated = active.iter().any(|a| a.session_id == r.0);
-                let active_connections = active.iter().find(|a| a.session_id == r.0).map(|a| a.active_connections).unwrap_or(0);
+                let active_connections = active.iter().find(|a| a.session_id == r.0).map_or(0, |a| a.active_connections);
                 AdminSessionRow { session_id: r.0, root_kit_id: r.1, status: r.2, domain_version: r.3, compose_version: r.4, created_at: r.5.to_string(), updated_at: r.6.to_string(), active_connections, is_activated }
             })
             .collect())
     }
 
     pub async fn load_admin_session_detail(pool: &PgPool, directory: &SessionDirectory, session_id: Uuid) -> Result<AdminSessionDetail, SessionError> {
-        let row: Option<(Uuid, Uuid, String, i64, i64, time::OffsetDateTime, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        let row: Option<SessionRow> = sqlx_core::query_as::query_as(
             "SELECT session_id, root_kit_id, status::text, domain_version, compose_version, created_at, updated_at
          FROM runtime.session WHERE session_id = $1",
         )
@@ -3390,12 +3440,12 @@ mod admin {
         let row = row.ok_or_else(|| SessionError::SessionNotFound(session_id.to_string()))?;
         let active = directory.list_active();
         let is_activated = active.iter().any(|a| a.session_id == session_id);
-        let active_connections = active.iter().find(|a| a.session_id == session_id).map(|a| a.active_connections).unwrap_or(0);
+        let active_connections = active.iter().find(|a| a.session_id == session_id).map_or(0, |a| a.active_connections);
         let session_row = AdminSessionRow { session_id: row.0, root_kit_id: row.1, status: row.2, domain_version: row.3, compose_version: row.4, created_at: row.5.to_string(), updated_at: row.6.to_string(), active_connections, is_activated };
-        let kit: Option<(Uuid, String, Option<String>, Option<String>, String)> =
+        let kit: Option<KitDetailRow> =
             sqlx_core::query_as::query_as("SELECT kit_id, name, version, remote, lifecycle::text FROM core.kit WHERE session_id = $1 LIMIT 1").bind(session_id).fetch_optional(pool).await?;
         let kit = kit.map(|k| AdminKitRow { session_id, kit_id: k.0, name: k.1, version: k.2, remote: k.3, lifecycle: k.4 });
-        let person_rows: Vec<(Uuid, String, Option<String>, Option<String>, bool, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        let person_rows: Vec<PersonDetailRow> = sqlx_core::query_as::query_as(
             "SELECT person_id, frontend_id, display_name, color, is_present, last_seen_at
          FROM compose.person WHERE session_id = $1 ORDER BY last_seen_at DESC",
         )
@@ -3403,7 +3453,7 @@ mod admin {
         .fetch_all(pool)
         .await?;
         let persons = person_rows.into_iter().map(|p| AdminPersonRow { session_id, person_id: p.0, frontend_id: p.1, display_name: p.2, color: p.3, is_present: p.4, last_seen_at: p.5.to_string() }).collect();
-        let token_rows: Vec<(Uuid, String, Option<String>, Option<Uuid>, Option<String>, time::OffsetDateTime, Option<time::OffsetDateTime>)> = sqlx_core::query_as::query_as(
+        let token_rows: Vec<ShareTokenDetailRow> = sqlx_core::query_as::query_as(
             "SELECT token, access_mode, entity_kind, entity_id, label, created_at, expires_at
          FROM runtime.share_token WHERE session_id = $1 ORDER BY created_at DESC",
         )
@@ -3415,12 +3465,12 @@ mod admin {
     }
 
     pub async fn load_admin_kits(pool: &PgPool) -> Result<Vec<AdminKitRow>, SessionError> {
-        let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<String>, String)> = sqlx_core::query_as::query_as("SELECT session_id, kit_id, name, version, remote, lifecycle::text FROM core.kit ORDER BY name").fetch_all(pool).await?;
+        let rows: Vec<KitRow> = sqlx_core::query_as::query_as("SELECT session_id, kit_id, name, version, remote, lifecycle::text FROM core.kit ORDER BY name").fetch_all(pool).await?;
         Ok(rows.into_iter().map(|r| AdminKitRow { session_id: r.0, kit_id: r.1, name: r.2, version: r.3, remote: r.4, lifecycle: r.5 }).collect())
     }
 
     pub async fn load_admin_persons(pool: &PgPool) -> Result<Vec<AdminPersonRow>, SessionError> {
-        let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<String>, bool, time::OffsetDateTime)> = sqlx_core::query_as::query_as(
+        let rows: Vec<PersonRow> = sqlx_core::query_as::query_as(
             "SELECT session_id, person_id, frontend_id, display_name, color, is_present, last_seen_at
          FROM compose.person ORDER BY last_seen_at DESC",
         )
@@ -3430,7 +3480,7 @@ mod admin {
     }
 
     pub async fn load_admin_share_tokens(pool: &PgPool) -> Result<Vec<AdminShareTokenRow>, SessionError> {
-        let rows: Vec<(Uuid, Uuid, String, Option<String>, Option<Uuid>, Option<String>, time::OffsetDateTime, Option<time::OffsetDateTime>)> = sqlx_core::query_as::query_as(
+        let rows: Vec<ShareTokenRow> = sqlx_core::query_as::query_as(
             "SELECT token, session_id, access_mode, entity_kind, entity_id, label, created_at, expires_at
          FROM runtime.share_token ORDER BY created_at DESC",
         )
@@ -3445,7 +3495,7 @@ mod admin {
     }
 
     pub async fn admin_load_compaction_config(pool: &PgPool, session_id: Uuid) -> Result<AdminCompactionConfig, SessionError> {
-        let row: Option<(serde_json::Value, Option<time::OffsetDateTime>)> =
+        let row: Option<(serde_json::Value, Option<OffsetDateTime>)> =
             sqlx_core::query_as::query_as("SELECT lookback_tokens, last_compacted_at FROM history.compaction_config WHERE session_id = $1").bind(session_id).fetch_optional(pool).await?;
         let (tokens, last) = match row {
             Some((json, ts)) => {
@@ -3481,7 +3531,7 @@ mod admin {
         pub config: AdminConfig,
     }
 
-    pub fn router(state: AdminState) -> Router<()> {
+    pub fn admin_router(state: AdminState) -> Router<()> {
         Router::new()
             .route("/admin", get(handler_dashboard))
             .route("/admin/", get(handler_dashboard))
@@ -3845,11 +3895,20 @@ pub use admin::*;
 // Summary: Entry point for the compose session-backend service.
 
 #[tokio::main]
-async fn main() {
+async fn main() -> std::process::ExitCode {
     tracing_subscriber::fmt().with_env_filter(tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "compose_hub=debug,tower_http=debug".into())).init();
     let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| "postgres://compose:compose@localhost:5432/compose_hub".to_string());
-    let pool = create_pool(&database_url).await;
-    run_migrations(&pool).await;
+    let pool = match create_pool(&database_url).await {
+        Ok(pool) => pool,
+        Err(e) => {
+            tracing::error!("failed to connect to PostgreSQL: {e}");
+            return std::process::ExitCode::FAILURE;
+        }
+    };
+    if let Err(e) = run_migrations(&pool).await {
+        tracing::error!("database migrations failed: {e}");
+        return std::process::ExitCode::FAILURE;
+    }
     let admin_config = AdminConfig::from_env();
     if admin_config.admin_token.is_none() {
         tracing::warn!("COMPOSE_ADMIN_TOKEN is not set: /admin/* endpoints will return 403");
@@ -3858,12 +3917,28 @@ async fn main() {
     }
     let app_state = AppState::new(pool.clone());
     let admin_state = AdminState { pool, directory: app_state.directory.clone(), config: admin_config };
-    let app_router = api::router(app_state).merge(admin::router(admin_state));
+    let app_router = router(app_state).merge(admin_router(admin_state));
     let default_host = if std::env::var("DEVCONTAINER").as_deref() == Ok("true") { "0.0.0.0" } else { "127.0.0.1" };
-    let addr: std::net::SocketAddr = std::env::var("LISTEN_ADDR").unwrap_or_else(|_| format!("{}:8080", default_host)).parse().expect("invalid LISTEN_ADDR");
+    let addr: std::net::SocketAddr = match std::env::var("LISTEN_ADDR").unwrap_or_else(|_| format!("{}:8080", default_host)).parse() {
+        Ok(addr) => addr,
+        Err(e) => {
+            tracing::error!("invalid LISTEN_ADDR: {e}");
+            return std::process::ExitCode::FAILURE;
+        }
+    };
     tracing::info!("compose-hub listening on {}", addr);
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app_router).await.unwrap();
+    let listener = match tokio::net::TcpListener::bind(addr).await {
+        Ok(l) => l,
+        Err(e) => {
+            tracing::error!("bind {addr}: {e}");
+            return std::process::ExitCode::FAILURE;
+        }
+    };
+    if let Err(e) = axum::serve(listener, app_router).await {
+        tracing::error!("server: {e}");
+        return std::process::ExitCode::FAILURE;
+    }
+    std::process::ExitCode::SUCCESS
 }
 
 // 🔖Main End
@@ -3871,7 +3946,6 @@ async fn main() {
 #[cfg(test)]
 // Specs: Tests cover domain types, commands, events, serde, error HTTP mapping, and integration with metabolism/nakagin data.
 // Summary: Comprehensive tests for all domain types, serialization, error mapping, and integration with real asset data.
-
 mod tests {
     // 📐Tests
 
@@ -3990,7 +4064,6 @@ mod tests {
             assert_eq!(s.0, u);
         }
     } // 👓Domain Tests
-    pub use domain_tests::*;
 
     mod command_tests {
         // 📜Command Tests
@@ -4072,7 +4145,6 @@ mod tests {
             assert!(json.contains("5"));
         }
     } // 📜Command Tests
-    pub use command_tests::*;
 
     mod error_tests {
         // 🌤️Error Tests
@@ -4127,7 +4199,6 @@ mod tests {
             assert_eq!(status_of(SessionError::Forbidden("no write access".into())), StatusCode::FORBIDDEN);
         }
     } // 🌤️Error Tests
-    pub use error_tests::*;
 
     mod event_tests {
         // 🔮Event Tests
@@ -4182,7 +4253,6 @@ mod tests {
             }
         }
     } // 🔮Event Tests
-    pub use event_tests::*;
 
     mod state_tests {
         // 📝State Tests
@@ -4333,7 +4403,6 @@ mod tests {
             assert_eq!(ds.connections.len(), 1);
         }
     } // 📝State Tests
-    pub use state_tests::*;
 
     mod metabolism_integration_tests {
         // 🔐Metabolism Integration Tests
@@ -4574,7 +4643,7 @@ mod tests {
             let diff_json = load_nakagin_diff_json();
             let pieces = diff_json["pieces"].as_array().unwrap();
             assert!(!pieces.is_empty());
-            let has_diff = pieces.iter().any(|p| p.get("attributes").and_then(|a| a.as_array()).map_or(false, |attrs| attrs.iter().any(|attr| attr.get("key").and_then(|k| k.as_str()) == Some("compose.diffStatus"))));
+            let has_diff = pieces.iter().any(|p| p.get("attributes").and_then(|a| a.as_array()).is_some_and(|attrs| attrs.iter().any(|attr| attr.get("key").and_then(|k| k.as_str()) == Some("compose.diffStatus"))));
             assert!(has_diff, "at least one piece should have compose.diffStatus attribute");
         }
 
@@ -4724,7 +4793,6 @@ mod tests {
             assert_eq!(f3_count, 10);
         }
     } // 🗽Multi-Frontend Tests
-    pub use multi_frontend_tests::*;
 
     mod full_metabolism_nakagin_session_test {
         // 🌦️Full Metabolism + Nakagin Session Test
@@ -4882,7 +4950,6 @@ mod tests {
             assert_eq!(state.domain_version, 410);
         }
     } // 🌦️Full Metabolism + Nakagin Session Test
-    pub use full_metabolism_nakagin_session_test::*;
 
     mod metabolism_diff_tests {
         // 📹Metabolism Diff Tests
@@ -4931,7 +4998,6 @@ mod tests {
             assert!(matches!(back, DomainCommand::Batch(_)));
         }
     } // 📹Metabolism Diff Tests
-    pub use metabolism_diff_tests::*;
 
     mod lookback_tests {
         // 🧫Lookback Tests
@@ -4976,7 +5042,6 @@ mod tests {
             }
         }
     } // 🧫Lookback Tests
-    pub use lookback_tests::*;
 
     mod history_unit_tests {
         // 💊History Unit Tests
@@ -5181,7 +5246,6 @@ mod tests {
             assert!(json.contains("logs_deleted"));
         }
     } // 💊History Unit Tests
-    pub use history_unit_tests::*;
 
     mod e2_e_testcontainer_tests {
         // 🌊E2E Testcontainer Tests
@@ -5189,7 +5253,7 @@ mod tests {
         /// Check if Docker/testcontainers are available at runtime.
         use super::*;
         pub fn docker_available() -> bool {
-            std::process::Command::new("docker").arg("info").output().map(|o| o.status.success()).unwrap_or(false)
+            std::process::Command::new("docker").arg("info").output().is_ok_and(|o| o.status.success())
         }
 
         #[ignore = "🐘 needs docker; run via test-e2e"]
@@ -5204,13 +5268,13 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             // Create session
             let session_id = Uuid::now_v7();
             let kit_id = Uuid::now_v7();
-            create_session(&pool, session_id, kit_id, "E2E Kit").await.unwrap();
+            create_session(&pool, session_id, kit_id, "E2E Kit", None).await.unwrap();
 
             // Verify session meta
             let (dv, sv) = load_session_meta(&pool, session_id).await.unwrap();
@@ -5242,12 +5306,12 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let session_id = Uuid::now_v7();
             let kit_id = Uuid::now_v7();
-            create_session(&pool, session_id, kit_id, "History Kit").await.unwrap();
+            create_session(&pool, session_id, kit_id, "History Kit", None).await.unwrap();
 
             // Start actor
             let state = load_session_state(&pool, session_id).await.unwrap();
@@ -5312,11 +5376,11 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool);
-            let app = api::router(app_state);
+            let app = router(app_state);
 
             // Start server on random port
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
@@ -5400,13 +5464,13 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let session_id = Uuid::now_v7();
             let kit_json = load_metabolism_kit_json();
             let kit_id = Uuid::parse_str(kit_json["id"].as_str().unwrap()).unwrap();
-            create_session(&pool, session_id, kit_id, "Metabolism").await.unwrap();
+            create_session(&pool, session_id, kit_id, "Metabolism", None).await.unwrap();
 
             let state = load_session_state(&pool, session_id).await.unwrap();
             let (cmd_tx, cmd_rx) = mpsc::channel(256);
@@ -5463,11 +5527,11 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool.clone());
-            let app = api::router(app_state);
+            let app = router(app_state);
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
@@ -5533,11 +5597,11 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool.clone());
-            let app = api::router(app_state);
+            let app = router(app_state);
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
@@ -5626,11 +5690,11 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool);
-            let app = api::router(app_state);
+            let app = router(app_state);
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
@@ -5729,11 +5793,11 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool);
-            let app = api::router(app_state);
+            let app = router(app_state);
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
             tokio::spawn(async move {
@@ -5858,7 +5922,7 @@ mod tests {
             let resp = client.delete(format!("{}/sessions/{}/shares/{}", base, session_id, kit_share_token)).bearer_auth(&owner_token).send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let del_body: serde_json::Value = resp.json().await.unwrap();
-            assert_eq!(del_body["deleted"].as_bool().unwrap(), true);
+            assert!(del_body["deleted"].as_bool().unwrap());
 
             // Deleted share token should no longer resolve
             let resp = client.get(format!("{}/shares/{}", base, kit_share_token)).send().await.unwrap();
@@ -5908,7 +5972,7 @@ mod tests {
         #[test]
         pub fn session_directory_tracks_active_connections() {
             // Specs: active_connections counter and activated_at are initialized on actor creation and observable through list_active.
-            let handle = SessionHandle { command_tx: tokio::sync::mpsc::channel(1).0, event_tx: tokio::sync::broadcast::channel(1).0, active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
+            let handle = SessionHandle { command_tx: mpsc::channel(1).0, event_tx: broadcast::channel(1).0, active_connections: Arc::new(AtomicUsize::new(0)), activated_at: Arc::new(Instant::now()) };
             handle.active_connections.fetch_add(3, AtomicOrdering::Relaxed);
             assert_eq!(handle.active_connections.load(AtomicOrdering::Relaxed), 3);
             handle.active_connections.fetch_sub(1, AtomicOrdering::Relaxed);
@@ -5928,13 +5992,13 @@ mod tests {
             let host_port = pg.get_host_port_ipv4(5432).await.expect("get postgres port");
             let db_url = format!("postgres://postgres:postgres@127.0.0.1:{}/postgres", host_port);
 
-            let pool = create_pool(&db_url).await;
-            run_migrations(&pool).await;
+            let pool = create_pool(&db_url).await.expect("create pool");
+            run_migrations(&pool).await.expect("run migrations");
 
             let app_state = AppState::new(pool.clone());
             let admin_config = AdminConfig { admin_token: Some("test-admin-token".into()), started_at: Arc::new(Instant::now()) };
             let admin_state = AdminState { pool: pool.clone(), directory: app_state.directory.clone(), config: admin_config };
-            let app = api::router(app_state).merge(admin::router(admin_state));
+            let app = router(app_state).merge(admin_router(admin_state));
 
             let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
             let addr = listener.local_addr().unwrap();
@@ -6012,7 +6076,7 @@ mod tests {
             let resp = client.delete(format!("{}/admin/share-tokens/{}", base, share_token)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let revoke: serde_json::Value = resp.json().await.unwrap();
-            assert_eq!(revoke["revoked"].as_bool().unwrap(), true);
+            assert!(revoke["revoked"].as_bool().unwrap());
 
             // List persons (empty but should return 200)
             let resp = client.get(format!("{}/admin/persons", base)).bearer_auth("test-admin-token").send().await.unwrap();
@@ -6043,7 +6107,7 @@ mod tests {
             let resp = client.post(format!("{}/admin/sessions/{}/close", base, session_b)).bearer_auth("test-admin-token").send().await.unwrap();
             assert_eq!(resp.status(), 200);
             let close: serde_json::Value = resp.json().await.unwrap();
-            assert_eq!(close["closed"].as_bool().unwrap(), true);
+            assert!(close["closed"].as_bool().unwrap());
 
             // After close, detail should report status = closed.
             let resp = client.get(format!("{}/admin/sessions/{}", base, session_b)).bearer_auth("test-admin-token").send().await.unwrap();
@@ -6065,5 +6129,4 @@ mod tests {
             assert!(html.contains("overview"));
         }
     } // 🌊E2E Testcontainer Tests
-    pub use e2_e_testcontainer_tests::*;
 } // 📐Tests

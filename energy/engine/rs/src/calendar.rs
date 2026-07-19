@@ -103,6 +103,7 @@ impl RunPeriod {
             end: SimDate::new(self.year, self.end_month, self.end_day),
             hour: 0u8,
             index: 0u32,
+            finished: false,
         }
     }
 }
@@ -113,6 +114,7 @@ pub struct RunPeriodHours {
     end: SimDate,
     hour: u8,
     index: u32,
+    finished: bool,
 }
 
 impl RunPeriodHours {
@@ -125,6 +127,9 @@ impl Iterator for RunPeriodHours {
     type Item = (SimDate, u8, u32);
 
     fn next(&mut self) -> Option<Self::Item> {
+        if self.finished {
+            return None;
+        }
         if self.current.month > self.end.month
             || (self.current.month == self.end.month && self.current.day > self.end.day)
         {
@@ -132,12 +137,13 @@ impl Iterator for RunPeriodHours {
         }
         let item = (self.current, self.hour, self.index);
         self.index += 1;
+        if self.current.month == self.end.month && self.current.day == self.end.day && self.hour == 23 {
+            self.finished = true;
+            return Some(item);
+        }
         self.hour += 1;
         if self.hour >= 24 {
             self.hour = 0;
-            if self.current.month == self.end.month && self.current.day == self.end.day {
-                return Some(item);
-            }
             self.current.advance_day();
         }
         Some(item)

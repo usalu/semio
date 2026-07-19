@@ -4,13 +4,13 @@ pub mod app_jack {
     //! 🔱 Trinity Jack plugin — jack query play app bundled as a hot-swappable WASM component.
 
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
-        build_node_graph_scene, build_table_scene, build_text_editor_scene,
-        text_identifier_occurrences_json,
+        app_labels, build_node_graph_scene, build_table_scene, build_text_editor_scene,
+        is_de_locale, localized_label_map, resolve_labels, text_identifier_occurrences_json, tree_item, tree_item_with_action,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
-        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, DocumentApp,
-        DocumentView, MeasureSelectItem, NodeGraphScene, OsMediaCapability, ResourceKindSpec,
+        ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
+        DocumentView, MeasureSelectItem, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec,
         TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
-        UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
+        ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
         WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -46,7 +46,7 @@ pub mod app_jack {
     const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
     //#endregion 🔖Constants
 
-    //#region 🔖Runtime
+    //#region 🔖Types
     /// 🎯 Ephemeral editor selection range (offsets into the jack query text) — pure runtime.
     #[derive(Clone, Debug, Default, PartialEq)]
     struct TrinityEditorSelection {
@@ -72,6 +72,40 @@ pub mod app_jack {
         revision: u64,
     }
 
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphPortRecord {
+        id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphNodeRecord {
+        id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        inputs: Vec<MediaGraphPortRecord>,
+        outputs: Vec<MediaGraphPortRecord>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphEdgeRecord {
+        id: String,
+        source_node_id: String,
+        source_port_id: String,
+        target_node_id: String,
+        target_port_id: String,
+    }
+    //#endregion 🔖Types
+
+    //#region 🔖DocumentHelpers
     /// 📦 The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
     fn default_fixture() -> GraphFixture {
         GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap_or_else(|_| trinity_ram::empty_trinity_graph_fixture())
@@ -93,7 +127,7 @@ pub mod app_jack {
     fn run_jack_query(fixture: &GraphFixture, query: &str) -> (String, Vec<TrinityGraphOp>) {
         let graph = match Graph::from_fixture(fixture.clone()) {
             Ok(graph) => graph,
-            Err(error) => return (error_result_json(&error), Vec::new()),
+            Err(error) => return (error_result_json(&error.to_string()), Vec::new()),
         };
         let parsed = match parse(query) {
             Ok(parsed) => parsed,
@@ -212,13 +246,12 @@ pub mod app_jack {
             .collect()
     }
 
+    /// 🎯 Selection ids from an action's args — delegates to the SDK's shared `ids`-array reader, falling
+    /// back to a singular `nodeIds`/`nodeId` key for actions dispatched from the node-graph scene surface.
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
         args.and_then(|value| value.get("nodeIds"))
             .and_then(|value| serde_json::from_value(value.clone()).ok())
-            .or_else(|| {
-                args.and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-            })
+            .or_else(|| Some(semio_framework_plugin::selection_ids(args)).filter(|ids: &Vec<String>| !ids.is_empty()))
             .or_else(|| {
                 args.and_then(|value| value.get("nodeId"))
                     .and_then(|value| value.as_str())
@@ -227,9 +260,6 @@ pub mod app_jack {
             .unwrap_or_default()
     }
 
-    //#endregion 🔖Runtime
-
-    //#region 🔖Lod
     fn trinity_lod_tier_rows() -> Vec<Value> {
         serde_json::from_str(&trinity_rewrite::trinity_lod_scale_json()).unwrap_or_default()
     }
@@ -262,41 +292,6 @@ pub mod app_jack {
             Some(json!({ "automatic": false, "forcedLabel": mode }).to_string())
         }
     }
-    //#endregion 🔖Lod
-
-    //#region 🔖MediaGraph
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphPortRecord {
-        id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        label: Option<String>,
-    }
-
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphNodeRecord {
-        id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        label: Option<String>,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        inputs: Vec<MediaGraphPortRecord>,
-        outputs: Vec<MediaGraphPortRecord>,
-    }
-
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphEdgeRecord {
-        id: String,
-        source_node_id: String,
-        source_port_id: String,
-        target_node_id: String,
-        target_port_id: String,
-    }
-
     fn port_endpoint(node_id: &str, port_id: &str) -> String {
         format!("{node_id}:{port_id}")
     }
@@ -393,117 +388,64 @@ pub mod app_jack {
             serde_json::to_string(&rows).unwrap_or_else(|_| "[]".into()),
         )
     }
-    //#endregion 🔖MediaGraph
+    //#endregion 🔖DocumentHelpers
 
     //#region 🔖Terminology
     /// 🗣️ Complete UI label set for the Jack query app; one field per label makes every locale combination compile-checked.
-    struct TrinityJackLabels {
-        pieces: &'static str,
-        connections: &'static str,
-        fixtures: &'static str,
-        example_queries: &'static str,
-        manifest_kinds: &'static str,
-        piece: &'static str,
-        connection: &'static str,
-        connector: &'static str,
-        geometry: &'static str,
-        identity: &'static str,
-        history: &'static str,
-        query: &'static str,
-        window_graph: &'static str,
-        window_editor: &'static str,
-        window_results: &'static str,
-    }
-
-    const TRINITY_JACK_LABELS_NATIVE_EN: TrinityJackLabels = TrinityJackLabels {
-        pieces: "Pieces",
-        connections: "Connections",
-        fixtures: "Fixtures",
-        example_queries: "Example queries",
-        manifest_kinds: "Manifest kinds",
-        piece: "Piece",
-        connection: "Connection",
-        connector: "Connector",
-        geometry: "Geometry",
-        identity: "Identity",
-        history: "History",
-        query: "Query",
-        window_graph: "Nakagin Graph",
-        window_editor: "Jack Query",
-        window_results: "Results",
-    };
-
-    const TRINITY_JACK_LABELS_NATIVE_DE: TrinityJackLabels = TrinityJackLabels {
-        pieces: "Stücke",
-        connections: "Verbindungen",
-        fixtures: "Fixturen",
-        example_queries: "Beispielabfragen",
-        manifest_kinds: "Manifestarten",
-        piece: "Stück",
-        connection: "Verbindung",
-        connector: "Verbinder",
-        geometry: "Geometrie",
-        identity: "Identität",
-        history: "Verlauf",
-        query: "Abfrage",
-        window_graph: "Nakagin-Graph",
-        window_editor: "Jack-Abfrage",
-        window_results: "Ergebnisse",
-    };
-
-    /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
-    fn trinity_jack_labels(view_state: &ViewState) -> &'static TrinityJackLabels {
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        if is_de { &TRINITY_JACK_LABELS_NATIVE_DE } else { &TRINITY_JACK_LABELS_NATIVE_EN }
+    app_labels! {
+        struct TrinityJackLabels {
+            pieces: &'static str = en: "Pieces", de: "Stücke";
+            connections: &'static str = en: "Connections", de: "Verbindungen";
+            fixtures: &'static str = en: "Fixtures", de: "Fixturen";
+            example_queries: &'static str = en: "Example queries", de: "Beispielabfragen";
+            manifest_kinds: &'static str = en: "Manifest kinds", de: "Manifestarten";
+            piece: &'static str = en: "Piece", de: "Stück";
+            connection: &'static str = en: "Connection", de: "Verbindung";
+            connector: &'static str = en: "Connector", de: "Verbinder";
+            geometry: &'static str = en: "Geometry", de: "Geometrie";
+            identity: &'static str = en: "Identity", de: "Identität";
+            history: &'static str = en: "History", de: "Verlauf";
+            query: &'static str = en: "Query", de: "Abfrage";
+            window_graph: &'static str = en: "Nakagin Graph", de: "Nakagin-Graph";
+            window_editor: &'static str = en: "Jack Query", de: "Jack-Abfrage";
+            window_results: &'static str = en: "Results", de: "Ergebnisse";
+        }
     }
     //#endregion 🔖Terminology
 
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_trinity_jack_app`'s static
+    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
+    /// and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn trinity_jack_action_labels(is_de: bool) -> HashMap<String, String> {
+        localized_label_map(is_de, &[
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
+            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausfuehren"),
+            ("submit", "Submit Jack Query", "Jack-Abfrage absenden"),
+            ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
+            ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
+            ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswaehlen"),
+            ("textHover", "Hover Jack Query Text", "Jack-Abfragetext hovern"),
+            ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
+            ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
+            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+            ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
+            ("graphEngagementInput", "Graph Engagement Input", "Graph-Eingabe"),
+            ("resultsEngagementInput", "Results Engagement Input", "Ergebnis-Eingabe"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+        ])
+    }
+    //#endregion 🔖CommandLabels
+
     //#region 🔖Panels
-    fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-        UiTreeItemNode {
-            id: id.into(),
-            label: label.into(),
-            description: None,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            action: None,
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
-    }
-
-    fn tree_item_with_action(
-        id: impl Into<String>,
-        label: impl Into<String>,
-        description: Option<String>,
-        action: ActionDescriptor,
-    ) -> UiTreeItemNode {
-        UiTreeItemNode {
-            id: id.into(),
-            label: label.into(),
-            description,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            action: Some(action),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
-    }
-
     fn flat_position_uv(node: &Node) -> (String, String) {
         let Some(flat) = node.properties.get("flatPosition").and_then(PropertyValue::as_object) else {
             return (String::new(), String::new());
@@ -513,12 +455,13 @@ pub mod app_jack {
     }
 
     fn build_document_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, labels: &TrinityJackLabels) -> UiNode {
+        let builder = PanelTreeBuilder::new("trinity-document");
         let node_items: Vec<UiTreeItemNode> = fixture
             .nodes
             .iter()
             .map(|node| {
                 tree_item_with_action(
-                    format!("trinity-document.node.{}", node.id),
+                    builder.item_id("node", &node.id),
                     if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
                     Some(node.kind.clone()),
                     jack_action("setSelection", Some(json!({ "ids": [node.id] }))),
@@ -528,37 +471,15 @@ pub mod app_jack {
         let edge_items: Vec<UiTreeItemNode> = fixture
             .edges
             .iter()
-            .map(|edge| tree_item(
-                format!("trinity-document.edge.{}", edge.id),
-                format!("{} → {}", edge.source, edge.target),
-            ))
+            .map(|edge| tree_item(builder.item_id("edge", &edge.id), format!("{} → {}", edge.source, edge.target)))
             .collect();
-        UiNode::Tree(UiTreeNode {
-            sections: vec![
-                UiTreeSectionNode {
-                    id: "trinity-document.nodes".into(),
-                    label: Some(labels.pieces.into()),
-                    default_open: Some(true),
-                    items: node_items,
-                },
-                UiTreeSectionNode {
-                    id: "trinity-document.edges".into(),
-                    label: Some(labels.connections.into()),
-                    default_open: Some(false),
-                    items: edge_items,
-                },
-            ],
-            selected_ids: Some(
-                runtime
-                    .selected_node_ids
-                    .iter()
-                    .map(|id| format!("trinity-document.node.{id}"))
-                    .collect(),
-            ),
-            highlighted_ids: None,
-            selection_change: Some(jack_action("setSelection", Some(json!({ "ids": [] })))),
-            drop_action: None,
-        })
+        let selected = runtime.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
+        builder
+            .section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items)
+            .section("trinity-document.edges", Some(labels.connections.into()), false, edge_items)
+            .selected(selected)
+            .selection_change(jack_action("setSelection", Some(json!({ "ids": [] }))))
+            .build()
     }
 
     fn build_catalogue_tree(runtime: &TrinityJackRuntime, labels: &TrinityJackLabels) -> UiNode {
@@ -573,63 +494,45 @@ pub mod app_jack {
             ("delete-leaf", "Delete Leaf", "MATCH (n:Piece) WHERE n.name = 'b' DELETE n"),
             ("merge-edge", "Merge Edge", "MERGE (x:Piece)-[:Connection]->(y:Piece)"),
         ];
-        UiNode::Tree(UiTreeNode {
-            sections: vec![
-                UiTreeSectionNode {
-                    id: "trinity-jack-catalogue.fixtures".into(),
-                    label: Some(labels.fixtures.into()),
-                    default_open: Some(true),
-                    items: fixtures
-                        .iter()
-                        .map(|(id, label)| {
-                            tree_item_with_action(
-                                format!("trinity-jack-catalogue.fixture.{id}"),
-                                *label,
-                                Some(preset_query(id).into()),
-                                jack_action("setActiveExample", Some(json!({ "exampleId": id }))),
-                            )
-                        })
-                        .collect(),
-                },
-                UiTreeSectionNode {
-                    id: "trinity-jack-catalogue.examples".into(),
-                    label: Some(labels.example_queries.into()),
-                    default_open: Some(true),
-                    items: examples
-                        .iter()
-                        .map(|(id, label, query)| {
-                            tree_item_with_action(
-                                format!("trinity-jack-catalogue.example.{id}"),
-                                *label,
-                                Some((*query).into()),
-                                jack_action("loadExampleQuery", Some(json!({ "query": query }))),
-                            )
-                        })
-                        .collect(),
-                },
-                UiTreeSectionNode {
-                    id: "trinity-jack-catalogue.kinds".into(),
-                    label: Some(labels.manifest_kinds.into()),
-                    default_open: Some(false),
-                    items: vec![
-                        tree_item("trinity-jack-catalogue.piece", labels.piece),
-                        tree_item("trinity-jack-catalogue.connection", labels.connection),
-                        tree_item("trinity-jack-catalogue.connector", labels.connector),
-                    ],
-                },
-            ],
-            selected_ids: if runtime.active_fixture_id.is_empty() {
-                Some(vec![])
-            } else {
-                Some(vec![format!(
-                    "trinity-jack-catalogue.fixture.{}",
-                    runtime.active_fixture_id
-                )])
-            },
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        let builder = PanelTreeBuilder::new("trinity-jack-catalogue");
+        let fixture_items: Vec<UiTreeItemNode> = fixtures
+            .iter()
+            .map(|(id, label)| {
+                tree_item_with_action(
+                    builder.item_id("fixture", id),
+                    *label,
+                    Some(preset_query(id).into()),
+                    jack_action("setActiveExample", Some(json!({ "exampleId": id }))),
+                )
+            })
+            .collect();
+        let example_items: Vec<UiTreeItemNode> = examples
+            .iter()
+            .map(|(id, label, query)| {
+                tree_item_with_action(
+                    builder.item_id("example", id),
+                    *label,
+                    Some((*query).into()),
+                    jack_action("loadExampleQuery", Some(json!({ "query": query }))),
+                )
+            })
+            .collect();
+        let selected = if runtime.active_fixture_id.is_empty() { vec![] } else { vec![builder.item_id("fixture", &runtime.active_fixture_id)] };
+        builder
+            .section("trinity-jack-catalogue.fixtures", Some(labels.fixtures.into()), true, fixture_items)
+            .section("trinity-jack-catalogue.examples", Some(labels.example_queries.into()), true, example_items)
+            .section(
+                "trinity-jack-catalogue.kinds",
+                Some(labels.manifest_kinds.into()),
+                false,
+                vec![
+                    tree_item("trinity-jack-catalogue.piece", labels.piece),
+                    tree_item("trinity-jack-catalogue.connection", labels.connection),
+                    tree_item("trinity-jack-catalogue.connector", labels.connector),
+                ],
+            )
+            .selected(selected)
+            .build()
     }
 
     fn build_inspector_tree(fixture: &GraphFixture, runtime: &TrinityJackRuntime, term_labels: &TrinityJackLabels) -> UiNode {
@@ -638,6 +541,7 @@ pub mod app_jack {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -651,6 +555,7 @@ pub mod app_jack {
                 id: "trinity-inspector.missing".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 children: vec![ui_text("Piece not found")],
             }]);
         }
@@ -1031,7 +936,7 @@ pub mod app_jack {
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, GraphFixture>, view_state: &ViewState) -> UiNode {
             let fixture = doc.projection;
-            let labels = trinity_jack_labels(view_state);
+            let labels = resolve_labels::<TrinityJackLabels>(view_state);
             match body_key {
                 TRINITY_JACK_PLAY_BODY_GRAPH => render_graph(fixture, &self.runtime),
                 TRINITY_JACK_PLAY_BODY_EDITOR => render_editor(fixture, &self.runtime),
@@ -1057,58 +962,15 @@ pub mod app_jack {
         }
 
         fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-            let labels = trinity_jack_labels(view_state);
-            AppLabelsOverlay {
-                window_kind_labels: HashMap::from([
-                    (TRINITY_JACK_PLAY_WINDOW_GRAPH.to_string(), labels.window_graph.to_string()),
-                    (TRINITY_JACK_PLAY_WINDOW_EDITOR.to_string(), labels.window_editor.to_string()),
-                    (TRINITY_JACK_PLAY_WINDOW_RESULTS.to_string(), labels.window_results.to_string()),
-                ]),
-                panel_tab_labels: HashMap::new(),
-                mode_labels: HashMap::new(),
-                action_labels: trinity_jack_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-                utility_labels: HashMap::new(),
-                example_labels: HashMap::new(),
-                action_arg_labels: HashMap::new(),
-                dialog_labels: HashMap::new(),
-                introduction_labels: HashMap::new(),
-            }
+            let labels = resolve_labels::<TrinityJackLabels>(view_state);
+            AppLabelsOverlay::default()
+                .window_kind_label(TRINITY_JACK_PLAY_WINDOW_GRAPH, labels.window_graph)
+                .window_kind_label(TRINITY_JACK_PLAY_WINDOW_EDITOR, labels.window_editor)
+                .window_kind_label(TRINITY_JACK_PLAY_WINDOW_RESULTS, labels.window_results)
+                .action_labels(trinity_jack_action_labels(is_de_locale(view_state)))
         }
     }
     //#endregion 🔖TrinityJackPlayApp
-
-    //#region 🔖CommandLabels
-    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_trinity_jack_app`'s static
-    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
-    /// and Actions rail get a translated label without threading locale through the whole builder chain.
-    fn trinity_jack_action_labels(is_de: bool) -> HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
-            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausfuehren"),
-            ("submit", "Submit Jack Query", "Jack-Abfrage absenden"),
-            ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
-            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
-            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
-            ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
-            ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswaehlen"),
-            ("textHover", "Hover Jack Query Text", "Jack-Abfragetext hovern"),
-            ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
-            ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
-            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-            ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
-            ("graphEngagementInput", "Graph Engagement Input", "Graph-Eingabe"),
-            ("resultsEngagementInput", "Results Engagement Input", "Ergebnis-Eingabe"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-    }
-    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     fn jack_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
@@ -1241,20 +1103,20 @@ pub mod app_jack {
         .example("nakagin", "Nakagin", NAKAGIN_FIXTURE_JSON)
         .program("trinity", "Trinity", "graph")
     }
+    //#endregion 🔖Manifest
 
     //#region 🧪Tests
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-        use vcs::{Backbone, BackboneMessage, MemoryBackbone};
+        use semio_framework_plugin::{testkit, ActionMeta, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
+            testkit::meta(actor)
         }
 
         fn new_app() -> VcsDocumentApp<TrinityJackPlayApp> {
-            VcsDocumentApp::new(TrinityJackPlayApp::default())
+            testkit::new_app()
         }
 
         fn node_id_at(app: &VcsDocumentApp<TrinityJackPlayApp>, index: usize) -> String {
@@ -1492,19 +1354,15 @@ pub mod app_jack {
         fn undo_redo_round_trip_through_the_wrapper() {
             let mut app = new_app();
             let node_id = node_id_at(&app, 0);
-            app.handle_action(
+            let before_name = app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone();
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
                 "patchTrinityNodes",
                 Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "undo-me" })),
-                &ViewState::default(),
-                &meta("local"),
-            )
-            .expect("rename");
-            let name_after = |app: &VcsDocumentApp<TrinityJackPlayApp>| app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone();
-            assert_eq!(name_after(&app), "undo-me");
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert_ne!(name_after(&app), "undo-me");
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-            assert_eq!(name_after(&app), "undo-me");
+                |app| app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone(),
+                before_name,
+                "undo-me".to_string(),
+            );
         }
 
         /// 🧪 The definitional merge proof: two instances start from the same fixture, rename DISJOINT
@@ -1512,55 +1370,34 @@ pub mod app_jack {
         /// converges both to contain BOTH renames — impossible under whole-document `setDocument` LWW.
         #[test]
         fn two_instances_converge_disjoint_edits_via_backbone() {
-            let mut instance_a = new_app();
-            let mut instance_b = new_app();
-            let node0 = node_id_at(&instance_a, 0);
-            let node1 = node_id_at(&instance_a, 1);
-            let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://trinity-jack-convergence", "mem://trinity-jack-convergence");
-            instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-            instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-
-            instance_a
-                .handle_action("patchTrinityNodes", Some(&json!({ "nodeIds": [node0.clone()], "field": "name", "value": "Renamed By A" })), &ViewState::default(), &meta("actor-a"))
-                .expect("a renames node0");
-            instance_b
-                .handle_action("patchTrinityNodes", Some(&json!({ "nodeIds": [node1.clone()], "field": "name", "value": "Renamed By B" })), &ViewState::default(), &meta("actor-b"))
-                .expect("b renames node1");
-
-            // Pump via a neutral history action (commitCheckpoint), NOT undo: TrinityGraphOp does not
-            // override Operation::author_id, so "undo" would misclassify a just-received remote edit as
-            // local and pop it back off. dispatch() always pumps inbound ops first.
-            instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-            instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-
-            let name_of = |app: &VcsDocumentApp<TrinityJackPlayApp>, id: &str| app.projection().unwrap().nodes.iter().find(|n| n.id == id).unwrap().name.clone();
-            assert_eq!(name_of(&instance_a, &node0), "Renamed By A", "A keeps its own edit");
-            assert_eq!(name_of(&instance_a, &node1), "Renamed By B", "A converges on B's remote edit");
-            assert_eq!(name_of(&instance_b, &node0), "Renamed By A", "B converges on A's remote edit");
-            assert_eq!(name_of(&instance_b, &node1), "Renamed By B", "B keeps its own edit");
+            let seed = new_app();
+            let node0 = node_id_at(&seed, 0);
+            let node1 = node_id_at(&seed, 1);
+            drop(seed);
+            testkit::assert_two_instances_converge::<TrinityJackPlayApp, _>(
+                "mem://trinity-jack-convergence",
+                ("patchTrinityNodes", Some(&json!({ "nodeIds": [node0.clone()], "field": "name", "value": "Renamed By A" }))),
+                ("patchTrinityNodes", Some(&json!({ "nodeIds": [node1.clone()], "field": "name", "value": "Renamed By B" }))),
+                |app| {
+                    let projection = app.projection().unwrap();
+                    (
+                        projection.nodes.iter().find(|n| n.id == node0).unwrap().name.clone(),
+                        projection.nodes.iter().find(|n| n.id == node1).unwrap().name.clone(),
+                    )
+                },
+            );
         }
 
         #[test]
         fn ingest_operations_is_idempotent() {
-            let mut sender = new_app();
-            let node_id = node_id_at(&sender, 0);
-            let (near, mut far) = MemoryBackbone::pair("mem://trinity-jack-doc", "mem://trinity-jack-doc");
-            sender.attach_backbone(Box::new(near)).expect("attach");
-            sender
-                .handle_action("patchTrinityNodes", Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "Hero" })), &ViewState::default(), &meta("local"))
-                .expect("rename");
-            let mut envelopes = Vec::new();
-            for message in far.receive().expect("receive") {
-                if let BackboneMessage::Ops { envelopes: ops } = message {
-                    envelopes.extend(ops);
-                }
-            }
-            assert!(!envelopes.is_empty(), "the applied op flows onto the channel");
-            let operations_json = serde_json::to_string(&envelopes).expect("serialize");
-            let mut receiver = new_app();
-            receiver.ingest_operations(&operations_json).expect("ingest once");
-            receiver.ingest_operations(&operations_json).expect("ingest twice");
-            assert_eq!(receiver.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name, "Hero");
+            let seed = new_app();
+            let node_id = node_id_at(&seed, 0);
+            drop(seed);
+            testkit::assert_ingest_idempotent::<TrinityJackPlayApp, _>(
+                "patchTrinityNodes",
+                Some(&json!({ "nodeIds": [node_id.clone()], "field": "name", "value": "Hero" })),
+                |app| app.projection().unwrap().nodes.iter().find(|n| n.id == node_id).unwrap().name.clone(),
+            );
         }
     }
     //#endregion 🧪Tests
@@ -1569,12 +1406,13 @@ pub mod app_rewrite {
     //! ♻️ Trinity Rewrite plugin — parametric rewrite play app bundled as a hot-swappable WASM component.
 
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
-        build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
+        app_labels, build_node_graph_scene, build_text_editor_scene, text_identifier_bounds_at,
+        is_de_locale, localized_label_map, resolve_labels, tree_item, tree_item_with_action,
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
-        ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay,
-        DocumentApp, DocumentView, MeasureSelectItem, NodeGraphScene,
+        ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt,
+        DocumentApp, DocumentView, MeasureSelectItem, NodeGraphScene, PanelTreeBuilder,
         TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
-        UiTreeNode, UiTreeSectionNode, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
+        ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
         WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -1640,7 +1478,7 @@ pub mod app_rewrite {
     const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
     //#endregion 🔖Constants
 
-    //#region 🔖Runtime
+    //#region 🔖Types
     /// 🎛️ Ephemeral view state (selection, hover/select var focus, epochs, LOD) — lives on the app
     /// struct, never in the document. The document projection is the {@link RewriteRuleState}.
     #[derive(Clone, Debug, Default, PartialEq)]
@@ -1654,6 +1492,40 @@ pub mod app_rewrite {
         lod_mode_by_window: BTreeMap<String, String>,
     }
 
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphPortRecord {
+        id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphNodeRecord {
+        id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        label: Option<String>,
+        x: f64,
+        y: f64,
+        width: f64,
+        height: f64,
+        inputs: Vec<MediaGraphPortRecord>,
+        outputs: Vec<MediaGraphPortRecord>,
+    }
+
+    #[derive(Serialize)]
+    #[serde(rename_all = "camelCase")]
+    struct MediaGraphEdgeRecord {
+        id: String,
+        source_node_id: String,
+        source_port_id: String,
+        target_node_id: String,
+        target_port_id: String,
+    }
+    //#endregion 🔖Types
+
+    //#region 🔖DocumentHelpers
     fn default_rule_state() -> RewriteRuleState {
         let mut state = RewriteRuleState {
             before_fixture_json: NAKAGIN_FIXTURE_JSON.into(),
@@ -1743,13 +1615,12 @@ pub mod app_rewrite {
         apply_rewrite_to_fixture(&state.before_fixture_json, state)
     }
 
+    /// 🎯 Selection ids from an action's args — delegates to the SDK's shared `ids`-array reader, falling
+    /// back to a singular `nodeIds`/`nodeId` key for actions dispatched from the node-graph scene surface.
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
         args.and_then(|value| value.get("nodeIds"))
             .and_then(|value| serde_json::from_value(value.clone()).ok())
-            .or_else(|| {
-                args.and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-            })
+            .or_else(|| Some(semio_framework_plugin::selection_ids(args)).filter(|ids: &Vec<String>| !ids.is_empty()))
             .or_else(|| {
                 args.and_then(|value| value.get("nodeId"))
                     .and_then(|value| value.as_str())
@@ -2191,41 +2062,6 @@ pub mod app_rewrite {
         }
         None
     }
-    //#endregion 🔖Envelope
-
-    //#region 🔖MediaGraph
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphPortRecord {
-        id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        label: Option<String>,
-    }
-
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphNodeRecord {
-        id: String,
-        #[serde(skip_serializing_if = "Option::is_none")]
-        label: Option<String>,
-        x: f64,
-        y: f64,
-        width: f64,
-        height: f64,
-        inputs: Vec<MediaGraphPortRecord>,
-        outputs: Vec<MediaGraphPortRecord>,
-    }
-
-    #[derive(Serialize)]
-    #[serde(rename_all = "camelCase")]
-    struct MediaGraphEdgeRecord {
-        id: String,
-        source_node_id: String,
-        source_port_id: String,
-        target_node_id: String,
-        target_port_id: String,
-    }
-
     fn split_endpoint(endpoint: &str) -> (String, String) {
         endpoint
             .split_once(':')
@@ -2292,164 +2128,86 @@ pub mod app_rewrite {
                 .collect(),
         }
     }
-    //#endregion 🔖MediaGraph
+    //#endregion 🔖DocumentHelpers
 
     //#region 🔖Terminology
     /// 🗣️ Complete UI label set for the Rewrite rule app; one field per label makes every locale combination compile-checked.
-    struct TrinityRewriteLabels {
-        pieces: &'static str,
-        piece: &'static str,
-        connection: &'static str,
-        connector: &'static str,
-        catalogue: &'static str,
-        add_to_lhs: &'static str,
-        add_to_rhs: &'static str,
-        parameters: &'static str,
-        geometry: &'static str,
-        identity: &'static str,
-        history: &'static str,
-        rule: &'static str,
-        window_before: &'static str,
-        window_after: &'static str,
-        window_lhs: &'static str,
-        window_rhs: &'static str,
-        window_jack: &'static str,
-        window_parameters: &'static str,
-    }
-
-    const TRINITY_REWRITE_LABELS_NATIVE_EN: TrinityRewriteLabels = TrinityRewriteLabels {
-        pieces: "Pieces",
-        piece: "Piece",
-        connection: "Connection",
-        connector: "Connector",
-        catalogue: "Catalogue",
-        add_to_lhs: "Add to LHS",
-        add_to_rhs: "Add to RHS",
-        parameters: "Parameters",
-        geometry: "Geometry",
-        identity: "Identity",
-        history: "History",
-        rule: "Rule",
-        window_before: "Before",
-        window_after: "After",
-        window_lhs: "LHS",
-        window_rhs: "RHS",
-        window_jack: "Jack",
-        window_parameters: "Parameters",
-    };
-
-    const TRINITY_REWRITE_LABELS_NATIVE_DE: TrinityRewriteLabels = TrinityRewriteLabels {
-        pieces: "Stücke",
-        piece: "Stück",
-        connection: "Verbindung",
-        connector: "Verbinder",
-        catalogue: "Katalog",
-        add_to_lhs: "Zu LHS hinzufügen",
-        add_to_rhs: "Zu RHS hinzufügen",
-        parameters: "Parameter",
-        geometry: "Geometrie",
-        identity: "Identität",
-        history: "Verlauf",
-        rule: "Regel",
-        window_before: "Vorher",
-        window_after: "Nachher",
-        window_lhs: "LHS",
-        window_rhs: "RHS",
-        window_jack: "Jack",
-        window_parameters: "Parameter",
-    };
-
-    /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
-    fn trinity_rewrite_labels(view_state: &ViewState) -> &'static TrinityRewriteLabels {
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        if is_de { &TRINITY_REWRITE_LABELS_NATIVE_DE } else { &TRINITY_REWRITE_LABELS_NATIVE_EN }
+    app_labels! {
+        struct TrinityRewriteLabels {
+            pieces: &'static str = en: "Pieces", de: "Stücke";
+            piece: &'static str = en: "Piece", de: "Stück";
+            connection: &'static str = en: "Connection", de: "Verbindung";
+            connector: &'static str = en: "Connector", de: "Verbinder";
+            catalogue: &'static str = en: "Catalogue", de: "Katalog";
+            add_to_lhs: &'static str = en: "Add to LHS", de: "Zu LHS hinzufügen";
+            add_to_rhs: &'static str = en: "Add to RHS", de: "Zu RHS hinzufügen";
+            parameters: &'static str = en: "Parameters", de: "Parameter";
+            geometry: &'static str = en: "Geometry", de: "Geometrie";
+            identity: &'static str = en: "Identity", de: "Identität";
+            history: &'static str = en: "History", de: "Verlauf";
+            rule: &'static str = en: "Rule", de: "Regel";
+            window_before: &'static str = en: "Before", de: "Vorher";
+            window_after: &'static str = en: "After", de: "Nachher";
+            window_lhs: &'static str = en: "LHS", de: "LHS";
+            window_rhs: &'static str = en: "RHS", de: "RHS";
+            window_jack: &'static str = en: "Jack", de: "Jack";
+            window_parameters: &'static str = en: "Parameters", de: "Parameter";
+        }
     }
     //#endregion 🔖Terminology
 
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_rewrite_app`'s static
+    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
+    /// and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn trinity_rewrite_action_labels(is_de: bool) -> HashMap<String, String> {
+        localized_label_map(is_de, &[
+            ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufuegen"),
+            ("resetRule", "Reset Rule", "Regel zuruecksetzen"),
+            ("setParameter", "Set Parameter", "Parameter festlegen"),
+            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
+            ("setLhsJson", "Set LHS Json", "LHS-JSON festlegen"),
+            ("setRhsJson", "Set RHS Json", "RHS-JSON festlegen"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("textSelect", "Select Text", "Text auswaehlen"),
+            ("textHover", "Hover Text", "Text hovern"),
+            ("recomputeRewrite", "Recompute Rewrite", "Rewrite neu berechnen"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
+        ])
+    }
+    //#endregion 🔖CommandLabels
+
     //#region 🔖Panels
-    fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-        UiTreeItemNode {
-            id: id.into(),
-            label: label.into(),
-            description: None,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            action: None,
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
-    }
-
-    fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-        UiTreeItemNode {
-            id: id.into(),
-            label: label.into(),
-            description,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            action: Some(action),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
-    }
-
     fn build_document_tree(state: &RewriteRuleState, runtime: &RewritePlayRuntime, labels: &TrinityRewriteLabels) -> UiNode {
         let Some(fixture) = parse_fixture_json(&state.before_fixture_json) else {
             return ui_text("Invalid trinity fixture");
         };
+        let builder = PanelTreeBuilder::new("trinity-document");
         let node_items: Vec<UiTreeItemNode> = fixture
             .nodes
             .iter()
-            .map(|node| UiTreeItemNode {
-                id: format!("trinity-document.node.{}", node.id),
-                label: if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
-                description: Some(node.kind.clone()),
-                icon_id: None,
-                selected: None,
-                default_open: None,
-                action: Some(rewrite_action("setSelection", Some(json!({ "ids": [node.id] })))),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-                draggable: None,
-                drag_data: None,
-                items: None,
-                control: None,
-                is_hidden: None,
+            .map(|node| {
+                tree_item_with_action(
+                    builder.item_id("node", &node.id),
+                    if node.name.is_empty() { node.id.clone() } else { node.name.clone() },
+                    Some(node.kind.clone()),
+                    rewrite_action("setSelection", Some(json!({ "ids": [node.id] }))),
+                )
             })
             .collect();
-        UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode {
-                id: "trinity-document.nodes".into(),
-                label: Some(labels.pieces.into()),
-                default_open: Some(true),
-                items: node_items,
-            }],
-            selected_ids: Some(
-                runtime
-                    .selected_node_ids
-                    .iter()
-                    .map(|id| format!("trinity-document.node.{id}"))
-                    .collect(),
-            ),
-            highlighted_ids: None,
-            selection_change: Some(rewrite_action("setSelection", Some(json!({ "ids": [] })))),
-            drop_action: None,
-        })
+        let selected = runtime.selected_node_ids.iter().map(|id| builder.item_id("node", id)).collect();
+        builder
+            .section("trinity-document.nodes", Some(labels.pieces.into()), true, node_items)
+            .selected(selected)
+            .selection_change(rewrite_action("setSelection", Some(json!({ "ids": [] }))))
+            .build()
     }
 
     fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
@@ -2457,42 +2215,37 @@ pub mod app_rewrite {
     }
 
     fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
-        UiNode::Tree(UiTreeNode {
-            sections: vec![
-                UiTreeSectionNode {
-                    id: "trinity-catalogue.kinds".into(),
-                    label: Some(labels.catalogue.into()),
-                    default_open: Some(true),
-                    items: vec![
-                        tree_item("trinity-catalogue.piece", labels.piece),
-                        tree_item("trinity-catalogue.connection", labels.connection),
-                        tree_item("trinity-catalogue.connector", labels.connector),
-                    ],
-                },
-                UiTreeSectionNode {
-                    id: "trinity-catalogue.lhs".into(),
-                    label: Some(labels.add_to_lhs.into()),
-                    default_open: Some(true),
-                    items: vec![catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")],
-                },
-                UiTreeSectionNode {
-                    id: "trinity-catalogue.rhs".into(),
-                    label: Some(labels.add_to_rhs.into()),
-                    default_open: Some(true),
-                    items: vec![
-                        catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),
-                        catalogue_add_item("trinity-catalogue.add-merge", "Merge pattern", "merge"),
-                        catalogue_add_item("trinity-catalogue.add-set", "Set assignment", "set"),
-                        catalogue_add_item("trinity-catalogue.add-delete", "Delete pattern", "delete"),
-                        catalogue_add_item("trinity-catalogue.add-parameter", "Parameter", "parameter"),
-                    ],
-                },
-            ],
-            selected_ids: Some(vec![]),
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("trinity-catalogue")
+            .section(
+                "trinity-catalogue.kinds",
+                Some(labels.catalogue.into()),
+                true,
+                vec![
+                    tree_item("trinity-catalogue.piece", labels.piece),
+                    tree_item("trinity-catalogue.connection", labels.connection),
+                    tree_item("trinity-catalogue.connector", labels.connector),
+                ],
+            )
+            .section(
+                "trinity-catalogue.lhs",
+                Some(labels.add_to_lhs.into()),
+                true,
+                vec![catalogue_add_item("trinity-catalogue.add-where", "Where clause", "where")],
+            )
+            .section(
+                "trinity-catalogue.rhs",
+                Some(labels.add_to_rhs.into()),
+                true,
+                vec![
+                    catalogue_add_item("trinity-catalogue.add-create", "Create pattern", "create"),
+                    catalogue_add_item("trinity-catalogue.add-merge", "Merge pattern", "merge"),
+                    catalogue_add_item("trinity-catalogue.add-set", "Set assignment", "set"),
+                    catalogue_add_item("trinity-catalogue.add-delete", "Delete pattern", "delete"),
+                    catalogue_add_item("trinity-catalogue.add-parameter", "Parameter", "parameter"),
+                ],
+            )
+            .selected(vec![])
+            .build()
     }
 
     fn flat_position_uv(node: &Node) -> (String, String) {
@@ -2518,6 +2271,7 @@ pub mod app_rewrite {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
+                loading: None,
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -2649,6 +2403,7 @@ pub mod app_rewrite {
             id: "trinity-rewrite.parameters".into(),
             label: Some(labels.parameters.into()),
             default_open: Some(true),
+            loading: None,
             children,
         }])
     }
@@ -2993,7 +2748,7 @@ pub mod app_rewrite {
         fn render(&self, body_key: &str, doc: &DocumentView<'_, RewriteRuleState>, view_state: &ViewState) -> UiNode {
             let state = doc.projection;
             let runtime = &self.runtime;
-            let labels = trinity_rewrite_labels(view_state);
+            let labels = resolve_labels::<TrinityRewriteLabels>(view_state);
             match body_key {
                 TRINITY_REWRITE_PLAY_BODY_BEFORE => render_fixture_graph(
                     TRINITY_REWRITE_PLAY_SURFACE_BEFORE,
@@ -3043,57 +2798,18 @@ pub mod app_rewrite {
         }
 
         fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-            let labels = trinity_rewrite_labels(view_state);
-            AppLabelsOverlay {
-                window_kind_labels: HashMap::from([
-                    (TRINITY_REWRITE_PLAY_WINDOW_BEFORE.to_string(), labels.window_before.to_string()),
-                    (TRINITY_REWRITE_PLAY_WINDOW_AFTER.to_string(), labels.window_after.to_string()),
-                    (TRINITY_REWRITE_PLAY_WINDOW_LHS.to_string(), labels.window_lhs.to_string()),
-                    (TRINITY_REWRITE_PLAY_WINDOW_RHS.to_string(), labels.window_rhs.to_string()),
-                    (TRINITY_REWRITE_PLAY_WINDOW_JACK.to_string(), labels.window_jack.to_string()),
-                    (TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS.to_string(), labels.window_parameters.to_string()),
-                ]),
-                panel_tab_labels: HashMap::new(),
-                mode_labels: HashMap::new(),
-                action_labels: trinity_rewrite_action_labels(view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"))),
-                utility_labels: HashMap::new(),
-                example_labels: HashMap::new(),
-                action_arg_labels: HashMap::new(),
-                dialog_labels: HashMap::new(),
-                introduction_labels: HashMap::new(),
-            }
+            let labels = resolve_labels::<TrinityRewriteLabels>(view_state);
+            AppLabelsOverlay::default()
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_BEFORE, labels.window_before)
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_AFTER, labels.window_after)
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_LHS, labels.window_lhs)
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_RHS, labels.window_rhs)
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_JACK, labels.window_jack)
+                .window_kind_label(TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS, labels.window_parameters)
+                .action_labels(trinity_rewrite_action_labels(is_de_locale(view_state)))
         }
     }
     //#endregion 🔖TrinityRewritePlayApp
-
-    //#region 🔖CommandLabels
-    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_rewrite_app`'s static
-    /// manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command palette
-    /// and Actions rail get a translated label without threading locale through the whole builder chain.
-    fn trinity_rewrite_action_labels(is_de: bool) -> HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufuegen"),
-            ("resetRule", "Reset Rule", "Regel zuruecksetzen"),
-            ("setParameter", "Set Parameter", "Parameter festlegen"),
-            ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
-            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-            ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
-            ("setLhsJson", "Set LHS Json", "LHS-JSON festlegen"),
-            ("setRhsJson", "Set RHS Json", "RHS-JSON festlegen"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
-            ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-            ("textSelect", "Select Text", "Text auswaehlen"),
-            ("textHover", "Hover Text", "Text hovern"),
-            ("recomputeRewrite", "Recompute Rewrite", "Rewrite neu berechnen"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-    }
-    //#endregion 🔖CommandLabels
 
     //#region 🔖Manifest
     fn rewrite_window_stack(id: &str, title: &str, size: Option<f64>) -> WindowLayoutChild {
@@ -3217,19 +2933,20 @@ pub mod app_rewrite {
         .example("label-core", "Label Core", serde_json::to_string(&default_rule_state()).unwrap())
         .program("trinity-rewrite", "Trinity Rewrite", "graph")
     }
+    //#endregion 🔖Manifest
 
     //#region 🧪Tests
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
+        use semio_framework_plugin::{testkit, ActionMeta, PluginApp, VcsDocumentApp};
 
         fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
+            testkit::meta(actor)
         }
 
         fn new_app() -> VcsDocumentApp<TrinityRewritePlayApp> {
-            VcsDocumentApp::new(TrinityRewritePlayApp::default())
+            testkit::new_app()
         }
 
         fn dispatch(app: &mut VcsDocumentApp<TrinityRewritePlayApp>, action: &str, args: Option<&Value>) -> semio_framework_plugin::kernel::InvocationResult {
@@ -3359,12 +3076,14 @@ pub mod app_rewrite {
             let mut app = new_app();
             let original = app.projection().unwrap().lhs_json;
             let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
-            dispatch(&mut app, "setLhsJson", Some(&json!({ "value": next_lhs })));
-            assert_eq!(app.projection().unwrap().lhs_json, next_lhs);
-            dispatch(&mut app, "undo", None);
-            assert_eq!(app.projection().unwrap().lhs_json, original);
-            dispatch(&mut app, "redo", None);
-            assert_eq!(app.projection().unwrap().lhs_json, next_lhs);
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "setLhsJson",
+                Some(&json!({ "value": next_lhs })),
+                |app| app.projection().unwrap().lhs_json,
+                original,
+                next_lhs.to_string(),
+            );
         }
     }
     //#endregion 🧪Tests

@@ -1,8 +1,6 @@
 //! 🖊️ Flow draw module: 2D vector-graphics operators backed by [`kernel_2d_rs::DrawingStore`].
 
-use kernel_2d_engine::{
-    block_on, DrawingError, DrawingHandle, DrawingKernel, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2,
-};
+use kernel_2d_engine::{block_on, DrawingError, DrawingHandle, DrawingKernel, FillStyle, GradientStop, LineCap, LineJoin, StrokeStyle, Vec2};
 use kernel_2d_rs::DrawingStore;
 use neural_engine::{channel_output, Atom, ChannelSpec, Dictionary, EvalError, FieldSpec, Operation, OperatorImpl, OperatorInfo, Registry, Schema, Value, ValueType};
 use std::collections::HashSet;
@@ -13,6 +11,17 @@ static KERNEL: OnceLock<Mutex<DrawingStore>> = OnceLock::new();
 fn kernel() -> &'static Mutex<DrawingStore> {
     KERNEL.get_or_init(|| Mutex::new(DrawingStore::new()))
 }
+
+// #region ⚠️ Errors
+/// 🧯 Internal error type for the draw module's JSON-bridging helpers (`boolean_segments_json`/`import_dwg_json` still flatten it to JSON `{"error"}` strings, matching prior behaviour byte-for-byte).
+#[derive(Debug, thiserror::Error)]
+enum DrawModuleError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("{0}")]
+    Invalid(String),
+}
+// #endregion ⚠️ Errors
 
 // #region 🔖Helpers
 fn with_kernel<T>(f: impl FnOnce(&mut DrawingStore) -> Result<T, EvalError>) -> Result<T, EvalError> {
@@ -39,17 +48,7 @@ fn kind_label(kind: kernel_2d_engine::DrawingKind) -> &'static str {
 
 fn drawing_dict(kernel: &DrawingStore, handle: &DrawingHandle) -> Result<Dictionary, EvalError> {
     let kind = block_on(kernel.kind(handle)).map_err(map_kernel_error)?;
-    Ok(Dictionary::with_schema("draw.drawing")
-        .insert("handle", Value::Atom(Atom::String(handle.as_str().to_string())))
-        .insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
-}
-
-fn number_dictionary(value: f64) -> Dictionary {
-    Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
-}
-
-fn text_dictionary(value: impl Into<String>) -> Dictionary {
-    Dictionary::with_schema("text").insert("value", Value::Atom(Atom::String(value.into())))
+    Ok(Dictionary::with_schema("draw.drawing").insert("handle", Value::Atom(Atom::String(handle.as_str().to_string()))).insert("kind", Value::Atom(Atom::String(kind_label(kind).into()))))
 }
 
 fn read_channel_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
@@ -76,10 +75,7 @@ fn read_point_list(input: &Dictionary, key: &str) -> Result<Vec<Vec2>, EvalError
         .into_iter()
         .map(|index| {
             let dict = list.get(&index.to_string()).and_then(|value| value.as_dictionary()).ok_or_else(|| EvalError::InvalidInput(format!("{key}[{index}] must be a point")))?;
-            Ok([
-                dict.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0),
-                dict.get("y").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0),
-            ])
+            Ok([dict.get("x").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0), dict.get("y").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).unwrap_or(0.0)])
         })
         .collect()
 }
@@ -113,6 +109,10 @@ fn out_drawing(full_name: &str) -> ChannelSpec {
     ChannelSpec::named("D", "Drw", "draw.drawing", full_name)
 }
 
+#[allow(
+    clippy::too_many_arguments,
+    reason = "positional operator-metadata builder mirroring this file's registration table shape (id/name/abbr/icon/summary/inputs/outputs/group columns); restructuring into a params struct would only churn call sites with no behavior change"
+)]
 fn operator_info(id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>, group: &[&str]) -> OperatorInfo {
     OperatorInfo {
         id: id.into(),
@@ -388,10 +388,7 @@ impl Operation for GradientLinear {
             let y1 = read_channel_number(input, "y1")?;
             let x2 = read_channel_number(input, "x2")?;
             let y2 = read_channel_number(input, "y2")?;
-            let stops = vec![
-                GradientStop { offset: 0.0, color: read_rgba(input, "start")? },
-                GradientStop { offset: 1.0, color: read_rgba(input, "end")? },
-            ];
+            let stops = vec![GradientStop { offset: 0.0, color: read_rgba(input, "start")? }, GradientStop { offset: 1.0, color: read_rgba(input, "end")? }];
             let handle = block_on(k.linear_gradient_fill(&drawing, x1, y1, x2, y2, &stops)).map_err(map_kernel_error)?;
             Ok(channel_output("draw.drawing", drawing_dict(k, &handle)?))
         })
@@ -427,22 +424,58 @@ pub fn register(registry: &mut Registry) {
     let clip = &["Clip"];
 
     registry.register_operator(
-        operator_info("draw.shape.rect", "Rect", "Rct", "emoji:▭", "Axis-aligned rectangle", vec![number_channel("x", "draw.shape.rect", 0.0), number_channel("y", "draw.shape.rect", 0.0), number_channel("width", "draw.shape.rect", 10.0), number_channel("height", "draw.shape.rect", 10.0)], vec![out_drawing("Rectangle")], shape),
+        operator_info(
+            "draw.shape.rect",
+            "Rect",
+            "Rct",
+            "emoji:▭",
+            "Axis-aligned rectangle",
+            vec![number_channel("x", "draw.shape.rect", 0.0), number_channel("y", "draw.shape.rect", 0.0), number_channel("width", "draw.shape.rect", 10.0), number_channel("height", "draw.shape.rect", 10.0)],
+            vec![out_drawing("Rectangle")],
+            shape,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeRect) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.shape.ellipse", "Ellipse", "Ell", "emoji:⬭", "Ellipse", vec![number_channel("cx", "draw.shape.ellipse", 0.0), number_channel("cy", "draw.shape.ellipse", 0.0), number_channel("rx", "draw.shape.ellipse", 10.0), number_channel("ry", "draw.shape.ellipse", 5.0)], vec![out_drawing("Ellipse")], shape),
+        operator_info(
+            "draw.shape.ellipse",
+            "Ellipse",
+            "Ell",
+            "emoji:⬭",
+            "Ellipse",
+            vec![number_channel("cx", "draw.shape.ellipse", 0.0), number_channel("cy", "draw.shape.ellipse", 0.0), number_channel("rx", "draw.shape.ellipse", 10.0), number_channel("ry", "draw.shape.ellipse", 5.0)],
+            vec![out_drawing("Ellipse")],
+            shape,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeEllipse) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.shape.circle", "Circle", "Cir", "emoji:⚪", "Circle", vec![number_channel("cx", "draw.shape.circle", 0.0), number_channel("cy", "draw.shape.circle", 0.0), number_channel("r", "draw.shape.circle", 5.0)], vec![out_drawing("Circle")], shape),
+        operator_info(
+            "draw.shape.circle",
+            "Circle",
+            "Cir",
+            "emoji:⚪",
+            "Circle",
+            vec![number_channel("cx", "draw.shape.circle", 0.0), number_channel("cy", "draw.shape.circle", 0.0), number_channel("r", "draw.shape.circle", 5.0)],
+            vec![out_drawing("Circle")],
+            shape,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeCircle) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.shape.line", "Line", "Lin", "emoji:╱", "Line segment", vec![number_channel("x1", "draw.shape.line", 0.0), number_channel("y1", "draw.shape.line", 0.0), number_channel("x2", "draw.shape.line", 10.0), number_channel("y2", "draw.shape.line", 10.0)], vec![out_drawing("Line")], shape),
+        operator_info(
+            "draw.shape.line",
+            "Line",
+            "Lin",
+            "emoji:╱",
+            "Line segment",
+            vec![number_channel("x1", "draw.shape.line", 0.0), number_channel("y1", "draw.shape.line", 0.0), number_channel("x2", "draw.shape.line", 10.0), number_channel("y2", "draw.shape.line", 10.0)],
+            vec![out_drawing("Line")],
+            shape,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(ShapeLine) }],
         &["draw.drawing"],
     );
@@ -457,22 +490,71 @@ pub fn register(registry: &mut Registry) {
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.path.rect", "Rect Path", "Rph", "emoji:▭", "Rectangle path", vec![number_channel("x", "draw.path.rect", 0.0), number_channel("y", "draw.path.rect", 0.0), number_channel("width", "draw.path.rect", 10.0), number_channel("height", "draw.path.rect", 10.0)], vec![out_drawing("RectPath")], paths),
+        operator_info(
+            "draw.path.rect",
+            "Rect Path",
+            "Rph",
+            "emoji:▭",
+            "Rectangle path",
+            vec![number_channel("x", "draw.path.rect", 0.0), number_channel("y", "draw.path.rect", 0.0), number_channel("width", "draw.path.rect", 10.0), number_channel("height", "draw.path.rect", 10.0)],
+            vec![out_drawing("RectPath")],
+            paths,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(PathRect) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.style.fill", "Fill", "Fil", "emoji:🪣", "Solid fill", vec![drawing_channel("drawing", "draw.style.fill"), number_channel("colorR", "draw.style.fill", 1.0), number_channel("colorG", "draw.style.fill", 1.0), number_channel("colorB", "draw.style.fill", 1.0), number_channel("colorA", "draw.style.fill", 1.0)], vec![out_drawing("FilledDrawing")], style),
+        operator_info(
+            "draw.style.fill",
+            "Fill",
+            "Fil",
+            "emoji:🪣",
+            "Solid fill",
+            vec![
+                drawing_channel("drawing", "draw.style.fill"),
+                number_channel("colorR", "draw.style.fill", 1.0),
+                number_channel("colorG", "draw.style.fill", 1.0),
+                number_channel("colorB", "draw.style.fill", 1.0),
+                number_channel("colorA", "draw.style.fill", 1.0),
+            ],
+            vec![out_drawing("FilledDrawing")],
+            style,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(StyleFill) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.style.stroke", "Stroke", "Str", "emoji:🖌️", "Stroke outline", vec![drawing_channel("drawing", "draw.style.stroke"), number_channel("width", "draw.style.stroke", 1.0), number_channel("colorR", "draw.style.stroke", 0.0), number_channel("colorG", "draw.style.stroke", 0.0), number_channel("colorB", "draw.style.stroke", 0.0), number_channel("colorA", "draw.style.stroke", 1.0)], vec![out_drawing("StrokedDrawing")], style),
+        operator_info(
+            "draw.style.stroke",
+            "Stroke",
+            "Str",
+            "emoji:🖌️",
+            "Stroke outline",
+            vec![
+                drawing_channel("drawing", "draw.style.stroke"),
+                number_channel("width", "draw.style.stroke", 1.0),
+                number_channel("colorR", "draw.style.stroke", 0.0),
+                number_channel("colorG", "draw.style.stroke", 0.0),
+                number_channel("colorB", "draw.style.stroke", 0.0),
+                number_channel("colorA", "draw.style.stroke", 1.0),
+            ],
+            vec![out_drawing("StrokedDrawing")],
+            style,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(StyleStroke) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.xform.translate", "Translate", "Trn", "emoji:↔️", "Translate drawing", vec![drawing_channel("drawing", "draw.xform.translate"), number_channel("dx", "draw.xform.translate", 0.0), number_channel("dy", "draw.xform.translate", 0.0)], vec![out_drawing("TranslatedDrawing")], xform),
+        operator_info(
+            "draw.xform.translate",
+            "Translate",
+            "Trn",
+            "emoji:↔️",
+            "Translate drawing",
+            vec![drawing_channel("drawing", "draw.xform.translate"), number_channel("dx", "draw.xform.translate", 0.0), number_channel("dy", "draw.xform.translate", 0.0)],
+            vec![out_drawing("TranslatedDrawing")],
+            xform,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(XformTranslate) }],
         &["draw.drawing"],
     );
@@ -482,7 +564,16 @@ pub fn register(registry: &mut Registry) {
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.xform.scale", "Scale", "Scl", "emoji:↕️", "Scale drawing", vec![drawing_channel("drawing", "draw.xform.scale"), number_channel("sx", "draw.xform.scale", 1.0), number_channel("sy", "draw.xform.scale", 1.0)], vec![out_drawing("ScaledDrawing")], xform),
+        operator_info(
+            "draw.xform.scale",
+            "Scale",
+            "Scl",
+            "emoji:↕️",
+            "Scale drawing",
+            vec![drawing_channel("drawing", "draw.xform.scale"), number_channel("sx", "draw.xform.scale", 1.0), number_channel("sy", "draw.xform.scale", 1.0)],
+            vec![out_drawing("ScaledDrawing")],
+            xform,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(XformScale) }],
         &["draw.drawing"],
     );
@@ -502,17 +593,58 @@ pub fn register(registry: &mut Registry) {
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.bool.intersection", "Intersection", "Int", "emoji:∩", "Boolean intersection", vec![drawing_channel("a", "draw.bool.intersection"), drawing_channel("b", "draw.bool.intersection")], vec![out_drawing("IntersectionDrawing")], boolean),
+        operator_info(
+            "draw.bool.intersection",
+            "Intersection",
+            "Int",
+            "emoji:∩",
+            "Boolean intersection",
+            vec![drawing_channel("a", "draw.bool.intersection"), drawing_channel("b", "draw.bool.intersection")],
+            vec![out_drawing("IntersectionDrawing")],
+            boolean,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(BoolIntersection) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.text", "Text", "Txt", "emoji:🔤", "Text label", vec![number_channel("x", "draw.text", 0.0), number_channel("y", "draw.text", 0.0), text_channel("text", "draw.text"), number_channel("size", "draw.text", 16.0)], vec![out_drawing("TextDrawing")], text),
+        operator_info(
+            "draw.text",
+            "Text",
+            "Txt",
+            "emoji:🔤",
+            "Text label",
+            vec![number_channel("x", "draw.text", 0.0), number_channel("y", "draw.text", 0.0), text_channel("text", "draw.text"), number_channel("size", "draw.text", 16.0)],
+            vec![out_drawing("TextDrawing")],
+            text,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(DrawText) }],
         &["draw.drawing"],
     );
     registry.register_operator(
-        operator_info("draw.gradient.linear", "Linear Gradient", "Lgr", "emoji:🌈", "Linear gradient fill", vec![drawing_channel("drawing", "draw.gradient.linear"), number_channel("x1", "draw.gradient.linear", 0.0), number_channel("y1", "draw.gradient.linear", 0.0), number_channel("x2", "draw.gradient.linear", 10.0), number_channel("y2", "draw.gradient.linear", 0.0), number_channel("startR", "draw.gradient.linear", 1.0), number_channel("startG", "draw.gradient.linear", 0.0), number_channel("startB", "draw.gradient.linear", 0.0), number_channel("startA", "draw.gradient.linear", 1.0), number_channel("endR", "draw.gradient.linear", 0.0), number_channel("endG", "draw.gradient.linear", 0.0), number_channel("endB", "draw.gradient.linear", 1.0), number_channel("endA", "draw.gradient.linear", 1.0)], vec![out_drawing("GradientDrawing")], gradient),
+        operator_info(
+            "draw.gradient.linear",
+            "Linear Gradient",
+            "Lgr",
+            "emoji:🌈",
+            "Linear gradient fill",
+            vec![
+                drawing_channel("drawing", "draw.gradient.linear"),
+                number_channel("x1", "draw.gradient.linear", 0.0),
+                number_channel("y1", "draw.gradient.linear", 0.0),
+                number_channel("x2", "draw.gradient.linear", 10.0),
+                number_channel("y2", "draw.gradient.linear", 0.0),
+                number_channel("startR", "draw.gradient.linear", 1.0),
+                number_channel("startG", "draw.gradient.linear", 0.0),
+                number_channel("startB", "draw.gradient.linear", 0.0),
+                number_channel("startA", "draw.gradient.linear", 1.0),
+                number_channel("endR", "draw.gradient.linear", 0.0),
+                number_channel("endG", "draw.gradient.linear", 0.0),
+                number_channel("endB", "draw.gradient.linear", 1.0),
+                number_channel("endA", "draw.gradient.linear", 1.0),
+            ],
+            vec![out_drawing("GradientDrawing")],
+            gradient,
+        ),
         vec![OperatorImpl { schemas: vec![], operation: Box::new(GradientLinear) }],
         &["draw.drawing"],
     );
@@ -538,11 +670,11 @@ pub fn render_scene_json(handle: &str) -> String {
     kernel()
         .lock()
         .ok()
-        .and_then(|store| {
+        .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match block_on(store.flatten_scene(&drawing)) {
-                Ok(scene) => Some(serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into())),
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Ok(scene) => serde_json::to_string(&scene).unwrap_or_else(|_| "{}".into()),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
@@ -553,11 +685,11 @@ pub fn export_svg_json(handle: &str) -> String {
     kernel()
         .lock()
         .ok()
-        .and_then(|store| {
+        .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match block_on(store.export_svg(&drawing)) {
-                Ok(svg) => Some(serde_json::json!({ "svg": svg }).to_string()),
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Ok(svg) => serde_json::json!({ "svg": svg }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
@@ -568,11 +700,11 @@ pub fn export_pdf_json(handle: &str) -> String {
     kernel()
         .lock()
         .ok()
-        .and_then(|store| {
+        .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match block_on(store.export_pdf(&drawing)) {
-                Ok(pdf) => Some(serde_json::json!({ "pdf": base64_encode(&pdf) }).to_string()),
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Ok(pdf) => serde_json::json!({ "pdf": base64_encode(&pdf) }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
@@ -583,11 +715,11 @@ pub fn export_dwg_json(handle: &str) -> String {
     kernel()
         .lock()
         .ok()
-        .and_then(|store| {
+        .map(|store| {
             let drawing = DrawingHandle(handle.to_string());
             match block_on(store.export_dwg(&drawing)) {
-                Ok(dwg) => Some(serde_json::json!({ "dwg": base64_encode(&dwg) }).to_string()),
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Ok(dwg) => serde_json::json!({ "dwg": base64_encode(&dwg) }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             }
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
@@ -601,9 +733,9 @@ pub fn import_dwg_json(data_base64: &str) -> String {
     kernel()
         .lock()
         .ok()
-        .and_then(|mut store| match block_on(store.import_dwg(&bytes)) {
-            Ok(handle) => Some(serde_json::json!({ "handle": handle.as_str() }).to_string()),
-            Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+        .map(|mut store| match block_on(store.import_dwg(&bytes)) {
+            Ok(handle) => serde_json::json!({ "handle": handle.as_str() }).to_string(),
+            Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
 }
@@ -623,10 +755,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
         .and_then(|mut store| match block_on(store.trace_bitmap(width, height, mask, threshold, simplify_epsilon)) {
             Ok(handle) => match block_on(store.flatten_scene(&handle)) {
                 Ok(scene) => {
-                    let segments = scene
-                        .nodes
-                        .into_iter()
-                        .find_map(|node| if let kernel_2d_engine::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
+                    let segments = scene.nodes.into_iter().find_map(|node| if let kernel_2d_engine::DrawingNode::Path { segments } = node.node { Some(segments) } else { None });
                     segments.map(|segs| serde_json::json!({ "segments": segs }).to_string())
                 }
                 Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
@@ -638,23 +767,23 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
 
 /// 🔀 Boolean-combines two path segment arrays.
 pub fn boolean_segments_json(a_json: &str, b_json: &str, op: &str) -> String {
-    let parse = |json: &str| -> Result<Vec<kernel_2d_engine::PathSegment>, String> {
-        let parsed: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    let parse = |json: &str| -> Result<Vec<kernel_2d_engine::PathSegment>, DrawModuleError> {
+        let parsed: serde_json::Value = serde_json::from_str(json)?;
         if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
-            return Err(error.to_string());
+            return Err(DrawModuleError::Invalid(error.to_string()));
         }
-        let segments_value = parsed.get("segments").cloned().ok_or_else(|| "missing segments".to_string())?;
-        serde_json::from_value(segments_value).map_err(|e| e.to_string())
+        let segments_value = parsed.get("segments").cloned().ok_or_else(|| DrawModuleError::Invalid("missing segments".to_string()))?;
+        serde_json::from_value(segments_value).map_err(DrawModuleError::from)
     };
     kernel()
         .lock()
         .ok()
-        .and_then(|store| match (parse(a_json), parse(b_json)) {
+        .map(|store| match (parse(a_json), parse(b_json)) {
             (Ok(a), Ok(b)) => match block_on(store.boolean_segments(&a, &b, op)) {
-                Ok(segments) => Some(serde_json::json!({ "segments": segments }).to_string()),
-                Err(error) => Some(serde_json::json!({ "error": error.to_string() }).to_string()),
+                Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
+                Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             },
-            (Err(error), _) | (_, Err(error)) => Some(serde_json::json!({ "error": error }).to_string()),
+            (Err(error), _) | (_, Err(error)) => serde_json::json!({ "error": error.to_string() }).to_string(),
         })
         .unwrap_or_else(|| serde_json::json!({ "error": "draw kernel unavailable" }).to_string())
 }
@@ -675,7 +804,7 @@ fn base64_encode(data: &[u8]) -> String {
     out
 }
 
-fn base64_decode(data: &str) -> Result<Vec<u8>, String> {
+fn base64_decode(data: &str) -> Result<Vec<u8>, DrawModuleError> {
     const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     let mut lookup = [255u8; 256];
     for (index, &byte) in TABLE.iter().enumerate() {
@@ -688,7 +817,7 @@ fn base64_decode(data: &str) -> Result<Vec<u8>, String> {
         for (index, &byte) in chunk.iter().enumerate() {
             let value = lookup[byte as usize];
             if value == 255 {
-                return Err("invalid base64 character".to_string());
+                return Err(DrawModuleError::Invalid("invalid base64 character".to_string()));
             }
             values[index] = value;
         }
@@ -710,6 +839,10 @@ fn base64_decode(data: &str) -> Result<Vec<u8>, String> {
 mod tests {
     use super::*;
     use flow_module_wasm::build_manifest_json;
+
+    fn number_dictionary(value: f64) -> Dictionary {
+        Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
+    }
 
     #[test]
     fn rect_operator_creates_drawing() {

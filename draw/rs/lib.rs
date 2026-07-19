@@ -3,19 +3,15 @@
 use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
-use vcs::{create_document_vcs_envelope, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
+#[cfg(target_arch = "wasm32")]
+use vcs::create_document_vcs_envelope;
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
-pub const DRAW_BLEND_MODES: &[&str] = &[
-    "normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight",
-    "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity",
-];
+pub const DRAW_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
 pub const DRAW_BOOLEAN_OPS: &[&str] = &["union", "difference", "intersection", "xor"];
 pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "polygon"];
-pub const DRAW_UTILITY_IDS: &[&str] = &[
-    "selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine",
-    "shapePolygon", "booleanCombine", "trace", "transformMove",
-];
+pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
 
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -243,14 +239,7 @@ pub enum PathSegment {
     Line { to: [f64; 2] },
     Quad { ctrl: [f64; 2], to: [f64; 2] },
     Cubic { ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2] },
-    Arc {
-        rx: f64,
-        ry: f64,
-        rotation: f64,
-        large_arc: bool,
-        sweep: bool,
-        to: [f64; 2],
-    },
+    Arc { rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: [f64; 2] },
     Close,
 }
 
@@ -339,79 +328,34 @@ pub fn create_draw_id(prefix: &str) -> String {
 }
 
 pub fn default_draw_transform() -> DrawTransform {
-    DrawTransform {
-        x: 0.0,
-        y: 0.0,
-        scale_x: 1.0,
-        scale_y: 1.0,
-        rotation: 0.0,
-    }
+    DrawTransform { x: 0.0, y: 0.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 }
 }
 
 pub fn default_draw_trace_params() -> DrawTraceParams {
-    DrawTraceParams {
-        threshold: 0.5,
-        simplify_epsilon: 1.5,
-    }
+    DrawTraceParams { threshold: 0.5, simplify_epsilon: 1.5 }
 }
 
 pub fn default_layer_base(name: &str) -> DrawLayerBase {
-    DrawLayerBase {
-        id: create_draw_id("layer"),
-        name: name.into(),
-        visible: true,
-        locked: false,
-        opacity: 1.0,
-        blend_mode: "normal".into(),
-        transform: default_draw_transform(),
-        attributes: DrawAttributes::default(),
-    }
+    DrawLayerBase { id: create_draw_id("layer"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() }
 }
 
 pub fn create_draw_path_layer(name: &str, segments: Vec<PathSegment>) -> DrawLayerNode {
     DrawLayerNode::Path(DrawPathBody {
-        base: DrawLayerBase {
-            id: create_draw_id("path"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("path"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         segments,
     })
 }
 
 pub fn create_draw_group_layer(name: &str) -> DrawLayerNode {
     DrawLayerNode::Group(DrawGroupBody {
-        base: DrawLayerBase {
-            id: create_draw_id("group"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("group"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         children: Vec::new(),
     })
 }
 
 pub fn create_draw_boolean_layer(name: &str, op: &str, children: Vec<String>) -> DrawLayerNode {
     DrawLayerNode::Boolean(DrawBooleanBody {
-        base: DrawLayerBase {
-            id: create_draw_id("boolean"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("boolean"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         op: op.into(),
         children,
     })
@@ -419,16 +363,7 @@ pub fn create_draw_boolean_layer(name: &str, op: &str, children: Vec<String>) ->
 
 pub fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
     DrawLayerNode::Trace(DrawTraceBody {
-        base: DrawLayerBase {
-            id: create_draw_id("trace"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("trace"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         source_key: source_key.into(),
         params: default_draw_trace_params(),
     })
@@ -436,16 +371,7 @@ pub fn create_draw_trace_layer(name: &str, source_key: &str) -> DrawLayerNode {
 
 pub fn create_draw_shape_layer_rect(name: &str) -> DrawLayerNode {
     DrawLayerNode::Shape(DrawShapeBody {
-        base: DrawLayerBase {
-            id: create_draw_id("shape"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("shape"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         shape_kind: "rect".into(),
         rect: Some(DrawRect { x: 0.0, y: 0.0, width: 128.0, height: 96.0 }),
         ellipse: None,
@@ -465,10 +391,7 @@ pub fn create_draw_text_layer(name: &str) -> DrawLayerNode {
             opacity: 1.0,
             blend_mode: "normal".into(),
             transform: default_draw_transform(),
-            attributes: DrawAttributes {
-                fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }),
-                stroke: None,
-            },
+            attributes: DrawAttributes { fill: Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] }), stroke: None },
         },
         x: 0.0,
         y: 0.0,
@@ -479,16 +402,7 @@ pub fn create_draw_text_layer(name: &str) -> DrawLayerNode {
 
 pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
     DrawLayerNode::Image(DrawImageBody {
-        base: DrawLayerBase {
-            id: create_draw_id("image"),
-            name: name.into(),
-            visible: true,
-            locked: false,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            transform: default_draw_transform(),
-            attributes: DrawAttributes::default(),
-        },
+        base: DrawLayerBase { id: create_draw_id("image"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
         image_key: image_key.into(),
         width: 256.0,
         height: 256.0,
@@ -496,15 +410,7 @@ pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
 }
 
 pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
-    DrawDocument {
-        schema: DRAW_DOCUMENT_SCHEMA.into(),
-        id: id.into(),
-        title: title.map(str::to_string),
-        camera: DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-        layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
-        assets: None,
-        artboard: None,
-    }
+    DrawDocument { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), camera: DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 }, layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: None, artboard: None }
 }
 
 pub fn empty_draw_projection() -> DrawDocument {
@@ -663,12 +569,7 @@ fn shape_to_path_segments(shape: &DrawShapeBody) -> Vec<PathSegment> {
                 PathSegment::Close,
             ]
         }),
-        "line" => shape.line.as_ref().map(|line| {
-            vec![
-                PathSegment::Move { to: [line.x1, line.y1] },
-                PathSegment::Line { to: [line.x2, line.y2] },
-            ]
-        }),
+        "line" => shape.line.as_ref().map(|line| vec![PathSegment::Move { to: [line.x1, line.y1] }, PathSegment::Line { to: [line.x2, line.y2] }]),
         "polygon" => shape.polygon.as_ref().and_then(|polygon| {
             if polygon.points.is_empty() {
                 return None;
@@ -680,12 +581,8 @@ fn shape_to_path_segments(shape: &DrawShapeBody) -> Vec<PathSegment> {
             segments.push(PathSegment::Close);
             Some(segments)
         }),
-        "ellipse" => shape.ellipse.as_ref().map(|ellipse| {
-            ellipse_path_segments(ellipse.cx, ellipse.cy, ellipse.rx, ellipse.ry)
-        }),
-        "circle" => shape.circle.as_ref().map(|circle| {
-            ellipse_path_segments(circle.cx, circle.cy, circle.r, circle.r)
-        }),
+        "ellipse" => shape.ellipse.as_ref().map(|ellipse| ellipse_path_segments(ellipse.cx, ellipse.cy, ellipse.rx, ellipse.ry)),
+        "circle" => shape.circle.as_ref().map(|circle| ellipse_path_segments(circle.cx, circle.cy, circle.r, circle.r)),
         _ => None,
     }
     .unwrap_or_default()
@@ -723,12 +620,7 @@ pub fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64, f64, 
         }
     };
     let base = layer_base(layer);
-    let corners = [
-        (local.0, local.1),
-        (local.0 + local.2, local.1),
-        (local.0 + local.2, local.1 + local.3),
-        (local.0, local.1 + local.3),
-    ];
+    let corners = [(local.0, local.1), (local.0 + local.2, local.1), (local.0 + local.2, local.1 + local.3), (local.0, local.1 + local.3)];
     let mut xs = Vec::new();
     let mut ys = Vec::new();
     for (x, y) in corners {
@@ -736,7 +628,12 @@ pub fn draw_layer_world_bounds(layer: &DrawLayerNode) -> Option<(f64, f64, f64, 
         xs.push(world.0);
         ys.push(world.1);
     }
-    Some((xs.iter().cloned().fold(f64::INFINITY, f64::min), ys.iter().cloned().fold(f64::INFINITY, f64::min), xs.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - xs.iter().cloned().fold(f64::INFINITY, f64::min), ys.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - ys.iter().cloned().fold(f64::INFINITY, f64::min)))
+    Some((
+        xs.iter().cloned().fold(f64::INFINITY, f64::min),
+        ys.iter().cloned().fold(f64::INFINITY, f64::min),
+        xs.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - xs.iter().cloned().fold(f64::INFINITY, f64::min),
+        ys.iter().cloned().fold(f64::NEG_INFINITY, f64::max) - ys.iter().cloned().fold(f64::INFINITY, f64::min),
+    ))
 }
 
 fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
@@ -814,18 +711,8 @@ pub fn flatten_draw_document_to_scene_nodes(doc: &DrawDocument) -> Vec<DrawScene
                     image: None,
                 }),
                 DrawLayerNode::Image(image) => {
-                    let src = doc
-                        .assets
-                        .as_ref()
-                        .and_then(|assets| assets.get(&image.image_key))
-                        .map(|asset| {
-                            if asset.data.starts_with("data:") {
-                                asset.data.clone()
-                            } else {
-                                format!("data:{};base64,{}", asset.mime, asset.data)
-                            }
-                        })
-                        .unwrap_or_default();
+                    let src =
+                        doc.assets.as_ref().and_then(|assets| assets.get(&image.image_key)).map(|asset| if asset.data.starts_with("data:") { asset.data.clone() } else { format!("data:{};base64,{}", asset.mime, asset.data) }).unwrap_or_default();
                     out.push(DrawSceneNode {
                         id: image.base.id.clone(),
                         transform: draw_transform_to_matrix(&image.base.transform),
@@ -861,15 +748,7 @@ pub fn canvas_layer_records(doc: &DrawDocument) -> Vec<DrawCanvasLayerRecord> {
         .map(|layer| {
             let base = layer_base(layer);
             let bounds = draw_layer_world_bounds(layer);
-            DrawCanvasLayerRecord {
-                id: base.id.clone(),
-                kind: layer_kind_label(layer),
-                name: base.name.clone(),
-                x: bounds.map(|b| b.0),
-                y: bounds.map(|b| b.1),
-                width: bounds.map(|b| b.2),
-                height: bounds.map(|b| b.3),
-            }
+            DrawCanvasLayerRecord { id: base.id.clone(), kind: layer_kind_label(layer), name: base.name.clone(), x: bounds.map(|b| b.0), y: bounds.map(|b| b.1), width: bounds.map(|b| b.2), height: bounds.map(|b| b.3) }
         })
         .collect()
 }
@@ -924,23 +803,9 @@ pub fn transform_path_segments(segments: &[PathSegment], transform: &DrawTransfo
         .map(|segment| match segment {
             PathSegment::Move { to } => PathSegment::Move { to: draw_map_point_by_matrix(matrix, *to) },
             PathSegment::Line { to } => PathSegment::Line { to: draw_map_point_by_matrix(matrix, *to) },
-            PathSegment::Quad { ctrl, to } => PathSegment::Quad {
-                ctrl: draw_map_point_by_matrix(matrix, *ctrl),
-                to: draw_map_point_by_matrix(matrix, *to),
-            },
-            PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic {
-                ctrl1: draw_map_point_by_matrix(matrix, *ctrl1),
-                ctrl2: draw_map_point_by_matrix(matrix, *ctrl2),
-                to: draw_map_point_by_matrix(matrix, *to),
-            },
-            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc {
-                rx: *rx,
-                ry: *ry,
-                rotation: *rotation,
-                large_arc: *large_arc,
-                sweep: *sweep,
-                to: draw_map_point_by_matrix(matrix, *to),
-            },
+            PathSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: draw_map_point_by_matrix(matrix, *ctrl), to: draw_map_point_by_matrix(matrix, *to) },
+            PathSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: draw_map_point_by_matrix(matrix, *ctrl1), ctrl2: draw_map_point_by_matrix(matrix, *ctrl2), to: draw_map_point_by_matrix(matrix, *to) },
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: draw_map_point_by_matrix(matrix, *to) },
             PathSegment::Close => PathSegment::Close,
         })
         .collect()
@@ -1082,11 +947,7 @@ fn arc_segment_to_cubics(from: [f64; 2], rx: f64, ry: f64, rotation_deg: f64, la
     let mut angle = ang1;
     for _ in 0..segment_count {
         let (unit_ctrl1, unit_ctrl2, unit_to) = arc_approx_unit_arc(angle, angle + delta);
-        cubics.push((
-            arc_ellipse_point(unit_ctrl1, rx, ry, cos_phi, sin_phi, cx, cy),
-            arc_ellipse_point(unit_ctrl2, rx, ry, cos_phi, sin_phi, cx, cy),
-            arc_ellipse_point(unit_to, rx, ry, cos_phi, sin_phi, cx, cy),
-        ));
+        cubics.push((arc_ellipse_point(unit_ctrl1, rx, ry, cos_phi, sin_phi, cx, cy), arc_ellipse_point(unit_ctrl2, rx, ry, cos_phi, sin_phi, cx, cy), arc_ellipse_point(unit_to, rx, ry, cos_phi, sin_phi, cx, cy)));
         angle += delta;
     }
     cubics
@@ -1134,10 +995,7 @@ fn sample_quad_points(from: [f64; 2], ctrl: [f64; 2], to: [f64; 2], steps: usize
         .map(|step| {
             let t = step as f64 / steps as f64;
             let mt = 1.0 - t;
-            [
-                mt * mt * from[0] + 2.0 * mt * t * ctrl[0] + t * t * to[0],
-                mt * mt * from[1] + 2.0 * mt * t * ctrl[1] + t * t * to[1],
-            ]
+            [mt * mt * from[0] + 2.0 * mt * t * ctrl[0] + t * t * to[0], mt * mt * from[1] + 2.0 * mt * t * ctrl[1] + t * t * to[1]]
         })
         .collect()
 }
@@ -1147,10 +1005,7 @@ fn sample_cubic_points(from: [f64; 2], ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f6
         .map(|step| {
             let t = step as f64 / steps as f64;
             let mt = 1.0 - t;
-            [
-                mt * mt * mt * from[0] + 3.0 * mt * mt * t * ctrl1[0] + 3.0 * mt * t * t * ctrl2[0] + t * t * t * to[0],
-                mt * mt * mt * from[1] + 3.0 * mt * mt * t * ctrl1[1] + 3.0 * mt * t * t * ctrl2[1] + t * t * t * to[1],
-            ]
+            [mt * mt * mt * from[0] + 3.0 * mt * mt * t * ctrl1[0] + 3.0 * mt * t * t * ctrl2[0] + t * t * t * to[0], mt * mt * mt * from[1] + 3.0 * mt * mt * t * ctrl1[1] + 3.0 * mt * t * t * ctrl2[1] + t * t * t * to[1]]
         })
         .collect()
 }
@@ -1194,9 +1049,7 @@ fn to_kernel_segment(segment: &PathSegment) -> kernel_2d_engine::PathSegment {
         PathSegment::Line { to } => KernelSegment::Line { to: *to },
         PathSegment::Quad { ctrl, to } => KernelSegment::Quad { ctrl: *ctrl, to: *to },
         PathSegment::Cubic { ctrl1, ctrl2, to } => KernelSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
-            KernelSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to }
-        }
+        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => KernelSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
         PathSegment::Close => KernelSegment::Close,
     }
 }
@@ -1208,9 +1061,7 @@ fn from_kernel_segment(segment: &kernel_2d_engine::PathSegment) -> PathSegment {
         KernelSegment::Line { to } => PathSegment::Line { to: *to },
         KernelSegment::Quad { ctrl, to } => PathSegment::Quad { ctrl: *ctrl, to: *to },
         KernelSegment::Cubic { ctrl1, ctrl2, to } => PathSegment::Cubic { ctrl1: *ctrl1, ctrl2: *ctrl2, to: *to },
-        KernelSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
-            PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to }
-        }
+        KernelSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => PathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: *to },
         KernelSegment::Close => PathSegment::Close,
     }
 }
@@ -1252,11 +1103,7 @@ fn decode_draw_image_asset_luma(asset: &DrawImageAsset) -> Option<(u32, u32, Vec
     let decoded = image::load_from_memory(&bytes).ok()?;
     let target_width = asset.width.unwrap_or(decoded.width());
     let target_height = asset.height.unwrap_or(decoded.height());
-    let rgba = if target_width == decoded.width() && target_height == decoded.height() {
-        decoded.to_rgba8()
-    } else {
-        image::imageops::resize(&decoded.to_rgba8(), target_width, target_height, image::imageops::FilterType::Triangle)
-    };
+    let rgba = if target_width == decoded.width() && target_height == decoded.height() { decoded.to_rgba8() } else { image::imageops::resize(&decoded.to_rgba8(), target_width, target_height, image::imageops::FilterType::Triangle) };
     let mut luma = vec![0u8; (target_width as usize) * (target_height as usize)];
     for (index, pixel) in rgba.pixels().enumerate() {
         let [r, g, b, a] = pixel.0;
@@ -1310,22 +1157,73 @@ fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Ve
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum DrawOp {
-    SetLayerVisible { layer_id: String, visible: bool },
-    SetLayerLocked { layer_id: String, locked: bool },
-    SetLayerOpacity { layer_id: String, opacity: f64 },
-    SetLayerBlendMode { layer_id: String, blend_mode: String },
-    SetLayerName { layer_id: String, name: String },
-    SetLayerTransform { layer_id: String, transform: DrawTransform },
-    SetFill { layer_id: String, #[serde(skip_serializing_if = "Option::is_none")] fill: Option<FillStyle> },
-    SetStroke { layer_id: String, #[serde(skip_serializing_if = "Option::is_none")] stroke: Option<StrokeStyle> },
-    SetBooleanOp { layer_id: String, boolean_op: String },
-    SetTraceParams { layer_id: String, params: DrawTraceParams },
-    AddLayer { #[serde(skip_serializing_if = "Option::is_none")] parent_id: Option<String>, #[serde(skip_serializing_if = "Option::is_none")] index: Option<usize>, layer: DrawLayerNode },
-    DuplicateLayer { layer_id: String },
-    RemoveLayer { layer_id: String },
-    ReorderLayer { layer_id: String, #[serde(skip_serializing_if = "Option::is_none")] parent_id: Option<String>, index: usize },
-    SetCamera { camera: DrawCamera },
-    SetDocument { document: DrawDocument },
+    SetLayerVisible {
+        layer_id: String,
+        visible: bool,
+    },
+    SetLayerLocked {
+        layer_id: String,
+        locked: bool,
+    },
+    SetLayerOpacity {
+        layer_id: String,
+        opacity: f64,
+    },
+    SetLayerBlendMode {
+        layer_id: String,
+        blend_mode: String,
+    },
+    SetLayerName {
+        layer_id: String,
+        name: String,
+    },
+    SetLayerTransform {
+        layer_id: String,
+        transform: DrawTransform,
+    },
+    SetFill {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        fill: Option<FillStyle>,
+    },
+    SetStroke {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        stroke: Option<StrokeStyle>,
+    },
+    SetBooleanOp {
+        layer_id: String,
+        boolean_op: String,
+    },
+    SetTraceParams {
+        layer_id: String,
+        params: DrawTraceParams,
+    },
+    AddLayer {
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_id: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        index: Option<usize>,
+        layer: Box<DrawLayerNode>,
+    },
+    DuplicateLayer {
+        layer_id: String,
+    },
+    RemoveLayer {
+        layer_id: String,
+    },
+    ReorderLayer {
+        layer_id: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        parent_id: Option<String>,
+        index: usize,
+    },
+    SetCamera {
+        camera: DrawCamera,
+    },
+    SetDocument {
+        document: DrawDocument,
+    },
 }
 
 pub fn apply_draw_edit_op(doc: &DrawDocument, edit: &DrawOp) -> DrawDocument {
@@ -1369,7 +1267,7 @@ pub fn apply_draw_edit_op(doc: &DrawDocument, edit: &DrawOp) -> DrawDocument {
         DrawOp::AddLayer { parent_id, index, layer } => {
             let mut next = doc.clone();
             let at = index.unwrap_or(next.layers.len());
-            insert_layer(&mut next.layers, parent_id.as_deref(), at, layer.clone());
+            insert_layer(&mut next.layers, parent_id.as_deref(), at, layer.as_ref().clone());
             next
         }
         DrawOp::DuplicateLayer { layer_id: source_id } => {
@@ -1520,24 +1418,10 @@ pub fn create_layer_by_kind(kind: &str) -> DrawLayerNode {
     if let Some(shape_kind) = kind.strip_prefix("shape:") {
         return match shape_kind {
             "rect" => create_draw_shape_layer_rect("Rectangle"),
-            "ellipse" => DrawLayerNode::Shape(DrawShapeBody {
-                base: default_layer_base("Ellipse"),
-                shape_kind: "ellipse".into(),
-                rect: None,
-                ellipse: Some(DrawEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }),
-                circle: None,
-                line: None,
-                polygon: None,
-            }),
-            "line" => DrawLayerNode::Shape(DrawShapeBody {
-                base: default_layer_base("Line"),
-                shape_kind: "line".into(),
-                rect: None,
-                ellipse: None,
-                circle: None,
-                line: Some(DrawLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }),
-                polygon: None,
-            }),
+            "ellipse" => {
+                DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 0.0, cy: 0.0, rx: 64.0, ry: 48.0 }), circle: None, line: None, polygon: None })
+            }
+            "line" => DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawLine { x1: 0.0, y1: 0.0, x2: 128.0, y2: 0.0 }), polygon: None }),
             "polygon" => DrawLayerNode::Shape(DrawShapeBody {
                 base: default_layer_base("Polygon"),
                 shape_kind: "polygon".into(),
@@ -1563,11 +1447,7 @@ pub fn create_layer_by_kind(kind: &str) -> DrawLayerNode {
 
 pub fn hex_to_rgba(hex: &str, alpha: f64) -> [f64; 4] {
     let normalized = hex.trim_start_matches('#');
-    let value = if normalized.len() == 3 {
-        normalized.chars().map(|c| format!("{c}{c}")).collect::<String>()
-    } else {
-        normalized.to_string()
-    };
+    let value = if normalized.len() == 3 { normalized.chars().map(|c| format!("{c}{c}")).collect::<String>() } else { normalized.to_string() };
     let parse = |start: usize| u8::from_str_radix(&value[start..start + 2], 16).unwrap_or(0) as f64 / 255.0;
     [parse(0), parse(2), parse(4), alpha]
 }
@@ -1601,27 +1481,20 @@ pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, 
             DrawOp::SetLayerTransform { layer_id: layer_id.into(), transform }
         }
         "fillColor" => {
-            let alpha = layer_base(layer).attributes.fill.as_ref().and_then(|fill| match fill {
-                FillStyle::Solid { color } => Some(color[3]),
-                FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => Some(1.0),
-            }).unwrap_or(1.0);
-            DrawOp::SetFill {
-                layer_id: layer_id.into(),
-                fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }),
-            }
+            let alpha = layer_base(layer)
+                .attributes
+                .fill
+                .as_ref()
+                .map(|fill| match fill {
+                    FillStyle::Solid { color } => color[3],
+                    FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
+                })
+                .unwrap_or(1.0);
+            DrawOp::SetFill { layer_id: layer_id.into(), fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }) }
         }
         "strokeWidth" => {
-            let stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle {
-                color: [0.0, 0.0, 0.0, 1.0],
-                width: 1.0,
-                cap: "butt".into(),
-                join: "miter".into(),
-                dash: None,
-            });
-            DrawOp::SetStroke {
-                layer_id: layer_id.into(),
-                stroke: Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }),
-            }
+            let stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None });
+            DrawOp::SetStroke { layer_id: layer_id.into(), stroke: Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }) }
         }
         "traceThreshold" => {
             let DrawLayerNode::Trace(trace) = layer else { return None };
@@ -1674,7 +1547,7 @@ pub struct DrawLayerTreeAdd {
     pub layer: DrawLayerNode,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawDiff {
     pub document: Option<DrawDocument>,
@@ -1682,18 +1555,6 @@ pub struct DrawDiff {
     pub layer_patches: Vec<DrawLayerTreePatch>,
     pub layers_removed: Vec<String>,
     pub layers_added: Vec<DrawLayerTreeAdd>,
-}
-
-impl Default for DrawDiff {
-    fn default() -> Self {
-        Self {
-            document: None,
-            camera: None,
-            layer_patches: Vec::new(),
-            layers_removed: Vec::new(),
-            layers_added: Vec::new(),
-        }
-    }
 }
 
 impl OperationDiff<DrawDocument> for DrawDiff {
@@ -1729,7 +1590,7 @@ impl OperationDiff<DrawDocument> for DrawDiff {
             remove_layer_from_tree(&mut next.layers, layer_id);
         }
         for add in &self.layers_added {
-            let index = add.index.unwrap_or_else(|| next.layers.len());
+            let index = add.index.unwrap_or(next.layers.len());
             insert_layer(&mut next.layers, add.parent_id.as_deref(), index, add.layer.clone());
         }
         next
@@ -1756,30 +1617,14 @@ impl Operation<DrawDocument> for DrawOp {
         match self {
             DrawOp::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
             DrawOp::SetCamera { camera } => DrawDiff { camera: Some(camera.clone()), ..Default::default() },
-            DrawOp::SetLayerVisible { layer_id, visible } => DrawDiff {
-                layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }],
-                ..Default::default()
-            },
-            DrawOp::SetLayerLocked { layer_id, locked } => DrawDiff {
-                layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }],
-                ..Default::default()
-            },
-            DrawOp::SetLayerName { layer_id, name } => DrawDiff {
-                layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }],
-                ..Default::default()
-            },
-            DrawOp::SetLayerOpacity { layer_id, opacity } => DrawDiff {
-                layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { opacity: Some(*opacity), ..Default::default() } }],
-                ..Default::default()
-            },
-            DrawOp::SetLayerBlendMode { layer_id, blend_mode } => DrawDiff {
-                layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { blend_mode: Some(blend_mode.clone()), ..Default::default() } }],
-                ..Default::default()
-            },
-            DrawOp::AddLayer { parent_id, index, layer } => DrawDiff {
-                layers_added: vec![DrawLayerTreeAdd { parent_id: parent_id.clone(), index: *index, layer: layer.clone() }],
-                ..Default::default()
-            },
+            DrawOp::SetLayerVisible { layer_id, visible } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }], ..Default::default() },
+            DrawOp::SetLayerLocked { layer_id, locked } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }], ..Default::default() },
+            DrawOp::SetLayerName { layer_id, name } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() },
+            DrawOp::SetLayerOpacity { layer_id, opacity } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { opacity: Some(*opacity), ..Default::default() } }], ..Default::default() },
+            DrawOp::SetLayerBlendMode { layer_id, blend_mode } => {
+                DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { blend_mode: Some(blend_mode.clone()), ..Default::default() } }], ..Default::default() }
+            }
+            DrawOp::AddLayer { parent_id, index, layer } => DrawDiff { layers_added: vec![DrawLayerTreeAdd { parent_id: parent_id.clone(), index: *index, layer: layer.as_ref().clone() }], ..Default::default() },
             DrawOp::RemoveLayer { layer_id } => DrawDiff { layers_removed: vec![layer_id.clone()], ..Default::default() },
             _ => DrawDiff { document: Some(apply_draw_edit_op(_projection, self)), ..Default::default() },
         }
@@ -1842,10 +1687,7 @@ mod wasm_bridge {
 
 //#region 🔖MediaExport
 fn escape_svg_text(value: &str) -> String {
-    value
-        .replace('&', "&amp;")
-        .replace('<', "&lt;")
-        .replace('>', "&gt;")
+    value.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
 }
 
 fn rgba_to_svg_color(color: [f64; 4]) -> String {
@@ -1875,28 +1717,9 @@ fn path_segments_to_svg_d(segments: &[PathSegment]) -> String {
             PathSegment::Line { to } => out.push_str(&format!("L {} {} ", to[0], to[1])),
             PathSegment::Quad { ctrl, to } => out.push_str(&format!("Q {} {} {} {} ", ctrl[0], ctrl[1], to[0], to[1])),
             PathSegment::Cubic { ctrl1, ctrl2, to } => {
-                out.push_str(&format!(
-                    "C {} {} {} {} {} {} ",
-                    ctrl1[0], ctrl1[1], ctrl2[0], ctrl2[1], to[0], to[1]
-                ));
+                out.push_str(&format!("C {} {} {} {} {} {} ", ctrl1[0], ctrl1[1], ctrl2[0], ctrl2[1], to[0], to[1]));
             }
-            PathSegment::Arc {
-                rx,
-                ry,
-                rotation,
-                large_arc,
-                sweep,
-                to,
-            } => out.push_str(&format!(
-                "A {} {} {} {} {} {} {} ",
-                rx,
-                ry,
-                rotation,
-                if *large_arc { 1 } else { 0 },
-                if *sweep { 1 } else { 0 },
-                to[0],
-                to[1]
-            )),
+            PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => out.push_str(&format!("A {} {} {} {} {} {} {} ", rx, ry, rotation, if *large_arc { 1 } else { 0 }, if *sweep { 1 } else { 0 }, to[0], to[1])),
             PathSegment::Close => out.push('Z'),
         }
     }
@@ -1905,10 +1728,7 @@ fn path_segments_to_svg_d(segments: &[PathSegment]) -> String {
 
 fn resolve_draw_document_artboard(doc: &DrawDocument) -> (u32, u32) {
     if let Some(artboard) = &doc.artboard {
-        return (
-            artboard.width.max(1.0).round() as u32,
-            artboard.height.max(1.0).round() as u32,
-        );
+        return (artboard.width.max(1.0).round() as u32, artboard.height.max(1.0).round() as u32);
     }
     let mut max_x: f64 = 1024.0;
     let mut max_y: f64 = 1024.0;
@@ -1927,54 +1747,27 @@ pub fn draw_document_to_svg(doc: &DrawDocument) -> (String, u32, u32) {
     let shapes = flatten_draw_document_to_scene_nodes(doc)
         .into_iter()
         .map(|node| {
-            let matrix = node
-                .transform
-                .iter()
-                .map(|value| value.to_string())
-                .collect::<Vec<_>>()
-                .join(" ");
+            let matrix = node.transform.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(" ");
             if let Some(text) = node.text {
                 let fill = node.fill.as_ref().map(fill_style_to_svg).unwrap_or_else(|| "black".into());
-                return format!(
-                    r#"<g transform="matrix({matrix})" opacity="{}"><text x="0" y="{}" font-size="{}" fill="{fill}">{}</text></g>"#,
-                    node.opacity,
-                    text.size,
-                    text.size,
-                    escape_svg_text(&text.content)
-                );
+                return format!(r#"<g transform="matrix({matrix})" opacity="{}"><text x="0" y="{}" font-size="{}" fill="{fill}">{}</text></g>"#, node.opacity, text.size, text.size, escape_svg_text(&text.content));
             }
             if let Some(image) = node.image {
-                return format!(
-                    r#"<g transform="matrix({matrix})" opacity="{}"><image href="{}" width="{}" height="{}"/></g>"#,
-                    node.opacity, image.src, image.width, image.height
-                );
+                return format!(r#"<g transform="matrix({matrix})" opacity="{}"><image href="{}" width="{}" height="{}"/></g>"#, node.opacity, image.src, image.width, image.height);
             }
             let d = path_segments_to_svg_d(&node.segments);
             if d.is_empty() {
                 return String::new();
             }
-            let fill = node
-                .fill
-                .as_ref()
-                .map(fill_style_to_svg)
-                .unwrap_or_else(|| "none".into());
-            let stroke = node
-                .stroke
-                .as_ref()
-                .map(|style| rgba_to_svg_color(style.color))
-                .unwrap_or_else(|| "none".into());
+            let fill = node.fill.as_ref().map(fill_style_to_svg).unwrap_or_else(|| "none".into());
+            let stroke = node.stroke.as_ref().map(|style| rgba_to_svg_color(style.color)).unwrap_or_else(|| "none".into());
             let stroke_width = node.stroke.as_ref().map(|style| style.width).unwrap_or(0.0);
-            format!(
-                r#"<g transform="matrix({matrix})" opacity="{}"><path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}" fill-rule="evenodd"/></g>"#,
-                node.opacity
-            )
+            format!(r#"<g transform="matrix({matrix})" opacity="{}"><path d="{d}" fill="{fill}" stroke="{stroke}" stroke-width="{stroke_width}" fill-rule="evenodd"/></g>"#, node.opacity)
         })
         .filter(|shape| !shape.is_empty())
         .collect::<Vec<_>>()
         .join("");
-    let svg = format!(
-        r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{shapes}</svg>"#
-    );
+    let svg = format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" width="{width}" height="{height}">{shapes}</svg>"#);
     (svg, width, height)
 }
 
@@ -1993,14 +1786,8 @@ fn draw_path_segment_to_dwg(segment: &PathSegment, transform: [f64; 6]) -> semio
         PathSegment::Move { to } => DwgPathSegment::Move { to: apply_draw_transform_point(transform, *to) },
         PathSegment::Line { to } => DwgPathSegment::Line { to: apply_draw_transform_point(transform, *to) },
         PathSegment::Quad { ctrl, to } => DwgPathSegment::Quad { ctrl: apply_draw_transform_point(transform, *ctrl), to: apply_draw_transform_point(transform, *to) },
-        PathSegment::Cubic { ctrl1, ctrl2, to } => DwgPathSegment::Cubic {
-            ctrl1: apply_draw_transform_point(transform, *ctrl1),
-            ctrl2: apply_draw_transform_point(transform, *ctrl2),
-            to: apply_draw_transform_point(transform, *to),
-        },
-        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => {
-            DwgPathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: apply_draw_transform_point(transform, *to) }
-        }
+        PathSegment::Cubic { ctrl1, ctrl2, to } => DwgPathSegment::Cubic { ctrl1: apply_draw_transform_point(transform, *ctrl1), ctrl2: apply_draw_transform_point(transform, *ctrl2), to: apply_draw_transform_point(transform, *to) },
+        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => DwgPathSegment::Arc { rx: *rx, ry: *ry, rotation: *rotation, large_arc: *large_arc, sweep: *sweep, to: apply_draw_transform_point(transform, *to) },
         PathSegment::Close => DwgPathSegment::Close,
     }
 }
@@ -2039,11 +1826,7 @@ pub fn draw_document_json_to_dwg_bytes(value: &serde_json::Value) -> Result<Vec<
     let mut drawing = semio_framework_core::paths_to_dwg_drawing(&path_groups);
     let layer = drawing.ensure_layer("0");
     for (x, y, size, content) in text_entities {
-        drawing.entities.push(semio_framework_core::DwgEntity {
-            layer,
-            color: semio_framework_core::DwgColor::ByLayer,
-            geometry: semio_framework_core::DwgGeometry::Text { at: [x, y, 0.0], height: size, rotation: 0.0, content },
-        });
+        drawing.entities.push(semio_framework_core::DwgEntity { layer, color: semio_framework_core::DwgColor::ByLayer, geometry: semio_framework_core::DwgGeometry::Text { at: [x, y, 0.0], height: size, rotation: 0.0, content } });
     }
     semio_framework_core::dwg_to_bytes(&drawing)
 }
@@ -2068,10 +1851,7 @@ pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -
         layers.push(create_draw_path_layer("Layer 1", Vec::new()));
     }
     doc.layers = layers;
-    doc.artboard = Some(DrawArtboard {
-        width: (drawing.extmax[0] - drawing.extmin[0]).max(1.0),
-        height: (drawing.extmax[1] - drawing.extmin[1]).max(1.0),
-    });
+    doc.artboard = Some(DrawArtboard { width: (drawing.extmax[0] - drawing.extmin[0]).max(1.0), height: (drawing.extmax[1] - drawing.extmin[1]).max(1.0) });
     serde_json::to_value(&doc).map_err(|error| error.to_string())
 }
 //#endregion 🔖MediaExport
@@ -2080,7 +1860,6 @@ pub fn draw_document_json_from_dwg(drawing: &semio_framework_core::DwgDrawing) -
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::create_document_vcs_envelope;
 
     #[test]
     fn default_document_has_path_layer() {
@@ -2091,15 +1870,7 @@ mod tests {
 
     #[test]
     fn dwg_export_import_round_trips_a_path_and_text_layer() {
-        let path_layer = create_draw_path_layer(
-            "Outline",
-            vec![
-                PathSegment::Move { to: [0.0, 0.0] },
-                PathSegment::Line { to: [10.0, 0.0] },
-                PathSegment::Cubic { ctrl1: [12.0, 2.0], ctrl2: [12.0, 6.0], to: [10.0, 8.0] },
-                PathSegment::Close,
-            ],
-        );
+        let path_layer = create_draw_path_layer("Outline", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Cubic { ctrl1: [12.0, 2.0], ctrl2: [12.0, 6.0], to: [10.0, 8.0] }, PathSegment::Close]);
         let text_layer = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("Label"), x: 1.0, y: 2.0, content: "semio".into(), size: 3.0 });
         let doc = DrawDocument { layers: vec![path_layer, text_layer], ..default_draw_document("dwg-test", None) };
         let value = serde_json::to_value(&doc).unwrap();
@@ -2121,7 +1892,7 @@ mod tests {
         let doc = empty_draw_projection();
         let layer = create_draw_shape_layer_rect("Rect");
         let id = layer_id(&layer).to_string();
-        let next = apply_draw_edit_op(&doc, &DrawOp::AddLayer { parent_id: None, index: None, layer });
+        let next = apply_draw_edit_op(&doc, &DrawOp::AddLayer { parent_id: None, index: None, layer: Box::new(layer) });
         assert_eq!(next.layers.len(), 2);
         let renamed = apply_draw_edit_op(&next, &DrawOp::SetLayerName { layer_id: id.clone(), name: "Box".into() });
         assert_eq!(find_draw_layer(&renamed, &id).map(|layer| layer_base(layer).name.as_str()), Some("Box"));
@@ -2130,10 +1901,7 @@ mod tests {
     #[test]
     fn scene_nodes_include_shape_bounds() {
         let layer = create_draw_shape_layer_rect("Rect");
-        let doc = DrawDocument {
-            layers: vec![layer],
-            ..default_draw_document("scene", None)
-        };
+        let doc = DrawDocument { layers: vec![layer], ..default_draw_document("scene", None) };
         let nodes = flatten_draw_document_to_scene_nodes(&doc);
         assert_eq!(nodes.len(), 1);
         assert!(!nodes[0].segments.is_empty());
@@ -2168,15 +1936,8 @@ mod tests {
     fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_op() {
         let mut doc = default_draw_document("bool-arc-test", None);
         doc.layers.clear();
-        let path_a = create_draw_path_layer(
-            "A",
-            vec![
-                PathSegment::Move { to: [0.0, 0.0] },
-                PathSegment::Line { to: [10.0, 0.0] },
-                PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] },
-                PathSegment::Close,
-            ],
-        );
+        let path_a =
+            create_draw_path_layer("A", vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] }, PathSegment::Close]);
         let id_a = layer_id(&path_a).to_string();
         let rect_b = {
             let mut layer = create_draw_shape_layer_rect("B");
@@ -2198,10 +1959,7 @@ mod tests {
 
     #[test]
     fn arc_segment_flattens_to_cubics_preserving_endpoints() {
-        let segments = vec![
-            PathSegment::Move { to: [10.0, 0.0] },
-            PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] },
-        ];
+        let segments = vec![PathSegment::Move { to: [10.0, 0.0] }, PathSegment::Arc { rx: 10.0, ry: 10.0, rotation: 0.0, large_arc: false, sweep: true, to: [0.0, 10.0] }];
         let flattened = flatten_curve_segments(&segments);
         assert!(flattened.iter().all(|segment| !matches!(segment, PathSegment::Arc { .. })));
         match flattened.last() {
@@ -2222,16 +1980,11 @@ mod tests {
             }
         }
         let mut bytes = Vec::new();
-        image::DynamicImage::ImageRgba8(image_buffer)
-            .write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png)
-            .expect("encode png");
+        image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
         let mut doc = default_draw_document("trace-test", None);
         doc.layers.clear();
         let mut assets = std::collections::HashMap::new();
-        assets.insert(
-            "source".to_string(),
-            DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None },
-        );
+        assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None });
         doc.assets = Some(assets);
         doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
         doc.layers.push(create_draw_trace_layer("Trace", "source"));

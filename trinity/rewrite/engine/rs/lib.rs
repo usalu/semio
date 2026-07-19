@@ -1,34 +1,54 @@
 //! ♻️ Parametric graph rewriting for trinity graphs with optional WASM canvas host.
 
-pub use infinite_cavas as cavas;
 use infinite_board_port_directed::{
-    force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
     compute_edge_bezier_points, distance_between,
-    BoardEngine, HandleRole, CanvasPalette,
+    force_graph::{apply_force_graph_layout_to_fixture_v1_value, ForceGraphLayoutOptions},
+    BoardEngine, CanvasPalette, HandleRole,
 };
 use infinite_board_port_directed_normal::BoardHost;
+pub use infinite_cavas as cavas;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::HashMap;
 use trinity_jack::{execute, parse};
-use trinity_ram::{
-    create_trinity_graph_envelope, dispatch_trinity_graph_ops, Graph, GraphFixture, Node, PortDirection, PropertyValue,
-    TrinityGraphOp, TrinityGraphStore, port_key,
-};
+use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_ops, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOp, TrinityGraphStore};
 
-pub use trinity_jack::{
-    complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack,
-    Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan,
-};
+pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
+
+//#region ⚠️ Errors
+/// ⚠️ Trinity rewrite-engine errors.
+#[derive(Debug, thiserror::Error)]
+pub enum TrinityRewriteError {
+    /// 🧩 Trinity graph fixture load/validation/mutation failure.
+    #[error(transparent)]
+    Graph(#[from] trinity_ram::TrinityRamError),
+    /// 🧭 VCS store/dispatch failure.
+    #[error(transparent)]
+    Vcs(#[from] vcs::VcsError),
+    /// 🧬 JSON (de)serialization failure.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    /// 🔤 Jack query parse/execute failure (`trinity_jack`'s own API is not yet thiserror-migrated).
+    #[error("{0}")]
+    Jack(String),
+    /// 📐 Force-directed layout failure (`infinite_board_port_directed`'s own API is not yet thiserror-migrated).
+    #[error("{0}")]
+    Layout(String),
+    /// 🎨 Canvas theme merge failure (`infinite_board_port_directed`'s own API is not yet thiserror-migrated).
+    #[error("{0}")]
+    CanvasTheme(String),
+    #[error("force layout fixture missing nodes")]
+    ForceLayoutFixtureMissingNodes,
+}
+//#endregion ⚠️ Errors
 
 type TrinityBoardEngine = BoardEngine;
 
 const TRINITY_HANDLE_RADIUS: f64 = 5.0;
 const TRINITY_BOARD_PORT_HANDLE_KIND: &str = "port";
 const TRINITY_DEFAULT_NODE_RADIUS: f64 = 44.0;
-const TRINITY_BOARD_KIND_CATALOGS_JSON: &str =
-    "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
+const TRINITY_BOARD_KIND_CATALOGS_JSON: &str = "{\"handleKinds\":[{\"id\":\"port\",\"name\":\"Port\",\"color\":\"#6b7280\"}],\"edgeKinds\":[{\"id\":\"Connection\",\"name\":\"Connection\",\"color\":\"#94a3b8\"}]}";
 const TRINITY_EDGE_STROKE: f64 = 1.5;
 
 // #region 🔖Rewrite
@@ -112,15 +132,7 @@ impl PatternJson {
         use trinity_jack::{PatternEdge, PatternNode};
         let left = PatternNode { var: self.left_var.clone(), kind: self.left_kind.clone() };
         if let (Some(right_var), Some(right_kind)) = (&self.right_var, &self.right_kind) {
-            Pattern {
-                nodes: vec![left],
-                edge: Some(PatternEdge {
-                    var: self.edge_var.clone(),
-                    kind: self.edge_kind.clone(),
-                    directed: true,
-                    right: PatternNode { var: right_var.clone(), kind: right_kind.clone() },
-                }),
-            }
+            Pattern { nodes: vec![left], edge: Some(PatternEdge { var: self.edge_var.clone(), kind: self.edge_kind.clone(), directed: true, right: PatternNode { var: right_var.clone(), kind: right_kind.clone() } }) }
         } else {
             Pattern { nodes: vec![left], edge: None }
         }
@@ -137,21 +149,17 @@ fn pattern_to_match_clause(pattern: &PatternJson) -> String {
             (None, Some(k)) => format!("[:{k}]"),
             (None, None) => "[]".into(),
         };
-        format!(
-            "({}:{} )-{edge_mid}->({}:{} )",
-            p.nodes[0].var, p.nodes[0].kind, edge.right.var, edge.right.kind
-        )
-        .replace(" )", ")")
+        format!("({}:{} )-{edge_mid}->({}:{} )", p.nodes[0].var, p.nodes[0].kind, edge.right.var, edge.right.kind).replace(" )", ")")
     } else {
         left
     }
 }
 
-fn parse_bindings_json(bindings_json: &str) -> Result<HashMap<String, PropertyValue>, String> {
+fn parse_bindings_json(bindings_json: &str) -> Result<HashMap<String, PropertyValue>, TrinityRewriteError> {
     if bindings_json.trim().is_empty() {
         return Ok(HashMap::new());
     }
-    serde_json::from_str(bindings_json).map_err(|e| e.to_string())
+    Ok(serde_json::from_str(bindings_json)?)
 }
 
 fn parameter_defaults(rule: &Rule) -> HashMap<String, PropertyValue> {
@@ -225,9 +233,10 @@ pub fn build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) 
 }
 
 /// ♻️ Apply a rewrite rule to a graph.
-pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> Result<QueryResult, String> {
+pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
     let query = build_rule_query(rule, bindings);
-    let (result, ops) = execute(graph, &parse(&query)?)?;
+    let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
+    let (result, ops) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
     if !ops.is_empty() {
         let fixture = trinity_ram::apply_trinity_graph_ops(graph.to_fixture(), &ops)?;
         *graph = Graph::from_fixture(fixture)?;
@@ -236,19 +245,19 @@ pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, Pro
 }
 
 /// ♻️ Apply a rewrite rule from JSON.
-pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, String> {
-    let rule: Rule = serde_json::from_str(rule_json).map_err(|e| e.to_string())?;
+pub fn apply_rule_json(graph: &mut Graph, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+    let rule: Rule = serde_json::from_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let result = apply_rule(graph, &rule, &bindings)?;
-    Ok(serde_json::to_string(&ApplyRuleResult { fixture: graph.fixture_json()?, query: result }).map_err(|e| e.to_string())?)
+    Ok(serde_json::to_string(&ApplyRuleResult { fixture: graph.fixture_json()?, query: result })?)
 }
 
 /// 🧵 Build a rewrite rule Jack query from JSON without a graph.
-pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, String> {
-    let rule: Rule = serde_json::from_str(rule_json).map_err(|e| e.to_string())?;
+pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+    let rule: Rule = serde_json::from_str(rule_json)?;
     let bindings = parse_bindings_json(bindings_json)?;
     let query = build_rule_query(&rule, &bindings);
-    Ok(serde_json::to_string(&RuleQueryResult { query }).map_err(|e| e.to_string())?)
+    Ok(serde_json::to_string(&RuleQueryResult { query })?)
 }
 
 #[derive(Serialize)]
@@ -329,14 +338,12 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewriteRuleState) -> Rewrit
     create_document_vcs_envelope(REWRITE_RULE_SCHEMA, id, state, None)
 }
 
-pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleState) -> Result<(), String> {
-    let current = store.projection().map_err(|e| e.to_string())?;
+pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteRuleState) -> Result<(), TrinityRewriteError> {
+    let current = store.projection()?;
     if current == state {
         return Ok(());
     }
-    store
-        .dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOp::SetState { state }], description: None })
-        .map_err(|e| e.to_string())
+    store.dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOp::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
 }
 // #endregion 🔖RuleVcs
 
@@ -517,11 +524,7 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
         .values()
         .map(|node| {
             let radius = trinity_node_radius(node);
-            let handles: Vec<serde_json::Value> = node
-                .ports
-                .iter()
-                .map(|port| serde_json::json!({ "id": port_key(&node.id, &port.id) }))
-                .collect();
+            let handles: Vec<serde_json::Value> = node.ports.iter().map(|port| serde_json::json!({ "id": port_key(&node.id, &port.id) })).collect();
             serde_json::json!({
                 "id": node.id,
                 "x": node.x,
@@ -532,11 +535,7 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
             })
         })
         .collect();
-    let edges: Vec<serde_json::Value> = graph
-        .edges
-        .values()
-        .map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target }))
-        .collect();
+    let edges: Vec<serde_json::Value> = graph.edges.values().map(|edge| serde_json::json!({ "source": edge.source, "target": edge.target })).collect();
     serde_json::json!({
         "schema": GraphFixture::SCHEMA,
         "nodes": nodes,
@@ -544,11 +543,8 @@ fn trinity_graph_to_force_layout_fixture(graph: &Graph) -> serde_json::Value {
     })
 }
 
-fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), String> {
-    let nodes = fixture
-        .get("nodes")
-        .and_then(|v| v.as_array())
-        .ok_or_else(|| "force layout fixture missing nodes".to_string())?;
+fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &serde_json::Value) -> Result<(), TrinityRewriteError> {
+    let nodes = fixture.get("nodes").and_then(|v| v.as_array()).ok_or(TrinityRewriteError::ForceLayoutFixtureMissingNodes)?;
     for node in nodes {
         let Some(obj) = node.as_object() else {
             continue;
@@ -569,7 +565,7 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
-fn force_layout_reposition_ops(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOp>, String> {
+fn force_layout_reposition_ops(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOp>, TrinityRewriteError> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
@@ -579,19 +575,15 @@ fn force_layout_reposition_ops(fixture: &GraphFixture) -> Result<Vec<TrinityGrap
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            ops.push(TrinityGraphOp::Reposition {
-                id: node.id.clone(),
-                x: node.x,
-                y: node.y,
-            });
+            ops.push(TrinityGraphOp::Reposition { id: node.id.clone(), x: node.x, y: node.y });
         }
     }
     Ok(ops)
 }
 
-fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), String> {
+fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewriteError> {
     let mut fixture = trinity_graph_to_force_layout_fixture(graph);
-    apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default())?;
+    apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &ForceGraphLayoutOptions::default()).map_err(TrinityRewriteError::Layout)?;
     apply_force_layout_positions_to_trinity_graph(graph, &fixture)
 }
 // #endregion 🔖Lod
@@ -640,53 +632,48 @@ impl TrinityHost {
         host
     }
 
-    pub fn load_fixture_json(json: &str) -> Result<Self, String> {
+    pub fn load_fixture_json(json: &str) -> Result<Self, TrinityRewriteError> {
         let graph = Graph::load_json(json)?;
         Ok(Self::from_graph(graph))
     }
 
-    fn refresh_graph_from_store(&mut self) -> Result<(), String> {
-        self.graph = Graph::from_fixture(self.store.projection().map_err(|e| e.to_string())?)?;
+    fn refresh_graph_from_store(&mut self) -> Result<(), TrinityRewriteError> {
+        self.graph = Graph::from_fixture(self.store.projection()?)?;
         Ok(())
     }
 
-    fn dispatch(&mut self, ops: Vec<TrinityGraphOp>) -> Result<(), String> {
+    fn dispatch(&mut self, ops: Vec<TrinityGraphOp>) -> Result<(), TrinityRewriteError> {
         dispatch_trinity_graph_ops(&mut self.store, ops)?;
         self.refresh_graph_from_store()
     }
 
-    pub fn undo(&mut self) -> Result<(), String> {
+    pub fn undo(&mut self) -> Result<(), TrinityRewriteError> {
         use vcs::DocumentVcsCommand;
-        self.store.dispatch(DocumentVcsCommand::Undo).map_err(|e| e.to_string())?;
+        self.store.dispatch(DocumentVcsCommand::Undo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
-    pub fn redo(&mut self) -> Result<(), String> {
+    pub fn redo(&mut self) -> Result<(), TrinityRewriteError> {
         use vcs::DocumentVcsCommand;
-        self.store.dispatch(DocumentVcsCommand::Redo).map_err(|e| e.to_string())?;
+        self.store.dispatch(DocumentVcsCommand::Redo)?;
         self.refresh_graph_from_store()?;
         self.rebuild_engine();
         Ok(())
     }
 
-    pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), String> {
+    pub fn commit_checkpoint(&mut self, message: Option<String>) -> Result<(), TrinityRewriteError> {
         use vcs::DocumentVcsCommand;
-        self.store
-            .dispatch(DocumentVcsCommand::CommitCheckpoint {
-                message,
-                authors: Vec::new(),
-            })
-            .map_err(|e| e.to_string())
+        self.store.dispatch(DocumentVcsCommand::CommitCheckpoint { message, authors: Vec::new() }).map_err(TrinityRewriteError::from)
     }
 
     pub fn store_generation(&self) -> u64 {
         self.store.generation()
     }
 
-    pub fn fixture_json(&self) -> Result<String, String> {
-        self.graph.fixture_json()
+    pub fn fixture_json(&self) -> Result<String, TrinityRewriteError> {
+        Ok(self.graph.fixture_json()?)
     }
 
     pub fn set_viewport(&mut self, width: u32, height: u32, dpr: f64) {
@@ -704,8 +691,8 @@ impl TrinityHost {
         self.board.set_camera_silent(x, y, zoom);
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.canvas_theme.merge_from_json(json)?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
+        self.canvas_theme.merge_from_json(json).map_err(TrinityRewriteError::CanvasTheme)?;
         self.board.canvas_theme = self.canvas_theme.clone();
         Ok(())
     }
@@ -744,9 +731,9 @@ impl TrinityHost {
         }
     }
 
-    pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, String> {
-        let parsed = parse(query)?;
-        let (result, ops) = execute(&self.graph, &parsed)?;
+    pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewriteError> {
+        let parsed = parse(query).map_err(TrinityRewriteError::Jack)?;
+        let (result, ops) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
         if !ops.is_empty() {
             self.dispatch(ops)?;
             self.rebuild_engine();
@@ -754,45 +741,42 @@ impl TrinityHost {
         Ok(result)
     }
 
-    pub fn run_jack_json(&mut self, query: &str) -> Result<String, String> {
+    pub fn run_jack_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
-        serde_json::to_string(&result).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&result)?)
     }
 
-    pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, String> {
+    pub fn run_jack_with_fixture_json(&mut self, query: &str) -> Result<String, TrinityRewriteError> {
         let result = self.run_jack(query)?;
         let fixture_json = self.fixture_json()?;
         let out = JackRunWithFixture { result, fixture_json };
-        serde_json::to_string(&out).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&out)?)
     }
 
-    pub fn tokenize_jack_json(&self, source: &str) -> Result<String, String> {
+    pub fn tokenize_jack_json(&self, source: &str) -> Result<String, TrinityRewriteError> {
         let tokens = tokenize_jack(source);
-        serde_json::to_string(&tokens).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&tokens)?)
     }
 
-    pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, String> {
+    pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, TrinityRewriteError> {
         let items = complete_jack(&self.graph, source, cursor);
-        serde_json::to_string(&items).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&items)?)
     }
 
-    pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, String> {
-        let rule: Rule = serde_json::from_str(rule_json).map_err(|e| e.to_string())?;
+    pub fn apply_rewrite_json(&mut self, rule_json: &str, bindings_json: &str) -> Result<String, TrinityRewriteError> {
+        let rule: Rule = serde_json::from_str(rule_json)?;
         let bindings = parse_bindings_json(bindings_json)?;
         let query = build_rule_query(&rule, &bindings);
-        let (result, ops) = execute(&self.graph, &parse(&query)?)?;
+        let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
+        let (result, ops) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
         if !ops.is_empty() {
             self.dispatch(ops)?;
             self.rebuild_engine();
         }
-        Ok(serde_json::to_string(&ApplyRuleResult {
-            fixture: self.fixture_json()?,
-            query: result,
-        })
-        .map_err(|e| e.to_string())?)
+        Ok(serde_json::to_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result })?)
     }
 
-    pub fn node_overlays_json(&self) -> Result<String, String> {
+    pub fn node_overlays_json(&self) -> Result<String, TrinityRewriteError> {
         Ok("[]".into())
     }
 
@@ -822,16 +806,12 @@ impl TrinityHost {
     pub fn wheel_screen(&mut self, sx: f64, sy: f64, delta_y: f64) {
         use cavas::camera::{wheel_screen, Camera as CavasCamera, Viewport};
         let viewport = Viewport { width: self.width, height: self.height, dpr: self.dpr };
-        let mut cam = CavasCamera {
-            x: self.graph.camera.x,
-            y: self.graph.camera.y,
-            zoom: self.graph.camera.zoom,
-        };
+        let mut cam = CavasCamera { x: self.graph.camera.x, y: self.graph.camera.y, zoom: self.graph.camera.zoom };
         wheel_screen(&mut cam, &viewport, sx, sy, delta_y);
         self.set_camera(cam.x, cam.y, cam.zoom);
     }
 
-    pub fn selected_node_ids_json(&self) -> Result<String, String> {
+    pub fn selected_node_ids_json(&self) -> Result<String, TrinityRewriteError> {
         let mut ids = Vec::new();
         for &nid in &self.engine.selection.node_ids {
             if let Some(tid) = self.node_id_map.get(&nid) {
@@ -847,11 +827,11 @@ impl TrinityHost {
                 }
             }
         }
-        serde_json::to_string(&ids).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&ids)?)
     }
 
-    pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), String> {
-        let ids: Vec<String> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), TrinityRewriteError> {
+        let ids: Vec<String> = serde_json::from_str(json)?;
         self.board.set_highlighted_ids(ids);
         Ok(())
     }
@@ -876,8 +856,8 @@ impl TrinityHost {
         self.sync_board_from_graph();
     }
 
-    fn commit_drag_positions(&mut self) -> Result<(), String> {
-        let projection = self.store.projection().map_err(|e| e.to_string())?;
+    fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
+        let projection = self.store.projection()?;
         let mut ops = Vec::new();
         for (nid, widget_id) in &self.node_id_map {
             let Some(engine_node) = self.engine.nodes.get(nid) else {
@@ -887,11 +867,7 @@ impl TrinityHost {
                 continue;
             };
             if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
-                ops.push(TrinityGraphOp::Reposition {
-                    id: widget_id.clone(),
-                    x: engine_node.center.x,
-                    y: engine_node.center.y,
-                });
+                ops.push(TrinityGraphOp::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
             }
         }
         if ops.is_empty() {
@@ -1028,8 +1004,7 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<TrinityRewriteDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: TrinityGraphEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     TrinityGraphStore::new(envelope)
                 }
                 None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity-rewrite", empty_trinity_graph_fixture())),
@@ -1039,26 +1014,17 @@ mod wasm_bridge {
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -1073,9 +1039,9 @@ mod wasm_bridge {
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {
     use super::*;
-    use trinity_ram::GraphFixture;
     use std::cell::RefCell;
     use std::rc::Rc;
+    use trinity_ram::GraphFixture;
     use wasm_bindgen::prelude::*;
     use wasm_bindgen_futures::future_to_promise;
     use web_sys::HtmlCanvasElement;
@@ -1098,25 +1064,29 @@ mod wasm_session {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
             let fixture = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
-            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| TrinityHost::from_graph(Graph::from_fixture(GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None }).unwrap()));
+            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| {
+                let empty =
+                    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+                TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
+            });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
         pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = TrinityHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
+            let host = TrinityHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
         pub fn fixture_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = nodeOverlaysJson)]
         pub fn node_overlays_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
@@ -1209,12 +1179,12 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]
         pub fn selected_node_ids_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.selected_node_ids_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.selected_node_ids_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = setHighlightedNodeIdsJson)]
         pub fn set_highlighted_node_ids_json(&mut self, json: &str) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.set_highlighted_node_ids_json(json).map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.set_highlighted_node_ids_json(json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = reorganize)]
@@ -1238,59 +1208,43 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = runJackJson)]
         pub fn run_jack_json(&self, query: &str) -> Result<String, JsValue> {
-            self.state.borrow_mut().host.run_jack_json(query).map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.run_jack_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = runJackJsonWithFixture)]
         pub fn run_jack_json_with_fixture(&self, query: &str) -> Result<String, JsValue> {
-            self.state
-                .borrow_mut()
-                .host
-                .run_jack_with_fixture_json(query)
-                .map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.run_jack_with_fixture_json(query).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = tokenizeJackJson)]
         pub fn tokenize_jack_json(&self, source: &str) -> Result<String, JsValue> {
-            self.state.borrow().host.tokenize_jack_json(source).map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.tokenize_jack_json(source).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = completeJackJson)]
         pub fn complete_jack_json(&self, source: &str, cursor: usize) -> Result<String, JsValue> {
-            self.state
-                .borrow()
-                .host
-                .complete_jack_json(source, cursor)
-                .map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.complete_jack_json(source, cursor).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = applyRewriteJson)]
         pub fn apply_rewrite_json(&self, rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
-            self.state
-                .borrow_mut()
-                .host
-                .apply_rewrite_json(rule_json, bindings_json)
-                .map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.apply_rewrite_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = undo)]
         pub fn undo(&self) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.undo().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.undo().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = redo)]
         pub fn redo(&self) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.redo().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.redo().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = commitCheckpoint)]
         pub fn commit_checkpoint(&self, message: &str) -> Result<(), JsValue> {
             let message = if message.is_empty() { None } else { Some(message.to_string()) };
-            self.state
-                .borrow_mut()
-                .host
-                .commit_checkpoint(message)
-                .map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.commit_checkpoint(message).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = storeGeneration)]
@@ -1301,7 +1255,7 @@ mod wasm_session {
 
     #[wasm_bindgen(js_name = ruleQueryJson)]
     pub fn rule_query_json(rule_json: &str, bindings_json: &str) -> Result<String, JsValue> {
-        super::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e))
+        super::rule_query_json(rule_json, bindings_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 
@@ -1370,11 +1324,7 @@ mod tests {
                 delete: vec![],
                 set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("$label".into()) }],
                 merge: vec![],
-                parameters: vec![ParameterSpec {
-                    name: "label".into(),
-                    kind: ParameterKind::String,
-                    default: PropertyValue::String("nakagin-core".into()),
-                }],
+                parameters: vec![ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("nakagin-core".into()) }],
             },
         };
         apply_rule(&mut g, &rule, &HashMap::new()).unwrap();

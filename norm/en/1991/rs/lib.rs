@@ -5,8 +5,6 @@ use norm_en_1990::{na_de::NaDe, na_en::NaEn, NationalAnnex};
 
 // #region 🔖NaDe
 pub mod na_de {
-    use super::*;
-
     pub use norm_en_1990::na_de::NaDe;
 
     /// ❄️ German snow zone per DIN EN 1991-1-3/NA.

@@ -9,8 +9,16 @@ pub(crate) mod domain {
 
     //#region 🔖DocumentVcs
     use vcs::{Operation, OperationDiff};
-    
+
     pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
+
+    fn default_one() -> f64 {
+        1.0
+    }
+
+    fn default_true() -> bool {
+        true
+    }
     
     //#region 🔖Projection
     /// 🎞️ Non-destructive raster document: a nested layer tree (pixel/group/adjustment) over a pannable

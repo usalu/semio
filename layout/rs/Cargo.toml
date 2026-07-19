@@ -23,6 +23,7 @@ image = { version = "0.25", default-features = false, features = ["png"] }
 png = "0.17"
 sha2 = "0.10"
 zip = { version = "2.2", default-features = false, features = ["deflate"] }
+thiserror = "2.0.12"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

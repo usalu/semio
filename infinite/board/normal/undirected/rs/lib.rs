@@ -4,13 +4,36 @@ pub mod fixture_layout {
     // #region fixture_layout
     //! ↔️ Normal undirected fixture layout: node-id edges, symmetric springs, no port handles.
 
-    use mathematical_graph_drawing::force::{self, ForceLayoutOptions as CoreForceLayoutOptions};
     use mathematical_geometry::Vec2;
+    use mathematical_graph_drawing::force::{self, ForceLayoutOptions as CoreForceLayoutOptions};
     use serde::{Deserialize, Serialize};
     use serde_json::Value;
     use std::collections::{HashMap, HashSet};
 
     use infinite_board::board_json_visible_or_true;
+
+    //#region ⚠️ Errors
+    /// ⚠️ Errors from normal-undirected force/redraw fixture layout.
+    #[derive(Debug, thiserror::Error)]
+    pub enum UndirectedGraphError {
+        #[error("fixture root must be object")]
+        FixtureRootNotObject,
+        #[error("schema must be one of: {0}")]
+        UnsupportedSchema(String),
+        #[error("nodes array missing")]
+        NodesMissing,
+        #[error("node must be object")]
+        NodeNotObject,
+        #[error("node id missing")]
+        NodeIdMissing,
+        #[error("normal undirected redraw does not support redrawHandlesAfter")]
+        RedrawHandlesAfterUnsupported,
+        #[error("normal undirected redraw does not support mode: {0}")]
+        UnsupportedRedrawMode(String),
+        #[error(transparent)]
+        Json(#[from] serde_json::Error),
+    }
+    //#endregion ⚠️ Errors
 
     // #region 🕸️ForceGraphLayout
     /// ⚙️ Force-directed layout parameters for normal undirected node-id graphs.
@@ -102,21 +125,14 @@ pub mod fixture_layout {
         }
     }
 
-    const FORCE_GRAPH_COMPATIBLE_SCHEMAS: &[&str] = &[
-        "puzzle.2d.fixture",
-        "reasoning.mindmap.fixture",
-        "trinity.graph",
-    ];
+    const FORCE_GRAPH_COMPATIBLE_SCHEMAS: &[&str] = &["puzzle.2d.fixture", "reasoning.mindmap.fixture", "trinity.graph"];
 
     fn fixture_schema_ok(schema: Option<&str>) -> bool {
         matches!(schema, Some(s) if FORCE_GRAPH_COMPATIBLE_SCHEMAS.contains(&s))
     }
 
-    fn fixture_schema_error_message() -> String {
-        format!(
-            "schema must be one of: {}",
-            FORCE_GRAPH_COMPATIBLE_SCHEMAS.join(", ")
-        )
+    fn fixture_schema_error() -> UndirectedGraphError {
+        UndirectedGraphError::UnsupportedSchema(FORCE_GRAPH_COMPATIBLE_SCHEMAS.join(", "))
     }
 
     fn node_repulsion_radius(node: &Value) -> f64 {
@@ -161,21 +177,21 @@ pub mod fixture_layout {
     }
 
     /// 🕸️ Runs undirected force layout on a mindmap or puzzle 2d fixture with node-id edges.
-    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), String> {
+    pub fn apply_force_graph_layout_to_fixture_v1_value(fixture: &mut Value, opts: &ForceGraphLayoutOptions) -> Result<(), UndirectedGraphError> {
         apply_force_graph_layout_to_fixture_v1_value_resolved(fixture, opts, resolve_node_id_endpoint)
     }
 
     /// 🕸️ Force layout with a custom endpoint→node-id resolver (ported graphs pass handle lookup here).
-    pub fn apply_force_graph_layout_to_fixture_v1_value_resolved(fixture: &mut Value, opts: &ForceGraphLayoutOptions, resolve_node_id: impl Fn(&str, &HashMap<String, usize>) -> Option<String>) -> Result<(), String> {
+    pub fn apply_force_graph_layout_to_fixture_v1_value_resolved(fixture: &mut Value, opts: &ForceGraphLayoutOptions, resolve_node_id: impl Fn(&str, &HashMap<String, usize>) -> Option<String>) -> Result<(), UndirectedGraphError> {
         let Some(root) = fixture.as_object_mut() else {
-            return Err("fixture root must be object".into());
+            return Err(UndirectedGraphError::FixtureRootNotObject);
         };
         if !fixture_schema_ok(root.get("schema").and_then(|v| v.as_str())) {
-            return Err(fixture_schema_error_message());
+            return Err(fixture_schema_error());
         }
         let edges = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
         let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-            return Err("nodes array missing".into());
+            return Err(UndirectedGraphError::NodesMissing);
         };
         if nodes.is_empty() {
             return Ok(());
@@ -189,13 +205,13 @@ pub mod fixture_layout {
         let mut radii: Vec<f64> = Vec::new();
         for (raw_idx, node) in nodes.iter().enumerate() {
             let Some(obj) = node.as_object() else {
-                return Err("node must be object".into());
+                return Err(UndirectedGraphError::NodeNotObject);
             };
             if !board_json_visible_or_true(obj) {
                 continue;
             }
             let Some(nid) = obj.get("id").and_then(|v| v.as_str()) else {
-                return Err("node id missing".into());
+                return Err(UndirectedGraphError::NodeIdMissing);
             };
             let x_opt = obj.get("x").and_then(|v| v.as_f64());
             let y_opt = obj.get("y").and_then(|v| v.as_f64());
@@ -216,11 +232,9 @@ pub mod fixture_layout {
         }
         let mut sum = Vec2::ZERO;
         let mut finite_ct: u32 = 0;
-        for xy in &optional_xy {
-            if let Some((x, y)) = xy {
-                sum += Vec2::new(*x, *y);
-                finite_ct += 1;
-            }
+        for (x, y) in optional_xy.iter().flatten() {
+            sum += Vec2::new(*x, *y);
+            finite_ct += 1;
         }
         let anchor = if finite_ct > 0 { sum / (finite_ct as f64) } else { Vec2::new(opts.center_x.unwrap_or(0.0), opts.center_y.unwrap_or(0.0)) };
         for i in 0..n {
@@ -286,11 +300,11 @@ pub mod fixture_layout {
     }
 
     /// 🕸️ JSON entry for undirected force layout.
-    pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
-        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json).map_err(|e| e.to_string())? };
+    pub fn apply_force_graph_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, UndirectedGraphError> {
+        let mut fixture: Value = serde_json::from_str(fixture_json)?;
+        let opts: ForceGraphLayoutOptions = if options_json.trim().is_empty() { ForceGraphLayoutOptions::default() } else { serde_json::from_str(options_json)? };
         apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &opts)?;
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&fixture)?)
     }
     // #endregion 🕸️ForceGraphLayout
 
@@ -314,12 +328,12 @@ pub mod fixture_layout {
     }
 
     /// ↔️ Redraw dispatcher for normal undirected graphs (`force-graph` only).
-    pub fn apply_redraw_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, String> {
-        let opts: RedrawFixtureOptions = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+    pub fn apply_redraw_layout_to_fixture_v1_json(fixture_json: &str, options_json: &str) -> Result<String, UndirectedGraphError> {
+        let opts: RedrawFixtureOptions = serde_json::from_str(options_json)?;
         if opts.redraw_handles_after {
-            return Err("normal undirected redraw does not support redrawHandlesAfter".into());
+            return Err(UndirectedGraphError::RedrawHandlesAfterUnsupported);
         }
-        let mut fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+        let mut fixture: Value = serde_json::from_str(fixture_json)?;
         match opts.mode.as_str() {
             "force-graph" => {
                 let mut fo = opts.force_graph.clone().unwrap_or_default();
@@ -339,9 +353,9 @@ pub mod fixture_layout {
                 }
                 apply_force_graph_layout_to_fixture_v1_value(&mut fixture, &fo)?;
             }
-            other => return Err(format!("normal undirected redraw does not support mode: {other}")),
+            other => return Err(UndirectedGraphError::UnsupportedRedrawMode(other.to_string())),
         }
-        serde_json::to_string(&fixture).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&fixture)?)
     }
     // #endregion 🔁RedrawLayout
     // #endregion fixture_layout
@@ -349,6 +363,7 @@ pub mod fixture_layout {
 
 pub use fixture_layout::{
     apply_force_graph_layout_to_fixture_v1_json, apply_force_graph_layout_to_fixture_v1_value, apply_force_graph_layout_to_fixture_v1_value_resolved, apply_redraw_layout_to_fixture_v1_json, resolve_node_id_endpoint, ForceGraphLayoutOptions,
+    UndirectedGraphError,
 };
 pub use infinite_board::*;
 

@@ -16,7 +16,8 @@ typegen = ["dep:ts-rs"]
 # 🖥️ Full retained-mode engine: arena/tree/layout/text/input/gpu rendering. Off by
 # default so wasm32-wasip2 plugin components depend on the component types only.
 engine = [
-    "dep:fontdue",
+    "dep:parley",
+    "dep:swash",
     "dep:bytemuck",
     "dep:winit",
     "dep:wgpu",
@@ -35,7 +36,11 @@ serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 ts-rs = { version = "10", optional = true }
 kernel_3d_scene = { path = "../../../kernel/3d/scene/rs", optional = true }
-fontdue = { version = "0.9.3", optional = true }
+# 🖋️ Text shaping/font-fallback (parley) + rasterization (swash) for the `text` region's glyph
+# atlas — versions match what `layout_rs` already resolves in the workspace lockfile (parley
+# pulls fontique 0.5.0 transitively; accessed here via `parley::fontique`, not a direct dep).
+parley = { version = "0.5.0", optional = true }
+swash = { version = "0.2.6", default-features = false, features = ["render", "std"], optional = true }
 bytemuck = { version = "1.24.0", features = ["derive"], optional = true }
 winit = { version = "0.30.12", default-features = false, features = ["rwh_06"], optional = true }
 wgpu = { version = "27.0.1", default-features = false, features = ["wgsl"], optional = true }

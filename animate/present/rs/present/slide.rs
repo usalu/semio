@@ -50,6 +50,21 @@ impl PresentScene {
     pub fn slide_count(&self) -> usize {
         self.sections.iter().map(|section| section.slides.len()).sum()
     }
+
+    /// 🎬 Collects unique scene hashes referenced by slides.
+    pub fn scene_hashes(&self) -> Vec<String> {
+        let mut hashes = Vec::new();
+        for section in &self.sections {
+            for slide in &section.slides {
+                if let Some(hash) = &slide.scene_hash {
+                    if !hashes.iter().any(|existing| existing == hash) {
+                        hashes.push(hash.clone());
+                    }
+                }
+            }
+        }
+        hashes
+    }
 }
 
 #[cfg(test)]
@@ -84,5 +99,6 @@ mod tests {
             deck: None,
         };
         assert_eq!(scene.slide_count(), 2);
+        assert_eq!(scene.scene_hashes(), vec!["abc123".to_string()]);
     }
 }

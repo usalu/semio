@@ -22,7 +22,7 @@ fn redraw_layout_fixture_json(fixture_json: &str, options_json: &str) -> Result<
     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
     let mode = opts.get("mode").and_then(|v| v.as_str()).unwrap_or("force-graph");
     if mode == "force-graph" && is_undirected_fixture_schema(schema) {
-        apply_normal_undirected_redraw_layout_to_fixture_v1_json(fixture_json, options_json)
+        apply_normal_undirected_redraw_layout_to_fixture_v1_json(fixture_json, options_json).map_err(|e| e.to_string())
     } else {
         apply_ported_redraw_layout_to_fixture_v1_json(fixture_json, options_json)
     }

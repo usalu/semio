@@ -2496,6 +2496,28 @@
       }
     },
     {
+      "name": "👁preview🎬animate-video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts preview",
+      "cwd": "${workspaceFolder}/animate/video/rs",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.43
+      }
+    },
+    {
+      "name": "🧹flush-cache🎬animate-video",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts flush-cache",
+      "cwd": "${workspaceFolder}/animate/video/rs",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.44
+      }
+    },
+    {
       "name": "🧪test⚡energy-engine",
       "type": "node-terminal",
       "request": "launch",

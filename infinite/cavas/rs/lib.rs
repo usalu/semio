@@ -8,17 +8,20 @@ mod renderer {
         pub use vello;
         pub use vello::kurbo;
         pub use vello::peniko;
+        #[cfg(target_arch = "wasm32")]
         pub use vello::util;
+        #[cfg(target_arch = "wasm32")]
         pub use vello::wgpu;
         pub use vello::Scene;
+        pub use vello_encoding;
         pub use vello_svg;
         pub use vello_svg::usvg;
     }
     // #endregion 🏷️VelloBackend
 
-    use vello_backend as backend;
-    use std::sync::Arc as SharedArc;
     use mathematical_geometry::{Affine, ShapeRef};
+    use std::sync::Arc as SharedArc;
+    use vello_backend as backend;
 
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Cap {
@@ -154,27 +157,13 @@ mod renderer {
         }
     }
 
-    impl Paint {
-        fn into_brush(self) -> backend::peniko::Brush {
-            match self {
-                Self::Solid(c) => backend::peniko::Brush::Solid(c.0),
-            }
-        }
-    }
-
     #[derive(Clone, Debug, PartialEq)]
     pub struct RasterImage(pub(crate) backend::peniko::ImageData);
 
     impl RasterImage {
         /// @emoji 🖼️ Builds an RGBA8 raster image for scene drawing.
         pub fn rgba8(width: u32, height: u32, data: SharedArc<Vec<u8>>) -> Self {
-            Self(backend::peniko::ImageData {
-                data: backend::peniko::Blob::new(data),
-                format: backend::peniko::ImageFormat::Rgba8,
-                alpha_type: backend::peniko::ImageAlphaType::Alpha,
-                width,
-                height,
-            })
+            Self(backend::peniko::ImageData { data: backend::peniko::Blob::new(data), format: backend::peniko::ImageFormat::Rgba8, alpha_type: backend::peniko::ImageAlphaType::Alpha, width, height })
         }
         pub fn clone_data(&self) -> Self {
             Self(self.0.clone())
@@ -252,6 +241,10 @@ mod renderer {
         pub fn path_count(&self) -> usize {
             self.0.encoding().path_tags.len()
         }
+        /// @emoji 🔓 Escape hatch exposing the raw `vello` encoding for callers that need path-tag-level introspection (e.g. LOD/label test assertions) beyond `is_empty`/`path_count`.
+        pub fn encoding(&self) -> &backend::vello_encoding::Encoding {
+            self.0.encoding()
+        }
 
         pub fn vello_scene(&self) -> &backend::Scene {
             &self.0
@@ -268,7 +261,7 @@ mod renderer {
 
         /// @emoji 🏷️ Appends the SVG tree into a scene.
         pub fn append_to_scene(&self, scene: &mut Scene) {
-            let _ = backend::vello_svg::append_tree(&mut scene.0, &self.0);
+            backend::vello_svg::append_tree(&mut scene.0, &self.0);
         }
     }
 
@@ -278,9 +271,9 @@ mod renderer {
     }
 }
 
-pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument};
 pub use mathematical_geometry::{append_shape_to_path, geom_sel, Affine, Arc, BezPath, Circle, CubicBez, Line, PathEl, Point, Rect, RoundedRect, RoundedRectRadii, ShapeRef, Vec2};
 pub(crate) use renderer::vello_backend::usvg;
+pub use renderer::{append_svg_document, BlendMode, Cap, Color, FillRule, Paint, RasterImage, Rgba8, Scene, Stroke, SvgDocument};
 // #endregion 🔖Renderer
 
 // #region ⚠️ Errors
@@ -294,70 +287,70 @@ pub enum CanvasError {
 // #endregion ⚠️ Errors
 
 pub mod theme {
-// #region theme
-//! @emoji 🎨 Default canvas paint helpers from centralized styling tokens.
+    // #region theme
+    //! @emoji 🎨 Default canvas paint helpers from centralized styling tokens.
 
-use crate::Color;
-use ui_styling::{appearance::AppearanceName, CANVAS_LIGHT};
+    use crate::Color;
+    use ui_styling::{appearance::AppearanceName, CANVAS_LIGHT};
 
-/// @emoji 🌈 Maps a linear-sRGB token color to `Color`.
-pub fn linear_color(rgba: [f32; 4]) -> Color {
-    Color::new(rgba)
-}
+    /// @emoji 🌈 Maps a linear-sRGB token color to `Color`.
+    pub fn linear_color(rgba: [f32; 4]) -> Color {
+        Color::new(rgba)
+    }
 
-/// @emoji 🎨 Shared default clear color for graph board canvases.
-pub fn default_raster_clear() -> Color {
-    linear_color(CANVAS_LIGHT.raster_clear)
-}
+    /// @emoji 🎨 Shared default clear color for graph board canvases.
+    pub fn default_raster_clear() -> Color {
+        linear_color(CANVAS_LIGHT.raster_clear)
+    }
 
-/// @emoji 🎨 Default themed icon foreground paint.
-pub fn default_icon_fg() -> Color {
-    linear_color(CANVAS_LIGHT.icon_fg)
-}
+    /// @emoji 🎨 Default themed icon foreground paint.
+    pub fn default_icon_fg() -> Color {
+        linear_color(CANVAS_LIGHT.icon_fg)
+    }
 
-/// @emoji 🎨 Default themed icon background paint.
-pub fn default_icon_bg() -> Color {
-    linear_color(CANVAS_LIGHT.icon_bg)
-}
+    /// @emoji 🎨 Default themed icon background paint.
+    pub fn default_icon_bg() -> Color {
+        linear_color(CANVAS_LIGHT.icon_bg)
+    }
 
-/// @emoji 🎨 Resolves canvas paints for a theme name.
-pub fn canvas_clear_for(theme: AppearanceName) -> Color {
-    linear_color(theme.canvas().raster_clear)
-}
+    /// @emoji 🎨 Resolves canvas paints for a theme name.
+    pub fn canvas_clear_for(theme: AppearanceName) -> Color {
+        linear_color(theme.canvas().raster_clear)
+    }
 
-/// @emoji 🌈 Parses an sRGB8888 JSON array into `Color`.
-pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
-    let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
-    let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
-    let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
-    let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
-    Some(Color::from_rgba8(r, g, b, a))
-}
+    /// @emoji 🌈 Parses an sRGB8888 JSON array into `Color`.
+    pub fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
+        let r = u8::try_from(arr.first()?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let g = u8::try_from(arr.get(1)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let b = u8::try_from(arr.get(2)?.as_u64().unwrap_or(0).min(255)).ok()?;
+        let a = u8::try_from(arr.get(3).and_then(|x| x.as_u64()).unwrap_or(255).min(255)).ok()?;
+        Some(Color::from_rgba8(r, g, b, a))
+    }
 
-/// @emoji 🎨 Merges one camelCase color field from a canvas theme JSON object.
-pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
-    if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
-        if let Some(c) = color_from_json_rgba8(arr) {
-            *next = c;
+    /// @emoji 🎨 Merges one camelCase color field from a canvas theme JSON object.
+    pub fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
+        if let Some(arr) = v.get(key).and_then(|x| x.as_array()) {
+            if let Some(c) = color_from_json_rgba8(arr) {
+                *next = c;
+            }
         }
     }
-}
 
-/// @emoji 🌓 Returns whether a canvas clear color reads as a light background.
-pub fn clear_is_light(clear: Color) -> bool {
-    let [r, g, b, _] = clear.components();
-    0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
-}
-
-/// @emoji 🎨 Checkerboard cell shades for transparent raster layers.
-pub fn checkerboard_shades_for_clear(clear: Color) -> (u8, u8) {
-    if clear_is_light(clear) {
-        (220, 180)
-    } else {
-        (64, 48)
+    /// @emoji 🌓 Returns whether a canvas clear color reads as a light background.
+    pub fn clear_is_light(clear: Color) -> bool {
+        let [r, g, b, _] = clear.components();
+        0.2126 * f64::from(r) + 0.7152 * f64::from(g) + 0.0722 * f64::from(b) > 0.5
     }
-}
-// #endregion theme
+
+    /// @emoji 🎨 Checkerboard cell shades for transparent raster layers.
+    pub fn checkerboard_shades_for_clear(clear: Color) -> (u8, u8) {
+        if clear_is_light(clear) {
+            (220, 180)
+        } else {
+            (64, 48)
+        }
+    }
+    // #endregion theme
 }
 
 // #region 🏷️IconAssets
@@ -371,7 +364,6 @@ pub mod icon_assets {
 }
 
 // #endregion 🏷️IconAssets
-
 
 pub mod svg_icon {
     use std::sync::{Arc, OnceLock};
@@ -388,10 +380,7 @@ pub mod svg_icon {
         ICON_USVG_OPTIONS.get_or_init(|| {
             let mut db = fontdb::Database::new();
             db.load_font_data(super::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF.to_vec());
-            let mut o = usvg::Options::default();
-            o.fontdb = Arc::new(db);
-            o.font_family = ui_styling::canvas_fonts::NOTO_COLOR_EMOJI.into();
-            o
+            usvg::Options { fontdb: Arc::new(db), font_family: ui_styling::canvas_fonts::NOTO_COLOR_EMOJI.into(), ..Default::default() }
         })
     }
 
@@ -724,10 +713,7 @@ pub mod text {
             let mut db = fontdb::Database::new();
             db.load_font_data(super::icon_assets::MAP_LABEL_SANS_TTF.to_vec());
             let family = db.faces().next().and_then(|face| face.families.first().map(|(name, _)| name.clone())).unwrap_or_else(|| ui_styling::canvas_fonts::MAP_LABEL_SANS_FALLBACK.into());
-            let mut o = usvg::Options::default();
-            o.fontdb = Arc::new(db);
-            o.font_family = family;
-            o
+            usvg::Options { fontdb: Arc::new(db), font_family: family, ..Default::default() }
         })
     }
 
@@ -854,10 +840,7 @@ pub mod text {
 
     /// @emoji ↔️ World x range for a byte span in a code line.
     pub fn label_span_world_x(line: &str, byte_start: usize, byte_end: usize, origin_x: f64, px: f64) -> (f64, f64) {
-        (
-            label_byte_world_x(line, byte_start, origin_x, px),
-            label_byte_world_x(line, byte_end, origin_x, px),
-        )
+        (label_byte_world_x(line, byte_start, origin_x, px), label_byte_world_x(line, byte_end, origin_x, px))
     }
 
     /// @emoji 🏷️ Renders a single map label via SVG text at `origin` (screen px, baseline).
@@ -893,9 +876,7 @@ pub mod text {
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = Affine::IDENTITY
-            .translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO))
-            .scale(scale);
+        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 
@@ -917,11 +898,7 @@ pub mod text {
             if slice.is_empty() {
                 continue;
             }
-            inner.push_str(&format!(
-                r#"<tspan fill="{fill}">{text}</tspan>"#,
-                fill = color_to_svg(fill),
-                text = escape_xml_attr(slice),
-            ));
+            inner.push_str(&format!(r#"<tspan fill="{fill}">{text}</tspan>"#, fill = color_to_svg(fill), text = escape_xml_attr(slice),));
         }
         if inner.is_empty() {
             return;
@@ -946,9 +923,7 @@ pub mod text {
         let scale = (px * ui_styling::metrics::label::SCALE_RATIO / bh).min(ui_styling::metrics::label::SCALE_MAX);
         let mut label_scene = Scene::new();
         render_svg_tree_literal(&mut label_scene, &tree);
-        let aff = Affine::IDENTITY
-            .translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO))
-            .scale(scale);
+        let aff = Affine::IDENTITY.translate(Vec2::new(origin.x() - bx * scale, origin.y() - by * scale - px * ui_styling::metrics::label::VERTICAL_OFFSET_RATIO)).scale(scale);
         scene.append(&label_scene, Some(aff));
     }
 }
@@ -1147,8 +1122,8 @@ pub mod canvas_content {
 // #region 🔖GpuSession
 #[cfg(target_arch = "wasm32")]
 pub mod gpu_session {
-    use crate::{Color, Scene};
     use crate::renderer::vello_backend::{util, vello, wgpu};
+    use crate::{Color, Scene};
     use wasm_bindgen::prelude::JsValue;
     use web_sys::HtmlCanvasElement;
 
@@ -1176,8 +1151,8 @@ pub mod gpu_session {
             let mut render_ctx = util::RenderContext::new();
             let surface = render_ctx.create_surface(wgpu::SurfaceTarget::Canvas(canvas), pw, ph, wgpu::PresentMode::AutoVsync).await.map_err(|err| format!("{err:?}"))?;
             let dev = &render_ctx.devices[surface.dev_id].device;
-            let renderer = vello::Renderer::new(dev, vello::RendererOptions { use_cpu: false, antialiasing_support: vello::AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None })
-                .map_err(|err| format!("{err:?}"))?;
+            let renderer =
+                vello::Renderer::new(dev, vello::RendererOptions { use_cpu: false, antialiasing_support: vello::AaSupport::area_only(), num_init_threads: std::num::NonZeroUsize::new(1), pipeline_cache: None }).map_err(|err| format!("{err:?}"))?;
             Ok((render_ctx, renderer, surface))
         }
 
@@ -1391,14 +1366,7 @@ pub mod icon_codec {
     /// @emoji 🔤 Encodes a structured {@link Icon} into the canonical wire string.
     pub fn encode_icon(icon: &Icon) -> String {
         match icon {
-            Icon::Url { url } => {
-                let u = url.trim();
-                if u.to_ascii_lowercase().starts_with("http://") || u.to_ascii_lowercase().starts_with("https://") {
-                    format!("url:{u}")
-                } else {
-                    format!("url:{u}")
-                }
-            }
+            Icon::Url { url } => format!("url:{}", url.trim()),
             Icon::Shortcode { code } => format!(":{code}:"),
             Icon::Data { data } => data.trim().to_string(),
             Icon::Emoji { emoji } => format!("emoji:{}", emoji.trim()),
@@ -1497,13 +1465,9 @@ pub mod icon_codec {
         for bytes in typst_assets::fonts() {
             let blob = Bytes::new(bytes);
             let mut idx = 0u32;
-            loop {
-                if let Some(f) = Font::new(blob.clone(), idx) {
-                    out.push(f);
-                    idx = idx.saturating_add(1);
-                } else {
-                    break;
-                }
+            while let Some(f) = Font::new(blob.clone(), idx) {
+                out.push(f);
+                idx = idx.saturating_add(1);
             }
         }
         out
@@ -1513,13 +1477,9 @@ pub mod icon_codec {
         let mut out = typst_asset_font_list();
         let emoji_blob = Bytes::new(crate::icon_assets::NOTO_COLOR_EMOJI_SUBSET_TTF);
         let mut idx = 0u32;
-        loop {
-            if let Some(f) = Font::new(emoji_blob.clone(), idx) {
-                out.push(f);
-                idx = idx.saturating_add(1);
-            } else {
-                break;
-            }
+        while let Some(f) = Font::new(emoji_blob.clone(), idx) {
+            out.push(f);
+            idx = idx.saturating_add(1);
         }
         out
     }
@@ -1787,7 +1747,7 @@ mod tests {
     use super::lod::{Lod, LodScale};
     use super::text;
     use super::theme;
-    use crate::{Affine, Point, Scene, Vec2};
+    use crate::{Point, Scene};
 
     #[test]
     fn scale_scene_for_device_pixel_ratio_scales_logical_scene() {

@@ -2073,6 +2073,30 @@ export function resolvePluginRegistryId(playgroundPluginId: string): string {
 export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): string | undefined {
   return findPlaygroundVariant(playgroundPluginId)?.app;
 }
+
+//#region 🏠🧳PluginHostConfig
+/** 🏠🧳 Declares, for a plugin whose manifest offers a host-style multi-app experience (one app is the
+ * landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
+ * pair), which app ids play which role. Callers resolve controller ids and default panel tabs from
+ * the *loaded manifest*'s own `controllerId`/`panelTabs` on those apps rather than hardcoding separate
+ * literals — this table only ever needs to carry app-id role assignments. A pluginFilter absent here
+ * simply boots through the ordinary single-app path (`resolvePlaygroundDefaultAppId`). Mirrored by
+ * `PLUGIN_HOST_CONFIGS`/`resolve_plugin_host_config` in `framework/renderer/wgpu/rs/lib.rs`'s
+ * `plugin_bridge` module for the WGPU renderer. */
+export type PluginHostConfig = {
+  readonly pluginId: string;
+  readonly landingAppId: string;
+  readonly hostAppId: string;
+};
+
+const PLUGIN_HOST_CONFIGS: readonly PluginHostConfig[] = [{ pluginId: "s", landingAppId: "home", hostAppId: "studio" }];
+
+/** 🎯 Resolves a playground filter/alias to its plugin's host config, or `undefined` when that plugin doesn't offer a host-style multi-app experience. */
+export function resolvePluginHostConfig(playgroundPluginId: string): PluginHostConfig | undefined {
+  const registryId = resolvePluginRegistryId(playgroundPluginId);
+  return PLUGIN_HOST_CONFIGS.find((entry) => entry.pluginId === registryId);
+}
+//#endregion 🏠🧳PluginHostConfig
 // #endregion 🎮PlaygroundResolution
 
 //#region 🧪Tests

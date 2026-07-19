@@ -178,6 +178,7 @@ import {
   resolveExternalSlots,
   resolveLayoutForMode,
   resolvePlaygroundDefaultAppId,
+  resolvePluginHostConfig,
   resolvePluginRegistryId,
   resolveUiDirtyScope,
   textEditorActions,
@@ -883,11 +884,6 @@ function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, 
   return `${session.pluginId}-${session.instanceId}`;
 }
 
-const S_HOME_APP_ID = "home";
-const S_HOME_CONTROLLER_ID = "s-home";
-const S_PLAY_APP_ID = "studio";
-const S_PLAY_CONTROLLER_ID = "s-play";
-const S_PLAY_CATALOGUE_TAB_ID = "s-play-catalogue";
 /** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact utility tree, so a narrower default suits them; the middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search). */
 const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
   "top-left": 280,
@@ -1043,7 +1039,7 @@ function requestFileOpen(accept: string, readAs?: string): Promise<{ contents: s
 }
 
 function isStudioMode(pluginFilter?: string): boolean {
-  return pluginFilter === "s";
+  return pluginFilter !== undefined && resolvePluginHostConfig(pluginFilter) !== undefined;
 }
 
 export interface StudioShellPath {
@@ -1313,7 +1309,10 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onActi
 }
 
 function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }> {
-  if (tabId === S_PLAY_CATALOGUE_TAB_ID || group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
+  // 🌱 `group === "workbench"` already covers every host-app catalogue tab (each such app declares its
+  // catalogue tab under `PanelGroup::Workbench` — see `s/plugin/rs`'s `App::builder(...).panel_tab(...)`)
+  // so no separate app-specific tab-id literal is needed here.
+  if (group === "workbench") return shellTabIcon(FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID);
   if (tabId.includes("parameters")) return shellTabIcon(FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID);
   if (tabId.includes("inspector")) return shellTabIcon(FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID);
   return shellTabIcon(tabId);
@@ -2500,11 +2499,23 @@ export function FrameworkOsShell({
   readonly appId?: string;
   readonly locks?: ResolvedShellLocks;
 }) {
-  const studioMode = isStudioMode(pluginFilter);
+  // 🏠🧳 `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
+  // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
+  // manifest's own `controllerId`/`panelTabs` on those apps below, never from a separate literal.
+  const hostConfig = pluginFilter ? resolvePluginHostConfig(pluginFilter) : undefined;
+  const studioMode = hostConfig !== undefined;
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
+  const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
+  const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
+  const landingApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.landingAppId) ?? hostPlugin?.manifest.apps[0], [hostPlugin, hostConfig]);
+  const landingAppId = hostConfig?.landingAppId;
+  const hostAppId = hostConfig?.hostAppId;
+  const hostControllerId = hostApp?.controllerId;
+  const landingControllerId = landingApp?.controllerId;
+  const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
   const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId } = shellState.actionPane;
@@ -2668,10 +2679,10 @@ export function FrameworkOsShell({
         const loadedState = loaded.map((handle) => ({ handle, manifest: handle.manifest }));
         dispatch({ type: "SET_LOADED_PLUGINS", value: loadedState });
 
-        if (studioMode) {
-          const sPlugin = loadedState.find((entry) => entry.handle.pluginId === "s");
-          const sApp = sPlugin?.manifest.apps.find((app) => app.id === S_HOME_APP_ID) ?? sPlugin?.manifest.apps[0];
-          if (!sPlugin || !sApp) throw new Error("s studio plugin missing home app");
+        if (hostConfig) {
+          const sPlugin = loadedState.find((entry) => entry.handle.pluginId === hostConfig.pluginId);
+          const sApp = sPlugin?.manifest.apps.find((app) => app.id === hostConfig.landingAppId) ?? sPlugin?.manifest.apps[0];
+          if (!sPlugin || !sApp) throw new Error("host plugin missing landing app");
           const programs = buildStudioPrograms(loadedState);
           const panelState = buildStudioPanelState(programs, []);
           const instanceId = await sPlugin.handle.createApp(sApp.id);
@@ -2723,7 +2734,7 @@ export function FrameworkOsShell({
     return () => {
       cancelled = true;
     };
-  }, [registry, studioMode, appId]);
+  }, [registry, studioMode, hostConfig, appId]);
 
   const findPluginForAction = useCallback(
     (action: ActionDescriptor) => {
@@ -2915,9 +2926,11 @@ export function FrameworkOsShell({
     });
   }, []);
 
-  const switchToSApp = useCallback(
+  // 🏠🧳 Generic replacement for the old `switchToSApp` — switches to either the host plugin's landing
+  // or host app by id (both resolved via `hostConfig`, never a specific app's identity).
+  const switchToManagedApp = useCallback(
     async (appId: string, viewState?: ViewState): Promise<ActiveSession | null> => {
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s");
+      const sPlugin = hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined;
       const app = sPlugin?.manifest.apps.find((candidate) => candidate.id === appId);
       if (!sPlugin || !app) return null;
       if (session?.pluginId === sPlugin.handle.pluginId && session.app.id === appId) {
@@ -2945,14 +2958,14 @@ export function FrameworkOsShell({
         ),
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null });
-      if (appId === S_HOME_APP_ID) {
+      if (appId === landingAppId) {
         openStudioIdRef.current = null;
         openInstanceIdRef.current = null;
       }
       await refreshUi(nextSession);
       return nextSession;
     },
-    [loadedPlugins, refreshUi, session, appLabelsOverlay],
+    [loadedPlugins, refreshUi, session, appLabelsOverlay, hostConfig, landingAppId],
   );
 
   const syncSpawnedPluginDocument = useCallback(async (plugin: PluginWasmHandle, app: AppDefinition, pluginInstanceId: number, documentJson: string, viewState: ViewState) => {
@@ -3135,39 +3148,40 @@ export function FrameworkOsShell({
   const applyShellUri = useCallback(
     async (uri: string, preservedViewState?: ViewState) => {
       const currentSession = sessionRef.current;
-      if (!studioMode || !currentSession || loadedPlugins.length === 0) return;
+      if (!hostConfig || !currentSession || loadedPlugins.length === 0) return;
       const path = uri.split("?")[0] ?? "/";
       const studioPath = parseStudioShellPath(path);
-      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === "s")?.handle;
+      const sPlugin = loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId)?.handle;
       if (!sPlugin) return;
       if (!studioPath) {
         openStudioIdRef.current = null;
         openInstanceIdRef.current = null;
-        if (currentSession.app.id !== S_HOME_APP_ID) await switchToSApp(S_HOME_APP_ID, preservedViewState);
+        if (currentSession.app.id !== hostConfig.landingAppId) await switchToManagedApp(hostConfig.landingAppId, preservedViewState);
         return;
       }
       const { studioId, instanceId } = studioPath;
-      const studioSession = currentSession.app.id === S_PLAY_APP_ID ? currentSession : await switchToSApp(S_PLAY_APP_ID, preservedViewState);
+      const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
       if (!studioSession) return;
+      const studioControllerId = studioSession.app.controllerId;
       if (openStudioIdRef.current !== studioId) {
         openStudioIdRef.current = studioId;
         openInstanceIdRef.current = null;
-        await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openStudio", args: { studioId } }), studioSession.viewState);
+        await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openStudio", args: { studioId } }), studioSession.viewState);
         await refreshUi(studioSession);
       }
       if (openInstanceIdRef.current === (instanceId ?? null)) return;
       openInstanceIdRef.current = instanceId ?? null;
       if (instanceId) {
-        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "openInstance", args: { instanceId } }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openInstance", args: { instanceId } }), studioSession.viewState);
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       } else {
-        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }), studioSession.viewState);
+        const response = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "closeFocusedInstance" }), studioSession.viewState);
         const currentPanel = parsePanelState(studioSession.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
         updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, undefined));
         await applyHostEffects(response.requestedEffects ?? [], studioSession, resolveUiDirtyScope(response.uiScope));
       }
     },
-    [applyHostEffects, loadedPlugins, refreshUi, studioMode, switchToSApp, updateStudioPanel],
+    [applyHostEffects, loadedPlugins, refreshUi, hostConfig, switchToManagedApp, updateStudioPanel],
   );
 
   useEffect(() => {
@@ -3388,12 +3402,12 @@ export function FrameworkOsShell({
         return;
       }
 
-      if (studioMode && action.controllerId === S_HOME_CONTROLLER_ID && action.action === "importStudio") {
+      if (studioMode && action.controllerId === landingControllerId && action.action === "importStudio") {
         importStudioInputRef.current?.click();
         return;
       }
 
-      if (studioMode && action.action === "spawnApp" && action.controllerId !== S_PLAY_CONTROLLER_ID) {
+      if (studioMode && action.action === "spawnApp" && action.controllerId !== hostControllerId) {
         const programId = typeof action.args === "object" && action.args != null && "programId" in action.args ? String((action.args as { programId?: string }).programId ?? "") : "";
         const pluginId = typeof action.args === "object" && action.args != null && "pluginId" in action.args ? String((action.args as { pluginId?: string }).pluginId ?? "") : "";
         const currentPanel = parsePanelState(session.viewState);
@@ -3402,8 +3416,8 @@ export function FrameworkOsShell({
         return;
       }
 
-      if (studioMode && action.controllerId === S_PLAY_CONTROLLER_ID && action.action === "setActivePanelTab") {
-        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? "s-play-catalogue") : "s-play-catalogue";
+      if (studioMode && action.controllerId === hostControllerId && action.action === "setActivePanelTab") {
+        const tabId = typeof action.args === "object" && action.args != null && "tabId" in action.args ? String((action.args as { tabId?: string }).tabId ?? (hostCatalogueTabId ?? "")) : (hostCatalogueTabId ?? "");
         const currentPanel = parsePanelState(session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
         updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, tabId, currentPanel.activeSpawnedId));
         return;
@@ -3440,7 +3454,7 @@ export function FrameworkOsShell({
           console.error("[DEBUG] action failed", actionError);
         });
     },
-    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, injectActiveUtility, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel],
+    [applyHostEffects, attachSyncBackbone, detachSyncBackbone, findPluginForAction, injectActiveUtility, loadedPlugins, panel, session, spawnProgram, studioMode, syncBackboneUri, syncDraftPath, updateStudioPanel, hostControllerId, landingControllerId, hostCatalogueTabId],
   );
 
   const onActionRef = useRef(onAction);
@@ -3454,18 +3468,21 @@ export function FrameworkOsShell({
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
   const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
 
-  const studioSessionActive = studioMode && session?.app.id === S_PLAY_APP_ID;
+  const studioSessionActive = studioMode && session?.app.id === hostAppId;
+  // 🏠🧳 Once `studioSessionActive` is true, `session.app` *is* the host app, so its own self-declared
+  // `controllerId` is the right value — no separate app-identity lookup needed.
+  const studioSessionControllerId = studioSessionActive ? session?.app.controllerId : undefined;
   useEffect(() => {
-    if (!studioSessionActive || typeof window === "undefined") return;
+    if (!studioSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
     const identity = presenceClientIdentity();
-    const beat = () => onActionRef.current({ controllerId: S_PLAY_CONTROLLER_ID, action: "presenceHeartbeat", args: identity });
+    const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: identity });
     const initial = window.setTimeout(beat, 1000);
     const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
     return () => {
       window.clearTimeout(initial);
       window.clearInterval(timer);
     };
-  }, [studioSessionActive]);
+  }, [studioSessionActive, studioSessionControllerId]);
 
   usePanelChromeHotkeys({
     onToggle: (anchor) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible }),
@@ -3892,7 +3909,7 @@ export function FrameworkOsShell({
   const workbenchLeftTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
     const pluginLeftTabs = session.app.panelTabs.filter((tab) => panelAnchorForGroup(tab.group) === "top-left").map((tab, order) => panelTabDefinitionToNode(tab, tab.group, panelUiByKey, onAction, order, appLabelsOverlay));
-    if (studioMode && session.app.id === S_PLAY_APP_ID && pluginLeftTabs.length > 0) return pluginLeftTabs;
+    if (studioMode && session.app.id === hostAppId && pluginLeftTabs.length > 0) return pluginLeftTabs;
     const hasPluginDocumentTab = pluginLeftTabs.some((tab) => tab.id === FRAMEWORK_PANEL_TAB_DOCUMENT_ID);
     if (hasPluginDocumentTab) return pluginLeftTabs;
     const documentTab = singleTreeLeaf({
@@ -3911,7 +3928,7 @@ export function FrameworkOsShell({
       }),
     });
     return [documentTab, ...pluginLeftTabs];
-  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale]);
+  }, [appLabelsOverlay, onAction, panel?.spawnedApps.length, panelUiByKey, session, studioMode, uiLocale, hostAppId]);
 
   const detailsRightTabs = useMemo((): PanelTabNode[] => {
     if (!session) return [];
@@ -4119,7 +4136,7 @@ export function FrameworkOsShell({
     [dock, defaultDock],
   );
 
-  const studioOverrideTabId = studioMode && session?.app.id === S_PLAY_APP_ID ? (panel?.activePanelTab ?? S_PLAY_CATALOGUE_TAB_ID) : undefined;
+  const studioOverrideTabId = studioMode && session?.app.id === hostAppId ? (panel?.activePanelTab ?? hostCatalogueTabId) : undefined;
   const studioOverrideAnchor = studioOverrideTabId ? findPanelTabInDock(dock, studioOverrideTabId)?.anchor : undefined;
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
@@ -4228,7 +4245,7 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_MOBILE_PANEL_PATH", value: path });
         const tabId = path[path.length - 1];
         // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
+        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(mobilePanelTabs, path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
@@ -4237,7 +4254,7 @@ export function FrameworkOsShell({
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     };
-  }, [panels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates]);
+  }, [panels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId]);
 
   const exampleOptions = useMemo(() => {
     const appId = session?.app.id ?? "";
@@ -4287,14 +4304,14 @@ export function FrameworkOsShell({
         }
         const tabId = path[path.length - 1];
         // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
-        if (tabId && studioMode && session?.app.id === S_PLAY_APP_ID && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+        if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
         }
       },
       pathMemory: panelPathMemory,
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
     }),
-    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode],
+    [dock, onAction, panelActivePaths, panelPathMemory, panels, session, studioMode, hostAppId],
   );
   //#endregion 🎛️PanelTabBarHosting
 
@@ -4310,7 +4327,7 @@ export function FrameworkOsShell({
         </span>
       </div>,
     ];
-    if (exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== S_HOME_APP_ID)) {
+    if (exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId)) {
       centerContent.push(
         <NavbarExampleSelect
           key="fixture"
@@ -4359,7 +4376,7 @@ export function FrameworkOsShell({
         ),
       },
     ];
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology]);
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology, studioMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -4459,7 +4476,7 @@ export function FrameworkOsShell({
           id: `spawn.${program.programId}`,
           label: `${shellLabel("ui.palette.spawnPrefix")} ${appDocumentLabel(resolveDocumentByAppId(loadedPlugins, program.appId, program.document, uiTerminology))}`,
           category: shellLabel("ui.search.category.catalogue"),
-          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "spawnApp", args: { programId: program.programId } }),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "spawnApp", args: { programId: program.programId } }),
         });
       }
       items.push(
@@ -4468,25 +4485,25 @@ export function FrameworkOsShell({
           label: shellLabel("ui.palette.undo"),
           category: shellLabel("ui.search.category.studio"),
           icon: <Icon icon="undo-2" size="small" />,
-          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "undo" }),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "undo" }),
         },
         {
           id: "studio.redo",
           label: shellLabel("ui.palette.redo"),
           category: shellLabel("ui.search.category.studio"),
           icon: <Icon icon="redo-2" size="small" />,
-          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "redo" }),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "redo" }),
         },
         {
           id: "studio.home",
           label: shellLabel("ui.palette.goHome"),
           category: shellLabel("ui.search.category.navigation"),
-          onSelect: () => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" }),
+          onSelect: () => onAction({ controllerId: hostControllerId ?? "", action: "goHome" }),
         },
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, loadedPlugins, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology]);
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology, hostControllerId]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -4625,11 +4642,11 @@ export function FrameworkOsShell({
       );
     const modes = session.app.modes.length > 0 ? session.app.modes : [{ id: session.app.id, label: appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) }];
     const studioHomeBar =
-      studioMode && session.app.id === S_PLAY_APP_ID && !panel?.activeSpawnedId ? (
+      studioMode && session.app.id === hostAppId && !panel?.activeSpawnedId ? (
         <button
           type="button"
           className={cn(borderNormalBottomClass, "px-single py-single text-left text-sm text-muted-foreground hover:bg-muted/40 hover:text-foreground")}
-          onClick={() => onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "goHome" })}
+          onClick={() => onAction({ controllerId: session.app.controllerId, action: "goHome" })}
         >
           ← {shellLabel("ui.common.home")}
         </button>
@@ -4637,7 +4654,7 @@ export function FrameworkOsShell({
     const focusedSpawned = panel?.activeSpawnedId ? panel.spawnedApps.find((entry) => entry.id === panel.activeSpawnedId) : undefined;
     const focusedBar = focusedSpawned ? (
       <div className={cn(borderNormalBottomClass, "flex items-center gap-single px-single py-single text-sm text-muted-foreground")}>
-        <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: S_PLAY_CONTROLLER_ID, action: "closeFocusedInstance" }))}>
+        <button type="button" className="hover:text-foreground" onClick={() => (openStudioIdRef.current ? navigateHistory(`/studios/${openStudioIdRef.current}`) : onAction({ controllerId: session.app.controllerId, action: "closeFocusedInstance" }))}>
           ← {shellLabel("ui.common.backToMediaGraph")}
         </button>
         <span>·</span>
@@ -4657,7 +4674,7 @@ export function FrameworkOsShell({
             const file = event.target.files?.[0];
             if (!file) return;
             void file.text().then((json) => {
-              onAction({ controllerId: S_HOME_CONTROLLER_ID, action: "importStudio", args: { json } });
+              onAction({ controllerId: landingControllerId ?? "", action: "importStudio", args: { json } });
               event.target.value = "";
             });
           }}

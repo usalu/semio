@@ -724,9 +724,10 @@ pub enum Expr {
     Or(Box<Expr>, Box<Expr>),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum QueryResultKind {
+    #[default]
     Table,
     Graph,
 }
@@ -740,12 +741,6 @@ pub struct QueryResult {
     pub rows: Vec<Vec<PropertyValue>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub graph_fixture_json: Option<String>,
-}
-
-impl Default for QueryResultKind {
-    fn default() -> Self {
-        Self::Table
-    }
 }
 
 impl QueryResult {
@@ -1023,7 +1018,7 @@ fn completion_prefix(source: &str, cursor: usize) -> String {
     source[start..cursor].to_string()
 }
 
-fn tokens_before_cursor<'a>(tokens: &'a [SpannedToken], cursor: usize) -> &'a [SpannedToken] {
+fn tokens_before_cursor(tokens: &[SpannedToken], cursor: usize) -> &[SpannedToken] {
     let mut end = tokens.len();
     for (i, row) in tokens.iter().enumerate() {
         if row.start >= cursor && !matches!(row.token, Token::Eof) {

@@ -1,7 +1,7 @@
 //! 📄 Program reporting — structured reports from `ReportKind`.
 
 use crate::analyze::run_analysis;
-use crate::kernel::{EntityHeader, EntityId, TextField};
+use crate::kernel::{EntityHeader, EntityId};
 use crate::program::Program;
 use crate::registers::{AnalysisKind, ReportKind, ReportRecord, ValidationStatus};
 use crate::status_summary::status_summary;
@@ -203,7 +203,7 @@ fn adjacency_matrix_report(program: &Program) -> ProgramReport {
                 .iter()
                 .find(|e| &e.header.id == id)
                 .map(|e| e.header.name.as_str())
-                .unwrap_or(id.as_ref()))
+                .unwrap_or(&id.0))
             .collect::<Vec<_>>()
             .join("\t")
     );
@@ -214,7 +214,7 @@ fn adjacency_matrix_report(program: &Program) -> ProgramReport {
             .iter()
             .find(|e| &e.header.id == row_id)
             .map(|e| e.header.name.as_str())
-            .unwrap_or(row_id.as_ref());
+            .unwrap_or(&row_id.0);
         let cells: Vec<String> = (0..matrix.element_ids.len())
             .map(|col_idx| {
                 if row_idx == col_idx {

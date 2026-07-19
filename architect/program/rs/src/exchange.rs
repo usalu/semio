@@ -186,7 +186,7 @@ fn write_delimited(rows: &[RegisterCsvRow], delimiter: char) -> Result<String, P
     let mut out = header;
     for row in rows {
         out.push_str(&format!(
-            "{}{}{}{}{}{}{}{}{}{}{}{}{}{}\n",
+            "{}{}{}{}{}{}{}{}{}{}{}{}{}\n",
             escape_field(&row.register, delimiter),
             delimiter,
             escape_field(&row.id.to_string(), delimiter),
@@ -365,6 +365,10 @@ fn upsert_element(program: &mut Program, row: RegisterCsvRow) {
         security_zone: None,
         flexibility_notes: Vec::new(),
         growth_allocation: None,
+        circulation_role: None,
+        visibility_level: None,
+        adjacency_preferences: Vec::new(),
+        environmental_zone: None,
     });
 }
 
@@ -395,6 +399,10 @@ fn upsert_stakeholder(program: &mut Program, row: RegisterCsvRow) {
         delegated_to: None,
         relationship_to_client: None,
         power_interest_notes: Vec::new(),
+        stakeholder_type: String::new(),
+        influence_strategy: None,
+        communication_channels: Vec::new(),
+        success_metrics: Vec::new(),
     });
 }
 
@@ -505,6 +513,7 @@ fn upsert_adjacency_stub(program: &mut Program, row: RegisterCsvRow) {
         normalized: true,
         verification_status: ValidationStatus::Pending,
         source_relationship_id: None,
+        internal_external_access: None,
     });
 }
 // #endregion

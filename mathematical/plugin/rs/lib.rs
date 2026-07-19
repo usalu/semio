@@ -325,7 +325,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         node_graph: None,
         text_editor: None,
         table: None,
-        raster: None,
+        paint_2d: None,
         virtual_file_system: None,
         tiled_map: None,
         board2d: None,

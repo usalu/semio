@@ -8,14 +8,37 @@ use serde::{Deserialize, Serialize};
 use mathematical_graph_manifest::{flow_dag::flow_dag_manifest, ManifestValidator, PropertyBag};
 
 use graph::{handle_position, world_box_from_points, BoardEvent, WorldBox};
-pub use infinite_cavas as cavas;
 pub use infinite_board_port_directed::{
-    self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak, handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node,
-    NodeId, RenderSnapshot, Selection, CanvasPalette,
+    self as graph, compute_edge_bezier_points, compute_edge_sharp_sz_path, handle_exterior_cap_fill_path, handle_exterior_cap_peak, handle_exterior_cap_stroke_path, handle_exterior_cap_triangle_fill_path, handle_exterior_cap_triangle_peak,
+    handle_exterior_cap_triangle_stroke_path, handle_outward_at_node_rim, CanvasPalette, DirectedPortGraphEngine, Edge, EdgeId, GraphExtension, Handle, HandleId, HandleRole, InteractionMode, Node, NodeId, RenderSnapshot, Selection,
 };
+pub use infinite_cavas as cavas;
 
 /// 🌳 DAG board engine alias.
 pub type DagBoardEngine = DirectedPortGraphEngine;
+
+//#region ⚠️ Errors
+/// 🚨 Crate-local error for DAG fixture parsing, layout, and host-state mutation.
+#[derive(Debug, thiserror::Error)]
+pub enum DagError {
+    #[error("fixture root must be object")]
+    FixtureRootNotObject,
+    #[error("schema must be dag.fixture")]
+    SchemaMismatch,
+    #[error("nodes array missing")]
+    NodesMissing,
+    #[error("{0}")]
+    InvalidNodeKind(String),
+    #[error("unknown align mode: {0}")]
+    UnknownAlignMode(String),
+    #[error("unknown widget: {0}")]
+    UnknownWidget(String),
+    #[error("{0}")]
+    CanvasTheme(String),
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+}
+//#endregion ⚠️ Errors
 
 // #region 🔖PortSide
 /// ↔️ Which side of a computation node a variadic insert targets.
@@ -270,7 +293,21 @@ fn default_port_cardinality() -> String {
 
 impl Default for IoPortSpec {
     fn default() -> Self {
-        Self { id: String::new(), label: String::new(), code: String::new(), abbreviation: String::new(), full_name: String::new(), value_type: None, default: None, value: None, connected: None, resource_kind: None, cardinality: default_port_cardinality(), shape: PortShape::default(), visible: true }
+        Self {
+            id: String::new(),
+            label: String::new(),
+            code: String::new(),
+            abbreviation: String::new(),
+            full_name: String::new(),
+            value_type: None,
+            default: None,
+            value: None,
+            connected: None,
+            resource_kind: None,
+            cardinality: default_port_cardinality(),
+            shape: PortShape::default(),
+            visible: true,
+        }
     }
 }
 
@@ -333,19 +370,20 @@ const DAG_PREVIEW_MAX_IMAGE: f64 = 200.0;
 const DAG_PREVIEW_MIN_SIZE: f64 = 20.0;
 
 /// 👁️ Typed preview payload rendered inside a preview node.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "variant")]
 pub enum DagPreviewContent {
+    #[default]
     Empty,
-    Scalar { text: String },
-    Image { src: String },
-    Tree { json: serde_json::Value },
-}
-
-impl Default for DagPreviewContent {
-    fn default() -> Self {
-        Self::Empty
-    }
+    Scalar {
+        text: String,
+    },
+    Image {
+        src: String,
+    },
+    Tree {
+        json: serde_json::Value,
+    },
 }
 
 #[derive(Clone, Debug)]
@@ -528,13 +566,7 @@ pub fn measure_preview_content(content: &DagPreviewContent, expanded: &BTreeSet<
                 .map(|row| {
                     let indent = row.depth as f64 * DAG_PREVIEW_TREE_INDENT;
                     let toggle = if row.has_children { DAG_PREVIEW_TOGGLE_WIDTH } else { 0.0 };
-                    let line = if row.has_children && !row.expanded {
-                        format!("{}: {}", row.label, row.summary)
-                    } else if !row.has_children {
-                        format!("{}: {}", row.label, row.summary)
-                    } else {
-                        row.label.clone()
-                    };
+                    let line = if row.has_children && row.expanded { row.label.clone() } else { format!("{}: {}", row.label, row.summary) };
                     indent + toggle + port_label_text_width(&line, DAG_LABEL_COMPACT_SCREEN_PX)
                 })
                 .fold(DAG_PREVIEW_MIN_SIZE, f64::max);
@@ -687,13 +719,11 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
     }
 }
 
-fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), String> {
+fn validate_dag_fixture_node_kinds(nodes: &[DagNodeSpec]) -> Result<(), DagError> {
     let manifest = flow_dag_manifest();
     let validator = ManifestValidator::new(&manifest);
     for node in nodes {
-        validator
-            .validate_node_kind(dag_node_kind_tag(&node.kind))
-            .map_err(|error| format!("{}: {}", error.path, error.message))?;
+        validator.validate_node_kind(dag_node_kind_tag(&node.kind)).map_err(|error| DagError::InvalidNodeKind(format!("{}: {}", error.path, error.message)))?;
     }
     Ok(())
 }
@@ -761,51 +791,24 @@ impl Default for DagNodeSpec {
             height: default_node_height(),
             operator_kind: None,
             properties: PropertyBag::new(),
-            kind: DagNodeKind::Computation {
-                inputs: vec![],
-                outputs: vec![],
-                variadic_inputs: false,
-                variadic_outputs: false,
-            },
+            kind: DagNodeKind::Computation { inputs: vec![], outputs: vec![], variadic_inputs: false, variadic_outputs: false },
         }
     }
 }
 
 impl DagNodeSpec {
     /// 🔧 Builds a computation node with explicit IO ports.
+    #[allow(clippy::too_many_arguments, reason = "positional constructor called by external crates (framework/surface/node-graph/rs, sequence/core/rs, flow/core/rs); bundling into a params struct is a breaking API change out of this crate's scope")]
     pub fn computation(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, variadic_inputs: bool, variadic_outputs: bool, x: f64, y: f64, width: f64, height: f64) -> Self {
         let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
-        Self {
-            id,
-            name,
-            abbreviation,
-            icon,
-            x,
-            y,
-            width,
-            height,
-            operator_kind: None,
-            properties: PropertyBag::new(),
-            kind: DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs },
-        }
+        Self { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } }
     }
 
     /// 🧩 Builds a cluster node with contract IO ports.
+    #[allow(clippy::too_many_arguments, reason = "positional constructor called by external crates (framework/surface/node-graph/rs, sequence/core/rs, flow/core/rs); bundling into a params struct is a breaking API change out of this crate's scope")]
     pub fn cluster(id: String, name: String, abbreviation: String, icon: String, inputs: Vec<IoPortSpec>, outputs: Vec<IoPortSpec>, x: f64, y: f64, width: f64, height: f64) -> Self {
         let (name, abbreviation) = normalize_node_display(&name, &abbreviation);
-        Self {
-            id,
-            name,
-            abbreviation,
-            icon,
-            x,
-            y,
-            width,
-            height,
-            operator_kind: None,
-            properties: PropertyBag::new(),
-            kind: DagNodeKind::Cluster { inputs, outputs },
-        }
+        Self { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Cluster { inputs, outputs } }
     }
 
     /// ➕ Whether the node exposes variadic input insert controls.
@@ -1033,7 +1036,7 @@ fn io_widget_name_column_bounds(node: &DagNodeSpec, px: f64) -> (f64, f64, f64, 
     use cavas::text::label_extent;
     let hh = node.height * 0.5;
     let name_px = px * 1.05;
-    let (name_w, name_h) = label_extent(&node.name, name_px);
+    let (_name_w, name_h) = label_extent(&node.name, name_px);
     let visual_w = name_h;
     let top = node.y - hh + DAG_NODE_EDGE_INSET;
     let bottom = node.y + hh * 0.12;
@@ -1223,16 +1226,16 @@ impl Default for DagLayoutOptions {
 }
 
 /// 🌳 Writes node centers from a layered DAG layout into `dag.fixture`.
-pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayoutOptions) -> Result<(), String> {
+pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayoutOptions) -> Result<(), DagError> {
     let Some(root) = fixture.as_object_mut() else {
-        return Err("fixture root must be object".into());
+        return Err(DagError::FixtureRootNotObject);
     };
     if root.get("schema").and_then(|v| v.as_str()) != Some("dag.fixture") {
-        return Err("schema must be dag.fixture".into());
+        return Err(DagError::SchemaMismatch);
     }
     let edges_json = root.get("edges").and_then(|v| v.as_array()).cloned().unwrap_or_default();
     let Some(nodes) = root.get_mut("nodes").and_then(|v| v.as_array_mut()) else {
-        return Err("nodes array missing".into());
+        return Err(DagError::NodesMissing);
     };
     if nodes.is_empty() {
         return Ok(());
@@ -1305,7 +1308,7 @@ pub fn apply_dag_layout_to_fixture_v1_value(fixture: &mut Value, opts: &DagLayou
     let mut maxx = f64::NEG_INFINITY;
     let mut miny = f64::INFINITY;
     let mut maxy = f64::NEG_INFINITY;
-    for (_, (x, y)) in &pos {
+    for (x, y) in pos.values() {
         minx = minx.min(*x);
         maxx = maxx.max(*x);
         miny = miny.min(*y);
@@ -1860,7 +1863,7 @@ pub struct DagCamera {
 }
 
 /// 🔗 Edge between port handles.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct DagFixtureEdge {
     pub id: String,
@@ -1870,18 +1873,6 @@ pub struct DagFixtureEdge {
     pub route_style: EdgeRouteStyle,
     #[serde(default)]
     pub properties: PropertyBag,
-}
-
-impl Default for DagFixtureEdge {
-    fn default() -> Self {
-        Self {
-            id: String::new(),
-            source: String::new(),
-            target: String::new(),
-            route_style: EdgeRouteStyle::default(),
-            properties: PropertyBag::new(),
-        }
-    }
 }
 
 impl Default for DagFixture {
@@ -1898,50 +1889,27 @@ fn split_dag_endpoint(endpoint: &str) -> (String, String) {
 }
 
 fn dag_visual_kind(node: &DagNodeSpec) -> String {
-    node.operator_kind
-        .clone()
-        .unwrap_or_else(|| dag_node_kind_tag(&node.kind).to_string())
+    node.operator_kind.clone().unwrap_or_else(|| dag_node_kind_tag(&node.kind).to_string())
 }
 
 /// 📝 Render a DAG fixture as wire-literal compiled text.
 pub fn dag_fixture_to_wire_literal(fixture: &DagFixture) -> String {
     use mathematical_graph_dsl::{wire_literal_from_dag, WireEdge, WireNode};
-    let nodes = fixture
-        .nodes
-        .iter()
-        .map(|node| WireNode {
-            id: node.id.clone(),
-            kind: dag_visual_kind(node),
-            port: None,
-            properties: node.properties.clone(),
-        })
-        .collect::<Vec<_>>();
+    let nodes = fixture.nodes.iter().map(|node| WireNode { id: node.id.clone(), kind: dag_visual_kind(node), port: None, properties: node.properties.clone() }).collect::<Vec<_>>();
     let edges = fixture
         .edges
         .iter()
         .map(|edge| {
             let (from, from_port) = split_dag_endpoint(&edge.source);
             let (to, to_port) = split_dag_endpoint(&edge.target);
-            WireEdge {
-                from,
-                from_port,
-                to,
-                to_port,
-                directed: true,
-                properties: edge.properties.clone(),
-            }
+            WireEdge { from, from_port, to, to_port, directed: true, properties: edge.properties.clone() }
         })
         .collect::<Vec<_>>();
     wire_literal_from_dag(&nodes, &edges)
 }
 
 /// 🧵 Build execution wire rows from an enriched DAG fixture.
-pub fn dag_fixture_execution_rows(
-    fixture: &DagFixture,
-) -> (
-    Vec<mathematical_graph_dsl::WireNode>,
-    Vec<mathematical_graph_dsl::WireEdge>,
-) {
+pub fn dag_fixture_execution_rows(fixture: &DagFixture) -> (Vec<mathematical_graph_dsl::WireNode>, Vec<mathematical_graph_dsl::WireEdge>) {
     use mathematical_graph_dsl::{WireEdge, WireNode};
     use std::collections::HashSet;
     let executable: HashSet<String> = fixture.nodes.iter().filter_map(|node| node.operator_kind.as_ref().map(|_| node.id.clone())).collect();
@@ -1950,12 +1918,7 @@ pub fn dag_fixture_execution_rows(
         .iter()
         .filter_map(|node| {
             let kind = node.operator_kind.clone()?;
-            Some(WireNode {
-                id: node.id.clone(),
-                kind,
-                port: None,
-                properties: node.properties.clone(),
-            })
+            Some(WireNode { id: node.id.clone(), kind, port: None, properties: node.properties.clone() })
         })
         .collect();
     let edges = fixture
@@ -1967,14 +1930,7 @@ pub fn dag_fixture_execution_rows(
             if !executable.contains(&from) || !executable.contains(&to) {
                 return None;
             }
-            Some(WireEdge {
-                from,
-                from_port,
-                to,
-                to_port,
-                directed: true,
-                properties: edge.properties.clone(),
-            })
+            Some(WireEdge { from, from_port, to, to_port, directed: true, properties: edge.properties.clone() })
         })
         .collect();
     (nodes, edges)
@@ -2204,18 +2160,8 @@ impl DagHost {
             .into_iter()
             .filter_map(|target| {
                 let row = match target.domain.as_str() {
-                    "node" => self.widget_id_for_node_id(target.id).map(|id| Row {
-                        domain: target.domain,
-                        id,
-                        generality: target.generality,
-                        label: None,
-                    }),
-                    "edge" => self.edge_id_map.get(&target.id).cloned().map(|id| Row {
-                        domain: target.domain,
-                        id,
-                        generality: target.generality,
-                        label: None,
-                    }),
+                    "node" => self.widget_id_for_node_id(target.id).map(|id| Row { domain: target.domain, id, generality: target.generality, label: None }),
+                    "edge" => self.edge_id_map.get(&target.id).cloned().map(|id| Row { domain: target.domain, id, generality: target.generality, label: None }),
                     "handle" => self.decode_channel_ref(target.id).map(|channel| Row {
                         domain: "handle".into(),
                         id: format!("{}:{}", channel.widget_id, channel.port),
@@ -2331,7 +2277,7 @@ impl DagHost {
     }
 
     /// 📐 Aligns or distributes the current multi-node selection.
-    pub fn align_selection(&mut self, mode: &str) -> Result<(), String> {
+    pub fn align_selection(&mut self, mode: &str) -> Result<(), DagError> {
         use cavas::Point;
         let mut selected = self.selected_fixture_nodes();
         if selected.is_empty() {
@@ -2442,7 +2388,7 @@ impl DagHost {
                     cursor += node.height + gap;
                 }
             }
-            other => return Err(format!("unknown align mode: {other}")),
+            other => return Err(DagError::UnknownAlignMode(other.to_string())),
         }
         for (idx, node) in selected {
             self.fixture.nodes[idx].x = node.x;
@@ -2454,8 +2400,8 @@ impl DagHost {
     // #endregion 🔖SelectionAlign
 
     /// 📍 Sets a fixture widget position in both the fixture and engine snapshots.
-    pub fn set_widget_position(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), String> {
-        let idx = self.fixture.nodes.iter().position(|node| node.id == widget_id).ok_or_else(|| format!("unknown widget: {widget_id}"))?;
+    pub fn set_widget_position(&mut self, widget_id: &str, x: f64, y: f64) -> Result<(), DagError> {
+        let idx = self.fixture.nodes.iter().position(|node| node.id == widget_id).ok_or_else(|| DagError::UnknownWidget(widget_id.to_string()))?;
         self.fixture.nodes[idx].x = x;
         self.fixture.nodes[idx].y = y;
         let Some(nid) = self.engine_node_id_for_index(idx) else {
@@ -2495,11 +2441,10 @@ impl DagHost {
 
     /// 🔌 Sets hover to a fixture channel handle, falling back to node hover below channel LOD.
     pub fn set_hover_channel(&mut self, widget_id: Option<&str>, port_id: Option<&str>) {
-        if widget_id.is_none() {
+        let Some(widget_id) = widget_id else {
             self.set_hover(None);
             return;
-        }
-        let widget_id = widget_id.expect("widget id");
+        };
         if let Some(port_id) = port_id {
             if self.draw_lod_for_frame().uses_channel_row_pick() {
                 if let Some(hid) = self.handle_id_for_port(widget_id, port_id) {
@@ -2697,24 +2642,24 @@ impl DagHost {
         self.forced_draw_lod = DagDrawLod::from_id(trimmed);
     }
 
-    pub fn load_fixture_json(json: &str) -> Result<Self, String> {
-        let fixture: DagFixture = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn load_fixture_json(json: &str) -> Result<Self, DagError> {
+        let fixture: DagFixture = serde_json::from_str(json)?;
         if fixture.schema != "dag.fixture" {
-            return Err("schema must be dag.fixture".into());
+            return Err(DagError::SchemaMismatch);
         }
         validate_dag_fixture_node_kinds(&fixture.nodes)?;
         Ok(Self::from_fixture(fixture))
     }
 
-    pub fn fixture_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.fixture).map_err(|e| e.to_string())
+    pub fn fixture_json(&self) -> Result<String, DagError> {
+        Ok(serde_json::to_string(&self.fixture)?)
     }
 
     /// 🌳 Recomputes node positions from the current graph using layered tree layout.
-    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), String> {
-        let mut fixture_value = serde_json::to_value(&self.fixture).map_err(|e| e.to_string())?;
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), DagError> {
+        let mut fixture_value = serde_json::to_value(&self.fixture)?;
         apply_dag_layout_to_fixture_v1_value(&mut fixture_value, opts)?;
-        self.fixture = serde_json::from_value(fixture_value).map_err(|e| e.to_string())?;
+        self.fixture = serde_json::from_value(fixture_value)?;
         self.rebuild_engine_with_layout(false);
         Ok(())
     }
@@ -2740,12 +2685,10 @@ impl DagHost {
                 self.fixture = updated;
             }
         }
-        let mut next_node: u64 = 1;
         let mut next_handle: u64 = 10;
         let mut handle_map: HashMap<String, u64> = HashMap::new();
         for (idx, node) in self.fixture.nodes.iter().enumerate() {
-            let nid = next_node;
-            next_node += 1;
+            let nid = idx as u64 + 1;
             self.node_id_map.insert(nid, idx);
             self.engine.create_rect_node(nid, node.x, node.y, node.width, node.height, true);
             let inputs = node.inputs();
@@ -2984,25 +2927,17 @@ impl DagHost {
     }
 
     fn rim_handle_anchor_hit(&self, world_x: f64, world_y: f64) -> Option<HandleId> {
-        let Some(hid) = self.handle_anchor_hit(world_x, world_y) else {
-            return None;
-        };
+        let hid = self.handle_anchor_hit(world_x, world_y)?;
         let lod = self.draw_lod_for_frame();
-        if lod.uses_input_row_connection_hitbox() || lod.uses_channel_row_pick() {
-            if self.port_row_handle_hit(world_x, world_y, true, true).is_some() {
-                let Some(handle) = self.engine.handles.get(&hid) else {
-                    return None;
-                };
-                let Some(node) = self.engine.nodes.get(&handle.node_id) else {
-                    return None;
-                };
-                let pos = handle_position(node, handle);
-                let dx = world_x - pos.x;
-                let dy = world_y - pos.y;
-                let rim_tol = (handle.radius + 1.5).max(3.0);
-                if dx * dx + dy * dy > rim_tol * rim_tol {
-                    return None;
-                }
+        if (lod.uses_input_row_connection_hitbox() || lod.uses_channel_row_pick()) && self.port_row_handle_hit(world_x, world_y, true, true).is_some() {
+            let handle = self.engine.handles.get(&hid)?;
+            let node = self.engine.nodes.get(&handle.node_id)?;
+            let pos = handle_position(node, handle);
+            let dx = world_x - pos.x;
+            let dy = world_y - pos.y;
+            let rim_tol = (handle.radius + 1.5).max(3.0);
+            if dx * dx + dy * dy > rim_tol * rim_tol {
+                return None;
             }
         }
         Some(hid)
@@ -3177,7 +3112,9 @@ impl DagHost {
         let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
             return false;
         };
-        let edit = self.editing_note.as_mut().expect("editing note");
+        let Some(edit) = self.editing_note.as_mut() else {
+            return false;
+        };
         let start = edit.caret.min(edit.anchor);
         let end = edit.caret.max(edit.anchor);
         text.replace_range(start..end, chunk);
@@ -3198,7 +3135,9 @@ impl DagHost {
         let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
             return false;
         };
-        let edit = self.editing_note.as_mut().expect("editing note");
+        let Some(edit) = self.editing_note.as_mut() else {
+            return false;
+        };
         let start = edit.caret.min(edit.anchor);
         let end = edit.caret.max(edit.anchor);
         if start < end {
@@ -3228,7 +3167,9 @@ impl DagHost {
         let DagNodeKind::Note { text, .. } = &mut self.fixture.nodes[idx].kind else {
             return false;
         };
-        let edit = self.editing_note.as_mut().expect("editing note");
+        let Some(edit) = self.editing_note.as_mut() else {
+            return false;
+        };
         let start = edit.caret.min(edit.anchor);
         let end = edit.caret.max(edit.anchor);
         if start < end {
@@ -3258,7 +3199,9 @@ impl DagHost {
         let DagNodeKind::Note { text, .. } = &self.fixture.nodes[idx].kind else {
             return false;
         };
-        let edit = self.editing_note.as_mut().expect("editing note");
+        let Some(edit) = self.editing_note.as_mut() else {
+            return false;
+        };
         let pos = match direction {
             "left" => {
                 if edit.caret == 0 {
@@ -3379,16 +3322,8 @@ impl DagHost {
         self.pointer_down_screen(x, y, 0, extend, false, false, false);
     }
 
-    pub fn pointer_down_screen(
-        &mut self,
-        sx: f64,
-        sy: f64,
-        button: u8,
-        shift: bool,
-        ctrl_or_meta: bool,
-        alt: bool,
-        pan: bool,
-    ) {
+    #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo (see infinite/board/rs, framework/editor/rs, layout/rs, etc.)")]
+    pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: u8, shift: bool, ctrl_or_meta: bool, alt: bool, pan: bool) {
         if pan {
             self.pan_anchor = Some((sx, sy, self.fixture.camera.x, self.fixture.camera.y));
             return;
@@ -3406,10 +3341,7 @@ impl DagHost {
                                 let now = pointer_event_now_ms();
                                 let dist = ((world.x - self.last_pointer_down_world.0).powi(2) + (world.y - self.last_pointer_down_world.1).powi(2)).sqrt();
                                 let zoom = self.fixture.camera.zoom.max(1e-9);
-                                if self.last_pointer_down_node_id.as_deref() == Some(widget_id.as_str())
-                                    && now - self.last_pointer_down_at_ms < 350.0
-                                    && dist < 8.0 / zoom
-                                {
+                                if self.last_pointer_down_node_id.as_deref() == Some(widget_id.as_str()) && now - self.last_pointer_down_at_ms < 350.0 && dist < 8.0 / zoom {
                                     self.pending_open_instance_id = Some(instance_id.clone());
                                     return;
                                 }
@@ -3514,14 +3446,14 @@ impl DagHost {
         self.sync_camera_from_engine();
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.canvas_theme.merge_from_json(json)?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), DagError> {
+        self.canvas_theme.merge_from_json(json).map_err(DagError::CanvasTheme)?;
         self.icon_paint_cache.clear();
         Ok(())
     }
 
     /// 🖼 Screen-node overlay rects in CSS pixel space for DOM media layers.
-    pub fn node_overlays_json(&self) -> Result<String, String> {
+    pub fn node_overlays_json(&self) -> Result<String, DagError> {
         use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
         use cavas::Point;
         let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
@@ -3553,23 +3485,7 @@ impl DagHost {
                 "rect": { "x": tl.x, "y": tl.y, "w": (br.x - tl.x).max(1.0), "h": (br.y - tl.y).max(1.0) }
             }));
         }
-        serde_json::to_string(&overlays).map_err(|e| e.to_string())
-    }
-
-    fn node_handle_centers(node: &DagNodeSpec) -> Vec<cavas::Point> {
-        use cavas::Point;
-        use graph::handle_position_on_rectangle;
-        let center = Point::new(node.x, node.y);
-        let mut centers = Vec::new();
-        for port_idx in 0..node.inputs().len() {
-            let angle = io_node_rect_port_angle_for_node(node, port_idx, true);
-            centers.push(handle_position_on_rectangle(center, node.width, node.height, angle));
-        }
-        for port_idx in 0..node.outputs().len() {
-            let angle = io_node_rect_port_angle_for_node(node, port_idx, false);
-            centers.push(handle_position_on_rectangle(center, node.width, node.height, angle));
-        }
-        centers
+        Ok(serde_json::to_string(&overlays)?)
     }
 
     fn handle_cap_peak(&self, center: cavas::Point, outward: cavas::Vec2, radius: f64, shape: PortShape) -> cavas::Point {
@@ -3611,9 +3527,9 @@ impl DagHost {
     }
 
     fn paint_node_handles_for_spec(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, cam: &cavas::camera::Camera, node: &DagNodeSpec, chrome: &DagNodePaintChrome) {
+        use cavas::FillRule;
         use cavas::Stroke;
         use cavas::{Circle, Point};
-        use cavas::FillRule;
         use graph::{handle_outward_at_node_rim, handle_position_on_rectangle, NodeShape};
 
         let theme = &self.canvas_theme;
@@ -3664,10 +3580,7 @@ impl DagHost {
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
             let (layout, x, y) = if lod.node_label_is_horizontal() {
                 ("horizontal", node.x, node.y)
-            } else if uses_computation_layout(&node.kind) && lod.shows_computation_layout() {
-                let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
-                ("horizontal", lx, ly)
-            } else if matches!(node.kind, DagNodeKind::Slider { .. } | DagNodeKind::Stepper { .. }) && lod.shows_controls() {
+            } else if (uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. } | DagNodeKind::Stepper { .. }) && lod.shows_controls()) {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
             } else {
@@ -3706,8 +3619,8 @@ impl DagHost {
         let computation = uses_computation_layout(&node.kind);
         let port_layout_px = if computation { dag_label_compact_paint_px(zoom, lod_index) } else { dag_label_paint_px(zoom, lod_index) };
         let mut rows = Vec::new();
-        let input_column_w = if computation { io_port_column_width(&inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
-        let output_column_w = if computation { io_port_column_width(&outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
+        let input_column_w = if computation { io_port_column_width(inputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
+        let output_column_w = if computation { io_port_column_width(outputs, port_layout_px) } else { (hw - handle_inset).max(8.0) };
         for (i, port) in inputs.iter().enumerate() {
             if port.shape == PortShape::Triangle || !port.visible {
                 continue;
@@ -3800,7 +3713,7 @@ impl DagHost {
     }
 
     /// �️ Stepper widget field anchors for the HTML stepper overlay.
-    pub fn slider_overlay_state_json(&self) -> Result<String, String> {
+    pub fn slider_overlay_state_json(&self) -> Result<String, DagError> {
         let cam = &self.fixture.camera;
         let mut sliders: Vec<serde_json::Value> = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
@@ -3827,10 +3740,10 @@ impl DagHost {
             "height": self.height,
             "sliders": sliders,
         }))
-        .map_err(|err| err.to_string())
+        .map_err(DagError::from)
     }
 
-    pub fn stepper_overlay_state_json(&self) -> Result<String, String> {
+    pub fn stepper_overlay_state_json(&self) -> Result<String, DagError> {
         let cam = &self.fixture.camera;
         let mut steppers: Vec<serde_json::Value> = Vec::new();
         for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
@@ -3870,11 +3783,11 @@ impl DagHost {
             "height": self.height,
             "steppers": steppers,
         }))
-        .map_err(|err| err.to_string())
+        .map_err(DagError::from)
     }
 
     /// �🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
-    pub fn param_overlay_paint_state_json(&self) -> Result<String, String> {
+    pub fn param_overlay_paint_state_json(&self) -> Result<String, DagError> {
         let lod = self.draw_lod_for_frame();
         let cam = &self.fixture.camera;
         let mut editors = Vec::new();
@@ -3892,11 +3805,11 @@ impl DagHost {
             "height": self.height,
             "editors": editors,
         }))
-        .map_err(|err| err.to_string())
+        .map_err(DagError::from)
     }
 
     /// 🏷️ Camera, draw LOD, and node label anchors for the JS canvas text overlay (must match the last GPU frame).
-    pub fn label_overlay_paint_state_json(&self) -> Result<String, String> {
+    pub fn label_overlay_paint_state_json(&self) -> Result<String, DagError> {
         let lod = self.draw_lod_for_frame();
         let cam = &self.fixture.camera;
         let lod_index = dag_lod_index(cam.zoom);
@@ -3915,7 +3828,7 @@ impl DagHost {
             "height": self.height,
             "labels": labels,
         }))
-        .map_err(|e| e.to_string())
+        .map_err(DagError::from)
     }
 
     fn paint_variadic_plus_controls(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, px: f64, fill: cavas::Color, halo: cavas::Color) {
@@ -3928,50 +3841,6 @@ impl DagHost {
         for (_, px_world, py_world) in variadic_output_insert_positions(node) {
             let screen = world_to_screen(cam, viewport, cavas::Point::new(px_world, py_world));
             append_label(scene, "+", screen, px * 0.95, fill, halo);
-        }
-    }
-
-    fn paint_port_labels(
-        scene: &mut cavas::Scene,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
-        node: &DagNodeSpec,
-        lod: DagDrawLod,
-        layout_px: f64,
-        paint_px: f64,
-        lod_index: usize,
-        label_fill: cavas::Color,
-        label_halo: cavas::Color,
-    ) {
-        if Self::port_labels_delegated_to_js_overlay(lod) {
-            return;
-        }
-        use cavas::camera::world_to_screen;
-        use cavas::text::{append_label, label_extent};
-        use cavas::Point;
-        let hw = node.width * 0.5;
-        let handle_inset = 8.0 / cam.zoom.max(0.05);
-        let inputs = node.inputs();
-        let outputs = node.outputs();
-        let computation = uses_computation_layout(&node.kind);
-        let port_layout_px = if computation { DAG_LABEL_COMPACT_SCREEN_PX } else { layout_px };
-        let port_paint_px = if computation { dag_label_compact_paint_px(cam.zoom, lod_index) } else { paint_px };
-        for (i, port) in inputs.iter().enumerate() {
-            let world_y = port_center_y(node, i, inputs.len());
-            let world_x = if computation { computation_input_label_x(node) } else { node.x - hw + handle_inset };
-            let label = port.label_with_cardinality(lod);
-            append_label(scene, &label, world_to_screen(cam, viewport, Point::new(world_x, world_y)), port_paint_px, label_fill, label_halo);
-        }
-        for (i, port) in outputs.iter().enumerate() {
-            let world_y = port_center_y(node, i, outputs.len());
-            let label = port.label_with_cardinality(lod);
-            let world_x = if computation {
-                computation_output_label_x(node, &label, port_layout_px)
-            } else {
-                let (label_w, _) = label_extent(&label, layout_px);
-                node.x + hw - handle_inset - label_w / cam.zoom.max(0.05)
-            };
-            append_label(scene, &label, world_to_screen(cam, viewport, Point::new(world_x, world_y)), port_paint_px, label_fill, label_halo);
         }
     }
 
@@ -3989,14 +3858,6 @@ impl DagHost {
         scene.append(&label_scene, Some(rot));
     }
 
-    fn paint_node_name(scene: &mut cavas::Scene, center_screen: cavas::Point, node: &DagNodeSpec, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
-        if node.width >= node.height {
-            Self::paint_node_name_horizontal(scene, center_screen, &node.name, px, label_fill, label_halo);
-        } else {
-            Self::paint_node_name_vertical(scene, center_screen, &node.name, px, label_fill, label_halo);
-        }
-    }
-
     fn paint_computation_column_divider(scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::Color) {
         use cavas::{Line, Point, Stroke};
         let Some(divider_x) = computation_column_divider_x(node) else {
@@ -4010,8 +3871,8 @@ impl DagHost {
     }
 
     fn paint_computation_channel_row_highlights(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, theme: &CanvasPalette, is_dimmed: bool) {
-        use cavas::Rect;
         use cavas::FillRule;
+        use cavas::Rect;
         let mut paint_bounds = |(x0, y0, x1, y1): (f64, f64, f64, f64), selected: bool, highlighted: bool, hovered: bool| {
             if !selected && !highlighted && !hovered {
                 return;
@@ -4053,17 +3914,8 @@ impl DagHost {
         }
     }
 
-    fn paint_computation_channel_row_dividers(
-        &self,
-        scene: &mut cavas::Scene,
-        aff: cavas::Affine,
-        node: &DagNodeSpec,
-        chrome_stroke: f64,
-        stroke: cavas::Color,
-        body_stroke: cavas::Color,
-        label_fill: cavas::Color,
-        channel_row_pick: bool,
-    ) {
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
+    fn paint_computation_channel_row_dividers(&self, scene: &mut cavas::Scene, aff: cavas::Affine, node: &DagNodeSpec, chrome_stroke: f64, stroke: cavas::Color, body_stroke: cavas::Color, label_fill: cavas::Color, channel_row_pick: bool) {
         use cavas::{Line, Point, Stroke};
         let grid_rows = computation_channel_row_count(node);
         if grid_rows <= 1 {
@@ -4098,6 +3950,7 @@ impl DagHost {
         }
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_preview_image_content(&self, scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, src: &str, label_fill: cavas::Color, bg: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
@@ -4115,6 +3968,7 @@ impl DagHost {
         self.icon_paint_cache.append_icon_at_screen_rect(scene, src, center, w, h, label_fill, bg, true);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_preview_content(
         &self,
         scene: &mut cavas::Scene,
@@ -4159,13 +4013,7 @@ impl DagHost {
                         append_label(scene, glyph, toggle_pos, row_font_px, label_fill, label_halo);
                     }
                     let text_x = x0 + indent + if row.has_children { DAG_PREVIEW_TOGGLE_WIDTH } else { 0.0 } + 2.0;
-                    let line = if row.has_children && !row.expanded {
-                        format!("{}: {}", row.label, row.summary)
-                    } else if !row.has_children {
-                        format!("{}: {}", row.label, row.summary)
-                    } else {
-                        row.label.clone()
-                    };
+                    let line = if row.has_children && row.expanded { row.label.clone() } else { format!("{}: {}", row.label, row.summary) };
                     let max_w = (x1 - text_x).max(1.0);
                     let shown = truncate_label_to_fit_width(&line, max_w, row_font_px);
                     let text_pos = world_to_screen(cam, viewport, Point::new(text_x, row_y));
@@ -4183,7 +4031,7 @@ impl DagHost {
         scene.stroke(&stroke_style, aff, stroke, None, &Line::new(Point::new(name_right, top), Point::new(name_right, bottom)));
     }
 
-    fn node_label_text<'a>(node: &'a DagNodeSpec, lod: DagDrawLod) -> Option<&'a str> {
+    fn node_label_text(node: &DagNodeSpec, lod: DagDrawLod) -> Option<&str> {
         if matches!(node.kind, DagNodeKind::Preview { .. } | DagNodeKind::Note { .. }) {
             return None;
         }
@@ -4203,10 +4051,6 @@ impl DagHost {
         Self::node_label_text(node, lod).is_some()
     }
 
-    fn port_labels_delegated_to_js_overlay(lod: DagDrawLod) -> bool {
-        lod.shows_port_labels()
-    }
-
     fn should_paint_node_lod_icon(node: &DagNodeSpec, lod: DagDrawLod) -> bool {
         if !lod.node_icon_visible() {
             return false;
@@ -4214,6 +4058,7 @@ impl DagHost {
         !uses_computation_layout(&node.kind) || !lod.shows_computation_layout()
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_node_lod_icon(&self, scene: &mut cavas::Scene, lod: DagDrawLod, center_screen: cavas::Point, node: &DagNodeSpec, zoom: f64, fg: cavas::Color, bg: cavas::Color) {
         if !Self::should_paint_node_lod_icon(node, lod) {
             return;
@@ -4242,16 +4087,8 @@ impl DagHost {
         }
     }
 
-    fn paint_computation_node_name(
-        scene: &mut cavas::Scene,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
-        node: &DagNodeSpec,
-        label: &str,
-        px: f64,
-        label_fill: cavas::Color,
-        label_halo: cavas::Color,
-    ) {
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
+    fn paint_computation_node_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::Point;
         let (label_x, label_y) = computation_name_world_center(node, label, px, cam.zoom);
@@ -4259,21 +4096,13 @@ impl DagHost {
         Self::paint_node_name_horizontal(scene, anchor, label, px, label_fill, label_halo);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_slider_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         Self::paint_computation_node_name(scene, cam, viewport, node, label, px, label_fill, label_halo);
     }
 
-    fn paint_io_widget_name(
-        scene: &mut cavas::Scene,
-        cam: &cavas::camera::Camera,
-        viewport: &cavas::camera::Viewport,
-        node: &DagNodeSpec,
-        lod: DagDrawLod,
-        label: &str,
-        px: f64,
-        label_fill: cavas::Color,
-        label_halo: cavas::Color,
-    ) {
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
+    fn paint_io_widget_name(scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, node: &DagNodeSpec, lod: DagDrawLod, label: &str, px: f64, label_fill: cavas::Color, label_halo: cavas::Color) {
         use cavas::camera::world_to_screen;
         use cavas::Point;
         if lod.node_label() == DagNodeLabel::None && !lod.shows_controls() {
@@ -4295,6 +4124,7 @@ impl DagHost {
         append_label(scene, trimmed, Point::new(center_screen.x - w * 0.5, center_screen.y - h * 0.5), px, label_fill, label_halo);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_computing_border_arc(&self, scene: &mut cavas::Scene, aff: &cavas::Affine, rect: &cavas::Rect, cam_zoom: f64, color: cavas::Color, start_t: f64, dashed: bool) {
         use cavas::{BezPath, Stroke};
         const SEGMENTS: usize = 40;
@@ -4349,19 +4179,11 @@ impl DagHost {
         Point::new(rect.x0(), rect.y1() - d)
     }
 
-    fn paint_note_caret_bar(
-        scene: &mut cavas::Scene,
-        aff: &cavas::Affine,
-        node: &DagNodeSpec,
-        caret_byte: usize,
-        text: &str,
-        font_px: f64,
-        fill: cavas::Color,
-        zoom: f64,
-    ) {
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
+    fn paint_note_caret_bar(scene: &mut cavas::Scene, aff: &cavas::Affine, node: &DagNodeSpec, caret_byte: usize, text: &str, font_px: f64, fill: cavas::Color, zoom: f64) {
         use cavas::text::label_byte_world_x;
-        use cavas::Rect;
         use cavas::FillRule;
+        use cavas::Rect;
         let (x0, y0, _x1, y1) = preview_content_bounds(node);
         let origin_x = x0 + DAG_PREVIEW_PAD;
         let caret_x = label_byte_world_x(text, caret_byte.min(text.len()), origin_x, font_px);
@@ -4372,6 +4194,7 @@ impl DagHost {
         scene.fill(FillRule::NonZero, *aff, fill, None, &rect);
     }
 
+    #[allow(clippy::too_many_arguments, reason = "internal rendering helper takes scene/camera/viewport/geometry/color context flatly, matching this crate's paint_* convention")]
     fn paint_node_visual(
         &self,
         scene: &mut cavas::Scene,
@@ -4386,8 +4209,8 @@ impl DagHost {
     ) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
-        use cavas::{Circle, Line, Point, Rect, Stroke};
         use cavas::FillRule;
+        use cavas::{Circle, Line, Point, Rect, Stroke};
 
         let theme = &self.canvas_theme;
         let label_halo = theme.label_halo;
@@ -4618,8 +4441,8 @@ impl DagHost {
 
     pub fn paint_scene(&self, scene: &mut cavas::Scene, viewport_w: u32, viewport_h: u32, dpr: f64) {
         use cavas::camera::{camera_content_affine, Camera as CavasCamera, Viewport};
-        use cavas::{Circle, Rect, Stroke};
         use cavas::FillRule;
+        use cavas::{Circle, Rect, Stroke};
 
         let theme = &self.canvas_theme;
         self.tick_computing_animation();
@@ -4636,7 +4459,7 @@ impl DagHost {
         }
         let snap = self.engine.render_snapshot();
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
-        for (&eid, _edge) in &self.engine.edges {
+        for &eid in self.engine.edges.keys() {
             let (is_selected, is_highlighted, is_hovered) = self.edge_interaction_chrome(eid);
             let stroke_c = dag_edge_body_stroke(theme, false, is_selected, is_highlighted, is_hovered);
             let style = self.edge_route_style.get(&eid).copied().unwrap_or_default();
@@ -4756,9 +4579,7 @@ impl DagHost {
             paint_snap_handle(scene, hid, center, Some(PortShape::Triangle));
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
-            let paint_ghost_handles = lod.shows_handles()
-                || ghost.inputs().iter().any(|port| port.shape == PortShape::Triangle)
-                || ghost.outputs().iter().any(|port| port.shape == PortShape::Triangle);
+            let paint_ghost_handles = lod.shows_handles() || ghost.inputs().iter().any(|port| port.shape == PortShape::Triangle) || ghost.outputs().iter().any(|port| port.shape == PortShape::Triangle);
             if paint_ghost_handles {
                 self.paint_node_handles_for_spec(scene, &aff, &cam, ghost, &DagNodePaintChrome::ghost_preview());
             }
@@ -4799,24 +4620,24 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = loadFixtureJson)]
         pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = DagHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e))?;
+            let host = DagHost::load_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
         pub fn fixture_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.fixture_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = nodeOverlaysJson)]
         pub fn node_overlays_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.node_overlays_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
         pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e))
+            self.state.borrow().host.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = attachCanvas)]
@@ -4919,7 +4740,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, options_json: &str) -> Result<(), JsValue> {
             let opts = if options_json.trim().is_empty() { DagLayoutOptions::default() } else { serde_json::from_str(options_json).unwrap_or_default() };
-            self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e))
+            self.state.borrow_mut().host.reorganize(&opts).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = setCanvasThemeJson)]
@@ -4974,7 +4795,7 @@ mod tests {
                 inputs: vec![IoPortSpec::simple("in-a", "In")],
                 outputs: vec![IoPortSpec::simple("out-a", "Out"), IoPortSpec::simple("out-b", "Mesh")],
             },
-        ..Default::default()
+            ..Default::default()
         };
         assert_eq!(dag_node_kind_tag(&node.kind), "appInstance");
         assert_eq!(node.inputs().len(), 1);
@@ -5336,7 +5157,7 @@ mod tests {
             width: slider_widget_width("Amount", &output),
             height: slider_widget_height(),
             kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 2.0, output },
-        ..Default::default()
+            ..Default::default()
         };
         let hw = node.width * 0.5;
         let hh = node.height * 0.5;
@@ -5453,7 +5274,7 @@ mod tests {
         let labels = raw["labels"].as_array().expect("labels");
         assert!(!labels.is_empty());
         assert!(labels.iter().all(|row| row["layout"] == "horizontal"));
-        assert!(labels[0]["text"].as_str().unwrap_or("").len() > 0);
+        assert!(!labels[0]["text"].as_str().unwrap_or("").is_empty());
     }
 
     #[test]
@@ -5836,11 +5657,40 @@ mod tests {
             schema: "dag.fixture".into(),
             camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
             nodes: vec![
-                DagNodeSpec::computation("extrude".into(), "Extrude".into(), "Extrude".into(), "emoji:⬆️".into(), vec![], solid.clone(), false, false, 0.0, 0.0, computation_node_width("Extrude", &[], &solid), computation_node_height(0, 1, false, false)),
+                DagNodeSpec::computation(
+                    "extrude".into(),
+                    "Extrude".into(),
+                    "Extrude".into(),
+                    "emoji:⬆️".into(),
+                    vec![],
+                    solid.clone(),
+                    false,
+                    false,
+                    0.0,
+                    0.0,
+                    computation_node_width("Extrude", &[], &solid),
+                    computation_node_height(0, 1, false, false),
+                ),
                 DagNodeSpec::computation("brep".into(), "Brep".into(), "Brep".into(), "emoji:🧊".into(), brep.clone(), brep.clone(), false, false, 200.0, 0.0, computation_node_width("Brep", &brep, &brep), computation_node_height(1, 1, false, false)),
-                DagNodeSpec::computation("get".into(), "Get".into(), "Get".into(), "emoji:📋".into(), list, vec![], false, false, 400.0, 0.0, computation_node_width("Get", &[IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }], &[]), computation_node_height(1, 0, false, false)),
+                DagNodeSpec::computation(
+                    "get".into(),
+                    "Get".into(),
+                    "Get".into(),
+                    "emoji:📋".into(),
+                    list,
+                    vec![],
+                    false,
+                    false,
+                    400.0,
+                    0.0,
+                    computation_node_width("Get", &[IoPortSpec { id: "list".into(), label: "list".into(), ..Default::default() }], &[]),
+                    computation_node_height(1, 0, false, false),
+                ),
             ],
-            edges: vec![DagFixtureEdge { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into(), ..Default::default() }, DagFixtureEdge { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into(), ..Default::default() }],
+            edges: vec![
+                DagFixtureEdge { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into(), ..Default::default() },
+                DagFixtureEdge { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into(), ..Default::default() },
+            ],
         });
         host.sync_edges_from_engine();
         let incoming = host.engine.edges.get(&100).expect("incoming brep edge");
@@ -6801,10 +6651,9 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-use vcs::{
-    collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, CollectionDiff, CollectionOp,
-    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
-};
+use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+#[cfg(any(test, target_arch = "wasm32"))]
+use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.fixture";
 
@@ -6913,10 +6762,7 @@ pub struct DagEdgePatch {
 
 impl Patchable<DagEdgePatch> for DagFixtureEdge {
     fn apply_patch(&mut self, patch: &DagEdgePatch) -> DagEdgePatch {
-        let inverse = DagEdgePatch {
-            source: patch.source.as_ref().map(|_| self.source.clone()),
-            target: patch.target.as_ref().map(|_| self.target.clone()),
-        };
+        let inverse = DagEdgePatch { source: patch.source.as_ref().map(|_| self.source.clone()), target: patch.target.as_ref().map(|_| self.target.clone()) };
         if let Some(source) = &patch.source {
             self.source = source.clone();
         }
@@ -6948,10 +6794,7 @@ where
 }
 
 /// ➕ Merges an incoming `CollectionDiff` into an existing one (coalescing two edits' diffs).
-fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
-    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
-    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
-) {
+fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
     if let Some(b) = incoming {
         match target {
             Some(a) => {
@@ -6970,6 +6813,10 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
 /// replaces the whole projection (import/reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
+#[allow(
+    clippy::large_enum_variant,
+    reason = "boxing `Nodes`'s CollectionOp would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOp values are short-lived per-dispatch operations, not stored in bulk"
+)]
 pub enum DagOp {
     Nodes(CollectionOp<String, DagNodeSpec, DagNodePatch>),
     Edges(CollectionOp<String, DagFixtureEdge, DagEdgePatch>),
@@ -7030,14 +6877,8 @@ impl Operation<DagDocument> for DagOp {
 
     fn diff(&self, projection: &DagDocument) -> DagDiff {
         match self {
-            DagOp::Nodes(op) => DagDiff {
-                nodes: Some(collection_diff_from_op(&projection.nodes, op)),
-                ..Default::default()
-            },
-            DagOp::Edges(op) => DagDiff {
-                edges: Some(collection_diff_from_op(&projection.edges, op)),
-                ..Default::default()
-            },
+            DagOp::Nodes(op) => DagDiff { nodes: Some(collection_diff_from_op(&projection.nodes, op)), ..Default::default() },
+            DagOp::Edges(op) => DagDiff { edges: Some(collection_diff_from_op(&projection.edges, op)), ..Default::default() },
             DagOp::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
             DagOp::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
             DagOp::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
@@ -7076,42 +6917,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<DagDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: DagEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: DagEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     DagStore::new(envelope)
                 }
-                None => DagStore::new(create_document_vcs_envelope(
-                    DAG_DOCUMENT_SCHEMA,
-                    "dag",
-                    empty_dag_document(),
-                    None,
-                )),
+                None => DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -7142,18 +6968,8 @@ mod dag_vcs_tests {
 
     #[test]
     fn dag_document_vcs_replays_node_ops() {
-        let mut store = DagStore::new(create_document_vcs_envelope(
-            DAG_DOCUMENT_SCHEMA,
-            "dag",
-            empty_dag_document(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") })],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
     }
 
@@ -7162,13 +6978,7 @@ mod dag_vcs_tests {
         let document = empty_dag_document();
         let added = round_trip(&document, &DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") }));
         assert_eq!(added.nodes.len(), 1);
-        let patched = round_trip(
-            &added,
-            &DagOp::Nodes(CollectionOp::Patch {
-                id: "n1".into(),
-                patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() },
-            }),
-        );
+        let patched = round_trip(&added, &DagOp::Nodes(CollectionOp::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
         assert_eq!(patched.nodes[0].name, "Renamed");
         assert_eq!(patched.nodes[0].x, 42.0);
         let removed = round_trip(&patched, &DagOp::Nodes(CollectionOp::Remove { id: "n1".into() }));

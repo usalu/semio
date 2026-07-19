@@ -3394,7 +3394,7 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         Ok(serde_json::to_string(&response).unwrap_or_else(|_| "{}".into()))
     })
 }
-//#endregion RefreshUi
+//#endregion 🔖RefreshUi
 
 #[macro_export]
 macro_rules! plugin_exports {

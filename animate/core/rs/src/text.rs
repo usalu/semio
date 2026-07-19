@@ -49,6 +49,112 @@ impl Text {
     }
 }
 
+fn format_decimal(value: f64, decimals: u32) -> String {
+    format!("{value:.prec$}", prec = decimals as usize)
+}
+
+/// 🔢 Decimal number label with interpolatable value.
+#[derive(Clone)]
+pub struct DecimalNumber {
+    pub value: f64,
+    pub inner: Text,
+    pub decimals: u32,
+}
+
+impl DecimalNumber {
+    pub fn new(value: f64, decimals: u32, color: Color) -> Self {
+        let inner = Text::new(format_decimal(value, decimals), color);
+        Self {
+            value,
+            inner,
+            decimals,
+        }
+    }
+
+    pub fn lerp_value(&mut self, target: f64, t: f64, color: Color) {
+        let t = t.clamp(0.0, 1.0);
+        self.value = self.value + (target - self.value) * t;
+        self.inner = Text::new(format_decimal(self.value, self.decimals), color);
+    }
+
+    pub fn as_sobject(&self) -> &VSobject {
+        &self.inner.inner
+    }
+}
+
+/// 🔢 Integer label wrapper.
+#[derive(Clone)]
+pub struct Integer {
+    pub value: i64,
+    pub inner: Text,
+}
+
+impl Integer {
+    pub fn new(value: i64, color: Color) -> Self {
+        Self {
+            value,
+            inner: Text::new(value.to_string(), color),
+        }
+    }
+
+    pub fn as_sobject(&self) -> &VSobject {
+        &self.inner.inner
+    }
+}
+
+/// 📄 Multi-line paragraph wrapper.
+#[derive(Clone)]
+pub struct Paragraph {
+    pub lines: Vec<EcoString>,
+    pub inner: Text,
+}
+
+impl Paragraph {
+    pub fn new(lines: Vec<impl Into<EcoString>>, color: Color) -> Self {
+        let lines: Vec<EcoString> = lines.into_iter().map(Into::into).collect();
+        let body = lines.iter().map(|l| l.as_str()).collect::<Vec<_>>().join("\n");
+        Self {
+            lines,
+            inner: Text::new(body, color),
+        }
+    }
+
+    pub fn as_sobject(&self) -> &VSobject {
+        &self.inner.inner
+    }
+}
+
+/// 💻 Monospace code block wrapper.
+#[derive(Clone)]
+pub struct Code {
+    pub source: EcoString,
+    pub inner: Text,
+}
+
+impl Code {
+    pub fn new(source: impl Into<EcoString>, color: Color) -> Self {
+        let source = source.into();
+        let wrapped = format!(
+            "#set page(width: {TEXT_PAGE_PT}pt, height: {TEXT_PAGE_PT}pt, margin: {TEXT_MARGIN_PT}pt, fill: none)\n#set text(size: {TEXT_SIZE_PT}pt, font: \"Courier New\")\n`{source}`"
+        );
+        let svg = typst_markup_to_svg(&wrapped).unwrap_or_default();
+        let mut inner_v = svg_to_vobject(&svg, color);
+        inner_v.set_name(source.to_string());
+        Self {
+            source: source.clone(),
+            inner: Text {
+                inner: inner_v,
+                content: source,
+                font_size: TEXT_SIZE_PT,
+            },
+        }
+    }
+
+    pub fn as_sobject(&self) -> &VSobject {
+        &self.inner.inner
+    }
+}
+
 /// ∑ Math-mode label rendered through Typst.
 #[derive(Clone)]
 pub struct MathText {
@@ -91,77 +197,68 @@ fn svg_to_vobject(svg: &str, color: Color) -> VSobject {
     }
     let options = usvg::Options::default();
     if let Ok(tree) = usvg::Tree::from_str(svg, &options) {
-        let mut paths = Vec::new();
-        collect_svg_paths(tree.root(), &mut paths);
-        if paths.is_empty() {
-            let rect = Rect::new(-1.0, -0.5, 1.0, 0.5);
-            let mut p = BezPath::new();
-            append_shape_to_path(&mut p, &rect, 0.01);
-            paths.push(p);
-        }
         let height = tree.size().height() as f64;
         let scale = if height > 1e-9 { 2.0 / height } else { 0.01 };
         let offset_y = height * scale;
-        for path in &mut paths {
-            for el in path.elements_mut() {
-                match el {
-                    mathematical_geometry::PathEl::MoveTo(p) | mathematical_geometry::PathEl::LineTo(p) => {
-                        *p = Point::new(p.x() * scale, offset_y - p.y() * scale);
-                    }
-                    mathematical_geometry::PathEl::QuadTo(p0, p1) => {
-                        *p0 = Point::new(p0.x() * scale, offset_y - p0.y() * scale);
-                        *p1 = Point::new(p1.x() * scale, offset_y - p1.y() * scale);
-                    }
-                    mathematical_geometry::PathEl::CurveTo(p0, p1, p2) => {
-                        *p0 = Point::new(p0.x() * scale, offset_y - p0.y() * scale);
-                        *p1 = Point::new(p1.x() * scale, offset_y - p1.y() * scale);
-                        *p2 = Point::new(p2.x() * scale, offset_y - p2.y() * scale);
-                    }
-                    mathematical_geometry::PathEl::ClosePath => {}
-                }
-            }
+        let mut paths = Vec::new();
+        for child in tree.root().children() {
+            collect_svg_paths(child, scale, offset_y, &mut paths);
+        }
+        if paths.is_empty() {
+            paths.push(fallback_text_rect());
         }
         v.set_paths(paths);
     } else {
-        let rect = Rect::new(-1.0, -0.5, 1.0, 0.5);
-        let mut p = BezPath::new();
-        append_shape_to_path(&mut p, &rect, 0.01);
-        v.set_paths(vec![p]);
+        v.set_paths(vec![fallback_text_rect()]);
     }
     v.set_fill(color);
     v.style.stroke = None;
     v
 }
 
-fn collect_svg_paths(node: &usvg::Node, out: &mut Vec<BezPath>) {
+fn fallback_text_rect() -> BezPath {
+    let rect = Rect::new(-1.0, -0.5, 1.0, 0.5);
+    let mut p = BezPath::new();
+    append_shape_to_path(&mut p, &rect, 0.01);
+    p
+}
+
+fn map_svg_point(x: f32, y: f32, scale: f64, offset_y: f64) -> Point {
+    Point::new(x as f64 * scale, offset_y - y as f64 * scale)
+}
+
+fn collect_svg_paths(node: &usvg::Node, scale: f64, offset_y: f64, out: &mut Vec<BezPath>) {
     match node {
         usvg::Node::Group(group) => {
             for child in group.children() {
-                collect_svg_paths(child, out);
+                collect_svg_paths(child, scale, offset_y, out);
             }
         }
         usvg::Node::Path(path) => {
-            let mut bez = kurbo::BezPath::new();
+            let mut p = BezPath::new();
             for segment in path.data().segments() {
                 match segment {
-                    usvg::tiny_skia_path::PathSegment::MoveTo(p) => bez.move_to((p.x as f64, p.y as f64)),
-                    usvg::tiny_skia_path::PathSegment::LineTo(p) => bez.line_to((p.x as f64, p.y as f64)),
-                    usvg::tiny_skia_path::PathSegment::QuadTo(c, p) => {
-                        bez.quad_to((c.x as f64, c.y as f64), (p.x as f64, p.y as f64));
+                    usvg::tiny_skia_path::PathSegment::MoveTo(pt) => {
+                        p.move_to(map_svg_point(pt.x, pt.y, scale, offset_y));
                     }
-                    usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, p) => {
-                        bez.curve_to(
-                            (c1.x as f64, c1.y as f64),
-                            (c2.x as f64, c2.y as f64),
-                            (p.x as f64, p.y as f64),
+                    usvg::tiny_skia_path::PathSegment::LineTo(pt) => {
+                        p.line_to(map_svg_point(pt.x, pt.y, scale, offset_y));
+                    }
+                    usvg::tiny_skia_path::PathSegment::QuadTo(c, pt) => {
+                        p.quad_to(
+                            map_svg_point(c.x, c.y, scale, offset_y),
+                            map_svg_point(pt.x, pt.y, scale, offset_y),
                         );
                     }
-                    usvg::tiny_skia_path::PathSegment::Close => bez.close_path(),
+                    usvg::tiny_skia_path::PathSegment::CubicTo(c1, c2, pt) => {
+                        p.curve_to(
+                            map_svg_point(c1.x, c1.y, scale, offset_y),
+                            map_svg_point(c2.x, c2.y, scale, offset_y),
+                            map_svg_point(pt.x, pt.y, scale, offset_y),
+                        );
+                    }
+                    usvg::tiny_skia_path::PathSegment::Close => p.close_path(),
                 }
-            }
-            let mut p = BezPath::new();
-            for el in bez.elements() {
-                p.push(PathEl::from(*el));
             }
             if !p.elements().is_empty() {
                 out.push(p);
@@ -268,5 +365,22 @@ mod tests {
     fn math_text_builds_vobject() {
         let m = MathText::new("x^2", Color::WHITE);
         assert!(!m.latex.is_empty());
+    }
+
+    #[test]
+    fn decimal_number_lerps() {
+        let mut d = DecimalNumber::new(0.0, 2, Color::WHITE);
+        d.lerp_value(10.0, 0.5, Color::WHITE);
+        assert!((d.value - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn text_wrappers_build() {
+        let i = Integer::new(42, Color::WHITE);
+        assert_eq!(i.value, 42);
+        let p = Paragraph::new(vec!["line one", "line two"], Color::WHITE);
+        assert_eq!(p.lines.len(), 2);
+        let c = Code::new("fn main() {}", Color::WHITE);
+        assert!(!c.source.is_empty());
     }
 }

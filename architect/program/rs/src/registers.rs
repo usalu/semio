@@ -120,10 +120,6 @@ pub enum AccessMode { Unrestricted, CardControlled, Biometric, Keyed, EscortRequ
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub enum OutputKind { Hierarchy, Taxonomy, Matrix, Network, Journey, Schedule, Dashboard, Summary, Register, Diagram }
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
 pub enum RelationshipKind {
     Contains,
     Serves,
@@ -183,7 +179,7 @@ pub enum ConflictKind { Adjacency, Capacity, Schedule, Budget, Regulatory, Opera
 #[serde(rename_all = "camelCase")]
 pub enum RequirementKind { Functional, Spatial, Performance, Regulatory, Operational, Technical, Aesthetic, Sustainability }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ValidationStatus { Pending, Passed, Failed, Waived, Deferred }
 

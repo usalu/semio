@@ -1,11 +1,8 @@
 //! 🖥️ S studio CQRS — programs, app instances, media graph on `vcs`.
 
-use vcs::{
-    create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs,
-    DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError,
-};
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
+use vcs::{create_document_vcs_envelope, materialize_document_projection, DocumentBackboneRef, DocumentVcs, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff, VcsError};
 
 pub const S_STUDIO_SCHEMA: &str = "s.studio";
 pub const S_MEDIA_GRAPH_SCHEMA: &str = "s.media-graph";
@@ -142,31 +139,15 @@ pub fn create_s_id(prefix: &str) -> String {
 }
 
 pub fn empty_media_graph() -> SMediaGraph {
-    SMediaGraph {
-        schema: S_MEDIA_GRAPH_SCHEMA.into(),
-        nodes: Vec::new(),
-        edges: Vec::new(),
-    }
+    SMediaGraph { schema: S_MEDIA_GRAPH_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }
 
 pub fn default_studio_projection() -> SStudioProjection {
-    SStudioProjection {
-        programs: Vec::new(),
-        active_program_id: None,
-        active_alternative_id: None,
-        app_instances: Vec::new(),
-        media_graph: empty_media_graph(),
-    }
+    SStudioProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), media_graph: empty_media_graph() }
 }
 
 pub fn create_empty_studio_document(id: &str, name: &str) -> SStudioDocument {
-    SStudioDocument {
-        schema: S_STUDIO_SCHEMA.into(),
-        id: id.into(),
-        name: name.into(),
-        vcs: create_document_vcs_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs,
-        backbone: None,
-    }
+    SStudioDocument { schema: S_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_vcs_envelope(S_STUDIO_SCHEMA, id, default_studio_projection(), None).vcs, backbone: None }
 }
 
 pub fn apply_studio_operation(projection: &SStudioProjection, operation: &StudioOp) -> SStudioProjection {
@@ -182,31 +163,16 @@ pub fn apply_studio_operation(projection: &SStudioProjection, operation: &Studio
             if !next.programs.contains(&instance.program_id) {
                 next.programs.push(instance.program_id.clone());
             }
-            let node = SMediaGraphNode {
-                id: create_s_id("node"),
-                instance_id: instance.id.clone(),
-                label: instance.label.clone(),
-                x: position.x,
-                y: position.y,
-                inputs: Vec::new(),
-                outputs: Vec::new(),
-            };
+            let node = SMediaGraphNode { id: create_s_id("node"), instance_id: instance.id.clone(), label: instance.label.clone(), x: position.x, y: position.y, inputs: Vec::new(), outputs: Vec::new() };
             next.media_graph.nodes.push(node);
             next.app_instances.push(instance.clone());
         }
         StudioOp::RemoveAppInstance { instance_id } => {
-            let node_id = next
-                .media_graph
-                .nodes
-                .iter()
-                .find(|node| node.instance_id == *instance_id)
-                .map(|node| node.id.clone());
+            let node_id = next.media_graph.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
             next.app_instances.retain(|instance| instance.id != *instance_id);
             next.media_graph.nodes.retain(|node| node.instance_id != *instance_id);
             if let Some(node_id) = node_id {
-                next.media_graph
-                    .edges
-                    .retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
+                next.media_graph.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
             }
         }
         StudioOp::ConnectMediaPorts { edge } => {
@@ -264,28 +230,13 @@ impl OperationDiff<SStudioProjection> for StudioDiff {
     fn apply(&self, projection: &SStudioProjection) -> SStudioProjection {
         let op = match self {
             StudioDiff::Empty => return projection.clone(),
-            StudioDiff::SetActiveProgram { program_id } => StudioOp::SetActiveProgram {
-                program_id: program_id.clone(),
-            },
-            StudioDiff::SetActiveAlternative { alternative_id } => StudioOp::SetActiveAlternative {
-                alternative_id: alternative_id.clone(),
-            },
-            StudioDiff::SpawnAppInstance { instance, position } => StudioOp::SpawnAppInstance {
-                instance: instance.clone(),
-                position: position.clone(),
-            },
-            StudioDiff::RemoveAppInstance { instance_id } => StudioOp::RemoveAppInstance {
-                instance_id: instance_id.clone(),
-            },
+            StudioDiff::SetActiveProgram { program_id } => StudioOp::SetActiveProgram { program_id: program_id.clone() },
+            StudioDiff::SetActiveAlternative { alternative_id } => StudioOp::SetActiveAlternative { alternative_id: alternative_id.clone() },
+            StudioDiff::SpawnAppInstance { instance, position } => StudioOp::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+            StudioDiff::RemoveAppInstance { instance_id } => StudioOp::RemoveAppInstance { instance_id: instance_id.clone() },
             StudioDiff::ConnectMediaPorts { edge } => StudioOp::ConnectMediaPorts { edge: edge.clone() },
-            StudioDiff::DisconnectMediaEdge { edge_id } => StudioOp::DisconnectMediaEdge {
-                edge_id: edge_id.clone(),
-            },
-            StudioDiff::MoveMediaNode { node_id, x, y } => StudioOp::MoveMediaNode {
-                node_id: node_id.clone(),
-                x: *x,
-                y: *y,
-            },
+            StudioDiff::DisconnectMediaEdge { edge_id } => StudioOp::DisconnectMediaEdge { edge_id: edge_id.clone() },
+            StudioDiff::MoveMediaNode { node_id, x, y } => StudioOp::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
         };
         apply_studio_operation(projection, &op)
     }
@@ -302,96 +253,39 @@ impl Operation<SStudioProjection> for StudioOp {
 
     fn diff(&self, _projection: &SStudioProjection) -> StudioDiff {
         match self {
-            StudioOp::SetActiveProgram { program_id } => StudioDiff::SetActiveProgram {
-                program_id: program_id.clone(),
-            },
-            StudioOp::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative {
-                alternative_id: alternative_id.clone(),
-            },
-            StudioOp::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance {
-                instance: instance.clone(),
-                position: position.clone(),
-            },
-            StudioOp::RemoveAppInstance { instance_id } => StudioDiff::RemoveAppInstance {
-                instance_id: instance_id.clone(),
-            },
+            StudioOp::SetActiveProgram { program_id } => StudioDiff::SetActiveProgram { program_id: program_id.clone() },
+            StudioOp::SetActiveAlternative { alternative_id } => StudioDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
+            StudioOp::SpawnAppInstance { instance, position } => StudioDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+            StudioOp::RemoveAppInstance { instance_id } => StudioDiff::RemoveAppInstance { instance_id: instance_id.clone() },
             StudioOp::ConnectMediaPorts { edge } => StudioDiff::ConnectMediaPorts { edge: edge.clone() },
-            StudioOp::DisconnectMediaEdge { edge_id } => StudioDiff::DisconnectMediaEdge {
-                edge_id: edge_id.clone(),
-            },
-            StudioOp::MoveMediaNode { node_id, x, y } => StudioDiff::MoveMediaNode {
-                node_id: node_id.clone(),
-                x: *x,
-                y: *y,
-            },
+            StudioOp::DisconnectMediaEdge { edge_id } => StudioDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
+            StudioOp::MoveMediaNode { node_id, x, y } => StudioDiff::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
         }
     }
 
     fn backwards(&self, projection: &SStudioProjection) -> Vec<Self> {
         match self {
-            StudioOp::SetActiveProgram { .. } => vec![StudioOp::SetActiveProgram {
-                program_id: projection.active_program_id.clone(),
-            }],
-            StudioOp::SetActiveAlternative { .. } => vec![StudioOp::SetActiveAlternative {
-                alternative_id: projection.active_alternative_id.clone(),
-            }],
-            StudioOp::SpawnAppInstance { instance, .. } => vec![StudioOp::RemoveAppInstance {
-                instance_id: instance.id.clone(),
-            }],
+            StudioOp::SetActiveProgram { .. } => vec![StudioOp::SetActiveProgram { program_id: projection.active_program_id.clone() }],
+            StudioOp::SetActiveAlternative { .. } => vec![StudioOp::SetActiveAlternative { alternative_id: projection.active_alternative_id.clone() }],
+            StudioOp::SpawnAppInstance { instance, .. } => vec![StudioOp::RemoveAppInstance { instance_id: instance.id.clone() }],
             StudioOp::RemoveAppInstance { instance_id } => projection
                 .app_instances
                 .iter()
                 .find(|i| i.id == *instance_id)
                 .map(|instance| {
-                    let node = projection
-                        .media_graph
-                        .nodes
-                        .iter()
-                        .find(|n| n.instance_id == *instance_id);
-                    vec![StudioOp::SpawnAppInstance {
-                        instance: instance.clone(),
-                        position: MediaGraphPosition {
-                            x: node.map(|n| n.x).unwrap_or(0.0),
-                            y: node.map(|n| n.y).unwrap_or(0.0),
-                        },
-                    }]
+                    let node = projection.media_graph.nodes.iter().find(|n| n.instance_id == *instance_id);
+                    vec![StudioOp::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: node.map(|n| n.x).unwrap_or(0.0), y: node.map(|n| n.y).unwrap_or(0.0) } }]
                 })
                 .unwrap_or_default(),
-            StudioOp::ConnectMediaPorts { edge } => vec![StudioOp::DisconnectMediaEdge {
-                edge_id: edge.id.clone(),
-            }],
-            StudioOp::DisconnectMediaEdge { edge_id } => projection
-                .media_graph
-                .edges
-                .iter()
-                .find(|e| e.id == *edge_id)
-                .map(|edge| vec![StudioOp::ConnectMediaPorts { edge: edge.clone() }])
-                .unwrap_or_default(),
-            StudioOp::MoveMediaNode { node_id, .. } => projection
-                .media_graph
-                .nodes
-                .iter()
-                .find(|n| n.id == *node_id)
-                .map(|node| {
-                    vec![StudioOp::MoveMediaNode {
-                        node_id: node_id.clone(),
-                        x: node.x,
-                        y: node.y,
-                    }]
-                })
-                .unwrap_or_default(),
+            StudioOp::ConnectMediaPorts { edge } => vec![StudioOp::DisconnectMediaEdge { edge_id: edge.id.clone() }],
+            StudioOp::DisconnectMediaEdge { edge_id } => projection.media_graph.edges.iter().find(|e| e.id == *edge_id).map(|edge| vec![StudioOp::ConnectMediaPorts { edge: edge.clone() }]).unwrap_or_default(),
+            StudioOp::MoveMediaNode { node_id, .. } => projection.media_graph.nodes.iter().find(|n| n.id == *node_id).map(|node| vec![StudioOp::MoveMediaNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
         }
     }
 }
 
 pub fn materialize_studio_projection(document: &SStudioDocument, applied_edit_ids: &[String]) -> Result<SStudioProjection, VcsError> {
-    let envelope = SStudioEnvelope {
-        schema: document.schema.clone(),
-        id: document.id.clone(),
-        vcs: document.vcs.clone(),
-        backbone: document.backbone.clone(),
-        active_alternative_id: None,
-    };
+    let envelope = SStudioEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: None };
     materialize_document_projection(&envelope, applied_edit_ids)
 }
 //#endregion 🔖Projection
@@ -404,17 +298,8 @@ pub struct StudioStore {
 
 impl StudioStore {
     pub fn new(document: SStudioDocument) -> Self {
-        let envelope = SStudioEnvelope {
-            schema: document.schema,
-            id: document.id,
-            vcs: document.vcs,
-            backbone: document.backbone,
-            active_alternative_id: None,
-        };
-        Self {
-            inner: DocumentVcsStore::new(envelope),
-            name: document.name,
-        }
+        let envelope = SStudioEnvelope { schema: document.schema, id: document.id, vcs: document.vcs, backbone: document.backbone, active_alternative_id: None };
+        Self { inner: DocumentVcsStore::new(envelope), name: document.name }
     }
 
     pub fn generation(&self) -> u64 {
@@ -427,13 +312,7 @@ impl StudioStore {
 
     pub fn document(&self) -> SStudioDocument {
         let envelope = self.inner.envelope();
-        SStudioDocument {
-            schema: envelope.schema.clone(),
-            id: envelope.id.clone(),
-            name: self.name.clone(),
-            vcs: envelope.vcs.clone(),
-            backbone: envelope.backbone.clone(),
-        }
+        SStudioDocument { schema: envelope.schema.clone(), id: envelope.id.clone(), name: self.name.clone(), vcs: envelope.vcs.clone(), backbone: envelope.backbone.clone() }
     }
 
     pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
@@ -441,10 +320,7 @@ impl StudioStore {
     }
 
     pub fn dispatch_apply(&mut self, operations: Vec<StudioOp>) -> Result<(), VcsError> {
-        self.inner.dispatch(DocumentVcsCommand::Apply {
-            operations,
-            description: None,
-        })
+        self.inner.dispatch(DocumentVcsCommand::Apply { operations, description: None })
     }
 
     /// @emoji 📡 Pumps any queued inbound backbone messages into the edit timeline.
@@ -489,11 +365,8 @@ pub mod wasm_bridge {
     impl StudioStoreHandle {
         #[wasm_bindgen(constructor)]
         pub fn new(document_json: &str) -> Result<StudioStoreHandle, JsValue> {
-            let document: SStudioDocument =
-                serde_json::from_str(document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-            Ok(Self {
-                store: Mutex::new(StudioStore::new(document)),
-            })
+            let document: SStudioDocument = serde_json::from_str(document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+            Ok(Self { store: Mutex::new(StudioStore::new(document)) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
@@ -526,23 +399,8 @@ mod tests {
     #[test]
     fn spawns_app_instance_through_cqrs_dispatch() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
-        let instance = SAppInstance {
-            id: "app-1".into(),
-            program_id: "draw".into(),
-            app_id: "draw".into(),
-            label: "Draw".into(),
-            yields: "graph.dag".into(),
-            document: SDocumentRef {
-                document_id: "doc-1".into(),
-                schema: "draw.document".into(),
-            },
-        };
-        store
-            .dispatch_apply(vec![StudioOp::SpawnAppInstance {
-                instance: instance.clone(),
-                position: MediaGraphPosition { x: 0.0, y: 0.0 },
-            }])
-            .expect("spawn");
+        let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
+        store.dispatch_apply(vec![StudioOp::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
         let projection = store.projection().expect("projection");
         assert_eq!(projection.app_instances.len(), 1);
         assert_eq!(projection.media_graph.nodes.len(), 1);
@@ -551,26 +409,9 @@ mod tests {
     #[test]
     fn undo_after_spawn() {
         let mut store = StudioStore::new(create_empty_studio_document("studio", "Studio"));
-        let instance = SAppInstance {
-            id: "app-1".into(),
-            program_id: "draw".into(),
-            app_id: "draw".into(),
-            label: "Draw".into(),
-            yields: "graph.dag".into(),
-            document: SDocumentRef {
-                document_id: "doc-1".into(),
-                schema: "draw.document".into(),
-            },
-        };
-        store
-            .dispatch_apply(vec![StudioOp::SpawnAppInstance {
-                instance,
-                position: MediaGraphPosition { x: 0.0, y: 0.0 },
-            }])
-            .expect("spawn");
-        store
-            .dispatch_json(r#"{"kind":"undo"}"#)
-            .expect("undo");
+        let instance = SAppInstance { id: "app-1".into(), program_id: "draw".into(), app_id: "draw".into(), label: "Draw".into(), yields: "graph.dag".into(), document: SDocumentRef { document_id: "doc-1".into(), schema: "draw.document".into() } };
+        store.dispatch_apply(vec![StudioOp::SpawnAppInstance { instance, position: MediaGraphPosition { x: 0.0, y: 0.0 } }]).expect("spawn");
+        store.dispatch_json(r#"{"kind":"undo"}"#).expect("undo");
         assert_eq!(store.projection().expect("projection").app_instances.len(), 0);
     }
 }

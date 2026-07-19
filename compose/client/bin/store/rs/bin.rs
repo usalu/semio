@@ -25,6 +25,36 @@ struct AppState {
 }
 
 //#endregion
+//#region ⚠️ Errors
+
+mod errors {
+    use std::net::SocketAddr;
+    use thiserror::Error;
+
+    /// ⚠️ compose-store install/request/serve failure.
+    #[derive(Debug, Error)]
+    pub enum StoreError {
+        #[error("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote")]
+        AmbiguousInstallSource,
+        #[error("{0}: not wired in compose-store yet")]
+        NotWired(&'static str),
+        #[error("no install field")]
+        NoInstallField,
+        #[error("read install file: {0}")]
+        ReadInstallFile(std::io::Error),
+        #[error("parse install file: {0}")]
+        ParseInstallFile(serde_json::Error),
+        #[error("invalid graphql json: {0}")]
+        InvalidGraphqlJson(serde_json::Error),
+        #[error(transparent)]
+        Kit(#[from] compose::error::ComposeError),
+        #[error("bind {addr}: {source}")]
+        BindFailed { addr: SocketAddr, #[source] source: std::io::Error },
+    }
+}
+use errors::StoreError;
+
+//#endregion
 //#region 🏪Install
 
 #[derive(Debug, Deserialize)]
@@ -50,14 +80,14 @@ struct PathOnly {
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[allow(dead_code)]
+#[allow(dead_code, reason = "hub_url/session_id parsed for schema compat with importFromRemote; unread until that path is wired")]
 struct RemoteIn {
     hub_url: String,
     session_id: String,
 }
 
 impl InstallBody {
-    async fn into_runtime(self) -> std::result::Result<Arc<ParentStore>, String> {
+    async fn into_runtime(self) -> Result<Arc<ParentStore>, StoreError> {
         let mut n = 0u8;
         if self.create.is_some() {
             n += 1;
@@ -75,33 +105,33 @@ impl InstallBody {
             n += 1;
         }
         if n != 1 {
-            return Err("expected exactly one of: create, importFile, importFromFolder, importFromZip, importFromRemote".to_string());
+            return Err(StoreError::AmbiguousInstallSource);
         }
         if let Some(c) = self.create {
-            return ParentStore::spawn_from_install_json_value(c.dto).await.map_err(|e| e.to_string());
+            return Ok(ParentStore::spawn_from_install_json_value(c.dto).await?);
         }
         if let Some(p) = self.import_file {
-            let txt = std::fs::read_to_string(&p.path).map_err(|e| e.to_string())?;
-            let v: serde_json::Value = serde_json::from_str(&txt).map_err(|e| e.to_string())?;
-            return ParentStore::spawn_from_install_json_value(v).await.map_err(|e| e.to_string());
+            let txt = std::fs::read_to_string(&p.path).map_err(StoreError::ReadInstallFile)?;
+            let v: serde_json::Value = serde_json::from_str(&txt).map_err(StoreError::ParseInstallFile)?;
+            return Ok(ParentStore::spawn_from_install_json_value(v).await?);
         }
         if self.import_from_folder.is_some() {
-            return Err("importFromFolder: not wired in compose-store yet".to_string());
+            return Err(StoreError::NotWired("importFromFolder"));
         }
         if self.import_from_zip.is_some() {
-            return Err("importFromZip: not wired in compose-store yet".to_string());
+            return Err(StoreError::NotWired("importFromZip"));
         }
         if self.import_from_remote.is_some() {
-            return Err("importFromRemote: not wired in compose-store yet".to_string());
+            return Err(StoreError::NotWired("importFromRemote"));
         }
-        Err("no install field".to_string())
+        Err(StoreError::NoInstallField)
     }
 }
 
 async fn post_install(State(state): State<Arc<AppState>>, Json(body): Json<InstallBody>) -> impl IntoResponse {
     let new_rt = match body.into_runtime().await {
         Ok(x) => x,
-        Err(msg) => return (StatusCode::BAD_REQUEST, msg).into_response(),
+        Err(e) => return (StatusCode::BAD_REQUEST, e.to_string()).into_response(),
     };
     let mut lock = state.runtime.lock().await;
     if lock.is_some() {
@@ -134,8 +164,8 @@ struct GraphqlRequestBody {
     query: String,
 }
 
-fn is_mutation_request(body: &str) -> std::result::Result<bool, String> {
-    let parsed: GraphqlRequestBody = serde_json::from_str(body).map_err(|e| format!("invalid graphql json: {e}"))?;
+fn is_mutation_request(body: &str) -> Result<bool, StoreError> {
+    let parsed: GraphqlRequestBody = serde_json::from_str(body).map_err(StoreError::InvalidGraphqlJson)?;
     for line in parsed.query.lines() {
         let t = line.trim();
         if t.is_empty() || t.starts_with('#') {
@@ -169,7 +199,7 @@ async fn post_graphql(State(state): State<Arc<AppState>>, body: String) -> impl 
     req = req.data(rt.clone()).data(rt.bus.clone());
     let schema = gql::build_schema_for(rt);
     let resp = schema.execute(req).await;
-    match serde_json::to_value(async_graphql::Response::from(resp)) {
+    match serde_json::to_value(resp) {
         Ok(v) => axum::Json(v).into_response(),
         Err(e) => graphql_error(StatusCode::INTERNAL_SERVER_ERROR, e),
     }
@@ -213,7 +243,7 @@ fn app_with_state(state: Arc<AppState>) -> Router {
 }
 
 async fn serve(listener: TcpListener, app: Router) {
-    let local = listener.local_addr().expect("local_addr");
+    let local = listener.local_addr().expect("listener is already bound, so its local addr is always resolvable");
     let actual_port: u16 = local.port();
     {
         use std::io::Write;
@@ -235,12 +265,13 @@ async fn serve(listener: TcpListener, app: Router) {
 }
 
 /// 🌐 Axum + GraphQL; binds `0.0.0.0` on `COMPOSE_STORE_PORT` (default `4000`).
-async fn run() {
+async fn run() -> Result<(), StoreError> {
     let port: u16 = std::env::var("COMPOSE_STORE_PORT").ok().and_then(|s| s.parse().ok()).unwrap_or(4000);
-    let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("port");
-    let listener: TcpListener = TcpListener::bind(&addr).await.unwrap_or_else(|e| panic!("compose-store bind {addr}: {e}"));
+    let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().expect("a u16 port always parses into a valid 0.0.0.0:<port> socket addr");
+    let listener: TcpListener = TcpListener::bind(&addr).await.map_err(|source| StoreError::BindFailed { addr, source })?;
     let state = Arc::new(build_state().await);
     serve(listener, app_with_state(state)).await;
+    Ok(())
 }
 
 async fn shutdown_signal() {
@@ -249,14 +280,20 @@ async fn shutdown_signal() {
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> std::process::ExitCode {
     let _ = tracing_subscriber::fmt()
         .with_env_filter(std::env::var("RUST_LOG").or_else(|_| std::env::var("RUST_TRACING")).unwrap_or_else(|_| "error,compose_store=info,compose_store_event=off".to_string()))
         .with_target(false)
         .with_writer(io::stderr)
         .try_init();
 
-    run().await;
+    match run().await {
+        Ok(()) => std::process::ExitCode::SUCCESS,
+        Err(e) => {
+            tracing::error!(target: "compose_store", "{e}");
+            std::process::ExitCode::FAILURE
+        }
+    }
 }
 
 //#endregion

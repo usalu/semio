@@ -3,5 +3,5 @@
 pub mod compiler;
 pub mod slide;
 
-pub use compiler::{compile_present_site, PresentCompileError};
+pub use compiler::{compile_present_site, compile_scene_to_assets, PresentCompileError, SceneAssetBundle};
 pub use slide::{PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA};

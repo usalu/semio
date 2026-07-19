@@ -142,7 +142,7 @@ fn build_vello_scene(capture: &CapturedFrame, camera: &Camera, config: &AnimateC
     let mut scene = Scene::new();
     let view = scene_affine(camera, config.width, config.height);
     let mut indices: Vec<usize> = (0..capture.mobjects.len()).collect();
-    indices.sort_by_key(|&i| capture.mobjects[i].id());
+    indices.sort_by_key(|&i| (capture.mobjects[i].z_order(), capture.mobjects[i].id()));
     for i in indices {
         paint_mobject(&mut scene, capture.mobjects[i].as_ref(), view);
     }
@@ -211,8 +211,17 @@ pub(crate) fn static_layer_hash(capture: &CapturedFrame, config: &AnimateConfig)
     ];
     for mobj in &capture.mobjects {
         parts.push(mobj.id().to_string());
-        parts.push(mobj.name().to_string());
+        parts.push(mobj.z_order().to_string());
+        parts.push(format_number_for_hash(mobj.opacity()));
+        parts.push(format_number_for_hash(mobj.point_ratio()));
+        let coeffs = mobj.transform().to_kurbo().as_coeffs();
+        for c in coeffs {
+            parts.push(format_number_for_hash(c));
+        }
         parts.push(mobj.paths().len().to_string());
+        for path in mobj.paths() {
+            parts.push(path.elements().len().to_string());
+        }
     }
     hash_parts(&parts)
 }

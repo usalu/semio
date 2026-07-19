@@ -156,10 +156,7 @@ pub struct SelectionState {
 
 impl Default for SelectionState {
     fn default() -> Self {
-        Self {
-            mode: default_selection_mode(),
-            ids: Vec::new(),
-        }
+        Self { mode: default_selection_mode(), ids: Vec::new() }
     }
 }
 
@@ -180,11 +177,7 @@ pub struct CameraState {
 
 impl Default for CameraState {
     fn default() -> Self {
-        Self {
-            position: default_camera_position(),
-            target: [0.0, 0.0, 0.0],
-            fov: default_camera_fov(),
-        }
+        Self { position: default_camera_position(), target: [0.0, 0.0, 0.0], fov: default_camera_fov() }
     }
 }
 
@@ -223,10 +216,7 @@ pub fn default_remodel_scene() -> RemodelScene {
         source_video: None,
         params: ReconstructionParams::default(),
         job: ReconstructionJob::default(),
-        result: Some(RemodelMesh {
-            mesh: semio_framework_core::mesh_from_kind("box"),
-            source: MeshSource::Placeholder,
-        }),
+        result: Some(RemodelMesh { mesh: semio_framework_core::mesh_from_kind("box"), source: MeshSource::Placeholder }),
     }
 }
 //#endregion 🔖Domain

@@ -4,10 +4,7 @@
 
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde::{Deserialize, Serialize};
-use vcs::{
-    apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff,
-    Patchable,
-};
+use vcs::{apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff, Patchable};
 
 //#region 🔖Pixels
 pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
@@ -40,9 +37,7 @@ mod pixels_base64 {
         if encoded.is_empty() {
             return Ok(super::empty_paint_pixels());
         }
-        base64::engine::general_purpose::STANDARD
-            .decode(encoded.as_bytes())
-            .map_err(serde::de::Error::custom)
+        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
 }
 //#endregion 🔖Pixels
@@ -58,11 +53,7 @@ pub struct LowpolyTransform {
 
 impl Default for LowpolyTransform {
     fn default() -> Self {
-        Self {
-            position: [0.0, 0.0, 0.0],
-            rotation: [0.0, 0.0, 0.0],
-            scale: [1.0, 1.0, 1.0],
-        }
+        Self { position: [0.0, 0.0, 0.0], rotation: [0.0, 0.0, 0.0], scale: [1.0, 1.0, 1.0] }
     }
 }
 
@@ -80,13 +71,7 @@ pub struct LowpolyPaintLayer {
 
 impl LowpolyPaintLayer {
     pub fn new(name: &str) -> Self {
-        Self {
-            name: name.into(),
-            visible: true,
-            opacity: 1.0,
-            blend_mode: "normal".into(),
-            pixels: empty_paint_pixels(),
-        }
+        Self { name: name.into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: empty_paint_pixels() }
     }
 }
 
@@ -133,14 +118,7 @@ pub fn default_projection() -> LowpolyProjection {
 pub fn projection_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolyProjection {
     LowpolyProjection {
         schema: LOWPOLY_DOCUMENT_SCHEMA.into(),
-        objects: vec![LowpolyObject {
-            id: object_id.into(),
-            name: object_name.into(),
-            transform: LowpolyTransform::default(),
-            smooth_shading: false,
-            mesh_json: mesh_json.into(),
-            paint_layers: vec![LowpolyPaintLayer::new("Base")],
-        }],
+        objects: vec![LowpolyObject { id: object_id.into(), name: object_name.into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json: mesh_json.into(), paint_layers: vec![LowpolyPaintLayer::new("Base")] }],
     }
 }
 
@@ -157,12 +135,7 @@ pub struct LowpolySelectionTargets {
 
 impl Default for LowpolySelectionTargets {
     fn default() -> Self {
-        Self {
-            mesh: true,
-            vertex: false,
-            edge: false,
-            face: false,
-        }
+        Self { mesh: true, vertex: false, edge: false, face: false }
     }
 }
 
@@ -179,12 +152,7 @@ pub struct LowpolySelection {
 
 impl Default for LowpolySelection {
     fn default() -> Self {
-        Self {
-            targets: LowpolySelectionTargets::default(),
-            keys: Vec::new(),
-            mode: "mesh".into(),
-            ids: Vec::new(),
-        }
+        Self { targets: LowpolySelectionTargets::default(), keys: Vec::new(), mode: "mesh".into(), ids: Vec::new() }
     }
 }
 //#endregion 🔖Projection
@@ -251,9 +219,7 @@ mod run_bytes_base64 {
 
     pub fn deserialize<'de, D: Deserializer<'de>>(deserializer: D) -> Result<Vec<u8>, D::Error> {
         let encoded = String::deserialize(deserializer)?;
-        base64::engine::general_purpose::STANDARD
-            .decode(encoded.as_bytes())
-            .map_err(serde::de::Error::custom)
+        base64::engine::general_purpose::STANDARD.decode(encoded.as_bytes()).map_err(serde::de::Error::custom)
     }
 }
 
@@ -345,43 +311,21 @@ pub fn apply_lowpoly_op(projection: &mut LowpolyProjection, op: &LowpolyOp) {
 }
 
 fn layer_pixels_at<'a>(projection: &'a LowpolyProjection, object_id: &str, layer_index: usize) -> Option<&'a [u8]> {
-    projection
-        .objects
-        .iter()
-        .find(|object| object.id == object_id)
-        .and_then(|object| object.paint_layers.get(layer_index))
-        .map(|layer| layer.pixels.as_slice())
+    projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 
 /// @emoji ↩️ Computes the inverse op from pre-state. For `PaintStroke` this reads the currently-stored
 /// bytes at each run's offset so undo restores the exact overwritten pixels (not merely "clear paint").
 pub fn invert_lowpoly_op(projection: &LowpolyProjection, op: &LowpolyOp) -> LowpolyOp {
     match op {
-        LowpolyOp::Objects(collection_op) => {
-            LowpolyOp::Objects(invert_collection_op(&projection.objects, collection_op))
-        }
-        LowpolyOp::AddPaintLayer { object_id, index, .. } => LowpolyOp::RemovePaintLayer {
-            object_id: object_id.clone(),
-            index: *index,
-        },
+        LowpolyOp::Objects(collection_op) => LowpolyOp::Objects(invert_collection_op(&projection.objects, collection_op)),
+        LowpolyOp::AddPaintLayer { object_id, index, .. } => LowpolyOp::RemovePaintLayer { object_id: object_id.clone(), index: *index },
         LowpolyOp::RemovePaintLayer { object_id, index } => {
-            let layer = projection
-                .objects
-                .iter()
-                .find(|object| object.id == *object_id)
-                .and_then(|object| object.paint_layers.get(*index))
-                .cloned()
-                .unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
+            let layer = projection.objects.iter().find(|object| object.id == *object_id).and_then(|object| object.paint_layers.get(*index)).cloned().unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
             LowpolyOp::AddPaintLayer { object_id: object_id.clone(), index: *index, layer }
         }
         LowpolyOp::PatchPaintLayer { object_id, index, patch } => {
-            let mut probe = projection
-                .objects
-                .iter()
-                .find(|object| object.id == *object_id)
-                .and_then(|object| object.paint_layers.get(*index))
-                .cloned()
-                .unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
+            let mut probe = projection.objects.iter().find(|object| object.id == *object_id).and_then(|object| object.paint_layers.get(*index)).cloned().unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
             let inverse = apply_paint_layer_patch(&mut probe, patch);
             LowpolyOp::PatchPaintLayer { object_id: object_id.clone(), index: *index, patch: inverse }
         }
@@ -404,11 +348,7 @@ pub fn invert_lowpoly_op(projection: &LowpolyProjection, op: &LowpolyOp) -> Lowp
                     PixelRun { offset: run.offset, bytes }
                 })
                 .collect();
-            LowpolyOp::PaintStroke {
-                object_id: object_id.clone(),
-                layer_index: *layer_index,
-                runs: inverse_runs,
-            }
+            LowpolyOp::PaintStroke { object_id: object_id.clone(), layer_index: *layer_index, runs: inverse_runs }
         }
         LowpolyOp::SetProjection { .. } => LowpolyOp::SetProjection { projection: projection.clone() },
     }
@@ -451,6 +391,27 @@ pub type LowpolyEnvelope = vcs::DocumentVcsEnvelope<LowpolyProjection, LowpolyOp
 pub type LowpolyStore = vcs::DocumentVcsStore<LowpolyProjection, LowpolyOp>;
 //#endregion 🔖Ops
 
+//#region ⚠️ Errors
+/// ⚠️ `LowpolyDocument` compute-session and mesh-op failure.
+#[derive(Debug, thiserror::Error)]
+pub enum LowpolyCoreError {
+    #[error(transparent)]
+    Mesh(#[from] MeshKernelError),
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("unknown primitive: {0}")]
+    UnknownPrimitive(String),
+    #[error("layer index out of range")]
+    LayerIndexOutOfRange,
+    #[error("no active object")]
+    NoActiveObject,
+    #[error("mesh missing")]
+    MeshMissing,
+    #[error("object not found")]
+    ObjectNotFound,
+}
+//#endregion ⚠️ Errors
+
 //#region 🔖ComputeSession
 /// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
 /// (active object + selection). The plugin runs a mesh/paint edit against it, then reads the mutated
@@ -467,28 +428,14 @@ fn prepare_paint_mesh(mesh: &mut HalfedgeMesh) {
     let _ = mesh.unwrap_uv();
 }
 
-fn map_err(e: MeshKernelError) -> String {
-    format!("{e:?}")
-}
-
 impl LowpolyDocument {
-    pub fn new(projection: LowpolyProjection) -> Result<Self, String> {
+    pub fn new(projection: LowpolyProjection) -> Result<Self, LowpolyCoreError> {
         let active_object_id = projection.objects.first().map(|object| object.id.clone()).unwrap_or_default();
         Self::with_context(projection, active_object_id, LowpolySelection::default())
     }
 
-    pub fn with_context(
-        projection: LowpolyProjection,
-        active_object_id: String,
-        selection: LowpolySelection,
-    ) -> Result<Self, String> {
-        let mut doc = Self {
-            projection,
-            active_object_id,
-            selection,
-            meshes: Vec::new(),
-            next_object_serial: 100,
-        };
+    pub fn with_context(projection: LowpolyProjection, active_object_id: String, selection: LowpolySelection) -> Result<Self, LowpolyCoreError> {
+        let mut doc = Self { projection, active_object_id, selection, meshes: Vec::new(), next_object_serial: 100 };
         doc.reload_meshes()?;
         doc.ensure_all_paint_buffers();
         Ok(doc)
@@ -523,30 +470,27 @@ impl LowpolyDocument {
         }
     }
 
-    pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], String> {
-        layer_pixels_at(&self.projection, object_id, layer_index).ok_or_else(|| "layer index out of range".into())
+    pub fn layer_pixels(&self, object_id: &str, layer_index: usize) -> Result<&[u8], LowpolyCoreError> {
+        layer_pixels_at(&self.projection, object_id, layer_index).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
-    pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, String> {
+    pub fn layer_pixels_mut(&mut self, object_id: &str, layer_index: usize) -> Result<&mut Vec<u8>, LowpolyCoreError> {
         self.ensure_paint_layer(object_id, layer_index)?;
-        object_mut(&mut self.projection, object_id)
-            .and_then(|object| object.paint_layers.get_mut(layer_index))
-            .map(|layer| &mut layer.pixels)
-            .ok_or_else(|| "layer index out of range".into())
+        object_mut(&mut self.projection, object_id).and_then(|object| object.paint_layers.get_mut(layer_index)).map(|layer| &mut layer.pixels).ok_or(LowpolyCoreError::LayerIndexOutOfRange)
     }
 
-    pub fn reload_meshes(&mut self) -> Result<(), String> {
+    pub fn reload_meshes(&mut self) -> Result<(), LowpolyCoreError> {
         self.meshes.clear();
         for object in &self.projection.objects {
-            let mesh = HalfedgeMesh::from_json(&object.mesh_json).map_err(|e| format!("{e:?}"))?;
+            let mesh = HalfedgeMesh::from_json(&object.mesh_json)?;
             self.meshes.push(mesh);
         }
         Ok(())
     }
 
-    pub fn sync_meshes_to_projection(&mut self) -> Result<(), String> {
+    pub fn sync_meshes_to_projection(&mut self) -> Result<(), LowpolyCoreError> {
         for (object, mesh) in self.projection.objects.iter_mut().zip(self.meshes.iter()) {
-            object.mesh_json = mesh.to_json().map_err(|e| format!("{e:?}"))?;
+            object.mesh_json = mesh.to_json()?;
         }
         Ok(())
     }
@@ -555,26 +499,22 @@ impl LowpolyDocument {
         self.projection.objects.iter().position(|o| o.id == self.active_object_id)
     }
 
-    pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, String> {
-        let idx = self.active_index().ok_or_else(|| "no active object".to_string())?;
-        self.meshes.get_mut(idx).ok_or_else(|| "mesh missing".to_string())
+    pub fn active_mesh_mut(&mut self) -> Result<&mut HalfedgeMesh, LowpolyCoreError> {
+        let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
+        self.meshes.get_mut(idx).ok_or(LowpolyCoreError::MeshMissing)
     }
 
-    pub fn active_mesh(&self) -> Result<&HalfedgeMesh, String> {
-        let idx = self.active_index().ok_or_else(|| "no active object".to_string())?;
-        self.meshes.get(idx).ok_or_else(|| "mesh missing".to_string())
+    pub fn active_mesh(&self) -> Result<&HalfedgeMesh, LowpolyCoreError> {
+        let idx = self.active_index().ok_or(LowpolyCoreError::NoActiveObject)?;
+        self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)
     }
 
     pub fn mesh_at(&self, index: usize) -> Option<&HalfedgeMesh> {
         self.meshes.get(index)
     }
 
-    pub fn object_index(&self, object_id: &str) -> Result<usize, String> {
-        self.projection
-            .objects
-            .iter()
-            .position(|o| o.id == object_id)
-            .ok_or_else(|| "object not found".to_string())
+    pub fn object_index(&self, object_id: &str) -> Result<usize, LowpolyCoreError> {
+        self.projection.objects.iter().position(|o| o.id == object_id).ok_or(LowpolyCoreError::ObjectNotFound)
     }
 
     pub fn selected_face_ids(&self) -> Vec<FaceId> {
@@ -599,7 +539,11 @@ impl LowpolyDocument {
     }
 
     pub fn normalize_selection_mode(mode: &str) -> String {
-        if mode == "object" { "mesh".into() } else { mode.into() }
+        if mode == "object" {
+            "mesh".into()
+        } else {
+            mode.into()
+        }
     }
 
     pub fn apply_selection(&mut self, mode: &str, ids: Vec<u32>) {
@@ -607,7 +551,7 @@ impl LowpolyDocument {
         self.selection.ids = ids;
     }
 
-    pub fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, String> {
+    pub fn selection_vertex_ids(&self) -> Result<Vec<VertexId>, LowpolyCoreError> {
         let mesh = self.active_mesh()?;
         match self.selection.mode.as_str() {
             "vertex" => Ok(self.selected_vertex_ids()),
@@ -615,7 +559,7 @@ impl LowpolyDocument {
                 let mut verts = Vec::new();
                 let mut seen = std::collections::HashSet::new();
                 for fid in self.selected_face_ids() {
-                    for vid in mesh.face_vertex_ids(fid).map_err(|e| format!("{e:?}"))? {
+                    for vid in mesh.face_vertex_ids(fid)? {
                         if seen.insert(vid.0) {
                             verts.push(vid);
                         }
@@ -627,7 +571,7 @@ impl LowpolyDocument {
                 let mut verts = Vec::new();
                 let mut seen = std::collections::HashSet::new();
                 for eid in self.selected_edge_ids() {
-                    let (v0, v1) = mesh.edge_endpoints(eid).map_err(|e| format!("{e:?}"))?;
+                    let (v0, v1) = mesh.edge_endpoints(eid)?;
                     for vid in [v0, v1] {
                         if seen.insert(vid.0) {
                             verts.push(vid);
@@ -640,7 +584,7 @@ impl LowpolyDocument {
         }
     }
 
-    pub fn selection_transform_pivot(&self) -> Result<Vec3, String> {
+    pub fn selection_transform_pivot(&self) -> Result<Vec3, LowpolyCoreError> {
         let mesh = self.active_mesh()?;
         if self.selection.mode == "mesh" {
             let count = mesh.vertex_count();
@@ -649,7 +593,7 @@ impl LowpolyDocument {
             }
             let mut sum = Vec3::new(0.0, 0.0, 0.0);
             for index in 0..count {
-                sum = sum.add(mesh.vertex_position(VertexId(index as u32)).map_err(|e| format!("{e:?}"))?);
+                sum = sum.add(mesh.vertex_position(VertexId(index as u32))?);
             }
             return Ok(sum.scale(1.0 / count as f32));
         }
@@ -659,52 +603,44 @@ impl LowpolyDocument {
         }
         let mut sum = Vec3::new(0.0, 0.0, 0.0);
         for vid in &verts {
-            sum = sum.add(mesh.vertex_position(*vid).map_err(|e| format!("{e:?}"))?);
+            sum = sum.add(mesh.vertex_position(*vid)?);
         }
         Ok(sum.scale(1.0 / verts.len() as f32))
     }
 
     /// @emoji ➕ Appends a primitive object, making it active, and returns its new id.
-    pub fn add_primitive(&mut self, kind: &str) -> Result<String, String> {
+    pub fn add_primitive(&mut self, kind: &str) -> Result<String, LowpolyCoreError> {
         let mut mesh = match kind {
             "box" => HalfedgeMesh::box_prim(1.0, 1.0, 1.0),
             "plane" => HalfedgeMesh::plane_prim(2.0, 2.0),
             "cylinder" => HalfedgeMesh::cylinder_prim(0.5, 1.0, 12),
             "cone" => HalfedgeMesh::cone_prim(0.5, 1.0, 12),
             "ico_sphere" => HalfedgeMesh::ico_sphere_prim(0.5, 1),
-            _ => return Err(format!("unknown primitive: {kind}")),
-        }
-        .map_err(|e| format!("{e:?}"))?;
+            _ => return Err(LowpolyCoreError::UnknownPrimitive(kind.to_string())),
+        }?;
         prepare_paint_mesh(&mut mesh);
         self.next_object_serial += 1;
         let id = format!("obj-{}", self.next_object_serial);
-        let mesh_json = mesh.to_json().map_err(|e| format!("{e:?}"))?;
-        self.projection.objects.push(LowpolyObject {
-            id: id.clone(),
-            name: kind.into(),
-            transform: LowpolyTransform::default(),
-            smooth_shading: false,
-            mesh_json,
-            paint_layers: vec![LowpolyPaintLayer::new("Base")],
-        });
+        let mesh_json = mesh.to_json()?;
+        self.projection.objects.push(LowpolyObject { id: id.clone(), name: kind.into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json, paint_layers: vec![LowpolyPaintLayer::new("Base")] });
         self.meshes.push(mesh);
         self.active_object_id = id.clone();
         Ok(id)
     }
 
-    pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), String> {
+    pub fn ensure_paint_layer(&mut self, object_id: &str, layer_index: usize) -> Result<(), LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
         if self.projection.objects[idx].paint_layers.is_empty() {
             self.projection.objects[idx].paint_layers.push(LowpolyPaintLayer::new("Base"));
         }
         if layer_index >= self.projection.objects[idx].paint_layers.len() {
-            return Err("layer index out of range".into());
+            return Err(LowpolyCoreError::LayerIndexOutOfRange);
         }
         Ok(())
     }
 
-    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, String> {
-        let transfer = mesh.tessellate().map_err(|e| format!("{e:?}"))?;
+    pub fn tessellate_transfer_json(mesh: &HalfedgeMesh) -> Result<serde_json::Value, LowpolyCoreError> {
+        let transfer = mesh.tessellate()?;
         Ok(serde_json::json!({
             "positions": transfer.positions,
             "normals": transfer.normals,
@@ -719,11 +655,11 @@ impl LowpolyDocument {
         }))
     }
 
-    pub fn tessellate_all_json(&self) -> Result<String, String> {
+    pub fn tessellate_all_json(&self) -> Result<String, LowpolyCoreError> {
         let active = self.active_object_id.clone();
         let mut items = Vec::new();
         for (idx, object) in self.projection.objects.iter().enumerate() {
-            let mesh = self.meshes.get(idx).ok_or_else(|| "mesh missing".to_string())?;
+            let mesh = self.meshes.get(idx).ok_or(LowpolyCoreError::MeshMissing)?;
             items.push(serde_json::json!({
                 "id": object.id,
                 "index": idx,
@@ -734,45 +670,31 @@ impl LowpolyDocument {
                 "tessellation": Self::tessellate_transfer_json(mesh)?,
             }));
         }
-        serde_json::to_string(&items).map_err(|e| e.to_string())
+        Ok(serde_json::to_string(&items)?)
     }
 
-    pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, String> {
+    pub fn composite_layers(&self, object_id: &str) -> Result<Vec<u8>, LowpolyCoreError> {
         let idx = self.object_index(object_id)?;
         Ok(composite_layer_pixels(&self.projection.objects[idx].paint_layers))
     }
 
     /// @emoji 🖌️ Stamps a soft brush (or eraser) into a layer's pixel buffer in place.
-    pub fn paint_stroke(
-        &mut self,
-        object_id: &str,
-        layer_index: usize,
-        u: f32,
-        v: f32,
-        radius: f32,
-        color: [u8; 4],
-        hardness: f32,
-        opacity: f32,
-        eraser: bool,
-    ) -> Result<(), String> {
+    #[allow(clippy::too_many_arguments, reason = "1:1 forwarder for stamp_brush's own justified 8 args plus object_id/layer_index; a params struct would only move the same fields around for this single call site")]
+    pub fn paint_stroke(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
         stamp_brush(layer_pixels, u, v, radius, color, hardness, opacity, eraser);
         Ok(())
     }
 
-    pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), String> {
+    pub fn fill_bucket(&mut self, object_id: &str, layer_index: usize, u: f32, v: f32, color: [u8; 4]) -> Result<(), LowpolyCoreError> {
         let layer_pixels = self.layer_pixels_mut(object_id, layer_index)?;
         flood_fill(layer_pixels, u, v, color);
         Ok(())
     }
 
-    pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], String> {
+    pub fn sample_pixel(&self, object_id: &str, u: f32, v: f32) -> Result<[u8; 4], LowpolyCoreError> {
         let composite = self.composite_layers(object_id)?;
         Ok(sample_pixel_from(&composite, u, v))
-    }
-
-    pub fn map_kernel_err(e: MeshKernelError) -> String {
-        map_err(e)
     }
 }
 
@@ -792,10 +714,10 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
             if out_a < 1e-6 {
                 continue;
             }
-            for c in 0..3 {
+            for (c, dst_c) in dst.iter_mut().enumerate().take(3) {
                 let sc = src.get(c).copied().unwrap_or(0) as f32 / 255.0;
-                let dc = dst[c] as f32 / 255.0;
-                dst[c] = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
+                let dc = *dst_c as f32 / 255.0;
+                *dst_c = ((sc * sa + dc * da * (1.0 - sa)) / out_a * 255.0).round().clamp(0.0, 255.0) as u8;
             }
             dst[3] = (out_a * 255.0).round().clamp(0.0, 255.0) as u8;
         }
@@ -805,6 +727,7 @@ pub fn composite_layer_pixels(layers: &[LowpolyPaintLayer]) -> Vec<u8> {
 
 /// @emoji 🖌️ Stamps a soft round brush (or eraser) into a raw RGBA buffer in place. Shared by the
 /// compute session and the plugin's mid-drag scratch buffer.
+#[allow(clippy::too_many_arguments, reason = "one brush stamp per call site; a params struct would only move the same 8 fields around for this single leaf fn")]
 pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4], hardness: f32, opacity: f32, eraser: bool) {
     let size = LOWPOLY_PAINT_TEXTURE_SIZE as f32;
     let cx = (u.clamp(0.0, 1.0) * (size - 1.0)).round() as i32;
@@ -832,11 +755,9 @@ pub fn stamp_brush(pixels: &mut [u8], u: f32, v: f32, radius: f32, color: [u8; 4
                 let current = pixels[offset + 3];
                 pixels[offset + 3] = current.saturating_sub(stamp);
             } else {
-                for c in 0..3 {
-                    pixels[offset + c] = color[c];
-                }
+                pixels[offset..(3 + offset)].copy_from_slice(&color[..3]);
                 let current = pixels[offset + 3];
-                pixels[offset + 3] = current.saturating_add(stamp).min(255);
+                pixels[offset + 3] = current.saturating_add(stamp);
             }
         }
     }
@@ -862,9 +783,7 @@ pub fn flood_fill(pixels: &mut [u8], u: f32, v: f32, color: [u8; 4]) {
         if pixel != target {
             continue;
         }
-        for c in 0..4 {
-            pixels[offset + c] = color[c];
-        }
+        pixels[offset..(4 + offset)].copy_from_slice(&color);
         if x > 0 {
             stack.push((x - 1, y));
         }
@@ -904,10 +823,7 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<PixelRun> {
         while index < len && before[index] != after[index] {
             index += 1;
         }
-        runs.push(PixelRun {
-            offset: start as u32,
-            bytes: after[start..index].to_vec(),
-        });
+        runs.push(PixelRun { offset: start as u32, bytes: after[start..index].to_vec() });
     }
     runs
 }
@@ -1009,11 +925,7 @@ mod tests {
     fn paint_stroke_op_backwards_restores_prior_pixels() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let op = LowpolyOp::PaintStroke {
-            object_id: object_id.clone(),
-            layer_index: 0,
-            runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }],
-        };
+        let op = LowpolyOp::PaintStroke { object_id: object_id.clone(), layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
         let backwards = op.backwards(&projection);
         let mut painted = projection.clone();
         apply_lowpoly_op(&mut painted, &op);
@@ -1047,10 +959,7 @@ mod tests {
     fn objects_patch_op_backwards_restores_prior_mesh_and_name() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let op = LowpolyOp::Objects(CollectionOp::Patch {
-            id: object_id.clone(),
-            patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() },
-        });
+        let op = LowpolyOp::Objects(CollectionOp::Patch { id: object_id.clone(), patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } });
         let backwards = op.backwards(&projection);
         let mut next = projection.clone();
         apply_lowpoly_op(&mut next, &op);
@@ -1095,21 +1004,11 @@ mod export_concrete_forest_mesh_tests {
         let source = include_str!("../../../cad/asset/play/hexagonal-cut-concrete-forest-left.model.json");
         let root: Value = serde_json::from_str(source).expect("fixture");
         let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
-        let objects = root
-            .pointer("/models/0/model/objects")
-            .and_then(|value| value.as_array())
-            .cloned()
-            .unwrap_or_default();
+        let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
         let mut kernel = BrepkitKernel::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
-        let mesh_data = tessellate_geometry_handle(
-            &mut kernel,
-            imported[0].solid_handle.as_ref().expect("handle"),
-            "solid",
-        )
-        .expect("tessellated mesh");
-        let mut mesh = HalfedgeMesh::from_indexed_triangles(&mesh_data.positions, &mesh_data.indices)
-            .expect("halfedge mesh");
+        let mesh_data = tessellate_geometry_handle(&mut kernel, imported[0].solid_handle.as_ref().expect("handle"), "solid").expect("tessellated mesh");
+        let mut mesh = HalfedgeMesh::from_indexed_triangles(&mesh_data.positions, &mesh_data.indices).expect("halfedge mesh");
         // The BREP tessellator emits independently-tessellated, non-shared vertices along seams between
         // adjacent source faces; weld those before touching topology so twins/boundaries are accurate.
         mesh.weld_coincident_vertices(1e-4).expect("weld coincident vertices");
@@ -1118,30 +1017,15 @@ mod export_concrete_forest_mesh_tests {
         mesh.fill_holes().expect("fill holes");
         let triangle_face_count = mesh.face_count();
         mesh.merge_coplanar_faces().expect("merge coplanar faces");
-        assert!(
-            mesh.face_count() < triangle_face_count,
-            "expected coplanar merge to reduce face count below {triangle_face_count}, got {}",
-            mesh.face_count()
-        );
-        assert!(
-            (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(kernel_3d_mesh::FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 4),
-            "expected at least one merged face with more than 4 corners"
-        );
+        assert!(mesh.face_count() < triangle_face_count, "expected coplanar merge to reduce face count below {triangle_face_count}, got {}", mesh.face_count());
+        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(kernel_3d_mesh::FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 4), "expected at least one merged face with more than 4 corners");
         assert_watertight(&mesh);
         let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);
         let mut max = MeshVec3::new(f32::MIN, f32::MIN, f32::MIN);
         for index in 0..mesh.vertex_count() {
             let position = mesh.vertex_position(VertexId(index as u32)).expect("vertex");
-            min = MeshVec3([
-                min.x().min(position.x()),
-                min.y().min(position.y()),
-                min.z().min(position.z()),
-            ]);
-            max = MeshVec3([
-                max.x().max(position.x()),
-                max.y().max(position.y()),
-                max.z().max(position.z()),
-            ]);
+            min = MeshVec3([min.x().min(position.x()), min.y().min(position.y()), min.z().min(position.z())]);
+            max = MeshVec3([max.x().max(position.x()), max.y().max(position.y()), max.z().max(position.z())]);
         }
         let center = min.add(max).scale(0.5);
         mesh.translate(center.scale(-1.0)).expect("center mesh");

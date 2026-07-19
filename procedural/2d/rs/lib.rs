@@ -3,27 +3,19 @@
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::{apply_generation_op, invert_generation_op, GenerationOp, GenerationPlayState};
 use serde::{Deserialize, Serialize};
-use vcs::{
-    create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff,
-};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PROCEDURAL_2D_SCHEMA: &str = "procedural.2d";
 
 //#region 🔖Document
 /// 🧾 Persistent procedural-2d document — the flow fixture plus the generation vocabulary state.
 /// Ephemeral view state (selection, show mode, preview evaluations) lives in the plugin app struct.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Procedural2dDocument {
     pub fixture: FlowFixture,
     #[serde(default)]
     pub generation: GenerationPlayState,
-}
-
-impl Default for Procedural2dDocument {
-    fn default() -> Self {
-        Self { fixture: FlowFixture::default(), generation: GenerationPlayState::default() }
-    }
 }
 
 /// 🪪 A flow widget's stable id, across every widget variant (mirrors flow_core's private accessor).
@@ -200,31 +192,20 @@ impl Operation<Procedural2dDocument> for Procedural2dOp {
                 Some(index) => vec![Procedural2dOp::SetWidget { index, widget: fixture.widgets[index].clone() }],
                 None => vec![Procedural2dOp::RemoveWidget { id: widget_id(widget).to_string() }],
             },
-            Procedural2dOp::RemoveWidget { id } => widget_index(fixture, id)
-                .map(|index| vec![Procedural2dOp::SetWidget { index, widget: fixture.widgets[index].clone() }])
-                .unwrap_or_default(),
+            Procedural2dOp::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural2dOp::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
             Procedural2dOp::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
                 Some(index) => vec![Procedural2dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
                 None => vec![Procedural2dOp::RemoveSynapse { id: synapse.id.clone() }],
             },
-            Procedural2dOp::RemoveSynapse { id } => synapse_index(fixture, id)
-                .map(|index| vec![Procedural2dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }])
-                .unwrap_or_default(),
+            Procedural2dOp::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural2dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
             Procedural2dOp::SetLayout { id, .. } => match fixture.layout.get(id) {
                 Some(layout) => vec![Procedural2dOp::SetLayout { id: id.clone(), layout: layout.clone() }],
                 None => vec![Procedural2dOp::RemoveLayout { id: id.clone() }],
             },
-            Procedural2dOp::RemoveLayout { id } => fixture
-                .layout
-                .get(id)
-                .map(|layout| vec![Procedural2dOp::SetLayout { id: id.clone(), layout: layout.clone() }])
-                .unwrap_or_default(),
+            Procedural2dOp::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural2dOp::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
             Procedural2dOp::SetCamera { .. } => vec![Procedural2dOp::SetCamera { camera: fixture.camera.clone() }],
             Procedural2dOp::SetSchema { .. } => vec![Procedural2dOp::SetSchema { schema: fixture.schema.clone() }],
-            Procedural2dOp::Generation(op) => invert_generation_op(&projection.generation, op)
-                .into_iter()
-                .map(Procedural2dOp::Generation)
-                .collect(),
+            Procedural2dOp::Generation(op) => invert_generation_op(&projection.generation, op).into_iter().map(Procedural2dOp::Generation).collect(),
         }
     }
 }
@@ -288,6 +269,7 @@ pub fn empty_procedural2d_projection() -> Procedural2dDocument {
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
+    use vcs::create_document_vcs_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -301,42 +283,27 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<Procedural2dDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: Procedural2dEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: Procedural2dEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     Procedural2dStore::new(envelope)
                 }
-                None => Procedural2dStore::new(create_document_vcs_envelope(
-                    PROCEDURAL_2D_SCHEMA,
-                    "procedural2d",
-                    empty_procedural2d_projection(),
-                    None,
-                )),
+                None => Procedural2dStore::new(create_document_vcs_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -350,7 +317,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::apply_operation;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
 
     fn round_trip(projection: &Procedural2dDocument, op: &Procedural2dOp) -> Procedural2dDocument {
         let forward = apply_operation(projection, op);
@@ -364,18 +331,8 @@ mod tests {
 
     #[test]
     fn store_applies_camera_op() {
-        let mut store = Procedural2dStore::new(create_document_vcs_envelope(
-            PROCEDURAL_2D_SCHEMA,
-            "procedural2d",
-            empty_procedural2d_projection(),
-            None,
-        ));
-        store
-            .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Procedural2dOp::SetCamera { camera: CameraJson { x: 7.0, y: 8.0, zoom: 2.0 } }],
-                description: None,
-            })
-            .expect("apply");
+        let mut store = Procedural2dStore::new(create_document_vcs_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None));
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Procedural2dOp::SetCamera { camera: CameraJson { x: 7.0, y: 8.0, zoom: 2.0 } }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").fixture.camera.zoom, 2.0);
     }
 
@@ -399,11 +356,7 @@ mod tests {
     #[test]
     fn generation_op_round_trips() {
         let before = empty_procedural2d_projection();
-        let generation = protocol::FormGeneration {
-            id: "generation-1".into(),
-            name: "Generation 1".into(),
-            values: serde_json::Map::new(),
-        };
+        let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural2dOp::Generation(GenerationOp::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }

@@ -1,16 +1,9 @@
 //! 🧠 Imperative logic module: boolean scope operators.
 
-use neural_engine::{
-    Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value,
-};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
 
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_scope_bool(input: &Dictionary, key: &str) -> bool {
@@ -82,17 +75,7 @@ fn string_channel(name: &str) -> ChannelSpec {
 }
 
 fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "imperative".into(),
-        name: name.into(),
-        abbreviation: abbreviation.into(),
-        icon: "emoji:🧠".into(),
-        summary: summary.into(),
-        inputs,
-        outputs: vec![ChannelSpec::wildcard()],
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🧠".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
@@ -102,53 +85,12 @@ fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<d
 pub fn register(registry: &mut Registry) {
     register_simple(
         registry,
-        operator_info(
-            "logic.compare",
-            "Compare",
-            "Cmp",
-            "Compares two numeric scope keys and writes a boolean result",
-            vec![
-                string_channel("left"),
-                string_channel("right"),
-                string_channel("operator"),
-                string_channel("into"),
-            ],
-        ),
+        operator_info("logic.compare", "Compare", "Cmp", "Compares two numeric scope keys and writes a boolean result", vec![string_channel("left"), string_channel("right"), string_channel("operator"), string_channel("into")]),
         Box::new(LogicCompare),
     );
-    register_simple(
-        registry,
-        operator_info(
-            "logic.and",
-            "And",
-            "And",
-            "Logical AND of two boolean scope keys",
-            vec![string_channel("left"), string_channel("right"), string_channel("into")],
-        ),
-        Box::new(LogicAnd),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "logic.or",
-            "Or",
-            "Or",
-            "Logical OR of two boolean scope keys",
-            vec![string_channel("left"), string_channel("right"), string_channel("into")],
-        ),
-        Box::new(LogicOr),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "logic.not",
-            "Not",
-            "Not",
-            "Logical NOT of a boolean scope key",
-            vec![string_channel("source"), string_channel("into")],
-        ),
-        Box::new(LogicNot),
-    );
+    register_simple(registry, operator_info("logic.and", "And", "And", "Logical AND of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), Box::new(LogicAnd));
+    register_simple(registry, operator_info("logic.or", "Or", "Or", "Logical OR of two boolean scope keys", vec![string_channel("left"), string_channel("right"), string_channel("into")]), Box::new(LogicOr));
+    register_simple(registry, operator_info("logic.not", "Not", "Not", "Logical NOT of a boolean scope key", vec![string_channel("source"), string_channel("into")]), Box::new(LogicNot));
     registry.finalize();
 }
 

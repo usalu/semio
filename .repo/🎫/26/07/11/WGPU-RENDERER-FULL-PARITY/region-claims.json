@@ -1,37 +1,53 @@
 {
-  "wave": 1,
-  "note": "WS-0 engine facade landed at ui/wgpu/rs/lib.rs engine region (~12083-12776, verify by grep). cargo check is clean. cargo test had 2 foreign stale-fixture bugs (raster->paint_2d) already fixed by orchestrator outside any wave-1 claim, and 2 bugs in the engine region's own test code being fixed by the w0-engine-facade agent. All wave-1 agents should use CARGO_TARGET_DIR=/private/tmp/claude-501/-Users-ueli-Documents-semio/e57c06c1-4105-4486-b074-dcbde9029be5/scratchpad/target-verify to avoid the severe shared target-dir lock contention (50-90+ concurrent cargo processes observed repo-wide).",
+  "wave": 3,
+  "note": "Wave 2 fully landed and verified (121/121 renderer, 39/39 infinite_world, 152/153 ui_wgpu — 1 pre-existing unrelated). Orchestrator applied 5 cross-agent wiring fixes as Integrator (event drain, dock keyed-diff activation, asset polling incl. a newly-discovered dead poll_world3d_assets, terrain fetch, BlockList RenderEntry arm). ui_wgpu's engine::Ui facade + overlay/drag/scroll/edit mechanisms are feature-complete and exported (see report-w2-ui-wgpu-integration.md). Region line numbers below are fresh as of wave-3 kickoff — all agents must re-grep before editing regardless. shell sub-regions (framework/renderer/wgpu/rs/lib.rs): ShellTypes 13891, NativeSyncChannel 13962, ShellLifecycle 14165, ShellActions 14845, ShellInput 15568, ActionPanelAndUtilities 17995, ShellChrome 18419-21306. interpreter region: 4921+ (render_ui_node @5293, ui_node_to_widget @5640).",
   "claims": [
     {
-      "agent": "w1a-reconcile",
-      "file": "ui/wgpu/rs/lib.rs",
-      "regions": ["reconcile"],
-      "may_also_touch": ["flex (only the grow/fill-semantics gap for non-Stack containers, per w0's KNOWN GAP note)"],
-      "must_not_touch": ["arena", "tree", "paint", "events", "text", "shell", "engine", "widgets", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
+      "agent": "w3-interpreter-cutover",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["interpreter (render_ui_node, ui_node_to_widget and everything between)"],
+      "note": "the big cutover: swap render_ui_node's live implementation from ui_node_to_widget+render_widget to ui_wgpu::engine::Ui (apply_tree/frame/dispatch_event). Do NOT delete widgets/ui_node_to_widget yet (Wave 4's job, after a full visual sweep) — this wave performs the swap and proves it via the existing test suite + golden harness; residual visual gaps on the 6 KNOWN GAP UiNode kinds (Field/Section/Image/ComponentScene/ExternalSlot/NumberStepper-edge-cases) are expected and acceptable pending Wave 4's sweep.",
+      "must_not_touch": ["dock", "engine_canvas", "plugin_bridge", "scenes (any sub-region)", "shell (all sub-regions — other Wave 3 agents own these)"],
+      "may_also_touch": ["shell::ShellChrome: exactly 2 lines, both inside render_window_content/render_floating_panel, each a single-token addition of a window/tab identifier already in that function's own scope (window_id / active_tab_id) to their existing render_ui_node(...) call — required because render_ui_node gained a new window_id parameter (the only way to key one-Ui-per-window retained state; see the RetainedEngineCutover doc comment at the top of interpreter's new code, framework/renderer/wgpu/rs/lib.rs, for the full reasoning). No other line in shell was read-as-editable or touched; everything else in ShellChrome remains the other Wave-3 agents' exclusively."]
     },
     {
-      "agent": "w1b-text-stack",
-      "file": "ui/wgpu/rs/lib.rs",
-      "regions": ["text"],
-      "may_also_touch": ["gpu (only to add an RGBA emoji atlas page / sampled texture)", "shaders (only minimal text-shader branch for emoji)"],
-      "cargo_toml_wiring_request_only": true,
-      "must_not_touch": ["arena", "tree", "reconcile", "flex", "paint", "events", "shell", "engine", "widgets", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
+      "agent": "w3-shell-input-cutover",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["shell::ShellInput"],
+      "note": "route winit-sourced pointer/keyboard events through ui_wgpu's UiEvent/EventRouter API where applicable, in addition to/replacing ad-hoc immediate InputState handling for window CONTENT (not chrome/dock, which stay on existing mechanisms)",
+      "must_not_touch": ["dock", "engine_canvas", "interpreter", "plugin_bridge", "scenes", "shell::ShellTypes/NativeSyncChannel/ShellLifecycle/ShellActions/ActionPanelAndUtilities/ShellChrome"]
     },
     {
-      "agent": "w1c-paint-parity",
-      "file": "ui/wgpu/rs/lib.rs",
-      "regions": ["paint"],
-      "must_not_touch": ["arena", "tree", "reconcile", "flex", "text", "events", "shell", "engine", "widgets (read-only reference)", "component", "theme", "re-exports", "host", "cursor", "scene_slots"]
+      "agent": "w3-command-palette",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["shell::ActionPanelAndUtilities"],
+      "note": "WP13: os command registry parity (appearance/theme/locale/terminology/expertise/layout/introduceApp), plugin+app+mode command aggregation, category tree, bottom-middle command panel with staged arg forms, fuzzy search, SEMIO_LOCKED_* pref locks. Reference: framework/renderer/react/os-shell.tsx buildOsCommands/resolveCommands (~:2000-2392).",
+      "must_not_touch": ["dock", "engine_canvas", "interpreter", "plugin_bridge", "scenes", "shell::ShellTypes/NativeSyncChannel/ShellLifecycle/ShellActions/ShellInput/ShellChrome"]
     },
     {
-      "agent": "w1d-events-overlay",
-      "file": "ui/wgpu/rs/lib.rs",
-      "regions": ["events", "cursor"],
-      "must_not_touch": ["arena", "tree", "reconcile", "flex", "text", "paint", "shell", "engine", "widgets (read-only reference)", "component", "theme", "re-exports", "host", "scene_slots"]
+      "agent": "w3-prefs-i18n-themes",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["shell::ShellChrome (prefs/theme/i18n sub-areas only)"],
+      "note": "WP14: uiPrefs localStorage persistence with byte-identical keys to React (os-shell.tsx ~:3463-3589), named/custom themes + draft editor, compact/expertise/uiLayout, DE bundle for chrome strings, terminology substitution. Coordinate scope with w3-overlays-chrome-polish which shares this same large sub-region — pick disjoint functions/areas, re-grep before editing, prefer additive new functions over restructuring shared ones.",
+      "must_not_touch": ["dock", "engine_canvas", "interpreter", "plugin_bridge", "scenes", "shell::ShellTypes/NativeSyncChannel/ShellLifecycle/ShellActions/ShellInput/ActionPanelAndUtilities"]
+    },
+    {
+      "agent": "w3-overlays-chrome-polish",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["shell::ShellChrome (overlay/tour/ribbon sub-areas only)"],
+      "note": "WP15+WP16: tooltips/hovercards (from carried-but-unrendered title fields), dialogs, introduction tour, cursor polish, window chrome ribbon recursive collections/picker segments, engagement inline-completion ghost text. Use ui_wgpu's new overlay manager (OverlayKind::Tooltip/Dialog, re-exported from ui_wgpu per report-w2-ui-wgpu-integration.md) rather than ad-hoc popup code where practical. Coordinate scope with w3-prefs-i18n-themes which shares this same large sub-region — pick disjoint functions/areas, re-grep before editing.",
+      "must_not_touch": ["dock", "engine_canvas", "interpreter", "plugin_bridge", "scenes", "shell::ShellTypes/NativeSyncChannel/ShellLifecycle/ShellActions/ShellInput/ActionPanelAndUtilities"]
+    },
+    {
+      "agent": "w3-panel-dock-6anchor",
+      "file": "framework/renderer/wgpu/rs/lib.rs",
+      "regions": ["shell::ShellLifecycle, shell::ShellActions (read/extend for panel positioning) — INVESTIGATE FIRST"],
+      "note": "WP12, IMPORTANT CORRECTION from Wave 2 (see report-w2-dock-dnd.md): the `dock` region is NOT the React 6-anchor PanelDock — it corresponds to React's `Mode` split-view component, a different, already-working system. Before writing any code, investigate whether wgpu has ANY generic 6-anchor (top/bottom x left/middle/right) panel positioning system at all, or whether panel placement is currently hardcoded/fixed in shell (the gap-matrix's 'measures rail/engagement rail/actions rail already at rough parity' finding suggests panels may be fixed-position, not generically re-anchorable). Scope the real gap first, then build middle-anchor support + drag re-anchoring + persisted dock skeleton (localStorage v2) matching os-shell.tsx's DockAssembly/dockLayoutStore (~:4006-4255, :4030-4080) ONLY if a real generic-anchoring gap is confirmed. Report the investigation findings even if the conclusion is 'less work needed than expected' or 'more foundational work needed than expected.'",
+      "must_not_touch": ["dock", "engine_canvas", "interpreter", "plugin_bridge", "scenes", "shell::ShellTypes/NativeSyncChannel/ShellInput/ActionPanelAndUtilities/ShellChrome"]
     }
   ],
   "choke_points_reserved_for_integrator": [
-    "framework/renderer/wgpu/rs/lib.rs: ShellState struct + new()/init, render_ui_node dispatch, Registry, host tail (semio_renderer_boot/run_native), Cargo.toml",
-    "ui/wgpu/rs/lib.rs: UiNode enum, UiCommand enum, theme, re-exports, host, Cargo.toml, engine (owned by w0-engine-facade agent, still finishing test fixes), tree, arena, shell, widgets, scene_slots, component"
+    "framework/renderer/wgpu/rs/lib.rs: shell::ShellTypes, shell::NativeSyncChannel (struct field additions coordinated by orchestrator), Cargo.toml",
+    "ui/wgpu/rs/lib.rs: everything (stable, feature-complete from Wave 1/2, read-only reference this wave unless a genuine gap is found — file a wiring request rather than editing)"
   ]
 }

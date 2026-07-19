@@ -32,7 +32,7 @@ impl Operation for Get {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         let dict = read_dict(input, "dictionary")?;
         let key = read_channel_text(input, "key")?;
-        match dict.get(&key).cloned().ok_or_else(|| EvalError::MissingInput(key))? {
+        match dict.get(&key).cloned().ok_or(EvalError::MissingInput(key))? {
             Value::Dictionary(value) => Ok(channel_output("value", value)),
             value => Ok(channel_output("value", Dictionary::with_schema("dictionary").insert("value", value))),
         }

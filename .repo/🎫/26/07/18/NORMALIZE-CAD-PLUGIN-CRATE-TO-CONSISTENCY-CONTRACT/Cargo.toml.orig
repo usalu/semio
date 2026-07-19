@@ -1,0 +1,37 @@
+[package]
+name = "cad-plugin"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+
+[package.metadata.component]
+package = "semio:cad"
+
+[package.metadata.semio]
+
+[[package.metadata.semio.playground]]
+variant = "cad"
+ports = { react = 6020, wgpu = 6120 }
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-fixture"
+root = "cad/fixture"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+path = "lib.rs"
+
+[dependencies]
+cad_document = { path = "../../rs" }
+semio-framework-plugin = { path = "../../../framework/plugin/rs" }
+semio-framework-os = { path = "../../../framework/product/os/core/rs" }
+semio-framework-core = { path = "../../../framework/core/rs" }
+ui_wgpu = { path = "../../../ui/wgpu/rs" }
+kernel_3d_brepkit = { path = "../../../kernel/3d/brep/rs" }
+kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs" }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+base64 = "0.22.1"
+vcs = { path = "../../../vcs/rs" }
+

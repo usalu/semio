@@ -5,10 +5,8 @@ use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry
 use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
-    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, ActionArgDef,
-    ActionArgOption, ActionEmit, App, ActionDescriptor, Contribution, DocumentApp, DocumentView, PluginBundle,
-    SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState,
-    world3d_default_camera, world3d_scene, world3d_selection_json, WorldSunConfig,
+    build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, Contribution, DocumentApp,
+    DocumentView, PluginBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -29,8 +27,7 @@ const ACTION_IMPORT_SOLID: &str = "importSolidGeometry";
 const SOLID_MEDIA_FORMATS: [&str; 4] = ["step", "obj", "stl", "glb"];
 const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
-const HEX_COLUMN_FIXTURE_JSON: &str =
-    include_str!("../../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
+const HEX_COLUMN_FIXTURE_JSON: &str = include_str!("../../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
 //#endregion 🔖Constants
 
 //#region 🔖Terminology
@@ -40,10 +37,8 @@ struct ModuleLabels {
     no_procedural_parameters: &'static str,
 }
 
-const MODULE_LABELS_NATIVE_EN: ModuleLabels =
-    ModuleLabels { no_flow_inputs: "No flow inputs.", no_procedural_parameters: "No procedural parameters." };
-const MODULE_LABELS_NATIVE_DE: ModuleLabels =
-    ModuleLabels { no_flow_inputs: "Keine Flow-Eingaben.", no_procedural_parameters: "Keine prozeduralen Parameter." };
+const MODULE_LABELS_NATIVE_EN: ModuleLabels = ModuleLabels { no_flow_inputs: "No flow inputs.", no_procedural_parameters: "No procedural parameters." };
+const MODULE_LABELS_NATIVE_DE: ModuleLabels = ModuleLabels { no_flow_inputs: "Keine Flow-Eingaben.", no_procedural_parameters: "Keine prozeduralen Parameter." };
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown/missing locale falls back to native English.
 fn module_labels(view_state: &ViewState) -> &'static ModuleLabels {
@@ -77,14 +72,7 @@ struct ModuleRenderPayload {
 /// 🌱 The module's default document — the hex-column fixture with its stock procedural params. Used
 /// as `DocumentApp::initial_projection`; live slot renders override it with the forms-supplied payload.
 fn default_payload() -> ModuleRenderPayload {
-    ModuleRenderPayload {
-        fixture_slug: "hexagonal-mushroom-column".into(),
-        params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }),
-        question_id: String::new(),
-        controller_id: String::new(),
-        surface: "try".into(),
-        interactive: true,
-    }
+    ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }), question_id: String::new(), controller_id: String::new(), surface: "try".into(), interactive: true }
 }
 
 //#region 🔖DocumentOp
@@ -154,11 +142,7 @@ fn json_string_value(value: &Value) -> String {
 }
 
 fn module_action(payload: &ModuleRenderPayload, action: &str, args: Value) -> ActionDescriptor {
-    ActionDescriptor {
-        controller_id: payload.controller_id.clone(),
-        action: action.into(),
-        args: Some(args),
-    }
+    ActionDescriptor { controller_id: payload.controller_id.clone(), action: action.into(), args: Some(args) }
 }
 //#endregion 🔖Payload
 
@@ -224,24 +208,11 @@ fn mesh_from_tessellation_json(mesh_json: &str) -> Option<semio_framework_plugin
     if parsed.get("error").is_some() {
         return None;
     }
-    let positions: Vec<f32> = parsed
-        .get("position")
-        .or_else(|| parsed.get("positions"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .filter(|items: &Vec<f32>| !items.is_empty())?;
-    let normals: Vec<f32> = parsed
-        .get("normal")
-        .or_else(|| parsed.get("normals"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect())
-        .unwrap_or_default();
-    let indices: Vec<u32> = parsed
-        .get("index")
-        .or_else(|| parsed.get("indices"))
-        .and_then(|entry| entry.as_array())
-        .map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect())
-        .filter(|items: &Vec<u32>| !items.is_empty())?;
+    let positions: Vec<f32> =
+        parsed.get("position").or_else(|| parsed.get("positions")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect()).filter(|items: &Vec<f32>| !items.is_empty())?;
+    let normals: Vec<f32> = parsed.get("normal").or_else(|| parsed.get("normals")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_f64().map(|number| number as f32)).collect()).unwrap_or_default();
+    let indices: Vec<u32> =
+        parsed.get("index").or_else(|| parsed.get("indices")).and_then(|entry| entry.as_array()).map(|items| items.iter().filter_map(|value| value.as_u64().map(|number| number as u32)).collect()).filter(|items: &Vec<u32>| !items.is_empty())?;
     Some(mesh_from_indexed(&positions, &normals, &indices))
 }
 
@@ -312,40 +283,20 @@ fn evaluated_preview_payload(fixture: &FlowFixture, params: &Value) -> (String, 
             "selected": false,
             "hovered": false,
         }]);
-        return (
-            serde_json::to_string(&fallback).unwrap_or_else(|_| "[]".into()),
-            serde_json::to_string(&fallback_instances).unwrap_or_else(|_| "[]".into()),
-        );
+        return (serde_json::to_string(&fallback).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&fallback_instances).unwrap_or_else(|_| "[]".into()));
     }
-    (
-        serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()),
-        serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()),
-    )
+    (serde_json::to_string(&meshes).unwrap_or_else(|_| "[]".into()), serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into()))
 }
 
 fn render_preview_body(payload: &ModuleRenderPayload) -> UiNode {
-    let slug = if payload.fixture_slug.is_empty() {
-        "hexagonal-mushroom-column"
-    } else {
-        payload.fixture_slug.as_str()
-    };
+    let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return ui_text(format!("Unknown fixture slug: {slug}"));
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let params = payload.params.clone();
     let (meshes_json, instances_json) = evaluated_preview_payload(&fixture, &params);
-    build_world_3d_scene(
-        PREVIEW_SURFACE,
-        MODULE_APP_ID,
-        world3d_scene(
-            world3d_default_camera(),
-            meshes_json,
-            instances_json,
-            world3d_selection_json("single", &[], None),
-            &WorldSunConfig::default(),
-        ),
-    )
+    build_world_3d_scene(PREVIEW_SURFACE, MODULE_APP_ID, world3d_scene(world3d_default_camera(), meshes_json, instances_json, world3d_selection_json("single", &[], None), &WorldSunConfig::default()))
 }
 //#endregion 🔖Preview
 
@@ -382,11 +333,7 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let handles = evaluated_preview_geometry_handles(&fixture, &payload.params);
-    let result_json = if handles.is_empty() {
-        json!({ "error": "no procedural solid geometry to export" })
-    } else {
-        serde_json::from_str(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(json!({ "error": "export failed" }))
-    };
+    let result_json = if handles.is_empty() { json!({ "error": "no procedural solid geometry to export" }) } else { serde_json::from_str(&export_solid_json(&handles, format, SOLID_EXPORT_DEFLECTION)).unwrap_or(json!({ "error": "export failed" })) };
     let mut params = payload.params.as_object().cloned().unwrap_or_default();
     params.insert("__solidExport".into(), result_json);
     payload.params = Value::Object(params);
@@ -396,11 +343,7 @@ fn handle_export_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
 fn handle_import_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) {
     let format = args.and_then(|value| value.get("format")).and_then(|value| value.as_str()).unwrap_or("obj");
     let data = args.and_then(|value| value.get("data")).and_then(|value| value.as_str()).unwrap_or("");
-    let result_json = if data.is_empty() {
-        json!({ "error": "no import data provided" })
-    } else {
-        serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" }))
-    };
+    let result_json = if data.is_empty() { json!({ "error": "no import data provided" }) } else { serde_json::from_str(&import_solid_json(format, data, SOLID_IMPORT_TOLERANCE)).unwrap_or(json!({ "error": "import failed" })) };
     let mut params = payload.params.as_object().cloned().unwrap_or_default();
     params.insert("__solidImport".into(), result_json);
     payload.params = Value::Object(params);
@@ -414,6 +357,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
         style: None,
         disabled: None,
+        loading: None,
     })
 }
 
@@ -425,6 +369,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
         style: None,
         disabled: None,
+        loading: None,
     })
 }
 
@@ -440,25 +385,13 @@ fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNode> {
 //#endregion 🔖MediaExport
 
 //#region 🔖Params
-fn render_question_control(
-    question: &ProtocolBlock,
-    value: &Value,
-    payload: &ModuleRenderPayload,
-) -> UiNode {
+fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
     let key = &question.id;
-    let patch_field = if payload.surface == "blueprint" {
-        "param"
-    } else {
-        "tryParam"
-    };
+    let patch_field = if payload.surface == "blueprint" { "param" } else { "tryParam" };
     let patch_cmd = |param_key: &str| {
         module_action(
             payload,
-            if payload.surface == "blueprint" {
-                "patchQuestions"
-            } else {
-                "setTryValue"
-            },
+            if payload.surface == "blueprint" { "patchQuestions" } else { "setTryValue" },
             json!({
                 "questionIds": [payload.question_id],
                 "field": patch_field,
@@ -525,13 +458,7 @@ fn render_question_control(
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("protocol-module.{key}"),
             label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode {
-                id: format!("protocol-module.{key}.toggle"),
-                icon_id: "check".into(),
-                pressed: value.as_bool().unwrap_or(false),
-                text: None,
-                on_change: patch_cmd(key),
-            })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("protocol-module.{key}.toggle"), icon_id: "check".into(), pressed: value.as_bool().unwrap_or(false), text: None, on_change: patch_cmd(key) })),
             description: None,
             required: None,
             error: None,
@@ -541,21 +468,13 @@ fn render_question_control(
 }
 
 fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
-    let slug = if payload.fixture_slug.is_empty() {
-        "hexagonal-mushroom-column"
-    } else {
-        payload.fixture_slug.as_str()
-    };
+    let slug = if payload.fixture_slug.is_empty() { "hexagonal-mushroom-column" } else { payload.fixture_slug.as_str() };
     let Some(fixture_json) = fixture_json_for_slug(slug) else {
         return ui_text(format!("Unknown fixture slug: {slug}"));
     };
     let fixture: FlowFixture = serde_json::from_str(fixture_json).unwrap_or_else(|_| FlowFixture::default());
     let spec = flow_fixture_to_form_spec(&fixture);
-    let values: Map<String, Value> = payload
-        .params
-        .as_object()
-        .cloned()
-        .unwrap_or_default();
+    let values: Map<String, Value> = payload.params.as_object().cloned().unwrap_or_default();
     let step = spec.steps.first();
     let Some(step) = step else {
         return ui_text(labels.no_flow_inputs.to_string());
@@ -564,10 +483,7 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
     let mut children: Vec<UiNode> = visible
         .iter()
         .map(|question| {
-            let value = values
-                .get(&question.id)
-                .cloned()
-                .unwrap_or_else(|| json!(0));
+            let value = values.get(&question.id).cloned().unwrap_or_else(|| json!(0));
             render_question_control(question, &value, payload)
         })
         .collect();
@@ -575,13 +491,6 @@ fn render_params_body(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> U
         children.push(ui_text(labels.no_procedural_parameters.to_string()));
     }
     children.extend(render_media_export_buttons(payload));
-    ui_stack_vertical(children)
-}
-
-fn render_flow3d_question(payload: &ModuleRenderPayload, labels: &ModuleLabels) -> UiNode {
-    let mut children = vec![render_params_body(payload, labels)];
-    children.extend(render_media_export_buttons(payload));
-    children.push(render_preview_body(payload));
     ui_stack_vertical(children)
 }
 //#endregion 🔖Params
@@ -606,13 +515,7 @@ impl DocumentApp for ModuleApp {
         default_payload()
     }
 
-    fn handle_action(
-        &mut self,
-        action: &str,
-        args: Option<&Value>,
-        doc: &DocumentView<'_, ModuleRenderPayload>,
-        _view_state: &ViewState,
-    ) -> ActionEmit<ModulePayloadOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOp> {
         match action {
             ACTION_EXPORT_SOLID => {
                 let mut payload = doc.projection.clone();
@@ -664,12 +567,7 @@ fn create_module_app() -> App {
 
 /// 🎛 The shared `format` Select over the solid interchange formats, defaulting to OBJ (the handlers' default).
 fn solid_format_arg() -> ActionArgDef {
-    ActionArgDef::select(
-        "format",
-        "Format",
-        SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, format.to_uppercase())).collect(),
-    )
-    .default_value("obj")
+    ActionArgDef::select("format", "Format", SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, format.to_uppercase())).collect()).default_value("obj")
 }
 
 fn module_bundle() -> PluginBundle {
@@ -700,19 +598,11 @@ mod tests {
     }
 
     fn new_app() -> VcsDocumentApp<ModuleApp> {
-        VcsDocumentApp::new(ModuleApp::default())
+        VcsDocumentApp::new(ModuleApp)
     }
 
     fn payload_json(params: Value) -> String {
-        serde_json::to_string(&ModuleRenderPayload {
-            fixture_slug: "hexagonal-mushroom-column".into(),
-            params,
-            question_id: "q".into(),
-            controller_id: "forms-play".into(),
-            surface: "try".into(),
-            interactive: true,
-        })
-        .unwrap()
+        serde_json::to_string(&ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params, question_id: "q".into(), controller_id: "forms-play".into(), surface: "try".into(), interactive: true }).unwrap()
     }
 
     #[test]
@@ -730,13 +620,7 @@ mod tests {
         let bundle = module_bundle();
         let manifest = bundle.manifest();
         assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::ProtocolBlockKind {
-            block_kind,
-            params_body_key,
-            preview_body_key,
-            ..
-        } = &manifest.contributions[0]
-        else {
+        let Contribution::ProtocolBlockKind { block_kind, params_body_key, preview_body_key, .. } = &manifest.contributions[0] else {
             panic!("expected a ProtocolBlockKind contribution");
         };
         assert_eq!(block_kind, "buildingComponent");
@@ -777,10 +661,7 @@ mod tests {
         // The export action emits a whole-payload `SetPayload` op; the store applies it and the
         // stashed result is read back through the materialized projection.
         app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("export");
-        assert!(
-            app.projection().expect("projection").params.get("__solidExport").is_some(),
-            "export result stashed on params via the SetPayload op"
-        );
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload op");
         // The op carries a true inverse (the pre-op payload), so undo removes the stashed result.
         app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
         assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-op payload");
@@ -789,17 +670,8 @@ mod tests {
     #[test]
     fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
-        app.handle_action(
-            ACTION_IMPORT_SOLID,
-            Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })),
-            &ViewState::default(),
-            &meta(),
-        )
-        .expect("import");
-        assert!(
-            app.projection().expect("projection").params.get("__solidImport").is_some(),
-            "import result stashed on params via the SetPayload op"
-        );
+        app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &ViewState::default(), &meta()).expect("import");
+        assert!(app.projection().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload op");
     }
 
     #[test]
@@ -820,7 +692,7 @@ mod tests {
         let export = definition.actions.iter().find(|action| action.id == ACTION_EXPORT_SOLID).expect("export declared");
         assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
         let registry = AppActionRegistry::from_definition(&definition);
-        let mut app = VcsDocumentApp::with_registry(ModuleApp::default(), registry);
+        let mut app = VcsDocumentApp::with_registry(ModuleApp, registry);
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
         // so the whole-payload op still applies and stashes a result.
         app.handle_action(ACTION_EXPORT_SOLID, None, &ViewState::default(), &meta()).expect("export");

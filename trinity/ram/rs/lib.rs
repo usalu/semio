@@ -4,10 +4,75 @@ use mathematical_graph_manifest::{manifest_by_id, GraphManifest, ManifestValidat
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
-pub use mathematical_graph_manifest::{ManifestValidator, PropertyBag, PropertyDef, PropertyKind, PropertyValue, PortDirection};
+pub use mathematical_graph_manifest::{ManifestValidator, PortDirection, PropertyBag, PropertyDef, PropertyKind, PropertyValue};
 
 /// 📜 Compile-time trinity manifest (projection of {@link GraphManifest}).
 pub type Manifest = TrinityManifest;
+
+//#region ⚠️ Errors
+/// ⚠️ Trinity graph fixture, manifest-validation, and mutation errors.
+#[derive(Debug, thiserror::Error)]
+pub enum TrinityRamError {
+    /// 🧬 JSON (de)serialization failure.
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    /// 🧭 VCS store/dispatch failure.
+    #[error(transparent)]
+    Vcs(#[from] vcs::VcsError),
+    /// 📜 Compile-time manifest validation failure (path-qualified).
+    #[error("{}: {}", .0.path, .0.message)]
+    Manifest(ManifestValidationError),
+    #[error("expected schema {expected}, got {actual}")]
+    SchemaMismatch { expected: &'static str, actual: String },
+    #[error("unknown manifest id {0}")]
+    UnknownManifestId(String),
+    #[error("fixture missing manifest or manifestId")]
+    ManifestMissing,
+    #[error("node {0} not found")]
+    NodeNotFound(String),
+    #[error("edge {0} not found")]
+    EdgeNotFound(String),
+    #[error("node {0} already exists")]
+    NodeAlreadyExists(String),
+    #[error("edge {0} already exists")]
+    EdgeAlreadyExists(String),
+    #[error("invalid source port key {0}")]
+    InvalidSourcePortKey(String),
+    #[error("invalid target port key {0}")]
+    InvalidTargetPortKey(String),
+    #[error("source node {0} not found")]
+    SourceNodeNotFound(String),
+    #[error("target node {0} not found")]
+    TargetNodeNotFound(String),
+    #[error("nodes/{node_id}/ports/{port_kind}: port kind {port_kind} not declared on node kind {node_kind}")]
+    PortKindNotDeclaredOnFixture { node_id: String, port_kind: String, node_kind: String },
+    #[error("nodes/{node_id}/ports/{port_id}: port kind {port_kind} not declared on node kind {node_kind}")]
+    PortKindNotDeclaredOnOp { node_id: String, port_id: String, port_kind: String, node_kind: String },
+    #[error("nodes/{kind}: unknown node kind {kind:?}")]
+    UnknownNodeKind { kind: String },
+    #[error("edges/{kind}: unknown edge kind {kind:?}")]
+    UnknownEdgeKind { kind: String },
+    #[error("ports/{kind}: unknown port kind {kind:?}")]
+    UnknownPortKind { kind: String },
+    #[error("{path}: unknown kind")]
+    UnknownEntityKind { path: String },
+    #[error("{path}: unknown property {key:?}")]
+    UnknownPropertyAtPath { path: String, key: String },
+    #[error("{path}: property {key:?} is derived and cannot be set")]
+    DerivedPropertyReadonly { path: String, key: String },
+    #[error("{path}/{name}: property type mismatch for {value_type}")]
+    PropertyTypeMismatch { path: String, name: String, value_type: String },
+    #[error("{path}/{key}: unknown property {key:?}")]
+    UnknownPropertyInBag { path: String, key: String },
+}
+
+/// 🔀 [`ManifestValidationError`] carries no `std::error::Error` impl of its own (plain path/message struct), so this is a manual conversion rather than `#[from]`.
+impl From<ManifestValidationError> for TrinityRamError {
+    fn from(error: ManifestValidationError) -> Self {
+        Self::Manifest(error)
+    }
+}
+//#endregion ⚠️ Errors
 
 // #region 🔖Runtime
 /// 🔌 Runtime port on a node.
@@ -87,35 +152,30 @@ pub struct GraphFixture {
 impl GraphFixture {
     pub const SCHEMA: &'static str = "trinity.graph";
 
-    pub fn validate_schema(&self) -> Result<(), String> {
+    pub fn validate_schema(&self) -> Result<(), TrinityRamError> {
         if self.schema != Self::SCHEMA {
-            return Err(format!("expected schema {}, got {}", Self::SCHEMA, self.schema));
+            return Err(TrinityRamError::SchemaMismatch { expected: Self::SCHEMA, actual: self.schema.clone() });
         }
         Ok(())
     }
 
-    pub fn to_json(&self) -> Result<String, String> {
-        serde_json::to_string_pretty(self).map_err(|e| e.to_string())
+    pub fn to_json(&self) -> Result<String, TrinityRamError> {
+        Ok(serde_json::to_string_pretty(self)?)
     }
 
-    pub fn resolve_manifest(&mut self) -> Result<(), String> {
+    pub fn resolve_manifest(&mut self) -> Result<(), TrinityRamError> {
         if let Some(id) = self.manifest_id.as_deref() {
-            self.manifest = manifest_by_id(id)
-                .ok_or_else(|| format!("unknown manifest id {id}"))?
-                .to_trinity_manifest();
+            self.manifest = manifest_by_id(id).ok_or_else(|| TrinityRamError::UnknownManifestId(id.to_string()))?.to_trinity_manifest();
             return Ok(());
         }
-        if self.manifest.node_kinds.is_empty()
-            && self.manifest.edge_kinds.is_empty()
-            && self.manifest.port_kinds.is_empty()
-        {
-            return Err("fixture missing manifest or manifestId".into());
+        if self.manifest.node_kinds.is_empty() && self.manifest.edge_kinds.is_empty() && self.manifest.port_kinds.is_empty() {
+            return Err(TrinityRamError::ManifestMissing);
         }
         Ok(())
     }
 
-    pub fn from_json(json: &str) -> Result<Self, String> {
-        let mut fixture: Self = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn from_json(json: &str) -> Result<Self, TrinityRamError> {
+        let mut fixture: Self = serde_json::from_str(json)?;
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         Ok(fixture)
@@ -134,7 +194,7 @@ pub struct Graph {
 }
 
 impl Graph {
-    pub fn from_fixture(mut fixture: GraphFixture) -> Result<Self, String> {
+    pub fn from_fixture(mut fixture: GraphFixture) -> Result<Self, TrinityRamError> {
         fixture.validate_schema()?;
         fixture.resolve_manifest()?;
         if let Some(id) = fixture.manifest_id.as_deref() {
@@ -150,14 +210,7 @@ impl Graph {
         for edge in fixture.edges {
             edges.insert(edge.id.clone(), edge);
         }
-        Ok(Self {
-            name: fixture.name,
-            manifest: fixture.manifest,
-            camera: fixture.camera,
-            nodes,
-            edges,
-            root_node_id: fixture.root_node_id,
-        })
+        Ok(Self { name: fixture.name, manifest: fixture.manifest, camera: fixture.camera, nodes, edges, root_node_id: fixture.root_node_id })
     }
 
     pub fn to_fixture(&self) -> GraphFixture {
@@ -173,11 +226,11 @@ impl Graph {
         }
     }
 
-    pub fn load_json(json: &str) -> Result<Self, String> {
+    pub fn load_json(json: &str) -> Result<Self, TrinityRamError> {
         Self::from_fixture(GraphFixture::from_json(json)?)
     }
 
-    pub fn fixture_json(&self) -> Result<String, String> {
+    pub fn fixture_json(&self) -> Result<String, TrinityRamError> {
         self.to_fixture().to_json()
     }
 
@@ -186,16 +239,7 @@ impl Graph {
         let nodes: Vec<Node> = node_ids.iter().filter_map(|id| self.nodes.get(id).cloned()).collect();
         let edges: Vec<Edge> = edge_ids.iter().filter_map(|id| self.edges.get(id).cloned()).collect();
         let root_node_id = self.root_node_id.clone().filter(|id| node_ids.contains(id));
-        GraphFixture {
-            schema: GraphFixture::SCHEMA.to_string(),
-            name: format!("{} subgraph", self.name),
-            manifest_id: Some("nakagin".into()),
-            manifest: self.manifest.clone(),
-            camera: self.camera.clone(),
-            nodes,
-            edges,
-            root_node_id,
-        }
+        GraphFixture { schema: GraphFixture::SCHEMA.to_string(), name: format!("{} subgraph", self.name), manifest_id: Some("nakagin".into()), manifest: self.manifest.clone(), camera: self.camera.clone(), nodes, edges, root_node_id }
     }
 
     pub fn node(&self, id: &str) -> Option<&Node> {
@@ -218,12 +262,7 @@ impl Graph {
         if self.nodes.remove(id).is_none() {
             return false;
         }
-        let edge_ids: Vec<String> = self
-            .edges
-            .iter()
-            .filter(|(_, e)| port_node_id(&e.source) == Some(id) || port_node_id(&e.target) == Some(id))
-            .map(|(id, _)| id.clone())
-            .collect();
+        let edge_ids: Vec<String> = self.edges.iter().filter(|(_, e)| port_node_id(&e.source) == Some(id) || port_node_id(&e.target) == Some(id)).map(|(id, _)| id.clone()).collect();
         for eid in edge_ids {
             self.edges.remove(&eid);
         }
@@ -241,14 +280,14 @@ impl Graph {
         self.edges.remove(id).is_some()
     }
 
-    pub fn set_property(&mut self, entity: EntityRef, key: &str, value: PropertyValue) -> Result<(), String> {
+    pub fn set_property(&mut self, entity: EntityRef, key: &str, value: PropertyValue) -> Result<(), TrinityRamError> {
         match entity {
             EntityRef::Node(id) => {
-                let node = self.nodes.get_mut(&id).ok_or_else(|| format!("node {id} not found"))?;
+                let node = self.nodes.get_mut(&id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
                 node.properties.insert(key.to_string(), value);
             }
             EntityRef::Edge(id) => {
-                let edge = self.edges.get_mut(&id).ok_or_else(|| format!("edge {id} not found"))?;
+                let edge = self.edges.get_mut(&id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
                 edge.properties.insert(key.to_string(), value);
             }
         }
@@ -268,11 +307,7 @@ impl Graph {
             if remaining.is_empty() {
                 break;
             }
-            let seed = remaining
-                .iter()
-                .find(|id| !Self::has_incoming_from_remaining(self, id, &remaining))
-                .cloned()
-                .unwrap_or_else(|| remaining.iter().next().expect("remaining non-empty").clone());
+            let seed = remaining.iter().find(|id| !Self::has_incoming_from_remaining(self, id, &remaining)).cloned().unwrap_or_else(|| remaining.iter().next().expect("remaining non-empty").clone());
             Self::extend_flat_positions_from_seed(self, &mut flat, seed);
         }
         for (node_id, (u, v)) in flat {
@@ -293,9 +328,7 @@ impl Graph {
             if tgt_node != node_id {
                 return false;
             }
-            port_node_id(&e.source)
-                .map(|src_node| remaining.contains(src_node))
-                .unwrap_or(false)
+            port_node_id(&e.source).map(|src_node| remaining.contains(src_node)).unwrap_or(false)
         })
     }
 
@@ -332,32 +365,25 @@ impl Graph {
 }
 
 /// 🛡️ Validates trinity fixture instances against a compile-time graph manifest.
-fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixture) -> Result<(), String> {
+fn validate_trinity_fixture(gm: &GraphManifest, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
     let validator = ManifestValidator::new(gm);
     for node in &fixture.nodes {
-        validator.validate_node_kind(&node.kind).map_err(manifest_err)?;
-        validator.validate_node_properties(&node.kind, &node.properties).map_err(manifest_err)?;
+        validator.validate_node_kind(&node.kind)?;
+        validator.validate_node_properties(&node.kind, &node.properties)?;
         if let Some(node_def) = gm.node_kind(&node.kind) {
             for port in &node.ports {
-                validator.validate_port_kind(&port.kind).map_err(manifest_err)?;
+                validator.validate_port_kind(&port.kind)?;
                 if !node_def.ports.is_empty() && !node_def.ports.iter().any(|p| p == &port.kind) {
-                    return Err(format!(
-                        "nodes/{}/ports/{}: port kind {} not declared on node kind {}",
-                        node.id, port.kind, port.kind, node.kind
-                    ));
+                    return Err(TrinityRamError::PortKindNotDeclaredOnFixture { node_id: node.id.clone(), port_kind: port.kind.clone(), node_kind: node.kind.clone() });
                 }
             }
         }
     }
     for edge in &fixture.edges {
-        validator.validate_edge_kind(&edge.kind).map_err(manifest_err)?;
-        validator.validate_edge_properties(&edge.kind, &edge.properties).map_err(manifest_err)?;
+        validator.validate_edge_kind(&edge.kind)?;
+        validator.validate_edge_properties(&edge.kind, &edge.properties)?;
     }
     Ok(())
-}
-
-fn manifest_err(error: ManifestValidationError) -> String {
-    format!("{}: {}", error.path, error.message)
 }
 
 /// 🎯 Entity reference for mutations.
@@ -394,14 +420,11 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 // #endregion 🔖Runtime
 
 // #region 🔖GraphOps
-use vcs::{
-    apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore,
-    ItemPatch, Operation, OperationDiff,
-};
+use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation, OperationDiff};
 
 pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeGeometryPatch {
     pub name: Option<String>,
@@ -583,53 +606,50 @@ pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixture) -> Trinity
     create_document_vcs_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 
-pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) -> Result<(), String> {
+pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
     match op {
         TrinityGraphOp::CreateNode { id, kind, ports, .. } => {
             if fixture.nodes.iter().any(|node| node.id == *id) {
-                return Err(format!("node {id} already exists"));
+                return Err(TrinityRamError::NodeAlreadyExists(id.clone()));
             }
             validate_node_kind_trinity(&fixture.manifest, kind)?;
             if let Some(node_def) = fixture.manifest.node_kind(kind) {
                 for port in ports {
                     validate_port_kind_trinity(&fixture.manifest, &port.kind)?;
                     if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
-                        return Err(format!(
-                            "nodes/{id}/ports/{}: port kind {} not declared on node kind {}",
-                            port.id, port.kind, kind
-                        ));
+                        return Err(TrinityRamError::PortKindNotDeclaredOnOp { node_id: id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: kind.clone() });
                     }
                 }
             }
         }
         TrinityGraphOp::DeleteNode { id } => {
             if !fixture.nodes.iter().any(|node| node.id == *id) {
-                return Err(format!("node {id} not found"));
+                return Err(TrinityRamError::NodeNotFound(id.clone()));
             }
         }
         TrinityGraphOp::CreateEdge { id, kind, source, target, properties } => {
             if fixture.edges.iter().any(|edge| edge.id == *id) {
-                return Err(format!("edge {id} already exists"));
+                return Err(TrinityRamError::EdgeAlreadyExists(id.clone()));
             }
             validate_edge_kind_trinity(&fixture.manifest, kind)?;
             validate_edge_properties_trinity(&fixture.manifest, kind, properties)?;
-            let source_node = port_node_id(source).ok_or_else(|| format!("invalid source port key {source}"))?;
-            let target_node = port_node_id(target).ok_or_else(|| format!("invalid target port key {target}"))?;
+            let source_node = port_node_id(source).ok_or_else(|| TrinityRamError::InvalidSourcePortKey(source.clone()))?;
+            let target_node = port_node_id(target).ok_or_else(|| TrinityRamError::InvalidTargetPortKey(target.clone()))?;
             if !fixture.nodes.iter().any(|node| node.id == source_node) {
-                return Err(format!("source node {source_node} not found"));
+                return Err(TrinityRamError::SourceNodeNotFound(source_node.to_string()));
             }
             if !fixture.nodes.iter().any(|node| node.id == target_node) {
-                return Err(format!("target node {target_node} not found"));
+                return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
             }
         }
         TrinityGraphOp::DeleteEdge { id } => {
             if !fixture.edges.iter().any(|edge| edge.id == *id) {
-                return Err(format!("edge {id} not found"));
+                return Err(TrinityRamError::EdgeNotFound(id.clone()));
             }
         }
         TrinityGraphOp::Rename { id, .. } | TrinityGraphOp::Reposition { id, .. } => {
             if !fixture.nodes.iter().any(|node| node.id == *id) {
-                return Err(format!("node {id} not found"));
+                return Err(TrinityRamError::NodeNotFound(id.clone()));
             }
         }
         TrinityGraphOp::SetDataProperty { entity, key, value } => {
@@ -643,7 +663,7 @@ pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) ->
     Ok(())
 }
 
-pub fn apply_trinity_graph_ops(fixture: GraphFixture, ops: &[TrinityGraphOp]) -> Result<GraphFixture, String> {
+pub fn apply_trinity_graph_ops(fixture: GraphFixture, ops: &[TrinityGraphOp]) -> Result<GraphFixture, TrinityRamError> {
     let mut projection = fixture;
     for op in ops {
         validate_trinity_graph_op(op, &projection)?;
@@ -652,104 +672,88 @@ pub fn apply_trinity_graph_ops(fixture: GraphFixture, ops: &[TrinityGraphOp]) ->
     Ok(projection)
 }
 
-pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<TrinityGraphOp>) -> Result<(), String> {
+pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<TrinityGraphOp>) -> Result<(), TrinityRamError> {
     if ops.is_empty() {
         return Ok(());
     }
-    let mut projection = store.projection().map_err(|e| e.to_string())?;
+    let mut projection = store.projection()?;
     for op in &ops {
         validate_trinity_graph_op(op, &projection)?;
         projection = apply_operation(&projection, op);
     }
-    store
-        .dispatch(DocumentVcsCommand::Apply {
-            operations: ops,
-            description: None,
-        })
-        .map_err(|e| e.to_string())
+    store.dispatch(DocumentVcsCommand::Apply { operations: ops, description: None }).map_err(TrinityRamError::from)
 }
 
-fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), String> {
+fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), TrinityRamError> {
     match entity {
         EntityRef::Node(id) => {
-            fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| format!("node {id} not found"))?;
+            fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
         }
         EntityRef::Edge(id) => {
-            fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| format!("edge {id} not found"))?;
+            fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
         }
     }
     let _ = key;
     Ok(())
 }
 
-fn validate_set_data_property(
-    fixture: &GraphFixture,
-    entity: &EntityRef,
-    key: &str,
-    value: &PropertyValue,
-) -> Result<(), String> {
+fn validate_set_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str, value: &PropertyValue) -> Result<(), TrinityRamError> {
     let (defs, path_prefix) = match entity {
         EntityRef::Node(id) => {
-            let node = fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| format!("node {id} not found"))?;
-            (
-                fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]),
-                format!("nodes/{id}/properties/{key}"),
-            )
+            let node = fixture.nodes.iter().find(|node| node.id == *id).ok_or_else(|| TrinityRamError::NodeNotFound(id.clone()))?;
+            (fixture.manifest.node_kind(&node.kind).map(|def| &def.properties[..]), format!("nodes/{id}/properties/{key}"))
         }
         EntityRef::Edge(id) => {
-            let edge = fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| format!("edge {id} not found"))?;
-            (
-                fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]),
-                format!("edges/{id}/properties/{key}"),
-            )
+            let edge = fixture.edges.iter().find(|edge| edge.id == *id).ok_or_else(|| TrinityRamError::EdgeNotFound(id.clone()))?;
+            (fixture.manifest.edge_kind(&edge.kind).map(|def| &def.properties[..]), format!("edges/{id}/properties/{key}"))
         }
     };
     let Some(defs) = defs else {
-        return Err(format!("{path_prefix}: unknown kind"));
+        return Err(TrinityRamError::UnknownEntityKind { path: path_prefix });
     };
     let Some(def) = defs.iter().find(|def| def.name == key) else {
-        return Err(format!("{path_prefix}: unknown property {key:?}"));
+        return Err(TrinityRamError::UnknownPropertyAtPath { path: path_prefix, key: key.to_string() });
     };
     if def.kind == PropertyKind::Derived {
-        return Err(format!("{path_prefix}: property {key:?} is derived and cannot be set"));
+        return Err(TrinityRamError::DerivedPropertyReadonly { path: path_prefix, key: key.to_string() });
     }
     let mut bag = PropertyBag::new();
     bag.insert(key.to_string(), value.clone());
     validate_property_bag_trinity(&path_prefix, defs, &bag)
 }
 
-fn validate_node_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+fn validate_node_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), TrinityRamError> {
     if manifest.node_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(format!("nodes/{kind}: unknown node kind {kind:?}"))
+        Err(TrinityRamError::UnknownNodeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+fn validate_edge_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), TrinityRamError> {
     if manifest.edge_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(format!("edges/{kind}: unknown edge kind {kind:?}"))
+        Err(TrinityRamError::UnknownEdgeKind { kind: kind.to_string() })
     }
 }
 
-fn validate_port_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), String> {
+fn validate_port_kind_trinity(manifest: &Manifest, kind: &str) -> Result<(), TrinityRamError> {
     if manifest.port_kind(kind).is_some() {
         Ok(())
     } else {
-        Err(format!("ports/{kind}: unknown port kind {kind:?}"))
+        Err(TrinityRamError::UnknownPortKind { kind: kind.to_string() })
     }
 }
 
-fn validate_edge_properties_trinity(manifest: &Manifest, kind: &str, properties: &PropertyBag) -> Result<(), String> {
+fn validate_edge_properties_trinity(manifest: &Manifest, kind: &str, properties: &PropertyBag) -> Result<(), TrinityRamError> {
     let Some(def) = manifest.edge_kind(kind) else {
         return validate_edge_kind_trinity(manifest, kind);
     };
     validate_property_bag_trinity(&format!("edges/{kind}/properties"), &def.properties, properties)
 }
 
-fn validate_property_bag_trinity(path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), String> {
+fn validate_property_bag_trinity(path: &str, defs: &[PropertyDef], bag: &PropertyBag) -> Result<(), TrinityRamError> {
     for def in defs {
         if def.kind == PropertyKind::Derived {
             continue;
@@ -758,16 +762,12 @@ fn validate_property_bag_trinity(path: &str, defs: &[PropertyDef], bag: &Propert
             continue;
         };
         if !property_value_matches_type_trinity(value, def) {
-            return Err(format!(
-                "{path}/{}: property type mismatch for {}",
-                def.name,
-                def.value_type.id()
-            ));
+            return Err(TrinityRamError::PropertyTypeMismatch { path: path.to_string(), name: def.name.clone(), value_type: def.value_type.id().to_string() });
         }
     }
     for key in bag.keys() {
         if !defs.iter().any(|def| def.name == *key) {
-            return Err(format!("{path}/{key}: unknown property {key:?}"));
+            return Err(TrinityRamError::UnknownPropertyInBag { path: path.to_string(), key: key.clone() });
         }
     }
     Ok(())
@@ -795,9 +795,7 @@ fn property_value_matches_type_trinity(value: &PropertyValue, def: &PropertyDef)
 
 fn remove_node_from_fixture(fixture: &mut GraphFixture, id: &str) {
     fixture.nodes.retain(|node| node.id != id);
-    fixture.edges.retain(|edge| {
-        port_node_id(&edge.source) != Some(id.as_ref()) && port_node_id(&edge.target) != Some(id.as_ref())
-    });
+    fixture.edges.retain(|edge| port_node_id(&edge.source) != Some(id) && port_node_id(&edge.target) != Some(id));
     if fixture.root_node_id.as_deref() == Some(id) {
         fixture.root_node_id = None;
     }
@@ -805,27 +803,14 @@ fn remove_node_from_fixture(fixture: &mut GraphFixture, id: &str) {
 
 fn delete_node_snapshot(fixture: &GraphFixture, id: &str) -> (Option<Node>, Vec<Edge>) {
     let node = fixture.nodes.iter().find(|node| node.id == id).cloned();
-    let edges: Vec<Edge> = fixture
-        .edges
-        .iter()
-        .filter(|edge| port_node_id(&edge.source) == Some(id) || port_node_id(&edge.target) == Some(id))
-        .cloned()
-        .collect();
+    let edges: Vec<Edge> = fixture.edges.iter().filter(|edge| port_node_id(&edge.source) == Some(id) || port_node_id(&edge.target) == Some(id)).cloned().collect();
     (node, edges)
 }
 
 fn entity_property_value(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Option<PropertyValue> {
     match entity {
-        EntityRef::Node(id) => fixture
-            .nodes
-            .iter()
-            .find(|node| node.id == *id)
-            .and_then(|node| node.properties.get(key).cloned()),
-        EntityRef::Edge(id) => fixture
-            .edges
-            .iter()
-            .find(|edge| edge.id == *id)
-            .and_then(|edge| edge.properties.get(key).cloned()),
+        EntityRef::Node(id) => fixture.nodes.iter().find(|node| node.id == *id).and_then(|node| node.properties.get(key).cloned()),
+        EntityRef::Edge(id) => fixture.edges.iter().find(|edge| edge.id == *id).and_then(|edge| edge.properties.get(key).cloned()),
     }
 }
 
@@ -834,148 +819,49 @@ impl Operation<GraphFixture> for TrinityGraphOp {
 
     fn diff(&self, projection: &GraphFixture) -> TrinityGraphDiff {
         match self {
-            TrinityGraphOp::CreateNode {
-                id,
-                kind,
-                name,
-                x,
-                y,
-                width,
-                height,
-                ports,
-            } => TrinityGraphDiff {
-                nodes: CollectionDiff {
-                    added: vec![Node {
-                        id: id.clone(),
-                        kind: kind.clone(),
-                        name: name.clone(),
-                        x: *x,
-                        y: *y,
-                        width: *width,
-                        height: *height,
-                        properties: PropertyBag::new(),
-                        ports: ports.clone(),
-                    }],
-                    ..Default::default()
-                },
+            TrinityGraphOp::CreateNode { id, kind, name, x, y, width, height, ports } => TrinityGraphDiff {
+                nodes: CollectionDiff { added: vec![Node { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, properties: PropertyBag::new(), ports: ports.clone() }], ..Default::default() },
                 recompute_derived: true,
                 ..Default::default()
             },
             TrinityGraphOp::DeleteNode { id } => {
                 let (node, edges) = delete_node_snapshot(projection, id);
                 TrinityGraphDiff {
-                    nodes: CollectionDiff {
-                        removed: node.as_ref().map(|node| vec![node.id.clone()]).unwrap_or_default(),
-                        ..Default::default()
-                    },
-                    edges: CollectionDiff {
-                        removed: edges.iter().map(|edge| edge.id.clone()).collect(),
-                        ..Default::default()
-                    },
+                    nodes: CollectionDiff { removed: node.as_ref().map(|node| vec![node.id.clone()]).unwrap_or_default(), ..Default::default() },
+                    edges: CollectionDiff { removed: edges.iter().map(|edge| edge.id.clone()).collect(), ..Default::default() },
                     recompute_derived: true,
                     ..Default::default()
                 }
             }
-            TrinityGraphOp::CreateEdge {
-                id,
-                kind,
-                source,
-                target,
-                properties,
-            } => TrinityGraphDiff {
-                edges: CollectionDiff {
-                    added: vec![Edge {
-                        id: id.clone(),
-                        kind: kind.clone(),
-                        source: source.clone(),
-                        target: target.clone(),
-                        properties: properties.clone(),
-                    }],
-                    ..Default::default()
-                },
+            TrinityGraphOp::CreateEdge { id, kind, source, target, properties } => TrinityGraphDiff {
+                edges: CollectionDiff { added: vec![Edge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() }], ..Default::default() },
                 recompute_derived: true,
                 ..Default::default()
             },
-            TrinityGraphOp::DeleteEdge { id } => TrinityGraphDiff {
-                edges: CollectionDiff {
-                    removed: vec![id.clone()],
-                    ..Default::default()
-                },
-                recompute_derived: true,
-                ..Default::default()
-            },
-            TrinityGraphOp::Rename { id, name } => TrinityGraphDiff {
-                nodes: CollectionDiff {
-                    modified: vec![ItemPatch {
-                        id: id.clone(),
-                        patch: NodeGeometryPatch {
-                            name: Some(name.clone()),
-                            ..Default::default()
-                        },
-                    }],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            TrinityGraphOp::Reposition { id, x, y } => TrinityGraphDiff {
-                nodes: CollectionDiff {
-                    modified: vec![ItemPatch {
-                        id: id.clone(),
-                        patch: NodeGeometryPatch {
-                            x: Some(*x),
-                            y: Some(*y),
-                            ..Default::default()
-                        },
-                    }],
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
+            TrinityGraphOp::DeleteEdge { id } => TrinityGraphDiff { edges: CollectionDiff { removed: vec![id.clone()], ..Default::default() }, recompute_derived: true, ..Default::default() },
+            TrinityGraphOp::Rename { id, name } => {
+                TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() }
+            }
+            TrinityGraphOp::Reposition { id, x, y } => {
+                TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { x: Some(*x), y: Some(*y), ..Default::default() } }], ..Default::default() }, ..Default::default() }
+            }
             TrinityGraphOp::SetDataProperty { entity, key, value } => {
-                let patch = PropertyPatch {
-                    key: key.clone(),
-                    value: Some(value.clone()),
-                };
+                let patch = PropertyPatch { key: key.clone(), value: Some(value.clone()) };
                 let recompute = matches!(entity, EntityRef::Edge(_)) && (key == "u" || key == "v");
                 match entity {
-                    EntityRef::Node(id) => TrinityGraphDiff {
-                        node_properties: vec![ItemPatch { id: id.clone(), patch }],
-                        recompute_derived: key == "flatPosition",
-                        ..Default::default()
-                    },
-                    EntityRef::Edge(id) => TrinityGraphDiff {
-                        edge_properties: vec![ItemPatch { id: id.clone(), patch }],
-                        recompute_derived: recompute,
-                        ..Default::default()
-                    },
+                    EntityRef::Node(id) => TrinityGraphDiff { node_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "flatPosition", ..Default::default() },
+                    EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: recompute, ..Default::default() },
                 }
             }
             TrinityGraphOp::ClearDataProperty { entity, key } => {
-                let patch = PropertyPatch {
-                    key: key.clone(),
-                    value: None,
-                };
+                let patch = PropertyPatch { key: key.clone(), value: None };
                 match entity {
-                    EntityRef::Node(id) => TrinityGraphDiff {
-                        node_properties: vec![ItemPatch { id: id.clone(), patch }],
-                        ..Default::default()
-                    },
-                    EntityRef::Edge(id) => TrinityGraphDiff {
-                        edge_properties: vec![ItemPatch { id: id.clone(), patch }],
-                        recompute_derived: key == "u" || key == "v",
-                        ..Default::default()
-                    },
+                    EntityRef::Node(id) => TrinityGraphDiff { node_properties: vec![ItemPatch { id: id.clone(), patch }], ..Default::default() },
+                    EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "u" || key == "v", ..Default::default() },
                 }
             }
-            TrinityGraphOp::SetCamera { camera } => TrinityGraphDiff {
-                camera: Some(camera.clone()),
-                ..Default::default()
-            },
-            TrinityGraphOp::SetFixture { fixture } => TrinityGraphDiff {
-                set_fixture: Some(fixture.clone()),
-                recompute_derived: true,
-                ..Default::default()
-            },
+            TrinityGraphOp::SetCamera { camera } => TrinityGraphDiff { camera: Some(camera.clone()), ..Default::default() },
+            TrinityGraphOp::SetFixture { fixture } => TrinityGraphDiff { set_fixture: Some(fixture.clone()), recompute_derived: true, ..Default::default() },
         }
     }
 
@@ -986,126 +872,41 @@ impl Operation<GraphFixture> for TrinityGraphOp {
                 let (node, edges) = delete_node_snapshot(projection, id);
                 let mut out = Vec::new();
                 if let Some(node) = node {
-                    out.push(TrinityGraphOp::CreateNode {
-                        id: node.id,
-                        kind: node.kind,
-                        name: node.name,
-                        x: node.x,
-                        y: node.y,
-                        width: node.width,
-                        height: node.height,
-                        ports: node.ports,
-                    });
+                    out.push(TrinityGraphOp::CreateNode { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, ports: node.ports });
                     for edge in edges {
-                        out.push(TrinityGraphOp::CreateEdge {
-                            id: edge.id,
-                            kind: edge.kind,
-                            source: edge.source,
-                            target: edge.target,
-                            properties: edge.properties,
-                        });
+                        out.push(TrinityGraphOp::CreateEdge { id: edge.id, kind: edge.kind, source: edge.source, target: edge.target, properties: edge.properties });
                     }
                 }
                 out
             }
-            TrinityGraphOp::CreateEdge {
-                id,
-                kind,
-                source,
-                target,
-                properties,
-            } => vec![TrinityGraphOp::DeleteEdge { id: id.clone() }],
+            TrinityGraphOp::CreateEdge { id, .. } => vec![TrinityGraphOp::DeleteEdge { id: id.clone() }],
             TrinityGraphOp::DeleteEdge { id } => projection
                 .edges
                 .iter()
                 .find(|edge| edge.id == *id)
-                .map(|edge| {
-                    vec![TrinityGraphOp::CreateEdge {
-                        id: edge.id.clone(),
-                        kind: edge.kind.clone(),
-                        source: edge.source.clone(),
-                        target: edge.target.clone(),
-                        properties: edge.properties.clone(),
-                    }]
-                })
+                .map(|edge| vec![TrinityGraphOp::CreateEdge { id: edge.id.clone(), kind: edge.kind.clone(), source: edge.source.clone(), target: edge.target.clone(), properties: edge.properties.clone() }])
                 .unwrap_or_default(),
-            TrinityGraphOp::Rename { id, name } => projection
-                .nodes
-                .iter()
-                .find(|node| node.id == *id)
-                .map(|node| vec![TrinityGraphOp::Rename {
-                    id: id.clone(),
-                    name: node.name.clone(),
-                }])
-                .unwrap_or_default(),
-            TrinityGraphOp::Reposition { id, x, y } => projection
-                .nodes
-                .iter()
-                .find(|node| node.id == *id)
-                .map(|node| vec![TrinityGraphOp::Reposition {
-                    id: id.clone(),
-                    x: node.x,
-                    y: node.y,
-                }])
-                .unwrap_or_default(),
-            TrinityGraphOp::SetDataProperty { entity, key, value } => {
+            TrinityGraphOp::Rename { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOp::Rename { id: id.clone(), name: node.name.clone() }]).unwrap_or_default(),
+            TrinityGraphOp::Reposition { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOp::Reposition { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            TrinityGraphOp::SetDataProperty { entity, key, .. } => {
                 let prior = entity_property_value(projection, entity, key);
                 match (entity, prior) {
-                    (EntityRef::Node(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty {
-                        entity: EntityRef::Node(id.clone()),
-                        key: key.clone(),
-                        value: old,
-                    }],
-                    (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty {
-                        entity: EntityRef::Edge(id.clone()),
-                        key: key.clone(),
-                        value: old,
-                    }],
-                    (entity, None) => vec![TrinityGraphOp::ClearDataProperty {
-                        entity: entity.clone(),
-                        key: key.clone(),
-                    }],
+                    (EntityRef::Node(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty { entity: EntityRef::Node(id.clone()), key: key.clone(), value: old }],
+                    (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty { entity: EntityRef::Edge(id.clone()), key: key.clone(), value: old }],
+                    (entity, None) => vec![TrinityGraphOp::ClearDataProperty { entity: entity.clone(), key: key.clone() }],
                 }
             }
-            TrinityGraphOp::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key)
-                .map(|old| {
-                    vec![TrinityGraphOp::SetDataProperty {
-                        entity: entity.clone(),
-                        key: key.clone(),
-                        value: old,
-                    }]
-                })
-                .unwrap_or_default(),
+            TrinityGraphOp::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOp::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default(),
             TrinityGraphOp::SetCamera { .. } => vec![TrinityGraphOp::SetCamera { camera: projection.camera.clone() }],
             TrinityGraphOp::SetFixture { .. } => vec![TrinityGraphOp::SetFixture { fixture: projection.clone() }],
         }
     }
 }
 
-impl Default for NodeGeometryPatch {
-    fn default() -> Self {
-        Self {
-            name: None,
-            x: None,
-            y: None,
-            width: None,
-            height: None,
-        }
-    }
-}
 // #endregion 🔖GraphOps
 
 pub fn empty_trinity_graph_fixture() -> GraphFixture {
-    GraphFixture {
-        schema: GraphFixture::SCHEMA.into(),
-        name: "trinity".into(),
-        manifest_id: Some("nakagin".into()),
-        manifest: Manifest::nakagin_default(),
-        camera: Camera::default(),
-        nodes: Vec::new(),
-        edges: Vec::new(),
-        root_node_id: None,
-    }
+    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
 }
 
 //#region 🔖WasmBridge
@@ -1126,8 +927,7 @@ mod wasm_bridge {
         pub fn new(envelope_json: Option<String>) -> Result<TrinityGraphDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: TrinityGraphEnvelope =
-                        serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    let envelope: TrinityGraphEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
                     TrinityGraphStore::new(envelope)
                 }
                 None => TrinityGraphStore::new(create_trinity_graph_envelope("trinity", empty_trinity_graph_fixture())),
@@ -1137,26 +937,17 @@ mod wasm_bridge {
 
         #[wasm_bindgen(js_name = dispatchJson)]
         pub fn dispatch_json(&self, command_json: &str) -> Result<(), JsValue> {
-            self.store
-                .borrow_mut()
-                .dispatch_json(command_json)
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow_mut().dispatch_json(command_json).map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = projectionJson)]
         pub fn projection_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .projection_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().projection_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = envelopeJson)]
         pub fn envelope_json(&self) -> Result<String, JsValue> {
-            self.store
-                .borrow()
-                .envelope_json()
-                .map_err(|e| JsValue::from_str(&e.to_string()))
+            self.store.borrow().envelope_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
         #[wasm_bindgen(js_name = generation)]
@@ -1371,20 +1162,7 @@ mod tests {
     fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_ops(
-            &mut store,
-            vec![TrinityGraphOp::CreateNode {
-                id: "new".into(),
-                kind: "Piece".into(),
-                name: "new-piece".into(),
-                x: 200.0,
-                y: 40.0,
-                width: 80.0,
-                height: 40.0,
-                ports: vec![],
-            }],
-        )
-        .expect("create");
+        dispatch_trinity_graph_ops(&mut store, vec![TrinityGraphOp::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
         assert_eq!(store.projection().expect("projection").nodes.len(), 3);
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").nodes.len(), 2);
@@ -1394,17 +1172,7 @@ mod tests {
     fn graph_op_dispatch_validates_create_edge_batch_incrementally() {
         let mut fixture = mini_fixture();
         while fixture.nodes.len() < 9 {
-            fixture.nodes.push(Node {
-                id: format!("pad-{}", fixture.nodes.len()),
-                kind: "Piece".into(),
-                name: format!("pad-{}", fixture.nodes.len()),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                properties: PropertyBag::new(),
-                ports: vec![],
-            });
+            fixture.nodes.push(Node { id: format!("pad-{}", fixture.nodes.len()), kind: "Piece".into(), name: format!("pad-{}", fixture.nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
         }
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
         dispatch_trinity_graph_ops(
@@ -1418,12 +1186,7 @@ mod tests {
                     y: 0.0,
                     width: 80.0,
                     height: 40.0,
-                    ports: vec![Port {
-                        id: "out".into(),
-                        kind: "Connector".into(),
-                        direction: PortDirection::Out,
-                        properties: PropertyBag::new(),
-                    }],
+                    ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
                 },
                 TrinityGraphOp::CreateNode {
                     id: "y-10".into(),
@@ -1433,20 +1196,9 @@ mod tests {
                     y: 80.0,
                     width: 80.0,
                     height: 40.0,
-                    ports: vec![Port {
-                        id: "in".into(),
-                        kind: "Connector".into(),
-                        direction: PortDirection::In,
-                        properties: PropertyBag::new(),
-                    }],
+                    ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
                 },
-                TrinityGraphOp::CreateEdge {
-                    id: "e-batch".into(),
-                    kind: "Connection".into(),
-                    source: port_key("x-9", "out"),
-                    target: port_key("y-10", "in"),
-                    properties: PropertyBag::new(),
-                },
+                TrinityGraphOp::CreateEdge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() },
             ],
         )
         .expect("batch create edge");
@@ -1458,36 +1210,15 @@ mod tests {
     #[test]
     fn graph_op_rejects_unknown_node_kind() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_op(
-            &TrinityGraphOp::CreateNode {
-                id: "new".into(),
-                kind: "Piece2".into(),
-                name: "x".into(),
-                x: 0.0,
-                y: 0.0,
-                width: 80.0,
-                height: 40.0,
-                ports: vec![],
-            },
-            &fixture,
-        )
-        .expect_err("unknown kind");
-        assert!(err.contains("unknown node kind"));
+        let err = validate_trinity_graph_op(&TrinityGraphOp::CreateNode { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![] }, &fixture).expect_err("unknown kind");
+        assert!(err.to_string().contains("unknown node kind"));
     }
 
     #[test]
     fn graph_op_rejects_derived_property_set() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_op(
-            &TrinityGraphOp::SetDataProperty {
-                entity: EntityRef::Node("root".into()),
-                key: "flatPosition".into(),
-                value: PropertyValue::Null,
-            },
-            &fixture,
-        )
-        .expect_err("derived");
-        assert!(err.contains("derived"));
+        let err = validate_trinity_graph_op(&TrinityGraphOp::SetDataProperty { entity: EntityRef::Node("root".into()), key: "flatPosition".into(), value: PropertyValue::Null }, &fixture).expect_err("derived");
+        assert!(err.to_string().contains("derived"));
     }
 }
 // #endregion 🔖Tests

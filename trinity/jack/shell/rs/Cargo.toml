@@ -11,3 +11,4 @@ path = "bin.rs"
 [dependencies]
 trinity_jack = { path = "../../core/rs" }
 trinity_ram = { path = "../../../ram/rs" }
+thiserror = "2.0.12"

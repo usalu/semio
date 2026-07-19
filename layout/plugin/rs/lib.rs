@@ -8,13 +8,13 @@ use layout_rs::{
 };
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
-    build_canvas_2d_scene, create_default_layout, engagement_token_matches, selection_ids, tree_item_desc, tree_item_with_action,
-    tree_item_with_action_draggable, ui_declarative_sections_to_tree,
+    build_canvas_2d_scene, create_default_layout, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, selection_ids,
+    tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
-    ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App,
+    ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
     Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
+    ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -113,12 +113,6 @@ fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
         action: action.into(),
         args,
     }
-}
-
-fn selection_ids(args: Option<&Value>) -> Vec<String> {
-    args.and_then(|value| value.get("ids"))
-        .and_then(|value| serde_json::from_value(value.clone()).ok())
-        .unwrap_or_default()
 }
 
 fn active_page<'a>(doc: &'a LayoutDocument, runtime: &LayoutPlayRuntime) -> Option<&'a Page> {
@@ -343,14 +337,6 @@ fn surface_is_blueprint(args: Option<&Value>) -> bool {
         .is_none_or(|surface| surface.contains("blueprint"))
 }
 
-fn camera_for_surface<'a>(doc: &'a mut LayoutDocument, blueprint: bool) -> &'a mut LayoutCamera {
-    if blueprint {
-        &mut doc.camera
-    } else {
-        &mut doc.preview_camera
-    }
-}
-
 fn screen_to_world_for_surface(doc: &LayoutDocument, blueprint: bool, sx: f64, sy: f64, width: f64, height: f64) -> (f64, f64) {
     let camera_doc = if blueprint { &doc.camera } else { &doc.preview_camera };
     let camera = layout_rs::cavas::camera::Camera { x: camera_doc.x, y: camera_doc.y, zoom: camera_doc.zoom.max(0.0001) };
@@ -547,204 +533,75 @@ fn run_layout_preflight(doc: &LayoutDocument, labels: &LayoutLabels) -> Vec<Pref
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the layout app; one field per label makes every locale combination compile-checked.
-struct LayoutLabels {
-    document: &'static str,
-    spreads: &'static str,
-    frames: &'static str,
-    parent_pages: &'static str,
-    layers: &'static str,
-    stories: &'static str,
-    links: &'static str,
-    styles: &'static str,
-    drop_here: &'static str,
-    catalogue_page: &'static str,
-    kind_rect: &'static str,
-    kind_text: &'static str,
-    kind_image: &'static str,
-    schema: &'static str,
-    name: &'static str,
-    pages: &'static str,
-    active_page: &'static str,
-    id: &'static str,
-    width: &'static str,
-    height: &'static str,
-    margin_top: &'static str,
-    margin_right: &'static str,
-    margin_bottom: &'static str,
-    margin_left: &'static str,
-    gutter: &'static str,
-    columns: &'static str,
-    page: &'static str,
-    kind: &'static str,
-    x: &'static str,
-    y: &'static str,
-    fill: &'static str,
-    stroke: &'static str,
-    story: &'static str,
-    wrap_mode: &'static str,
-    wrap_none: &'static str,
-    wrap_box: &'static str,
-    wrap_contour: &'static str,
-    link_path: &'static str,
-    group_page: &'static str,
-    group_frame: &'static str,
-    selection_not_found: &'static str,
-    preflight: &'static str,
-    no_issues: &'static str,
-    window_blueprint: &'static str,
-    window_preview: &'static str,
-    parent: &'static str,
-    objects: &'static str,
-    chars: &'static str,
-    undo: &'static str,
-    redo: &'static str,
-    preflight_out_of_bounds: &'static str,
-    preflight_asset_missing: &'static str,
-    preflight_asset_modified: &'static str,
-    preflight_asset_low_resolution: &'static str,
-    preflight_image_empty_frame: &'static str,
-    preflight_text_missing_story: &'static str,
-    preflight_text_below_minimum_size: &'static str,
-    preflight_font_missing: &'static str,
-    preflight_text_overset: &'static str,
-    preflight_asset_rgb_in_print: &'static str,
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the layout app; one field per label makes every locale combination compile-checked.
+    struct LayoutLabels {
+        document: &'static str = en: "Document", de: "Dokument";
+        spreads: &'static str = en: "Spreads", de: "Doppelseiten";
+        frames: &'static str = en: "Frames", de: "Rahmen";
+        parent_pages: &'static str = en: "Parent Pages", de: "Übergeordnete Seiten";
+        layers: &'static str = en: "Layers", de: "Ebenen";
+        stories: &'static str = en: "Stories", de: "Textflüsse";
+        links: &'static str = en: "Links", de: "Verknüpfungen";
+        styles: &'static str = en: "Styles", de: "Formate";
+        drop_here: &'static str = en: "Drop catalogue items here", de: "Katalogelemente hier ablegen";
+        catalogue_page: &'static str = en: "Page", de: "Seite";
+        kind_rect: &'static str = en: "Rectangle", de: "Rechteck";
+        kind_text: &'static str = en: "Text Frame", de: "Textrahmen";
+        kind_image: &'static str = en: "Image Frame", de: "Bildrahmen";
+        schema: &'static str = en: "Schema", de: "Schema";
+        name: &'static str = en: "Name", de: "Name";
+        pages: &'static str = en: "Pages", de: "Seiten";
+        active_page: &'static str = en: "Active page", de: "Aktive Seite";
+        id: &'static str = en: "Id", de: "ID";
+        width: &'static str = en: "Width", de: "Breite";
+        height: &'static str = en: "Height", de: "Höhe";
+        margin_top: &'static str = en: "Margin Top", de: "Rand oben";
+        margin_right: &'static str = en: "Margin Right", de: "Rand rechts";
+        margin_bottom: &'static str = en: "Margin Bottom", de: "Rand unten";
+        margin_left: &'static str = en: "Margin Left", de: "Rand links";
+        gutter: &'static str = en: "Gutter", de: "Spaltenabstand";
+        columns: &'static str = en: "Columns", de: "Spalten";
+        page: &'static str = en: "Page", de: "Seite";
+        kind: &'static str = en: "Kind", de: "Art";
+        x: &'static str = en: "X", de: "X";
+        y: &'static str = en: "Y", de: "Y";
+        fill: &'static str = en: "Fill", de: "Füllung";
+        stroke: &'static str = en: "Stroke", de: "Kontur";
+        story: &'static str = en: "Story", de: "Textfluss";
+        wrap_mode: &'static str = en: "Wrap Mode", de: "Textumfluss";
+        wrap_none: &'static str = en: "None", de: "Kein";
+        wrap_box: &'static str = en: "Box", de: "Rechteck";
+        wrap_contour: &'static str = en: "Contour", de: "Kontur";
+        link_path: &'static str = en: "Link Path", de: "Verknüpfungspfad";
+        group_page: &'static str = en: "Page", de: "Seite";
+        group_frame: &'static str = en: "Frame", de: "Rahmen";
+        selection_not_found: &'static str = en: "Selection not found in document.", de: "Auswahl im Dokument nicht gefunden.";
+        preflight: &'static str = en: "Preflight", de: "Preflight";
+        no_issues: &'static str = en: "No issues", de: "Keine Probleme";
+        window_blueprint: &'static str = en: "Blueprint", de: "Entwurf";
+        window_preview: &'static str = en: "Preview", de: "Vorschau";
+        parent: &'static str = en: "parent", de: "uebergeordnet";
+        objects: &'static str = en: "objects", de: "Objekte";
+        chars: &'static str = en: "chars", de: "Zeichen";
+        undo: &'static str = en: "Undo", de: "Rueckgaengig";
+        redo: &'static str = en: "Redo", de: "Wiederholen";
+        preflight_out_of_bounds: &'static str = en: "Object {} extends outside page bounds", de: "Objekt {} liegt ausserhalb der Seitengrenzen";
+        preflight_asset_missing: &'static str = en: "Linked asset missing for {}", de: "Verknuepftes Element fehlt fuer {}";
+        preflight_asset_modified: &'static str = en: "Linked asset modified for {}", de: "Verknuepftes Element geaendert fuer {}";
+        preflight_asset_low_resolution: &'static str = en: "Linked asset is low resolution for {}", de: "Verknuepftes Element hat niedrige Aufloesung fuer {}";
+        preflight_image_empty_frame: &'static str = en: "Image frame {} has no preview", de: "Bildrahmen {} hat keine Vorschau";
+        preflight_text_missing_story: &'static str = en: "Text frame {} has no story", de: "Textrahmen {} hat keinen Textfluss";
+        preflight_text_below_minimum_size: &'static str = en: "Text in {} is below minimum readable size", de: "Text in {} ist kleiner als die Mindestlesbarkeitsgroesse";
+        preflight_font_missing: &'static str = en: "Font {} used by {} is not available", de: "Schriftart {} verwendet von {} ist nicht verfuegbar";
+        preflight_text_overset: &'static str = en: "Text in {} overflows its frame", de: "Text in {} laeuft ueber den Rahmen hinaus";
+        preflight_asset_rgb_in_print: &'static str = en: "Linked asset {} uses RGB in a print document", de: "Verknuepftes Element {} verwendet RGB in einem Druckdokument";
+    }
 }
-
-const LAYOUT_LABELS_NATIVE_EN: LayoutLabels = LayoutLabels {
-    document: "Document",
-    spreads: "Spreads",
-    frames: "Frames",
-    parent_pages: "Parent Pages",
-    layers: "Layers",
-    stories: "Stories",
-    links: "Links",
-    styles: "Styles",
-    drop_here: "Drop catalogue items here",
-    catalogue_page: "Page",
-    kind_rect: "Rectangle",
-    kind_text: "Text Frame",
-    kind_image: "Image Frame",
-    schema: "Schema",
-    name: "Name",
-    pages: "Pages",
-    active_page: "Active page",
-    id: "Id",
-    width: "Width",
-    height: "Height",
-    margin_top: "Margin Top",
-    margin_right: "Margin Right",
-    margin_bottom: "Margin Bottom",
-    margin_left: "Margin Left",
-    gutter: "Gutter",
-    columns: "Columns",
-    page: "Page",
-    kind: "Kind",
-    x: "X",
-    y: "Y",
-    fill: "Fill",
-    stroke: "Stroke",
-    story: "Story",
-    wrap_mode: "Wrap Mode",
-    wrap_none: "None",
-    wrap_box: "Box",
-    wrap_contour: "Contour",
-    link_path: "Link Path",
-    group_page: "Page",
-    group_frame: "Frame",
-    selection_not_found: "Selection not found in document.",
-    preflight: "Preflight",
-    no_issues: "No issues",
-    window_blueprint: "Blueprint",
-    window_preview: "Preview",
-    parent: "parent",
-    objects: "objects",
-    chars: "chars",
-    undo: "Undo",
-    redo: "Redo",
-    preflight_out_of_bounds: "Object {} extends outside page bounds",
-    preflight_asset_missing: "Linked asset missing for {}",
-    preflight_asset_modified: "Linked asset modified for {}",
-    preflight_asset_low_resolution: "Linked asset is low resolution for {}",
-    preflight_image_empty_frame: "Image frame {} has no preview",
-    preflight_text_missing_story: "Text frame {} has no story",
-    preflight_text_below_minimum_size: "Text in {} is below minimum readable size",
-    preflight_font_missing: "Font {} used by {} is not available",
-    preflight_text_overset: "Text in {} overflows its frame",
-    preflight_asset_rgb_in_print: "Linked asset {} uses RGB in a print document",
-};
-
-const LAYOUT_LABELS_NATIVE_DE: LayoutLabels = LayoutLabels {
-    document: "Dokument",
-    spreads: "Doppelseiten",
-    frames: "Rahmen",
-    parent_pages: "Übergeordnete Seiten",
-    layers: "Ebenen",
-    stories: "Textflüsse",
-    links: "Verknüpfungen",
-    styles: "Formate",
-    drop_here: "Katalogelemente hier ablegen",
-    catalogue_page: "Seite",
-    kind_rect: "Rechteck",
-    kind_text: "Textrahmen",
-    kind_image: "Bildrahmen",
-    schema: "Schema",
-    name: "Name",
-    pages: "Seiten",
-    active_page: "Aktive Seite",
-    id: "ID",
-    width: "Breite",
-    height: "Höhe",
-    margin_top: "Rand oben",
-    margin_right: "Rand rechts",
-    margin_bottom: "Rand unten",
-    margin_left: "Rand links",
-    gutter: "Spaltenabstand",
-    columns: "Spalten",
-    page: "Seite",
-    kind: "Art",
-    x: "X",
-    y: "Y",
-    fill: "Füllung",
-    stroke: "Kontur",
-    story: "Textfluss",
-    wrap_mode: "Textumfluss",
-    wrap_none: "Kein",
-    wrap_box: "Rechteck",
-    wrap_contour: "Kontur",
-    link_path: "Verknüpfungspfad",
-    group_page: "Seite",
-    group_frame: "Rahmen",
-    selection_not_found: "Auswahl im Dokument nicht gefunden.",
-    preflight: "Preflight",
-    no_issues: "Keine Probleme",
-    window_blueprint: "Entwurf",
-    window_preview: "Vorschau",
-    parent: "uebergeordnet",
-    objects: "Objekte",
-    chars: "Zeichen",
-    undo: "Rueckgaengig",
-    redo: "Wiederholen",
-    preflight_out_of_bounds: "Objekt {} liegt ausserhalb der Seitengrenzen",
-    preflight_asset_missing: "Verknuepftes Element fehlt fuer {}",
-    preflight_asset_modified: "Verknuepftes Element geaendert fuer {}",
-    preflight_asset_low_resolution: "Verknuepftes Element hat niedrige Aufloesung fuer {}",
-    preflight_image_empty_frame: "Bildrahmen {} hat keine Vorschau",
-    preflight_text_missing_story: "Textrahmen {} hat keinen Textfluss",
-    preflight_text_below_minimum_size: "Text in {} ist kleiner als die Mindestlesbarkeitsgroesse",
-    preflight_font_missing: "Schriftart {} verwendet von {} ist nicht verfuegbar",
-    preflight_text_overset: "Text in {} laeuft ueber den Rahmen hinaus",
-    preflight_asset_rgb_in_print: "Verknuepftes Element {} verwendet RGB in einem Druckdokument",
-};
 
 /// 🗣️ Resolves the active label set from the shell-provided locale; unknown locales fall back to native English.
 fn layout_labels(view_state: &ViewState) -> &'static LayoutLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &LAYOUT_LABELS_NATIVE_DE
-    } else {
-        &LAYOUT_LABELS_NATIVE_EN
-    }
+    resolve_labels::<LayoutLabels>(view_state)
 }
 
 /// 🗣️ Resolves a catalogue frame kind's display label from its stable id; unknown kinds fall back to the kind id itself.
@@ -766,6 +623,45 @@ fn preflight_msg(template: &str, args: &[&str]) -> String {
     result
 }
 //#endregion 🔖Terminology
+
+//#region 🔖CommandLabels
+/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_layout_app`'s
+/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
+    const ENTRIES: &[(&str, &str, &str)] = &[
+        ("addFrame", "Add Frame", "Rahmen hinzufuegen"),
+        ("addPage", "Add Page", "Seite hinzufuegen"),
+        ("exportPng", "Export Png", "Png exportieren"),
+        ("exportSvg", "Export Svg", "Svg exportieren"),
+        ("exportPdf", "Export Pdf", "Pdf exportieren"),
+        ("exportPackage", "Export Package", "Paket exportieren"),
+        ("patchPage", "Patch Page", "Seite aktualisieren"),
+        ("patchFrame", "Patch Frame", "Rahmen aktualisieren"),
+        ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("canvasDrop", "Canvas Drop", "Ablegen auf Leinwand"),
+        ("setSelection", "Set Selection", "Auswahl festlegen"),
+        ("setActivePage", "Set Active Page", "Aktive Seite festlegen"),
+        ("setHover", "Set Hover", "Hover festlegen"),
+        ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
+        ("engagementInput", "Engagement Input", "Eingabe"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
+        ("canvasDragOver", "Canvas Drag Over", "Ziehen ueber Leinwand"),
+        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlaesst Leinwand"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+    ];
+    localized_label_map(is_de, ENTRIES)
+}
+
+/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_layout_app`.
+/// The layout app currently declares no utilities, so this returns an empty map — kept for parity with the
+/// other crates' overlay-wiring shape and to compile-check the moment a utility is added.
+fn layout_utility_labels(_is_de: bool) -> HashMap<String, String> {
+    HashMap::new()
+}
+//#endregion 🔖CommandLabels
 
 //#region 🔖Panels
 /// 🌳 Layout's row shape (id/label/description/icon/optional-action) over the SDK's
@@ -960,10 +856,10 @@ fn build_document_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, labels
 
 fn catalogue_tree_item(kind: &str, label: &str, icon: &str) -> UiTreeItemNode {
     let action = if kind == "page" { layout_action("addPage", None) } else { layout_action("addFrame", Some(json!({ "kind": kind }))) };
-    let drag_data = json!({
-        LAYOUT_CATALOGUE_DRAG_MIME: json!({ "kind": kind }).to_string(),
-        format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"): "",
-    });
+    let mut drag_data_entries = serde_json::Map::new();
+    drag_data_entries.insert(LAYOUT_CATALOGUE_DRAG_MIME.to_string(), json!(json!({ "kind": kind }).to_string()));
+    drag_data_entries.insert(format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}{kind}"), json!(""));
+    let drag_data = Value::Object(drag_data_entries);
     let mut item = tree_item_with_action_draggable(format!("layout-catalogue.{kind}"), label, Some(kind.into()), action, &drag_data);
     item.icon_id = Some(icon.into());
     item
@@ -1268,20 +1164,9 @@ fn build_preflight_tree(doc: &LayoutDocument, labels: &LayoutLabels) -> UiNode {
             })
             .collect()
     };
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "layout-preflight.issues".into(),
-            label: Some(labels.preflight.into()),
-            default_open: Some(true),
-            loading: None,
-            items,
-        }],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+    PanelTreeBuilder::new("layout-preflight")
+        .section("layout-preflight.issues", Some(labels.preflight.into()), true, items)
+        .build()
 }
 
 fn layout_window_engagement(runtime: &LayoutPlayRuntime, label: &str, labels: &LayoutLabels) -> WindowEngagement {
@@ -1806,73 +1691,22 @@ impl DocumentApp for LayoutPlayApp {
         ])
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
         let labels = layout_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        semio_framework_plugin::AppLabelsOverlay {
-            window_kind_labels: std::collections::HashMap::from([
-                (LAYOUT_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
-                (LAYOUT_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
-            ]),
-            panel_tab_labels: std::collections::HashMap::from([
-                (LAYOUT_PLAY_PREFLIGHT_TAB_ID.to_string(), labels.preflight.to_string()),
-            ]),
-            mode_labels: std::collections::HashMap::from([
-                ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
-            ]),
-            action_labels: layout_action_labels(is_de),
-            utility_labels: layout_utility_labels(is_de),
-            example_labels: std::collections::HashMap::from([
-                ("sample".to_string(), (if is_de { "Beispiel" } else { "Sample" }).to_string()),
-            ]),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(LAYOUT_PLAY_WINDOW_BLUEPRINT, labels.window_blueprint)
+            .window_kind_label(LAYOUT_PLAY_WINDOW_PREVIEW, labels.window_preview)
+            .panel_tab_label(LAYOUT_PLAY_PREFLIGHT_TAB_ID, labels.preflight)
+            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+            .action_labels(layout_action_labels(is_de))
+            .utility_labels(layout_utility_labels(is_de))
+            .example_labels(HashMap::from([("sample".to_string(), (if is_de { "Beispiel" } else { "Sample" }).to_string())]))
     }
 }
 //#endregion 🔖LayoutPlayApp
 
-//#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_layout_app`'s
-/// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-/// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn layout_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addFrame", "Add Frame", "Rahmen hinzufuegen"),
-        ("addPage", "Add Page", "Seite hinzufuegen"),
-        ("exportPng", "Export Png", "Png exportieren"),
-        ("exportSvg", "Export Svg", "Svg exportieren"),
-        ("exportPdf", "Export Pdf", "Pdf exportieren"),
-        ("exportPackage", "Export Package", "Paket exportieren"),
-        ("patchPage", "Patch Page", "Seite aktualisieren"),
-        ("patchFrame", "Patch Frame", "Rahmen aktualisieren"),
-        ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("canvasDrop", "Canvas Drop", "Ablegen auf Leinwand"),
-        ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setActivePage", "Set Active Page", "Aktive Seite festlegen"),
-        ("setHover", "Set Hover", "Hover festlegen"),
-        ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
-        ("engagementInput", "Engagement Input", "Eingabe"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
-        ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasDragOver", "Canvas Drag Over", "Ziehen ueber Leinwand"),
-        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlaesst Leinwand"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
-    ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-}
-
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_layout_app`.
-/// The layout app currently declares no utilities, so this returns an empty map — kept for parity with the
-/// other crates' overlay-wiring shape and to compile-check the moment a utility is added.
-fn layout_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
-}
-//#endregion 🔖CommandLabels
-
-//#region 🔖AppFactory
+//#region 🔖Manifest
 /// 🛠️ An internal (non-palette) action declaration — the pointer/inspector/DnD/engagement-bound
 /// vocabulary dispatched by the canvas and panels, never surfaced as a standalone palette command.
 fn layout_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
@@ -2056,28 +1890,13 @@ semio_framework_plugin::semio_plugin! {
     setup: register_layout_exports,
     apps: [ create_layout_app => LayoutPlayApp ],
 }
-//#endregion 🔖AppFactory
+//#endregion 🔖Manifest
 
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-    use semio_framework_plugin::app::AppActionRegistry;
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
-
-    fn new_app() -> VcsDocumentApp<LayoutPlayApp> {
-        VcsDocumentApp::new(LayoutPlayApp::default())
-    }
-
-    /// 🧬 A wrapper carrying the real registry so kind discipline (View/Shell-emits-ops rejection) runs.
-    fn new_app_with_registry() -> VcsDocumentApp<LayoutPlayApp> {
-        let definition = create_layout_app().definition;
-        VcsDocumentApp::with_registry(LayoutPlayApp::default(), AppActionRegistry::from_definition(&definition))
-    }
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
     fn render_json(app: &mut VcsDocumentApp<LayoutPlayApp>, body: &str) -> String {
         let node = app.render(body, None, &ViewState::default()).expect("render");
@@ -2104,13 +1923,13 @@ mod tests {
 
     #[test]
     fn renders_blueprint_canvas_scene() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("canvas-2d"));
     }
 
     #[test]
     fn renders_preview_canvas_scene() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_PREVIEW).contains("canvas-2d"));
     }
 
@@ -2137,7 +1956,7 @@ mod tests {
 
     #[test]
     fn document_lists_sample_pages() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.page.page-1"));
         assert!(json.contains("Page 1"));
@@ -2145,7 +1964,7 @@ mod tests {
 
     #[test]
     fn catalogue_lists_frame_kinds() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains("layout-catalogue.rect"));
         assert!(json.contains("Text Frame"));
@@ -2153,7 +1972,7 @@ mod tests {
 
     #[test]
     fn layout_labels_resolve_native_english_by_default() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("\"Frames\""));
         assert!(json.contains("\"Layers\""));
@@ -2164,7 +1983,7 @@ mod tests {
 
     #[test]
     fn layout_labels_translate_document_tree_in_german() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json_locale(&mut app, LAYOUT_PLAY_BODY_DOCUMENT, "de");
         assert!(json.contains("\"Rahmen\""));
         assert!(json.contains("\"Ebenen\""));
@@ -2175,17 +1994,17 @@ mod tests {
 
     #[test]
     fn preflight_finds_missing_asset() {
-        let issues = run_layout_preflight(&default_document(), &LAYOUT_LABELS_NATIVE_EN);
+        let issues = run_layout_preflight(&default_document(), &LayoutLabels::EN);
         assert!(issues.iter().any(|issue| issue.code == "asset.missing"));
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_PREFLIGHT);
         assert!(json.contains("asset.missing") || json.contains("Linked asset missing"));
     }
 
     #[test]
     fn set_selection_reflects_in_inspector() {
-        let mut app = new_app();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        let mut app = testkit::new_app::<LayoutPlayApp>();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &testkit::meta("local")).expect("select");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_INSPECTION);
         assert!(json.contains("frame-text-1"));
     }
@@ -2199,28 +2018,30 @@ mod tests {
 
     #[test]
     fn add_frame_action_appends_rect() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        let result = app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local")).expect("add");
         assert_eq!(result.operations.len(), 1);
         assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
     }
 
     #[test]
     fn undo_redo_round_trips_add_frame() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
-        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("projection").pages[0].frames.len(), before + 1);
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            "addFrame",
+            Some(&json!({ "kind": "rect" })),
+            |app| app.projection().expect("projection").pages[0].frames.len(),
+            before,
+            before + 1,
+        );
     }
 
     #[test]
     fn patch_page_supports_margins_and_columns() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         for (field, value) in [
             ("marginTop", 60.0),
             ("marginRight", 40.0),
@@ -2229,27 +2050,27 @@ mod tests {
             ("columnsGutter", 18.0),
         ] {
             let result = app
-                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewState::default(), &meta("local"))
+                .handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": field, "value": value })), &ViewState::default(), &testkit::meta("local"))
                 .expect("patch");
             assert_eq!(result.operations.len(), 1, "field {field} should apply");
         }
-        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewState::default(), &meta("local")).expect("cols");
+        app.handle_action("patchPage", Some(&json!({ "pageId": "page-1", "field": "columnsCount", "value": 3 })), &ViewState::default(), &testkit::meta("local")).expect("cols");
         let page = app.projection().expect("projection").pages.into_iter().find(|page| page.id == "page-1").unwrap();
         assert_eq!(page.columns.count, 3);
     }
 
     #[test]
     fn patch_frame_supports_rect_fill_and_stroke() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let before = app.projection().expect("projection").pages[0].frames.len();
-        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local")).expect("add");
+        app.handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local")).expect("add");
         let frame_id = format!("frame-{}", before + 1);
         let result = app
             .handle_action(
                 "patchFrame",
                 Some(&json!({ "frameId": frame_id, "pageId": "page-1", "field": "fill", "value": "0.5, 0.4, 0.3, 1" })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("patch");
         assert_eq!(result.operations.len(), 1);
@@ -2261,12 +2082,12 @@ mod tests {
 
     #[test]
     fn patch_frame_supports_text_story_content_and_wrap_mode() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "storyContent", "value": "Edited story body." })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("story");
         let story = app.projection().expect("projection").stories.into_iter().find(|story| story.id == "story-1").unwrap();
@@ -2276,7 +2097,7 @@ mod tests {
             "patchFrame",
             Some(&json!({ "frameId": "frame-text-1", "pageId": "page-1", "field": "wrapMode", "value": "contour" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("wrap");
         let doc = app.projection().expect("projection");
@@ -2287,12 +2108,12 @@ mod tests {
 
     #[test]
     fn patch_frame_supports_image_link_path() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         app.handle_action(
             "patchFrame",
             Some(&json!({ "frameId": "frame-image-1", "pageId": "page-1", "field": "linkPath", "value": "assets/updated.png" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("link");
         let link = app.projection().expect("projection").links.into_iter().find(|link| link.id == "link-missing").unwrap();
@@ -2301,14 +2122,14 @@ mod tests {
 
     #[test]
     fn export_actions_wire_to_real_layout_rs_exporters() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         for (action, mime_type) in [
             ("exportPng", "image/png"),
             ("exportSvg", "image/svg+xml"),
             ("exportPdf", "application/pdf"),
             ("exportPackage", "application/zip"),
         ] {
-            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewState::default(), &meta("local")).expect("export");
+            let result = app.handle_action(action, Some(&json!({ "pageId": "page-1" })), &ViewState::default(), &testkit::meta("local")).expect("export");
             match result.requested_effects.first() {
                 Some(HostEffect::DownloadMediaExport { mime_type: mime, data, .. }) => {
                     assert_eq!(mime, mime_type, "{action}");
@@ -2321,7 +2142,7 @@ mod tests {
 
     #[test]
     fn blueprint_scene_has_page_background_and_guides() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
@@ -2335,7 +2156,7 @@ mod tests {
 
     #[test]
     fn preview_scene_has_white_background_and_no_guides() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let node = app.render(LAYOUT_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("layout.page-bg"));
@@ -2344,7 +2165,7 @@ mod tests {
 
     #[test]
     fn inherited_frame_gets_dashed_stroke_in_blueprint() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let node = app.render(LAYOUT_PLAY_BODY_BLUEPRINT, None, &ViewState::default()).expect("render");
         let layers_json = scene_layers_json(&node);
         assert!(layers_json.contains("\"dash\":[4.0,3.0]"));
@@ -2352,23 +2173,23 @@ mod tests {
 
     #[test]
     fn selected_and_hovered_frames_get_chrome_strokes() {
-        let mut app = new_app();
-        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &meta("local")).expect("select");
+        let mut app = testkit::new_app::<LayoutPlayApp>();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["frame-text-1"] })), &ViewState::default(), &testkit::meta("local")).expect("select");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("2.5"));
 
-        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewState::default(), &meta("local")).expect("hover");
+        app.handle_action("setHover", Some(&json!({ "id": "frame-image-1" })), &ViewState::default(), &testkit::meta("local")).expect("hover");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("1.75"));
     }
 
     #[test]
     fn set_camera_updates_surface_camera() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let result = app
             .handle_action(
                 "setCamera",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "camera": { "x": 10.0, "y": 20.0, "zoom": 1.5 } })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("camera");
         assert_eq!(result.operations.len(), 1);
@@ -2381,13 +2202,13 @@ mod tests {
 
     #[test]
     fn pointer_down_selects_frame_via_hit_test() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 136.0, 435.0);
         app.handle_action(
             "canvasPointerDown",
             Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "button": 0 })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("pointer");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
@@ -2396,10 +2217,10 @@ mod tests {
 
     #[test]
     fn pointer_move_updates_hover_highlight() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
-        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &meta("local")).expect("move");
+        let result = app.handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local")).expect("move");
         assert!(result.operations.is_empty(), "hover is a view action, not an operation");
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         assert!(json.contains("layout-document.frame.frame-text-1"));
@@ -2407,7 +2228,7 @@ mod tests {
 
     #[test]
     fn canvas_drop_adds_frame_at_world_coords() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 100.0, 200.0);
         let drag_data = json!({ "kind": "rect" }).to_string();
         let result = app
@@ -2415,7 +2236,7 @@ mod tests {
                 "canvasDrop",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0, "dragData": drag_data })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("drop");
         assert_eq!(result.operations.len(), 1);
@@ -2428,7 +2249,7 @@ mod tests {
 
     #[test]
     fn canvas_drop_page_kind_adds_page() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let before = app.projection().expect("projection").pages.len();
         let drag_data = json!({ "kind": "page" }).to_string();
         let result = app
@@ -2436,7 +2257,7 @@ mod tests {
                 "canvasDrop",
                 Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": 0.0, "y": 0.0, "width": 800.0, "height": 600.0, "dragData": drag_data })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("drop");
         assert_eq!(result.operations.len(), 1);
@@ -2445,7 +2266,7 @@ mod tests {
 
     #[test]
     fn drag_over_emits_ghost_and_leave_clears() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         app.handle_action(
             "canvasDragOver",
             Some(&json!({
@@ -2454,18 +2275,18 @@ mod tests {
                 "types": [format!("{LAYOUT_CATALOGUE_KIND_MIME_PREFIX}rect")],
             })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("over");
         assert!(render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
 
-        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &meta("local")).expect("leave");
+        app.handle_action("canvasDragLeave", Some(&json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT })), &ViewState::default(), &testkit::meta("local")).expect("leave");
         assert!(!render_json(&mut app, LAYOUT_PLAY_BODY_BLUEPRINT).contains("layout.drop-preview"));
     }
 
     #[test]
     fn catalogue_items_are_draggable() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_CATALOGUE);
         assert!(json.contains(LAYOUT_CATALOGUE_DRAG_MIME));
         assert!(json.contains("\"draggable\":true"));
@@ -2474,7 +2295,7 @@ mod tests {
 
     #[test]
     fn document_tree_has_nine_sections() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let json = render_json(&mut app, LAYOUT_PLAY_BODY_DOCUMENT);
         for section_id in [
             "layout-document.document",
@@ -2540,7 +2361,7 @@ mod tests {
         if let Some(story) = doc.stories.iter_mut().find(|story| story.id == "story-overset") {
             story.content = "a".repeat(450);
         }
-        let issues = run_layout_preflight(&doc, &LAYOUT_LABELS_NATIVE_EN);
+        let issues = run_layout_preflight(&doc, &LayoutLabels::EN);
         let codes: Vec<&str> = issues.iter().map(|issue| issue.code.as_str()).collect();
         for expected in [
             "object.out_of_bounds",
@@ -2560,7 +2381,7 @@ mod tests {
 
     #[test]
     fn window_engagements_cover_both_windows() {
-        let mut app = new_app();
+        let mut app = testkit::new_app::<LayoutPlayApp>();
         let engagements = app.window_engagements(&ViewState::default());
         let blueprint = engagements.get(LAYOUT_PLAY_WINDOW_BLUEPRINT).expect("blueprint engagement");
         let status = blueprint.status.as_ref().and_then(|rows| rows.first()).expect("status");
@@ -2574,9 +2395,9 @@ mod tests {
     fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
         // 🧬 engagementSubmit is declared `Shell`: through the real registry the kind-discipline
         // check must accept it because its handler only routes an export `HostEffect`, never ops.
-        let mut app = new_app_with_registry();
+        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
         let result = app
-            .handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &meta("local"))
+            .handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &testkit::meta("local"))
             .expect("engagementSubmit passes registry kind discipline");
         assert!(result.operations.is_empty(), "Shell action must not emit document operations");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
@@ -2585,9 +2406,9 @@ mod tests {
     #[test]
     fn registry_backed_add_frame_emits_operation() {
         // 🧬 addFrame is declared `Operation`: the registry-backed wrapper must let its ops through.
-        let mut app = new_app_with_registry();
+        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
         let result = app
-            .handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &meta("local"))
+            .handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local"))
             .expect("addFrame passes registry kind discipline");
         assert_eq!(result.operations.len(), 1);
     }
@@ -2596,19 +2417,19 @@ mod tests {
     fn registry_backed_pointer_move_is_view_only() {
         // 🧬 canvasPointerMove is declared `View`: it mutates only runtime hover state and must
         // never emit an operation, which the registry kind-discipline check enforces.
-        let mut app = new_app_with_registry();
+        let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
         let (sx, sy) = test_screen_point(0.0, 0.0, 0.5, 800.0, 600.0, 156.0, 220.0);
         let args = json!({ "surfaceId": LAYOUT_PLAY_SURFACE_BLUEPRINT, "x": sx, "y": sy, "width": 800.0, "height": 600.0 });
         let result = app
-            .handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &meta("local"))
+            .handle_action("canvasPointerMove", Some(&args), &ViewState::default(), &testkit::meta("local"))
             .expect("canvasPointerMove passes registry kind discipline");
         assert!(result.operations.is_empty(), "View action must not emit document operations");
     }
 
     #[test]
     fn engagement_submit_triggers_export() {
-        let mut app = new_app();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &meta("local")).expect("submit");
+        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 
@@ -2616,8 +2437,8 @@ mod tests {
     fn engagement_submit_triggers_export_from_normalized_shell_draft() {
         // The React shell PascalCases and strips separators from every draft before submitting it
         // (`normalizeEngagementActionText`), so "export png" arrives as "ExportPng".
-        let mut app = new_app();
-        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewState::default(), &meta("local")).expect("submit");
+        let mut app = testkit::new_app::<LayoutPlayApp>();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "ExportPng" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
         assert!(matches!(result.requested_effects.first(), Some(HostEffect::DownloadMediaExport { mime_type, .. }) if mime_type == "image/png"));
     }
 

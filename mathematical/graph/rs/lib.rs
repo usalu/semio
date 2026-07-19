@@ -335,8 +335,8 @@ pub mod algorithms {
             }
         }
         let mut heap = std::collections::BinaryHeap::new();
-        for i in 0..adj.n {
-            if in_deg[i] == 0 {
+        for (i, &deg) in in_deg.iter().enumerate() {
+            if deg == 0 {
                 heap.push(std::cmp::Reverse(i));
             }
         }
@@ -545,11 +545,11 @@ pub mod algorithms {
         }
         let mut root_to_component: HashMap<usize, usize> = HashMap::new();
         let mut labels = vec![0usize; adj.n];
-        for u in 0..adj.n {
+        for (u, label) in labels.iter_mut().enumerate() {
             let root = uf.find(u);
             let next_id = root_to_component.len();
             let id = *root_to_component.entry(root).or_insert(next_id);
-            labels[u] = id;
+            *label = id;
         }
         labels
     }
@@ -935,7 +935,7 @@ pub mod algorithms {
 
         #[test]
         fn id_index_is_deterministic_and_sorted() {
-            let edges = vec![("c".to_string(), "a".to_string()), ("a".to_string(), "b".to_string())];
+            let edges = [("c".to_string(), "a".to_string()), ("a".to_string(), "b".to_string())];
             let index = IdIndex::from_edges(edges.iter().map(|(a, b)| (a.as_str(), b.as_str())));
             assert_eq!(index.id_of(0), Some("a"));
             assert_eq!(index.id_of(1), Some("b"));

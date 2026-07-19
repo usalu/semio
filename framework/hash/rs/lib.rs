@@ -19,11 +19,7 @@ pub fn format_number_for_hash(value: f64) -> String {
         return "nan".to_string();
     }
     if value.is_infinite() {
-        return if value.is_sign_positive() {
-            "inf".into()
-        } else {
-            "-inf".into()
-        };
+        return if value.is_sign_positive() { "inf".into() } else { "-inf".into() };
     }
     if value == 0.0 {
         return "0".into();

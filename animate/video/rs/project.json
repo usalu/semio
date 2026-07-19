@@ -33,6 +33,38 @@
         "command": "bun ./script.ts render",
         "forwardAllArgs": true
       }
+    },
+    "preview": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts preview",
+        "forwardAllArgs": true
+      }
+    },
+    "flush-cache": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts flush-cache",
+        "forwardAllArgs": true
+      }
     }
   }
 }

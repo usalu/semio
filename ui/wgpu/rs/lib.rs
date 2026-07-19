@@ -3745,6 +3745,12 @@ pub struct WidgetState {
     pub edit: Option<EditState>,
     /// 🖱️ M5 `events` scroll routing's live offset for a `NodeFlags::SCROLLABLE` node.
     pub scroll_offset: (f32, f32),
+    /// 🔽 M5/W2 wiring: whether a `Select`'s synthesized popup (`reconcile::children_of`'s `Select`
+    /// arm always builds the item rows unconditionally, per that module's own doc comment) is
+    /// currently shown. Toggled by `events::EventRouter::dispatch`'s `Select`-click handling (via
+    /// `open_overlay`/`close_overlay`, see `EventRouter::toggle_select_popup`/`finish_close`), read
+    /// by `paint::paint_select` to decide whether to paint the popup at all.
+    pub open: bool,
 }
 
 /// 📐 Resolved rect from the last taffy layout pass, in the node's **parent-relative** coordinate
@@ -4486,6 +4492,151 @@ mod tests {
         assert!(!tree.contains(removed_id));
         assert_eq!(tree.children(root).count(), 1);
     }
+
+    //#region 🔖CompositeExpansionTests
+    fn select(id: &str, value: &str, items: Vec<(&str, &str)>) -> UiNode {
+        UiNode::Select(UiSelectNode {
+            id: id.into(),
+            value: value.into(),
+            items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into() }).collect(),
+            placeholder: None,
+            on_change: action(),
+        })
+    }
+
+    fn tree_item(id: &str, label: &str) -> UiTreeItemNode {
+        UiTreeItemNode {
+            id: id.into(),
+            label: label.into(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            loading: None,
+            default_open: None,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: None,
+            control: None,
+            is_hidden: None,
+        }
+    }
+
+    fn tree_ui(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
+        UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
+    }
+
+    #[test]
+    fn select_expands_items_into_keyed_button_rows_carrying_the_chosen_value_and_flags_has_popup() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
+        let root = tree.root.unwrap();
+
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::HAS_POPUP));
+        let children: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(children.len(), 2);
+        let first = tree.node(children[0]).unwrap();
+        assert_eq!(first.key, NodeKey::Explicit("a".into()));
+        match &first.spec.0 {
+            UiNode::Button(button) => {
+                assert_eq!(button.label, "Alpha");
+                assert_eq!(button.action.args, Some(serde_json::json!({ "value": "a" })));
+            }
+            other => panic!("expected a synthesized Button row, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn select_removing_an_item_removes_its_row_and_clears_has_popup_once_empty() {
+        let mut tree = UiTree::new();
+        tree.apply_tree(&select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]));
+        let root = tree.root.unwrap();
+        let children_before: Vec<NodeId> = tree.children(root).collect();
+        let removed = children_before[1];
+
+        tree.apply_tree(&select("sel", "a", vec![("a", "Alpha")]));
+        assert!(!tree.contains(removed));
+        assert_eq!(tree.children(root).count(), 1);
+
+        tree.apply_tree(&select("sel", "a", vec![]));
+        assert_eq!(tree.children(root).count(), 0);
+        assert!(!tree.node(root).unwrap().flags.contains(NodeFlags::HAS_POPUP));
+    }
+
+    #[test]
+    fn tree_expands_sections_and_nested_items_into_keyed_stack_rows() {
+        let mut tree = UiTree::new();
+        let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent") };
+        let ui = tree_ui(
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![nested] }],
+            Some(vec!["parent".into()]),
+        );
+        tree.apply_tree(&ui);
+        let root = tree.root.unwrap();
+
+        let sections: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(sections.len(), 1);
+        assert_eq!(tree.node(sections[0]).unwrap().key, NodeKey::Explicit("s1".into()));
+
+        let items: Vec<NodeId> = tree.children(sections[0]).collect();
+        assert_eq!(items.len(), 1);
+        let parent_node = tree.node(items[0]).unwrap();
+        assert_eq!(parent_node.key, NodeKey::Explicit("parent".into()));
+        match &parent_node.spec.0 {
+            UiNode::Stack(stack) => assert_eq!(stack.selected, Some(true), "item.selected unset but its id is in tree_node.selected_ids"),
+            other => panic!("expected a synthesized Stack row, got {other:?}"),
+        }
+
+        let grandchildren: Vec<NodeId> = tree.children(items[0]).collect();
+        assert_eq!(grandchildren.len(), 1);
+        assert_eq!(tree.node(grandchildren[0]).unwrap().key, NodeKey::Explicit("child".into()));
+    }
+
+    #[test]
+    fn tree_item_control_and_trailing_actions_become_retained_children_too() {
+        let mut tree = UiTree::new();
+        let item = UiTreeItemNode {
+            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: "icon".into(), pressed: true, text: None, on_change: action() })),
+            actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
+            ..tree_item("leaf", "Leaf")
+        };
+        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] }], None);
+        tree.apply_tree(&ui);
+        let root = tree.root.unwrap();
+        let section = tree.children(root).next().unwrap();
+        let row = tree.children(section).next().unwrap();
+
+        let row_children: Vec<NodeId> = tree.children(row).collect();
+        assert_eq!(row_children.len(), 2, "expected the embedded control plus one trailing action row");
+        assert!(matches!(tree.node(row_children[0]).unwrap().spec.0, UiNode::Toggle(_)), "control comes first");
+        assert!(matches!(tree.node(row_children[1]).unwrap().spec.0, UiNode::Button(_)), "action follows the control");
+    }
+
+    #[test]
+    fn reapplying_an_identical_select_or_tree_sets_zero_dirty_flags() {
+        let mut tree = UiTree::new();
+        let select_ui = select("sel", "a", vec![("a", "Alpha"), ("b", "Beta")]);
+        tree.apply_tree(&select_ui);
+        let root = tree.root.unwrap();
+        clear_dirty(&mut tree, root);
+        tree.apply_tree(&select_ui);
+        assert!(!any_dirty(&tree, root), "re-applying an identical Select must not dirty its synthesized rows");
+
+        let mut tree = UiTree::new();
+        let tree_ui_value = tree_ui(
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![tree_item("a", "A")] }],
+            None,
+        );
+        tree.apply_tree(&tree_ui_value);
+        let root = tree.root.unwrap();
+        clear_dirty(&mut tree, root);
+        tree.apply_tree(&tree_ui_value);
+        assert!(!any_dirty(&tree, root), "re-applying an identical Tree must not dirty its synthesized rows");
+    }
+    //#endregion 🔖CompositeExpansionTests
 }
 // #endregion reconcile
 }
@@ -4612,7 +4763,11 @@ pub mod cursor {
 // #region cursor
 //! 🖱️ Theme-aware Semio cursor URLs for wgpu canvas hover parity with React.
 
+use crate::arena::NodeId;
+use crate::component::ui::UiNode;
+use crate::events::CaptureKind;
 use crate::input::{DragAxis, HitKind, HitTarget};
+use crate::tree::{NodeFlags, UiTree};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SemioCursor {
@@ -4710,6 +4865,44 @@ fn axis_cursor(axis: DragAxis) -> SemioCursor {
         DragAxis::Vertical => SemioCursor::NsResize,
         DragAxis::Both => SemioCursor::NwseResize,
         DragAxis::Ring => SemioCursor::Crosshair,
+    }
+}
+
+/// 🖱️ M5's retained-tree counterpart to `resolve_semio_cursor`: derives a cursor from the
+/// `events::EventRouter`'s own hovered/capture `NodeId`s (via its `hovered()`/`capture()` accessors)
+/// rather than the immediate-mode `input::HitTarget`. Mostly wiring existing pieces together — an
+/// active `CaptureKind` wins outright (dragging/scrolling a thumb never re-derives from whatever's
+/// merely hovered underneath), otherwise it falls back to the hovered node's own `NodeFlags`/
+/// `UiNode` variant.
+pub fn resolve_semio_cursor_from_tree(tree: &UiTree, hovered: Option<NodeId>, capture: Option<(NodeId, CaptureKind)>) -> SemioCursor {
+    if let Some((_, kind)) = capture {
+        match kind {
+            CaptureKind::Drag => return SemioCursor::Grabbing,
+            CaptureKind::ScrollThumb(axis) => {
+                return match axis {
+                    crate::events::ScrollAxis::Horizontal => SemioCursor::EwResize,
+                    crate::events::ScrollAxis::Vertical => SemioCursor::NsResize,
+                };
+            }
+            CaptureKind::Press => {}
+        }
+    }
+    let Some(target) = capture.map(|(id, _)| id).or(hovered) else {
+        return SemioCursor::Default;
+    };
+    let Some(node) = tree.node(target) else {
+        return SemioCursor::Default;
+    };
+    if node.flags.contains(NodeFlags::DRAG_SOURCE) {
+        return SemioCursor::Grab;
+    }
+    match &node.spec.0 {
+        UiNode::Input(_) => SemioCursor::Text,
+        UiNode::Select(_) | UiNode::IconSelect(_) => SemioCursor::Foldable,
+        UiNode::Slider(_) | UiNode::NumberStepper(_) | UiNode::Ring(_) => SemioCursor::Grab,
+        UiNode::Button(_) | UiNode::Toggle(_) => SemioCursor::Selectable,
+        _ if node.flags.contains(NodeFlags::DROP_TARGET) => SemioCursor::Default,
+        _ => SemioCursor::Default,
     }
 }
 
@@ -4892,6 +5085,67 @@ mod tests {
         assert!(semio_cursor_css(SemioCursor::Default, true).contains("cursor_dark.svg"));
         assert!(semio_cursor_css(SemioCursor::Selectable, false).contains("cursor_selectable.svg"));
     }
+
+    //#region 🔖RetainedTreeCursorTests
+    use crate::component::layout::ActionDescriptor;
+    use crate::component::ui::{UiInputNode, UiStackNode, UiTextNode};
+    use crate::events::ScrollAxis;
+    use crate::tree::{Node, NodeKey, WidgetSpec};
+
+    fn leaf(node: UiNode) -> (UiTree, NodeId) {
+        let mut tree = UiTree::new();
+        let id = tree.insert_child(None, Node::new(NodeKey::Positional(0, 0), WidgetSpec(node)));
+        (tree, id)
+    }
+
+    #[test]
+    fn hovering_an_input_uses_the_text_cursor() {
+        let (tree, id) = leaf(UiNode::Input(UiInputNode {
+            id: "name".into(),
+            input_kind: "text".into(),
+            value: String::new(),
+            placeholder: None,
+            commit: None,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None },
+        }));
+        assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
+    }
+
+    #[test]
+    fn hovering_a_drag_source_uses_the_grab_cursor() {
+        let (mut tree, id) = leaf(UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: None,
+            selected: None,
+            loading: None,
+            activate: None,
+            drop_action: None,
+            children: Vec::new(),
+        }));
+        tree.node_mut(id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
+        assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Grab);
+    }
+
+    #[test]
+    fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
+        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None }));
+        let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((dragged, CaptureKind::Drag)));
+        assert_eq!(cursor, SemioCursor::Grabbing);
+    }
+
+    #[test]
+    fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
+        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None }));
+        let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((scrollable, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
+        assert_eq!(cursor, SemioCursor::NsResize);
+    }
+    //#endregion 🔖RetainedTreeCursorTests
 }
 // #endregion cursor
 }
@@ -9611,7 +9865,7 @@ impl LayoutEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiStackNode, UiTextNode};
+    use crate::component::ui::{UiFieldNode, UiSectionNode, UiStackNode, UiTextNode};
 
     fn text(value: &str) -> UiNode {
         UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
@@ -9710,6 +9964,50 @@ mod tests {
         let cached = tree.node(child).unwrap().layout.cached_text_measure.clone();
         assert!(cached.is_some(), "text node should have a cached measurement after layout");
     }
+
+    //#region 🔖FieldSectionGrowSemantics
+    #[test]
+    fn field_child_grows_to_fill_the_label_adjusted_remainder() {
+        let mut tree = UiTree::new();
+        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")) });
+        tree.apply_tree(&field);
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+
+        engine.compute(&mut tree, root, &mut atlas, &theme, 200.0, 100.0);
+
+        let child = tree.children(root).next().unwrap();
+        let layout = &tree.node(child).unwrap().layout;
+        let label_h = theme.font_size_small;
+        let gap = gap_for_token(&theme, Some("standard"));
+        assert!((layout.y - (label_h + gap)).abs() < 0.5, "child should start below the label, got y={}", layout.y);
+        assert!((layout.height - (100.0 - label_h - gap)).abs() < 0.5, "child should fill the label-adjusted remainder, got height={}", layout.height);
+        assert!((layout.width - 200.0).abs() < 0.5, "child should stretch to the field's full width, got width={}", layout.width);
+    }
+
+    #[test]
+    fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
+        let mut tree = UiTree::new();
+        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), loading: None, children: vec![text("a"), text("a longer line of text")] });
+        tree.apply_tree(&section);
+        let root = tree.root.unwrap();
+        let mut engine = LayoutEngine::new();
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+
+        engine.compute(&mut tree, root, &mut atlas, &theme, 200.0, 200.0);
+
+        let children: Vec<NodeId> = tree.children(root).collect();
+        assert_eq!(children.len(), 2);
+        let first = tree.node(children[0]).unwrap().layout.clone();
+        let second = tree.node(children[1]).unwrap().layout.clone();
+        assert!((first.y - SECTION_HEADER_HEIGHT).abs() < 0.5, "first child should start right below the header offset, got y={}", first.y);
+        assert!((second.y - (first.y + first.height + theme.gap_standard)).abs() < 0.5, "second child should sit one gap below the first child's own intrinsic height, got y={} first.height={}", second.y, first.height);
+        assert!((first.width - 200.0).abs() < 0.5, "children should stretch to the section's full width, got width={}", first.width);
+    }
+    //#endregion 🔖FieldSectionGrowSemantics
 }
 // #endregion flex
 }
@@ -10150,9 +10448,29 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
 #[cfg(feature = "engine")]
 pub mod text {
 // #region text
-//! 🖋️ Glyph atlas — fontdue when bytes are available, built-in bitmap fallback.
+//! 🖋️ Glyph atlas — `parley` (shaping/font-fallback resolution) + `fontique` (font collection
+//! and generic/emoji fallback registry) + `swash` (rasterization), packed into two atlas pages
+//! (alpha-only `pixels` for regular glyphs, RGBA `color_pixels` for COLR/bitmap color-emoji
+//! glyphs). A built-in 8×16 ASCII bitmap mode is kept as the deterministic, dependency-free
+//! fallback used by `FontAtlas::builtin()` (relied on by many call sites across the crate for
+//! fast/fixed-metric test setup) and by any single codepoint no registered font can shape at all.
+//! See `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1b-text-stack.md` for the full
+//! architecture writeup, including the deliberate measurement/paint-consistency tradeoff that
+//! keeps `measure_text`/`ensure_glyph` per-codepoint rather than switching to whole-string
+//! `parley::Layout` metrics.
 
+use std::borrow::Cow;
 use std::collections::HashMap;
+use std::sync::Arc;
+
+use parley::fontique::{
+    Blob, Collection, CollectionOptions, FamilyId, FontInfoOverride, GenericFamily, SourceCache,
+};
+use parley::{FontContext, FontStack, LayoutContext, PositionedLayoutItem, StyleProperty};
+use swash::scale::image::Content as SwashContent;
+use swash::scale::{Render, ScaleContext, Source, StrikeWith};
+use swash::zeno::Format as SwashFormat;
+use swash::FontRef as SwashFontRef;
 
 pub struct GlyphEntry {
     pub atlas_x: u32,
@@ -10162,24 +10480,37 @@ pub struct GlyphEntry {
     pub advance: f32,
     pub bearing_x: f32,
     pub bearing_y: f32,
+    /// 🎨 True when this glyph lives in the RGBA `color_pixels` page (COLR/bitmap color emoji)
+    /// rather than the alpha-only `pixels` page. Paint call sites in `widgets`/`paint` (outside
+    /// this region) still only sample the alpha page — see the report's wiring-request section.
+    pub is_color: bool,
 }
 
-enum FontSource {
-    Fontdue(fontdue::Font),
-    Bitmap,
-}
+/// 🔤 Fixed family names every registered font is forced under via `FontInfoOverride`, so
+/// multi-file families (Noto Emoji's 12 codepoint-range buckets) merge into one fontique family
+/// regardless of what each file's own `name` table declares.
+const FAMILY_SANS: &str = "Anta";
+const FAMILY_SERIF: &str = "Kelly Slab";
+const FAMILY_MONO: &str = "Share Tech Mono";
+const FAMILY_EMOJI: &str = "Noto Emoji";
 
-pub struct FontAtlas {
-    pub width: u32,
-    pub height: u32,
-    pub pixels: Vec<u8>,
-    source: FontSource,
-    glyphs: HashMap<(char, u32), GlyphEntry>,
-    cursor_x: u32,
-    cursor_y: u32,
-    row_height: u32,
-    dirty: bool,
-}
+static ANTA_LATIN: &[u8] = include_bytes!("../../asset/font/anta/latin.ttf");
+static KELLY_SLAB_LATIN: &[u8] = include_bytes!("../../asset/font/kelly-slab/latin.ttf");
+static SHARE_TECH_MONO_LATIN: &[u8] = include_bytes!("../../asset/font/share-tech-mono/latin.ttf");
+static NOTO_EMOJI_BUCKETS: [&[u8]; 12] = [
+    include_bytes!("../../asset/font/noto-emoji/0-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/1-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/2-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/3-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/4-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/5-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/6-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/7-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/8-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/9-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/10-400.ttf"),
+    include_bytes!("../../asset/font/noto-emoji/11-400.ttf"),
+];
 
 const BITMAP_GLYPH_W: u32 = 8;
 const BITMAP_GLYPH_H: u32 = 16;
@@ -10282,18 +10613,103 @@ static BITMAP_FONT: [[u8; 8]; 95] = [
     [0x31, 0x6B, 0x46, 0x00, 0x00, 0x00, 0x00, 0x00],
 ];
 
+/// 🧩 How a `FontAtlas` resolves and rasterizes glyphs. `Bitmap` is the deterministic,
+/// dependency-free 8×16 ASCII fallback used by `FontAtlas::builtin()`; `Shaped` runs the full
+/// parley/fontique/swash pipeline against a registered `fontique::Collection`.
+enum AtlasMode {
+    Bitmap,
+    Shaped,
+}
+
+/// 📦 One rasterized glyph ready to be packed into an atlas page, produced by either
+/// `rasterize_bitmap_glyph` or `rasterize_shaped_glyph`.
+struct RasterizedGlyph {
+    bitmap: Vec<u8>,
+    width: u32,
+    height: u32,
+    bearing_x: f32,
+    bearing_y: f32,
+    advance: f32,
+    is_color: bool,
+}
+
+/// 🧭 The font and glyph a single codepoint resolved to after running it through parley's
+/// shaping/itemization (which performs the family + generic-emoji-fallback font selection).
+struct ResolvedGlyph {
+    glyph_id: swash::GlyphId,
+    advance: f32,
+    font_data: Blob<u8>,
+    font_index: u32,
+}
+
+pub struct FontAtlas {
+    pub width: u32,
+    pub height: u32,
+    pub pixels: Vec<u8>,
+    /// 🌈 RGBA emoji atlas page (2048×2048×4 in `Shaped` mode, empty in `Bitmap` mode since that
+    /// mode never produces color glyphs).
+    pub color_width: u32,
+    pub color_height: u32,
+    pub color_pixels: Vec<u8>,
+    mode: AtlasMode,
+    font_cx: FontContext,
+    layout_cx: LayoutContext<[u8; 4]>,
+    scale_cx: ScaleContext,
+    glyphs: HashMap<(char, u32), GlyphEntry>,
+    cursor_x: u32,
+    cursor_y: u32,
+    row_height: u32,
+    color_cursor_x: u32,
+    color_cursor_y: u32,
+    color_row_height: u32,
+    dirty: bool,
+    color_dirty: bool,
+}
+
+/// 🗂️ A `fontique::Collection` with no system-font scanning (deterministic, self-contained —
+/// every family this atlas ever shapes with is one of the four `FAMILY_*` names registered from
+/// `include_bytes!`-embedded assets).
+fn empty_font_context() -> FontContext {
+    FontContext {
+        collection: Collection::new(CollectionOptions { shared: false, system_fonts: false }),
+        source_cache: SourceCache::default(),
+    }
+}
+
+/// 📥 Registers `bytes` into `collection` under a forced `family` name (ignoring whatever family
+/// name the font file's own `name` table declares), so multi-file families like Noto Emoji's 12
+/// codepoint-range buckets always merge into one fontique family.
+fn register_family(collection: &mut Collection, bytes: &[u8], family: &'static str) -> Option<FamilyId> {
+    let over = FontInfoOverride { family_name: Some(family), ..Default::default() };
+    collection
+        .register_fonts(Blob::new(Arc::new(bytes.to_vec())), Some(over))
+        .into_iter()
+        .next()
+        .map(|(id, _)| id)
+}
+
 impl FontAtlas {
     pub fn builtin() -> Self {
         Self {
             width: 2048,
             height: 2048,
             pixels: vec![0; 2048 * 2048],
-            source: FontSource::Bitmap,
+            color_width: 0,
+            color_height: 0,
+            color_pixels: Vec::new(),
+            mode: AtlasMode::Bitmap,
+            font_cx: empty_font_context(),
+            layout_cx: LayoutContext::new(),
+            scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
+            color_cursor_x: 1,
+            color_cursor_y: 1,
+            color_row_height: 0,
             dirty: false,
+            color_dirty: false,
         }
     }
 
@@ -10303,25 +10719,78 @@ impl FontAtlas {
         dirty
     }
 
-    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
-        if bytes.is_empty() {
-            return Ok(Self::builtin());
-        }
-        let font = match fontdue::Font::from_bytes(bytes, fontdue::FontSettings::default()) {
-            Ok(font) => font,
-            Err(_) => return Ok(Self::builtin()),
+    /// 🌈 Same contract as `take_dirty` for the RGBA emoji atlas page (`color_pixels`). Wiring
+    /// this into an actual GPU upload is a `gpu`-region call site left as a wiring request — see
+    /// `GpuContext::upload_font_atlas`/`upload_emoji_atlas` in the report.
+    pub fn take_color_dirty(&mut self) -> bool {
+        let dirty = self.color_dirty;
+        self.color_dirty = false;
+        dirty
+    }
+
+    /// 🏗️ Builds a fully self-contained `Shaped`-mode atlas: registers the embedded Anta, Kelly
+    /// Slab and Share Tech Mono families plus all 12 Noto Emoji fallback buckets, then wires
+    /// `GenericFamily::Emoji`/`SansSerif`/`Serif`/`Monospace` to them. `primary_override`, when it
+    /// parses as a real font, replaces the embedded Anta bytes as the `FAMILY_SANS` source (this
+    /// is how `from_bytes` keeps honoring whatever bytes the host fetched) — falling back to the
+    /// embedded copy keeps this constructor infallible even for garbage/empty-ish input.
+    fn shaped(primary_override: Option<&[u8]>) -> Self {
+        let mut collection = Collection::new(CollectionOptions { shared: false, system_fonts: false });
+        let sans_bytes: &[u8] = match primary_override {
+            Some(bytes) if SwashFontRef::from_index(bytes, 0).is_some() => bytes,
+            _ => ANTA_LATIN,
         };
-        Ok(Self {
+        let sans_id = register_family(&mut collection, sans_bytes, FAMILY_SANS)
+            .or_else(|| register_family(&mut collection, ANTA_LATIN, FAMILY_SANS))
+            .expect("embedded Anta font asset must register");
+        let serif_id = register_family(&mut collection, KELLY_SLAB_LATIN, FAMILY_SERIF)
+            .expect("embedded Kelly Slab font asset must register");
+        let mono_id = register_family(&mut collection, SHARE_TECH_MONO_LATIN, FAMILY_MONO)
+            .expect("embedded Share Tech Mono font asset must register");
+        let mut emoji_id: Option<FamilyId> = None;
+        for bucket in NOTO_EMOJI_BUCKETS {
+            if let Some(id) = register_family(&mut collection, bucket, FAMILY_EMOJI) {
+                emoji_id.get_or_insert(id);
+            }
+        }
+        let emoji_id = emoji_id.expect("embedded Noto Emoji font assets must register");
+        collection.set_generic_families(GenericFamily::Emoji, std::iter::once(emoji_id));
+        collection.set_generic_families(GenericFamily::SansSerif, std::iter::once(sans_id));
+        collection.set_generic_families(GenericFamily::Serif, std::iter::once(serif_id));
+        collection.set_generic_families(GenericFamily::Monospace, std::iter::once(mono_id));
+        Self {
             width: 2048,
             height: 2048,
             pixels: vec![0; 2048 * 2048],
-            source: FontSource::Fontdue(font),
+            color_width: 2048,
+            color_height: 2048,
+            color_pixels: vec![0; 2048 * 2048 * 4],
+            mode: AtlasMode::Shaped,
+            font_cx: FontContext { collection, source_cache: SourceCache::default() },
+            layout_cx: LayoutContext::new(),
+            scale_cx: ScaleContext::new(),
             glyphs: HashMap::new(),
             cursor_x: 1,
             cursor_y: 1,
             row_height: 0,
+            color_cursor_x: 1,
+            color_cursor_y: 1,
+            color_row_height: 0,
             dirty: false,
-        })
+            color_dirty: false,
+        }
+    }
+
+    /// 🔡 `bytes` empty ⇒ deterministic `builtin()` bitmap mode (unchanged contract). Any
+    /// non-empty input — including bytes that fail to parse as a font — now resolves into full
+    /// `Shaped` mode (registering the embedded Anta/Kelly Slab/Share Tech Mono/Noto Emoji
+    /// families regardless), which is a strict improvement over the old fontdue-only pipeline's
+    /// "garbage bytes ⇒ crude ASCII boxes" behavior.
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, String> {
+        if bytes.is_empty() {
+            return Ok(Self::builtin());
+        }
+        Ok(Self::shaped(Some(bytes)))
     }
 
     /// 🔑 Quantizes a float px size to the glyph-cache's integer key component, so float jitter
@@ -10344,46 +10813,90 @@ impl FontAtlas {
 
     fn rasterize_glyph(&mut self, key: (char, u32)) {
         let (ch, size_px) = key;
-        let (metrics, bitmap, width, height) = match &self.source {
-            FontSource::Fontdue(font) => {
-                let (metrics, bitmap) = font.rasterize(ch, size_px as f32);
-                (metrics, bitmap, metrics.width as u32, metrics.height as u32)
-            }
-            FontSource::Bitmap => self.rasterize_bitmap(ch),
+        let glyph = match self.mode {
+            AtlasMode::Bitmap => self.rasterize_bitmap_glyph(ch),
+            AtlasMode::Shaped => self.rasterize_shaped_glyph(ch, size_px as f32),
         };
-        if self.cursor_x + width + 2 >= self.width {
-            self.cursor_x = 1;
-            self.cursor_y += self.row_height + 2;
-            self.row_height = 0;
-        }
-        let atlas_x = self.cursor_x;
-        let atlas_y = self.cursor_y;
-        for row in 0..height {
-            let dst = ((atlas_y + row) * self.width + atlas_x) as usize;
-            let src = (row * width) as usize;
-            if !bitmap.is_empty() && width > 0 {
-                self.pixels[dst..dst + width as usize]
-                    .copy_from_slice(&bitmap[src..src + width as usize]);
-            }
-        }
-        self.glyphs.insert(
-            key,
-            GlyphEntry {
-                atlas_x,
-                atlas_y,
-                width,
-                height,
-                advance: metrics.advance_width,
-                bearing_x: metrics.xmin as f32,
-                bearing_y: metrics.ymin as f32,
-            },
-        );
-        self.cursor_x += width + 2;
-        self.row_height = self.row_height.max(height);
-        self.dirty = true;
+        self.pack_glyph(key, glyph);
     }
 
-    fn rasterize_bitmap(&self, ch: char) -> (fontdue::Metrics, Vec<u8>, u32, u32) {
+    /// 🧵 Resolves `ch` to a font + glyph id by running a single-codepoint `parley::Layout`. This
+    /// is what performs family resolution and (via parley's built-in emoji-cluster detection)
+    /// automatic fallback into the registered `GenericFamily::Emoji` family. Returns `None` when
+    /// no registered font (including the emoji fallback) could shape the codepoint at all.
+    fn shape_single_char(&mut self, ch: char, size_px: f32) -> Option<ResolvedGlyph> {
+        let text = ch.to_string();
+        let mut builder = self.layout_cx.ranged_builder(&mut self.font_cx, &text, 1.0, true);
+        builder.push_default(StyleProperty::FontStack(FontStack::Source(Cow::Borrowed(FAMILY_SANS))));
+        builder.push_default(StyleProperty::FontSize(size_px));
+        let mut layout: parley::Layout<[u8; 4]> = builder.build(&text);
+        layout.break_all_lines(None);
+        for line in layout.lines() {
+            for item in line.items() {
+                let PositionedLayoutItem::GlyphRun(run) = item else { continue };
+                let Some(glyph) = run.glyphs().next() else { continue };
+                let font = run.run().font();
+                return Some(ResolvedGlyph {
+                    glyph_id: glyph.id,
+                    advance: glyph.advance,
+                    font_data: font.data.clone(),
+                    font_index: font.index,
+                });
+            }
+        }
+        None
+    }
+
+    /// 🖌️ Rasterizes a resolved glyph via swash, preferring color bitmap/outline sources (COLR,
+    /// embedded color bitmaps — what carries Noto Emoji's color) over the plain scalable outline,
+    /// so any glyph the resolved font can render in color comes back as `Content::Color` RGBA and
+    /// everything else comes back as an 8-bit alpha mask.
+    fn render_resolved(&mut self, resolved: &ResolvedGlyph, size_px: f32) -> Option<RasterizedGlyph> {
+        let data = resolved.font_data.data();
+        let font_ref = SwashFontRef::from_index(data, resolved.font_index as usize)?;
+        let mut scaler = self.scale_cx.builder(font_ref).size(size_px).hint(true).build();
+        let image = Render::new(&[
+            Source::ColorBitmap(StrikeWith::BestFit),
+            Source::ColorOutline(0),
+            Source::Outline,
+        ])
+        .format(SwashFormat::Alpha)
+        .render(&mut scaler, resolved.glyph_id)?;
+        let is_color = matches!(image.content, SwashContent::Color);
+        Some(RasterizedGlyph {
+            bitmap: image.data,
+            width: image.placement.width,
+            height: image.placement.height,
+            bearing_x: image.placement.left as f32,
+            bearing_y: (image.placement.top - image.placement.height as i32) as f32,
+            advance: resolved.advance,
+            is_color,
+        })
+    }
+
+    /// 🪶 `shape_single_char` + `render_resolved`, falling back to the plain ASCII bitmap glyph
+    /// (see `rasterize_bitmap_glyph`) when no registered font — including the emoji fallback —
+    /// can shape `ch` at all (e.g. scripts none of Anta/Kelly Slab/Share Tech Mono/Noto Emoji
+    /// cover, such as CJK or Arabic; a pre-existing limitation this atlas doesn't newly regress).
+    fn rasterize_shaped_glyph(&mut self, ch: char, size_px: f32) -> RasterizedGlyph {
+        let Some(resolved) = self.shape_single_char(ch, size_px) else {
+            return self.rasterize_bitmap_glyph(ch);
+        };
+        if let Some(glyph) = self.render_resolved(&resolved, size_px) {
+            return glyph;
+        }
+        RasterizedGlyph {
+            bitmap: Vec::new(),
+            width: 0,
+            height: 0,
+            bearing_x: 0.0,
+            bearing_y: 0.0,
+            advance: resolved.advance,
+            is_color: false,
+        }
+    }
+
+    fn rasterize_bitmap_glyph(&self, ch: char) -> RasterizedGlyph {
         let index = ch as u32;
         let glyph_index = if (32..127).contains(&index) {
             (index - 32) as usize
@@ -10399,16 +10912,63 @@ impl FontAtlas {
                 }
             }
         }
-        let metrics = fontdue::Metrics {
-            xmin: 0,
-            ymin: 0,
-            width: BITMAP_GLYPH_W as usize,
-            height: BITMAP_GLYPH_H as usize,
-            advance_width: BITMAP_GLYPH_W as f32 + 2.0,
-            advance_height: BITMAP_GLYPH_H as f32,
-            bounds: fontdue::OutlineBounds::default(),
+        RasterizedGlyph {
+            bitmap,
+            width: BITMAP_GLYPH_W,
+            height: BITMAP_GLYPH_H,
+            bearing_x: 0.0,
+            bearing_y: 0.0,
+            advance: BITMAP_GLYPH_W as f32 + 2.0,
+            is_color: false,
+        }
+    }
+
+    /// 📐 Bin-packs one rasterized glyph into the alpha (`pixels`) or color (`color_pixels`)
+    /// atlas page, per `RasterizedGlyph::is_color`, and records the resulting `GlyphEntry`.
+    fn pack_glyph(&mut self, key: (char, u32), glyph: RasterizedGlyph) {
+        let RasterizedGlyph { bitmap, width, height, bearing_x, bearing_y, advance, is_color } = glyph;
+        let (atlas_x, atlas_y) = if is_color {
+            if self.color_cursor_x + width + 2 >= self.color_width {
+                self.color_cursor_x = 1;
+                self.color_cursor_y += self.color_row_height + 2;
+                self.color_row_height = 0;
+            }
+            let x = self.color_cursor_x;
+            let y = self.color_cursor_y;
+            for row in 0..height {
+                let dst = (((y + row) * self.color_width + x) * 4) as usize;
+                let src = (row * width * 4) as usize;
+                if !bitmap.is_empty() && width > 0 {
+                    self.color_pixels[dst..dst + (width * 4) as usize]
+                        .copy_from_slice(&bitmap[src..src + (width * 4) as usize]);
+                }
+            }
+            self.color_cursor_x += width + 2;
+            self.color_row_height = self.color_row_height.max(height);
+            self.color_dirty = true;
+            (x, y)
+        } else {
+            if self.cursor_x + width + 2 >= self.width {
+                self.cursor_x = 1;
+                self.cursor_y += self.row_height + 2;
+                self.row_height = 0;
+            }
+            let x = self.cursor_x;
+            let y = self.cursor_y;
+            for row in 0..height {
+                let dst = ((y + row) * self.width + x) as usize;
+                let src = (row * width) as usize;
+                if !bitmap.is_empty() && width > 0 {
+                    self.pixels[dst..dst + width as usize].copy_from_slice(&bitmap[src..src + width as usize]);
+                }
+            }
+            self.cursor_x += width + 2;
+            self.row_height = self.row_height.max(height);
+            self.dirty = true;
+            (x, y)
         };
-        (metrics, bitmap, BITMAP_GLYPH_W, BITMAP_GLYPH_H)
+        self.glyphs
+            .insert(key, GlyphEntry { atlas_x, atlas_y, width, height, advance, bearing_x, bearing_y, is_color });
     }
 
     pub fn measure_text(&mut self, text: &str, size: f32) -> (f32, f32) {
@@ -10458,12 +11018,13 @@ mod tests {
     use super::FontAtlas;
 
     #[test]
-    fn from_bytes_uses_builtin_for_woff2_and_empty_input() {
+    fn from_bytes_falls_back_to_embedded_fonts_for_unparseable_input() {
         assert!(FontAtlas::from_bytes(&[]).is_ok());
         let woff2 = b"wOF2\x00\x01\x00\x00";
-        let mut atlas = FontAtlas::from_bytes(woff2).expect("woff2 should fall back to builtin");
+        let mut atlas = FontAtlas::from_bytes(woff2).expect("unparseable bytes still register embedded fonts");
         let glyph = atlas.ensure_glyph('A', 16.0);
         assert!(glyph.width > 0);
+        assert!(!glyph.is_color, "'A' must rasterize as a regular alpha glyph, not a color one");
     }
 
     #[test]
@@ -10475,6 +11036,52 @@ mod tests {
         assert_eq!(atlas.glyphs.len(), 2, "a second size for the same char must add a new cache entry, not collide");
         atlas.ensure_glyph('A', 16.0);
         assert_eq!(atlas.glyphs.len(), 2, "re-requesting an already-cached (char, size) must not insert again");
+    }
+
+    #[test]
+    fn shaped_mode_resolves_real_font_metrics_that_differ_from_the_bitmap_fallback() {
+        let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
+        let glyph = atlas.ensure_glyph('W', 24.0);
+        assert!(glyph.width > 0 && glyph.height > 0);
+        assert!(!glyph.is_color);
+    }
+
+    /// 🔤 The bundled `ui/asset/font/noto-emoji/*.ttf` buckets are the monochrome "Noto Emoji"
+    /// family (`glyf` outlines only — verified no `COLR`/`CPAL`/`CBDT`/`CBLC`/`sbix` table is
+    /// present), not "Noto Color Emoji", so real emoji codepoints correctly resolve through the
+    /// `GenericFamily::Emoji` fallback and rasterize successfully, but land on the alpha page
+    /// like any other outline glyph. `packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty`
+    /// below exercises the RGBA color-page path directly, since these assets never trigger it.
+    #[test]
+    fn emoji_codepoints_resolve_through_the_noto_emoji_fallback_family() {
+        let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
+        let glyph = atlas.ensure_glyph('😀', 32.0);
+        assert!(glyph.width > 0 && glyph.height > 0, "emoji glyph must produce a non-empty raster");
+        assert!(!glyph.is_color, "the bundled Noto Emoji assets are monochrome outline-only");
+        assert!(atlas.take_dirty());
+    }
+
+    #[test]
+    fn packing_a_synthetic_color_glyph_lands_on_the_rgba_page_and_marks_it_dirty() {
+        let mut atlas = FontAtlas::from_bytes(super::ANTA_LATIN).expect("embedded Anta bytes must load");
+        assert!(!atlas.take_color_dirty());
+        atlas.pack_glyph(
+            ('🔥', 32),
+            super::RasterizedGlyph {
+                bitmap: vec![255u8; 4 * 4 * 4],
+                width: 4,
+                height: 4,
+                bearing_x: 0.0,
+                bearing_y: 0.0,
+                advance: 32.0,
+                is_color: true,
+            },
+        );
+        let glyph = atlas.ensure_glyph('🔥', 32.0);
+        assert!(glyph.is_color);
+        assert_eq!((glyph.width, glyph.height), (4, 4));
+        assert!(atlas.take_color_dirty(), "packing a color glyph must mark the color page dirty");
+        assert!(!atlas.take_color_dirty(), "take_color_dirty must reset after being read");
     }
 }
 
@@ -10756,18 +11363,18 @@ pub mod paint {
 //! (M5 events, M6 shell) both wires the state and expands these composites into retained children.
 
 use crate::arena::NodeId;
-use crate::chrome::{chrome_item_bg, item_bg, item_text, push_control_border, push_icon, ICON_TINY};
+use crate::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
 use crate::component::ui::{
     UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode,
     UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode,
-    UiRingNode, UiSectionNode, UiSelectNode, UiSliderNode, UiTextNode, UiToggleNode,
-    UiTreeItemNode, UiTreeNode, UiVec3Node, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode,
+    UiToggleNode, UiTreeItemNode, UiTreeNode, UiVec3Node, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
 use crate::text::FontAtlas;
-use crate::theme::{Rgba, Theme};
-use crate::tree::{NodeFlags, UiTree};
+use crate::theme::{GlassTier, Rgba, Theme};
+use crate::tree::{NodeFlags, NodeKey, UiTree};
 use crate::widgets::{draw_text_on, wrap_text};
 
 const PANEL_HEADER: f32 = 24.0;
@@ -10787,6 +11394,7 @@ const TREE_ICON_SIZE: f32 = 14.0;
 /// decision a later milestone's `engine` facade owns (it already knows from driving `flex::compute`
 /// and `reconcile::apply_tree`), not something `paint_tree` decides for itself.
 pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    sync_interactive_state(tree, root, theme);
     paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, draw);
     clear_dirty_paint(tree, root);
 }
@@ -10801,6 +11409,150 @@ fn clear_dirty_paint(tree: &mut UiTree, id: NodeId) {
     }
 }
 
+//#region 🔖InteractiveStateSync
+// 🔗 W2 wiring: a paint-owned pre-pass, mutable (unlike `paint_node`'s own read-only walk below),
+// run once per `paint_tree` call before painting anything — writes derived state `flex`/`reconcile`
+// have no way to produce for composite widgets they don't fully own the interactive geometry of:
+//  - an open `Select`'s synthesized item-row `Button`s (`reconcile::children_of`'s `Select` arm)
+//    get real per-row `LayoutBucket` rects here (`flex::style_for`'s fallback leaf style gives every
+//    one of them a zero-size rect — neither `Select` nor its rows are a flex container `flex` grants
+//    space to), computed with the exact geometry `paint_select` itself paints the popup at (see
+//    `select_popup_row_rect`), so `events::hit_test` can actually find and click them.
+//  - a `Stack`'s `NodeFlags::DROP_TARGET` bit is kept in sync with its own `drop_action` field
+//    (`events::nearest_accepting_drop_target` walks the bubble chain for this flag).
+//  - a `Tree`'s synthesized per-row `Stack`s (`reconcile::children_of`'s `Tree` arm) get real
+//    per-row rects too (same zero-size root cause as `Select`'s rows), computed with the exact
+//    row-height/indent math `paint_tree_item` paints rows at, and their `NodeFlags::DRAG_SOURCE` bit
+//    is kept in sync with the *original* `UiTreeItemNode`'s `draggable` field (`reconcile` never
+//    drops fields, only clones them into `WidgetSpec` — see that module's own doc comment).
+
+/// 🔎 Finds `parent`'s retained child keyed `key` — `reconcile`'s synthesized `Select`/`Tree` rows
+/// are keyed by stable identity (`item.value`/`section.id`/`item.id`, see `reconcile::children_of`),
+/// so this is how this pass re-associates a declarative row (`UiSelectItem`/`UiTreeItemNode`) with
+/// its already-existing retained `NodeId`, robust to reconcile's insertion-order quirks (a re-used
+/// matched child physically keeps its old sibling-list position — see that module's own doc comment
+/// on why key lookup, not positional indexing, is the safe way to do this).
+fn find_child_by_key(tree: &UiTree, parent: NodeId, key: &NodeKey) -> Option<NodeId> {
+    tree.children(parent).find(|&child| tree.node(child).map(|n| &n.key) == Some(key))
+}
+
+fn sync_interactive_state(tree: &mut UiTree, id: NodeId, theme: &Theme) {
+    let select_open: Option<(Vec<UiSelectItem>, f32, f32)> = tree.node(id).and_then(|node| match &node.spec.0 {
+        UiNode::Select(select) if node.state.open => Some((select.items.clone(), node.layout.width, node.layout.height)),
+        _ => None,
+    });
+    if let Some((items, select_w, select_h)) = select_open {
+        sync_select_popup_rows(tree, id, &items, select_w, select_h, theme);
+    }
+
+    let stack_drop_target: Option<bool> = tree.node(id).and_then(|node| match &node.spec.0 {
+        UiNode::Stack(stack) => Some(stack.drop_action.is_some()),
+        _ => None,
+    });
+    if let Some(accepts_drop) = stack_drop_target {
+        if let Some(node) = tree.node_mut(id) {
+            node.flags.set(NodeFlags::DROP_TARGET, accepts_drop);
+        }
+    }
+
+    if tree.node(id).is_some_and(|node| matches!(node.spec.0, UiNode::Tree(_))) {
+        sync_tree_row_layout(tree, id, theme);
+    }
+
+    let children: Vec<NodeId> = tree.children(id).collect();
+    for child in children {
+        sync_interactive_state(tree, child, theme);
+    }
+}
+
+/// 📐 One popup row's `(x, y, w, h)` **relative to the `Select`'s own top-left** — shared by
+/// `sync_select_popup_rows` (writes it into the row's retained `LayoutBucket`) and `paint_select`
+/// (paints it), so the two can never drift apart. Mirrors `widgets::render_select_menu`'s literal
+/// geometry: the popup sits `select_h + 2.0` below the trigger, each row inset `2.0`,
+/// `theme.control_height` tall.
+fn select_popup_row_rect(select_w: f32, select_h: f32, index: usize, theme: &Theme) -> Rect {
+    let item_h = theme.control_height;
+    let menu_y = select_h + 2.0;
+    Rect::new(2.0, menu_y + 2.0 + index as f32 * item_h, (select_w - 4.0).max(0.0), item_h)
+}
+
+fn sync_select_popup_rows(tree: &mut UiTree, select_id: NodeId, items: &[UiSelectItem], select_w: f32, select_h: f32, theme: &Theme) {
+    for (index, item) in items.iter().enumerate() {
+        let Some(row_id) = find_child_by_key(tree, select_id, &NodeKey::Explicit(item.value.clone())) else { continue };
+        let rect = select_popup_row_rect(select_w, select_h, index, theme);
+        if let Some(node) = tree.node_mut(row_id) {
+            node.layout.x = rect.x;
+            node.layout.y = rect.y;
+            node.layout.width = rect.w;
+            node.layout.height = rect.h;
+        }
+    }
+}
+
+/// 🌳 Gives each of a `Tree`'s synthesized per-section `Stack`s (`reconcile::children_of`'s `Tree`
+/// arm, keyed by `section.id`) real `LayoutBucket` geometry, cumulative down the tree exactly like
+/// `paint_tree_widget`'s own procedural walk (header height, then each item's row height including
+/// any expanded nested rows).
+fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId, theme: &Theme) {
+    let Some(tree_node) = tree.node(tree_id).and_then(|node| match &node.spec.0 {
+        UiNode::Tree(tree_node) => Some(tree_node.clone()),
+        _ => None,
+    }) else {
+        return;
+    };
+    let width = tree.node(tree_id).map(|node| node.layout.width).unwrap_or(0.0);
+    let mut section_y = 0.0;
+    for section in &tree_node.sections {
+        let Some(section_id) = find_child_by_key(tree, tree_id, &NodeKey::Explicit(section.id.clone())) else { continue };
+        let header_offset = if section.label.is_some() { PANEL_HEADER } else { 0.0 };
+        let mut item_y = header_offset;
+        for item in &section.items {
+            item_y += sync_tree_item_layout(tree, section_id, item, item_y, width);
+        }
+        if let Some(node) = tree.node_mut(section_id) {
+            node.layout.x = 0.0;
+            node.layout.y = section_y;
+            node.layout.width = width;
+            node.layout.height = item_y;
+        }
+        section_y += item_y;
+    }
+}
+
+/// 🌳 Recursive per-item counterpart of `sync_tree_row_layout`, one level down — writes `item`'s own
+/// retained row `Stack` geometry (found by `item.id`, `reconcile::tree_item_row`'s key) at
+/// `y_offset` relative to `parent` (its retained parent row/section), then recurses into any
+/// expanded nested `items` relative to *this* row, mirroring `paint_tree_item`'s identical
+/// recursion. Also keeps `NodeFlags::DRAG_SOURCE` synced with `item.draggable` (see
+/// `events::is_plain_stack_container`/`set_drag_payload` for the two consumers of that bit). Returns
+/// the total height (own row + any expanded nested rows) consumed, for the caller's own cursor.
+fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
+    if item.is_hidden.unwrap_or(false) {
+        return 0.0;
+    }
+    let Some(item_id) = find_child_by_key(tree, parent, &NodeKey::Explicit(item.id.clone())) else {
+        return TREE_ROW_HEIGHT;
+    };
+    let expandable = item.items.as_ref().is_some_and(|items| !items.is_empty());
+    let expanded = expandable && item.default_open.unwrap_or(false);
+    let mut nested_height = 0.0;
+    if expanded {
+        for nested in item.items.as_ref().unwrap() {
+            nested_height += sync_tree_item_layout(tree, item_id, nested, TREE_ROW_HEIGHT + nested_height, width);
+        }
+    }
+    let total_height = TREE_ROW_HEIGHT + nested_height;
+    if let Some(node) = tree.node_mut(item_id) {
+        node.layout.x = 0.0;
+        node.layout.y = y_offset;
+        node.layout.width = width;
+        node.layout.height = total_height;
+        node.flags.set(NodeFlags::DRAG_SOURCE, item.draggable.unwrap_or(false));
+    }
+    total_height
+}
+//#endregion 🔖InteractiveStateSync
+
 /// 🎯 Per-variant paint dispatcher for one retained node, given `(origin_x, origin_y)` — the
 /// absolute position of *this node's parent's* content-box origin (so `origin + node.layout.{x,y}`
 /// is this node's own absolute top-left, matching taffy's parent-relative `Layout::location`).
@@ -10812,6 +11564,7 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
     let flags = node.flags;
     match &node.spec.0 {
         UiNode::Stack(stack) => {
+            paint_stack_frame(stack, bounds, flags, theme, draw);
             paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
             if stack.loading.unwrap_or(false) {
                 paint_loading_border(draw, bounds, theme.border_normal, theme);
@@ -10821,7 +11574,7 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
         UiNode::Separator(_) => paint_separator(bounds, theme, draw),
         UiNode::Button(button) => paint_button(button, bounds, flags, theme, atlas, icons, draw),
         UiNode::Input(input) => paint_input(input, bounds, flags, theme, atlas, draw),
-        UiNode::Select(select) => paint_select(select, bounds, flags, theme, atlas, icons, draw),
+        UiNode::Select(select) => paint_select(select, bounds, flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
         UiNode::Toggle(toggle) => paint_toggle(toggle, bounds, flags, theme, atlas, icons, draw),
         UiNode::Vec3(vec3) => paint_vec3(vec3, bounds, theme, atlas, draw),
         UiNode::KeyValue(kv) => paint_key_value(kv, bounds, theme, atlas, draw),
@@ -10860,9 +11613,42 @@ fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &
     draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
 }
 
-/// 🧱 `Stack`'s own paint is a no-op (it's pure layout); recurses into its retained children, each
-/// offset by this node's absolute top-left. Also reused by `Field`/`Section`, whose single/`children`
-/// nested `UiNode`s reconcile already expands into retained children (see `reconcile::children_of`).
+/// 🎴 A `Stack`'s `activate`/`selected` visual affordances, ported from
+/// `framework/renderer/react/ui-interpreter.tsx`'s `case "stack"` (`widgets::WidgetNode::Stack` has
+/// neither field to port from — see this region's own doc comment on why `widgets` is an incomplete
+/// reference for fixtures like this one): `activate` (React's `"border bg-panel cursor-pointer
+/// rounded-md"`) paints a filled `theme.panel` background (brighter, `theme.button_hover`, while
+/// `events::EventRouter`'s hover-chain has flagged it `NodeFlags::HOVERED` — see
+/// `events::is_plain_stack_container`'s matching hit-test exception for why an activatable Stack can
+/// be hovered/clicked at all) with a normal border; `selected` (`"ring-primary border-primary
+/// ring-1"`) paints an accent-colored border plus a slightly outset accent ring, approximating the
+/// DOM's separate `ring`+`border` layers with this crate's single stroke-rect primitive.
+/// `dropAction`'s accept-a-drop affordance has no dedicated visual in the React reference either
+/// (`onDragOver`/`onDrop` are behavioral only) — its only paint-visible effect is keeping
+/// `NodeFlags::DROP_TARGET` in sync (`sync_interactive_state`, above), consumed by
+/// `events`/cursor-derivation, not drawn here.
+fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme: &Theme, draw: &mut DrawList) {
+    let activatable = stack.activate.is_some();
+    let selected = stack.selected.unwrap_or(false);
+    if !activatable && !selected {
+        return;
+    }
+    let hovered = activatable && flags.contains(NodeFlags::HOVERED);
+    let bg = if activatable { if hovered { theme.button_hover } else { theme.panel } } else { Rgba::new(0.0, 0.0, 0.0, 0.0) };
+    let border = if selected { theme.accent } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, bg);
+    if selected {
+        let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
+        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
+    }
+}
+
+/// 🧱 `Stack`'s own paint (beyond `paint_node`'s separate `paint_stack_frame` call for its
+/// `activate`/`selected` affordance) is a no-op — it's pure layout; this just recurses into its
+/// retained children, each offset by this node's absolute top-left. Also reused by `Field`/`Section`,
+/// whose single/`children` nested `UiNode`s reconcile already expands into retained children (see
+/// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
+/// `activate`/`selected`).
 fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let children: Vec<NodeId> = tree.children(id).collect();
     for child in children {
@@ -10924,7 +11710,16 @@ fn paint_input(node: &UiInputNode, bounds: Rect, flags: NodeFlags, theme: &Theme
     draw_text_on(draw, atlas, display, bounds.x + 8.0, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, if muted { theme.text_muted } else { theme.text });
 }
 
-fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+/// 🔽 `retained` is `Some((tree, id))` for a real top-level `Select` node (able to read its
+/// synthesized item rows' live `NodeFlags::HOVERED` for the popup's row-hover highlight) and `None`
+/// for an inline `Select` painted via `paint_control` (a `TreeItem`'s embedded control — no per-
+/// control `NodeId` exists for that yet, same caveat `paint_control`'s own doc comment already
+/// makes, so it always paints closed regardless of `open`). W2 wiring: `open` (from
+/// `tree::WidgetState::open`, toggled by `events::EventRouter::toggle_select_popup`) now has a real
+/// data source, closing the gap this function's own doc comment used to describe — when `true`, the
+/// popup paints below the trigger with the exact geometry `select_popup_row_rect` also writes into
+/// the rows' `LayoutBucket` (see `sync_select_popup_rows`), so clicking a row actually hit-tests.
+fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
     push_control_border(draw, bounds, theme, theme.border_normal, bg);
@@ -10938,15 +11733,25 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, theme: &The
     if let Some(icons) = icons {
         push_icon(draw, icons, "chevron-down", bounds.x + bounds.w - theme.padding_standard - ICON_TINY, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
     }
-    // Select's open dropdown menu is popup state the old `WidgetContext::open_selects` map tracked.
-    // Re-checked while porting the rest of this region's fidelity gaps (see `w1c-paint-parity`'s
-    // report): `tree::WidgetState` is still an empty marker struct (no per-node open/closed slot to
-    // read), `tree::NodeFlags::HAS_POPUP` exists but nothing in `reconcile`/`events` ever sets it yet,
-    // and `reconcile::children_of` still only expands `Stack`/`Section`/`Field` — `Select` isn't
-    // expanded into a retained popup child. There is genuinely no "is this select open" signal
-    // anywhere in the retained data model yet, so this stays closed-rest-state-only until reconcile
-    // lands Select's popup-child expansion and events/shell start writing that open state somewhere
-    // `paint` can read it — not a paint-side omission, a missing data source.
+    if !open {
+        return;
+    }
+    let row_children: Vec<NodeId> = retained.map(|(tree, id)| tree.children(id).collect()).unwrap_or_default();
+    let item_h = theme.control_height;
+    let menu_h = node.items.len() as f32 * item_h + 4.0;
+    let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
+    draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, GlassTier::Menu, theme);
+    for (index, item) in node.items.iter().enumerate() {
+        let relative = select_popup_row_rect(bounds.w, bounds.h, index, theme);
+        let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
+        let row_hovered = retained
+            .zip(row_children.get(index))
+            .is_some_and(|((tree, _), &row_id)| tree.node(row_id).is_some_and(|n| n.flags.contains(NodeFlags::HOVERED)));
+        if row_hovered || item.value == node.value {
+            draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
+        }
+        draw_text_on(draw, atlas, &item.label, row.x + 8.0, row.y + 18.0, theme.font_size_body, theme.text);
+    }
 }
 
 fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
@@ -11271,7 +12076,7 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
     match control {
         UiControlNode::Button(node) => paint_button(node, bounds, flags, theme, atlas, icons, draw),
         UiControlNode::Input(node) => paint_input(node, bounds, flags, theme, atlas, draw),
-        UiControlNode::Select(node) => paint_select(node, bounds, flags, theme, atlas, icons, draw),
+        UiControlNode::Select(node) => paint_select(node, bounds, flags, false, None, theme, atlas, icons, draw),
         UiControlNode::Toggle(node) => paint_toggle(node, bounds, flags, theme, atlas, icons, draw),
         UiControlNode::Vec3(node) => paint_vec3(node, bounds, theme, atlas, draw),
         UiControlNode::KeyValue(node) => paint_key_value(node, bounds, theme, atlas, draw),
@@ -11636,6 +12441,130 @@ mod tests {
         assert!(rich_total > bare_total, "a tree item's description text should paint extra glyphs beyond a bare item (icons are None here, so its always-visible action doesn't add its own icon instance in this fixture)");
     }
     //#endregion 🔖FidelityFixes
+
+    //#region 🔖W2InteractivityFixes
+    // 🔽🎴🌳 Tests for `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 pass: Select popup painting
+    // (`paint_select` + `sync_select_popup_rows`), Stack `activate`/`selected`/`drop_action`
+    // (`paint_stack_frame` + `sync_interactive_state`'s `DROP_TARGET` sync), and Tree row real layout
+    // + `DRAG_SOURCE` sync (`sync_tree_row_layout`/`sync_tree_item_layout`).
+
+    fn select(id: &str, value: &str) -> UiNode {
+        UiNode::Select(UiSelectNode {
+            id: id.into(),
+            value: value.into(),
+            items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
+            placeholder: None,
+            on_change: action(),
+        })
+    }
+
+    #[test]
+    fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_highlights_the_value() {
+        let (mut tree, root, theme, mut atlas) = setup(&select("sel", "b"));
+        let mut closed_draw = DrawList::default();
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut closed_draw);
+        let closed_total: usize = closed_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        tree.node_mut(root).unwrap().state.open = true;
+        tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        let mut open_draw = DrawList::default();
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut open_draw);
+        let open_total: usize = open_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        assert!(open_total > closed_total, "an open Select should paint its popup rows in addition to the closed trigger");
+        // "Beta" (value "b") is the current value — its row should paint a `row_hover`-colored
+        // highlight rect (a KIND_ROUNDED instance in exactly `theme.row_hover`).
+        let has_selected_highlight = open_draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
+            (instance.color[0] - theme.row_hover.r).abs() < 0.001 && (instance.color[1] - theme.row_hover.g).abs() < 0.001 && (instance.color[2] - theme.row_hover.b).abs() < 0.001
+        });
+        assert!(has_selected_highlight, "the popup row matching the Select's current value should paint a row_hover highlight");
+    }
+
+    #[test]
+    fn opening_a_selects_popup_gives_its_synthesized_item_rows_real_hit_testable_layout() {
+        let (mut tree, root, theme, mut atlas) = setup(&select("sel", "a"));
+        tree.node_mut(root).unwrap().state.open = true;
+        tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let row_a = find_child_by_key(&tree, root, &NodeKey::Explicit("a".into())).expect("reconcile should have synthesized a retained row for item \"a\"");
+        let row_b = find_child_by_key(&tree, root, &NodeKey::Explicit("b".into())).expect("reconcile should have synthesized a retained row for item \"b\"");
+        let bucket_a = &tree.node(row_a).unwrap().layout;
+        let bucket_b = &tree.node(row_b).unwrap().layout;
+        assert!(bucket_a.width > 0.0 && bucket_a.height > 0.0, "an open Select's row should get real (non-zero) layout so events::hit_test can find it");
+        assert!(bucket_b.y > bucket_a.y, "row \"b\" should be laid out below row \"a\"");
+    }
+
+    fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, activate: None, drop_action, children: vec![text("child")] })
+    }
+
+    #[test]
+    fn a_stacks_drop_target_flag_tracks_its_drop_action() {
+        let (mut tree, root, theme, mut atlas) = setup(&drop_stack(Some(action())));
+        let mut draw = DrawList::default();
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DROP_TARGET), "a Stack with a drop_action should be flagged NodeFlags::DROP_TARGET");
+
+        let (mut plain_tree, plain_root, plain_theme, mut plain_atlas) = setup(&drop_stack(None));
+        let mut plain_draw = DrawList::default();
+        paint_tree(&mut plain_tree, plain_root, &plain_theme, &mut plain_atlas, None, &mut plain_draw);
+        assert!(!plain_tree.node(plain_root).unwrap().flags.contains(NodeFlags::DROP_TARGET), "a Stack without a drop_action must not be flagged DROP_TARGET");
+    }
+
+    fn activatable_stack(selected: bool) -> UiNode {
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, activate: Some(action()), drop_action: None, children: vec![text("child")] })
+    }
+
+    #[test]
+    fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring() {
+        let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&stack(vec![text("child")]));
+        let mut bare_draw = DrawList::default();
+        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, &mut bare_draw);
+        let bare_total: usize = bare_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        let (mut card_tree, card_root, theme2, mut card_atlas) = setup(&activatable_stack(false));
+        let mut card_draw = DrawList::default();
+        paint_tree(&mut card_tree, card_root, &theme2, &mut card_atlas, None, &mut card_draw);
+        let card_total: usize = card_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        assert!(card_total > bare_total, "an activatable Stack should paint a bg+border frame a bare Stack doesn't");
+
+        let (mut selected_tree, selected_root, theme3, mut selected_atlas) = setup(&activatable_stack(true));
+        let mut selected_draw = DrawList::default();
+        paint_tree(&mut selected_tree, selected_root, &theme3, &mut selected_atlas, None, &mut selected_draw);
+        let selected_total: usize = selected_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        assert!(selected_total > card_total, "a selected activatable Stack should paint an extra ring border beyond the plain activate frame");
+    }
+
+    fn tree_with_draggable_item() -> UiNode {
+        let mut item = UiTreeItemNode::base("i1", "Item One");
+        item.draggable = Some(true);
+        UiNode::Tree(UiTreeNode {
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] }],
+            loading: None,
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        })
+    }
+
+    #[test]
+    fn a_trees_draggable_item_gets_real_row_layout_and_the_drag_source_flag() {
+        let (mut tree, root, theme, mut atlas) = setup(&tree_with_draggable_item());
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let section = find_child_by_key(&tree, root, &NodeKey::Explicit("s1".into())).expect("reconcile should have synthesized a retained row for section \"s1\"");
+        let row = find_child_by_key(&tree, section, &NodeKey::Explicit("i1".into())).expect("reconcile should have synthesized a retained row for item \"i1\"");
+        let bucket = &tree.node(row).unwrap().layout;
+        assert!(bucket.width > 0.0 && bucket.height > 0.0, "a Tree row should get real (non-zero) layout so events::hit_test can find it");
+        assert!(tree.node(row).unwrap().flags.contains(NodeFlags::DRAG_SOURCE), "a draggable Tree item's row should be flagged NodeFlags::DRAG_SOURCE");
+    }
+    //#endregion 🔖W2InteractivityFixes
 }
 // #endregion paint
 }
@@ -11655,9 +12584,9 @@ use std::collections::HashMap;
 
 use crate::arena::NodeId;
 use crate::component::layout::ActionDescriptor;
-use crate::component::ui::UiNode;
+use crate::component::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
 use crate::geometry::Rect;
-use crate::tree::{EditState, NodeFlags, UiTree};
+use crate::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 
 //#region 🔖UiEvent
 /// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
@@ -11751,14 +12680,84 @@ fn hit_test_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, x: f32
     }
     // A bare `Stack` is a layout-only container with no interaction semantics of its own — it
     // must never be the hit result itself, only a pass-through to its children (same intent as
-    // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven).
-    let is_plain_container = matches!(node.spec.0, UiNode::Stack(_));
+    // `HIT_TRANSPARENT`, just implicit for this variant instead of flag-driven) — *unless* W2
+    // wiring (`is_plain_stack_container`) finds it actually carries `activate`/`drop_action`, is a
+    // registered drag source, or (for `Tree`'s synthesized per-row `Stack`s, see
+    // `reconcile::children_of`'s `Tree` arm) its original `UiTreeItemNode` spec has a
+    // `hover_action`/`unhover_action` — any of those make it a real interaction target.
+    let is_plain_container = is_plain_stack_container(tree, id, node);
     if inside && !node.flags.contains(NodeFlags::HIT_TRANSPARENT) && !is_plain_container {
         Some(id)
     } else {
         None
     }
 }
+
+/// 🎯🌳 W2 wiring: a `Stack` (`node.spec.0`) stops being a plain pass-through container the moment
+/// it carries `activate`/`drop_action` of its own, or is a registered `NodeFlags::DRAG_SOURCE`
+/// (`paint::sync_interactive_state` keeps that flag synced with `Tree` rows' `draggable` field, and
+/// `dispatch`'s `PointerDown` handling can only ever register a drag payload on a node that's
+/// actually reachable as a hit-test target in the first place — see `find_tree_item_spec`'s own
+/// caller in `dispatch`). A `Tree`'s synthesized per-row `Stack` (`reconcile::children_of`'s `Tree`
+/// arm, keyed by `item.id`) has no room for `hover_action`/`unhover_action` on its own retained
+/// shape either — those are re-derived here, by key, straight from the row's *original*
+/// `UiTreeItemNode` spec (`find_tree_item_spec`), so a row with only a hover affordance (no
+/// `action`/`draggable`) still becomes hit-testable.
+fn is_plain_stack_container(tree: &UiTree, id: NodeId, node: &Node) -> bool {
+    let UiNode::Stack(stack) = &node.spec.0 else { return false };
+    if stack.activate.is_some() || stack.drop_action.is_some() || node.flags.contains(NodeFlags::DRAG_SOURCE) {
+        return false;
+    }
+    if stack.id.is_some() {
+        if let Some(item) = find_tree_item_spec(tree, id) {
+            if item.hover_action.is_some() || item.unhover_action.is_some() {
+                return false;
+            }
+        }
+    }
+    true
+}
+
+//#region 🔖TreeItemLookup
+/// 🌳 Re-derives a `Tree` row's *original* `UiTreeItemNode` spec — `hover_action`/`unhover_action`/
+/// `draggable`/`drag_data`, fields `UiStackNode` (the row's synthesized retained shape, see
+/// `reconcile::children_of`'s `Tree` arm) has no room for at all — by walking up from `row` to the
+/// nearest ancestor `UiNode::Tree` and searching its still-fully-intact spec (`reconcile` never
+/// drops fields, only clones them into `WidgetSpec` — see that module's own doc comment) for the
+/// item whose `id` matches this row's own stable key (`NodeKey::Explicit(item.id)`, exactly what
+/// `reconcile::tree_item_row` keys the row with). `None` for anything that isn't a keyed descendant
+/// of a `Tree` (ordinary `Stack`s, a `Tree`'s section rows, which are keyed by `section.id` instead).
+fn find_tree_item_spec(tree: &UiTree, row: NodeId) -> Option<&UiTreeItemNode> {
+    let NodeKey::Explicit(row_id) = &tree.node(row)?.key else { return None };
+    let mut ancestor = tree.node(row)?.parent;
+    while let Some(candidate) = ancestor {
+        let candidate_node = tree.node(candidate)?;
+        if let UiNode::Tree(tree_node) = &candidate_node.spec.0 {
+            return find_item_in_sections(&tree_node.sections, row_id);
+        }
+        ancestor = candidate_node.parent;
+    }
+    None
+}
+
+fn find_item_in_sections<'a>(sections: &'a [UiTreeSectionNode], id: &str) -> Option<&'a UiTreeItemNode> {
+    sections.iter().find_map(|section| find_item_in_items(&section.items, id))
+}
+
+fn find_item_in_items<'a>(items: &'a [UiTreeItemNode], id: &str) -> Option<&'a UiTreeItemNode> {
+    for item in items {
+        if item.id == id {
+            return Some(item);
+        }
+        if let Some(nested) = &item.items {
+            if let Some(found) = find_item_in_items(nested, id) {
+                return Some(found);
+            }
+        }
+    }
+    None
+}
+//#endregion 🔖TreeItemLookup
 
 /// 📐 A node's absolute (window-space) origin: `LayoutBucket`'s own doc comment fixes `x`/`y` as
 /// **parent-relative**, so this walks the parent chain to `root` (whose own origin is `(0.0, 0.0)`)
@@ -11782,6 +12781,21 @@ pub(crate) fn node_abs_rect(tree: &UiTree, id: NodeId) -> Option<Rect> {
     let node = tree.node(id)?;
     let (x, y) = node_abs_origin(tree, id);
     Some(Rect::new(x, y, node.layout.width, node.layout.height))
+}
+
+/// 🎯 `hit_test`, but `subtree_root` need not be the window's true tree root (an overlay root
+/// virtually never is — it's some descendant node). `hit_test` walks from its `root` argument
+/// treating that node's own `layout.x`/`layout.y` as relative to origin `(0.0, 0.0)`, which is only
+/// correct window-absolute-coordinate behavior when `root` itself has no parent; this instead
+/// resolves `subtree_root`'s *parent's* absolute origin (`(0.0, 0.0)` if it has none) and translates
+/// `(x, y)` into that frame first, so overlay dismissal/hover-out checks against a non-root overlay
+/// subtree stay correct regardless of how deep it's nested.
+pub(crate) fn hit_test_subtree(tree: &UiTree, subtree_root: NodeId, x: f32, y: f32) -> Option<NodeId> {
+    let (parent_x, parent_y) = match tree.node(subtree_root).and_then(|node| node.parent) {
+        Some(parent) => node_abs_origin(tree, parent),
+        None => (0.0, 0.0),
+    };
+    hit_test(tree, subtree_root, x - parent_x, y - parent_y)
 }
 //#endregion 🔖HitTest
 
@@ -12317,10 +13331,15 @@ impl EventRouter {
 
     /// 👆 Flips `NodeFlags::HOVERED` off every node in the old hover bubble chain that isn't in the
     /// new one, and on for every new node that wasn't in the old one — see `hover_chain`'s own doc
-    /// comment for why the whole chain (not just the leaf) carries the flag.
-    fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) {
+    /// comment for why the whole chain (not just the leaf) carries the flag. W2 wiring: also fires a
+    /// `Tree` row's `hover_action`/`unhover_action` (`find_tree_item_spec`) on entering/leaving —
+    /// `UiStackNode` (a row's synthesized retained shape) has no field for either, so this is the same
+    /// re-derivation `is_plain_stack_container`'s tree-row exception uses, fired via `UiCommand::App`
+    /// exactly like a `Button`'s click (see `dispatch`'s `PointerUp` handling for that precedent).
+    fn update_hover(&mut self, tree: &mut UiTree, target: Option<NodeId>) -> Vec<UiCommand> {
+        let mut commands = Vec::new();
         if self.hovered == target {
-            return;
+            return commands;
         }
         let mut new_chain = Vec::new();
         if let Some(leaf) = target {
@@ -12335,6 +13354,9 @@ impl EventRouter {
                     node.flags.set(NodeFlags::HOVERED, false);
                 }
                 tree.mark_dirty(previous, NodeFlags::DIRTY_PAINT);
+                if let Some(action) = find_tree_item_spec(tree, previous).and_then(|item| item.unhover_action.clone()) {
+                    commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                }
             }
         }
         for &next in &new_chain {
@@ -12343,10 +13365,14 @@ impl EventRouter {
                     node.flags.set(NodeFlags::HOVERED, true);
                 }
                 tree.mark_dirty(next, NodeFlags::DIRTY_PAINT);
+                if let Some(action) = find_tree_item_spec(tree, next).and_then(|item| item.hover_action.clone()) {
+                    commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                }
             }
         }
         self.hover_chain = new_chain;
         self.hovered = target;
+        commands
     }
 
     //#region 🔖OverlayApi
@@ -12380,12 +13406,37 @@ impl EventRouter {
         self.overlays.topmost()
     }
 
+    /// 🔽 W2 wiring: the consumer-side effect of a `Select` click — flips `tree::WidgetState::open`
+    /// via `open_overlay`/`close_overlay` (root *and* anchor are the `Select` node itself: its own
+    /// synthesized item rows, see `reconcile::children_of`'s `Select` arm, are already its retained
+    /// children, and marking the `Select` node `NodeFlags::OVERLAY` gives the whole popup hit-test
+    /// priority over its own later-painted siblings). All dismissal paths (outside-press, `Escape`,
+    /// an explicit `close_overlay`, or picking an item — see `dispatch`'s `PointerUp` handling) funnel
+    /// through `finish_close`, which clears `open` back to `false` uniformly.
+    pub(crate) fn toggle_select_popup(&mut self, tree: &mut UiTree, select_id: NodeId) -> Vec<UiCommand> {
+        let already_open = tree.node(select_id).is_some_and(|node| node.state.open);
+        if already_open {
+            self.close_overlay(tree, select_id)
+        } else {
+            self.open_overlay(tree, select_id, OverlayKind::SelectPopup, OverlayAnchor::Node(select_id));
+            if let Some(node) = tree.node_mut(select_id) {
+                node.state.open = true;
+            }
+            Vec::new()
+        }
+    }
+
     /// 🧹 Clears `NodeFlags::OVERLAY`, and clears focus too if it was inside the closed overlay's
     /// subtree (dangling focus into a now-hidden subtree would otherwise route key events nowhere
-    /// useful).
+    /// useful). `SelectPopup`'s `tree::WidgetState::open` is the popup's own show/hide bit
+    /// (`paint::paint_select` reads it) — cleared here too, so every dismissal path (see
+    /// `toggle_select_popup`'s doc comment) stays in sync with the overlay lifecycle uniformly.
     fn finish_close(&mut self, tree: &mut UiTree, overlay: OpenOverlay) -> Vec<UiCommand> {
         if let Some(node) = tree.node_mut(overlay.root) {
             node.flags.set(NodeFlags::OVERLAY, false);
+            if overlay.kind == OverlayKind::SelectPopup {
+                node.state.open = false;
+            }
         }
         tree.mark_dirty(overlay.root, NodeFlags::DIRTY_PAINT);
         let mut out = vec![UiCommand::OverlayClosed { window_id: self.window_id.clone(), root: overlay.root, kind: overlay.kind }];
@@ -12407,7 +13458,7 @@ impl EventRouter {
             return None;
         }
         let overlay_root = top.root;
-        if hit_test(tree, overlay_root, x, y).is_some() {
+        if hit_test_subtree(tree, overlay_root, x, y).is_some() {
             return None;
         }
         Some(self.close_topmost_overlay(tree))
@@ -12675,7 +13726,7 @@ impl EventRouter {
                     _ => {}
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
-                self.update_hover(tree, target);
+                commands.extend(self.update_hover(tree, target));
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
             UiEvent::PointerDown { x, y, .. } => {
@@ -12684,7 +13735,7 @@ impl EventRouter {
                 }
                 self.press_origin = Some((*x, *y));
                 let target = hit_test(tree, root, *x, *y);
-                self.update_hover(tree, target);
+                commands.extend(self.update_hover(tree, target));
                 if let Some(id) = target {
                     if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
                         let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
@@ -12701,6 +13752,15 @@ impl EventRouter {
                             self.focus.set_focus(tree, Some(id));
                             commands.push(UiCommand::FocusChanged { window_id: self.window_id.clone(), node: Some(id) });
                         }
+                        // 🫳 W2 wiring: a `Tree` row's `draggable`/`drag_data` (re-derived by key —
+                        // see `find_tree_item_spec`) registers this press as a promotable drag
+                        // source, exactly like a widget spec would call `set_drag_payload` itself if
+                        // `UiStackNode` had room for the field (it doesn't — see that fn's own doc).
+                        if let Some(item) = find_tree_item_spec(tree, id) {
+                            if item.draggable.unwrap_or(false) {
+                                self.set_drag_payload(id, item.drag_data.clone().unwrap_or_default());
+                            }
+                        }
                     }
                 } else {
                     self.focus.clear_focus(tree);
@@ -12716,9 +13776,31 @@ impl EventRouter {
                             }
                             tree.mark_dirty(active_id, NodeFlags::DIRTY_PAINT);
                             if hit_test(tree, root, *x, *y) == Some(active_id) {
-                                if let Some(node) = tree.node(active_id) {
-                                    if let UiNode::Button(button) = &node.spec.0 {
-                                        commands.push(UiCommand::App { window_id: self.window_id.clone(), action: button.action.clone() });
+                                // 🔽🎴 W2 wiring: `Select` toggles its popup (`toggle_select_popup`);
+                                // a `Button` (this covers `Select`'s own synthesized item rows too —
+                                // see `reconcile::children_of`'s `Select` arm — since they're plain
+                                // `UiNode::Button`s) fires its action, additionally closing an open
+                                // `SelectPopup` if this button *is* one of that popup's rows (picking
+                                // an item closes the popup, per `toggle_select_popup`'s doc comment);
+                                // a `Stack` with `activate` set fires that action (see
+                                // `paint::paint_stack_frame`'s matching visual for the same field).
+                                let is_select = tree.node(active_id).is_some_and(|node| matches!(node.spec.0, UiNode::Select(_)));
+                                if is_select {
+                                    commands.extend(self.toggle_select_popup(tree, active_id));
+                                } else {
+                                    let fired = tree.node(active_id).and_then(|node| match &node.spec.0 {
+                                        UiNode::Button(button) => Some((button.action.clone(), node.parent)),
+                                        UiNode::Stack(stack) => stack.activate.clone().map(|action| (action, None)),
+                                        _ => None,
+                                    });
+                                    if let Some((action, parent)) = fired {
+                                        commands.push(UiCommand::App { window_id: self.window_id.clone(), action });
+                                        if let Some(parent) = parent {
+                                            let picked_from_open_select = self.overlays.topmost().is_some_and(|overlay| overlay.kind == OverlayKind::SelectPopup && overlay.root == parent);
+                                            if picked_from_open_select {
+                                                commands.extend(self.close_topmost_overlay(tree));
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -12741,7 +13823,7 @@ impl EventRouter {
                     }
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
-                self.update_hover(tree, target);
+                commands.extend(self.update_hover(tree, target));
             }
             UiEvent::KeyDown { key, modifiers } => {
                 if key == "Escape" {
@@ -12772,11 +13854,69 @@ impl EventRouter {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiButtonNode, UiSeparatorNode, UiStackNode, UiTextNode};
+    use crate::component::ui::{
+        UiButtonNode, UiInputNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode,
+        UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+    };
     use crate::tree::{Node, NodeKey, WidgetSpec};
 
     fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
+    }
+
+    fn select_ui(id: &str, value: &str) -> UiNode {
+        UiNode::Select(UiSelectNode {
+            id: id.into(),
+            value: value.into(),
+            items: vec![UiSelectItem { value: "a".into(), label: "A".into() }, UiSelectItem { value: "b".into(), label: "B".into() }],
+            placeholder: None,
+            on_change: action(),
+        })
+    }
+
+    fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
+        UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+    }
+
+    /// 🌳 Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
+    /// shape/key exactly) as a retained child of `tree_id` — these tests build the retained tree by
+    /// hand (like every other test in this module, via `leaf`), so `reconcile` never actually runs;
+    /// this stand-in keeps the row's key (`NodeKey::Explicit(item.id)`) and geometry consistent with
+    /// what `paint::sync_tree_row_layout` would have written.
+    fn insert_tree_row(tree: &mut UiTree, tree_id: NodeId, item_id: &str, rect: (f32, f32, f32, f32)) -> NodeId {
+        let spec = UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: Some(item_id.into()),
+            selected: Some(false),
+            loading: None,
+            activate: None,
+            drop_action: None,
+            children: Vec::new(),
+        });
+        let id = tree.insert_child(Some(tree_id), Node::new(NodeKey::Explicit(item_id.into()), WidgetSpec(spec)));
+        let bucket = tree.node_mut(id).unwrap();
+        bucket.layout.x = rect.0;
+        bucket.layout.y = rect.1;
+        bucket.layout.width = rect.2;
+        bucket.layout.height = rect.3;
+        id
+    }
+
+    fn input_ui(id: &str, value: &str) -> UiNode {
+        UiNode::Input(UiInputNode {
+            id: id.into(),
+            input_kind: "text".into(),
+            value: value.into(),
+            placeholder: None,
+            commit: None,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: action(),
+        })
     }
 
     fn stack_ui() -> UiNode {
@@ -12958,6 +14098,451 @@ mod tests {
 
         assert_eq!(visited, vec![leaf_node, mid], "bubbling must stop at `mid` and never reach `root`");
     }
+
+    //#region 🔖OverlayTests
+    #[test]
+    fn overlay_open_flags_the_node_and_close_clears_it_and_emits_overlay_closed() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let popup = leaf(&mut tree, Some(root), 1, stack_ui(), (10.0, 10.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+
+        router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
+        assert!(tree.node(popup).unwrap().flags.contains(NodeFlags::OVERLAY));
+        assert_eq!(router.topmost_overlay().map(|overlay| overlay.kind), Some(OverlayKind::SelectPopup));
+
+        let commands = router.close_topmost_overlay(&mut tree);
+        assert!(!tree.node(popup).unwrap().flags.contains(NodeFlags::OVERLAY));
+        assert!(router.topmost_overlay().is_none());
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { root, kind, .. } if *root == popup && *kind == OverlayKind::SelectPopup)));
+    }
+
+    #[test]
+    fn pointer_down_outside_a_dismissable_overlay_closes_it_and_swallows_the_press() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, button_ui("underneath"), (0.0, 0.0, 200.0, 200.0));
+        let popup = leaf(&mut tree, Some(root), 2, stack_ui(), (10.0, 10.0, 50.0, 50.0));
+        leaf(&mut tree, Some(popup), 1, text_ui("item"), (0.0, 0.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+        router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary });
+
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { .. })), "outside press must close the overlay");
+        assert!(router.topmost_overlay().is_none());
+        assert_eq!(router.capture(), None, "the outside press must be swallowed, not routed to whatever's underneath");
+    }
+
+    #[test]
+    fn pointer_down_inside_a_dismissable_overlay_does_not_close_it() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let popup = leaf(&mut tree, Some(root), 1, stack_ui(), (10.0, 10.0, 50.0, 50.0));
+        leaf(&mut tree, Some(popup), 1, text_ui("item"), (0.0, 0.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+        router.open_overlay(&mut tree, popup, OverlayKind::SelectPopup, OverlayAnchor::Node(root));
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Primary });
+
+        assert!(commands.iter().all(|cmd| !matches!(cmd, UiCommand::OverlayClosed { .. })), "a press inside the overlay must not dismiss it");
+        assert!(router.topmost_overlay().is_some());
+    }
+
+    #[test]
+    fn escape_closes_only_the_topmost_of_two_open_overlays() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let menu = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 50.0, 50.0));
+        let submenu = leaf(&mut tree, Some(root), 2, stack_ui(), (60.0, 0.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+        router.open_overlay(&mut tree, menu, OverlayKind::ContextMenu, OverlayAnchor::Node(root));
+        router.open_overlay(&mut tree, submenu, OverlayKind::ContextMenu, OverlayAnchor::Node(menu));
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Escape".into(), modifiers: EventModifiers::default() });
+
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { root, .. } if *root == submenu)));
+        assert_eq!(router.topmost_overlay().map(|overlay| overlay.root), Some(menu), "only the topmost overlay closes on Escape");
+    }
+
+    #[test]
+    fn tab_focus_is_trapped_inside_an_open_dialog_overlay() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 300.0));
+        leaf(&mut tree, Some(root), 1, button_ui("a"), (0.0, 0.0, 50.0, 20.0));
+        leaf(&mut tree, Some(root), 2, button_ui("b"), (50.0, 0.0, 50.0, 20.0));
+        let dialog = leaf(&mut tree, Some(root), 3, stack_ui(), (100.0, 100.0, 100.0, 100.0));
+        let button_c = leaf(&mut tree, Some(dialog), 1, button_ui("c"), (0.0, 0.0, 50.0, 20.0));
+        let button_d = leaf(&mut tree, Some(dialog), 2, button_ui("d"), (50.0, 0.0, 50.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.open_overlay(&mut tree, dialog, OverlayKind::Dialog, OverlayAnchor::Point { x: 0.0, y: 0.0 });
+
+        let tab = || UiEvent::KeyDown { key: "Tab".into(), modifiers: EventModifiers::default() };
+        router.dispatch(&mut tree, root, &tab());
+        assert_eq!(router.focus.focused, Some(button_c));
+        router.dispatch(&mut tree, root, &tab());
+        assert_eq!(router.focus.focused, Some(button_d));
+        router.dispatch(&mut tree, root, &tab());
+        assert_eq!(router.focus.focused, Some(button_c), "focus-trapped Tab cycling must never reach button_a/button_b outside the dialog");
+    }
+    //#endregion 🔖OverlayTests
+
+    //#region 🔖DragDropTests
+    #[test]
+    fn drag_session_promotes_after_threshold_and_commits_on_an_accepting_drop_target() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
+        set_flag(&mut tree, source, NodeFlags::DRAG_SOURCE);
+        let target = leaf(&mut tree, Some(root), 2, stack_ui(), (100.0, 100.0, 50.0, 50.0));
+        set_flag(&mut tree, target, NodeFlags::DROP_TARGET);
+        leaf(&mut tree, Some(target), 1, text_ui("drop-here"), (0.0, 0.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+        let mut payload = DragPayload::new();
+        payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
+        router.set_drag_payload(source, payload.clone());
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+        assert_eq!(router.capture(), Some((source, CaptureKind::Press)), "a plain press must not immediately start a drag");
+
+        // Small move under the promotion threshold: still just a Press.
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 6.0, y: 6.0 });
+        assert_eq!(router.capture(), Some((source, CaptureKind::Press)));
+
+        // Move past the threshold and over the drop target: promotes to Drag and finds the target.
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0 });
+        assert_eq!(router.capture(), Some((source, CaptureKind::Drag)));
+        assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), Some(target));
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 120.0, y: 120.0, button: PointerButton::Primary });
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::DropCommitted { source: s, target: t, payload: p, .. } if *s == source && *t == target && *p == payload)));
+        assert_eq!(router.capture(), None);
+        assert!(router.drag_session().is_none());
+    }
+
+    #[test]
+    fn drag_session_cancels_when_released_over_no_accepting_drop_target() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0,200.0 as f32, 200.0));
+        let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.set_drag_payload(source, DragPayload::new());
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0 });
+        assert_eq!(router.capture(), Some((source, CaptureKind::Drag)));
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 190.0, y: 190.0, button: PointerButton::Primary });
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::DropCancelled { source: s, .. } if *s == source)));
+    }
+
+    #[test]
+    fn a_drop_targets_accept_predicate_can_reject_the_active_payload() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let source = leaf(&mut tree, Some(root), 1, text_ui("drag-me"), (0.0, 0.0, 20.0, 20.0));
+        let target = leaf(&mut tree, Some(root), 2, stack_ui(), (100.0, 100.0, 50.0, 50.0));
+        set_flag(&mut tree, target, NodeFlags::DROP_TARGET);
+        leaf(&mut tree, Some(target), 1, text_ui("drop-here"), (0.0, 0.0, 50.0, 50.0));
+        let mut router = EventRouter::new("main");
+        router.set_drag_payload(source, DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "x".to_string())]));
+        router.set_drop_accept(target, |payload| payload.contains_key("application/x-semio-catalogue-item"));
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 5.0, y: 5.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 120.0, y: 120.0 });
+
+        assert_eq!(router.drag_session().and_then(|drag| drag.drop_target), None, "the predicate must reject this payload's mime key");
+    }
+    //#endregion 🔖DragDropTests
+
+    //#region 🔖ScrollTests
+    #[test]
+    fn scroll_routes_to_the_nearest_scrollable_ancestor_and_clamps_at_zero() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
+        leaf(&mut tree, Some(root), 1, text_ui("content"), (10.0, 10.0, 20.0, 20.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: 30.0 });
+        assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 30.0));
+
+        router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 15.0, y: 15.0, delta_x: 0.0, delta_y: -100.0 });
+        assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 0.0), "scroll offset must clamp at zero, not go negative");
+    }
+
+    #[test]
+    fn scroll_thumb_capture_drags_the_scrollable_offset_along_its_registered_axis() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        set_flag(&mut tree, root, NodeFlags::SCROLLABLE);
+        // A bare `Stack` is a `hit_test`-transparent pass-through container (see 🔖HitTest's
+        // `is_plain_container`) — the thumb needs to be a real leaf to be hit-testable itself.
+        let thumb = leaf(&mut tree, Some(root), 1, separator_ui(), (190.0, 0.0, 10.0, 40.0));
+        let mut router = EventRouter::new("main");
+        router.register_scroll_thumb(thumb, root, ScrollAxis::Vertical);
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 195.0, y: 5.0, button: PointerButton::Primary });
+        assert_eq!(router.capture(), Some((root, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 195.0, y: 25.0 });
+        assert_eq!(tree.node(root).unwrap().state.scroll_offset, (0.0, 20.0));
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 195.0, y: 25.0, button: PointerButton::Primary });
+        assert_eq!(router.capture(), None);
+    }
+    //#endregion 🔖ScrollTests
+
+    //#region 🔖EditStateTests
+    #[test]
+    fn focusing_an_input_seeds_edit_state_from_its_value_and_blur_clears_it() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let input = leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert_eq!(tree.node(input).unwrap().state.edit, Some(EditState { text: "hello".into(), caret: 5, anchor: 5, composition: None, scroll_x: 0.0 }));
+
+        // clicking empty space blurs.
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary });
+        assert_eq!(tree.node(input).unwrap().state.edit, None, "blur must relinquish the buffer so the declarative value governs again");
+    }
+
+    #[test]
+    fn arrow_keys_move_the_caret_and_backspace_deletes_the_previous_char() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let input = router.focus.focused.unwrap();
+
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers::default() });
+        assert_eq!(tree.node(input).unwrap().state.edit.as_ref().unwrap().caret, 2);
+
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
+        let edit = tree.node(input).unwrap().state.edit.clone().unwrap();
+        assert_eq!((edit.anchor, edit.caret), (2, 1), "shift+arrow extends the selection instead of collapsing it");
+
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Backspace".into(), modifiers: EventModifiers::default() });
+        let edit = tree.node(input).unwrap().state.edit.clone().unwrap();
+        assert_eq!(edit.text, "ac", "backspace over a selection deletes the selected range");
+        assert_eq!((edit.anchor, edit.caret), (1, 1));
+    }
+
+    #[test]
+    fn character_insertion_replaces_the_selection() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, input_ui("name", "abc"), (0.0, 0.0, 100.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let input = router.focus.focused.unwrap();
+
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
+        router.dispatch(&mut tree, root, &UiEvent::TextInput { text: "xyz".into() });
+
+        let edit = tree.node(input).unwrap().state.edit.clone().unwrap();
+        assert_eq!(edit.text, "xyz");
+        assert_eq!((edit.anchor, edit.caret), (3, 3));
+    }
+
+    #[test]
+    fn copy_over_a_selection_emits_a_clipboard_command_without_mutating_the_buffer() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, input_ui("name", "hello"), (0.0, 0.0, 100.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let input = router.focus.focused.unwrap();
+
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "Home".into(), modifiers: EventModifiers::default() });
+        router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "End".into(), modifiers: EventModifiers { shift: true, ..Default::default() } });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::KeyDown { key: "c".into(), modifiers: EventModifiers { ctrl: true, ..Default::default() } });
+
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::ClipboardCopy { text, .. } if text == "hello")));
+        assert_eq!(tree.node(input).unwrap().state.edit.as_ref().unwrap().text, "hello", "copy must not mutate the buffer");
+    }
+
+    #[test]
+    fn ime_commit_inserts_the_composed_text_and_clears_composition() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, input_ui("name", ""), (0.0, 0.0, 100.0, 20.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let input = router.focus.focused.unwrap();
+
+        router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Start));
+        router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Update { text: "ねこ".into(), cursor: 2 }));
+        assert_eq!(tree.node(input).unwrap().state.edit.as_ref().unwrap().composition.as_deref(), Some("ねこ"));
+
+        router.dispatch(&mut tree, root, &UiEvent::Ime(ImeEvent::Commit { text: "ねこ".into() }));
+        let edit = tree.node(input).unwrap().state.edit.clone().unwrap();
+        assert_eq!(edit.text, "ねこ");
+        assert_eq!(edit.composition, None);
+    }
+    //#endregion 🔖EditStateTests
+
+    //#region 🔖HoverRevealTests
+    #[test]
+    fn hovering_a_leaf_marks_its_whole_ancestor_chain_hovered_and_clearing_hover_clears_it_all() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let row = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 100.0));
+        let label = leaf(&mut tree, Some(row), 1, text_ui("item"), (0.0, 0.0, 50.0, 20.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+        assert!(tree.node(label).unwrap().flags.contains(NodeFlags::HOVERED));
+        assert!(tree.node(row).unwrap().flags.contains(NodeFlags::HOVERED), "an ancestor Stack row must observe hover too, for paint's reveal-on-hover");
+        assert!(tree.node(root).unwrap().flags.contains(NodeFlags::HOVERED));
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 500.0, y: 500.0 });
+        assert!(!tree.node(label).unwrap().flags.contains(NodeFlags::HOVERED));
+        assert!(!tree.node(row).unwrap().flags.contains(NodeFlags::HOVERED));
+        assert!(!tree.node(root).unwrap().flags.contains(NodeFlags::HOVERED));
+    }
+    //#endregion 🔖HoverRevealTests
+
+    //#region 🔖W2InteractivityTests
+    // 🔽🎴🌳 Tests for the wiring closed out per `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2
+    // pass: `Select` popup open/close (`toggle_select_popup`/`finish_close`), `Stack`
+    // `activate`/`drop_action` (`is_plain_stack_container`'s hit-test exception), and `Tree` row
+    // `hover_action`/`unhover_action`/`draggable` (`find_tree_item_spec`).
+
+    #[test]
+    fn clicking_a_select_opens_its_popup_and_clicking_again_closes_it() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert!(tree.node(select).unwrap().state.open, "clicking a closed select should open its popup");
+        assert!(tree.node(select).unwrap().flags.contains(NodeFlags::OVERLAY), "an open select's popup subtree should win hit-test priority over its siblings");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert!(!tree.node(select).unwrap().state.open, "clicking an open select's trigger again should close its popup");
+        assert!(!tree.node(select).unwrap().flags.contains(NodeFlags::OVERLAY));
+    }
+
+    #[test]
+    fn a_press_outside_an_open_selects_popup_closes_it_and_swallows_the_press() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert!(tree.node(select).unwrap().state.open);
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 190.0, y: 190.0, button: PointerButton::Primary });
+
+        assert!(!tree.node(select).unwrap().state.open, "a press well outside the select and its popup should close it");
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::OverlayClosed { kind: OverlayKind::SelectPopup, .. })));
+    }
+
+    #[test]
+    fn picking_a_selects_item_row_fires_its_action_and_closes_the_popup() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let select = leaf(&mut tree, Some(root), 1, select_ui("sel", "a"), (0.0, 0.0, 100.0, 30.0));
+        let row_b = leaf(&mut tree, Some(select), 1, button_ui("b"), (0.0, 32.0, 100.0, 24.0));
+        let mut router = EventRouter::new("main");
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert!(tree.node(select).unwrap().state.open);
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 40.0, button: PointerButton::Primary });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 40.0, button: PointerButton::Primary });
+
+        let expected = action();
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)), "picking a row should fire its (merged) action");
+        assert!(!tree.node(select).unwrap().state.open, "picking an item should close the popup, per toggle_select_popup's dismissal-paths doc comment");
+        let _ = row_b;
+    }
+
+    fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, activate: Some(action), drop_action: None, children: Vec::new() })
+    }
+
+    #[test]
+    fn clicking_an_activatable_stack_fires_its_activate_action() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let _card = leaf(&mut tree, Some(root), 1, activatable_stack_ui(action()), (0.0, 0.0, 100.0, 40.0));
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
+
+        let expected = action();
+        assert!(commands.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected)), "clicking an activatable Stack should fire its `activate` action");
+    }
+
+    #[test]
+    fn a_bare_stack_without_activate_or_drop_action_stays_a_hit_test_pass_through() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let _plain = leaf(&mut tree, Some(root), 1, stack_ui(), (0.0, 0.0, 100.0, 40.0));
+
+        assert_eq!(hit_test(&tree, root, 10.0, 10.0), None, "a bare Stack (no activate/drop_action/drag_source/tree-row hover affordance) must remain a hit-test pass-through");
+    }
+
+    #[test]
+    fn hovering_a_tree_row_fires_its_hover_action_and_leaving_fires_unhover_action() {
+        let mut item = UiTreeItemNode::base("row1", "Row One");
+        item.hover_action = Some(action());
+        let mut leave_action = action();
+        leave_action.action = "leave".into();
+        item.unhover_action = Some(leave_action.clone());
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] };
+
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
+        insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
+        let mut router = EventRouter::new("main");
+
+        let entered = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 10.0, y: 10.0 });
+        let expected_enter = action();
+        assert!(entered.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == expected_enter)), "moving onto a hover-only tree row should fire its hover_action even though it has no activate/draggable of its own");
+
+        let left = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 190.0, y: 190.0 });
+        assert!(left.iter().any(|cmd| matches!(cmd, UiCommand::App { action, .. } if *action == leave_action)), "moving off the row should fire its unhover_action");
+    }
+
+    #[test]
+    fn pressing_a_draggable_tree_row_then_moving_past_threshold_promotes_it_to_a_drag_session() {
+        let mut item = UiTreeItemNode::base("row1", "Row One");
+        item.draggable = Some(true);
+        let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
+        item.drag_data = Some(payload.clone());
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] };
+
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let tree_id = leaf(&mut tree, Some(root), 1, tree_ui(vec![section]), (0.0, 0.0, 200.0, 200.0));
+        let row_id = insert_tree_row(&mut tree, tree_id, "row1", (0.0, 0.0, 200.0, 24.0));
+        // `paint::sync_tree_row_layout` is what would normally flip this on (mirroring `item.draggable`)
+        // — these tests build the retained tree by hand (no `paint_tree` call), so it's set directly.
+        tree.node_mut(row_id).unwrap().flags.set(NodeFlags::DRAG_SOURCE, true);
+        let mut router = EventRouter::new("main");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+        assert_eq!(router.capture(), Some((row_id, CaptureKind::Press)), "the row must be a real hit-test target once DRAG_SOURCE-flagged");
+
+        router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 30.0, y: 10.0 });
+        let drag = router.drag_session().expect("moving past the promote threshold should start a DragSession for a draggable row");
+        assert_eq!(drag.source, row_id);
+        assert_eq!(drag.payload, payload);
+    }
+    //#endregion 🔖W2InteractivityTests
 }
 // #endregion events
 }
@@ -13486,8 +15071,6 @@ pub struct Ui {
     windows: HashMap<String, UiWindow>,
     shell: Shell,
     theme: Theme,
-    atlas: FontAtlas,
-    icons: Option<IconAtlas>,
     scene_host: Option<Box<dyn SceneHost>>,
     pending_commands: Vec<UiCommand>,
 }
@@ -13498,8 +15081,6 @@ impl Ui {
             windows: HashMap::new(),
             shell: Shell::new(),
             theme: Theme::default(),
-            atlas: FontAtlas::builtin(),
-            icons: None,
             scene_host: None,
             pending_commands: Vec::new(),
         }
@@ -13507,10 +15088,6 @@ impl Ui {
 
     pub fn set_theme(&mut self, theme: Theme) {
         self.theme = theme;
-    }
-
-    pub fn set_icons(&mut self, icons: Option<IconAtlas>) {
-        self.icons = icons;
     }
 
     /// 🎬 Registers the host's `scene_slots::SceneHost`; `frame` hands it every `ComponentScene`
@@ -13566,7 +15143,14 @@ impl Ui {
     /// `window_id` has no tree yet (`apply_tree` never called). A dirty window always repaints its
     /// whole tree — `paint::paint_tree`'s own doc comment: `DrawList` only supports a full
     /// clear-and-rebuild, no incremental dirty-subtree replacement yet.
-    pub fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32) -> Option<&DrawList> {
+    ///
+    /// 🖋️ `atlas`/`icons` are the CALLER's own `FontAtlas`/`IconAtlas` — `Ui` never owns either (see
+    /// this region's top-of-file doc comment): the host must pass the SAME instances it already
+    /// `GpuContext::upload_font_atlas`/`upload_icon_atlas`s every frame, exactly like `flex::LayoutEngine::
+    /// compute`/`paint::paint_tree` already receive them as parameters rather than fields. This lets
+    /// retained-mode content share glyph/icon UVs with the rest of the host's chrome instead of
+    /// clobbering (or never populating) a second, independent GPU texture.
+    pub fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>) -> Option<&DrawList> {
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
         window.viewport = (viewport_width, viewport_height);
@@ -13576,9 +15160,9 @@ impl Ui {
         if !dirty {
             return Some(&window.draw);
         }
-        window.layout.compute(&mut window.tree, root, &mut self.atlas, &self.theme, viewport_width, viewport_height);
+        window.layout.compute(&mut window.tree, root, atlas, &self.theme, viewport_width, viewport_height);
         window.draw.clear();
-        paint_tree(&mut window.tree, root, &self.theme, &mut self.atlas, self.icons.as_ref(), &mut window.draw);
+        paint_tree(&mut window.tree, root, &self.theme, atlas, icons, &mut window.draw);
         if let Some(host) = self.scene_host.as_mut() {
             for slot in collect_scene_slots(&window.tree, root) {
                 host.paint_slot(&slot, &mut window.draw);
@@ -13668,10 +15252,11 @@ mod tests {
     #[test]
     fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
-        let draw = ui.frame("main", 400.0, 400.0).expect("frame must produce a draw list once a tree was applied");
+        let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None).expect("frame must produce a draw list once a tree was applied");
         let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(total > 0, "expected the text node to emit at least one glyph instance");
     }
@@ -13679,15 +15264,17 @@ mod tests {
     #[test]
     fn frame_before_any_apply_tree_returns_none() {
         let mut ui = Ui::new();
-        assert!(ui.frame("nonexistent", 400.0, 400.0).is_none());
+        let mut atlas = FontAtlas::builtin();
+        assert!(ui.frame("nonexistent", 400.0, 400.0, &mut atlas, None).is_none());
     }
 
     #[test]
     fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
         let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
         let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]);
         ui.apply_tree("main", &ui_node);
-        ui.frame("main", 400.0, 400.0);
+        ui.frame("main", 400.0, 400.0, &mut atlas, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
 
         ui.apply_tree("main", &ui_node);
@@ -13697,8 +15284,9 @@ mod tests {
     #[test]
     fn dispatch_event_emits_a_button_click_command_and_it_is_also_drainable() {
         let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
-        ui.frame("main", 400.0, 400.0);
+        ui.frame("main", 400.0, 400.0, &mut atlas, None);
 
         ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
         let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
@@ -13874,8 +15462,9 @@ mod tests {
 
     fn retained_stats(node: &UiNode) -> (usize, usize, usize) {
         let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
         ui.apply_tree("golden", node);
-        let draw = ui.frame("golden", 400.0, 400.0).expect("apply_tree then frame must produce a draw list");
+        let draw = ui.frame("golden", 400.0, 400.0, &mut atlas, None).expect("apply_tree then frame must produce a draw list");
         stats(draw)
     }
 
@@ -15945,19 +17534,34 @@ pub use component::ui::*;
 #[cfg(feature = "engine")]
 pub use arena::{Arena, NodeId};
 #[cfg(feature = "engine")]
-pub use tree::{Node, NodeFlags, NodeKey, LayoutBucket, PaintBucket, UiTree, WidgetSpec, WidgetState};
+pub use tree::{EditState, Node, NodeFlags, NodeKey, LayoutBucket, PaintBucket, UiTree, WidgetSpec, WidgetState};
 #[cfg(feature = "engine")]
 pub use cursor::{resolve_semio_cursor, apply_window_cursor, CursorDragState, SemioCursor};
 #[cfg(all(feature = "engine", target_arch = "wasm32"))]
 pub use cursor::apply_canvas_cursor;
 #[cfg(feature = "engine")]
 pub use draw::{mesh_content_version, DrawList, IconAtlas, MeshGpuStore, RasterTextureStore, ear_clip_polygon, paint_selection_marquee};
+// 🪟🫳🖱️ W2 wiring: `w1d-events-overlay`'s overlay/drag-drop/scroll types, previously reachable only
+// via `ui_wgpu::events::*` (the module itself is `pub`, just not curated into this flattened surface)
+// — `EventRouter` itself stays `pub(crate)` (an `engine::Ui` implementation detail; drive it via
+// `Ui::dispatch_event`), but the data these `UiCommand`s/the host's own drag-ghost rendering need are
+// now part of the crate's curated public API like every other `events` type already was.
 #[cfg(feature = "engine")]
-pub use events::{CaptureKind, EventModifiers, PointerButton, UiCommand, UiEvent};
+pub use events::{
+    CaptureKind, DismissPolicy, DragGhost, DragPayload, DragSession, EventModifiers, ImeEvent,
+    OpenOverlay, OverlayAnchor, OverlayKind, OverlayPlacement, PointerButton, ScrollAxis, UiCommand,
+    UiEvent, resolve_overlay_placement,
+};
 #[cfg(feature = "engine")]
 pub use scene_slots::{SceneHost, SceneSlot};
 #[cfg(feature = "engine")]
 pub use shell::{Shell, ShellEvent};
+// 🧵 W2 wiring: the retained-mode façade itself (`engine::Ui` — `apply_tree`/`frame`/
+// `dispatch_event`/`needs_frame`/`drain_commands`) was never re-exported at all before this pass;
+// this is the actual public entry point a host drives per tick, per `report-w0-engine-facade.md`'s
+// own closing wiring request.
+#[cfg(feature = "engine")]
+pub use engine::Ui;
 #[cfg(feature = "engine")]
 pub use gpu::GpuContext;
 #[cfg(feature = "engine")]

@@ -627,7 +627,8 @@ export function resolvePolicyScriptEntity(repoRoot: string, scriptPath: string):
   const folder = runCliGraphql(`query Fo($p: String!) { folder(path: $p) { id path } }`, { p: relDir }, { repoRoot }) as {
     folder: { id?: string; path?: string };
   };
-  if (!folder.folder?.id) throw new Error(`[policy-runner] folder not resolved for ${relDir}`);
+  // 🌱 Workspace root: `folder.id` is `""` (falsy but valid — relative(repoRoot, repoRoot) === "").
+  if (folder.folder?.id === undefined) throw new Error(`[policy-runner] folder not resolved for ${relDir}`);
 
   const meta = runCliGraphql(`query M { bundles { id root name } technologies { id root name } }`, {}, { repoRoot }) as {
     bundles: GraphNode[];
@@ -640,7 +641,10 @@ export function resolvePolicyScriptEntity(repoRoot: string, scriptPath: string):
     }
   }
   for (const t of meta.technologies ?? []) {
-    if (norm(String(t.root ?? "")) === d) {
+    // 🌱 Technology `root` echoes the absolute `--repo` path (unlike bundle `root`, which is repo-relative) —
+    // the workspace-root script.ts's relDir is "", so match against the absolute repoRoot too.
+    const tRoot = norm(String(t.root ?? ""));
+    if (tRoot === d || tRoot === norm(repoRoot)) {
       return { kind: "technology", id: String(t.id) };
     }
   }

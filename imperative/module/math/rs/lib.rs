@@ -1,24 +1,13 @@
 //! 🔢 Imperative math module: numeric scope operators.
 
-use neural_engine::{
-    Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value,
-};
+use neural_engine::{Atom, ChannelSpec, Dictionary, EvalError, Operation, OperatorImpl, OperatorInfo, Registry, Value};
 
 fn read_string(input: &Dictionary, key: &str) -> Result<String, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_str())
-        .map(str::to_string)
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn read_number(input: &Dictionary, key: &str) -> Result<f64, EvalError> {
-    input
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_f64())
-        .ok_or_else(|| EvalError::MissingInput(key.into()))
+    input.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_f64()).ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 
 fn write_into(input: &Dictionary, value: f64) -> Result<Dictionary, EvalError> {
@@ -73,17 +62,7 @@ fn string_channel(name: &str) -> ChannelSpec {
 }
 
 fn operator_info(id: &str, name: &str, abbreviation: &str, summary: &str, inputs: Vec<ChannelSpec>) -> OperatorInfo {
-    OperatorInfo {
-        id: id.into(),
-        module: "imperative".into(),
-        name: name.into(),
-        abbreviation: abbreviation.into(),
-        icon: "emoji:🔢".into(),
-        summary: summary.into(),
-        inputs,
-        outputs: vec![ChannelSpec::wildcard()],
-        ..Default::default()
-    }
+    OperatorInfo { id: id.into(), module: "imperative".into(), name: name.into(), abbreviation: abbreviation.into(), icon: "emoji:🔢".into(), summary: summary.into(), inputs, outputs: vec![ChannelSpec::wildcard()], ..Default::default() }
 }
 
 fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<dyn Operation>) {
@@ -91,127 +70,17 @@ fn register_simple(registry: &mut Registry, info: OperatorInfo, operation: Box<d
 }
 
 pub fn register(registry: &mut Registry) {
-    register_simple(
-        registry,
-        operator_info(
-            "math.add",
-            "Add",
-            "Add",
-            "Adds two numbers and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathAdd),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.subtract",
-            "Subtract",
-            "Sub",
-            "Subtracts two numbers and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathSubtract),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.multiply",
-            "Multiply",
-            "Mul",
-            "Multiplies two numbers and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathMultiply),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.divide",
-            "Divide",
-            "Div",
-            "Divides two numbers and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathDivide),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.modulo",
-            "Modulo",
-            "Mod",
-            "Computes remainder and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathModulo),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.power",
-            "Power",
-            "Pow",
-            "Raises a to the power of b and writes the result into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathPower),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.min",
-            "Min",
-            "Min",
-            "Writes the minimum of two numbers into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathMin),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.max",
-            "Max",
-            "Max",
-            "Writes the maximum of two numbers into scope",
-            vec![number_channel("a"), number_channel("b"), string_channel("into")],
-        ),
-        Box::new(MathMax),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.round",
-            "Round",
-            "Rnd",
-            "Rounds a number and writes the result into scope",
-            vec![number_channel("value"), string_channel("into")],
-        ),
-        Box::new(MathRound),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.floor",
-            "Floor",
-            "Flr",
-            "Floors a number and writes the result into scope",
-            vec![number_channel("value"), string_channel("into")],
-        ),
-        Box::new(MathFloor),
-    );
-    register_simple(
-        registry,
-        operator_info(
-            "math.ceil",
-            "Ceil",
-            "Ceil",
-            "Ceils a number and writes the result into scope",
-            vec![number_channel("value"), string_channel("into")],
-        ),
-        Box::new(MathCeil),
-    );
+    register_simple(registry, operator_info("math.add", "Add", "Add", "Adds two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathAdd));
+    register_simple(registry, operator_info("math.subtract", "Subtract", "Sub", "Subtracts two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathSubtract));
+    register_simple(registry, operator_info("math.multiply", "Multiply", "Mul", "Multiplies two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMultiply));
+    register_simple(registry, operator_info("math.divide", "Divide", "Div", "Divides two numbers and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathDivide));
+    register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Computes remainder and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathModulo));
+    register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b and writes the result into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathPower));
+    register_simple(registry, operator_info("math.min", "Min", "Min", "Writes the minimum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMin));
+    register_simple(registry, operator_info("math.max", "Max", "Max", "Writes the maximum of two numbers into scope", vec![number_channel("a"), number_channel("b"), string_channel("into")]), Box::new(MathMax));
+    register_simple(registry, operator_info("math.round", "Round", "Rnd", "Rounds a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathRound));
+    register_simple(registry, operator_info("math.floor", "Floor", "Flr", "Floors a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathFloor));
+    register_simple(registry, operator_info("math.ceil", "Ceil", "Ceil", "Ceils a number and writes the result into scope", vec![number_channel("value"), string_channel("into")]), Box::new(MathCeil));
     registry.finalize();
 }
 
@@ -259,10 +128,7 @@ mod tests {
     #[test]
     fn math_add_writes_into_scope() {
         let registry = module_registry();
-        let input = Dictionary::new()
-            .insert("a", Value::Atom(Atom::Decimal(2.0)))
-            .insert("b", Value::Atom(Atom::Decimal(3.0)))
-            .insert("into", Value::Atom(Atom::String("sum".into())));
+        let input = Dictionary::new().insert("a", Value::Atom(Atom::Decimal(2.0))).insert("b", Value::Atom(Atom::Decimal(3.0))).insert("into", Value::Atom(Atom::String("sum".into())));
         let output = registry.dispatch("math.add", &input).expect("dispatch");
         let value = output.get("sum").and_then(|v| v.as_atom()).and_then(|a| a.as_f64());
         assert_eq!(value, Some(5.0));

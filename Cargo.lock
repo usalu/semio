@@ -103,6 +103,7 @@ name = "animate-plugin"
 version = "0.1.0"
 dependencies = [
  "animate_present",
+ "animate_video",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -137,6 +138,7 @@ name = "animate_present"
 version = "0.1.0"
 dependencies = [
  "animate_core",
+ "animate_video",
  "serde",
  "serde_json",
  "vcs",
@@ -156,6 +158,7 @@ dependencies = [
  "serde_json",
  "vello",
  "wgpu",
+ "winit",
 ]
 
 [[package]]
@@ -1456,6 +1459,7 @@ dependencies = [
  "reqwest",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "tokio",
  "tower-http 0.5.2",
  "tracing",
@@ -1857,6 +1861,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
 ]
 
@@ -2201,6 +2206,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "draw",
+ "fsm",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -2507,6 +2513,7 @@ dependencies = [
  "mathematical_algebra",
  "serde",
  "serde_json",
+ "spade",
  "thiserror 2.0.18",
 ]
 
@@ -2587,6 +2594,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "thiserror 2.0.18",
  "ui_styling",
  "vcs",
  "wasm-bindgen",
@@ -2621,6 +2629,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -2656,6 +2665,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "wasm-bindgen",
 ]
 
@@ -2799,17 +2809,7 @@ dependencies = [
  "memmap2",
  "slotmap",
  "tinyvec",
- "ttf-parser 0.25.1",
-]
-
-[[package]]
-name = "fontdue"
-version = "0.9.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e57e16b3fe8ff4364c0661fdaac543fb38b29ea9bc9c2f45612d90adf931d2b"
-dependencies = [
- "hashbrown 0.15.5",
- "ttf-parser 0.21.1",
+ "ttf-parser",
 ]
 
 [[package]]
@@ -2935,6 +2935,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "ui_styling",
  "vcs",
  "wasm-bindgen",
@@ -4336,6 +4337,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
 ]
@@ -4449,6 +4451,7 @@ dependencies = [
  "mathematical_graph_drawing",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -4488,6 +4491,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "ui_styling",
  "vcs",
  "wasm-bindgen",
@@ -4506,6 +4510,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "ui_styling",
 ]
 
@@ -4533,6 +4538,7 @@ dependencies = [
  "typst-svg",
  "ui_styling",
  "vello",
+ "vello_encoding",
  "vello_svg",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -4544,6 +4550,7 @@ name = "infinite_world"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "framework_surface_terrain",
  "image",
  "js-sys",
  "kernel_3d_scene",
@@ -4963,6 +4970,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "swash",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -5132,6 +5140,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
 ]
 
@@ -5631,6 +5640,8 @@ name = "norm_din_v_18599"
 version = "0.1.0"
 dependencies = [
  "norm_core",
+ "norm_din_4108",
+ "norm_din_en_16798",
  "serde",
 ]
 
@@ -7083,6 +7094,7 @@ dependencies = [
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
 ]
@@ -7095,6 +7107,7 @@ dependencies = [
  "puzzle_3d",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
 ]
@@ -7391,7 +7404,7 @@ dependencies = [
 name = "reasoning-mindmap-plugin"
 version = "0.1.0"
 dependencies = [
- "puzzle_2d",
+ "infinite_board_port_directed",
  "reasoning_mindmap",
  "reasoning_mindmap_wires",
  "semio-framework-plugin",
@@ -7421,6 +7434,7 @@ dependencies = [
  "reasoning_mindmap",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
@@ -7921,7 +7935,7 @@ dependencies = [
  "core_maths",
  "log",
  "smallvec",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "unicode-bidi-mirroring",
  "unicode-ccc",
  "unicode-properties",
@@ -7940,6 +7954,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "infinite_board_port_directed_dag",
+ "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -8154,6 +8169,7 @@ dependencies = [
  "semio-framework-core",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "ui_wgpu",
  "vcs",
  "wasmtime",
@@ -8260,6 +8276,7 @@ dependencies = [
  "neural_engine",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -9609,6 +9626,7 @@ dependencies = [
  "mathematical_graph_dsl",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
  "wasm-bindgen",
@@ -9618,6 +9636,7 @@ dependencies = [
 name = "trinity_jack_shell"
 version = "0.1.0"
 dependencies = [
+ "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
 ]
@@ -9629,6 +9648,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "vcs",
  "wasm-bindgen",
 ]
@@ -9643,6 +9663,7 @@ dependencies = [
  "js-sys",
  "serde",
  "serde_json",
+ "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
  "ui_styling",
@@ -9680,12 +9701,6 @@ dependencies = [
  "syn 2.0.117",
  "termcolor",
 ]
-
-[[package]]
-name = "ttf-parser"
-version = "0.21.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2c591d83f69777866b9126b24c6dd9a18351f177e49d625920d19f989fd31cf8"
 
 [[package]]
 name = "ttf-parser"
@@ -9848,7 +9863,7 @@ dependencies = [
  "rustc-hash 2.1.2",
  "rustybuzz",
  "smallvec",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "typst-assets",
  "typst-library",
  "typst-macros",
@@ -9909,7 +9924,7 @@ dependencies = [
  "syntect",
  "time",
  "toml",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "two-face",
  "typed-arena",
  "typst-assets",
@@ -9971,7 +9986,7 @@ dependencies = [
  "hayro-svg",
  "image",
  "rustc-hash 2.1.2",
- "ttf-parser 0.25.1",
+ "ttf-parser",
  "typst-assets",
  "typst-library",
  "typst-macros",
@@ -10063,12 +10078,13 @@ name = "ui_wgpu"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
- "fontdue",
  "js-sys",
  "kernel_3d_scene",
+ "parley",
  "pollster",
  "serde",
  "serde_json",
+ "swash",
  "taffy",
  "ts-rs",
  "ui_styling",

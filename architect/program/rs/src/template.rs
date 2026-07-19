@@ -52,6 +52,10 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     delegated_to: None,
                     relationship_to_client: None,
                     power_interest_notes: Vec::new(),
+                    stakeholder_type: "Template".into(),
+                    influence_strategy: None,
+                    communication_channels: Vec::new(),
+                    success_metrics: Vec::new(),
                 };
                 ops.push(ProgramOp::Stakeholders(CollectionOp::Add {
                     index: program.stakeholders.len(),
@@ -82,6 +86,10 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     pain_points: Vec::new(),
                     goals: template.checklists.clone(),
                     activity_ids: Vec::new(),
+                    research_method: None,
+                    persona_archetype: None,
+                    validated: false,
+                    stakeholder_ids: Vec::new(),
                 };
                 ops.push(ProgramOp::Users(CollectionOp::Add {
                     index: program.users.len(),
@@ -179,6 +187,10 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     security_zone: None,
                     flexibility_notes: Vec::new(),
                     growth_allocation: None,
+                    circulation_role: None,
+                    visibility_level: None,
+                    adjacency_preferences: Vec::new(),
+                    environmental_zone: None,
                 };
                 ops.push(ProgramOp::Elements(CollectionOp::Add {
                     index: program.elements.len(),
@@ -220,22 +232,25 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
             "risk" => {
                 let item = Risk {
                     header: EntityHeader::new(id.clone(), format!("{} Risk", template.header.name)),
-                    risk_category: "template".into(),
-                    description: TextField::plain(template.checklists.join("; ")),
+                    risk_statement: TextField::plain(template.checklists.join("; ")),
+                    category: "template".into(),
                     probability: RiskLevel::Medium,
                     impact: RiskLevel::Medium,
-                    exposure: None,
+                    risk_score: None,
+                    causes: Vec::new(),
+                    effects: Vec::new(),
+                    affected_element_ids: Vec::new(),
+                    affected_requirement_ids: Vec::new(),
                     mitigation: Vec::new(),
                     contingency: Vec::new(),
                     owner_id: None,
-                    trigger_events: Vec::new(),
-                    affected_entity_ids: Vec::new(),
-                    related_requirement_ids: Vec::new(),
-                    related_conflict_ids: Vec::new(),
-                    monitoring_plan: Vec::new(),
-                    residual_risk: None,
                     review_date: None,
+                    trigger_indicators: Vec::new(),
+                    residual_probability: None,
+                    residual_impact: None,
+                    related_conflict_ids: Vec::new(),
                     escalation_path: Vec::new(),
+                    monitoring_plan: None,
                 };
                 ops.push(ProgramOp::Risks(CollectionOp::Add {
                     index: program.risks.len(),
@@ -261,12 +276,14 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                     bottlenecks: Vec::new(),
                     dependencies: Vec::new(),
                     kpis: Vec::new(),
-                    standards: template.standards.clone(),
                     automation_level: None,
-                    quality_controls: Vec::new(),
-                    risk_controls: Vec::new(),
-                    handoffs: Vec::new(),
-                    documentation_refs: Vec::new(),
+                    failure_modes: Vec::new(),
+                    improvement_opportunities: Vec::new(),
+                    regulatory_refs: template.standards.clone(),
+                    owner_id: None,
+                    workflow_type: Some("template".into()),
+                    handoff_points: Vec::new(),
+                    quality_gates: Vec::new(),
                 };
                 ops.push(ProgramOp::Processes(CollectionOp::Add {
                     index: program.processes.len(),
@@ -332,6 +349,7 @@ pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<P
                         normalized: true,
                         verification_status: ValidationStatus::Pending,
                         source_relationship_id: None,
+                        internal_external_access: None,
                     };
                     ops.push(ProgramOp::SetAdjacency {
                         adjacency: adjacency.clone(),

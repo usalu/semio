@@ -5,8 +5,9 @@ pub mod board_host {
 //! 🕸️ Generic graph board host on infinite canvas.
 
 #![allow(clippy::missing_errors_doc, reason = "Graph board host is internal to directed port normal.")]
+#![allow(clippy::too_many_arguments, reason = "Immediate-mode paint helpers take one positional arg per geometry/style input; grouping them into structs would obscure call sites more than it clarifies.")]
 
-use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, RasterImage, Rect, Scene, Stroke, Vec2};
+use infinite_cavas::{Affine, Circle, CubicBez, Color, FillRule, Point, Rect, Scene, Stroke, Vec2};
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{BTreeMap, BTreeSet};
@@ -14,7 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 use crate::{
     board_json_locked_option, board_json_visible_option, builtin_edge_tips, circle_handle_angle_toward, compute_edge_bezier_points, distance_between, distance_point_to_cubic_bezier, fixture_edge_handle_ids_from_object,
     handle_exterior_cap_fill_path, handle_exterior_cap_stroke_path, handle_outward_at_node_rim, handle_position_on_circle, handle_position_on_rectangle, merge_ids_into_selection, merge_pick_into_selection, normalize_or_zero,
-    normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, property_bag_to_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
+    normalize_selection_mode, pick_merge_mode_for_modifiers, property_bag_from_json, rectangle_handle_angle_toward, selection_drag_enclosing, selection_drag_shape, ActiveUtility, BoardElementStyleKind, CachedIconBody, CompatSpecificity, EdgeData, EdgeDescJson,
     EdgeKindDef, EdgeStrokePattern, EdgeTipDef, EdgeTipGeometry, FixtureJson, GraphPortMode, HandleData, HandleDescJson, HandleKindDef, IconPaintCache, Interaction, LinkCompatRule, NodeData, NodeDescJson, NodeKindDef, NodeKindHandleTemplate,
     NodeShape, SceneDescriptorJson, SelectionOptions, CanvasPalette, WireData, WireKindDef,
 };
@@ -27,20 +28,69 @@ use infinite_cavas::geom_sel::{
 
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::hash::{Hash, Hasher};
-use std::sync::Arc;
 
 pub use infinite_cavas::camera::{CANVAS_CAMERA_ZOOM_MAX as BOARD_CAMERA_ZOOM_MAX, CANVAS_CAMERA_ZOOM_MIN as BOARD_CAMERA_ZOOM_MIN};
 
 use infinite_cavas::lod::{Lod, LodScale};
+
+//#region ⚠️ Errors
+/// ⚠️ Errors from board host theme/catalog/layout JSON mutators and manifest validation.
+#[derive(Debug, thiserror::Error)]
+pub enum NormalPortError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("setLinkSessionJson: {0}")]
+    ExternalLinkPreviewJson(#[source] serde_json::Error),
+    #[error("setBrushSessionJson: {0}")]
+    BrushSessionJson(#[source] serde_json::Error),
+    #[error("setFixtureDropPreviewJson: {0}")]
+    FixtureDropPreviewJson(#[source] serde_json::Error),
+    #[error("{0}")]
+    Theme(String),
+    #[error("gridFactor must be finite and in (0, 1e6]")]
+    GridFactorOutOfRange,
+    #[error("expected JSON array of compatibility objects")]
+    CompatNotArray,
+    #[error("{0} row must be object")]
+    RowNotObject(&'static str),
+    #[error("compat row missing string source")]
+    CompatSourceMissing,
+    #[error("compat row missing string target")]
+    CompatTargetMissing,
+    #[error("compat specificity must be general|node|edge|handle|wire|vortex, got {0:?}")]
+    InvalidCompatSpecificity(String),
+    #[error("{0} kind row must use name, not legacy label")]
+    LegacyLabelField(&'static str),
+    #[error("kind catalogs root must be object")]
+    KindCatalogsRootNotObject,
+    #[error("{0} id missing")]
+    IdMissing(&'static str),
+    #[error("handle kind color missing")]
+    HandleKindColorMissing,
+    #[error("invalid handle kind color {0:?}")]
+    InvalidHandleKindColor(String),
+    #[error("node kind handle handleKind missing")]
+    NodeKindHandleKindMissing,
+    #[error("node kind handle angle missing")]
+    NodeKindHandleAngleMissing,
+    #[error("edge tip row {0:?} invalid")]
+    EdgeTipRowInvalid(String),
+    #[error("unknown manifest id {0}")]
+    UnknownManifestId(String),
+    #[error("catalog missing {0} kind {1:?}")]
+    CatalogMissingKind(&'static str, String),
+    #[error("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size")]
+    FixtureDropPreviewInvalid,
+    #[error("invalid color on handle {0}: {1:?}")]
+    InvalidHandleColor(String, String),
+}
+//#endregion ⚠️ Errors
 
 const GRID_WORLD_LARGE: f64 = ui_styling::metrics::board::GRID_WORLD_LARGE;
 const GRID_WORLD_MEDIUM: f64 = ui_styling::metrics::board::GRID_WORLD_MEDIUM;
 const GRID_WORLD_SMALL: f64 = ui_styling::metrics::board::GRID_WORLD_SMALL;
 const GRID_WORLD_MICRO: f64 = ui_styling::metrics::board::GRID_WORLD_MICRO;
 const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT;
-const WORLD_CLIP_TILE_WORLD: f64 = ui_styling::metrics::board::WORLD_CLIP_TILE_WORLD;
-const MAX_WORLD_CLIP_TILES: u32 = ui_styling::metrics::board::MAX_WORLD_CLIP_TILES;
 const EDGE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::EDGE_HIT_TOLERANCE_PX;
 const HANDLE_HIT_TOLERANCE_PX: f64 = ui_styling::metrics::board::HANDLE_HIT_TOLERANCE_PX;
 const INDIRECT_HANDLE_MARKER_NODE_SCALE: f64 = ui_styling::metrics::board::INDIRECT_HANDLE_MARKER_SCALE;
@@ -444,8 +494,7 @@ impl BoardHost {
 
     /// 🧠 Normal directed graph host: no handles, edges reference node ids.
     pub fn new_normal() -> Self {
-        let mut host = Self::default();
-        host.port_mode = GraphPortMode::Normal;
+        let mut host = Self { port_mode: GraphPortMode::Normal, ..Self::default() };
         host.selection_options.select_handles = false;
         host
     }
@@ -530,17 +579,17 @@ impl BoardHost {
         };
     }
 
-    pub fn set_grid_factor(&mut self, v: f64) -> Result<(), String> {
+    pub fn set_grid_factor(&mut self, v: f64) -> Result<(), NormalPortError> {
         if !v.is_finite() || v <= 0.0 || v > 1_000_000.0 {
-            return Err("gridFactor must be finite and in (0, 1e6]".into());
+            return Err(NormalPortError::GridFactorOutOfRange);
         }
         self.grid_factor = v;
         Ok(())
     }
 
     /// @emoji 🔗 Applies or clears a host-driven link preview session (cross-surface mirror).
-    pub fn set_external_link_preview_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setLinkSessionJson: {e}"))?;
+    pub fn set_external_link_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+        let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::ExternalLinkPreviewJson)?;
         let source = v.get("source").and_then(|s| s.as_str()).unwrap_or("").trim().to_string();
         if source.is_empty() {
             if matches!(self.interaction, Interaction::ExternalLinkPreview { .. }) {
@@ -612,14 +661,14 @@ impl BoardHost {
     }
 
     /// @emoji 🔗 JSON `[{ "source","target","bidirectional"?,"important"?,"specificity"? },…]` gates link gestures; empty clears restrictions.
-    pub fn set_handle_link_compat_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let arr = v.as_array().ok_or_else(|| "expected JSON array of compatibility objects".to_string())?;
+    pub fn set_handle_link_compat_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
+        let arr = v.as_array().ok_or(NormalPortError::CompatNotArray)?;
         let mut next = Vec::new();
         for row in arr {
-            let o = row.as_object().ok_or("compat row must be object")?;
-            let source = o.get("source").and_then(|x| x.as_str()).ok_or_else(|| "compat row missing string source".to_string())?.trim().to_string();
-            let target = o.get("target").and_then(|x| x.as_str()).ok_or_else(|| "compat row missing string target".to_string())?.trim().to_string();
+            let o = row.as_object().ok_or(NormalPortError::RowNotObject("compat"))?;
+            let source = o.get("source").and_then(|x| x.as_str()).ok_or(NormalPortError::CompatSourceMissing)?.trim().to_string();
+            let target = o.get("target").and_then(|x| x.as_str()).ok_or(NormalPortError::CompatTargetMissing)?.trim().to_string();
             let bidirectional = o.get("bidirectional").and_then(|x| x.as_bool()).unwrap_or(false);
             let important = o.get("important").and_then(|x| x.as_bool()).unwrap_or(false);
             let spec_s = o.get("specificity").and_then(|x| x.as_str()).unwrap_or("handle");
@@ -630,37 +679,37 @@ impl BoardHost {
         Ok(())
     }
 
-    fn parse_compat_specificity(raw: &str) -> Result<CompatSpecificity, String> {
+    fn parse_compat_specificity(raw: &str) -> Result<CompatSpecificity, NormalPortError> {
         match raw.trim().to_ascii_lowercase().as_str() {
             "general" => Ok(CompatSpecificity::General),
             "node" => Ok(CompatSpecificity::Node),
             "edge" => Ok(CompatSpecificity::Edge),
             "handle" | "vortex" => Ok(CompatSpecificity::Handle),
             "wire" => Ok(CompatSpecificity::Wire),
-            _ => Err(format!("compat specificity must be general|node|edge|handle|wire|vortex, got {raw:?}")),
+            _ => Err(NormalPortError::InvalidCompatSpecificity(raw.to_string())),
         }
     }
 
-    fn reject_kind_catalog_row_legacy_label(row: &serde_json::Map<String, serde_json::Value>, slice: &str) -> Result<(), String> {
+    fn reject_kind_catalog_row_legacy_label(row: &serde_json::Map<String, serde_json::Value>, slice: &'static str) -> Result<(), NormalPortError> {
         if row.contains_key("label") {
-            return Err(format!("{slice} kind row must use name, not legacy label"));
+            return Err(NormalPortError::LegacyLabelField(slice));
         }
         Ok(())
     }
 
     /// @emoji 🧩 JSON object `{ handleKinds?, wireKinds?, nodeKinds?, edgeKinds? }` replacing prior catalogs (omit arrays to clear that slice).
-    pub fn set_board_kind_catalogs_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
-        let o = v.as_object().ok_or("kind catalogs root must be object")?;
+    pub fn set_board_kind_catalogs_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
+        let o = v.as_object().ok_or(NormalPortError::KindCatalogsRootNotObject)?;
         if let Some(arr) = o.get("handleKinds").and_then(|x| x.as_array()) {
             let mut next = BTreeMap::new();
             for row in arr {
-                let ho = row.as_object().ok_or("handle kind row must be object")?;
+                let ho = row.as_object().ok_or(NormalPortError::RowNotObject("handle kind"))?;
                 Self::reject_kind_catalog_row_legacy_label(ho, "handle")?;
-                let id = ho.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("handle kind id missing")?;
+                let id = ho.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("handle kind"))?;
                 let name = ho.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
-                let color_s = ho.get("color").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("handle kind color missing")?;
-                let color = Self::parse_css_color(color_s).ok_or_else(|| format!("invalid handle kind color {color_s:?}"))?;
+                let color_s = ho.get("color").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::HandleKindColorMissing)?;
+                let color = Self::parse_css_color(color_s).ok_or_else(|| NormalPortError::InvalidHandleKindColor(color_s.to_string()))?;
                 let default_wire_kind = ho.get("defaultWireKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                 let scale = ho.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
                 next.insert(id.to_string(), HandleKindDef { name, color, default_wire_kind, scale });
@@ -670,9 +719,9 @@ impl BoardHost {
         if let Some(arr) = o.get("wireKinds").and_then(|x| x.as_array()) {
             let mut next = BTreeMap::new();
             for row in arr {
-                let wo = row.as_object().ok_or("wire kind row must be object")?;
+                let wo = row.as_object().ok_or(NormalPortError::RowNotObject("wire kind"))?;
                 Self::reject_kind_catalog_row_legacy_label(wo, "wire")?;
-                let id = wo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("wire kind id missing")?;
+                let id = wo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("wire kind"))?;
                 let name = wo.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
                 let default_edge_kind = wo.get("defaultEdgeKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
                 next.insert(id.to_string(), WireKindDef { name, default_edge_kind });
@@ -682,9 +731,9 @@ impl BoardHost {
         if let Some(arr) = o.get("nodeKinds").and_then(|x| x.as_array()) {
             let mut next = BTreeMap::new();
             for row in arr {
-                let no = row.as_object().ok_or("node kind row must be object")?;
+                let no = row.as_object().ok_or(NormalPortError::RowNotObject("node kind"))?;
                 Self::reject_kind_catalog_row_legacy_label(no, "node")?;
-                let id = no.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("node kind id missing")?;
+                let id = no.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("node kind"))?;
                 let name = no.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
                 let scale = no.get("scale").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0).unwrap_or(1.0);
                 let shape = match no.get("shape").and_then(|x| x.as_str()).map(str::trim) {
@@ -694,9 +743,9 @@ impl BoardHost {
                 let mut handles: Vec<NodeKindHandleTemplate> = Vec::new();
                 if let Some(arr) = no.get("handles").and_then(|x| x.as_array()) {
                     for row in arr {
-                        let ho = row.as_object().ok_or("node kind handle row must be object")?;
-                        let handle_kind = ho.get("handleKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("node kind handle handleKind missing")?;
-                        let angle = ho.get("angle").and_then(|x| x.as_f64()).filter(|x| x.is_finite()).ok_or("node kind handle angle missing")?;
+                        let ho = row.as_object().ok_or(NormalPortError::RowNotObject("node kind handle"))?;
+                        let handle_kind = ho.get("handleKind").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::NodeKindHandleKindMissing)?;
+                        let angle = ho.get("angle").and_then(|x| x.as_f64()).filter(|x| x.is_finite()).ok_or(NormalPortError::NodeKindHandleAngleMissing)?;
                         let radius = ho.get("radius").and_then(|x| x.as_f64()).filter(|x| x.is_finite() && *x > 0.0);
                         handles.push(NodeKindHandleTemplate { handle_kind: handle_kind.to_string(), angle, radius });
                     }
@@ -710,9 +759,9 @@ impl BoardHost {
         if let Some(arr) = o.get("edgeTips").and_then(|x| x.as_array()) {
             let mut tips = builtin_edge_tips();
             for row in arr {
-                let eo = row.as_object().ok_or("edge tip row must be object")?;
-                let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("edge tip id missing")?;
-                let def = EdgeTipDef::from_catalog_row(eo).ok_or_else(|| format!("edge tip row {:?} invalid", id))?;
+                let eo = row.as_object().ok_or(NormalPortError::RowNotObject("edge tip"))?;
+                let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("edge tip"))?;
+                let def = EdgeTipDef::from_catalog_row(eo).ok_or_else(|| NormalPortError::EdgeTipRowInvalid(id.to_string()))?;
                 tips.insert(id.to_string(), def);
             }
             self.edge_tips = tips;
@@ -720,9 +769,9 @@ impl BoardHost {
         if let Some(arr) = o.get("edgeKinds").and_then(|x| x.as_array()) {
             let mut next = BTreeMap::new();
             for row in arr {
-                let eo = row.as_object().ok_or("edge kind row must be object")?;
+                let eo = row.as_object().ok_or(NormalPortError::RowNotObject("edge kind"))?;
                 Self::reject_kind_catalog_row_legacy_label(eo, "edge")?;
-                let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or("edge kind id missing")?;
+                let id = eo.get("id").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).ok_or(NormalPortError::IdMissing("edge kind"))?;
                 let name = eo.get("name").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).unwrap_or("").to_string();
                 let color = eo.get("color").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).and_then(Self::parse_css_hex_color);
                 let stroke_width = eo
@@ -747,22 +796,22 @@ impl BoardHost {
     }
 
     /// @emoji 🛡️ Ensures runtime catalogs declare every kind from a compile-time manifest.
-    pub fn validate_against_manifest_id(&self, manifest_id: &str) -> Result<(), String> {
-        let gm = manifest_by_id(manifest_id).ok_or_else(|| format!("unknown manifest id {manifest_id}"))?;
+    pub fn validate_against_manifest_id(&self, manifest_id: &str) -> Result<(), NormalPortError> {
+        let gm = manifest_by_id(manifest_id).ok_or_else(|| NormalPortError::UnknownManifestId(manifest_id.to_string()))?;
         for row in &gm.port_kinds {
             let visual = row.presentation.as_ref().is_some_and(|p| p.get("color").is_some());
             if visual && !self.handle_kinds.contains_key(&row.id) {
-                return Err(format!("catalog missing handle kind {:?}", row.id));
+                return Err(NormalPortError::CatalogMissingKind("handle", row.id.clone()));
             }
         }
         for row in &gm.wire_kinds {
             if !self.wire_kinds.contains_key(&row.id) {
-                return Err(format!("catalog missing wire kind {:?}", row.id));
+                return Err(NormalPortError::CatalogMissingKind("wire", row.id.clone()));
             }
         }
         for row in &gm.edge_kinds {
             if row.presentation.is_some() && !self.edge_kinds.contains_key(&row.id) {
-                return Err(format!("catalog missing edge kind {:?}", row.id));
+                return Err(NormalPortError::CatalogMissingKind("edge", row.id.clone()));
             }
         }
         for row in &gm.node_kinds {
@@ -770,7 +819,7 @@ impl BoardHost {
                 continue;
             }
             if !self.node_kinds.contains_key(&row.id) {
-                return Err(format!("catalog missing node kind {:?}", row.id));
+                return Err(NormalPortError::CatalogMissingKind("node", row.id.clone()));
             }
         }
         Ok(())
@@ -847,10 +896,9 @@ impl BoardHost {
         let low = s.trim().to_ascii_lowercase();
         let (legacy_alpha_form, inner) = if let Some(inner) = low.strip_prefix("hsla(").and_then(|x| x.strip_suffix(')')) {
             (true, inner)
-        } else if let Some(inner) = low.strip_prefix("hsl(").and_then(|x| x.strip_suffix(')')) {
-            (false, inner)
         } else {
-            return None;
+            let inner = low.strip_prefix("hsl(").and_then(|x| x.strip_suffix(')'))?;
+            (false, inner)
         };
         let inner = inner.trim();
         let (main, alpha_slash) = inner.split_once('/').map(|(a, b)| (a.trim(), Some(b.trim()))).unwrap_or((inner, None));
@@ -1313,7 +1361,7 @@ impl BoardHost {
         let kind_def = self.edge_kinds.get(e.edge_kind.as_str());
         let source_slot = e.source_tip.as_deref().or_else(|| kind_def.and_then(|d| d.source_tip.as_deref()));
         let target_slot = e.target_tip.as_deref().or_else(|| kind_def.and_then(|d| d.target_tip.as_deref()));
-        let mut source = self.resolve_tip_slot(source_slot);
+        let source = self.resolve_tip_slot(source_slot);
         let mut target = self.resolve_tip_slot(target_slot);
         if target.is_none() && target_slot.is_none() {
             let directed = kind_def.map(|d| d.directed).unwrap_or(true);
@@ -1642,10 +1690,6 @@ impl BoardHost {
         best.map(|(_, id)| id)
     }
 
-    fn brush_candidate_seed(source_handle_id: &str) -> u64 {
-        source_handle_id.bytes().fold(0u64, |acc, b| acc.wrapping_mul(31).wrapping_add(u64::from(b)))
-    }
-
     fn brush_kind_weight(weights: &HashMap<String, f64>, id: &str, uniform_fallback: f64) -> f64 {
         weights.get(id).copied().filter(|w| w.is_finite() && *w > 0.0).unwrap_or(uniform_fallback)
     }
@@ -1735,9 +1779,7 @@ impl BoardHost {
         let kind = self.node_kinds.get(candidate.node_kind_id.as_str())?;
         let center = self.brush_slot_center_world(source)?;
         let target_handle_index = candidate.target_handle_index;
-        if kind.handles.get(target_handle_index).is_none() {
-            return None;
-        }
+        kind.handles.get(target_handle_index)?;
         let node_kind_id = candidate.node_kind_id.as_str();
         let radius = self.brush_node_size * 0.5 * kind.scale;
         let (width, height) = if kind.shape == NodeShape::Rectangle { (self.brush_node_size * kind.scale, self.brush_node_size * kind.scale) } else { (radius * 2.0, radius * 2.0) };
@@ -2224,7 +2266,7 @@ impl BoardHost {
     }
 
     /// @emoji 🖌️ Mirrors brush slot + preview from another authoring pane (no pointer input on this host).
-    pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_brush_session_mirror_json(&mut self, json: &str) -> Result<(), NormalPortError> {
         if json.trim().is_empty() {
             self.brush_slot_suggestions_active = false;
             self.brush_slot_source_id = None;
@@ -2236,7 +2278,7 @@ impl BoardHost {
             self.bump_content_scene_generation();
             return Ok(());
         }
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setBrushSessionJson: {e}"))?;
+        let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::BrushSessionJson)?;
         let source = v.get("sourceHandleId").and_then(|x| x.as_str()).map(str::trim).filter(|s| !s.is_empty()).map(|s| s.to_string());
         self.brush_slot_source_id = source.clone();
         self.brush_candidates = v
@@ -2446,7 +2488,7 @@ impl BoardHost {
         self.brush_clear_slot();
     }
 
-    fn append_brush_node_icon_paint(&self, scene: &mut Scene, lod: BoardDrawLod, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: &str, fill: Color, stroke_c: Color, world_space: bool) {
+    fn append_brush_node_icon_paint(&self, scene: &mut Scene, lod: BoardDrawLod, center: Point, shape: NodeShape, radius: f64, width: f64, height: f64, icon_kind: &str, world_space: bool) {
         if !matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro) {
             return;
         }
@@ -2529,7 +2571,7 @@ impl BoardHost {
             }
         }
         if let Some(icon) = icon_kind.map(str::trim).filter(|s| !s.is_empty()) {
-            self.append_brush_node_icon_paint(scene, BoardDrawLod::Detail, center, shape, radius, width, height, icon, fill, stroke_c, world_space);
+            self.append_brush_node_icon_paint(scene, BoardDrawLod::Detail, center, shape, radius, width, height, icon, world_space);
         }
     }
 
@@ -2572,16 +2614,16 @@ impl BoardHost {
     }
 
     /// @emoji 👻 Sets or clears the workbench palette fixture drop ghost node (independent of brush utility).
-    pub fn set_fixture_drop_preview_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_fixture_drop_preview_json(&mut self, json: &str) -> Result<(), NormalPortError> {
         if json.trim().is_empty() {
             self.fixture_drop_preview = None;
             self.bump_content_scene_generation();
             return Ok(());
         }
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| format!("setFixtureDropPreviewJson: {e}"))?;
+        let v: serde_json::Value = serde_json::from_str(json).map_err(NormalPortError::FixtureDropPreviewJson)?;
         self.fixture_drop_preview = self.fixture_drop_preview_from_json(&v);
         if self.fixture_drop_preview.is_none() {
-            return Err("setFixtureDropPreviewJson: preview payload missing nodeKind, screen/world point, or size".into());
+            return Err(NormalPortError::FixtureDropPreviewInvalid);
         }
         self.bump_content_scene_generation();
         Ok(())
@@ -2653,8 +2695,8 @@ impl BoardHost {
         self.selection_screen_preview = points;
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
-        self.canvas_theme.merge_from_json(json)?;
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), NormalPortError> {
+        self.canvas_theme.merge_from_json(json).map_err(NormalPortError::Theme)?;
         self.icon_paint_cache.clear();
         Ok(())
     }
@@ -3548,17 +3590,15 @@ impl BoardHost {
         let mut out = Vec::new();
         let lod = self.current_draw_lod();
         let zoom = self.camera.zoom;
-        if self.has_ports() && !matches!(lod, BoardDrawLod::Minimap) {
-            if matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
-                for h in self.handles.values().rev() {
-                    if !self.handle_selectable(h.id.as_str()) {
-                        continue;
-                    }
-                    let Some(pos) = self.handle_world_pos(h) else { continue };
-                    let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.effective_handle_radius(h);
-                    if distance_between(point, pos) <= tol {
-                        Self::push_pick_target(&mut out, "handle", h.id.clone(), 2, Some(h.id.clone()));
-                    }
+        if self.has_ports() && !matches!(lod, BoardDrawLod::Minimap) && matches!(lod, BoardDrawLod::Normal | BoardDrawLod::Detail | BoardDrawLod::Micro) {
+            for h in self.handles.values().rev() {
+                if !self.handle_selectable(h.id.as_str()) {
+                    continue;
+                }
+                let Some(pos) = self.handle_world_pos(h) else { continue };
+                let tol = (HANDLE_HIT_TOLERANCE_PX / zoom) + self.effective_handle_radius(h);
+                if distance_between(point, pos) <= tol {
+                    Self::push_pick_target(&mut out, "handle", h.id.clone(), 2, Some(h.id.clone()));
                 }
             }
         }
@@ -3716,7 +3756,7 @@ impl BoardHost {
         None
     }
 
-    pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), String> {
+    pub fn sync_descriptor(&mut self, desc: &SceneDescriptorJson) -> Result<(), NormalPortError> {
         if matches!(self.interaction, Interaction::LinkAtSourceHandle { .. } | Interaction::LinkDragSnap { .. } | Interaction::LinkTargetNode { .. } | Interaction::ExternalLinkPreview { .. }) {
             self.interaction = Interaction::None;
             self.clear_link_gesture_events();
@@ -3765,7 +3805,7 @@ impl BoardHost {
             let kind = h.handle_kind.as_deref().unwrap_or("").trim().to_string();
             let color_fill = match h.color.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
                 None => None,
-                Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| format!("invalid color on handle {}: {s:?}", h.id))?),
+                Some(s) => Some(Self::parse_css_color(s).ok_or_else(|| NormalPortError::InvalidHandleColor(h.id.clone(), s.to_string()))?),
             };
             let icon_kind = h.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()).map(|s| s.to_string());
             let properties = h.user_data.as_ref().map(property_bag_from_json).unwrap_or_default();
@@ -3903,14 +3943,14 @@ impl BoardHost {
     }
 
     /// @emoji 📍 Parses `[{"id","x","y"},…]` and updates existing host nodes in place.
-    pub fn set_node_positions_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_node_positions_json(&mut self, json: &str) -> Result<(), NormalPortError> {
         #[derive(Deserialize)]
         struct NodePositionMoveJson {
             id: String,
             x: f64,
             y: f64,
         }
-        let rows: Vec<NodePositionMoveJson> = serde_json::from_str(json).map_err(|e| e.to_string())?;
+        let rows: Vec<NodePositionMoveJson> = serde_json::from_str(json)?;
         let moves: Vec<(String, f64, f64)> = rows.into_iter().map(|row| (row.id, row.x, row.y)).collect();
         self.set_node_positions(&moves);
         Ok(())
@@ -4111,36 +4151,6 @@ impl BoardHost {
         16.0 / self.camera.zoom.max(1e-9)
     }
 
-    fn visible_world_box(&self, pad_world: f64) -> WorldBox {
-        let corners = [
-            self.screen_to_world(Point::new(0.0, 0.0)),
-            self.screen_to_world(Point::new(self.width as f64, 0.0)),
-            self.screen_to_world(Point::new(self.width as f64, self.height as f64)),
-            self.screen_to_world(Point::new(0.0, self.height as f64)),
-        ];
-        let base = world_box_from_points(&corners).unwrap_or(WorldBox { min_x: self.camera.x - 1.0, min_y: self.camera.y - 1.0, max_x: self.camera.x + 1.0, max_y: self.camera.y + 1.0 });
-        inflate_world_box(base, pad_world)
-    }
-
-    fn world_tile_screen_clip_rect(&self, ix: i32, iy: i32, tile: f64) -> Rect {
-        let wx0 = ix as f64 * tile;
-        let wy0 = iy as f64 * tile;
-        let wx1 = wx0 + tile;
-        let wy1 = wy0 + tile;
-        let ps = [self.world_to_screen(Point::new(wx0, wy0)), self.world_to_screen(Point::new(wx1, wy0)), self.world_to_screen(Point::new(wx1, wy1)), self.world_to_screen(Point::new(wx0, wy1))];
-        let mut min_x = f64::INFINITY;
-        let mut min_y = f64::INFINITY;
-        let mut max_x = f64::NEG_INFINITY;
-        let mut max_y = f64::NEG_INFINITY;
-        for p in ps {
-            min_x = min_x.min(p.x);
-            min_y = min_y.min(p.y);
-            max_x = max_x.max(p.x);
-            max_y = max_y.max(p.y);
-        }
-        Rect::from_points(Point::new(min_x, min_y), Point::new(max_x, max_y)).inflate(1.0, 1.0)
-    }
-
     fn handle_world_bounds_cull(&self, h: &HandleData) -> Option<WorldBox> {
         let pos = self.handle_world_pos(h)?;
         let pad = self.drawable_cull_pad_world() + self.effective_handle_radius(h).max(1.0);
@@ -4305,13 +4315,6 @@ impl BoardHost {
         (screen_px / z).max(1e-3)
     }
 
-    fn append_nodes_handles_edges(&self, scene: &mut Scene, tile_filter: Option<&WorldBox>, lod: BoardDrawLod, world_space: bool) {
-        self.append_nodes_and_handles(scene, tile_filter, lod, world_space, None, StyleChromePass::CachedBase, NodeHandlePaintLayer::Full);
-        if !world_space {
-            self.append_edges_wires_and_link(scene, tile_filter, lod, world_space, None, None);
-        }
-    }
-
     fn paint_node_geometry(&self, scene: &mut Scene, n: &NodeData, lod: BoardDrawLod, world_space: bool, layer: NodeHandlePaintLayer, chrome_pass: StyleChromePass, link_compat: bool) {
         let draw_node_icons = matches!(lod, BoardDrawLod::Detail | BoardDrawLod::Micro);
         let resolved_style_kind = self.resolve_node_style_kind(n, chrome_pass);
@@ -4339,7 +4342,7 @@ impl BoardHost {
                     scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &circle);
                 }
                 if paint_icons {
-                    self.paint_node_icon(scene, n, world_space, style_kind, stroke_c, fill, Some(&circle), None);
+                    self.paint_node_icon(scene, n, world_space, style_kind, Some(&circle), None);
                 }
             }
             NodeShape::Rectangle => {
@@ -4355,13 +4358,13 @@ impl BoardHost {
                     scene.stroke(&Stroke::new(sw), Affine::IDENTITY, stroke_c, None, &rect);
                 }
                 if paint_icons {
-                    self.paint_node_icon(scene, n, world_space, style_kind, stroke_c, fill, None, Some(rect));
+                    self.paint_node_icon(scene, n, world_space, style_kind, None, Some(rect));
                 }
             }
         }
     }
 
-    fn paint_node_icon(&self, scene: &mut Scene, n: &NodeData, world_space: bool, style_kind: BoardElementStyleKind, stroke_c: Color, fill: Color, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
+    fn paint_node_icon(&self, scene: &mut Scene, n: &NodeData, world_space: bool, style_kind: BoardElementStyleKind, circle_clip: Option<&Circle>, rect_clip: Option<Rect>) {
         if let Some(k) = n.icon_kind.as_ref().map(|s| s.trim()).filter(|s| !s.is_empty()) {
             let preserve_original_style = self.preserve_original_element_style || style_kind == BoardElementStyleKind::Original;
             let (icon_fg, icon_bg) = IconPaintCache::board_icon_paint_colors(&self.canvas_theme);
@@ -4785,8 +4788,8 @@ impl BoardHost {
     }
 
     /// @emoji 💠 Current externally driven highlight ids as JSON array.
-    pub fn highlighted_ids_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.highlighted_ids.iter().cloned().collect::<Vec<_>>()).map_err(|e| e.to_string())
+    pub fn highlighted_ids_json(&self) -> Result<String, NormalPortError> {
+        Ok(serde_json::to_string(&self.highlighted_ids.iter().cloned().collect::<Vec<_>>())?)
     }
 
     /// @emoji 🔇 Mirrors controlled kind hover without emitting `hover`.
@@ -4992,22 +4995,6 @@ impl BoardHost {
             return false;
         }
         wire.target.as_ref().map(|id| self.handle_selectable(id.as_str())).unwrap_or(true)
-    }
-
-    fn entity_selectable_by_id(&self, id: &str) -> bool {
-        if let Some(n) = self.nodes.get(id) {
-            return self.node_selectable(n.id.as_str());
-        }
-        if let Some(h) = self.handles.get(id) {
-            return self.handle_selectable(h.id.as_str());
-        }
-        if let Some(e) = self.edges.get(id) {
-            return self.edge_selectable(e);
-        }
-        if let Some(w) = self.wires.get(id) {
-            return self.wire_selectable(w);
-        }
-        false
     }
 
     fn handle_effectively_visible(&self, handle_id: &str) -> bool {
@@ -5257,7 +5244,6 @@ impl BoardHost {
         match std::mem::replace(&mut self.interaction, Interaction::None) {
             Interaction::DragNodes { primary_id, offset, start_positions, .. } => {
                 let primary_id = primary_id.clone();
-                let offset = offset;
                 let start_positions_cloned = start_positions.clone();
                 let (px0, py0) = start_positions.get(&primary_id).copied().unwrap_or((0.0, 0.0));
                 let nx = world.x - offset.x;
@@ -5446,7 +5432,7 @@ impl BoardHost {
                 let click_only = distance_between(start_screen, end_screen) < SELECTION_CLICK_MAX_DISTANCE_PX;
                 let merge_from_modifiers = ctrl_or_meta || shift;
                 let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
-                let gesture = merge_from_modifiers.then(|| merge_mode.as_str());
+                let gesture = merge_from_modifiers.then_some(merge_mode.as_str());
                 if click_only {
                     self.commit_area_select_from_initial(&initial_ids, &[], gesture);
                 } else {

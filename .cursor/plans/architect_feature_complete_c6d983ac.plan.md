@@ -7,16 +7,16 @@ todos:
     status: completed
   - id: phase1-fields
     content: Add all missing typed fields/enums/collections across §1–§65 in registers/kernel/program/ops
-    status: in_progress
+    status: completed
   - id: phase2-behavior
     content: Deepen validate/analyze/report/search/trace/exchange/template/status/adjacency + new outputs.rs
-    status: pending
+    status: completed
   - id: phase3-plugin
     content: Full plugin CRUD for all registers, inspectors, search/import/templates/trace/all analysis+report kinds
-    status: pending
+    status: completed
   - id: phase4-verify
     content: Isolated-target tests for program+plugin; ticket_close
-    status: pending
+    status: completed
 isProject: false
 ---
 

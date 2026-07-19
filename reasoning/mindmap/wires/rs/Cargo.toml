@@ -14,3 +14,4 @@ infinite_board_normal_undirected = { path = "../../../../infinite/board/normal/u
 infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+thiserror = "2.0.12"

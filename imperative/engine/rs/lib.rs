@@ -93,13 +93,7 @@ impl<'a> Executor<'a> {
 
     fn run_steps(&self, steps: &[Step], scope: &mut Dictionary, effects: &mut Vec<EffectLogEntry>, depth: usize) {
         if depth > MAX_NESTING_DEPTH {
-            effects.push(EffectLogEntry {
-                step_id: String::new(),
-                kind: "control.depth".into(),
-                input: Dictionary::new(),
-                output: None,
-                error: Some(format!("nesting depth exceeded {MAX_NESTING_DEPTH}")),
-            });
+            effects.push(EffectLogEntry { step_id: String::new(), kind: "control.depth".into(), input: Dictionary::new(), output: None, error: Some(format!("nesting depth exceeded {MAX_NESTING_DEPTH}")) });
             return;
         }
         for step in steps {
@@ -118,16 +112,7 @@ impl<'a> Executor<'a> {
                 let condition = read_scope_bool(scope, &key);
                 let slot = if condition { "then" } else { "else" };
                 let input = scope.merge(&step.params);
-                effects.push(EffectLogEntry {
-                    step_id: step.id.clone(),
-                    kind: step.kind.clone(),
-                    input,
-                    output: Some(Dictionary::new().insert(
-                        "branch",
-                        Value::Atom(Atom::String(slot.into())),
-                    )),
-                    error: None,
-                });
+                effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(Dictionary::new().insert("branch", Value::Atom(Atom::String(slot.into())))), error: None });
                 if let Some(body) = step.bodies.get(slot) {
                     self.run_steps(&body.steps, scope, effects, depth + 1);
                 }
@@ -139,13 +124,7 @@ impl<'a> Executor<'a> {
                 while read_scope_bool(scope, &key) {
                     iterations += 1;
                     if iterations > MAX_LOOP_ITERATIONS {
-                        effects.push(EffectLogEntry {
-                            step_id: step.id.clone(),
-                            kind: step.kind.clone(),
-                            input: scope.merge(&step.params),
-                            output: None,
-                            error: Some(format!("while loop exceeded {MAX_LOOP_ITERATIONS} iterations")),
-                        });
+                        effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input: scope.merge(&step.params), output: None, error: Some(format!("while loop exceeded {MAX_LOOP_ITERATIONS} iterations")) });
                         return Some(true);
                     }
                     if let Some(body) = step.bodies.get("body") {
@@ -158,13 +137,7 @@ impl<'a> Executor<'a> {
                 let count = read_number_param(&step.params, "count").unwrap_or(0.0).max(0.0) as u64;
                 let capped = count.min(MAX_LOOP_ITERATIONS);
                 if count > MAX_LOOP_ITERATIONS {
-                    effects.push(EffectLogEntry {
-                        step_id: step.id.clone(),
-                        kind: step.kind.clone(),
-                        input: scope.merge(&step.params),
-                        output: None,
-                        error: Some(format!("repeat count capped at {MAX_LOOP_ITERATIONS}")),
-                    });
+                    effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input: scope.merge(&step.params), output: None, error: Some(format!("repeat count capped at {MAX_LOOP_ITERATIONS}")) });
                 }
                 if let Some(body) = step.bodies.get("body") {
                     for index in 0..capped {
@@ -180,23 +153,11 @@ impl<'a> Executor<'a> {
         match self.registry.dispatch(&step.kind, &input) {
             Ok(output) => {
                 *scope = merge_output_into_scope(scope, &output);
-                effects.push(EffectLogEntry {
-                    step_id: step.id.clone(),
-                    kind: step.kind.clone(),
-                    input,
-                    output: Some(output),
-                    error: None,
-                });
+                effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: Some(output), error: None });
                 None
             }
             Err(err) => {
-                effects.push(EffectLogEntry {
-                    step_id: step.id.clone(),
-                    kind: step.kind.clone(),
-                    input,
-                    output: None,
-                    error: Some(err.to_string()),
-                });
+                effects.push(EffectLogEntry { step_id: step.id.clone(), kind: step.kind.clone(), input, output: None, error: Some(err.to_string()) });
                 Some(true)
             }
         }
@@ -204,11 +165,7 @@ impl<'a> Executor<'a> {
 }
 
 fn read_string_param(params: &Dictionary, key: &str) -> Option<String> {
-    params
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_str())
-        .map(str::to_string)
+    params.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_str()).map(str::to_string)
 }
 
 fn read_number_param(params: &Dictionary, key: &str) -> Option<f64> {
@@ -216,11 +173,7 @@ fn read_number_param(params: &Dictionary, key: &str) -> Option<f64> {
 }
 
 fn read_scope_bool(scope: &Dictionary, key: &str) -> bool {
-    scope
-        .get(key)
-        .and_then(|v| v.as_atom())
-        .and_then(|a| a.as_bool())
-        .unwrap_or(false)
+    scope.get(key).and_then(|v| v.as_atom()).and_then(|a| a.as_bool()).unwrap_or(false)
 }
 
 fn merge_output_into_scope(scope: &Dictionary, output: &Dictionary) -> Dictionary {
@@ -255,27 +208,15 @@ pub fn compile_to_text(path: &Path) -> String {
 
 fn compile_steps(steps: &[Step], indent: usize) -> String {
     let pad = "  ".repeat(indent);
-    steps
-        .iter()
-        .map(|step| compile_step(step, indent, &pad))
-        .collect::<Vec<_>>()
-        .join("\n")
+    steps.iter().map(|step| compile_step(step, indent, &pad)).collect::<Vec<_>>().join("\n")
 }
 
 fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
     match step.kind.as_str() {
         "control.if" => {
             let key = read_string_param(&step.params, "key").unwrap_or_else(|| "condition".into());
-            let then_body = step
-                .bodies
-                .get("then")
-                .map(|path| compile_steps(&path.steps, indent + 1))
-                .unwrap_or_default();
-            let else_body = step
-                .bodies
-                .get("else")
-                .map(|path| compile_steps(&path.steps, indent + 1))
-                .unwrap_or_default();
+            let then_body = step.bodies.get("then").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
+            let else_body = step.bodies.get("else").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
             if else_body.is_empty() {
                 format!("{pad}if ({key}) {{\n{then_body}\n{pad}}}")
             } else {
@@ -284,20 +225,12 @@ fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
         }
         "control.while" => {
             let key = read_string_param(&step.params, "key").unwrap_or_else(|| "condition".into());
-            let body = step
-                .bodies
-                .get("body")
-                .map(|path| compile_steps(&path.steps, indent + 1))
-                .unwrap_or_default();
+            let body = step.bodies.get("body").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
             format!("{pad}while ({key}) {{\n{body}\n{pad}}}")
         }
         "control.repeat" => {
             let count = read_number_param(&step.params, "count").unwrap_or(0.0);
-            let body = step
-                .bodies
-                .get("body")
-                .map(|path| compile_steps(&path.steps, indent + 1))
-                .unwrap_or_default();
+            let body = step.bodies.get("body").map(|path| compile_steps(&path.steps, indent + 1)).unwrap_or_default();
             format!("{pad}repeat ({count}) {{\n{body}\n{pad}}}")
         }
         _ => {
@@ -305,7 +238,7 @@ fn compile_step(step: &Step, indent: usize, pad: &str) -> String {
                 .params
                 .keys()
                 .filter(|key| key.as_str() != SCHEMA_KEY)
-                .map(|key| format!("{}={}", key, format_value(step.params.get(key).expect("key"))))
+                .map(|key| format!("{}={}", key, format_value(step.params.get(key).expect("key just yielded by params.keys()")))) // 🛡️ infallible: key sourced from this same dict's own keys()
                 .collect();
             if params.is_empty() {
                 format!("{pad}{}();", step.kind)
@@ -349,20 +282,12 @@ pub fn imperative_module_registry() -> Registry {
 
 /// 📚 Merges catalogue sections from all installed imperative modules.
 pub fn imperative_catalogue_json(registry: &Registry) -> String {
-    let core: serde_json::Value =
-        serde_json::from_str(&imperative_module_core::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let text: serde_json::Value =
-        serde_json::from_str(&imperative_module_text::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let math: serde_json::Value =
-        serde_json::from_str(&imperative_module_math::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
-    let logic: serde_json::Value =
-        serde_json::from_str(&imperative_module_logic::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
+    let core: serde_json::Value = serde_json::from_str(&imperative_module_core::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
+    let text: serde_json::Value = serde_json::from_str(&imperative_module_text::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
+    let math: serde_json::Value = serde_json::from_str(&imperative_module_math::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
+    let logic: serde_json::Value = serde_json::from_str(&imperative_module_logic::catalogue_json(registry)).unwrap_or(serde_json::json!({}));
     let control: serde_json::Value = serde_json::from_str(&imperative_module_control::catalogue_json()).unwrap_or(serde_json::json!({}));
-    let mut sections = core
-        .get("sections")
-        .and_then(|value| value.as_array())
-        .cloned()
-        .unwrap_or_default();
+    let mut sections = core.get("sections").and_then(|value| value.as_array()).cloned().unwrap_or_default();
     for module in [&text, &math, &logic, &control] {
         if let Some(module_sections) = module.get("sections").and_then(|value| value.as_array()) {
             sections.extend(module_sections.iter().cloned());
@@ -388,9 +313,7 @@ mod tests {
     #[test]
     fn composed_registry_runs_text_operators() {
         let registry = imperative_module_registry();
-        let input = Dictionary::new()
-            .insert("text", Value::Atom(Atom::String("abc".into())))
-            .insert("into", Value::Atom(Atom::String("upper".into())));
+        let input = Dictionary::new().insert("text", Value::Atom(Atom::String("abc".into()))).insert("into", Value::Atom(Atom::String("upper".into())));
         let output = registry.dispatch("text.uppercase", &input).expect("dispatch");
         let value = output.get("upper").and_then(|v| v.as_atom()).and_then(|a| a.as_str());
         assert_eq!(value, Some("ABC"));
@@ -402,28 +325,9 @@ mod tests {
         let executor = Executor::new(&registry);
         let path = Path {
             steps: vec![
-                Step {
-                    id: "s1".into(),
-                    kind: "state.set".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("counter".into())))
-                        .insert("value", Value::Atom(Atom::Decimal(0.0))),
-                    bodies: BTreeMap::new(),
-                },
-                Step {
-                    id: "s2".into(),
-                    kind: "state.increment".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("counter".into())))
-                        .insert("by", Value::Atom(Atom::Decimal(3.0))),
-                    bodies: BTreeMap::new(),
-                },
-                Step {
-                    id: "s3".into(),
-                    kind: "log.print".into(),
-                    params: Dictionary::new().insert("message", Value::Atom(Atom::String("done".into()))),
-                    bodies: BTreeMap::new(),
-                },
+                Step { id: "s1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))), bodies: BTreeMap::new() },
+                Step { id: "s2".into(), kind: "state.increment".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(3.0))), bodies: BTreeMap::new() },
+                Step { id: "s3".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("done".into()))), bodies: BTreeMap::new() },
             ],
         };
         let result = executor.run(&path, &Dictionary::new());
@@ -441,40 +345,17 @@ mod tests {
         bodies.insert(
             "then".into(),
             Path {
-                steps: vec![Step {
-                    id: "t1".into(),
-                    kind: "state.set".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("result".into())))
-                        .insert("value", Value::Atom(Atom::String("yes".into()))),
-                    bodies: BTreeMap::new(),
-                }],
+                steps: vec![Step { id: "t1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("result".into()))).insert("value", Value::Atom(Atom::String("yes".into()))), bodies: BTreeMap::new() }],
             },
         );
         let path = Path {
             steps: vec![
-                Step {
-                    id: "s1".into(),
-                    kind: "state.set".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("flag".into())))
-                        .insert("value", Value::Atom(Atom::Boolean(true))),
-                    bodies: BTreeMap::new(),
-                },
-                Step {
-                    id: "s2".into(),
-                    kind: "control.if".into(),
-                    params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))),
-                    bodies,
-                },
+                Step { id: "s1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))).insert("value", Value::Atom(Atom::Boolean(true))), bodies: BTreeMap::new() },
+                Step { id: "s2".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), bodies },
             ],
         };
         let result = executor.run(&path, &Dictionary::new());
-        let value = result
-            .scope
-            .get("result")
-            .and_then(|v| v.as_atom())
-            .and_then(|a| a.as_str());
+        let value = result.scope.get("result").and_then(|v| v.as_atom()).and_then(|a| a.as_str());
         assert_eq!(value, Some("yes"));
     }
 
@@ -485,33 +366,12 @@ mod tests {
         let mut bodies = BTreeMap::new();
         bodies.insert(
             "body".into(),
-            Path {
-                steps: vec![Step {
-                    id: "b1".into(),
-                    kind: "state.increment".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("counter".into())))
-                        .insert("by", Value::Atom(Atom::Decimal(1.0))),
-                    bodies: BTreeMap::new(),
-                }],
-            },
+            Path { steps: vec![Step { id: "b1".into(), kind: "state.increment".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(1.0))), bodies: BTreeMap::new() }] },
         );
         let path = Path {
             steps: vec![
-                Step {
-                    id: "s1".into(),
-                    kind: "state.set".into(),
-                    params: Dictionary::new()
-                        .insert("key", Value::Atom(Atom::String("counter".into())))
-                        .insert("value", Value::Atom(Atom::Decimal(0.0))),
-                    bodies: BTreeMap::new(),
-                },
-                Step {
-                    id: "s2".into(),
-                    kind: "control.repeat".into(),
-                    params: Dictionary::new().insert("count", Value::Atom(Atom::Decimal(3.0))),
-                    bodies,
-                },
+                Step { id: "s1".into(), kind: "state.set".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))), bodies: BTreeMap::new() },
+                Step { id: "s2".into(), kind: "control.repeat".into(), params: Dictionary::new().insert("count", Value::Atom(Atom::Decimal(3.0))), bodies },
             ],
         };
         let result = executor.run(&path, &Dictionary::new());
@@ -521,41 +381,16 @@ mod tests {
 
     #[test]
     fn compile_to_text_emits_one_line_per_step() {
-        let path = Path {
-            steps: vec![Step {
-                id: "s1".into(),
-                kind: "state.increment".into(),
-                params: Dictionary::new()
-                    .insert("key", Value::Atom(Atom::String("counter".into())))
-                    .insert("by", Value::Atom(Atom::Decimal(5.0))),
-                bodies: BTreeMap::new(),
-            }],
-        };
+        let path =
+            Path { steps: vec![Step { id: "s1".into(), kind: "state.increment".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("by", Value::Atom(Atom::Decimal(5.0))), bodies: BTreeMap::new() }] };
         assert_eq!(compile_to_text(&path), "state.increment(by=5, key=\"counter\");");
     }
 
     #[test]
     fn compile_to_text_emits_nested_control_blocks() {
         let mut bodies = BTreeMap::new();
-        bodies.insert(
-            "then".into(),
-            Path {
-                steps: vec![Step {
-                    id: "t1".into(),
-                    kind: "log.print".into(),
-                    params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))),
-                    bodies: BTreeMap::new(),
-                }],
-            },
-        );
-        let path = Path {
-            steps: vec![Step {
-                id: "s1".into(),
-                kind: "control.if".into(),
-                params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))),
-                bodies,
-            }],
-        };
+        bodies.insert("then".into(), Path { steps: vec![Step { id: "t1".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))), bodies: BTreeMap::new() }] });
+        let path = Path { steps: vec![Step { id: "s1".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), bodies }] };
         let text = compile_to_text(&path);
         assert!(text.contains("if (flag)"));
         assert!(text.contains("log.print"));

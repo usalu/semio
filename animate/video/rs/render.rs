@@ -7,7 +7,7 @@ use std::path::PathBuf;
 
 use crate::cache::PartialMovieCache;
 use crate::renderer::{frame_hash, CapturedFrame, VelloRenderer};
-use crate::writer::SceneFileWriter;
+use crate::writer::{write_sections_srt, SceneFileWriter};
 
 /// 📼 Encoded artifact kinds.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -51,7 +51,10 @@ pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[Ou
     let mut renderer = VelloRenderer::new(config.width, config.height)?;
     let mut writer = SceneFileWriter::new(&config, formats)?;
     let mut cache = if config.cache.enabled {
-        Some(PartialMovieCache::open(config.cache.partial_movie_dir.clone())?)
+        Some(PartialMovieCache::open_with_limit(
+            config.cache.partial_movie_dir.clone(),
+            config.cache.max_entries,
+        )?)
     } else {
         None
     };
@@ -69,7 +72,7 @@ pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[Ou
                     cache.insert(current_hash.clone(), encoded);
                 }
             }
-            if let Some(cache) = cache.as_ref() {
+            if let Some(cache) = cache.as_mut() {
                 if let Some(cached) = cache.get(&hash) {
                     writer.register_cached_partial(cached);
                     current_hash = hash;
@@ -90,9 +93,13 @@ pub fn render_scene<S: Scene>(mut scene: S, config: AnimateConfig, formats: &[Ou
     if let Some(partial) = current_partial {
         let encoded = writer.finalize_partial(&partial)?;
         if let Some(cache) = cache.as_mut() {
-            cache.insert(current_hash, encoded);
+            cache.insert(current_hash, encoded)?;
             let _ = cache.write_index();
         }
+    }
+
+    if let Some(subtitles_path) = &config.subtitles_path {
+        write_sections_srt(&sections, subtitles_path)?;
     }
 
     let mut outputs = writer.encode_outputs(last_pixels.as_deref())?;

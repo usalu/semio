@@ -6,14 +6,14 @@ use forms::{
     FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
-    create_default_layout,
+    create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
-    ActionDefinition, ActionKind, ActionEmit, App, Contribution,
-    DocumentApp, DocumentView, HostEffect, OsMediaCapability, PanelGroup, ResourceKindSpec, ActionDescriptor, UiButtonNode,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
-    UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, ViewState,
+    ActionDefinition, ActionKind, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
+    DocumentApp, DocumentView, HostEffect, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
+    UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
+    UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
+    ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -153,7 +153,7 @@ const AVATAR_PLACEHOLDER_PNG_BASE64: &str =
 static FORM_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
-//#region 🔖Runtime
+//#region 🔖Types
 /// 👁️ Ephemeral per-session view state — never part of the persisted `FormSpec` document. Blueprint
 /// selection, the Try wizard's active step, and its in-progress answer values all live here on the
 /// app struct, out of the VCS document.
@@ -163,7 +163,9 @@ struct FormsPlayRuntime {
     current_step_index: usize,
     try_values: HashMap<String, Value>,
 }
+//#endregion 🔖Types
 
+//#region 🔖DocumentHelpers
 /// 🌱 The forms app's default document — the building-component fixture. Used as
 /// `DocumentApp::initial_projection`.
 fn building_component_spec() -> FormSpec {
@@ -206,9 +208,7 @@ fn replace_spec_ops(current: &FormSpec, next: &FormSpec) -> Vec<FormOp> {
     }
     ops
 }
-//#endregion 🔖Runtime
 
-//#region 🔖Helpers
 struct QuestionLocation {
     step_id: String,
     question: FormQuestion,
@@ -651,182 +651,64 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabe
     }
     kinds
 }
-//#endregion 🔖Helpers
+//#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
-struct FormsLabels {
-    label: &'static str,
-    kind: &'static str,
-    id: &'static str,
-    required: &'static str,
-    description: &'static str,
-    placeholder: &'static str,
-    default: &'static str,
-    min: &'static str,
-    max: &'static str,
-    step_field: &'static str,
-    unit: &'static str,
-    schema: &'static str,
-    text: &'static str,
-    src: &'static str,
-    accept: &'static str,
-    yes: &'static str,
-    no: &'static str,
-    option: &'static str,
-    remove: &'static str,
-    add_option: &'static str,
-    remove_option: &'static str,
-    add_vector_field: &'static str,
-    vector_field_label_suffix: &'static str,
-    vector_field_value_suffix: &'static str,
-    add_step: &'static str,
-    add_text_question: &'static str,
-    question: &'static str,
-    selected: &'static str,
-    no_steps_in_form: &'static str,
-    form_fallback_title: &'static str,
-    step_progress: &'static str,
-    back: &'static str,
-    next: &'static str,
-    submit: &'static str,
-    fixture_slug: &'static str,
-    no_steps_tree_item: &'static str,
-    actions: &'static str,
-    kind_text: &'static str,
-    kind_long_text: &'static str,
-    kind_number: &'static str,
-    kind_slider: &'static str,
-    kind_boolean: &'static str,
-    kind_single: &'static str,
-    kind_multi: &'static str,
-    kind_date: &'static str,
-    kind_color: &'static str,
-    kind_image: &'static str,
-    kind_file: &'static str,
-    kind_vector: &'static str,
-    kind_note: &'static str,
-    window_blueprint: &'static str,
-    window_try: &'static str,
-}
-
-const FORMS_LABELS_NATIVE_EN: FormsLabels = FormsLabels {
-    label: "Label",
-    kind: "Kind",
-    id: "Id",
-    required: "Required",
-    description: "Description",
-    placeholder: "Placeholder",
-    default: "Default",
-    min: "Min",
-    max: "Max",
-    step_field: "Step",
-    unit: "Unit",
-    schema: "Schema",
-    text: "Text",
-    src: "Src",
-    accept: "Accept",
-    yes: "Yes",
-    no: "No",
-    option: "Option",
-    remove: "Remove",
-    add_option: "Add Option",
-    remove_option: "Remove Option",
-    add_vector_field: "Add Vector Field",
-    vector_field_label_suffix: "label",
-    vector_field_value_suffix: "value",
-    add_step: "Add Step",
-    add_text_question: "Add Text Question",
-    question: "Question",
-    selected: "selected",
-    no_steps_in_form: "No steps in this form.",
-    form_fallback_title: "Form",
-    step_progress: "Step",
-    back: "Back",
-    next: "Next",
-    submit: "Submit",
-    fixture_slug: "Fixture Slug",
-    no_steps_tree_item: "(no steps)",
-    actions: "Actions",
-    kind_text: "Text",
-    kind_long_text: "Long Text",
-    kind_number: "Number",
-    kind_slider: "Slider",
-    kind_boolean: "Boolean",
-    kind_single: "Single Select",
-    kind_multi: "Multi Select",
-    kind_date: "Date",
-    kind_color: "Color",
-    kind_image: "Image",
-    kind_file: "File",
-    kind_vector: "Vector",
-    kind_note: "Note",
-    window_blueprint: "Blueprint",
-    window_try: "Try",
-};
-
-const FORMS_LABELS_NATIVE_DE: FormsLabels = FormsLabels {
-    label: "Bezeichnung",
-    kind: "Art",
-    id: "Id",
-    required: "Erforderlich",
-    description: "Beschreibung",
-    placeholder: "Platzhalter",
-    default: "Standard",
-    min: "Min",
-    max: "Max",
-    step_field: "Schrittweite",
-    unit: "Einheit",
-    schema: "Schema",
-    text: "Text",
-    src: "Quelle",
-    accept: "Akzeptierte Dateien",
-    yes: "Ja",
-    no: "Nein",
-    option: "Option",
-    remove: "Entfernen",
-    add_option: "Option hinzufügen",
-    remove_option: "Option entfernen",
-    add_vector_field: "Vektorfeld hinzufügen",
-    vector_field_label_suffix: "Bezeichnung",
-    vector_field_value_suffix: "Wert",
-    add_step: "Schritt hinzufügen",
-    add_text_question: "Textfrage hinzufügen",
-    question: "Frage",
-    selected: "ausgewählt",
-    no_steps_in_form: "Keine Schritte in diesem Formular.",
-    form_fallback_title: "Formular",
-    step_progress: "Schritt",
-    back: "Zurück",
-    next: "Weiter",
-    submit: "Absenden",
-    fixture_slug: "Fixture-Slug",
-    no_steps_tree_item: "(keine Schritte)",
-    actions: "Aktionen",
-    kind_text: "Text",
-    kind_long_text: "Langtext",
-    kind_number: "Zahl",
-    kind_slider: "Schieberegler",
-    kind_boolean: "Boolescher Wert",
-    kind_single: "Einzelauswahl",
-    kind_multi: "Mehrfachauswahl",
-    kind_date: "Datum",
-    kind_color: "Farbe",
-    kind_image: "Bild",
-    kind_file: "Datei",
-    kind_vector: "Vektor",
-    kind_note: "Notiz",
-    window_blueprint: "Entwurf",
-    window_try: "Testen",
-};
-
-/// 🗣️ Resolves the active label set from the shell-provided locale; forms has no domain-terminology variant to switch on.
-fn forms_labels(view_state: &ViewState) -> &'static FormsLabels {
-    let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-    if is_de {
-        &FORMS_LABELS_NATIVE_DE
-    } else {
-        &FORMS_LABELS_NATIVE_EN
+semio_framework_plugin::app_labels! {
+    /// 🗣️ Complete UI label set for the forms app; one field per label makes every locale combination compile-checked.
+    struct FormsLabels {
+        label: &'static str = en: "Label", de: "Bezeichnung";
+        kind: &'static str = en: "Kind", de: "Art";
+        id: &'static str = en: "Id", de: "Id";
+        required: &'static str = en: "Required", de: "Erforderlich";
+        description: &'static str = en: "Description", de: "Beschreibung";
+        placeholder: &'static str = en: "Placeholder", de: "Platzhalter";
+        default: &'static str = en: "Default", de: "Standard";
+        min: &'static str = en: "Min", de: "Min";
+        max: &'static str = en: "Max", de: "Max";
+        step_field: &'static str = en: "Step", de: "Schrittweite";
+        unit: &'static str = en: "Unit", de: "Einheit";
+        schema: &'static str = en: "Schema", de: "Schema";
+        text: &'static str = en: "Text", de: "Text";
+        src: &'static str = en: "Src", de: "Quelle";
+        accept: &'static str = en: "Accept", de: "Akzeptierte Dateien";
+        yes: &'static str = en: "Yes", de: "Ja";
+        no: &'static str = en: "No", de: "Nein";
+        option: &'static str = en: "Option", de: "Option";
+        remove: &'static str = en: "Remove", de: "Entfernen";
+        add_option: &'static str = en: "Add Option", de: "Option hinzufügen";
+        remove_option: &'static str = en: "Remove Option", de: "Option entfernen";
+        add_vector_field: &'static str = en: "Add Vector Field", de: "Vektorfeld hinzufügen";
+        vector_field_label_suffix: &'static str = en: "label", de: "Bezeichnung";
+        vector_field_value_suffix: &'static str = en: "value", de: "Wert";
+        add_step: &'static str = en: "Add Step", de: "Schritt hinzufügen";
+        add_text_question: &'static str = en: "Add Text Question", de: "Textfrage hinzufügen";
+        question: &'static str = en: "Question", de: "Frage";
+        selected: &'static str = en: "selected", de: "ausgewählt";
+        no_steps_in_form: &'static str = en: "No steps in this form.", de: "Keine Schritte in diesem Formular.";
+        form_fallback_title: &'static str = en: "Form", de: "Formular";
+        step_progress: &'static str = en: "Step", de: "Schritt";
+        back: &'static str = en: "Back", de: "Zurück";
+        next: &'static str = en: "Next", de: "Weiter";
+        submit: &'static str = en: "Submit", de: "Absenden";
+        fixture_slug: &'static str = en: "Fixture Slug", de: "Fixture-Slug";
+        no_steps_tree_item: &'static str = en: "(no steps)", de: "(keine Schritte)";
+        actions: &'static str = en: "Actions", de: "Aktionen";
+        kind_text: &'static str = en: "Text", de: "Text";
+        kind_long_text: &'static str = en: "Long Text", de: "Langtext";
+        kind_number: &'static str = en: "Number", de: "Zahl";
+        kind_slider: &'static str = en: "Slider", de: "Schieberegler";
+        kind_boolean: &'static str = en: "Boolean", de: "Boolescher Wert";
+        kind_single: &'static str = en: "Single Select", de: "Einzelauswahl";
+        kind_multi: &'static str = en: "Multi Select", de: "Mehrfachauswahl";
+        kind_date: &'static str = en: "Date", de: "Datum";
+        kind_color: &'static str = en: "Color", de: "Farbe";
+        kind_image: &'static str = en: "Image", de: "Bild";
+        kind_file: &'static str = en: "File", de: "Datei";
+        kind_vector: &'static str = en: "Vector", de: "Vektor";
+        kind_note: &'static str = en: "Note", de: "Notiz";
+        window_blueprint: &'static str = en: "Blueprint", de: "Entwurf";
+        window_try: &'static str = en: "Try", de: "Testen";
     }
 }
 //#endregion 🔖Terminology
@@ -835,7 +717,7 @@ fn forms_labels(view_state: &ViewState) -> &'static FormsLabels {
 /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_forms_app`'s
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn forms_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn forms_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("addStep", "Add Step", "Schritt hinzufuegen"),
         ("addQuestion", "Add Question", "Frage hinzufuegen"),
@@ -867,17 +749,489 @@ fn forms_action_labels(is_de: bool) -> std::collections::HashMap<String, String>
         ("tryEngagementInput", "Try Engagement Input", "Testeingabe"),
         ("exportFixture", "Export Fixture", "Fixture exportieren"),
     ];
-    ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    localized_label_map(is_de, ENTRIES)
 }
 
 /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_forms_app`.
 /// The forms manifest declares no toolbar utilities, so this always resolves empty; kept for parity with the
 /// other play apps' terminology plumbing.
-fn forms_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
-    std::collections::HashMap::new()
+fn forms_utility_labels(is_de: bool) -> HashMap<String, String> {
+    localized_label_map(is_de, &[])
 }
 //#endregion 🔖CommandLabels
 
+//#region 🔖Panels
+fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
+    let step_items: Vec<UiTreeItemNode> = spec
+        .steps
+        .iter()
+        .map(|step| {
+            let question_items: Vec<UiTreeItemNode> = step
+                .blocks
+                .iter()
+                .map(|question| UiTreeItemNode {
+                    icon_id: Some("help-circle".into()),
+                    draggable: Some(true),
+                    ..tree_item_with_action(
+                        question.id.clone(),
+                        question.label.clone(),
+                        Some(question.kind.clone()),
+                        forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] }))),
+                    )
+                })
+                .collect();
+            UiTreeItemNode {
+                icon_id: Some("list-tree".into()),
+                default_open: Some(true),
+                draggable: Some(true),
+                items: Some(question_items),
+                ..tree_item_with_action(
+                    forms_play_step_tree_id(&step.id),
+                    step.title.clone(),
+                    Some(format!("{} questions", step.blocks.len())),
+                    forms_action("setSelection", Some(json!({ "ids": [] }))),
+                )
+            }
+        })
+        .collect();
+    PanelTreeBuilder::new("forms-play-document")
+        .section_or_placeholder(
+            "forms-play-document.steps",
+            Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+            true,
+            step_items,
+            labels.no_steps_tree_item,
+        )
+        .selected(selected_ids.to_vec())
+        .selection_change(forms_action("setSelection", None))
+        .drop_action(forms_action("dropQuestionKind", None))
+        .build()
+}
+
+fn build_catalogue_tree(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
+    let kind_items: Vec<UiTreeItemNode> = catalogue_kinds(contributions, labels)
+        .into_iter()
+        .map(|(kind, label, icon)| {
+            let mut drag_data = HashMap::new();
+            drag_data.insert(FORMS_QUESTION_DRAG_MIME.into(), json!({ "kind": kind }).to_string());
+            UiTreeItemNode {
+                icon_id: Some(icon),
+                draggable: Some(true),
+                drag_data: Some(drag_data),
+                ..tree_item_with_action(
+                    format!("forms-play-catalogue.{kind}"),
+                    label,
+                    Some(kind.clone()),
+                    forms_action("addQuestion", Some(json!({ "kind": kind }))),
+                )
+            }
+        })
+        .collect();
+    let action_items = vec![
+        UiTreeItemNode {
+            icon_id: Some("plus".into()),
+            ..tree_item_with_action("forms-play-catalogue.add-step", labels.add_step, None, forms_action("addStep", None))
+        },
+        UiTreeItemNode {
+            icon_id: Some("type".into()),
+            ..tree_item_with_action(
+                "forms-play-catalogue.add-question",
+                labels.add_text_question,
+                None,
+                forms_action("addQuestion", Some(json!({ "kind": "text" }))),
+            )
+        },
+    ];
+    PanelTreeBuilder::new("forms-play-catalogue")
+        .section("forms-play-catalogue.kinds", Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()), true, kind_items)
+        .section("forms-play-catalogue.actions", Some(labels.actions.into()), true, action_items)
+        .build()
+}
+
+fn inspector_patch(question_ids: &[String], field: &str) -> ActionDescriptor {
+    forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": field })))
+}
+
+fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
+    let mixed = ui_inspector_mixed_text(values);
+    UiNode::Field(UiFieldNode {
+        id: field_id.into(),
+        label: label.into(),
+        child: Box::new(UiNode::Input(UiInputNode {
+            id: format!("{field_id}.input"),
+            input_kind: "text".into(),
+            value: mixed.value,
+            placeholder: mixed.placeholder,
+            commit: None,
+            on_change: inspector_patch(question_ids, field),
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
+    let mixed = ui_inspector_mixed_number(values);
+    UiNode::Field(UiFieldNode {
+        id: field_id.into(),
+        label: label.into(),
+        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+            id: format!("{field_id}.stepper"),
+            value: mixed.value,
+            step: 0.1,
+            uniform: mixed.uniform,
+            on_absolute: inspector_patch(question_ids, field),
+            on_delta: inspector_patch(question_ids, field),
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+fn question_kind_editor_fields(
+    question: &FormQuestion,
+    question_ids: &[String],
+    contributions: &[PluginContributionEntry],
+    id_prefix: &str,
+    labels: &FormsLabels,
+) -> Vec<UiNode> {
+    let fid = |suffix: &str| format!("{id_prefix}.{suffix}");
+    let mut fields = Vec::new();
+    fields.push(inspector_text_field(
+        question_ids,
+        &fid("description"),
+        labels.description,
+        &[question.description.clone().unwrap_or_default()],
+        "description",
+    ));
+    match question.kind.as_str() {
+        "text" | "longText" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("placeholder"),
+                labels.placeholder,
+                &[question.placeholder.clone().unwrap_or_default()],
+                "placeholder",
+            ));
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("default"),
+                labels.default,
+                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                "default",
+            ));
+        }
+        "number" | "slider" => {
+            fields.push(inspector_number_field(question_ids, &fid("min"), labels.min, &[question.min.unwrap_or(0.0)], "min"));
+            fields.push(inspector_number_field(question_ids, &fid("max"), labels.max, &[question.max.unwrap_or(100.0)], "max"));
+            fields.push(inspector_number_field(question_ids, &fid("step"), labels.step_field, &[question.step.unwrap_or(1.0)], "step"));
+            fields.push(inspector_number_field(
+                question_ids,
+                &fid("default"),
+                labels.default,
+                &[question.default.as_ref().map(json_f64_value).unwrap_or(0.0)],
+                "default",
+            ));
+            if question.kind == "slider" {
+                fields.push(inspector_text_field(
+                    question_ids,
+                    &fid("unit"),
+                    labels.unit,
+                    &[question.unit.clone().unwrap_or_default()],
+                    "unit",
+                ));
+            }
+        }
+        "boolean" => {
+            let pressed = question.default.as_ref().and_then(|default| default.as_bool()).unwrap_or(false);
+            fields.push(UiNode::Field(UiFieldNode {
+                id: fid("default"),
+                label: labels.default.into(),
+                description: None,
+                required: None,
+                error: None,
+                child: Box::new(UiNode::Toggle(UiToggleNode {
+                    id: fid("default.toggle"),
+                    icon_id: "check".into(),
+                    pressed,
+                    text: Some(if pressed { labels.yes.into() } else { labels.no.into() }),
+                    on_change: inspector_patch(question_ids, "default"),
+                })),
+            }));
+        }
+        "single" | "multi" => {
+            if let Some(options) = &question.options {
+                for option in options {
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: fid(&format!("option.{}", option.value)),
+                        label: format!("{} {}", labels.option, option.value),
+                        description: None,
+                        required: None,
+                        error: None,
+                        child: Box::new(UiNode::Input(UiInputNode {
+                            id: fid(&format!("option.{}.input", option.value)),
+                            input_kind: "text".into(),
+                            value: option.label.clone(),
+                            placeholder: None,
+                            commit: None,
+                            on_change: forms_action(
+                                "patchQuestionOptions",
+                                Some(json!({ "questionIds": question_ids, "optionValue": option.value, "field": "label" })),
+                            ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
+                        })),
+                    }));
+                    fields.push(UiNode::Button(UiButtonNode {
+                        loading: None,
+                        id: Some(fid(&format!("option.{}.remove", option.value))),
+                        icon_id: "trash-2".into(),
+                        label: labels.remove_option.into(),
+                        action: forms_action(
+                            "removeQuestionOption",
+                            Some(json!({ "questionId": question.id, "optionValue": option.value })),
+                        ),
+                        style: None,
+                        disabled: None,
+                    }));
+                }
+            }
+            fields.push(UiNode::Button(UiButtonNode {
+                loading: None,
+                id: Some(fid("option.add")),
+                icon_id: "plus".into(),
+                label: labels.add_option.into(),
+                action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
+                style: None,
+                disabled: None,
+            }));
+        }
+        "date" | "color" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("default"),
+                labels.default,
+                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
+                "default",
+            ));
+        }
+        "vector" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("schema"),
+                labels.schema,
+                &[question.schema.clone().unwrap_or_default()],
+                "schema",
+            ));
+            fields.push(inspector_number_field(question_ids, &fid("step"), labels.step_field, &[question.step.unwrap_or(0.1)], "step"));
+            if let Some(vector_fields) = &question.fields {
+                for field in vector_fields {
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: fid(&format!("vector.{}.label", field.key)),
+                        label: format!("{} {}", field.key, labels.vector_field_label_suffix),
+                        description: None,
+                        required: None,
+                        error: None,
+                        child: Box::new(UiNode::Input(UiInputNode {
+                            id: fid(&format!("vector.{}.label.input", field.key)),
+                            input_kind: "text".into(),
+                            value: field.label.clone().unwrap_or_else(|| field.key.clone()),
+                            placeholder: None,
+                            commit: None,
+                            on_change: forms_action(
+                                "patchVectorField",
+                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "label" })),
+                            ),
+                            min: None,
+                            max: None,
+                            step: None,
+                            accept: None,
+                        })),
+                    }));
+                    fields.push(UiNode::Field(UiFieldNode {
+                        id: fid(&format!("vector.{}.value", field.key)),
+                        label: format!("{} {}", field.key, labels.vector_field_value_suffix),
+                        description: None,
+                        required: None,
+                        error: None,
+                        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                            id: fid(&format!("vector.{}.value.stepper", field.key)),
+                            value: field.value.unwrap_or(0.0),
+                            step: question.step.unwrap_or(0.1),
+                            uniform: true,
+                            on_absolute: forms_action(
+                                "patchVectorField",
+                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
+                            ),
+                            on_delta: forms_action(
+                                "patchVectorField",
+                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
+                            ),
+                        })),
+                    }));
+                    fields.push(UiNode::Button(UiButtonNode {
+                        loading: None,
+                        id: Some(fid(&format!("vector.{}.remove", field.key))),
+                        icon_id: "trash-2".into(),
+                        label: format!("{} {}", labels.remove, field.key),
+                        action: forms_action(
+                            "removeVectorField",
+                            Some(json!({ "questionId": question.id, "fieldKey": field.key })),
+                        ),
+                        style: None,
+                        disabled: None,
+                    }));
+                }
+            }
+            fields.push(UiNode::Button(UiButtonNode {
+                loading: None,
+                id: Some(fid("vector.add")),
+                icon_id: "plus".into(),
+                label: labels.add_vector_field.into(),
+                action: forms_action(
+                    "addVectorField",
+                    Some(json!({ "questionId": question.id, "fieldKey": "field" })),
+                ),
+                style: None,
+                disabled: None,
+            }));
+        }
+        "note" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("text"),
+                labels.text,
+                &[question.text.clone().unwrap_or_default()],
+                "text",
+            ));
+        }
+        "image" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("src"),
+                labels.src,
+                &[question.src.clone().unwrap_or_default()],
+                "src",
+            ));
+        }
+        "file" => {
+            fields.push(inspector_text_field(
+                question_ids,
+                &fid("accept"),
+                labels.accept,
+                &[question.accept.clone().unwrap_or_default()],
+                "accept",
+            ));
+        }
+        kind if is_extension_question_kind(kind) => {
+            let values = serde_json::Map::new();
+            fields.push(render_extension_question(question, &values, contributions, "blueprint", true));
+            if let Some(slug) = &question.fixture_slug {
+                fields.push(ui_inspector_readonly_field(fid("fixtureSlug"), labels.fixture_slug, slug));
+            }
+        }
+        _ => {}
+    }
+    fields
+}
+
+fn build_inspector_tree(
+    spec: &FormSpec,
+    runtime: &FormsPlayRuntime,
+    contributions: &[PluginContributionEntry],
+    term_labels: &FormsLabels,
+) -> UiNode {
+    let questions: Vec<FormQuestion> = runtime
+        .selected_ids
+        .iter()
+        .filter_map(|id| find_question_location(spec, id).map(|location| location.question))
+        .collect();
+    if questions.is_empty() {
+        return ui_stack_vertical(vec![
+            ui_text(format!("Schema: {FORMS_DOCUMENT_SCHEMA}")),
+            ui_text(format!("Steps: {}", spec.steps.len())),
+            ui_text(format!("Questions: {}", flatten_questions(spec).len())),
+        ]);
+    }
+    let question_ids: Vec<String> = questions.iter().map(|question| question.id.clone()).collect();
+    let labels: Vec<String> = questions.iter().map(|question| question.label.clone()).collect();
+    let kinds: Vec<String> = questions.iter().map(|question| question.kind.clone()).collect();
+    let required: Vec<bool> = questions.iter().map(|question| question.required.unwrap_or(false)).collect();
+    let kind_mixed = ui_inspector_mixed_text(&kinds);
+    let required_mixed = ui_inspector_mixed_toggle(&required);
+    let kind_items: Vec<UiSelectItem> = catalogue_kinds(contributions, term_labels)
+        .into_iter()
+        .map(|(kind, label, _)| UiSelectItem {
+            value: kind,
+            label,
+        })
+        .collect();
+    let mut base_fields = vec![
+        inspector_text_field(&question_ids, "forms-play-inspector.label", term_labels.label, &labels, "label"),
+        UiNode::Field(UiFieldNode {
+            id: "forms-play-inspector.kind".into(),
+            label: term_labels.kind.into(),
+            child: Box::new(UiNode::Select(UiSelectNode {
+                id: "forms-play-inspector.kind.select".into(),
+                value: kind_mixed.value,
+                placeholder: kind_mixed.placeholder,
+                items: kind_items,
+                on_change: inspector_patch(&question_ids, "kind"),
+            })),
+            description: None,
+            required: None,
+            error: None,
+        }),
+        ui_inspector_readonly_field(
+            "forms-play-inspector.id",
+            term_labels.id,
+            if question_ids.len() == 1 {
+                question_ids[0].clone()
+            } else {
+                format!("{} {}", question_ids.len(), term_labels.selected)
+            },
+        ),
+        UiNode::Field(UiFieldNode {
+            id: "forms-play-inspector.required".into(),
+            label: term_labels.required.into(),
+            child: Box::new(UiNode::Toggle(UiToggleNode {
+                id: "forms-play-inspector.required.toggle".into(),
+                icon_id: "check".into(),
+                pressed: required_mixed.uniform && required_mixed.pressed,
+                text: if required_mixed.uniform {
+                    Some(if required_mixed.pressed { term_labels.yes.into() } else { term_labels.no.into() })
+                } else {
+                    Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
+                },
+                on_change: inspector_patch(&question_ids, "required"),
+            })),
+            description: None,
+            required: None,
+            error: None,
+        }),
+    ];
+    if questions.len() == 1 {
+        base_fields.extend(question_kind_editor_fields(&questions[0], &question_ids, contributions, "forms-play-inspector", term_labels));
+    }
+    let groups = vec![UiInspectorFieldGroup {
+        id: "forms-play-inspector.base".into(),
+        label: term_labels.question.into(),
+        default_open: None,
+        fields: base_fields,
+    }];
+    ui_inspector_groups_to_tree(&groups)
+}
+//#endregion 🔖Panels
+
+//#region 🔖Render
 //#region 🔖Builder
 fn forms_protocol_builder_config() -> protocol::ProtocolBuilderConfig {
     protocol::ProtocolBuilderConfig {
@@ -888,9 +1242,9 @@ fn forms_protocol_builder_config() -> protocol::ProtocolBuilderConfig {
 }
 
 fn render_blueprint_builder(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
-    let palette: Vec<semio_framework_plugin::BlockPaletteEntry> = catalogue_kinds(contributions, labels)
+    let palette: Vec<BlockPaletteEntry> = catalogue_kinds(contributions, labels)
         .into_iter()
-        .map(|(kind, label, icon_id)| semio_framework_plugin::BlockPaletteEntry {
+        .map(|(kind, label, icon_id)| BlockPaletteEntry {
             block_kind: kind,
             label,
             icon_id,
@@ -941,6 +1295,7 @@ fn ui_text_emphasized(value: impl Into<String>) -> UiNode {
 
 fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
+        loading: None,
         direction: "horizontal".into(),
         gap: Some("tight".into()),
         padding: Some("none".into()),
@@ -1190,6 +1545,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
     }
     let nav = vec![
         UiNode::Button(UiButtonNode {
+            loading: None,
             id: Some("forms-try.back".into()),
             icon_id: "chevron-left".into(),
             label: labels.back.into(),
@@ -1199,6 +1555,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
         }),
         if step_index + 1 < spec.steps.len() {
             UiNode::Button(UiButtonNode {
+                loading: None,
                 id: Some("forms-try.next".into()),
                 icon_id: "chevron-right".into(),
                 label: labels.next.into(),
@@ -1208,6 +1565,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
             })
         } else {
             UiNode::Button(UiButtonNode {
+                loading: None,
                 id: Some("forms-try.submit".into()),
                 icon_id: "check".into(),
                 label: labels.submit.into(),
@@ -1221,545 +1579,7 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
     ui_stack_vertical(children)
 }
 //#endregion 🔖TryWizard
-
-//#region 🔖Panels
-fn build_document_tree(spec: &FormSpec, selected_ids: &[String], labels: &FormsLabels) -> UiNode {
-    let step_items: Vec<UiTreeItemNode> = spec
-        .steps
-        .iter()
-        .map(|step| UiTreeItemNode {
-            id: forms_play_step_tree_id(&step.id),
-            label: step.title.clone(),
-            description: Some(format!("{} questions", step.blocks.len())),
-            icon_id: Some("list-tree".into()),
-            selected: None,
-            default_open: Some(true),
-            action: Some(forms_action("setSelection", Some(json!({ "ids": [] })))),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: Some(true),
-            drag_data: None,
-            items: Some(
-                step.blocks
-                    .iter()
-                    .map(|question| UiTreeItemNode {
-                        id: question.id.clone(),
-                        label: question.label.clone(),
-                        description: Some(question.kind.clone()),
-                        icon_id: Some("help-circle".into()),
-                        selected: None,
-                        default_open: None,
-                        action: Some(forms_action("setSelection", Some(json!({ "ids": [question.id.clone()] })))),
-                        hover_action: None,
-                        unhover_action: None,
-                        actions: None,
-                        draggable: Some(true),
-                        drag_data: None,
-                        items: None,
-                        control: None,
-                        is_hidden: None,
-                    })
-                    .collect(),
-            ),
-            control: None,
-            is_hidden: None,
-        })
-        .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![UiTreeSectionNode {
-            id: "forms-play-document.steps".into(),
-            label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
-            default_open: Some(true),
-            items: if step_items.is_empty() {
-                vec![UiTreeItemNode {
-                    id: "forms-play-document.empty".into(),
-                    label: labels.no_steps_tree_item.into(),
-                    description: None,
-                    icon_id: None,
-                    selected: None,
-                    default_open: None,
-                    action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-                    draggable: None,
-                    drag_data: None,
-                    items: None,
-                    control: None,
-                    is_hidden: None,
-                }]
-            } else {
-                step_items
-            },
-        }],
-        selected_ids: Some(selected_ids.to_vec()),
-        highlighted_ids: None,
-        selection_change: Some(forms_action("setSelection", None)),
-        drop_action: Some(forms_action("dropQuestionKind", None)),
-    })
-}
-
-fn build_catalogue_tree(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> UiNode {
-    let kind_items: Vec<UiTreeItemNode> = catalogue_kinds(contributions, labels)
-        .into_iter()
-        .map(|(kind, label, icon)| {
-            let mut drag_data = HashMap::new();
-            drag_data.insert(FORMS_QUESTION_DRAG_MIME.into(), json!({ "kind": kind }).to_string());
-            UiTreeItemNode {
-                id: format!("forms-play-catalogue.{kind}"),
-                label: label.clone(),
-                description: Some(kind.clone()),
-                icon_id: Some(icon.clone()),
-                selected: None,
-                default_open: None,
-                action: Some(forms_action("addQuestion", Some(json!({ "kind": kind })))),
-                hover_action: None,
-                unhover_action: None,
-                actions: None,
-                draggable: Some(true),
-                drag_data: Some(drag_data),
-                items: None,
-                control: None,
-                is_hidden: None,
-            }
-        })
-        .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "forms-play-catalogue.kinds".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
-                default_open: Some(true),
-                items: kind_items,
-            },
-            UiTreeSectionNode {
-                id: "forms-play-catalogue.actions".into(),
-                label: Some(labels.actions.into()),
-                default_open: Some(true),
-                items: vec![
-                    UiTreeItemNode {
-                        id: "forms-play-catalogue.add-step".into(),
-                        label: labels.add_step.into(),
-                        description: None,
-                        icon_id: Some("plus".into()),
-                        selected: None,
-                        default_open: None,
-                        action: Some(forms_action("addStep", None)),
-                        hover_action: None,
-                        unhover_action: None,
-                        actions: None,
-                        draggable: None,
-                        drag_data: None,
-                        items: None,
-                        control: None,
-                        is_hidden: None,
-                    },
-                    UiTreeItemNode {
-                        id: "forms-play-catalogue.add-question".into(),
-                        label: labels.add_text_question.into(),
-                        description: None,
-                        icon_id: Some("type".into()),
-                        selected: None,
-                        default_open: None,
-                        action: Some(forms_action("addQuestion", Some(json!({ "kind": "text" })))),
-                        hover_action: None,
-                        unhover_action: None,
-                        actions: None,
-                        draggable: None,
-                        drag_data: None,
-                        items: None,
-                        control: None,
-                        is_hidden: None,
-                    },
-                ],
-            },
-        ],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-    })
-}
-
-fn inspector_patch(question_ids: &[String], field: &str) -> ActionDescriptor {
-    forms_action("patchQuestions", Some(json!({ "questionIds": question_ids, "field": field })))
-}
-
-fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
-    let mixed = ui_inspector_mixed_text(values);
-    UiNode::Field(UiFieldNode {
-        id: field_id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{field_id}.input"),
-            input_kind: "text".into(),
-            value: mixed.value,
-            placeholder: mixed.placeholder,
-            commit: None,
-            on_change: inspector_patch(question_ids, field),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-    })
-}
-
-fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
-    let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {
-        id: field_id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
-            id: format!("{field_id}.stepper"),
-            value: mixed.value,
-            step: 0.1,
-            uniform: mixed.uniform,
-            on_absolute: inspector_patch(question_ids, field),
-            on_delta: inspector_patch(question_ids, field),
-        })),
-        description: None,
-        required: None,
-        error: None,
-    })
-}
-
-fn question_kind_editor_fields(
-    question: &FormQuestion,
-    question_ids: &[String],
-    contributions: &[PluginContributionEntry],
-    id_prefix: &str,
-    labels: &FormsLabels,
-) -> Vec<UiNode> {
-    let fid = |suffix: &str| format!("{id_prefix}.{suffix}");
-    let mut fields = Vec::new();
-    fields.push(inspector_text_field(
-        question_ids,
-        &fid("description"),
-        labels.description,
-        &[question.description.clone().unwrap_or_default()],
-        "description",
-    ));
-    match question.kind.as_str() {
-        "text" | "longText" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("placeholder"),
-                labels.placeholder,
-                &[question.placeholder.clone().unwrap_or_default()],
-                "placeholder",
-            ));
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("default"),
-                labels.default,
-                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
-                "default",
-            ));
-        }
-        "number" | "slider" => {
-            fields.push(inspector_number_field(question_ids, &fid("min"), labels.min, &[question.min.unwrap_or(0.0)], "min"));
-            fields.push(inspector_number_field(question_ids, &fid("max"), labels.max, &[question.max.unwrap_or(100.0)], "max"));
-            fields.push(inspector_number_field(question_ids, &fid("step"), labels.step_field, &[question.step.unwrap_or(1.0)], "step"));
-            fields.push(inspector_number_field(
-                question_ids,
-                &fid("default"),
-                labels.default,
-                &[question.default.as_ref().map(json_f64_value).unwrap_or(0.0)],
-                "default",
-            ));
-            if question.kind == "slider" {
-                fields.push(inspector_text_field(
-                    question_ids,
-                    &fid("unit"),
-                    labels.unit,
-                    &[question.unit.clone().unwrap_or_default()],
-                    "unit",
-                ));
-            }
-        }
-        "boolean" => {
-            let pressed = question.default.as_ref().and_then(|default| default.as_bool()).unwrap_or(false);
-            fields.push(UiNode::Field(UiFieldNode {
-                id: fid("default"),
-                label: labels.default.into(),
-                description: None,
-                required: None,
-                error: None,
-                child: Box::new(UiNode::Toggle(UiToggleNode {
-                    id: fid("default.toggle"),
-                    icon_id: "check".into(),
-                    pressed,
-                    text: Some(if pressed { labels.yes.into() } else { labels.no.into() }),
-                    on_change: inspector_patch(question_ids, "default"),
-                })),
-            }));
-        }
-        "single" | "multi" => {
-            if let Some(options) = &question.options {
-                for option in options {
-                    fields.push(UiNode::Field(UiFieldNode {
-                        id: fid(&format!("option.{}", option.value)),
-                        label: format!("{} {}", labels.option, option.value),
-                        description: None,
-                        required: None,
-                        error: None,
-                        child: Box::new(UiNode::Input(UiInputNode {
-                            id: fid(&format!("option.{}.input", option.value)),
-                            input_kind: "text".into(),
-                            value: option.label.clone(),
-                            placeholder: None,
-                            commit: None,
-                            on_change: forms_action(
-                                "patchQuestionOptions",
-                                Some(json!({ "questionIds": question_ids, "optionValue": option.value, "field": "label" })),
-                            ),
-                            min: None,
-                            max: None,
-                            step: None,
-                            accept: None,
-                        })),
-                    }));
-                    fields.push(UiNode::Button(UiButtonNode {
-                        id: Some(fid(&format!("option.{}.remove", option.value))),
-                        icon_id: "trash-2".into(),
-                        label: labels.remove_option.into(),
-                        action: forms_action(
-                            "removeQuestionOption",
-                            Some(json!({ "questionId": question.id, "optionValue": option.value })),
-                        ),
-                        style: None,
-                        disabled: None,
-                    }));
-                }
-            }
-            fields.push(UiNode::Button(UiButtonNode {
-                id: Some(fid("option.add")),
-                icon_id: "plus".into(),
-                label: labels.add_option.into(),
-                action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
-                style: None,
-                disabled: None,
-            }));
-        }
-        "date" | "color" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("default"),
-                labels.default,
-                &[question.default.as_ref().map(json_string_value).unwrap_or_default()],
-                "default",
-            ));
-        }
-        "vector" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("schema"),
-                labels.schema,
-                &[question.schema.clone().unwrap_or_default()],
-                "schema",
-            ));
-            fields.push(inspector_number_field(question_ids, &fid("step"), labels.step_field, &[question.step.unwrap_or(0.1)], "step"));
-            if let Some(vector_fields) = &question.fields {
-                for field in vector_fields {
-                    fields.push(UiNode::Field(UiFieldNode {
-                        id: fid(&format!("vector.{}.label", field.key)),
-                        label: format!("{} {}", field.key, labels.vector_field_label_suffix),
-                        description: None,
-                        required: None,
-                        error: None,
-                        child: Box::new(UiNode::Input(UiInputNode {
-                            id: fid(&format!("vector.{}.label.input", field.key)),
-                            input_kind: "text".into(),
-                            value: field.label.clone().unwrap_or_else(|| field.key.clone()),
-                            placeholder: None,
-                            commit: None,
-                            on_change: forms_action(
-                                "patchVectorField",
-                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "label" })),
-                            ),
-                            min: None,
-                            max: None,
-                            step: None,
-                            accept: None,
-                        })),
-                    }));
-                    fields.push(UiNode::Field(UiFieldNode {
-                        id: fid(&format!("vector.{}.value", field.key)),
-                        label: format!("{} {}", field.key, labels.vector_field_value_suffix),
-                        description: None,
-                        required: None,
-                        error: None,
-                        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
-                            id: fid(&format!("vector.{}.value.stepper", field.key)),
-                            value: field.value.unwrap_or(0.0),
-                            step: question.step.unwrap_or(0.1),
-                            uniform: true,
-                            on_absolute: forms_action(
-                                "patchVectorField",
-                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
-                            ),
-                            on_delta: forms_action(
-                                "patchVectorField",
-                                Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
-                            ),
-                        })),
-                    }));
-                    fields.push(UiNode::Button(UiButtonNode {
-                        id: Some(fid(&format!("vector.{}.remove", field.key))),
-                        icon_id: "trash-2".into(),
-                        label: format!("{} {}", labels.remove, field.key),
-                        action: forms_action(
-                            "removeVectorField",
-                            Some(json!({ "questionId": question.id, "fieldKey": field.key })),
-                        ),
-                        style: None,
-                        disabled: None,
-                    }));
-                }
-            }
-            fields.push(UiNode::Button(UiButtonNode {
-                id: Some(fid("vector.add")),
-                icon_id: "plus".into(),
-                label: labels.add_vector_field.into(),
-                action: forms_action(
-                    "addVectorField",
-                    Some(json!({ "questionId": question.id, "fieldKey": "field" })),
-                ),
-                style: None,
-                disabled: None,
-            }));
-        }
-        "note" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("text"),
-                labels.text,
-                &[question.text.clone().unwrap_or_default()],
-                "text",
-            ));
-        }
-        "image" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("src"),
-                labels.src,
-                &[question.src.clone().unwrap_or_default()],
-                "src",
-            ));
-        }
-        "file" => {
-            fields.push(inspector_text_field(
-                question_ids,
-                &fid("accept"),
-                labels.accept,
-                &[question.accept.clone().unwrap_or_default()],
-                "accept",
-            ));
-        }
-        kind if is_extension_question_kind(kind) => {
-            let values = serde_json::Map::new();
-            fields.push(render_extension_question(question, &values, contributions, "blueprint", true));
-            if let Some(slug) = &question.fixture_slug {
-                fields.push(ui_inspector_readonly_field(fid("fixtureSlug"), labels.fixture_slug, slug));
-            }
-        }
-        _ => {}
-    }
-    fields
-}
-
-fn build_inspector_tree(
-    spec: &FormSpec,
-    runtime: &FormsPlayRuntime,
-    contributions: &[PluginContributionEntry],
-    term_labels: &FormsLabels,
-) -> UiNode {
-    let questions: Vec<FormQuestion> = runtime
-        .selected_ids
-        .iter()
-        .filter_map(|id| find_question_location(spec, id).map(|location| location.question))
-        .collect();
-    if questions.is_empty() {
-        return ui_stack_vertical(vec![
-            ui_text(format!("Schema: {FORMS_DOCUMENT_SCHEMA}")),
-            ui_text(format!("Steps: {}", spec.steps.len())),
-            ui_text(format!("Questions: {}", flatten_questions(spec).len())),
-        ]);
-    }
-    let question_ids: Vec<String> = questions.iter().map(|question| question.id.clone()).collect();
-    let labels: Vec<String> = questions.iter().map(|question| question.label.clone()).collect();
-    let kinds: Vec<String> = questions.iter().map(|question| question.kind.clone()).collect();
-    let required: Vec<bool> = questions.iter().map(|question| question.required.unwrap_or(false)).collect();
-    let kind_mixed = ui_inspector_mixed_text(&kinds);
-    let required_mixed = ui_inspector_mixed_toggle(&required);
-    let kind_items: Vec<UiSelectItem> = catalogue_kinds(contributions, term_labels)
-        .into_iter()
-        .map(|(kind, label, _)| UiSelectItem {
-            value: kind,
-            label,
-        })
-        .collect();
-    let mut base_fields = vec![
-        inspector_text_field(&question_ids, "forms-play-inspector.label", term_labels.label, &labels, "label"),
-        UiNode::Field(UiFieldNode {
-            id: "forms-play-inspector.kind".into(),
-            label: term_labels.kind.into(),
-            child: Box::new(UiNode::Select(UiSelectNode {
-                id: "forms-play-inspector.kind.select".into(),
-                value: kind_mixed.value,
-                placeholder: kind_mixed.placeholder,
-                items: kind_items,
-                on_change: inspector_patch(&question_ids, "kind"),
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-        ui_inspector_readonly_field(
-            "forms-play-inspector.id",
-            term_labels.id,
-            if question_ids.len() == 1 {
-                question_ids[0].clone()
-            } else {
-                format!("{} {}", question_ids.len(), term_labels.selected)
-            },
-        ),
-        UiNode::Field(UiFieldNode {
-            id: "forms-play-inspector.required".into(),
-            label: term_labels.required.into(),
-            child: Box::new(UiNode::Toggle(UiToggleNode {
-                id: "forms-play-inspector.required.toggle".into(),
-                icon_id: "check".into(),
-                pressed: required_mixed.uniform && required_mixed.pressed,
-                text: if required_mixed.uniform {
-                    Some(if required_mixed.pressed { term_labels.yes.into() } else { term_labels.no.into() })
-                } else {
-                    Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
-                },
-                on_change: inspector_patch(&question_ids, "required"),
-            })),
-            description: None,
-            required: None,
-            error: None,
-        }),
-    ];
-    if questions.len() == 1 {
-        base_fields.extend(question_kind_editor_fields(&questions[0], &question_ids, contributions, "forms-play-inspector", term_labels));
-    }
-    let groups = vec![UiInspectorFieldGroup {
-        id: "forms-play-inspector.base".into(),
-        label: term_labels.question.into(),
-        default_open: None,
-        fields: base_fields,
-    }];
-    ui_inspector_groups_to_tree(&groups)
-}
-//#endregion 🔖Panels
+//#endregion 🔖Render
 
 //#region 🔖FormsPlayApp
 #[derive(Default)]
@@ -1794,12 +1614,7 @@ impl DocumentApp for FormsPlayApp {
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no ops.
             "setSelection" => {
-                if let Some(ids) = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()) {
-                    self.runtime.selected_ids = ids
-                        .iter()
-                        .filter_map(|value| value.as_str().map(str::to_string))
-                        .collect();
-                }
+                self.runtime.selected_ids = selection_ids(args);
                 ActionEmit::default()
             }
             "editEngagementInput" | "tryEngagementInput" => ActionEmit::default(),
@@ -2165,7 +1980,7 @@ impl DocumentApp for FormsPlayApp {
     fn render(&self, body_key: &str, doc: &DocumentView<'_, FormSpec>, view_state: &ViewState) -> UiNode {
         let spec = doc.projection;
         let contributions = parse_contributions(view_state);
-        let labels = forms_labels(view_state);
+        let labels = resolve_labels::<FormsLabels>(view_state);
         match body_key {
             FORMS_PLAY_BODY_BLUEPRINT => render_blueprint_builder(spec, &self.runtime, &contributions, labels),
             FORMS_PLAY_BODY_TRY => render_try_wizard(spec, &self.runtime, &contributions, labels),
@@ -2176,31 +1991,28 @@ impl DocumentApp for FormsPlayApp {
         }
     }
 
-    fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-        let labels = forms_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        let mut overlay = semio_framework_plugin::AppLabelsOverlay::with_framework_panel_tabs(
+    fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
+        let labels = resolve_labels::<FormsLabels>(view_state);
+        let is_de = is_de_locale(view_state);
+        AppLabelsOverlay::with_framework_panel_tabs(
             ["framework.panel.document", "framework.panel.catalogue", "framework.panel.inspection"],
             is_de,
-        );
-        overlay.window_kind_labels = std::collections::HashMap::from([
-            (FORMS_PLAY_WINDOW_BLUEPRINT.to_string(), labels.window_blueprint.to_string()),
-            (FORMS_PLAY_WINDOW_TRY.to_string(), labels.window_try.to_string()),
-        ]);
-        overlay.mode_labels = std::collections::HashMap::from([("blueprint".to_string(), labels.window_blueprint.to_string())]);
-        overlay.action_labels = forms_action_labels(is_de);
-        overlay.utility_labels = forms_utility_labels(is_de);
-        overlay.example_labels = std::collections::HashMap::from([
+        )
+        .window_kind_label(FORMS_PLAY_WINDOW_BLUEPRINT, labels.window_blueprint)
+        .window_kind_label(FORMS_PLAY_WINDOW_TRY, labels.window_try)
+        .mode_label("blueprint", labels.window_blueprint)
+        .action_labels(forms_action_labels(is_de))
+        .utility_labels(forms_utility_labels(is_de))
+        .example_labels(HashMap::from([
             ("default".to_string(), (if is_de { "Kontakt" } else { "Contact" }).to_string()),
             ("onboarding".to_string(), "Onboarding".to_string()),
             ("building-component".to_string(), (if is_de { "Baukomponente" } else { "Building Component" }).to_string()),
-        ]);
-        overlay
+        ]))
     }
 }
 //#endregion 🔖FormsPlayApp
 
-//#region 🔖AppFactory
+//#region 🔖Manifest
 fn create_forms_app() -> App {
     App::from_builder(
         App::builder(FORMS_PLAY_APP_ID, "Forms").document(["semio", "forms"])
@@ -2291,29 +2103,22 @@ semio_framework_plugin::semio_plugin! {
     setup: register_forms_exports,
     apps: [ create_forms_app => FormsPlayApp ],
 }
-//#endregion 🔖AppFactory
+//#endregion 🔖Manifest
 
 //#region 🧪Tests
 #[cfg(test)]
 mod tests {
     use super::*;
     use forms::apply_form_edit_op;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-    use vcs::MemoryBackbone;
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<FormsPlayApp> {
-        VcsDocumentApp::new(FormsPlayApp::default())
+        testkit::new_app::<FormsPlayApp>()
     }
 
     /// 🧬 A wrapper carrying the real action registry so `addQuestion`'s declared `kind` default materializes.
     fn new_app_with_registry() -> VcsDocumentApp<FormsPlayApp> {
-        use semio_framework_plugin::app::AppActionRegistry;
-        let definition = create_forms_app().definition;
-        VcsDocumentApp::with_registry(FormsPlayApp::default(), AppActionRegistry::from_definition(&definition))
+        testkit::new_app_with_registry::<FormsPlayApp>(create_forms_app)
     }
 
     #[test]
@@ -2322,7 +2127,7 @@ mod tests {
         let steps_before = app.projection().expect("projection").steps.len();
         assert!(steps_before > 0, "seeded fixture has at least one step to receive the question");
         // addQuestion fired with no args: the declared `kind` default ("text") must be materialized host-side.
-        app.handle_action("addQuestion", None, &ViewState::default(), &meta("local")).expect("add question");
+        app.handle_action("addQuestion", None, &ViewState::default(), &testkit::meta("local")).expect("add question");
         let spec = app.projection().expect("projection");
         assert!(
             flatten_questions(&spec).iter().any(|(_, question)| question.kind == "text"),
@@ -2335,7 +2140,7 @@ mod tests {
             "setActiveExample",
             Some(&json!({ "exampleId": example_id })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("seed example");
     }
@@ -2371,7 +2176,7 @@ mod tests {
             "setSelection",
             Some(&json!({ "ids": [first_question_id.clone()] })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("select");
         let json = render(&mut app, FORMS_PLAY_BODY_BLUEPRINT, &ViewState::default());
@@ -2386,7 +2191,7 @@ mod tests {
             "setTryValues",
             Some(&json!({ "values": { "name": "", "email": "" } })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("clear values");
         let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
@@ -2406,10 +2211,10 @@ mod tests {
             "setTryValues",
             Some(&json!({ "values": { "full-name": "Ada" } })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("fill");
-        app.handle_action("nextStep", None, &ViewState::default(), &meta("local")).expect("next");
+        app.handle_action("nextStep", None, &ViewState::default(), &testkit::meta("local")).expect("next");
         let second_json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
         assert!(second_json.contains(r#""unit":"%""#));
     }
@@ -2420,7 +2225,7 @@ mod tests {
             src: Some("https://example.com/picture.png".into()),
             ..question_shell("q-image".into(), "Picture".into(), "image".into())
         };
-        let node = render_try_question(&question, &Map::new(), &[], None, &FORMS_LABELS_NATIVE_EN);
+        let node = render_try_question(&question, &Map::new(), &[], None, &FormsLabels::EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(r#""type":"image""#));
         assert!(json.contains("https://example.com/picture.png"));
@@ -2434,7 +2239,7 @@ mod tests {
             "patchStep",
             Some(&json!({ "stepId": step_id, "field": "title", "value": "Renamed" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("patch step");
         assert_eq!(app.projection().expect("projection").steps[0].title, "Renamed");
@@ -2443,13 +2248,13 @@ mod tests {
     #[test]
     fn remove_and_move_step_actions() {
         let mut app = new_app();
-        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         let last_step_id = app.projection().expect("projection").steps.last().unwrap().id.clone();
         app.handle_action(
             "moveStep",
             Some(&json!({ "stepId": last_step_id, "index": 0 })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("move step");
         assert_eq!(app.projection().expect("projection").steps[0].id, last_step_id);
@@ -2457,7 +2262,7 @@ mod tests {
             "removeStep",
             Some(&json!({ "stepId": last_step_id })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("remove step");
         assert!(app.projection().expect("projection").steps.iter().all(|step| step.id != last_step_id));
@@ -2470,7 +2275,7 @@ mod tests {
             "updateForm",
             Some(&json!({ "field": "title", "value": "My Form" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("update form");
         assert_eq!(app.projection().expect("projection").title.as_deref(), Some("My Form"));
@@ -2492,7 +2297,7 @@ mod tests {
             "dropQuestionKind",
             Some(&json!({ "kind": "slider", "targetId": forms_play_step_tree_id(&step_id), "dropPosition": "inside" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("drop kind");
         let spec = app.projection().expect("projection");
@@ -2504,7 +2309,7 @@ mod tests {
     #[test]
     fn kind_editor_fields_are_editable_when_unset() {
         let question = question_shell("q-num".into(), "Amount".into(), "number".into());
-        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", &FORMS_LABELS_NATIVE_EN);
+        let fields = question_kind_editor_fields(&question, &["q-num".into()], &[], "forms-blueprint.q-num", &FormsLabels::EN);
         let json = serde_json::to_string(&fields).unwrap();
         assert!(json.contains("forms-blueprint.q-num.min"));
         assert!(json.contains("forms-blueprint.q-num.max"));
@@ -2550,7 +2355,7 @@ mod tests {
             &Map::new(),
             &building_component_contributions(),
             None,
-            &FORMS_LABELS_NATIVE_EN,
+            &FormsLabels::EN,
         );
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("externalSlot"));
@@ -2559,7 +2364,7 @@ mod tests {
 
     #[test]
     fn extension_question_falls_back_without_contribution() {
-        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FORMS_LABELS_NATIVE_EN);
+        let node = render_try_question(&building_component_question(), &Map::new(), &[], None, &FormsLabels::EN);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Extension unavailable"));
     }
@@ -2585,14 +2390,14 @@ mod tests {
     fn add_step_action_appends_step() {
         let mut app = new_app();
         let before = app.projection().expect("projection").steps.len();
-        app.handle_action("addStep", None, &ViewState::default(), &meta("local")).expect("add step");
+        app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         assert_eq!(app.projection().expect("projection").steps.len(), before + 1);
     }
 
     #[test]
     fn add_question_action_appends_question() {
         let mut app = new_app();
-        app.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("local")).expect("add question");
+        app.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &testkit::meta("local")).expect("add question");
         assert!(flatten_questions(&app.projection().expect("projection")).iter().any(|(_, question)| question.kind == "text"));
     }
 
@@ -2600,12 +2405,14 @@ mod tests {
     fn add_question_undo_redo_round_trip() {
         let mut app = new_app();
         let before = flatten_questions(&app.projection().expect("projection")).len();
-        app.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("local")).expect("add");
-        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before + 1);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(flatten_questions(&app.projection().expect("projection")).len(), before + 1);
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            "addQuestion",
+            Some(&json!({ "kind": "text" })),
+            |app| flatten_questions(&app.projection().expect("projection")).len(),
+            before,
+            before + 1,
+        );
     }
 
     #[test]
@@ -2616,7 +2423,7 @@ mod tests {
             "setTryValues",
             Some(&json!({ "values": { "name": "Ada" } })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("set try values");
         let json = render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default());
@@ -2641,9 +2448,9 @@ mod tests {
         let mut app = new_app();
         seed_example(&mut app, "onboarding");
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 1 / 3"));
-        app.handle_action("nextStep", None, &ViewState::default(), &meta("local")).expect("next");
+        app.handle_action("nextStep", None, &ViewState::default(), &testkit::meta("local")).expect("next");
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 2 / 3"));
-        app.handle_action("previousStep", None, &ViewState::default(), &meta("local")).expect("prev");
+        app.handle_action("previousStep", None, &ViewState::default(), &testkit::meta("local")).expect("prev");
         assert!(render(&mut app, FORMS_PLAY_BODY_TRY, &ViewState::default()).contains("Step 1 / 3"));
     }
 
@@ -2666,7 +2473,7 @@ mod tests {
             "patchQuestions",
             Some(&json!({ "questionIds": [name_id], "field": "required", "pressed": false })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("patch required");
         let spec = app.projection().expect("projection");
@@ -2706,36 +2513,21 @@ mod tests {
         assert!(catalogue_json.contains("Aktionen"));
     }
 
+    /// 🧪 The definitional proof: two independent instances start from the same seeded document, apply
+    /// DISJOINT edits (A adds a question to the first step, B adds a whole new step), and exchanging ops
+    /// over a backbone converges both sides onto the same projection — impossible under whole-document
+    /// snapshots, where one side's write would clobber the other's.
     #[test]
     fn two_instances_converge_disjoint_edits() {
-        let base = new_app();
-        let base_doc = base.document_json().expect("base document");
-        let base_spec = base.projection().expect("base projection");
-        let base_steps = base_spec.steps.len();
-        let base_blocks0 = base_spec.steps[0].blocks.len();
-
-        let mut a = new_app();
-        let mut b = new_app();
-        a.load_document(&base_doc).expect("load a");
-        b.load_document(&base_doc).expect("load b");
-        let (backbone_a, backbone_b) =
-            MemoryBackbone::pair("mem://forms-convergence", "mem://forms-convergence");
-        a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-
-        // Disjoint edits: A adds a question to the first step, B adds a whole new step.
-        a.handle_action("addQuestion", Some(&json!({ "kind": "text" })), &ViewState::default(), &meta("actor-a")).expect("a adds question");
-        b.handle_action("addStep", None, &ViewState::default(), &meta("actor-b")).expect("b adds step");
-        a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-
-        let spec_a = a.projection().expect("projection a");
-        let spec_b = b.projection().expect("projection b");
-        assert_eq!(spec_a.steps.len(), base_steps + 1, "A converges on B's new step");
-        assert_eq!(spec_b.steps.len(), base_steps + 1, "B keeps its own new step");
-        assert_eq!(spec_a.steps[0].blocks.len(), base_blocks0 + 1, "A keeps its own new question");
-        assert_eq!(spec_b.steps[0].blocks.len(), base_blocks0 + 1, "B converges on A's new question");
+        testkit::assert_two_instances_converge::<FormsPlayApp, (usize, usize)>(
+            "mem://forms-convergence",
+            ("addQuestion", Some(&json!({ "kind": "text" }))),
+            ("addStep", None),
+            |app| {
+                let projection = app.projection().expect("materialize projection");
+                (projection.steps.len(), projection.steps[0].blocks.len())
+            },
+        );
     }
 }
 //#endregion 🧪Tests
-

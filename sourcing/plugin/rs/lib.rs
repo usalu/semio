@@ -1,21 +1,14 @@
 //! 🛒 Sourcing plugin — curate app: handpick and curate 3D object kinds out of a modular catalogue.
 
-use semio_framework_plugin::{
-    app_labels, build_table_scene, build_world_3d_scene, is_de_locale, localized_label_map, resolve_labels,
-    table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionDefinition, ActionEmit, ActionKind, App,
-    AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, OsMediaCapability,
-    ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode, UiNumberStepperNode,
-    UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode,
-    WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
-};
 use semio_framework_core::mesh_from_indexed;
+use semio_framework_plugin::{
+    app_labels, build_table_scene, build_world_3d_scene, is_de_locale, localized_label_map, resolve_labels, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, OsMediaCapability, ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode,
+    UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
+};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sourcing_curate::{
-    grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument,
-    ObjectKind, SortDirection, SourcingOp, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA,
-};
+use sourcing_curate::{grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument, ObjectKind, SortDirection, SourcingOp, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA};
 use std::collections::HashSet;
 
 //#region 🔖Constants
@@ -45,7 +38,7 @@ const EMPTY_CURATION_JSON: &str = include_str!("../../curate/example/empty-curat
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct PluginContributionEntry {
-    #[allow(dead_code)]
+    #[allow(dead_code, reason = "🧩 present to match the manifest contribution entry JSON shape for Deserialize; never read after parsing, only `contribution` is")]
     plugin_id: String,
     contribution: Contribution,
 }
@@ -87,15 +80,7 @@ fn available_modules(view_state: &ViewState) -> Vec<ModuleCatalogue> {
     if !contributed.is_empty() {
         return contributed;
     }
-    sourcing_modules()
-        .into_iter()
-        .map(|module| ModuleCatalogue {
-            module_id: module.module_id().to_string(),
-            label: module.label().to_string(),
-            typology: module.typology(),
-            kinds: module.demo_kinds(),
-        })
-        .collect()
+    sourcing_modules().into_iter().map(|module| ModuleCatalogue { module_id: module.module_id().to_string(), label: module.label().to_string(), typology: module.typology(), kinds: module.demo_kinds() }).collect()
 }
 //#endregion 🔖Contributions
 
@@ -122,8 +107,8 @@ fn selection_json_for(document: &CurateDocument) -> String {
 //#endregion 🔖Document
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
 app_labels! {
+    /// 🗣️ Complete UI label set for the curate app; one field per label makes every locale combination compile-checked.
     struct SourcingLabels {
         window_pool: &'static str = en: "Pool", de: "Pool";
         window_curated: &'static str = en: "Curated", de: "Kuratiert";
@@ -174,13 +159,7 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
             typology_items.push(UiSelectItem { value: path.join("/"), label });
         }
     }
-    children.push(UiNode::Select(UiSelectNode {
-        id: "sourcing-filter-typology".into(),
-        value: document.filters.typology_path.join("/"),
-        items: typology_items,
-        placeholder: None,
-        on_change: sourcing_action("setFilterTypology", None),
-    }));
+    children.push(UiNode::Select(UiSelectNode { id: "sourcing-filter-typology".into(), value: document.filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None) }));
     children.push(UiNode::NumberStepper(UiNumberStepperNode {
         id: "sourcing-filter-min-availability".into(),
         value: document.filters.min_availability as f64,
@@ -230,16 +209,7 @@ fn build_pool_table(document: &CurateDocument, labels: &SourcingLabels) -> UiNod
                     ("module", TableCell::Text { value: kind.module_id.clone() }),
                     ("typology", TableCell::Text { value: kind.typology_path.join(" / ") }),
                     ("availability", TableCell::Number { value: kind.availability as f64 }),
-                    (
-                        "curated",
-                        TableCell::Stepper {
-                            value: curated_count,
-                            min: 0.0,
-                            max: kind.availability as f64,
-                            step: 1.0,
-                            action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))),
-                        },
-                    ),
+                    ("curated", TableCell::Stepper { value: curated_count, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                 ],
             )
         })
@@ -271,26 +241,10 @@ fn build_curated_table(document: &CurateDocument, labels: &SourcingLabels) -> Ui
                 &[
                     ("name", TableCell::Text { value: kind.name.clone() }),
                     ("availability", TableCell::Number { value: kind.availability as f64 }),
-                    (
-                        "count",
-                        TableCell::Stepper {
-                            value: item.count as f64,
-                            min: 0.0,
-                            max: kind.availability as f64,
-                            step: 1.0,
-                            action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))),
-                        },
-                    ),
+                    ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                     (
                         "actions",
-                        TableCell::Buttons {
-                            buttons: vec![UiTreeItemAction {
-                                icon_id: "trash".into(),
-                                label: Some(labels.remove.into()),
-                                action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))),
-                                reveal_on_hover: None,
-                            }],
-                        },
+                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None }] },
                     ),
                 ],
             ))
@@ -349,13 +303,7 @@ fn render_grid(document: &CurateDocument) -> UiNode {
         let selected = document.runtime.selected_object_id.as_deref() == Some(kind.id.as_str());
         instances.push(instance_json(kind, [x, 0.0, z], scale, selected));
     }
-    let mut scene = world3d_scene(
-        world3d_default_camera(),
-        json!(meshes).to_string(),
-        json!(instances).to_string(),
-        world3d_selection_json("rectangle", &selected_ids(document), None),
-        &WorldSunConfig::default(),
-    );
+    let mut scene = world3d_scene(world3d_default_camera(), json!(meshes).to_string(), json!(instances).to_string(), world3d_selection_json("rectangle", &selected_ids(document), None), &WorldSunConfig::default());
     scene.fit_json = Some(json!({ "enabled": true, "padding": 0.3 }).to_string());
     build_world_3d_scene(SURFACE_GRID, SOURCING_CONTROLLER_ID, scene)
 }
@@ -391,11 +339,7 @@ impl DocumentApp for SourcingCurateApp {
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
-                let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID {
-                    empty_document()
-                } else {
-                    default_document()
-                };
+                let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
                 return ActionEmit::ops(vec![SourcingOp::SetDocument { document: next }]);
             }
             "stockFromCatalogue" => {
@@ -414,9 +358,7 @@ impl DocumentApp for SourcingCurateApp {
                 return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "setFilterModule" => {
-                if let (Some(module_id), Some(enabled)) =
-                    (args.and_then(|value| value.get("moduleId")).and_then(|value| value.as_str()), args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()))
-                {
+                if let (Some(module_id), Some(enabled)) = (args.and_then(|value| value.get("moduleId")).and_then(|value| value.as_str()), args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool())) {
                     if enabled {
                         if !document.filters.module_ids.iter().any(|id| id == module_id) {
                             document.filters.module_ids.push(module_id.to_string());
@@ -434,20 +376,14 @@ impl DocumentApp for SourcingCurateApp {
             }
             "setFilterMinAvailability" => {
                 let current = document.filters.min_availability as f64;
-                let next = args
-                    .and_then(|value| value.get("delta"))
-                    .and_then(|value| value.as_f64())
-                    .map(|delta| current + delta)
-                    .or_else(|| args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()))
-                    .unwrap_or(current);
+                let next = args.and_then(|value| value.get("delta")).and_then(|value| value.as_f64()).map(|delta| current + delta).or_else(|| args.and_then(|value| value.get("value")).and_then(|value| value.as_f64())).unwrap_or(current);
                 document.filters.min_availability = next.max(0.0) as u32;
                 return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
             "sortTable" => {
                 if let Some(column_id) = args.and_then(|value| value.get("columnId")).and_then(|value| value.as_str()) {
                     let direction = args.and_then(|value| value.get("direction")).and_then(|value| value.as_str()).unwrap_or("asc");
-                    document.filters.sort =
-                        Some(TableSort { column_id: column_id.to_string(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } });
+                    document.filters.sort = Some(TableSort { column_id: column_id.to_string(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } });
                 }
                 return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
             }
@@ -567,21 +503,9 @@ fn sourcing_three_column_layout() -> WindowLayout {
             kind: "row".into(),
             size: None,
             children: vec![
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.34),
-                    children: vec![sourcing_stack(WINDOW_POOL, "Pool", None)],
-                }),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.33),
-                    children: vec![sourcing_stack(WINDOW_CURATED, "Curated", Some(0.55)), sourcing_stack(WINDOW_PREVIEW, "Preview", Some(0.45))],
-                }),
-                WindowLayoutChild::Axis(WindowLayoutAxisNode {
-                    kind: "column".into(),
-                    size: Some(0.33),
-                    children: vec![sourcing_stack(WINDOW_GRID, "Grid", None)],
-                }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "column".into(), size: Some(0.34), children: vec![sourcing_stack(WINDOW_POOL, "Pool", None)] }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "column".into(), size: Some(0.33), children: vec![sourcing_stack(WINDOW_CURATED, "Curated", Some(0.55)), sourcing_stack(WINDOW_PREVIEW, "Preview", Some(0.45))] }),
+                WindowLayoutChild::Axis(WindowLayoutAxisNode { kind: "column".into(), size: Some(0.33), children: vec![sourcing_stack(WINDOW_GRID, "Grid", None)] }),
             ],
         }),
     }

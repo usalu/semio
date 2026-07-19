@@ -3,7 +3,8 @@
 use crate::color::Color;
 use crate::geometry::{arrow, dot, line};
 use crate::sobject::{Group, Sobject, VSobject};
-use mathematical_geometry::Point;
+use crate::text::Text;
+use mathematical_geometry::{BezPath, Point};
 
 /// 📈 Cartesian axes with optional labels.
 pub struct Axes {
@@ -26,12 +27,101 @@ impl Axes {
         }
     }
 
+    pub fn with_tick_labels(mut self, x_ticks: &[f64], y_ticks: &[f64], color: Color) -> Self {
+        for &x in x_ticks {
+            let p = self.coords_to_point(x, 0.0);
+            let mut label = Text::new(format!("{x:.1}"), color);
+            label.inner.move_to(Point::new(p.x(), p.y() - 0.25));
+            self.group.add_child(Box::new(label.inner));
+            self.group.add_child(Box::new(line(
+                Point::new(p.x(), p.y() - 0.08),
+                Point::new(p.x(), p.y() + 0.08),
+                color.with_alpha(0.6),
+                1.0,
+            )));
+        }
+        for &y in y_ticks {
+            let p = self.coords_to_point(0.0, y);
+            let mut label = Text::new(format!("{y:.1}"), color);
+            label.inner.move_to(Point::new(p.x() - 0.35, p.y()));
+            self.group.add_child(Box::new(label.inner));
+            self.group.add_child(Box::new(line(
+                Point::new(p.x() - 0.08, p.y()),
+                Point::new(p.x() + 0.08, p.y()),
+                color.with_alpha(0.6),
+                1.0,
+            )));
+        }
+        self
+    }
+
     pub fn coords_to_point(&self, x: f64, y: f64) -> Point {
         Point::new(self.origin.x() + x, self.origin.y() + y)
     }
 
     pub fn as_group(&self) -> &Group {
         &self.group
+    }
+}
+
+/// 📉 Function graph y = f(x) sampled over a range.
+pub struct FunctionGraph {
+    pub inner: VSobject,
+}
+
+impl FunctionGraph {
+    pub fn new<F>(x_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
+    where
+        F: Fn(f64) -> f64,
+    {
+        let samples = samples.max(2);
+        let mut path = BezPath::new();
+        for i in 0..samples {
+            let t = i as f64 / (samples - 1) as f64;
+            let x = x_range.0 + t * (x_range.1 - x_range.0);
+            let y = f(x);
+            let p = axes.coords_to_point(x, y);
+            if i == 0 {
+                path.move_to(p);
+            } else {
+                path.line_to(p);
+            }
+        }
+        let mut inner = VSobject::from_path(path);
+        inner.style.fill = None;
+        inner.style.stroke = Some(color);
+        inner.style.stroke_width = width;
+        Self { inner }
+    }
+}
+
+/// 🌀 Parametric curve (x(t), y(t)) sampled over a parameter range.
+pub struct ParametricFunction {
+    pub inner: VSobject,
+}
+
+impl ParametricFunction {
+    pub fn new<F>(t_range: (f64, f64), axes: &Axes, f: F, samples: u32, color: Color, width: f64) -> Self
+    where
+        F: Fn(f64) -> (f64, f64),
+    {
+        let samples = samples.max(2);
+        let mut path = BezPath::new();
+        for i in 0..samples {
+            let t = t_range.0 + (i as f64 / (samples - 1) as f64) * (t_range.1 - t_range.0);
+            let (x, y) = f(t);
+            let p = axes.coords_to_point(x, y);
+            if i == 0 {
+                path.move_to(p);
+            } else {
+                path.line_to(p);
+            }
+        }
+        let mut inner = VSobject::from_path(path);
+        inner.style.fill = None;
+        inner.style.stroke = Some(color);
+        inner.style.stroke_width = width;
+        Self { inner }
     }
 }
 
@@ -198,5 +288,15 @@ mod tests {
     fn integer_line_maps_values() {
         let il = IntegerLine::new(Point::ZERO, 0, 10, 1.0, Color::WHITE);
         assert!((il.integer_to_point(5).x() - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn axes_tick_labels_and_graphs() {
+        let axes = Axes::new(4.0, 3.0, Point::ZERO, Color::WHITE).with_tick_labels(&[1.0, 2.0], &[1.0], Color::WHITE);
+        assert!(axes.group.children.len() > 2);
+        let fg = FunctionGraph::new((0.0, 2.0), &axes, |x| x * x, 16, Color::YELLOW, 2.0);
+        assert!(!fg.inner.paths.is_empty());
+        let pf = ParametricFunction::new((0.0, std::f64::consts::TAU), &axes, |t| (t.cos(), t.sin()), 32, Color::GREEN, 2.0);
+        assert!(!pf.inner.paths.is_empty());
     }
 }

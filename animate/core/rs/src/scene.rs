@@ -1,7 +1,7 @@
 //! 🎭 Scene trait with construct/play/wait timeline and frame loop.
 
 use crate::animation::{apply_parent_opacity_tree, compile_animations, interpolate_at, Animation, Wait};
-use crate::camera::Camera;
+use crate::camera::{Camera, MovingCamera, ThreeDCamera, ZoomedCamera};
 use crate::config::AnimateConfig;
 use crate::section::SectionList;
 use crate::sobject::Sobject;
@@ -46,6 +46,22 @@ pub trait Scene {
     }
 
     fn play(&mut self, mut animation: Box<dyn Animation>) {
+        let pending_introducers = if animation.is_introducer() {
+            animation.get_all_mobjects()
+        } else {
+            Vec::new()
+        };
+        for id in &pending_introducers {
+            debug_assert!(
+                self.mobjects().contains_key(id),
+                "introducer animation requires mobject {id} to exist in scene"
+            );
+        }
+        let remover_ids = if animation.is_remover() {
+            animation.get_all_mobjects()
+        } else {
+            Vec::new()
+        };
         animation.begin();
         let duration = animation.duration().max(0.0);
         let steps = (duration * self.config().frame_rate).ceil() as u64;
@@ -56,6 +72,19 @@ pub trait Scene {
             self.sample_frame(self.config().frame_duration());
         }
         animation.finish();
+        for id in remover_ids {
+            self.remove(id);
+        }
+    }
+
+    fn begin_section(&mut self, name: impl Into<String>) {
+        self.sections_mut().begin_section(name, false);
+    }
+
+    fn next_section(&mut self, name: impl Into<String>) {
+        let t = self.scene_time();
+        self.sections_mut().end_section(t);
+        self.sections_mut().begin_section(name, false);
     }
 
     fn wait(&mut self, seconds: f64) {
@@ -206,6 +235,234 @@ impl Default for TestScene {
 }
 
 impl Scene for TestScene {
+    fn construct(&mut self) {}
+    fn config(&self) -> &AnimateConfig {
+        self.inner.config()
+    }
+    fn config_mut(&mut self) -> &mut AnimateConfig {
+        self.inner.config_mut()
+    }
+    fn camera(&self) -> &Camera {
+        self.inner.camera()
+    }
+    fn camera_mut(&mut self) -> &mut Camera {
+        self.inner.camera_mut()
+    }
+    fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects()
+    }
+    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects_mut()
+    }
+    fn sections(&self) -> &SectionList {
+        self.inner.sections()
+    }
+    fn sections_mut(&mut self) -> &mut SectionList {
+        self.inner.sections_mut()
+    }
+    fn scene_time(&self) -> f64 {
+        self.inner.scene_time()
+    }
+    fn set_scene_time(&mut self, time: f64) {
+        self.inner.set_scene_time(time);
+    }
+}
+
+/// 🎥 Scene with a panning/zooming {@link MovingCamera}.
+pub struct MovingCameraScene {
+    inner: BasicScene,
+    pub moving_camera: MovingCamera,
+}
+
+impl MovingCameraScene {
+    pub fn new(config: AnimateConfig) -> Self {
+        let camera = Camera::new(
+            config.width as f64 / 100.0,
+            config.height as f64 / 100.0,
+        );
+        Self {
+            moving_camera: MovingCamera::new(camera.clone()),
+            inner: BasicScene {
+                config,
+                camera,
+                mobjects: HashMap::new(),
+                sections: SectionList::new(),
+                scene_time: 0.0,
+            },
+        }
+    }
+}
+
+impl Scene for MovingCameraScene {
+    fn construct(&mut self) {}
+    fn config(&self) -> &AnimateConfig {
+        self.inner.config()
+    }
+    fn config_mut(&mut self) -> &mut AnimateConfig {
+        self.inner.config_mut()
+    }
+    fn camera(&self) -> &Camera {
+        &self.moving_camera.camera
+    }
+    fn camera_mut(&mut self) -> &mut Camera {
+        &mut self.moving_camera.camera
+    }
+    fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects()
+    }
+    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects_mut()
+    }
+    fn sections(&self) -> &SectionList {
+        self.inner.sections()
+    }
+    fn sections_mut(&mut self) -> &mut SectionList {
+        self.inner.sections_mut()
+    }
+    fn scene_time(&self) -> f64 {
+        self.inner.scene_time()
+    }
+    fn set_scene_time(&mut self, time: f64) {
+        self.inner.set_scene_time(time);
+    }
+    fn sample_frame(&mut self, dt: f64) {
+        self.moving_camera.interpolate((self.scene_time() * self.config().frame_rate).fract());
+        self.inner.sample_frame(dt);
+    }
+}
+
+/// 🧊 Scene using a perspective {@link ThreeDCamera}.
+pub struct ThreeDScene {
+    inner: BasicScene,
+    pub three_d_camera: ThreeDCamera,
+}
+
+impl ThreeDScene {
+    pub fn new(config: AnimateConfig) -> Self {
+        let camera = Camera::new(
+            config.width as f64 / 100.0,
+            config.height as f64 / 100.0,
+        );
+        Self {
+            three_d_camera: ThreeDCamera::new(camera.clone()),
+            inner: BasicScene {
+                config,
+                camera,
+                mobjects: HashMap::new(),
+                sections: SectionList::new(),
+                scene_time: 0.0,
+            },
+        }
+    }
+}
+
+impl Scene for ThreeDScene {
+    fn construct(&mut self) {}
+    fn config(&self) -> &AnimateConfig {
+        self.inner.config()
+    }
+    fn config_mut(&mut self) -> &mut AnimateConfig {
+        self.inner.config_mut()
+    }
+    fn camera(&self) -> &Camera {
+        &self.three_d_camera.camera
+    }
+    fn camera_mut(&mut self) -> &mut Camera {
+        &mut self.three_d_camera.camera
+    }
+    fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects()
+    }
+    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects_mut()
+    }
+    fn sections(&self) -> &SectionList {
+        self.inner.sections()
+    }
+    fn sections_mut(&mut self) -> &mut SectionList {
+        self.inner.sections_mut()
+    }
+    fn scene_time(&self) -> f64 {
+        self.inner.scene_time()
+    }
+    fn set_scene_time(&mut self, time: f64) {
+        self.inner.set_scene_time(time);
+    }
+}
+
+/// 🔍 Scene with a picture-in-picture {@link ZoomedCamera} inset.
+pub struct ZoomedScene {
+    inner: BasicScene,
+    pub zoomed_camera: ZoomedCamera,
+}
+
+impl ZoomedScene {
+    pub fn new(config: AnimateConfig, zoom_factor: f64) -> Self {
+        let camera = Camera::new(
+            config.width as f64 / 100.0,
+            config.height as f64 / 100.0,
+        );
+        Self {
+            zoomed_camera: ZoomedCamera::new(camera.clone(), zoom_factor),
+            inner: BasicScene {
+                config,
+                camera,
+                mobjects: HashMap::new(),
+                sections: SectionList::new(),
+                scene_time: 0.0,
+            },
+        }
+    }
+}
+
+impl Scene for ZoomedScene {
+    fn construct(&mut self) {}
+    fn config(&self) -> &AnimateConfig {
+        self.inner.config()
+    }
+    fn config_mut(&mut self) -> &mut AnimateConfig {
+        self.inner.config_mut()
+    }
+    fn camera(&self) -> &Camera {
+        &self.zoomed_camera.camera
+    }
+    fn camera_mut(&mut self) -> &mut Camera {
+        &mut self.zoomed_camera.camera
+    }
+    fn mobjects(&self) -> &HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects()
+    }
+    fn mobjects_mut(&mut self) -> &mut HashMap<u64, Box<dyn Sobject>> {
+        self.inner.mobjects_mut()
+    }
+    fn sections(&self) -> &SectionList {
+        self.inner.sections()
+    }
+    fn sections_mut(&mut self) -> &mut SectionList {
+        self.inner.sections_mut()
+    }
+    fn scene_time(&self) -> f64 {
+        self.inner.scene_time()
+    }
+    fn set_scene_time(&mut self, time: f64) {
+        self.inner.set_scene_time(time);
+    }
+}
+
+/// ➡️ Scene for vector-field and linear-transformation animations.
+pub struct VectorScene {
+    inner: BasicScene,
+}
+
+impl VectorScene {
+    pub fn new(config: AnimateConfig) -> Self {
+        Self {
+            inner: BasicScene::new(config),
+        }
+    }
+}
+
+impl Scene for VectorScene {
     fn construct(&mut self) {}
     fn config(&self) -> &AnimateConfig {
         self.inner.config()

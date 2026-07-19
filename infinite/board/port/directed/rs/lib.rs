@@ -762,6 +762,7 @@ pub mod force_graph {
             let node_id = handle_to_node.get(endpoint).cloned().unwrap_or_else(|| endpoint.to_string());
             id_to_index.contains_key(&node_id).then_some(node_id)
         })
+        .map_err(|e| e.to_string())
     }
 
     /// 🕸️ JSON entry for ported force layout (handle endpoints resolved before undirected physics).

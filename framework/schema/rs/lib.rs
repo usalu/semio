@@ -32,10 +32,7 @@ impl Default for SchemaRegistry {
 
 impl SchemaRegistry {
     pub fn new() -> Self {
-        Self {
-            schemas: HashMap::new(),
-            validators: HashMap::new(),
-        }
+        Self { schemas: HashMap::new(), validators: HashMap::new() }
     }
 
     pub fn register<T: JsonSchema>(&mut self, id: &str) -> Result<(), SchemaError> {
@@ -59,13 +56,8 @@ impl SchemaRegistry {
     }
 
     pub fn validate(&self, id: &str, value: &Value) -> Result<(), SchemaError> {
-        let validator = self
-            .validators
-            .get(id)
-            .ok_or_else(|| SchemaError::UnknownSchema(id.to_string()))?;
-        validator
-            .validate(value)
-            .map_err(|error| SchemaError::Validation(error.to_string()))
+        let validator = self.validators.get(id).ok_or_else(|| SchemaError::UnknownSchema(id.to_string()))?;
+        validator.validate(value).map_err(|error| SchemaError::Validation(error.to_string()))
     }
 }
 //#endregion 🔖SchemaRegistry

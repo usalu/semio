@@ -1,8 +1,9 @@
 //! 🕸️ Graph and directed graph layouts as Sobject groups.
 
 use crate::color::Color;
-use crate::geometry::{circle, line};
+use crate::geometry::{arrow, circle, line};
 use crate::sobject::{Group, Sobject};
+use crate::text::Text;
 use mathematical_geometry::Point;
 use std::collections::HashMap;
 
@@ -33,6 +34,18 @@ impl Graph {
             edges,
         }
     }
+
+    pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
+        for (&(a, b), label) in labels {
+            if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
+                let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
+                let mut t = Text::new(label, color);
+                t.inner.move_to(mid);
+                self.group.add_child(Box::new(t.inner));
+            }
+        }
+        self
+    }
 }
 
 /// ➡️ Directed graph with force-directed layout seed.
@@ -45,15 +58,21 @@ pub struct DiGraph {
 impl DiGraph {
     pub fn new(nodes: Vec<u32>, edges: Vec<(u32, u32)>, radius: f64, center: Point, color: Color) -> Self {
         let positions = force_layout_seed(&nodes, &edges, radius, center);
+        let node_r = 0.18;
         let mut children: Vec<Box<dyn Sobject>> = Vec::new();
         for &(a, b) in &edges {
             if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
-                children.push(Box::new(line(pa, pb, color.with_alpha(0.7), 2.0)));
+                let dir = pb - pa;
+                let len = dir.hypot().max(1e-9);
+                let u = dir / len;
+                let start = pa + u * node_r;
+                let end = pb - u * node_r;
+                children.push(Box::new(arrow(start, end, color.with_alpha(0.7), 2.0, 0.15)));
             }
         }
         for &n in &nodes {
             if let Some(&p) = positions.get(&n) {
-                children.push(Box::new(circle(p, 0.18, color, Some(Color::WHITE), 1.0)));
+                children.push(Box::new(circle(p, node_r, color, Some(Color::WHITE), 1.0)));
             }
         }
         Self {
@@ -61,6 +80,18 @@ impl DiGraph {
             nodes,
             edges,
         }
+    }
+
+    pub fn with_edge_labels(mut self, labels: &HashMap<(u32, u32), String>, positions: &HashMap<u32, Point>, color: Color) -> Self {
+        for (&(a, b), label) in labels {
+            if let (Some(&pa), Some(&pb)) = (positions.get(&a), positions.get(&b)) {
+                let mid = Point::new((pa.x() + pb.x()) / 2.0, (pa.y() + pb.y()) / 2.0);
+                let mut t = Text::new(label, color);
+                t.inner.move_to(mid);
+                self.group.add_child(Box::new(t.inner));
+            }
+        }
+        self
     }
 }
 
@@ -124,5 +155,18 @@ mod tests {
         let g = Graph::new(vec![1, 2, 3], vec![(1, 2), (2, 3)], 2.0, Point::ZERO, Color::BLUE);
         assert_eq!(g.nodes.len(), 3);
         assert!(!g.group.children.is_empty());
+    }
+
+    #[test]
+    fn digraph_uses_arrows_and_labels() {
+        let dg = DiGraph::new(vec![1, 2], vec![(1, 2)], 2.0, Point::ZERO, Color::WHITE);
+        assert_eq!(dg.edges.len(), 1);
+        let mut positions = HashMap::new();
+        positions.insert(1, Point::new(-1.0, 0.0));
+        positions.insert(2, Point::new(1.0, 0.0));
+        let mut labels = HashMap::new();
+        labels.insert((1, 2), "edge".into());
+        let labeled = dg.with_edge_labels(&labels, &positions, Color::WHITE);
+        assert!(labeled.group.children.len() > 2);
     }
 }

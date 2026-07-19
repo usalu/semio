@@ -13,15 +13,15 @@ pub mod app_2d {
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
         build_canvas_2d_scene, build_node_graph_scene, create_default_layout, create_named_layout,
         ui_inspector_groups_to_tree, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
-        NodeGraphScene, OsMediaCapability, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode,
-        UiTreeSectionNode, ViewState,
+        ui_stack_vertical, ui_text, tree_item_with_action, ActionArgDef, ActionArgOption, ActionEmit, App,
+        AppLabelsOverlayExt, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
+        NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
+        ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     };
     use serde::Serialize;
     use serde_json::{json, Value};
-    use std::collections::HashMap;
 
     //#region 🔖Constants
     const PROCEDURAL2D_PLAY_APP_ID: &str = "procedural2d-play";
@@ -44,105 +44,6 @@ pub mod app_2d {
     const PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural2d.play.generate-preview";
     const DEFAULT_PROCEDURAL2D_FIXTURE_JSON: &str = include_str!("../../2d/example/default.procedural2d.json");
     //#endregion 🔖Constants
-
-    //#region 🔖Terminology
-    /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
-    struct Procedural2dLabels {
-        sources: &'static str,
-        components: &'static str,
-        sinks: &'static str,
-        show_mode_section: &'static str,
-        show_prefix: &'static str,
-        none: &'static str,
-        selection: &'static str,
-        ids: &'static str,
-        schema_prefix: &'static str,
-        widgets_prefix: &'static str,
-        show_mode_prefix: &'static str,
-        generate_hint: &'static str,
-        preview_hint: &'static str,
-        source_slider: &'static str,
-        source_stepper: &'static str,
-        source_note: &'static str,
-        component_add: &'static str,
-        component_and: &'static str,
-        component_concat: &'static str,
-        sink_preview: &'static str,
-        sink_export: &'static str,
-        window_main: &'static str,
-        window_preview: &'static str,
-        window_generations: &'static str,
-        window_generate_form: &'static str,
-        window_generate_preview: &'static str,
-        delete_selection: &'static str,
-    }
-
-    const PROCEDURAL2D_LABELS_NATIVE_EN: Procedural2dLabels = Procedural2dLabels {
-        sources: "Sources",
-        components: "Components",
-        sinks: "Sinks",
-        show_mode_section: "Show mode",
-        show_prefix: "Show",
-        none: "(none)",
-        selection: "Selection",
-        ids: "Ids",
-        schema_prefix: "Schema:",
-        widgets_prefix: "Widgets:",
-        show_mode_prefix: "Show mode:",
-        generate_hint: "Add a generation to edit input values.",
-        preview_hint: "(evaluate a generation to preview output)",
-        source_slider: "Slider",
-        source_stepper: "Stepper",
-        source_note: "Note",
-        component_add: "Add",
-        component_and: "And",
-        component_concat: "Concat",
-        sink_preview: "Preview",
-        sink_export: "Export",
-        window_main: "Flow",
-        window_preview: "Preview",
-        window_generations: "Generations",
-        window_generate_form: "Form",
-        window_generate_preview: "Preview",
-        delete_selection: "Delete selection",
-    };
-
-    const PROCEDURAL2D_LABELS_NATIVE_DE: Procedural2dLabels = Procedural2dLabels {
-        sources: "Quellen",
-        components: "Komponenten",
-        sinks: "Senken",
-        show_mode_section: "Anzeigemodus",
-        show_prefix: "Anzeigen",
-        none: "(keine)",
-        selection: "Auswahl",
-        ids: "Kennungen",
-        schema_prefix: "Schema:",
-        widgets_prefix: "Elemente:",
-        show_mode_prefix: "Anzeigemodus:",
-        generate_hint: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
-        preview_hint: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
-        source_slider: "Schieberegler",
-        source_stepper: "Schrittzähler",
-        source_note: "Notiz",
-        component_add: "Addieren",
-        component_and: "Und",
-        component_concat: "Verketten",
-        sink_preview: "Vorschau",
-        sink_export: "Export",
-        window_main: "Fluss",
-        window_preview: "Vorschau",
-        window_generations: "Generationen",
-        window_generate_form: "Formular",
-        window_generate_preview: "Vorschau",
-        delete_selection: "Auswahl loeschen",
-    };
-
-    /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
-    fn procedural2d_labels(view_state: &ViewState) -> &'static Procedural2dLabels {
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        if is_de { &PROCEDURAL2D_LABELS_NATIVE_DE } else { &PROCEDURAL2D_LABELS_NATIVE_EN }
-    }
-    //#endregion 🔖Terminology
 
     //#region 🔖Types
     /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, the
@@ -215,13 +116,15 @@ pub mod app_2d {
         host
     }
 
+    /// 🎯 `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "nodeIds" fallback —
+    /// this app's actions accept either shape depending on the caller.
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
+        let ids = semio_framework_plugin::selection_ids(args);
+        if !ids.is_empty() {
+            return ids;
+        }
         args.and_then(|value| value.get("nodeIds"))
             .and_then(|value| serde_json::from_value(value.clone()).ok())
-            .or_else(|| {
-                args.and_then(|value| value.get("ids"))
-                    .and_then(|value| serde_json::from_value(value.clone()).ok())
-            })
             .unwrap_or_default()
     }
 
@@ -497,28 +400,81 @@ pub mod app_2d {
     }
     //#endregion 🔖DocumentHelpers
 
-    //#region 🔖Panels
-    fn tree_item(id: impl Into<String>, label: impl Into<String>, action: Option<ActionDescriptor>) -> UiTreeItemNode {
-        UiTreeItemNode {
-            loading: None,
-            id: id.into(),
-            label: label.into(),
-            description: None,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            action,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
+    //#region 🔖Terminology
+    semio_framework_plugin::app_labels! {
+        /// 🗣️ Complete UI label set for the 2D flow app; one field per label makes every locale combination compile-checked.
+        struct Procedural2dLabels {
+            sources: &'static str = en: "Sources", de: "Quellen";
+            components: &'static str = en: "Components", de: "Komponenten";
+            sinks: &'static str = en: "Sinks", de: "Senken";
+            show_mode_section: &'static str = en: "Show mode", de: "Anzeigemodus";
+            show_prefix: &'static str = en: "Show", de: "Anzeigen";
+            none: &'static str = en: "(none)", de: "(keine)";
+            selection: &'static str = en: "Selection", de: "Auswahl";
+            ids: &'static str = en: "Ids", de: "Kennungen";
+            schema_prefix: &'static str = en: "Schema:", de: "Schema:";
+            widgets_prefix: &'static str = en: "Widgets:", de: "Elemente:";
+            show_mode_prefix: &'static str = en: "Show mode:", de: "Anzeigemodus:";
+            generate_hint: &'static str = en: "Add a generation to edit input values.", de: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
+            preview_hint: &'static str = en: "(evaluate a generation to preview output)", de: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
+            source_slider: &'static str = en: "Slider", de: "Schieberegler";
+            source_stepper: &'static str = en: "Stepper", de: "Schrittzähler";
+            source_note: &'static str = en: "Note", de: "Notiz";
+            component_add: &'static str = en: "Add", de: "Addieren";
+            component_and: &'static str = en: "And", de: "Und";
+            component_concat: &'static str = en: "Concat", de: "Verketten";
+            sink_preview: &'static str = en: "Preview", de: "Vorschau";
+            sink_export: &'static str = en: "Export", de: "Export";
+            window_main: &'static str = en: "Flow", de: "Fluss";
+            window_preview: &'static str = en: "Preview", de: "Vorschau";
+            window_generations: &'static str = en: "Generations", de: "Generationen";
+            window_generate_form: &'static str = en: "Form", de: "Formular";
+            window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
+            delete_selection: &'static str = en: "Delete selection", de: "Auswahl loeschen";
         }
     }
 
+    /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
+    fn procedural2d_labels(view_state: &ViewState) -> &'static Procedural2dLabels {
+        semio_framework_plugin::resolve_labels::<Procedural2dLabels>(view_state)
+    }
+    //#endregion 🔖Terminology
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural2d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn procedural2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("moveMediaNode", "Move Node", "Knoten verschieben"),
+            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("removeWidget", "Remove Widget", "Element entfernen"),
+            ("connectMediaPorts", "Connect Ports", "Ports verbinden"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("removeGeneration", "Remove Generation", "Generation entfernen"),
+            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
+            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
+            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
+            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
+            ("generate", "Generate", "Generieren"),
+            ("setEvalOutputs", "Set Eval Outputs", "Auswertungsausgaben festlegen"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrueckt"),
+            ("canvasPointerMove", "Canvas Pointer Move", "Canvas-Zeiger bewegt"),
+            ("canvasPointerUp", "Canvas Pointer Up", "Canvas-Zeiger losgelassen"),
+            ("canvasWheel", "Canvas Wheel", "Canvas-Mausrad"),
+            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+        ];
+        semio_framework_plugin::localized_label_map(is_de, ENTRIES)
+    }
+    //#endregion 🔖CommandLabels
+
+    //#region 🔖Panels
     fn build_document_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let widget_items: Vec<UiTreeItemNode> = play
             .fixture
@@ -526,119 +482,97 @@ pub mod app_2d {
             .iter()
             .map(|widget| {
                 let id = widget_id(widget).to_string();
-                tree_item(
+                tree_item_with_action(
                     format!("procedural2d-play-document.widget.{id}"),
                     id.clone(),
-                    Some(procedural2d_action("setSelection", Some(json!({ "ids": [id] })))),
+                    None,
+                    procedural2d_action("setSelection", Some(json!({ "ids": [id] }))),
                 )
             })
             .collect();
-        UiNode::Tree(UiTreeNode {
-            loading: None,
-            sections: vec![UiTreeSectionNode {
-                loading: None,
-                id: "procedural2d-play-document.widgets".into(),
-                label: Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
-                default_open: Some(true),
-                items: if widget_items.is_empty() {
-                    vec![tree_item("procedural2d-play-document.empty", labels.none, None)]
-                } else {
-                    widget_items
-                },
-            }],
-            selected_ids: Some(
-                play.runtime
-                    .selected_ids
-                    .iter()
-                    .map(|id| format!("procedural2d-play-document.widget.{id}"))
-                    .collect(),
-            ),
-            highlighted_ids: None,
-            selection_change: Some(procedural2d_action("setSelection", None)),
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("procedural2d-play-document")
+            .section_or_placeholder(
+                "procedural2d-play-document.widgets",
+                Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()),
+                true,
+                widget_items,
+                labels.none,
+            )
+            .selected(play.runtime.selected_ids.iter().map(|id| format!("procedural2d-play-document.widget.{id}")).collect())
+            .selection_change(procedural2d_action("setSelection", None))
+            .build()
     }
 
     fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
         let sources = [("inputSlider", labels.source_slider), ("inputStepper", labels.source_stepper), ("inputNote", labels.source_note)];
         let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
         let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
-        UiNode::Tree(UiTreeNode {
-            loading: None,
-            sections: vec![
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "procedural2d-play-catalogue.sources".into(),
-                    label: Some(labels.sources.into()),
-                    default_open: Some(true),
-                    items: sources
-                        .iter()
-                        .map(|(kind, label)| {
-                            tree_item(
-                                format!("procedural2d-play-catalogue.source.{kind}"),
-                                *label,
-                                Some(procedural2d_action("addWidget", Some(json!({ "kind": kind })))),
-                            )
-                        })
-                        .collect(),
-                },
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "procedural2d-play-catalogue.components".into(),
-                    label: Some(labels.components.into()),
-                    default_open: Some(true),
-                    items: components
-                        .iter()
-                        .map(|(kind, label)| {
-                            tree_item(
-                                format!("procedural2d-play-catalogue.component.{kind}"),
-                                *label,
-                                Some(procedural2d_action(
-                                    "addWidget",
-                                    Some(json!({ "kind": "neuron", "neuronKind": kind })),
-                                )),
-                            )
-                        })
-                        .collect(),
-                },
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "procedural2d-play-catalogue.sinks".into(),
-                    label: Some(labels.sinks.into()),
-                    default_open: Some(true),
-                    items: sinks
-                        .iter()
-                        .map(|(kind, label)| {
-                            tree_item(
-                                format!("procedural2d-play-catalogue.sink.{kind}"),
-                                *label,
-                                Some(procedural2d_action("addWidget", Some(json!({ "kind": kind })))),
-                            )
-                        })
-                        .collect(),
-                },
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "procedural2d-play-catalogue.modes".into(),
-                    label: Some(labels.show_mode_section.into()),
-                    default_open: Some(false),
-                    items: ["preview", "generate", "wire"]
-                        .iter()
-                        .map(|mode| {
-                            tree_item(
-                                format!("procedural2d-play-catalogue.mode.{mode}"),
-                                format!("{} {mode}", labels.show_prefix),
-                                Some(procedural2d_action("setShowMode", Some(json!({ "value": mode })))),
-                            )
-                        })
-                        .collect(),
-                },
-            ],
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("procedural2d-play-catalogue")
+            .section(
+                "procedural2d-play-catalogue.sources",
+                Some(labels.sources.into()),
+                true,
+                sources
+                    .iter()
+                    .map(|(kind, label)| {
+                        tree_item_with_action(
+                            format!("procedural2d-play-catalogue.source.{kind}"),
+                            *label,
+                            None,
+                            procedural2d_action("addWidget", Some(json!({ "kind": kind }))),
+                        )
+                    })
+                    .collect(),
+            )
+            .section(
+                "procedural2d-play-catalogue.components",
+                Some(labels.components.into()),
+                true,
+                components
+                    .iter()
+                    .map(|(kind, label)| {
+                        tree_item_with_action(
+                            format!("procedural2d-play-catalogue.component.{kind}"),
+                            *label,
+                            None,
+                            procedural2d_action("addWidget", Some(json!({ "kind": "neuron", "neuronKind": kind }))),
+                        )
+                    })
+                    .collect(),
+            )
+            .section(
+                "procedural2d-play-catalogue.sinks",
+                Some(labels.sinks.into()),
+                true,
+                sinks
+                    .iter()
+                    .map(|(kind, label)| {
+                        tree_item_with_action(
+                            format!("procedural2d-play-catalogue.sink.{kind}"),
+                            *label,
+                            None,
+                            procedural2d_action("addWidget", Some(json!({ "kind": kind }))),
+                        )
+                    })
+                    .collect(),
+            )
+            .section(
+                "procedural2d-play-catalogue.modes",
+                Some(labels.show_mode_section.into()),
+                false,
+                ["preview", "generate", "wire"]
+                    .iter()
+                    .map(|mode| {
+                        tree_item_with_action(
+                            format!("procedural2d-play-catalogue.mode.{mode}"),
+                            format!("{} {mode}", labels.show_prefix),
+                            None,
+                            procedural2d_action("setShowMode", Some(json!({ "value": mode }))),
+                        )
+                    })
+                    .collect(),
+            )
+            .build()
     }
 
     fn build_inspector_tree(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
@@ -1017,68 +951,22 @@ pub mod app_2d {
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = procedural2d_labels(view_state);
-            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-            semio_framework_plugin::AppLabelsOverlay {
-                window_kind_labels: std::collections::HashMap::from([
-                    (PROCEDURAL2D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string()),
-                    (PROCEDURAL2D_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
-                    (PROCEDURAL2D_PLAY_WINDOW_GENERATIONS.to_string(), labels.window_generations.to_string()),
-                    (PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM.to_string(), labels.window_generate_form.to_string()),
-                    (PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(), labels.window_generate_preview.to_string()),
-                ]),
-                panel_tab_labels: std::collections::HashMap::new(),
-                mode_labels: std::collections::HashMap::from([
-                    ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
-                    ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
-                ]),
-                action_labels: procedural2d_action_labels(is_de),
-                utility_labels: HashMap::new(),
-                example_labels: std::collections::HashMap::from([
-                    ("default".to_string(), (if is_de { "Standard" } else { "Default" }).to_string()),
-                ]),
-                action_arg_labels: HashMap::new(),
-                dialog_labels: HashMap::new(),
-                introduction_labels: HashMap::new(),
-            }
+            let is_de = semio_framework_plugin::is_de_locale(view_state);
+            semio_framework_plugin::AppLabelsOverlay::default()
+                .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_MAIN, labels.window_main)
+                .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, labels.window_preview)
+                .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATIONS, labels.window_generations)
+                .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
+                .window_kind_label(PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
+                .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+                .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
+                .action_labels(procedural2d_action_labels(is_de))
+                .example_labels(semio_framework_plugin::localized_label_map(is_de, &[("default", "Default", "Standard")]))
         }
     }
     //#endregion 🔖Procedural2dPlayApp
 
-    //#region 🔖CommandLabels
-    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural2d_app`'s
-    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-    fn procedural2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
-            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-            ("moveMediaNode", "Move Node", "Knoten verschieben"),
-            ("addWidget", "Add Widget", "Element hinzufuegen"),
-            ("removeWidget", "Remove Widget", "Element entfernen"),
-            ("connectMediaPorts", "Connect Ports", "Ports verbinden"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
-            ("removeGeneration", "Remove Generation", "Generation entfernen"),
-            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
-            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
-            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
-            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
-            ("generate", "Generate", "Generieren"),
-            ("setEvalOutputs", "Set Eval Outputs", "Auswertungsausgaben festlegen"),
-            ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrueckt"),
-            ("canvasPointerMove", "Canvas Pointer Move", "Canvas-Zeiger bewegt"),
-            ("canvasPointerUp", "Canvas Pointer Up", "Canvas-Zeiger losgelassen"),
-            ("canvasWheel", "Canvas Wheel", "Canvas-Mausrad"),
-            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-    }
-    //#endregion 🔖CommandLabels
-
-    //#region 🔖AppFactory
+    //#region 🔖Manifest
     pub fn create_procedural2d_app() -> App {
         App::from_builder(
             App::builder(PROCEDURAL2D_PLAY_APP_ID, "Procedural 2D").document(["semio", "procedural", "2d"])
@@ -1205,28 +1093,26 @@ pub mod app_2d {
         semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
         semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);
     }
-    //#endregion 🔖AppFactory
+    //#endregion 🔖Manifest
 
     //#region 🧪Tests
     #[cfg(test)]
     mod tests {
         use super::*;
+        use semio_framework_plugin::testkit;
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-        use semio_framework_plugin::app::AppActionRegistry;
-        use vcs::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
+            testkit::meta(actor)
         }
 
         fn new_app() -> VcsDocumentApp<Procedural2dPlayApp> {
-            VcsDocumentApp::new(Procedural2dPlayApp::default())
+            testkit::new_app::<Procedural2dPlayApp>()
         }
 
         /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
         fn new_app_with_registry() -> VcsDocumentApp<Procedural2dPlayApp> {
-            let definition = create_procedural2d_app().definition;
-            VcsDocumentApp::with_registry(Procedural2dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+            testkit::new_app_with_registry::<Procedural2dPlayApp>(create_procedural2d_app)
         }
 
         #[test]
@@ -1289,12 +1175,14 @@ pub mod app_2d {
         fn add_widget_undo_redo_round_trip() {
             let mut app = new_app();
             let before = app.projection().expect("projection").fixture.widgets.len();
-            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before);
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "addWidget",
+                Some(&json!({ "kind": "inputNote" })),
+                |app| app.projection().expect("projection").fixture.widgets.len(),
+                before,
+                before + 1,
+            );
         }
 
         #[test]
@@ -1308,10 +1196,14 @@ pub mod app_2d {
         #[test]
         fn add_generation_records_an_undoable_generation_op() {
             let mut app = new_app();
-            app.handle_action("addGeneration", None, &ViewState::default(), &meta("local")).expect("add generation");
-            assert_eq!(app.projection().expect("projection").generation.generations.len(), 1);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert_eq!(app.projection().expect("projection").generation.generations.len(), 0);
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "addGeneration",
+                None,
+                |app| app.projection().expect("projection").generation.generations.len(),
+                0,
+                1,
+            );
         }
 
         #[test]
@@ -1331,17 +1223,7 @@ pub mod app_2d {
 
         #[test]
         fn two_instances_converge_disjoint_widget_moves() {
-            let base = new_app();
-            let base_doc = base.document_json().expect("base document");
-            let mut a = new_app();
-            let mut b = new_app();
-            a.load_document(&base_doc).expect("load a");
-            b.load_document(&base_doc).expect("load b");
-            let (backbone_a, backbone_b) =
-                MemoryBackbone::pair("mem://procedural2d-convergence", "mem://procedural2d-convergence");
-            a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-            b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-            let widgets: Vec<String> = a
+            let widgets: Vec<String> = new_app()
                 .projection()
                 .expect("projection")
                 .fixture
@@ -1351,16 +1233,15 @@ pub mod app_2d {
                 .collect();
             assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
             let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-            a.handle_action("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 })), &ViewState::default(), &meta("actor-a")).expect("a moves w0");
-            b.handle_action("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 })), &ViewState::default(), &meta("actor-b")).expect("b moves w1");
-            a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-            b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-            let layout_a = a.projection().expect("projection a").fixture.layout;
-            let layout_b = b.projection().expect("projection b").fixture.layout;
-            assert_eq!(layout_a.get(&w0).map(|l| l.x), Some(111.0), "A keeps its own edit");
-            assert_eq!(layout_a.get(&w1).map(|l| l.x), Some(222.0), "A converges on B's edit");
-            assert_eq!(layout_b.get(&w0).map(|l| l.x), Some(111.0), "B converges on A's edit");
-            assert_eq!(layout_b.get(&w1).map(|l| l.x), Some(222.0), "B keeps its own edit");
+            testkit::assert_two_instances_converge::<Procedural2dPlayApp, (Option<f64>, Option<f64>)>(
+                "mem://procedural2d-convergence",
+                ("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 }))),
+                ("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 }))),
+                move |app| {
+                    let layout = &app.projection().expect("projection").fixture.layout;
+                    (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
+                },
+            );
         }
 
         #[test]
@@ -1411,10 +1292,10 @@ pub mod app_3d {
     use semio_framework_plugin::{PanelGroup,
         apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
         create_named_layout, merge_world_selection_ids,
-        mesh_from_kind, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
-        ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
-        ActionDescriptor, MeasureSelectItem, NodeGraphScene, OsMediaCapability, ResourceKindSpec, UtilityDefinition,
-        UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowMeasure, WorldSunConfig,
+        mesh_from_kind, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
+        ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, AppLabelsOverlayExt, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
+        ActionDescriptor, MeasureSelectItem, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition,
+        UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, ViewState, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -1422,7 +1303,7 @@ pub mod app_3d {
     };
     use semio_framework_core::mesh_from_indexed;
     use ui_wgpu::SurfaceKind;
-    use std::collections::{hash_map::DefaultHasher, HashMap, HashSet};
+    use std::collections::{hash_map::DefaultHasher, HashSet};
     use std::hash::{Hash, Hasher};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
@@ -1483,96 +1364,7 @@ pub mod app_3d {
     }
     //#endregion 🔖EvalCache
 
-    //#region 🔖Terminology
-    /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
-    struct Procedural3dLabels {
-        widgets: &'static str,
-        schema_prefix: &'static str,
-        widgets_prefix: &'static str,
-        no_selection: &'static str,
-        id_field: &'static str,
-        value_field: &'static str,
-        range_field: &'static str,
-        widget_group: &'static str,
-        generate_hint: &'static str,
-        preview_hint: &'static str,
-        catalog_neuron: &'static str,
-        catalog_slider: &'static str,
-        catalog_note: &'static str,
-        catalog_preview: &'static str,
-        window_flow: &'static str,
-        window_preview: &'static str,
-        window_generations: &'static str,
-        window_generate_form: &'static str,
-        window_generate_preview: &'static str,
-        delete_selection: &'static str,
-    }
-
-    const PROCEDURAL3D_LABELS_NATIVE_EN: Procedural3dLabels = Procedural3dLabels {
-        widgets: "Widgets",
-        schema_prefix: "Schema:",
-        widgets_prefix: "Widgets:",
-        no_selection: "No selection",
-        id_field: "Id",
-        value_field: "Value",
-        range_field: "Range",
-        widget_group: "Widget",
-        generate_hint: "Add a generation to edit input values.",
-        preview_hint: "(evaluate a generation to preview output)",
-        catalog_neuron: "Neuron",
-        catalog_slider: "Slider",
-        catalog_note: "Note",
-        catalog_preview: "Preview",
-        window_flow: "Flow",
-        window_preview: "Preview",
-        window_generations: "Generations",
-        window_generate_form: "Form",
-        window_generate_preview: "Preview",
-        delete_selection: "Delete selection",
-    };
-
-    const PROCEDURAL3D_LABELS_NATIVE_DE: Procedural3dLabels = Procedural3dLabels {
-        widgets: "Elemente",
-        schema_prefix: "Schema:",
-        widgets_prefix: "Elemente:",
-        no_selection: "Keine Auswahl",
-        id_field: "ID",
-        value_field: "Wert",
-        range_field: "Bereich",
-        widget_group: "Element",
-        generate_hint: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.",
-        preview_hint: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)",
-        catalog_neuron: "Neuron",
-        catalog_slider: "Schieberegler",
-        catalog_note: "Notiz",
-        catalog_preview: "Vorschau",
-        window_flow: "Workflow",
-        window_preview: "Vorschau",
-        window_generations: "Generationen",
-        window_generate_form: "Formular",
-        window_generate_preview: "Vorschau",
-        delete_selection: "Auswahl loeschen",
-    };
-
-    /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
-    fn procedural3d_labels(view_state: &ViewState) -> &'static Procedural3dLabels {
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        if is_de { &PROCEDURAL3D_LABELS_NATIVE_DE } else { &PROCEDURAL3D_LABELS_NATIVE_EN }
-    }
-
-    /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to the id itself.
-    fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
-        match kind {
-            "neuron" => labels.catalog_neuron,
-            "inputSlider" => labels.catalog_slider,
-            "inputNote" => labels.catalog_note,
-            "outputPreview" => labels.catalog_preview,
-            _ => kind,
-        }
-    }
-    //#endregion 🔖Terminology
-
-    //#region 🔖Document
+    //#region 🔖Types
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Procedural3dPreviewCamera {
@@ -1676,7 +1468,9 @@ pub mod app_3d {
         generation.preview_text = runtime.generation_preview_text.clone();
         Procedural3dPlayView { fixture: projection.fixture.clone(), runtime: runtime.clone(), generation }
     }
+    //#endregion 🔖Types
 
+    //#region 🔖DocumentHelpers
     fn default_fixture() -> FlowFixture {
         serde_json::from_str::<FlowFixture>(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_default()
     }
@@ -2231,7 +2025,7 @@ pub mod app_3d {
                 MeasureSelectItem { id: "procedural3d-measure-lod-solid".into(), value: "solid".into(), label: "Solid".into() },
                 MeasureSelectItem { id: "procedural3d-measure-lod-wireframe".into(), value: "wireframe".into(), label: "Wireframe".into() },
             ],
-            on_change: procedural3d_action("setLodMode", None),
+            on_change: procedural_action("setLodMode", None),
         }
     }
 
@@ -2253,33 +2047,111 @@ pub mod app_3d {
             .unwrap_or(PROCEDURAL_FALLBACK_MESH_KIND);
         mesh_from_kind(kind)
     }
-    //#endregion 🔖Document
+    //#endregion 🔖DocumentHelpers
+
+    //#region 🔖Terminology
+    semio_framework_plugin::app_labels! {
+        /// 🗣️ Complete UI label set for the 3D flow app; one field per label makes every locale combination compile-checked.
+        struct Procedural3dLabels {
+            widgets: &'static str = en: "Widgets", de: "Elemente";
+            schema_prefix: &'static str = en: "Schema:", de: "Schema:";
+            widgets_prefix: &'static str = en: "Widgets:", de: "Elemente:";
+            no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
+            id_field: &'static str = en: "Id", de: "ID";
+            value_field: &'static str = en: "Value", de: "Wert";
+            range_field: &'static str = en: "Range", de: "Bereich";
+            widget_group: &'static str = en: "Widget", de: "Element";
+            generate_hint: &'static str = en: "Add a generation to edit input values.", de: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
+            preview_hint: &'static str = en: "(evaluate a generation to preview output)", de: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
+            catalog_neuron: &'static str = en: "Neuron", de: "Neuron";
+            catalog_slider: &'static str = en: "Slider", de: "Schieberegler";
+            catalog_note: &'static str = en: "Note", de: "Notiz";
+            catalog_preview: &'static str = en: "Preview", de: "Vorschau";
+            window_flow: &'static str = en: "Flow", de: "Workflow";
+            window_preview: &'static str = en: "Preview", de: "Vorschau";
+            window_generations: &'static str = en: "Generations", de: "Generationen";
+            window_generate_form: &'static str = en: "Form", de: "Formular";
+            window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
+            delete_selection: &'static str = en: "Delete selection", de: "Auswahl loeschen";
+        }
+    }
+
+    /// 🗣️ Resolves the active label set from the shell-provided locale; falls back to native English.
+    fn procedural3d_labels(view_state: &ViewState) -> &'static Procedural3dLabels {
+        semio_framework_plugin::resolve_labels::<Procedural3dLabels>(view_state)
+    }
+
+    /// 🗣️ Resolves a catalogue widget kind's display label from its stable id; unknown kinds fall back to the id itself.
+    fn procedural3d_catalog_label(kind: &'static str, labels: &Procedural3dLabels) -> &'static str {
+        match kind {
+            "neuron" => labels.catalog_neuron,
+            "inputSlider" => labels.catalog_slider,
+            "inputNote" => labels.catalog_note,
+            "outputPreview" => labels.catalog_preview,
+            _ => kind,
+        }
+    }
+    //#endregion 🔖Terminology
+
+    //#region 🔖CommandLabels
+    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural3d_app`'s
+    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
+    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
+    fn procedural3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
+            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
+            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
+            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("removeWidget", "Remove Widget", "Element entfernen"),
+            ("moveMediaNode", "Move Node", "Knoten verschieben"),
+            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("patchFlowWidgets", "Patch Flow Widgets", "Flow-Elemente aktualisieren"),
+            ("reorganize", "Reorganize", "Neu anordnen"),
+            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
+            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
+            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
+            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("removeGeneration", "Remove Generation", "Generation entfernen"),
+            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
+            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
+            ("setSelection", "Set Selection", "Auswahl festlegen"),
+            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
+            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldHover", "World Hover", "Welt-Hover"),
+            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+            ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
+            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
+            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
+            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setCamera", "Set Camera", "Kamera festlegen"),
+            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+        ];
+        semio_framework_plugin::localized_label_map(is_de, ENTRIES)
+    }
+
+    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_procedural3d_app`.
+    fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+        const ENTRIES: &[(&str, &str, &str)] = &[
+            ("move", "Move", "Verschieben"),
+            ("rotate", "Rotate", "Drehen"),
+            ("scale", "Scale", "Skalieren"),
+        ];
+        semio_framework_plugin::localized_label_map(is_de, ENTRIES)
+    }
+    //#endregion 🔖CommandLabels
 
     //#region 🔖Panels
-    fn tree_item_with_action(
-        id: impl Into<String>,
-        label: impl Into<String>,
-        icon_id: Option<&str>,
-        action: ActionDescriptor,
-    ) -> UiTreeItemNode {
-        UiTreeItemNode {
-            loading: None,
-            id: id.into(),
-            label: label.into(),
-            description: None,
-            icon_id: icon_id.map(str::to_string),
-            selected: None,
-            default_open: None,
-            action: Some(action),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
+    /// 🌳 SDK's `tree_item_with_action` plus an icon id — this crate's document/catalogue trees carry
+    /// icons per item, which the shared helper doesn't model directly.
+    fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
+        UiTreeItemNode { icon_id: icon_id.map(str::to_string), ..tree_item_with_action(id, label, None, action) }
     }
 
     fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -2288,7 +2160,7 @@ pub mod app_3d {
             .iter()
             .map(|widget| {
                 let id = widget_id(widget).to_string();
-                tree_item_with_action(
+                tree_item_with_icon(
                     format!("procedural-widget:{id}"),
                     id.clone(),
                     Some("cpu"),
@@ -2296,27 +2168,17 @@ pub mod app_3d {
                 )
             })
             .collect();
-        UiNode::Tree(UiTreeNode {
-            loading: None,
-            sections: vec![UiTreeSectionNode {
-                loading: None,
-                id: "procedural-play-document.widgets".into(),
-                label: Some(labels.widgets.into()),
-                default_open: Some(true),
-                items,
-            }],
-            selected_ids: Some(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect()),
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("procedural-play-document")
+            .section("procedural-play-document.widgets", Some(labels.widgets.into()), true, items)
+            .selected(selected_node_ids.iter().map(|id| format!("procedural-widget:{id}")).collect())
+            .build()
     }
 
     fn build_catalogue_tree(labels: &Procedural3dLabels) -> UiNode {
         let items: Vec<UiTreeItemNode> = WIDGET_CATALOG
             .iter()
             .map(|(kind, icon)| {
-                tree_item_with_action(
+                tree_item_with_icon(
                     format!("procedural-play-catalogue.{kind}"),
                     procedural3d_catalog_label(*kind, labels),
                     Some(icon),
@@ -2324,20 +2186,9 @@ pub mod app_3d {
                 )
             })
             .collect();
-        UiNode::Tree(UiTreeNode {
-            loading: None,
-            sections: vec![UiTreeSectionNode {
-                loading: None,
-                id: "procedural-play-catalogue.widgets".into(),
-                label: Some(labels.widgets.into()),
-                default_open: Some(true),
-                items,
-            }],
-            selected_ids: None,
-            highlighted_ids: None,
-            selection_change: None,
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("procedural-play-catalogue")
+            .section("procedural-play-catalogue.widgets", Some(labels.widgets.into()), true, items)
+            .build()
     }
 
     fn build_inspector_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {
@@ -2394,7 +2245,7 @@ pub mod app_3d {
     }
     //#endregion 🔖Panels
 
-    //#region 🔖GenerateRender
+    //#region 🔖Render
     fn render_generate_generations(envelope: &Procedural3dPlayView) -> UiNode {
         render_generations_tree(
             PROCEDURAL_3D_PLAY_APP_ID,
@@ -2445,7 +2296,7 @@ pub mod app_3d {
             ),
         )
     }
-    //#endregion 🔖GenerateRender
+    //#endregion 🔖Render
 
     //#region 🔖Procedural3dPlayApp
     #[derive(Default)]
@@ -2871,7 +2722,7 @@ pub mod app_3d {
             _doc: &DocumentView<'_, Procedural3dDocument>,
             _view_state: &ViewState,
         ) -> std::collections::HashMap<String, Vec<WindowMeasure>> {
-            let measures = vec![world3d_sun_measures("procedural3d", &self.runtime.sun, procedural3d_action)];
+            let measures = vec![world3d_sun_measures("procedural3d", &self.runtime.sun, procedural_action)];
             std::collections::HashMap::from([
                 (PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), vec![procedural3d_lod_measure(&self.runtime.lod_mode)]),
                 (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), measures.clone()),
@@ -2881,38 +2732,26 @@ pub mod app_3d {
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
             let labels = procedural3d_labels(view_state);
-            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-            semio_framework_plugin::AppLabelsOverlay {
-                window_kind_labels: std::collections::HashMap::from([
-                    (PROCEDURAL_3D_PLAY_WINDOW_MAIN.to_string(), labels.window_flow.to_string()),
-                    (PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.to_string(), labels.window_preview.to_string()),
-                    (PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS.to_string(), labels.window_generations.to_string()),
-                    (PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM.to_string(), labels.window_generate_form.to_string()),
-                    (
-                        PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW.to_string(),
-                        labels.window_generate_preview.to_string(),
-                    ),
-                ]),
-                panel_tab_labels: std::collections::HashMap::new(),
-                mode_labels: std::collections::HashMap::from([
-                    ("edit".to_string(), (if is_de { "Bearbeiten" } else { "Edit" }).to_string()),
-                    ("generate".to_string(), (if is_de { "Generieren" } else { "Generate" }).to_string()),
-                ]),
-                action_labels: procedural3d_action_labels(is_de),
-                utility_labels: procedural3d_utility_labels(is_de),
-                example_labels: std::collections::HashMap::from([
-                    (PROCEDURAL_EXAMPLE_HEX_COLUMN.to_string(), (if is_de { "Sechseckige Pilzsaeule" } else { "Hexagonal Mushroom Column" }).to_string()),
-                    (PROCEDURAL_EXAMPLE_RECT_EXTRUDE.to_string(), (if is_de { "Rechteck-Extrusionsvolumen" } else { "Rectangle Extrude Volume" }).to_string()),
-                    (PROCEDURAL_EXAMPLE_SPHERE_TORUS.to_string(), (if is_de { "Kugel mit Torus geschnitten" } else { "Sphere Cut With Torus" }).to_string()),
-                ]),
-                action_arg_labels: HashMap::new(),
-                dialog_labels: HashMap::new(),
-                introduction_labels: HashMap::new(),
-            }
+            let is_de = semio_framework_plugin::is_de_locale(view_state);
+            semio_framework_plugin::AppLabelsOverlay::default()
+                .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_MAIN, labels.window_flow)
+                .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW, labels.window_preview)
+                .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS, labels.window_generations)
+                .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM, labels.window_generate_form)
+                .window_kind_label(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW, labels.window_generate_preview)
+                .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+                .mode_label("generate", if is_de { "Generieren" } else { "Generate" })
+                .action_labels(procedural3d_action_labels(is_de))
+                .utility_labels(procedural3d_utility_labels(is_de))
+                .example_labels(semio_framework_plugin::localized_label_map(is_de, &[
+                    (PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", "Sechseckige Pilzsaeule"),
+                    (PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen"),
+                    (PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", "Kugel mit Torus geschnitten"),
+                ]))
         }
     }
 
-        fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
+    fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
         if let Some(ids) = args
             .and_then(|value| value.get("nodeIds"))
             .and_then(|value| serde_json::from_value(value.clone()).ok())
@@ -2922,79 +2761,19 @@ pub mod app_3d {
         selection_ids(args)
     }
 
+    /// 🎯 `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "nodeId" fallback —
+    /// this app's actions accept either shape depending on the caller.
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
-        args.and_then(|value| value.get("ids"))
-            .and_then(|value| serde_json::from_value(value.clone()).ok())
-            .or_else(|| {
-                args.and_then(|value| value.get("nodeId"))
-                    .and_then(|value| value.as_str())
-                    .map(|id| vec![id.to_string()])
-            })
+        let ids = semio_framework_plugin::selection_ids(args);
+        if !ids.is_empty() {
+            return ids;
+        }
+        args.and_then(|value| value.get("nodeId"))
+            .and_then(|value| value.as_str())
+            .map(|id| vec![id.to_string()])
             .unwrap_or_default()
     }
     //#endregion 🔖Procedural3dPlayApp
-
-    //#region 🔖CommandLabels
-    /// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_procedural3d_app`'s
-    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-    fn procedural3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
-            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
-            ("removeWidget", "Remove Widget", "Element entfernen"),
-            ("moveMediaNode", "Move Node", "Knoten verschieben"),
-            ("addWidget", "Add Widget", "Element hinzufuegen"),
-            ("patchFlowWidgets", "Patch Flow Widgets", "Flow-Elemente aktualisieren"),
-            ("reorganize", "Reorganize", "Neu anordnen"),
-            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
-            ("removeGeneration", "Remove Generation", "Generation entfernen"),
-            ("renameGeneration", "Rename Generation", "Generation umbenennen"),
-            ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
-            ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
-            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-            ("worldSelect", "World Select", "Welt auswaehlen"),
-            ("worldHover", "World Hover", "Welt-Hover"),
-            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-            ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
-            ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
-            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
-            ("setCamera", "Set Camera", "Kamera festlegen"),
-            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-    }
-
-    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_procedural3d_app`.
-    fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("move", "Move", "Verschieben"),
-            ("rotate", "Rotate", "Drehen"),
-            ("scale", "Scale", "Skalieren"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
-    }
-    //#endregion 🔖CommandLabels
-
-    fn procedural3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
-        ActionDescriptor {
-            controller_id: PROCEDURAL_3D_PLAY_CONTROLLER_ID.into(),
-            action: action.into(),
-            args,
-        }
-    }
 
     //#region 🔖Manifest
     pub fn create_procedural3d_app() -> App {
@@ -3168,6 +2947,7 @@ pub mod app_3d {
         semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
     }
+    //#endregion 🔖Manifest
 
     //#region 🧪Tests
     #[cfg(test)]
@@ -3176,22 +2956,20 @@ pub mod app_3d {
         use kernel_3d_scene::{
             aabb_intersects_frustum, frustum_planes, transform_aabb, Camera3d, Instance3d, Mesh3d, Vec3,
         };
+        use semio_framework_plugin::testkit;
         use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-        use semio_framework_plugin::app::AppActionRegistry;
-        use vcs::MemoryBackbone;
 
         fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
+            testkit::meta(actor)
         }
 
         fn new_app() -> VcsDocumentApp<Procedural3dPlayApp> {
-            VcsDocumentApp::new(Procedural3dPlayApp::default())
+            testkit::new_app::<Procedural3dPlayApp>()
         }
 
         /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
         fn new_app_with_registry() -> VcsDocumentApp<Procedural3dPlayApp> {
-            let definition = create_procedural3d_app().definition;
-            VcsDocumentApp::with_registry(Procedural3dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+            testkit::new_app_with_registry::<Procedural3dPlayApp>(create_procedural3d_app)
         }
 
         #[test]
@@ -3447,10 +3225,14 @@ pub mod app_3d {
         #[test]
         fn add_generation_records_an_undoable_generation_op() {
             let mut app = new_app();
-            app.handle_action("addGeneration", None, &ViewState::default(), &meta("local")).expect("add generation");
-            assert_eq!(app.projection().expect("projection").generation.generations.len(), 1);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert_eq!(app.projection().expect("projection").generation.generations.len(), 0);
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "addGeneration",
+                None,
+                |app| app.projection().expect("projection").generation.generations.len(),
+                0,
+                1,
+            );
         }
 
         #[test]
@@ -3522,37 +3304,33 @@ pub mod app_3d {
         fn undo_redo_round_trips_flow_graph_edits() {
             let mut app = new_app();
             let before = app.projection().expect("projection").fixture.widgets.len();
-            app.handle_action("addWidget", Some(&json!({ "kind": "inputNote" })), &ViewState::default(), &meta("local")).expect("add");
-            assert!(app.projection().expect("projection").fixture.widgets.len() > before);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before);
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1);
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "addWidget",
+                Some(&json!({ "kind": "inputNote" })),
+                |app| app.projection().expect("projection").fixture.widgets.len(),
+                before,
+                before + 1,
+            );
         }
 
         #[test]
         fn remove_widget_action_deletes_by_id_and_supports_undo() {
             let mut app = new_app();
             assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-            app.handle_action("removeWidget", Some(&json!({ "widgetId": "sides" })), &ViewState::default(), &meta("local")).expect("remove");
-            assert!(!app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-            assert!(app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"));
+            testkit::assert_undo_redo_round_trip(
+                &mut app,
+                "removeWidget",
+                Some(&json!({ "widgetId": "sides" })),
+                |app| app.projection().expect("projection").fixture.widgets.iter().any(|widget| widget_id(widget) == "sides"),
+                true,
+                false,
+            );
         }
 
         #[test]
         fn two_instances_converge_disjoint_widget_moves() {
-            let base = new_app();
-            let base_doc = base.document_json().expect("base document");
-            let mut a = new_app();
-            let mut b = new_app();
-            a.load_document(&base_doc).expect("load a");
-            b.load_document(&base_doc).expect("load b");
-            let (backbone_a, backbone_b) =
-                MemoryBackbone::pair("mem://procedural3d-convergence", "mem://procedural3d-convergence");
-            a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-            b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-            let widgets: Vec<String> = a
+            let widgets: Vec<String> = new_app()
                 .projection()
                 .expect("projection")
                 .fixture
@@ -3562,16 +3340,15 @@ pub mod app_3d {
                 .collect();
             assert!(widgets.len() >= 2, "default fixture needs two widgets for the test");
             let (w0, w1) = (widgets[0].clone(), widgets[1].clone());
-            a.handle_action("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 })), &ViewState::default(), &meta("actor-a")).expect("a moves w0");
-            b.handle_action("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 })), &ViewState::default(), &meta("actor-b")).expect("b moves w1");
-            a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-            b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-            let layout_a = a.projection().expect("projection a").fixture.layout;
-            let layout_b = b.projection().expect("projection b").fixture.layout;
-            assert_eq!(layout_a.get(&w0).map(|l| l.x), Some(111.0), "A keeps its own edit");
-            assert_eq!(layout_a.get(&w1).map(|l| l.x), Some(222.0), "A converges on B's edit");
-            assert_eq!(layout_b.get(&w0).map(|l| l.x), Some(111.0), "B converges on A's edit");
-            assert_eq!(layout_b.get(&w1).map(|l| l.x), Some(222.0), "B keeps its own edit");
+            testkit::assert_two_instances_converge::<Procedural3dPlayApp, (Option<f64>, Option<f64>)>(
+                "mem://procedural3d-convergence",
+                ("moveMediaNode", Some(&json!({ "nodeId": w0, "x": 111.0, "y": 5.0 }))),
+                ("moveMediaNode", Some(&json!({ "nodeId": w1, "x": 222.0, "y": 6.0 }))),
+                move |app| {
+                    let layout = &app.projection().expect("projection").fixture.layout;
+                    (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
+                },
+            );
         }
 
         #[test]

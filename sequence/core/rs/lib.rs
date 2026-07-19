@@ -1,14 +1,12 @@
 //! 📜 Sequence core: execution-flow canvas host wrapping DagHost.
 
-pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, imperative_catalogue_json, imperative_module_registry, Path, RunResult, Step};
+pub use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, EffectLogEntry, Executor, Path, RunResult, Step};
 pub use imperative_module_core::{catalogue_json, module_registry};
 pub use infinite_board_port_directed_dag as dag;
 
-use dag::{
-    dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixtureEdge, DagFixture, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape,
-};
+use dag::{dag_fixture_to_wire_literal, would_create_cycle, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeSpec, EdgeRouteStyle, IoPortSpec, PortShape};
 use imperative_engine::compile_to_text as imperative_compile_to_text;
-use mathematical_graph_manifest::{PropertyBag, PropertyValue};
+use mathematical_graph_manifest::PropertyBag;
 use neural_engine::{Atom, ChannelSpec, Dictionary, Registry, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -48,7 +46,11 @@ fn max_serial_in_fixture(fixture: &SequenceFixture) -> u64 {
 }
 
 fn default_control_slot(kind: &str) -> &'static str {
-    if kind == "control.if" { "then" } else { "body" }
+    if kind == "control.if" {
+        "then"
+    } else {
+        "body"
+    }
 }
 
 fn neural_value_to_json_value(value: &Value) -> serde_json::Value {
@@ -180,28 +182,43 @@ pub fn default_fixture() -> SequenceFixture {
             SequenceStep {
                 id: "step-1".into(),
                 kind: "state.set".into(),
-                params: Dictionary::new()
-                    .insert("key", Value::Atom(Atom::String("counter".into())))
-                    .insert("value", Value::Atom(Atom::Decimal(0.0))),
+                params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))),
                 x: 0.0,
                 y: 0.0,
                 slot: None,
                 collapsed: false,
             },
-            SequenceStep {
-                id: "step-2".into(),
-                kind: "log.print".into(),
-                params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))),
-                x: 280.0,
-                y: 0.0,
-                slot: None,
-                collapsed: false,
-            },
+            SequenceStep { id: "step-2".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))), x: 280.0, y: 0.0, slot: None, collapsed: false },
         ],
         edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
     }
 }
 // #endregion 🔖Fixture
+
+// #region ⚠️ Errors
+/// 🚨 Sequence core's fallible operations.
+#[derive(Debug, thiserror::Error)]
+pub enum SequenceCoreError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("unsupported schema: {0}")]
+    UnsupportedSchema(String),
+    #[error("cannot connect step to itself")]
+    SelfConnect,
+    #[error("{0} not found")]
+    StepNotFound(String),
+    #[error("steps must share the same slot scope")]
+    MismatchedSlotScope,
+    #[error("connection would create cycle")]
+    CycleDetected,
+    #[error("{0} already has outgoing flow")]
+    OutgoingFlowExists(String),
+    #[error("unknown step: {0}")]
+    UnknownStep(String),
+    #[error("{0}")]
+    Dag(String),
+}
+// #endregion ⚠️ Errors
 
 // #region 🔖Host
 pub struct SequenceHost {
@@ -220,24 +237,15 @@ impl Default for SequenceHost {
 impl SequenceHost {
     pub fn from_fixture(fixture: SequenceFixture) -> Self {
         let next_serial = max_serial_in_fixture(&fixture).max(100);
-        let mut host = Self {
-            fixture,
-            dag: DagHost::from_fixture_without_layout(DagFixture {
-                schema: "dag.fixture".into(),
-                camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-                nodes: vec![],
-                edges: vec![],
-            }),
-            registry: imperative_module_registry(),
-            next_serial,
-        };
+        let mut host =
+            Self { fixture, dag: DagHost::from_fixture_without_layout(DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }), registry: imperative_module_registry(), next_serial };
         host.rebuild_dag();
         host
     }
 
-    pub fn replace_fixture(&mut self, fixture: SequenceFixture) -> Result<(), String> {
+    pub fn replace_fixture(&mut self, fixture: SequenceFixture) -> Result<(), SequenceCoreError> {
         if fixture.schema != "sequence.fixture" {
-            return Err(format!("unsupported schema: {}", fixture.schema));
+            return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
         self.next_serial = self.next_serial.max(max_serial_in_fixture(&fixture));
         self.fixture = fixture;
@@ -245,16 +253,16 @@ impl SequenceHost {
         Ok(())
     }
 
-    pub fn load_json(json: &str) -> Result<Self, String> {
-        let fixture: SequenceFixture = serde_json::from_str(json).map_err(|err| err.to_string())?;
+    pub fn load_json(json: &str) -> Result<Self, SequenceCoreError> {
+        let fixture: SequenceFixture = serde_json::from_str(json)?;
         if fixture.schema != "sequence.fixture" {
-            return Err(format!("unsupported schema: {}", fixture.schema));
+            return Err(SequenceCoreError::UnsupportedSchema(fixture.schema));
         }
         Ok(Self::from_fixture(fixture))
     }
 
-    pub fn to_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.fixture).map_err(|err| err.to_string())
+    pub fn to_json(&self) -> Result<String, SequenceCoreError> {
+        Ok(serde_json::to_string(&self.fixture)?)
     }
 
     pub fn catalogue_json(&self) -> String {
@@ -264,16 +272,8 @@ impl SequenceHost {
     pub fn pick_step_id_at_screen(&self, sx: f64, sy: f64, width: u32, height: u32, dpr: f64) -> Option<String> {
         use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
         use infinite_cavas::Point;
-        let viewport = Viewport {
-            width: width.max(1),
-            height: height.max(1),
-            dpr: dpr.max(1.0),
-        };
-        let camera = CavasCamera {
-            x: self.dag.fixture.camera.x,
-            y: self.dag.fixture.camera.y,
-            zoom: self.dag.fixture.camera.zoom,
-        };
+        let viewport = Viewport { width: width.max(1), height: height.max(1), dpr: dpr.max(1.0) };
+        let camera = CavasCamera { x: self.dag.fixture.camera.x, y: self.dag.fixture.camera.y, zoom: self.dag.fixture.camera.zoom };
         let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
         for node in self.dag.fixture.nodes.iter().rev() {
             let hw = node.width * 0.5;
@@ -293,15 +293,7 @@ impl SequenceHost {
         if let Some(owner_id) = picked_step_id {
             if let Some(owner) = self.fixture.steps.iter().find(|step| step.id == owner_id) {
                 if is_control_kind(&owner.kind) && !owner.collapsed {
-                    return self.add_step_in_slot(
-                        kind,
-                        x,
-                        y,
-                        Some(SlotRef {
-                            owner: owner_id.into(),
-                            name: default_control_slot(&owner.kind).into(),
-                        }),
-                    );
+                    return self.add_step_in_slot(kind, x, y, Some(SlotRef { owner: owner_id.into(), name: default_control_slot(&owner.kind).into() }));
                 }
             }
         }
@@ -331,15 +323,7 @@ impl SequenceHost {
     pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
         self.clear_ghost_step();
         let id = self.next_step_id();
-        self.fixture.steps.push(SequenceStep {
-            id: id.clone(),
-            kind: kind.into(),
-            params: Dictionary::new(),
-            x,
-            y,
-            slot,
-            collapsed: false,
-        });
+        self.fixture.steps.push(SequenceStep { id: id.clone(), kind: kind.into(), params: Dictionary::new(), x, y, slot, collapsed: false });
         self.rebuild_dag();
         id
     }
@@ -366,12 +350,8 @@ impl SequenceHost {
                 }
             }
         }
-        self.fixture
-            .steps
-            .retain(|step| !remove_ids.iter().any(|remove_id| remove_id == &step.id));
-        self.fixture
-            .edges
-            .retain(|edge| !remove_ids.iter().any(|remove_id| remove_id == &edge.from || remove_id == &edge.to));
+        self.fixture.steps.retain(|step| !remove_ids.iter().any(|remove_id| remove_id == &step.id));
+        self.fixture.edges.retain(|edge| !remove_ids.iter().any(|remove_id| remove_id == &edge.from || remove_id == &edge.to));
         if self.fixture.steps.len() == before {
             return false;
         }
@@ -379,41 +359,31 @@ impl SequenceHost {
         true
     }
 
-    pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), String> {
-        let params: Dictionary = serde_json::from_str(json).map_err(|err| err.to_string())?;
+    pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
+        let params: Dictionary = serde_json::from_str(json)?;
         let Some(step) = self.fixture.steps.iter_mut().find(|step| step.id == id) else {
-            return Err(format!("unknown step: {id}"));
+            return Err(SequenceCoreError::UnknownStep(id.into()));
         };
         step.params = params;
         self.rebuild_dag();
         Ok(())
     }
 
-    pub fn connect_steps(&mut self, from_id: &str, to_id: &str) -> Result<String, String> {
+    pub fn connect_steps(&mut self, from_id: &str, to_id: &str) -> Result<String, SequenceCoreError> {
         if from_id == to_id {
-            return Err("cannot connect step to itself".into());
+            return Err(SequenceCoreError::SelfConnect);
         }
-        let from_step = self
-            .fixture
-            .steps
-            .iter()
-            .find(|step| step.id == from_id)
-            .ok_or_else(|| format!("{from_id} not found"))?;
-        let to_step = self
-            .fixture
-            .steps
-            .iter()
-            .find(|step| step.id == to_id)
-            .ok_or_else(|| format!("{to_id} not found"))?;
+        let from_step = self.fixture.steps.iter().find(|step| step.id == from_id).ok_or_else(|| SequenceCoreError::StepNotFound(from_id.into()))?;
+        let to_step = self.fixture.steps.iter().find(|step| step.id == to_id).ok_or_else(|| SequenceCoreError::StepNotFound(to_id.into()))?;
         if slot_key(from_step.slot.as_ref()) != slot_key(to_step.slot.as_ref()) {
-            return Err("steps must share the same slot scope".into());
+            return Err(SequenceCoreError::MismatchedSlotScope);
         }
         let existing: Vec<(String, String)> = self.fixture.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
         if would_create_cycle(&existing, from_id, to_id) {
-            return Err("connection would create cycle".into());
+            return Err(SequenceCoreError::CycleDetected);
         }
         if self.fixture.edges.iter().any(|edge| edge.from == from_id) {
-            return Err(format!("{from_id} already has outgoing flow"));
+            return Err(SequenceCoreError::OutgoingFlowExists(from_id.into()));
         }
         if self.fixture.edges.iter().any(|edge| edge.to == to_id) {
             self.fixture.edges.retain(|edge| edge.to != to_id);
@@ -451,13 +421,7 @@ impl SequenceHost {
             .collect();
         let mut edges = Vec::new();
         for (from, to) in dag_pairs {
-            let id = self
-                .fixture
-                .edges
-                .iter()
-                .find(|edge| edge.from == from && edge.to == to)
-                .map(|edge| edge.id.clone())
-                .unwrap_or_else(|| self.next_edge_id());
+            let id = self.fixture.edges.iter().find(|edge| edge.from == from && edge.to == to).map(|edge| edge.id.clone()).unwrap_or_else(|| self.next_edge_id());
             edges.push(SequenceEdge { id, from, to });
         }
         self.fixture.edges = edges;
@@ -479,36 +443,22 @@ impl SequenceHost {
         self.build_path_for_slot(None)
     }
 
-    pub fn build_path_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.build_path()).map_err(|err| err.to_string())
+    pub fn build_path_json(&self) -> Result<String, SequenceCoreError> {
+        Ok(serde_json::to_string(&self.build_path())?)
     }
 
     fn build_path_for_slot(&self, slot: Option<&SlotRef>) -> Path {
         let slot_filter = slot_key(slot);
-        let scoped_steps: Vec<&SequenceStep> = self
-            .fixture
-            .steps
-            .iter()
-            .filter(|step| slot_key(step.slot.as_ref()) == slot_filter)
-            .collect();
+        let scoped_steps: Vec<&SequenceStep> = self.fixture.steps.iter().filter(|step| slot_key(step.slot.as_ref()) == slot_filter).collect();
         let incoming: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.to.as_str(), edge.from.as_str())).collect();
         let outgoing: HashMap<&str, &str> = self.fixture.edges.iter().map(|edge| (edge.from.as_str(), edge.to.as_str())).collect();
-        let heads: Vec<&SequenceStep> = scoped_steps
-            .iter()
-            .copied()
-            .filter(|step| !incoming.contains_key(step.id.as_str()))
-            .collect();
+        let heads: Vec<&SequenceStep> = scoped_steps.iter().copied().filter(|step| !incoming.contains_key(step.id.as_str())).collect();
         let start = if heads.len() == 1 {
             heads[0].id.as_str()
         } else if scoped_steps.len() == 1 {
             scoped_steps[0].id.as_str()
         } else {
-            return Path {
-                steps: scoped_steps
-                    .iter()
-                    .map(|step| self.step_to_imperative_step(step))
-                    .collect(),
-            };
+            return Path { steps: scoped_steps.iter().map(|step| self.step_to_imperative_step(step)).collect() };
         };
         let mut ordered = Vec::new();
         let mut by_id: BTreeMap<&str, &SequenceStep> = scoped_steps.into_iter().map(|step| (step.id.as_str(), step)).collect();
@@ -533,19 +483,11 @@ impl SequenceHost {
         let mut bodies = BTreeMap::new();
         if is_control_kind(&step.kind) {
             for slot_name in control_slots(&step.kind) {
-                let slot_ref = SlotRef {
-                    owner: step.id.clone(),
-                    name: slot_name.to_string(),
-                };
+                let slot_ref = SlotRef { owner: step.id.clone(), name: slot_name.to_string() };
                 bodies.insert(slot_name.to_string(), self.build_path_for_slot(Some(&slot_ref)));
             }
         }
-        Step {
-            id: step.id.clone(),
-            kind: step.kind.clone(),
-            params: step.params.clone(),
-            bodies,
-        }
+        Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.clone(), bodies }
     }
 
     fn is_step_visible(&self, step: &SequenceStep) -> bool {
@@ -559,21 +501,11 @@ impl SequenceHost {
     }
 
     fn slot_member_count(&self, owner_id: &str) -> usize {
-        self.fixture
-            .steps
-            .iter()
-            .filter(|step| step.slot.as_ref().is_some_and(|slot| slot.owner == owner_id))
-            .count()
+        self.fixture.steps.iter().filter(|step| step.slot.as_ref().is_some_and(|slot| slot.owner == owner_id)).count()
     }
 
     pub fn layout_expanded_slots(&mut self) {
-        let control_steps: Vec<(String, String, bool)> = self
-            .fixture
-            .steps
-            .iter()
-            .filter(|step| is_control_kind(&step.kind))
-            .map(|step| (step.id.clone(), step.kind.clone(), step.collapsed))
-            .collect();
+        let control_steps: Vec<(String, String, bool)> = self.fixture.steps.iter().filter(|step| is_control_kind(&step.kind)).map(|step| (step.id.clone(), step.kind.clone(), step.collapsed)).collect();
         for (owner_id, kind, collapsed) in control_steps {
             if collapsed {
                 continue;
@@ -583,17 +515,8 @@ impl SequenceHost {
             let base_x = owner.x;
             let base_y = owner.y + 160.0;
             for (index, slot_name) in control_slots(&kind).iter().enumerate() {
-                let slot_ref = SlotRef {
-                    owner: owner_id.clone(),
-                    name: (*slot_name).into(),
-                };
-                let members: Vec<String> = self
-                    .fixture
-                    .steps
-                    .iter()
-                    .filter(|step| step.slot.as_ref() == Some(&slot_ref))
-                    .map(|step| step.id.clone())
-                    .collect();
+                let slot_ref = SlotRef { owner: owner_id.clone(), name: (*slot_name).into() };
+                let members: Vec<String> = self.fixture.steps.iter().filter(|step| step.slot.as_ref() == Some(&slot_ref)).map(|step| step.id.clone()).collect();
                 let offset_x = base_x + (index as f64 - (control_slots(&kind).len() as f64 - 1.0) * 0.5) * 320.0;
                 for (member_index, member_id) in members.iter().enumerate() {
                     if let Some(step) = self.fixture.steps.iter_mut().find(|step| step.id == *member_id) {
@@ -607,10 +530,9 @@ impl SequenceHost {
     }
 
     /// 🌳 Recomputes visible step positions using the shared layered DAG tree layout, then rebuilds the DAG view.
-    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), String> {
-        self.dag.reorganize(opts)?;
-        let positions: HashMap<String, (f64, f64)> =
-            self.dag.fixture.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
+    pub fn reorganize(&mut self, opts: &DagLayoutOptions) -> Result<(), SequenceCoreError> {
+        self.dag.reorganize(opts).map_err(|e| SequenceCoreError::Dag(e.to_string()))?;
+        let positions: HashMap<String, (f64, f64)> = self.dag.fixture.nodes.iter().map(|node| (node.id.clone(), (node.x, node.y))).collect();
         for step in self.fixture.steps.iter_mut() {
             if let Some(&(x, y)) = positions.get(&step.id) {
                 step.x = x;
@@ -645,13 +567,7 @@ impl SequenceHost {
     }
 
     fn build_dag_fixture(&self) -> DagFixture {
-        let nodes: Vec<DagNodeSpec> = self
-            .fixture
-            .steps
-            .iter()
-            .filter(|step| self.is_step_visible(step))
-            .map(|step| self.step_to_dag_node(step))
-            .collect();
+        let nodes: Vec<DagNodeSpec> = self.fixture.steps.iter().filter(|step| self.is_step_visible(step)).map(|step| self.step_to_dag_node(step)).collect();
         let visible_ids: std::collections::HashSet<String> = nodes.iter().map(|node| node.id.clone()).collect();
         let existing: Vec<(String, String)> = self.fixture.edges.iter().map(|edge| (edge.from.clone(), edge.to.clone())).collect();
         let edges: Vec<DagFixtureEdge> = self
@@ -660,51 +576,32 @@ impl SequenceHost {
             .iter()
             .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
-            .map(|edge| DagFixtureEdge {
-                id: edge.id.clone(),
-                source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT),
-                target: format!("{}:{}", edge.to, FLOW_INPUT_PORT),
-                route_style: EdgeRouteStyle::SharpSz,
-                properties: PropertyBag::new(),
-            })
+            .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}:{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagFixture {
-            schema: "dag.fixture".into(),
-            camera: self.fixture.camera.clone(),
-            nodes,
-            edges,
-        }
+        DagFixture { schema: "dag.fixture".into(), camera: self.fixture.camera.clone(), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
         let info = self.registry.operator_info(&step.kind);
-        let (name, mut abbreviation, icon) = info
-            .as_ref()
-            .map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone()))
-            .unwrap_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡".into()));
+        let (name, mut abbreviation, icon) = info.as_ref().map(|entry| (entry.name.clone(), entry.abbreviation.clone(), entry.icon.clone())).unwrap_or_else(|| (step.kind.clone(), step.kind.clone(), "emoji:⚡".into()));
         if is_control_kind(&step.kind) {
             let count = self.slot_member_count(&step.id);
-            abbreviation = if step.collapsed {
-                format!("▸ {count}")
-            } else {
-                format!("▾ {count}")
-            };
+            abbreviation = if step.collapsed { format!("▸ {count}") } else { format!("▾ {count}") };
         }
-        let (inputs, outputs) = if is_function_kind(&step.kind) {
-            let info = info.expect("function step must resolve operator info");
-            let mut inputs: Vec<IoPortSpec> = info.inputs.iter().map(|spec| input_spec_to_port(spec, &step.params)).collect();
-            let mut outputs: Vec<IoPortSpec> = info.outputs.iter().map(channel_spec_to_output_port).collect();
-            if outputs.is_empty() {
-                outputs.push(channel_spec_to_output_port(&ChannelSpec::wildcard()));
+        // 🛡️ falls back to execution-only ports for a function-kind step whose kind isn't (yet) registered,
+        // rather than assuming the registry always resolves it — matches the non-function-kind fallback below.
+        let (inputs, outputs) = match info.filter(|_| is_function_kind(&step.kind)) {
+            Some(info) => {
+                let mut inputs: Vec<IoPortSpec> = info.inputs.iter().map(|spec| input_spec_to_port(spec, &step.params)).collect();
+                let mut outputs: Vec<IoPortSpec> = info.outputs.iter().map(channel_spec_to_output_port).collect();
+                if outputs.is_empty() {
+                    outputs.push(channel_spec_to_output_port(&ChannelSpec::wildcard()));
+                }
+                inputs.push(hidden_flow_input_port());
+                outputs.push(hidden_flow_output_port());
+                (inputs, outputs)
             }
-            inputs.push(hidden_flow_input_port());
-            outputs.push(hidden_flow_output_port());
-            (inputs, outputs)
-        } else {
-            (
-                vec![visible_flow_input_port()],
-                vec![visible_flow_output_port()],
-            )
+            None => (vec![visible_flow_input_port()], vec![visible_flow_output_port()]),
         };
         let width = dag::computation_node_width(&name, &inputs, &outputs);
         let height = dag::computation_node_height(inputs.len(), outputs.len(), false, false);
@@ -715,15 +612,7 @@ impl SequenceHost {
     }
 
     pub fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
-        let ghost = SequenceStep {
-            id: "__ghost__".into(),
-            kind: kind.into(),
-            params: Dictionary::new(),
-            x,
-            y,
-            slot: None,
-            collapsed: false,
-        };
+        let ghost = SequenceStep { id: "__ghost__".into(), kind: kind.into(), params: Dictionary::new(), x, y, slot: None, collapsed: false };
         let node = self.step_to_dag_node(&ghost);
         self.dag.set_ghost_node(Some(node));
     }
@@ -781,17 +670,13 @@ mod wasm_session {
         #[wasm_bindgen(js_name = loadFixtureJson)]
         pub fn load_fixture_json(&self, json: &str) -> Result<(), JsValue> {
             let fixture: SequenceFixture = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-            self.state
-                .borrow_mut()
-                .host
-                .replace_fixture(fixture)
-                .map_err(|err| JsValue::from_str(&err))
+            self.state.borrow_mut().host.replace_fixture(fixture).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = fixtureJson)]
         pub fn fixture_json(&self) -> Result<String, JsValue> {
             self.state.borrow_mut().host.sync_from_dag();
-            self.state.borrow().host.to_json().map_err(|err| JsValue::from_str(&err))
+            self.state.borrow().host.to_json().map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = catalogueJson)]
@@ -806,18 +691,12 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = addStepDropped)]
         pub fn add_step_dropped(&self, kind: &str, x: f64, y: f64, picked_step_id: Option<String>) -> String {
-            self.state
-                .borrow_mut()
-                .host
-                .add_step_dropped(kind, x, y, picked_step_id.as_deref())
+            self.state.borrow_mut().host.add_step_dropped(kind, x, y, picked_step_id.as_deref())
         }
 
         #[wasm_bindgen(js_name = addStepToSlot)]
         pub fn add_step_to_slot(&self, kind: &str, x: f64, y: f64, owner: &str, slot_name: &str) -> String {
-            self.state
-                .borrow_mut()
-                .host
-                .add_step_in_slot(kind, x, y, Some(SlotRef { owner: owner.into(), name: slot_name.into() }))
+            self.state.borrow_mut().host.add_step_in_slot(kind, x, y, Some(SlotRef { owner: owner.into(), name: slot_name.into() }))
         }
 
         #[wasm_bindgen(js_name = setStepCollapsed)]
@@ -833,7 +712,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = buildPathJson)]
         pub fn build_path_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.build_path_json().map_err(|err| JsValue::from_str(&err))
+            self.state.borrow().host.build_path_json().map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = removeStep)]
@@ -843,12 +722,12 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = setStepParamsJson)]
         pub fn set_step_params_json(&self, id: &str, json: &str) -> Result<(), JsValue> {
-            self.state.borrow_mut().host.set_step_params_json(id, json).map_err(|err| JsValue::from_str(&err))
+            self.state.borrow_mut().host.set_step_params_json(id, json).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = connectSteps)]
         pub fn connect_steps(&self, from_id: &str, to_id: &str) -> Result<String, JsValue> {
-            self.state.borrow_mut().host.connect_steps(from_id, to_id).map_err(|err| JsValue::from_str(&err))
+            self.state.borrow_mut().host.connect_steps(from_id, to_id).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = disconnectSteps)]
@@ -881,9 +760,7 @@ mod wasm_session {
             let pw = ((lw as f64 * dpr).round() as u32).max(1);
             let ph = ((lh as f64 * dpr).round() as u32).max(1);
             future_to_promise(async move {
-                let (render_ctx, renderer, surface) = infinite_cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph)
-                    .await
-                    .map_err(|err| JsValue::from_str(&err))?;
+                let (render_ctx, renderer, surface) = infinite_cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|err| JsValue::from_str(&err))?;
                 let mut g = inner.borrow_mut();
                 g.width = lw;
                 g.height = lh;
@@ -928,16 +805,8 @@ mod wasm_session {
             use infinite_cavas::camera::{screen_to_world, Camera as CavasCamera, Viewport};
             use infinite_cavas::Point;
             let inner = self.state.borrow();
-            let viewport = Viewport {
-                width: inner.width.max(1),
-                height: inner.height.max(1),
-                dpr: inner.dpr.max(1.0),
-            };
-            let camera = CavasCamera {
-                x: inner.host.dag.fixture.camera.x,
-                y: inner.host.dag.fixture.camera.y,
-                zoom: inner.host.dag.fixture.camera.zoom,
-            };
+            let viewport = Viewport { width: inner.width.max(1), height: inner.height.max(1), dpr: inner.dpr.max(1.0) };
+            let camera = CavasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
             let world = screen_to_world(&camera, &viewport, Point::new(sx, sy));
             Ok(format!("{{\"x\":{},\"y\":{}}}", world.x, world.y))
         }
@@ -991,16 +860,8 @@ mod wasm_session {
             use infinite_cavas::camera::{wheel_screen, Camera as CavasCamera, Viewport};
             let mut inner = self.state.borrow_mut();
             inner.host.dag.set_wheel_zoom_active(true);
-            let viewport = Viewport {
-                width: inner.width.max(1),
-                height: inner.height.max(1),
-                dpr: inner.dpr.max(1.0),
-            };
-            let mut camera = CavasCamera {
-                x: inner.host.dag.fixture.camera.x,
-                y: inner.host.dag.fixture.camera.y,
-                zoom: inner.host.dag.fixture.camera.zoom,
-            };
+            let viewport = Viewport { width: inner.width.max(1), height: inner.height.max(1), dpr: inner.dpr.max(1.0) };
+            let mut camera = CavasCamera { x: inner.host.dag.fixture.camera.x, y: inner.host.dag.fixture.camera.y, zoom: inner.host.dag.fixture.camera.zoom };
             wheel_screen(&mut camera, &viewport, sx, sy, delta_y);
             inner.host.dag.set_camera(camera.x, camera.y, camera.zoom);
             inner.host.dag.set_wheel_zoom_active(false);
@@ -1010,7 +871,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = reorganize)]
         pub fn reorganize(&self, opts_json: &str) -> Result<(), JsValue> {
             let opts: DagLayoutOptions = serde_json::from_str(opts_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-            self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|err| JsValue::from_str(&err))?;
+            self.state.borrow_mut().host.dag.reorganize(&opts).map_err(|err| JsValue::from_str(&err.to_string()))?;
             self.state.borrow_mut().host.sync_from_dag();
             self.state.borrow_mut().host.layout_expanded_slots();
             Ok(())
@@ -1055,7 +916,7 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = labelOverlayPaintStateJson)]
         pub fn label_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.dag.label_overlay_paint_state_json().map_err(|err| JsValue::from_str(&err))
+            self.state.borrow().host.dag.label_overlay_paint_state_json().map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = hoveredNodeId)]
@@ -1144,15 +1005,7 @@ mod tests {
     fn connect_steps_rejects_fan_out() {
         let mut host = SequenceHost::default();
         host.fixture.edges.clear();
-        host.fixture.steps.push(SequenceStep {
-            id: "step-3".into(),
-            kind: "wait.delay".into(),
-            params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))),
-            x: 560.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         assert!(host.connect_steps("step-1", "step-2").is_ok());
         assert!(host.connect_steps("step-1", "step-3").is_err());
     }
@@ -1160,15 +1013,7 @@ mod tests {
     #[test]
     fn build_path_includes_control_bodies() {
         let mut host = SequenceHost::default();
-        host.fixture.steps.push(SequenceStep {
-            id: "step-3".into(),
-            kind: "control.if".into(),
-            params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))),
-            x: 560.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         host.fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),
@@ -1190,15 +1035,7 @@ mod tests {
     fn rebuild_dag_preserves_selection() {
         let mut host = SequenceHost::default();
         host.dag.set_selection(&["step-1".into()]);
-        host.fixture.steps.push(SequenceStep {
-            id: "step-3".into(),
-            kind: "wait.delay".into(),
-            params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))),
-            x: 560.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         host.rebuild_dag();
         assert!(host.dag.selected_node_ids().contains(&"step-1".to_string()));
     }
@@ -1214,15 +1051,7 @@ mod tests {
     #[test]
     fn function_steps_use_data_ports_without_visible_execution_pins() {
         let host = SequenceHost::default();
-        let step = SequenceStep {
-            id: "step-fn".into(),
-            kind: "math.add".into(),
-            params: Dictionary::new(),
-            x: 0.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        };
+        let step = SequenceStep { id: "step-fn".into(), kind: "math.add".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
         let node = host.step_to_dag_node(&step);
         assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
@@ -1233,15 +1062,7 @@ mod tests {
     #[test]
     fn text_steps_use_data_ports_without_visible_execution_pins() {
         let host = SequenceHost::default();
-        let step = SequenceStep {
-            id: "step-txt".into(),
-            kind: "text.concat".into(),
-            params: Dictionary::new(),
-            x: 0.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        };
+        let step = SequenceStep { id: "step-txt".into(), kind: "text.concat".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
         let node = host.step_to_dag_node(&step);
         assert!(node.inputs().iter().any(|port| port.id == "left" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
@@ -1254,7 +1075,7 @@ mod tests {
     fn replace_fixture_preserves_next_serial_and_selection() {
         let mut host = SequenceHost::default();
         let first = host.add_step("math.add", 40.0, 40.0);
-        host.dag.set_selection(&[first.clone()]);
+        host.dag.set_selection(std::slice::from_ref(&first));
         let json = host.to_json().expect("fixture json");
         let round_trip: SequenceFixture = serde_json::from_str(&json).expect("parse");
         host.replace_fixture(round_trip).expect("replace");
@@ -1280,15 +1101,7 @@ mod tests {
     #[test]
     fn add_step_dropped_targets_expanded_control_slot() {
         let mut host = SequenceHost::default();
-        host.fixture.steps.push(SequenceStep {
-            id: "step-3".into(),
-            kind: "control.if".into(),
-            params: Dictionary::new(),
-            x: 560.0,
-            y: 0.0,
-            slot: None,
-            collapsed: false,
-        });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
         let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
         let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
         assert_eq!(step.slot.as_ref().map(|slot| slot.name.as_str()), Some("then"));
@@ -1303,10 +1116,7 @@ mod tests {
 }
 
 // #region 🔖DocumentVcs
-use vcs::{
-    collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, Identified, ItemPatch, Operation,
-    OperationDiff, Patchable,
-};
+use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, Identified, Operation, OperationDiff, Patchable};
 
 pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 
@@ -1339,12 +1149,7 @@ pub struct SequenceStepPatch {
 
 impl Patchable<SequenceStepPatch> for SequenceStep {
     fn apply_patch(&mut self, patch: &SequenceStepPatch) -> SequenceStepPatch {
-        let inverse = SequenceStepPatch {
-            params: patch.params.as_ref().map(|_| self.params.clone()),
-            x: patch.x.map(|_| self.x),
-            y: patch.y.map(|_| self.y),
-            collapsed: patch.collapsed.map(|_| self.collapsed),
-        };
+        let inverse = SequenceStepPatch { params: patch.params.as_ref().map(|_| self.params.clone()), x: patch.x.map(|_| self.x), y: patch.y.map(|_| self.y), collapsed: patch.collapsed.map(|_| self.collapsed) };
         if let Some(params) = &patch.params {
             self.params = params.clone();
         }
@@ -1371,10 +1176,7 @@ pub struct SequenceEdgePatch {
 
 impl Patchable<SequenceEdgePatch> for SequenceEdge {
     fn apply_patch(&mut self, patch: &SequenceEdgePatch) -> SequenceEdgePatch {
-        let inverse = SequenceEdgePatch {
-            from: patch.from.as_ref().map(|_| self.from.clone()),
-            to: patch.to.as_ref().map(|_| self.to.clone()),
-        };
+        let inverse = SequenceEdgePatch { from: patch.from.as_ref().map(|_| self.from.clone()), to: patch.to.as_ref().map(|_| self.to.clone()) };
         if let Some(from) = &patch.from {
             self.from = from.clone();
         }
@@ -1403,10 +1205,7 @@ where
     }
 }
 
-fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(
-    target: &mut Option<CollectionDiff<TId, TPatch, TItem>>,
-    incoming: Option<CollectionDiff<TId, TPatch, TItem>>,
-) {
+fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut Option<CollectionDiff<TId, TPatch, TItem>>, incoming: Option<CollectionDiff<TId, TPatch, TItem>>) {
     if let Some(b) = incoming {
         match target {
             Some(a) => {
@@ -1467,14 +1266,8 @@ impl Operation<SequenceFixture> for SequenceOp {
 
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
-            SequenceOp::Steps(op) => SequenceDiff {
-                steps: Some(collection_diff_from_op(&projection.steps, op)),
-                ..Default::default()
-            },
-            SequenceOp::Edges(op) => SequenceDiff {
-                edges: Some(collection_diff_from_op(&projection.edges, op)),
-                ..Default::default()
-            },
+            SequenceOp::Steps(op) => SequenceDiff { steps: Some(collection_diff_from_op(&projection.steps, op)), ..Default::default() },
+            SequenceOp::Edges(op) => SequenceDiff { edges: Some(collection_diff_from_op(&projection.edges, op)), ..Default::default() },
             SequenceOp::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
         }
     }
@@ -1523,10 +1316,7 @@ pub fn sequence_fixture_ops(before: &SequenceFixture, after: &SequenceFixture) -
         match before.edges.iter().find(|entry| entry.id == edge.id) {
             None => ops.push(SequenceOp::Edges(CollectionOp::Add { index, item: edge.clone() })),
             Some(prior) => {
-                let patch = SequenceEdgePatch {
-                    from: (prior.from != edge.from).then(|| edge.from.clone()),
-                    to: (prior.to != edge.to).then(|| edge.to.clone()),
-                };
+                let patch = SequenceEdgePatch { from: (prior.from != edge.from).then(|| edge.from.clone()), to: (prior.to != edge.to).then(|| edge.to.clone()) };
                 if patch != SequenceEdgePatch::default() {
                     ops.push(SequenceOp::Edges(CollectionOp::Patch { id: edge.id.clone(), patch }));
                 }
@@ -1559,24 +1349,10 @@ mod ops_tests {
     #[test]
     fn add_remove_patch_steps_round_trip() {
         let fixture = default_fixture();
-        let step = SequenceStep {
-            id: "step-99".into(),
-            kind: "log.print".into(),
-            params: Dictionary::new(),
-            x: 5.0,
-            y: 6.0,
-            slot: None,
-            collapsed: false,
-        };
+        let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: Dictionary::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
         let added = round_trip(&fixture, &SequenceOp::Steps(CollectionOp::Add { index: 2, item: step }));
         assert_eq!(added.steps.len(), 3);
-        let patched = round_trip(
-            &added,
-            &SequenceOp::Steps(CollectionOp::Patch {
-                id: "step-99".into(),
-                patch: SequenceStepPatch { x: Some(120.0), ..Default::default() },
-            }),
-        );
+        let patched = round_trip(&added, &SequenceOp::Steps(CollectionOp::Patch { id: "step-99".into(), patch: SequenceStepPatch { x: Some(120.0), ..Default::default() } }));
         assert_eq!(patched.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
         let removed = round_trip(&patched, &SequenceOp::Steps(CollectionOp::Remove { id: "step-99".into() }));
         assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
@@ -1600,26 +1376,10 @@ mod ops_tests {
 
     #[test]
     fn store_applies_and_undoes_step_add() {
-        let mut store = SequenceStore::new(create_document_vcs_envelope(
-            SEQUENCE_FIXTURE_SCHEMA,
-            "sequence",
-            default_fixture(),
-            None,
-        ));
+        let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence", default_fixture(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![SequenceOp::Steps(CollectionOp::Add {
-                    index: 2,
-                    item: SequenceStep {
-                        id: "step-7".into(),
-                        kind: "log.print".into(),
-                        params: Dictionary::new(),
-                        x: 0.0,
-                        y: 0.0,
-                        slot: None,
-                        collapsed: false,
-                    },
-                })],
+                operations: vec![SequenceOp::Steps(CollectionOp::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } })],
                 description: None,
             })
             .expect("apply");

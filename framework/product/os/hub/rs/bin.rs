@@ -16,6 +16,7 @@ use dashmap::DashMap;
 use futures::{SinkExt, StreamExt};
 use os_hub_storage::model::{DocumentRecord, NodeRecord, StudioRole};
 use os_hub_storage::HubStorage;
+use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OpEnvelope, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -23,13 +24,23 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::sync::{broadcast, mpsc, oneshot};
-use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OpEnvelope, PresencePeer};
+
+//#region ⚠️ Errors
+/// @emoji 🧯 Top-level startup error — the only fallible paths outside a per-document actor are
+/// picking/connecting the storage backend and binding the HTTP listener.
+#[derive(Debug, thiserror::Error)]
+enum HubError {
+    #[error(transparent)]
+    Storage(#[from] os_hub_storage::error::StorageError),
+    #[error("io error: {0}")]
+    Io(#[from] std::io::Error),
+    #[error("unknown OS_HUB_STORAGE_BACKEND: {0}")]
+    UnknownStorageBackend(String),
+}
+//#endregion ⚠️ Errors
 
 fn now_ms() -> i64 {
-    SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map(|d| d.as_millis() as i64)
-        .unwrap_or(0)
+    SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
 }
 
 //#region 🔖DocumentActor
@@ -49,36 +60,14 @@ struct SubscribeReply {
 
 /// @emoji 📬 Mailbox messages for a {@link DocumentActor}.
 enum DocMsg {
-    Subscribe {
-        since_version: i64,
-        reply: oneshot::Sender<SubscribeReply>,
-    },
-    AppendOps {
-        envelopes: Vec<OpEnvelope>,
-        origin: String,
-        reply: oneshot::Sender<Vec<AppendedOp>>,
-    },
-    PutEnvelope {
-        version: i64,
-        envelope: Value,
-        reply: oneshot::Sender<Result<i64, i64>>,
-    },
-    GetDocument {
-        reply: oneshot::Sender<(Value, i64)>,
-    },
-    GetEnvelope {
-        reply: oneshot::Sender<(Value, i64)>,
-    },
-    OpsSince {
-        since: i64,
-        reply: oneshot::Sender<Vec<(i64, OpEnvelope)>>,
-    },
-    PresenceUpdate {
-        peer: PresencePeer,
-    },
-    PresenceLeave {
-        actor: String,
-    },
+    Subscribe { since_version: i64, reply: oneshot::Sender<SubscribeReply> },
+    AppendOps { envelopes: Vec<OpEnvelope>, origin: String, reply: oneshot::Sender<Vec<AppendedOp>> },
+    PutEnvelope { version: i64, envelope: Value, reply: oneshot::Sender<Result<i64, i64>> },
+    GetDocument { reply: oneshot::Sender<(Value, i64)> },
+    GetEnvelope { reply: oneshot::Sender<(Value, i64)> },
+    OpsSince { since: i64, reply: oneshot::Sender<Vec<(i64, OpEnvelope)>> },
+    PresenceUpdate { peer: PresencePeer },
+    PresenceLeave { actor: String },
 }
 
 /// @emoji 🎛️ Cheap clonable handle to a document's actor mailbox.
@@ -90,21 +79,13 @@ struct DocumentHandle {
 impl DocumentHandle {
     async fn subscribe(&self, since_version: i64) -> Option<SubscribeReply> {
         let (reply, rx) = oneshot::channel();
-        self.tx
-            .send(DocMsg::Subscribe { since_version, reply })
-            .await
-            .ok()?;
+        self.tx.send(DocMsg::Subscribe { since_version, reply }).await.ok()?;
         rx.await.ok()
     }
 
     async fn append_ops(&self, envelopes: Vec<OpEnvelope>, origin: String) -> Vec<AppendedOp> {
         let (reply, rx) = oneshot::channel();
-        if self
-            .tx
-            .send(DocMsg::AppendOps { envelopes, origin, reply })
-            .await
-            .is_err()
-        {
+        if self.tx.send(DocMsg::AppendOps { envelopes, origin, reply }).await.is_err() {
             return Vec::new();
         }
         rx.await.unwrap_or_default()
@@ -112,12 +93,7 @@ impl DocumentHandle {
 
     async fn put_envelope(&self, version: i64, envelope: Value) -> Result<i64, i64> {
         let (reply, rx) = oneshot::channel();
-        if self
-            .tx
-            .send(DocMsg::PutEnvelope { version, envelope, reply })
-            .await
-            .is_err()
-        {
+        if self.tx.send(DocMsg::PutEnvelope { version, envelope, reply }).await.is_err() {
             return Err(-1);
         }
         rx.await.unwrap_or(Err(-1))
@@ -169,12 +145,9 @@ struct DocumentActor {
 }
 
 impl DocumentActor {
-    async fn load(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> Self {
-        let record: DocumentRecord = storage
-            .ensure_document(&studio_id, &document_id)
-            .await
-            .expect("ensure document");
-        let ops = storage.load_ops(&document_id).await.expect("load ops");
+    async fn load(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> Result<Self, os_hub_storage::error::StorageError> {
+        let record: DocumentRecord = storage.ensure_document(&studio_id, &document_id).await?;
+        let ops = storage.load_ops(&document_id).await?;
         let mut dag = OpDag::new();
         let mut seen = HashSet::new();
         for (_, envelope) in &ops {
@@ -182,115 +155,63 @@ impl DocumentActor {
             seen.insert(envelope.id.0.clone());
         }
         let (broadcast, _) = broadcast::channel(256);
-        Self {
-            document_id,
-            storage,
-            schema: record.schema,
-            snapshot: record.snapshot,
-            version: record.version,
-            dag,
-            ops,
-            seen,
-            presence: HashMap::new(),
-            broadcast,
-        }
+        Ok(Self { document_id, storage, schema: record.schema, snapshot: record.snapshot, version: record.version, dag, ops, seen, presence: HashMap::new(), broadcast })
     }
 
     async fn run(mut self, mut rx: mpsc::Receiver<DocMsg>) {
         while let Some(msg) = rx.recv().await {
             match msg {
-                DocMsg::Subscribe {
-                    since_version,
-                    reply,
-                } => {
-                    let backlog = self
-                        .ops
-                        .iter()
-                        .filter(|(version, _)| *version > since_version)
-                        .map(|(_, envelope)| envelope.clone())
-                        .collect();
-                    let _ = reply.send(SubscribeReply {
-                        receiver: self.broadcast.subscribe(),
-                        version: self.version,
-                        envelope: self.snapshot.clone(),
-                        presence: self.presence.values().cloned().collect(),
-                        backlog,
-                    });
+                DocMsg::Subscribe { since_version, reply } => {
+                    let backlog = self.ops.iter().filter(|(version, _)| *version > since_version).map(|(_, envelope)| envelope.clone()).collect();
+                    let _ = reply.send(SubscribeReply { receiver: self.broadcast.subscribe(), version: self.version, envelope: self.snapshot.clone(), presence: self.presence.values().cloned().collect(), backlog });
                 }
-                DocMsg::AppendOps {
-                    envelopes,
-                    origin,
-                    reply,
-                } => {
+                DocMsg::AppendOps { envelopes, origin, reply } => {
                     let mut appended = Vec::new();
                     let mut fresh = Vec::new();
                     for envelope in envelopes {
                         let op_id = envelope.id.0.clone();
                         if self.seen.contains(&op_id) {
-                            appended.push(AppendedOp {
-                                version: self.version,
-                                op_id,
-                                is_new: false,
-                            });
+                            appended.push(AppendedOp { version: self.version, op_id, is_new: false });
                             continue;
                         }
-                        let inserted = self
-                            .storage
-                            .insert_op(&self.document_id, self.version + 1, &envelope)
-                            .await
-                            .expect("insert op");
+                        let inserted = match self.storage.insert_op(&self.document_id, self.version + 1, &envelope).await {
+                            Ok(inserted) => inserted,
+                            Err(error) => {
+                                tracing::error!(%error, op_id = %op_id, "failed to insert op; dropping from this batch");
+                                continue;
+                            }
+                        };
                         if !inserted {
                             self.seen.insert(op_id.clone());
-                            appended.push(AppendedOp {
-                                version: self.version,
-                                op_id,
-                                is_new: false,
-                            });
+                            appended.push(AppendedOp { version: self.version, op_id, is_new: false });
                             continue;
                         }
                         self.version += 1;
                         let _ = self.dag.insert(envelope.clone());
                         self.seen.insert(op_id.clone());
                         self.ops.push((self.version, envelope.clone()));
-                        appended.push(AppendedOp {
-                            version: self.version,
-                            op_id,
-                            is_new: true,
-                        });
+                        appended.push(AppendedOp { version: self.version, op_id, is_new: true });
                         fresh.push(envelope);
                     }
                     if !fresh.is_empty() {
-                        self.storage
-                            .save_document(&self.document_id, &self.schema, &self.snapshot, self.version)
-                            .await
-                            .expect("save document");
-                        let _ = self.broadcast.send(HubServerFrame::Ops {
-                            version: self.version,
-                            envelopes: fresh,
-                            origin,
-                        });
+                        if let Err(error) = self.storage.save_document(&self.document_id, &self.schema, &self.snapshot, self.version).await {
+                            tracing::error!(%error, document_id = %self.document_id, "failed to persist document snapshot after append");
+                        }
+                        let _ = self.broadcast.send(HubServerFrame::Ops { version: self.version, envelopes: fresh, origin });
                     }
                     let _ = reply.send(appended);
                 }
-                DocMsg::PutEnvelope {
-                    version,
-                    envelope,
-                    reply,
-                } => {
+                DocMsg::PutEnvelope { version, envelope, reply } => {
                     if version != self.version {
                         let _ = reply.send(Err(self.version));
                         continue;
                     }
                     self.version += 1;
                     self.apply_envelope(&envelope);
-                    self.storage
-                        .save_document(&self.document_id, &self.schema, &self.snapshot, self.version)
-                        .await
-                        .expect("save document");
-                    let _ = self.broadcast.send(HubServerFrame::SnapshotReplaced {
-                        version: self.version,
-                        envelope: self.snapshot.clone(),
-                    });
+                    if let Err(error) = self.storage.save_document(&self.document_id, &self.schema, &self.snapshot, self.version).await {
+                        tracing::error!(%error, document_id = %self.document_id, "failed to persist document snapshot after put");
+                    }
+                    let _ = self.broadcast.send(HubServerFrame::SnapshotReplaced { version: self.version, envelope: self.snapshot.clone() });
                     let _ = reply.send(Ok(self.version));
                 }
                 DocMsg::GetDocument { reply } => {
@@ -300,25 +221,16 @@ impl DocumentActor {
                     let _ = reply.send((self.envelope_view(), self.version));
                 }
                 DocMsg::OpsSince { since, reply } => {
-                    let rows = self
-                        .ops
-                        .iter()
-                        .filter(|(version, _)| *version > since)
-                        .map(|(version, envelope)| (*version, envelope.clone()))
-                        .collect();
+                    let rows = self.ops.iter().filter(|(version, _)| *version > since).map(|(version, envelope)| (*version, envelope.clone())).collect();
                     let _ = reply.send(rows);
                 }
                 DocMsg::PresenceUpdate { peer } => {
                     self.presence.insert(peer.actor.clone(), peer);
-                    let _ = self.broadcast.send(HubServerFrame::Presence {
-                        peers: self.presence.values().cloned().collect(),
-                    });
+                    let _ = self.broadcast.send(HubServerFrame::Presence { peers: self.presence.values().cloned().collect() });
                 }
                 DocMsg::PresenceLeave { actor } => {
                     if self.presence.remove(&actor).is_some() {
-                        let _ = self.broadcast.send(HubServerFrame::Presence {
-                            peers: self.presence.values().cloned().collect(),
-                        });
+                        let _ = self.broadcast.send(HubServerFrame::Presence { peers: self.presence.values().cloned().collect() });
                     }
                 }
             }
@@ -372,8 +284,12 @@ impl DocumentActor {
 fn spawn_document_actor(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> DocumentHandle {
     let (tx, rx) = mpsc::channel(256);
     tokio::spawn(async move {
-        let actor = DocumentActor::load(studio_id, document_id, storage).await;
-        actor.run(rx).await;
+        match DocumentActor::load(studio_id, document_id, storage).await {
+            Ok(actor) => actor.run(rx).await,
+            // rx is dropped here, closing the mailbox; every DocumentHandle method already
+            // tolerates a closed channel (`.ok()?` / `.is_err()` / `unwrap_or_default()`).
+            Err(error) => tracing::error!(%error, "failed to load document actor"),
+        }
     });
     DocumentHandle { tx }
 }
@@ -396,19 +312,12 @@ impl HubState {
         if let Some(existing) = self.actors.get(&key) {
             return existing.clone();
         }
-        self.actors
-            .entry(key.clone())
-            .or_insert_with(|| spawn_document_actor(key.0.clone(), key.1.clone(), self.storage.clone()))
-            .clone()
+        self.actors.entry(key.clone()).or_insert_with(|| spawn_document_actor(key.0.clone(), key.1.clone(), self.storage.clone())).clone()
     }
 }
 
 fn bearer(headers: &HeaderMap) -> Option<String> {
-    headers
-        .get(axum::http::header::AUTHORIZATION)
-        .and_then(|value| value.to_str().ok())
-        .and_then(|value| value.strip_prefix("Bearer "))
-        .map(|value| value.to_string())
+    headers.get(axum::http::header::AUTHORIZATION).and_then(|value| value.to_str().ok()).and_then(|value| value.strip_prefix("Bearer ")).map(|value| value.to_string())
 }
 //#endregion 🔖State
 
@@ -486,70 +395,31 @@ struct CreateAuthSessionResponse {
     user_id: String,
 }
 
-async fn list_nodes(
-    Path(studio_id): Path<String>,
-    Query(query): Query<NodesQuery>,
-    State(state): State<HubState>,
-) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
-    state
-        .storage
-        .list_nodes(&studio_id, query.parent.as_deref())
-        .await
-        .map(Json)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+async fn list_nodes(Path(studio_id): Path<String>, Query(query): Query<NodesQuery>, State(state): State<HubState>) -> Result<Json<Vec<NodeRecord>>, StatusCode> {
+    state.storage.list_nodes(&studio_id, query.parent.as_deref()).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn create_node(
-    Path(studio_id): Path<String>,
-    State(state): State<HubState>,
-    Json(body): Json<CreateNodeRequest>,
-) -> Result<Json<NodeRecord>, StatusCode> {
-    state
-        .storage
-        .create_node(&studio_id, body.parent_id.as_deref(), &body.name, &body.kind)
-        .await
-        .map(Json)
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
+async fn create_node(Path(studio_id): Path<String>, State(state): State<HubState>, Json(body): Json<CreateNodeRequest>) -> Result<Json<NodeRecord>, StatusCode> {
+    state.storage.create_node(&studio_id, body.parent_id.as_deref(), &body.name, &body.kind).await.map(Json).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)
 }
 
-async fn get_document(
-    Path((studio_id, document_id)): Path<(String, String)>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-) -> Result<Json<DocumentResponse>, StatusCode> {
+async fn get_document(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<DocumentResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let (snapshot, version) = state
-        .actor(&studio_id, &document_id)
-        .get_document()
-        .await
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+    let (snapshot, version) = state.actor(&studio_id, &document_id).get_document().await.ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(DocumentResponse { snapshot, version }))
 }
 
-async fn get_envelope(
-    Path((studio_id, document_id)): Path<(String, String)>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-) -> Result<Json<EnvelopeResponse>, StatusCode> {
+async fn get_envelope(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<EnvelopeResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let (envelope, version) = state
-        .actor(&studio_id, &document_id)
-        .get_envelope()
-        .await
-        .ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
+    let (envelope, version) = state.actor(&studio_id, &document_id).get_envelope().await.ok_or(StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(EnvelopeResponse { envelope, version }))
 }
 
-async fn put_envelope(
-    Path((studio_id, document_id)): Path<(String, String)>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-    Json(body): Json<PutEnvelopeRequest>,
-) -> Result<Json<PutEnvelopeResponse>, StatusCode> {
+async fn put_envelope(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<PutEnvelopeRequest>) -> Result<Json<PutEnvelopeResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -559,12 +429,7 @@ async fn put_envelope(
     }
 }
 
-async fn append_op(
-    Path((studio_id, document_id)): Path<(String, String)>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-    Json(body): Json<AppendOpRequest>,
-) -> Result<Json<AppendOpResponse>, StatusCode> {
+async fn append_op(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<AppendOpRequest>) -> Result<Json<AppendOpResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
@@ -574,30 +439,15 @@ async fn append_op(
     Ok(Json(AppendOpResponse { version }))
 }
 
-async fn get_ops_since(
-    Path((studio_id, document_id)): Path<(String, String)>,
-    Query(query): Query<SinceQuery>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-) -> Result<Json<Vec<OpSinceRow>>, StatusCode> {
+async fn get_ops_since(Path((studio_id, document_id)): Path<(String, String)>, Query(query): Query<SinceQuery>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<Vec<OpSinceRow>>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
-    let rows = state
-        .actor(&studio_id, &document_id)
-        .ops_since(query.since.unwrap_or(0))
-        .await
-        .into_iter()
-        .map(|(version, envelope)| OpSinceRow { version, envelope })
-        .collect();
+    let rows = state.actor(&studio_id, &document_id).ops_since(query.since.unwrap_or(0)).await.into_iter().map(|(version, envelope)| OpSinceRow { version, envelope }).collect();
     Ok(Json(rows))
 }
 
-async fn create_share(
-    Path((_studio_id, document_id)): Path<(String, String)>,
-    headers: HeaderMap,
-    State(state): State<HubState>,
-) -> Result<Json<ShareResponse>, StatusCode> {
+async fn create_share(Path((_studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>) -> Result<Json<ShareResponse>, StatusCode> {
     match state.admin_token.as_deref() {
         Some(expected) => {
             if bearer(&headers).as_deref() != Some(expected) {
@@ -606,35 +456,20 @@ async fn create_share(
         }
         None => return Err(StatusCode::FORBIDDEN),
     }
-    let token = state
-        .storage
-        .create_share_token(&document_id)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let token = state.storage.create_share_token(&document_id).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(ShareResponse { token }))
 }
 
 /// @emoji 🧪 Dev-mode session mint: trades a bare email for a bearer session token, upserting the
 /// user if it doesn't exist yet. No password/SSO check — real SSO/OAuth is explicitly future scope;
 /// this exists only so `AuthSessionRecord`-backed routes have a caller until that lands.
-async fn create_auth_session(
-    State(state): State<HubState>,
-    Json(body): Json<CreateAuthSessionRequest>,
-) -> Result<Json<CreateAuthSessionResponse>, StatusCode> {
+async fn create_auth_session(State(state): State<HubState>, Json(body): Json<CreateAuthSessionRequest>) -> Result<Json<CreateAuthSessionResponse>, StatusCode> {
     let user = match state.storage.get_user_by_email(&body.email).await {
         Ok(Some(user)) => user,
-        Ok(None) => state
-            .storage
-            .create_user(&body.email, &body.email, None, None, None)
-            .await
-            .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
+        Ok(None) => state.storage.create_user(&body.email, &body.email, None, None, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
         Err(_) => return Err(StatusCode::INTERNAL_SERVER_ERROR),
     };
-    let session = state
-        .storage
-        .create_auth_session(&user.id, 60 * 60 * 24 * 30, None)
-        .await
-        .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let session = state.storage.create_auth_session(&user.id, 60 * 60 * 24 * 30, None).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     Ok(Json(CreateAuthSessionResponse { token: session.id, user_id: user.id }))
 }
 
@@ -671,11 +506,7 @@ async fn authorized(state: &HubState, studio_id: &str, document_id: &str, token:
 //#endregion 🔖Rest
 
 //#region 🔖WebSocket
-async fn document_ws(
-    ws: WebSocketUpgrade,
-    Path((studio_id, document_id)): Path<(String, String)>,
-    State(state): State<HubState>,
-) -> impl IntoResponse {
+async fn document_ws(ws: WebSocketUpgrade, Path((studio_id, document_id)): Path<(String, String)>, State(state): State<HubState>) -> impl IntoResponse {
     ws.on_upgrade(move |socket| handle_ws(socket, studio_id, document_id, state))
 }
 
@@ -693,11 +524,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
     let (actor, token, since_version) = match hello {
         Some(HubClientFrame::Hello { actor, token, since_version }) => (actor, token, since_version),
         _ => {
-            let _ = sender
-                .send(encode(&HubServerFrame::Error {
-                    message: "expected hello frame".into(),
-                }))
-                .await;
+            let _ = sender.send(encode(&HubServerFrame::Error { message: "expected hello frame".into() })).await;
             return;
         }
     };
@@ -706,11 +533,7 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         AuthOutcome::Session { user_id, role } => (Some(user_id.clone()), Some(role.as_str().to_string())),
         AuthOutcome::ShareToken => (None, None),
         AuthOutcome::Denied => {
-            let _ = sender
-                .send(encode(&HubServerFrame::Error {
-                    message: "unauthorized".into(),
-                }))
-                .await;
+            let _ = sender.send(encode(&HubServerFrame::Error { message: "unauthorized".into() })).await;
             return;
         }
     };
@@ -721,30 +544,13 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
         None => return,
     };
     let mut broadcast_rx = sub.receiver;
-    let welcome = HubServerFrame::Welcome {
-        version: sub.version,
-        envelope: if since_version == 0 { Some(sub.envelope) } else { None },
-        presence: sub.presence,
-        backlog: sub.backlog,
-    };
+    let welcome = HubServerFrame::Welcome { version: sub.version, envelope: if since_version == 0 { Some(sub.envelope) } else { None }, presence: sub.presence, backlog: sub.backlog };
     if sender.send(encode(&welcome)).await.is_err() {
         return;
     }
 
     // Register this connection in the presence roster on connect; richer Presence frames update it later.
-    handle
-        .presence_update(PresencePeer {
-            actor: actor.clone(),
-            label: None,
-            selection_json: None,
-            connected_at_ms: now_ms(),
-            user_id,
-            role,
-            cursor: None,
-            viewport: None,
-            drag_ghost_json: None,
-        })
-        .await;
+    handle.presence_update(PresencePeer { actor: actor.clone(), label: None, selection_json: None, connected_at_ms: now_ms(), user_id, role, cursor: None, viewport: None, drag_ghost_json: None }).await;
 
     loop {
         tokio::select! {
@@ -755,10 +561,8 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
                             Ok(HubClientFrame::Ops { envelopes }) => {
                                 let appended = handle.append_ops(envelopes, actor.clone()).await;
                                 for op in appended {
-                                    if op.is_new {
-                                        if sender.send(encode(&HubServerFrame::Ack { op_id: op.op_id, version: op.version })).await.is_err() {
-                                            break;
-                                        }
+                                    if op.is_new && sender.send(encode(&HubServerFrame::Ack { op_id: op.op_id, version: op.version })).await.is_err() {
+                                        break;
                                     }
                                 }
                             }
@@ -818,7 +622,7 @@ fn router(state: HubState) -> Router {
 
 /// @emoji 🧬 Resolves and connects the storage backend selected by `OS_HUB_STORAGE_BACKEND`
 /// (`sqlite` today; `postgres`/`neo4j` are sibling crates wired in by HP-2/HP-3).
-async fn connect_storage() -> Arc<dyn HubStorage> {
+async fn connect_storage() -> Result<Arc<dyn HubStorage>, HubError> {
     let backend = std::env::var("OS_HUB_STORAGE_BACKEND").unwrap_or_else(|_| "sqlite".into());
     match backend.as_str() {
         "sqlite" | "" => {
@@ -828,32 +632,26 @@ async fn connect_storage() -> Arc<dyn HubStorage> {
                     let _ = std::fs::create_dir_all(parent);
                 }
             }
-            let storage = os_hub_storage_sqlite::SqliteStorage::connect(&db_path).await.expect("connect sqlite storage");
-            storage.seed().await.expect("seed sqlite storage");
-            Arc::new(storage)
+            let storage = os_hub_storage_sqlite::SqliteStorage::connect(&db_path).await?;
+            storage.seed().await?;
+            Ok(Arc::new(storage))
         }
-        other => panic!("unknown OS_HUB_STORAGE_BACKEND: {other}"),
+        other => Err(HubError::UnknownStorageBackend(other.to_string())),
     }
 }
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), HubError> {
     tracing_subscriber::fmt::init();
-    let port: u16 = std::env::var("OS_HUB_PORT")
-        .ok()
-        .and_then(|value| value.parse().ok())
-        .unwrap_or(6070);
-    let storage = connect_storage().await;
+    let port: u16 = std::env::var("OS_HUB_PORT").ok().and_then(|value| value.parse().ok()).unwrap_or(6070);
+    let storage = connect_storage().await?;
     let admin_token = std::env::var("OS_HUB_ADMIN_TOKEN").ok().filter(|value| !value.is_empty());
-    let state = HubState {
-        storage,
-        actors: Arc::new(DashMap::new()),
-        admin_token,
-    };
+    let state = HubState { storage, actors: Arc::new(DashMap::new()), admin_token };
     let addr = SocketAddr::from(([0, 0, 0, 0], port));
     tracing::info!("os-hub listening on http://{addr}");
-    let listener = tokio::net::TcpListener::bind(addr).await.expect("bind");
-    axum::serve(listener, router(state)).await.expect("serve");
+    let listener = tokio::net::TcpListener::bind(addr).await?;
+    axum::serve(listener, router(state)).await?;
+    Ok(())
 }
 //#endregion 🔖Main
 
@@ -863,10 +661,7 @@ mod tests {
     use super::*;
 
     use os_hub_storage_sqlite::SqliteStorage;
-    use semio_framework_core::{
-        ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash,
-        SchemaId, SchemaVersion, UndoPolicy,
-    };
+    use semio_framework_core::{ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy};
     use tokio_tungstenite::connect_async;
     use tokio_tungstenite::tungstenite::Message as WsMessage;
     use uuid::Uuid;
@@ -875,30 +670,19 @@ mod tests {
     const STUDIO: &str = "default";
 
     fn temp_db_path() -> String {
-        std::env::temp_dir()
-            .join(format!("os-hub-test-{}.db", Uuid::now_v7()))
-            .to_string_lossy()
-            .into_owned()
+        std::env::temp_dir().join(format!("os-hub-test-{}.db", Uuid::now_v7())).to_string_lossy().into_owned()
     }
 
     async fn memory_state() -> HubState {
         let storage = SqliteStorage::connect(":memory:").await.expect("connect");
         storage.seed().await.expect("seed");
-        HubState {
-            storage: Arc::new(storage),
-            actors: Arc::new(DashMap::new()),
-            admin_token: None,
-        }
+        HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: None }
     }
 
     async fn file_state(path: &str) -> HubState {
         let storage = SqliteStorage::connect(path).await.expect("connect");
         storage.seed().await.expect("seed");
-        HubState {
-            storage: Arc::new(storage),
-            actors: Arc::new(DashMap::new()),
-            admin_token: None,
-        }
+        HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: None }
     }
 
     fn sample_envelope(id: &str) -> OpEnvelope {
@@ -909,16 +693,10 @@ mod tests {
             schema_version: SchemaVersion("test.v1".into()),
             deps: Vec::new(),
             payload_hash: PayloadHash("hash".into()),
-            diff: DocumentDiff {
-                schema_id: SchemaId("diff.v1".into()),
-                payload: serde_json::json!({ "value": id }),
-            },
+            diff: DocumentDiff { schema_id: SchemaId("diff.v1".into()), payload: serde_json::json!({ "value": id }) },
             inverse: InverseOperation {
                 target_operation: OperationId(id.into()),
-                inverse_diff: DocumentDiff {
-                    schema_id: SchemaId("diff.v1".into()),
-                    payload: serde_json::json!({}),
-                },
+                inverse_diff: DocumentDiff { schema_id: SchemaId("diff.v1".into()), payload: serde_json::json!({}) },
                 base_version: DocumentVersion(0),
                 dependencies: Vec::new(),
                 undo_policy: UndoPolicy::ExactBaseOnly,
@@ -942,9 +720,7 @@ mod tests {
     {
         loop {
             match ws.next().await {
-                Some(Ok(WsMessage::Text(text))) => {
-                    return serde_json::from_str::<HubServerFrame>(text.as_str()).expect("server frame")
-                }
+                Some(Ok(WsMessage::Text(text))) => return serde_json::from_str::<HubServerFrame>(text.as_str()).expect("server frame"),
                 Some(Ok(_)) => continue,
                 other => panic!("expected text frame, got {other:?}"),
             }
@@ -962,30 +738,14 @@ mod tests {
         let url = format!("ws://{addr}/studios/{STUDIO}/documents/default/ws");
 
         let (mut a, _) = connect_async(&url).await.unwrap();
-        a.send(client_text(&HubClientFrame::Hello {
-            actor: "A".into(),
-            token: None,
-            since_version: 0,
-        }))
-        .await
-        .unwrap();
+        a.send(client_text(&HubClientFrame::Hello { actor: "A".into(), token: None, since_version: 0 })).await.unwrap();
         assert!(matches!(next_server_frame(&mut a).await, HubServerFrame::Welcome { .. }));
 
         let (mut b, _) = connect_async(&url).await.unwrap();
-        b.send(client_text(&HubClientFrame::Hello {
-            actor: "B".into(),
-            token: None,
-            since_version: 0,
-        }))
-        .await
-        .unwrap();
+        b.send(client_text(&HubClientFrame::Hello { actor: "B".into(), token: None, since_version: 0 })).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, HubServerFrame::Welcome { .. }));
 
-        a.send(client_text(&HubClientFrame::Ops {
-            envelopes: vec![sample_envelope("op-1")],
-        }))
-        .await
-        .unwrap();
+        a.send(client_text(&HubClientFrame::Ops { envelopes: vec![sample_envelope("op-1")] })).await.unwrap();
 
         // B must observe the op fanned out with origin "A".
         loop {
@@ -1070,14 +830,7 @@ mod tests {
     #[tokio::test]
     async fn rest_append_increments_version() {
         let state = memory_state().await;
-        let response = append_op(
-            Path((STUDIO.to_string(), "default".to_string())),
-            HeaderMap::new(),
-            State(state.clone()),
-            Json(AppendOpRequest { envelope: sample_envelope("op-1") }),
-        )
-        .await
-        .expect("append");
+        let response = append_op(Path((STUDIO.to_string(), "default".to_string())), HeaderMap::new(), State(state.clone()), Json(AppendOpRequest { envelope: sample_envelope("op-1") })).await.expect("append");
         assert_eq!(response.0.version, 1);
     }
 
@@ -1088,23 +841,9 @@ mod tests {
         let handle = state.actor(STUDIO, "default");
         handle.append_ops(vec![sample_envelope("op-1")], "actor-1".into()).await;
         handle.append_ops(vec![sample_envelope("op-2")], "actor-1".into()).await;
-        let all = get_ops_since(
-            Path((STUDIO.to_string(), "default".to_string())),
-            Query(SinceQuery { since: None }),
-            HeaderMap::new(),
-            State(state.clone()),
-        )
-        .await
-        .unwrap();
+        let all = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: None }), HeaderMap::new(), State(state.clone())).await.unwrap();
         assert_eq!(all.0.len(), 2);
-        let newer = get_ops_since(
-            Path((STUDIO.to_string(), "default".to_string())),
-            Query(SinceQuery { since: Some(1) }),
-            HeaderMap::new(),
-            State(state.clone()),
-        )
-        .await
-        .unwrap();
+        let newer = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: Some(1) }), HeaderMap::new(), State(state.clone())).await.unwrap();
         assert_eq!(newer.0.len(), 1);
         assert_eq!(newer.0[0].envelope.id.0, "op-2");
     }
@@ -1113,31 +852,9 @@ mod tests {
     #[tokio::test]
     async fn nodes_create_and_list() {
         let state = memory_state().await;
-        let created = create_node(
-            Path(STUDIO.to_string()),
-            State(state.clone()),
-            Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() }),
-        )
-        .await
-        .expect("create");
-        let child = create_node(
-            Path(STUDIO.to_string()),
-            State(state.clone()),
-            Json(CreateNodeRequest {
-                parent_id: Some(created.0.id.clone()),
-                name: "sketch".into(),
-                kind: "document".into(),
-            }),
-        )
-        .await
-        .expect("create child");
-        let children = list_nodes(
-            Path(STUDIO.to_string()),
-            Query(NodesQuery { parent: Some(created.0.id.clone()) }),
-            State(state.clone()),
-        )
-        .await
-        .expect("list");
+        let created = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: None, name: "Projects".into(), kind: "folder".into() })).await.expect("create");
+        let child = create_node(Path(STUDIO.to_string()), State(state.clone()), Json(CreateNodeRequest { parent_id: Some(created.0.id.clone()), name: "sketch".into(), kind: "document".into() })).await.expect("create child");
+        let children = list_nodes(Path(STUDIO.to_string()), Query(NodesQuery { parent: Some(created.0.id.clone()) }), State(state.clone())).await.expect("list");
         assert_eq!(children.0.len(), 1);
         assert_eq!(children.0[0].id, child.0.id);
     }
@@ -1147,18 +864,12 @@ mod tests {
     async fn share_token_gates_access() {
         let storage = SqliteStorage::connect(":memory:").await.expect("connect");
         storage.seed().await.expect("seed");
-        let admin = HubState {
-            storage: Arc::new(storage),
-            actors: Arc::new(DashMap::new()),
-            admin_token: Some("admin-secret".into()),
-        };
+        let admin = HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: Some("admin-secret".into()) };
         // Open before any token is issued.
         assert!(admin.storage.authorized_by_token("guarded", None).await.unwrap());
         let mut headers = HeaderMap::new();
         headers.insert(axum::http::header::AUTHORIZATION, "Bearer admin-secret".parse().unwrap());
-        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, State(admin.clone()))
-            .await
-            .expect("share");
+        let share = create_share(Path((STUDIO.to_string(), "guarded".to_string())), headers, State(admin.clone())).await.expect("share");
         // Now closed to tokenless access, open with the minted token.
         assert!(!admin.storage.authorized_by_token("guarded", None).await.unwrap());
         assert!(admin.storage.authorized_by_token("guarded", Some(&share.0.token)).await.unwrap());
@@ -1191,14 +902,8 @@ mod tests {
         state.storage.create_share_token(document).await.expect("close with share token");
         assert!(!state.storage.authorized_by_token(document, None).await.unwrap());
 
-        let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() }))
-            .await
-            .expect("mint session");
-        state
-            .storage
-            .upsert_membership(studio, &minted.0.user_id, StudioRole::Member)
-            .await
-            .expect("grant membership");
+        let minted = create_auth_session(State(state.clone()), Json(CreateAuthSessionRequest { email: "dev@example.com".into() })).await.expect("mint session");
+        state.storage.upsert_membership(studio, &minted.0.user_id, StudioRole::Member).await.expect("grant membership");
 
         assert!(!authorized(&state, studio, document, None).await, "tokenless request still denied");
         assert!(authorized(&state, studio, document, Some(&minted.0.token)).await, "session token authorized despite no share token");

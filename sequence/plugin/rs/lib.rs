@@ -156,6 +156,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     description: Some(format!("{} {}", step.id, labels.slot)),
                     icon_id: Some("folder".into()),
                     selected: None,
+                    loading: None,
                     default_open: Some(true),
                     action: None,
                     hover_action: None,
@@ -179,8 +180,8 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale combination compile-checked.
 app_labels! {
+    /// 🗣️ Complete UI label set for the sequence app; one field per label makes every locale combination compile-checked.
     struct SequenceLabels {
         steps: &'static str = en: "Steps", de: "Schritte";
         flow_edges: &'static str = en: "Flow edges", de: "Ablaufkanten";
@@ -294,6 +295,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             children: vec![ui_text(labels.select_prompt)],
         }]);
     }
@@ -303,6 +305,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
+            loading: None,
             children: vec![ui_text(labels.step_not_found)],
         }]);
     }
@@ -704,7 +707,7 @@ fn create_sequence_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_fixture()).unwrap())
+    .example("demo", "Demo", serde_json::to_string(&default_fixture()).expect("default_fixture is a static, hand-built value with no non-finite floats or non-UTF8 keys"))
     .program("sequence", "Sequence", "graph")
 }
 

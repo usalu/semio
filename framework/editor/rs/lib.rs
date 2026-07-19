@@ -5,6 +5,18 @@ use cavas::camera::{Camera, Viewport};
 use cavas::text as canvas_text;
 use serde::Deserialize;
 
+// #region ⚠️ Errors
+/// 🧯 Errors from `EditorHost`'s own JSON-boundary parsing (theme/scene sync). The
+/// `#[cfg(target_arch = "wasm32")] #[wasm_bindgen]` methods on `EditorSession` stay
+/// `Result<_, JsValue>` — that shape is dictated by the `wasm_bindgen` ABI, not this crate's own
+/// error handling, so it is not migrated here.
+#[derive(Debug, thiserror::Error)]
+pub enum EditorError {
+    #[error("json: {0}")]
+    Json(#[from] serde_json::Error),
+}
+// #endregion ⚠️ Errors
+
 // #region 🔖Theme
 #[derive(Clone, Copy, Debug)]
 struct EditorCanvasTheme {
@@ -36,16 +48,12 @@ impl EditorCanvasTheme {
         }
     }
 
-    fn color_from_json_rgba8(arr: &[serde_json::Value]) -> Option<Color> {
-        cavas::theme::color_from_json_rgba8(arr)
-    }
-
     fn merge_color_field(next: &mut Color, v: &serde_json::Value, key: &str) {
         cavas::theme::merge_color_field(next, v, key);
     }
 
-    fn merge_from_json(&mut self, json: &str) -> Result<(), String> {
-        let v: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    fn merge_from_json(&mut self, json: &str) -> Result<(), EditorError> {
+        let v: serde_json::Value = serde_json::from_str(json)?;
         let mut next = *self;
         Self::merge_color_field(&mut next.raster_clear, &v, "rasterClear");
         Self::merge_color_field(&mut next.grid_minor_stroke, &v, "gridMinorStroke");
@@ -244,7 +252,7 @@ impl EditorHost {
         self.clamp_camera();
     }
 
-    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), String> {
+    pub fn set_canvas_theme_from_json(&mut self, json: &str) -> Result<(), EditorError> {
         self.theme.merge_from_json(json)
     }
 
@@ -531,8 +539,8 @@ impl EditorHost {
         self.clamp_camera();
     }
 
-    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), String> {
-        let value: serde_json::Value = serde_json::from_str(json).map_err(|e| e.to_string())?;
+    pub fn sync_from_scene_json(&mut self, json: &str) -> Result<(), EditorError> {
+        let value: serde_json::Value = serde_json::from_str(json)?;
         if let Some(buffer) = value.get("buffer").and_then(|v| v.as_str()) {
             self.set_text(buffer.to_string());
         }

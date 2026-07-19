@@ -1,10 +1,7 @@
 //! 🪚 Process 3d document VCS on `vcs` — subtractive/additive processing steps on a stock solid.
 
 use serde::{Deserialize, Serialize};
-use vcs::{
-    apply_collection_op, create_document_vcs_envelope, invert_collection_op, CollectionOp, DocumentVcsEnvelope,
-    DocumentVcsStore, Identified, OperationDiff, Patchable,
-};
+use vcs::{apply_collection_op, invert_collection_op, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, OperationDiff, Patchable};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 
@@ -267,6 +264,7 @@ pub type Process3dStore = DocumentVcsStore<Process3dDocument, Process3dOp>;
 mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
+    use vcs::create_document_vcs_envelope;
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
@@ -329,7 +327,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{DocumentVcsCommand, Operation};
+    use vcs::{create_document_vcs_envelope, DocumentVcsCommand, Operation};
 
     fn cut_step(id: &str) -> ProcessStep {
         ProcessStep {

@@ -158,7 +158,7 @@ fn number_dictionary(value: f64) -> Dictionary {
     Dictionary::with_schema("number").insert("value", Value::Atom(Atom::Decimal(value)))
 }
 
-fn read_list<'a>(input: &'a Dictionary, key: &str) -> Result<Dictionary, EvalError> {
+fn read_list(input: &Dictionary, key: &str) -> Result<Dictionary, EvalError> {
     input.get(key).and_then(|value| value.as_dictionary()).filter(|dict| dict.schema() == Some("list")).cloned().ok_or_else(|| EvalError::MissingInput(key.into()))
 }
 

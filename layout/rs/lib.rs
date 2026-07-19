@@ -2,6 +2,26 @@
 
 pub use infinite_cavas as cavas;
 
+//#region ⚠️ Errors
+/// 🚧 All fallible layout-crate operations funnel through this — document parsing, scene/hit-test
+/// resolution, and export (SVG/PDF/PNG/zip package).
+#[derive(Debug, thiserror::Error)]
+pub enum LayoutError {
+    #[error("json: {0}")]
+    Json(#[from] serde_json::Error),
+    #[error("unexpected schema {0}")]
+    UnexpectedSchema(String),
+    #[error("page {0} not found")]
+    PageNotFound(String),
+    #[error("png: {0}")]
+    Png(#[from] png::EncodingError),
+    #[error("zip: {0}")]
+    Zip(#[from] zip::result::ZipError),
+    #[error("io: {0}")]
+    Io(#[from] std::io::Error),
+}
+//#endregion ⚠️ Errors
+
 mod document {
 // #region document
 use serde::{Deserialize, Serialize};
@@ -312,10 +332,10 @@ pub struct LayoutDocument {
     pub print_target: Option<String>,
 }
 
-pub fn parse_layout_document(json: &str) -> Result<LayoutDocument, String> {
-    let doc: LayoutDocument = serde_json::from_str(json).map_err(|e| e.to_string())?;
+pub fn parse_layout_document(json: &str) -> Result<LayoutDocument, crate::LayoutError> {
+    let doc: LayoutDocument = serde_json::from_str(json)?;
     if doc.schema != LAYOUT_FIXTURE_SCHEMA {
-        return Err(format!("unexpected schema {}", doc.schema));
+        return Err(crate::LayoutError::UnexpectedSchema(doc.schema));
     }
     Ok(doc)
 }
@@ -889,36 +909,38 @@ pub fn display_list_to_scene(
     scene
 }
 
-pub fn build_scene_from_document_json(
-    json: &str,
-    page_id: &str,
-    selected_ids: &[String],
-    hovered_id: Option<&str>,
-    chrome_blueprint: bool,
-    camera: &Camera,
-    viewport: &Viewport,
-    drop_preview: Option<&LayoutDropPreview>,
-) -> Result<Scene, String> {
-    let doc = parse_layout_document(json)?;
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, chrome_blueprint);
-    Ok(display_list_to_scene(&list, chrome_blueprint, camera, viewport, drop_preview))
+/// 🔭 Bundled render/hit-test context for a single page query — page, camera/viewport, and
+/// selection state. Groups {@link build_scene_from_document_json} and
+/// {@link hit_test_document_json}'s shared arguments under `clippy::too_many_arguments`.
+pub struct SceneQuery<'a> {
+    pub page_id: &'a str,
+    pub selected_ids: &'a [String],
+    pub hovered_id: Option<&'a str>,
+    pub chrome_blueprint: bool,
+    pub camera: &'a Camera,
+    pub viewport: &'a Viewport,
 }
 
-pub fn hit_test_document_json(
-    json: &str,
-    page_id: &str,
-    sx: f64,
-    sy: f64,
-    selected_ids: &[String],
-    hovered_id: Option<&str>,
-    camera: &Camera,
-    viewport: &Viewport,
-) -> Result<Option<String>, String> {
+pub fn build_scene_from_document_json(json: &str, query: &SceneQuery, drop_preview: Option<&LayoutDropPreview>) -> Result<Scene, crate::LayoutError> {
     let doc = parse_layout_document(json)?;
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
-    let list = build_display_list_for_page(&doc, page, page_id, selected_ids, hovered_id, true);
-    let world = camera::screen_to_world(camera, viewport, Point::new(sx, sy));
+    let page = doc
+        .pages
+        .iter()
+        .find(|p| p.id == query.page_id)
+        .ok_or_else(|| crate::LayoutError::PageNotFound(query.page_id.to_string()))?;
+    let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, query.chrome_blueprint);
+    Ok(display_list_to_scene(&list, query.chrome_blueprint, query.camera, query.viewport, drop_preview))
+}
+
+pub fn hit_test_document_json(json: &str, sx: f64, sy: f64, query: &SceneQuery) -> Result<Option<String>, crate::LayoutError> {
+    let doc = parse_layout_document(json)?;
+    let page = doc
+        .pages
+        .iter()
+        .find(|p| p.id == query.page_id)
+        .ok_or_else(|| crate::LayoutError::PageNotFound(query.page_id.to_string()))?;
+    let list = build_display_list_for_page(&doc, page, query.page_id, query.selected_ids, query.hovered_id, true);
+    let world = camera::screen_to_world(query.camera, query.viewport, Point::new(sx, sy));
     Ok(list.hit_test(world.x as f32, world.y as f32))
 }
 
@@ -936,7 +958,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
-        let scene = build_scene_from_document_json(json, "page-1", &[], None, true, &camera, &viewport, None).expect("scene");
+        let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
+        let scene = build_scene_from_document_json(json, &query, None).expect("scene");
         let _ = scene;
     }
 
@@ -945,7 +968,8 @@ mod tests {
         let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[{"id":"paragraph.body","name":"Body","fontFamily":"Layout Sans","fontSize":12,"fontWeight":400,"leading":14.4,"tracking":0,"alignment":"left"}],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
         let camera = Camera { x: 0.0, y: 0.0, zoom: 0.5 };
         let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
-        let hit = hit_test_document_json(json, "page-1", 210.0, 160.0, &[], None, &camera, &viewport).expect("hit");
+        let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
+        let hit = hit_test_document_json(json, 210.0, 160.0, &query).expect("hit");
         assert_eq!(hit.as_deref(), Some("frame-1"));
     }
 
@@ -1038,14 +1062,14 @@ pub fn export_display_list_svg(list: &DisplayList) -> String {
     out
 }
 
-pub fn export_document_svg(doc: &LayoutDocument, page_id: &str) -> Result<String, String> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
+pub fn export_document_svg(doc: &LayoutDocument, page_id: &str) -> Result<String, crate::LayoutError> {
+    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| crate::LayoutError::PageNotFound(page_id.to_string()))?;
     let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     Ok(export_display_list_svg(&list))
 }
 
-pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, String> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
+pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, crate::LayoutError> {
+    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| crate::LayoutError::PageNotFound(page_id.to_string()))?;
     let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     let mut body = String::new();
     body.push_str("BT\n/F1 12 Tf\n");
@@ -1058,7 +1082,7 @@ pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8
     body.push_str("ET\n");
     let objects = vec![
         "1 0 obj<< /Type /Catalog /Pages 2 0 R >>endobj\n".to_string(),
-        format!("2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n"),
+        "2 0 obj<< /Type /Pages /Kids [3 0 R] /Count 1 >>endobj\n".to_string(),
         format!(
             "3 0 obj<< /Type /Page /Parent 2 0 R /MediaBox [0 0 {} {}] /Contents 4 0 R /Resources<< /Font<< /F1 5 0 R >> >> >>endobj\n",
             page.width, page.height
@@ -1082,8 +1106,8 @@ pub fn export_document_pdf(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8
     Ok(pdf.into_bytes())
 }
 
-pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, String> {
-    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| format!("page {page_id} not found"))?;
+pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Vec<u8>, crate::LayoutError> {
+    let page = doc.pages.iter().find(|p| p.id == page_id).ok_or_else(|| crate::LayoutError::PageNotFound(page_id.to_string()))?;
     let list = build_display_list_for_page(doc, page, page_id, &[], None, false);
     let width = list.page_width.max(1.0) as u32;
     let height = list.page_height.max(1.0) as u32;
@@ -1112,20 +1136,20 @@ pub fn export_document_png_cpu(doc: &LayoutDocument, page_id: &str) -> Result<Ve
         let mut encoder = png::Encoder::new(&mut bytes, width, height);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
-        writer.write_image_data(img.as_raw()).map_err(|e| e.to_string())?;
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(img.as_raw())?;
     }
     Ok(bytes)
 }
 
-pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, String> {
-    let doc: LayoutDocument = serde_json::from_str(doc_json).map_err(|e| e.to_string())?;
+pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8>, crate::LayoutError> {
+    let doc: LayoutDocument = serde_json::from_str(doc_json)?;
     let mut zip = ZipWriter::new(Cursor::new(Vec::new()));
     let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated);
-    zip.start_file("document.json", options).map_err(|e| e.to_string())?;
-    zip.write_all(doc_json.as_bytes()).map_err(|e| e.to_string())?;
-    zip.start_file("preflight-report.json", options).map_err(|e| e.to_string())?;
-    zip.write_all(preflight_json.as_bytes()).map_err(|e| e.to_string())?;
+    zip.start_file("document.json", options)?;
+    zip.write_all(doc_json.as_bytes())?;
+    zip.start_file("preflight-report.json", options)?;
+    zip.write_all(preflight_json.as_bytes())?;
     let manifest_links: Vec<serde_json::Value> = doc
         .links
         .iter()
@@ -1151,13 +1175,13 @@ pub fn export_package_zip(doc_json: &str, preflight_json: &str) -> Result<Vec<u8
         "links": manifest_links,
         "generatedAt": "2026-07-02T00:00:00Z",
     });
-    zip.start_file("package-manifest.json", options).map_err(|e| e.to_string())?;
-    zip.write_all(manifest.to_string().as_bytes()).map_err(|e| e.to_string())?;
-    let data = zip.finish().map_err(|e| e.to_string())?;
+    zip.start_file("package-manifest.json", options)?;
+    zip.write_all(manifest.to_string().as_bytes())?;
+    let data = zip.finish()?;
     Ok(data.into_inner())
 }
 
-pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String> {
+pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, crate::LayoutError> {
     let camera = infinite_cavas::camera::Camera { x: 0.0, y: 0.0, zoom: 1.0 };
     let viewport = infinite_cavas::camera::Viewport {
         width: list.page_width.max(1.0) as u32,
@@ -1173,8 +1197,8 @@ pub fn scene_png_from_display_list(list: &DisplayList) -> Result<Vec<u8>, String
         let mut encoder = png::Encoder::new(&mut bytes, width, height);
         encoder.set_color(png::ColorType::Rgba);
         encoder.set_depth(png::BitDepth::Eight);
-        let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
-        writer.write_image_data(img.as_raw()).map_err(|e| e.to_string())?;
+        let mut writer = encoder.write_header()?;
+        writer.write_image_data(img.as_raw())?;
     }
     Ok(bytes)
 }
@@ -1784,7 +1808,7 @@ impl LayoutSession {
 
     #[wasm_bindgen(js_name = setDocumentJson)]
     pub fn set_document_json(&mut self, json: &str) -> Result<(), JsValue> {
-        parse_layout_document(json).map_err(|e| JsValue::from_str(&e))?;
+        parse_layout_document(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         self.state.borrow_mut().document_json = json.to_string();
         Ok(())
     }
@@ -1872,17 +1896,15 @@ impl LayoutSession {
         let mut inner = self.state.borrow_mut();
         let hovered = inner.hovered_id.as_deref();
         let drop_preview = inner.drop_preview.clone();
-        let scene = build_scene_from_document_json(
-            &inner.document_json,
-            &inner.page_id,
-            &inner.selected_ids,
-            hovered,
-            inner.chrome_blueprint,
-            &inner.camera,
-            &inner.viewport,
-            drop_preview.as_ref(),
-        )
-        .map_err(|e| JsValue::from_str(&e))?;
+        let query = SceneQuery {
+            page_id: &inner.page_id,
+            selected_ids: &inner.selected_ids,
+            hovered_id: hovered,
+            chrome_blueprint: inner.chrome_blueprint,
+            camera: &inner.camera,
+            viewport: &inner.viewport,
+        };
+        let scene = build_scene_from_document_json(&inner.document_json, &query, drop_preview.as_ref()).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let clear = infinite_cavas::theme::default_raster_clear();
         inner.gpu.render_frame(&scene, clear).map_err(|e| e)
     }
@@ -1891,45 +1913,43 @@ impl LayoutSession {
     pub fn hit_test(&self, sx: f32, sy: f32) -> Result<JsValue, JsValue> {
         let inner = self.state.borrow();
         let hovered = inner.hovered_id.as_deref();
-        let hit = hit_test_document_json(
-            &inner.document_json,
-            &inner.page_id,
-            sx as f64,
-            sy as f64,
-            &inner.selected_ids,
-            hovered,
-            &inner.camera,
-            &inner.viewport,
-        )
-        .map_err(|e| JsValue::from_str(&e))?;
+        let query = SceneQuery {
+            page_id: &inner.page_id,
+            selected_ids: &inner.selected_ids,
+            hovered_id: hovered,
+            chrome_blueprint: true,
+            camera: &inner.camera,
+            viewport: &inner.viewport,
+        };
+        let hit = hit_test_document_json(&inner.document_json, sx as f64, sy as f64, &query).map_err(|e| JsValue::from_str(&e.to_string()))?;
         Ok(hit.map(|id| JsValue::from_str(&id)).unwrap_or(JsValue::NULL))
     }
 
     #[wasm_bindgen(js_name = exportPng)]
     pub fn export_png(&self, page_id: &str) -> Result<Vec<u8>, JsValue> {
         let inner = self.state.borrow();
-        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e))?;
-        export_document_png_cpu(&doc, page_id).map_err(|e| JsValue::from_str(&e))
+        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        export_document_png_cpu(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = exportSvg)]
     pub fn export_svg(&self, page_id: &str) -> Result<String, JsValue> {
         let inner = self.state.borrow();
-        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e))?;
-        export_document_svg(&doc, page_id).map_err(|e| JsValue::from_str(&e))
+        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        export_document_svg(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = exportPdf)]
     pub fn export_pdf(&self, page_id: &str) -> Result<Vec<u8>, JsValue> {
         let inner = self.state.borrow();
-        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e))?;
-        export_document_pdf(&doc, page_id).map_err(|e| JsValue::from_str(&e))
+        let doc = parse_layout_document(&inner.document_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        export_document_pdf(&doc, page_id).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = exportPackage)]
     pub fn export_package(&self, preflight_json: &str) -> Result<Vec<u8>, JsValue> {
         let inner = self.state.borrow();
-        export_package_zip(&inner.document_json, preflight_json).map_err(|e| JsValue::from_str(&e))
+        export_package_zip(&inner.document_json, preflight_json).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 }
 // #endregion wasm_session

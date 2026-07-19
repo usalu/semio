@@ -1,6 +1,6 @@
 //! ⚙️ Imperative core: path host and WASM session.
 
-pub use imperative_engine::{compile_to_text, EffectLogEntry, Executor, imperative_catalogue_json, imperative_module_registry, Path, RunResult, Step};
+pub use imperative_engine::{compile_to_text, imperative_catalogue_json, imperative_module_registry, EffectLogEntry, Executor, Path, RunResult, Step};
 pub use imperative_module_core::{catalogue_json, module_registry, register};
 pub use neural_engine::{Dictionary, Registry};
 
@@ -30,11 +30,7 @@ pub struct ImperativeDocument {
 
 impl Default for ImperativeDocument {
     fn default() -> Self {
-        Self {
-            schema: "imperative.document".into(),
-            path: Path::new(),
-            seed: Dictionary::new(),
-        }
+        Self { schema: "imperative.document".into(), path: Path::new(), seed: Dictionary::new() }
     }
 }
 
@@ -78,10 +74,7 @@ impl vcs::Operation<ImperativeDocument> for ImperativeOp {
 
     fn backwards(&self, projection: &ImperativeDocument) -> Vec<Self> {
         match resolve_steps(projection, &self.path_ref) {
-            Some(steps) => vec![ImperativeOp {
-                path_ref: self.path_ref.clone(),
-                collection: vcs::invert_collection_op(steps, &self.collection),
-            }],
+            Some(steps) => vec![ImperativeOp { path_ref: self.path_ref.clone(), collection: vcs::invert_collection_op(steps, &self.collection) }],
             None => Vec::new(),
         }
     }
@@ -122,6 +115,25 @@ fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
 }
 //#endregion 🔖Operation
 
+//#region ⚠️ Errors
+/// 🚨 Imperative core's fallible operations.
+#[derive(Debug, thiserror::Error)]
+pub enum ImperativeCoreError {
+    #[error(transparent)]
+    Json(#[from] serde_json::Error),
+    #[error("unsupported schema: {0}")]
+    UnsupportedSchema(String),
+    #[error("missing owner")]
+    MissingOwner,
+    #[error("missing slot")]
+    MissingSlot,
+    #[error("unknown owner step: {0}")]
+    UnknownOwnerStep(String),
+    #[error("unknown step: {0}")]
+    UnknownStep(String),
+}
+//#endregion ⚠️ Errors
+
 pub fn default_document() -> ImperativeDocument {
     ImperativeDocument {
         path: Path {
@@ -129,20 +141,10 @@ pub fn default_document() -> ImperativeDocument {
                 Step {
                     id: "step-1".into(),
                     kind: "state.set".into(),
-                    params: Dictionary::new()
-                        .insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into())))
-                        .insert("value", neural_engine::Value::Atom(neural_engine::Atom::Decimal(0.0))),
+                    params: Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("counter".into()))).insert("value", neural_engine::Value::Atom(neural_engine::Atom::Decimal(0.0))),
                     bodies: BTreeMap::new(),
                 },
-                Step {
-                    id: "step-2".into(),
-                    kind: "log.print".into(),
-                    params: Dictionary::new().insert(
-                        "message",
-                        neural_engine::Value::Atom(neural_engine::Atom::String("hello imperative".into())),
-                    ),
-                    bodies: BTreeMap::new(),
-                },
+                Step { id: "step-2".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", neural_engine::Value::Atom(neural_engine::Atom::String("hello imperative".into()))), bodies: BTreeMap::new() },
             ],
         },
         ..Default::default()
@@ -166,62 +168,47 @@ impl Default for ImperativeHost {
 
 impl ImperativeHost {
     pub fn from_document(document: ImperativeDocument) -> Self {
-        Self {
-            document,
-            registry: imperative_module_registry(),
-            next_serial: 100,
-        }
+        Self { document, registry: imperative_module_registry(), next_serial: 100 }
     }
 
-    pub fn load_json(json: &str) -> Result<Self, String> {
-        let document: ImperativeDocument = serde_json::from_str(json).map_err(|err| err.to_string())?;
+    pub fn load_json(json: &str) -> Result<Self, ImperativeCoreError> {
+        let document: ImperativeDocument = serde_json::from_str(json)?;
         if document.schema != "imperative.document" {
-            return Err(format!("unsupported schema: {}", document.schema));
+            return Err(ImperativeCoreError::UnsupportedSchema(document.schema));
         }
         Ok(Self::from_document(document))
     }
 
-    pub fn to_json(&self) -> Result<String, String> {
-        serde_json::to_string(&self.document).map_err(|err| err.to_string())
+    pub fn to_json(&self) -> Result<String, ImperativeCoreError> {
+        Ok(serde_json::to_string(&self.document)?)
     }
 
     pub fn catalogue_json(&self) -> String {
         imperative_catalogue_json(&self.registry)
     }
 
-    fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, String> {
+    fn resolve_path_mut<'a>(&'a mut self, path_ref: &PathRef) -> Result<&'a mut Path, ImperativeCoreError> {
         if path_ref.owner.is_none() && path_ref.slot.is_none() {
             return Ok(&mut self.document.path);
         }
-        let owner = path_ref.owner.as_ref().ok_or_else(|| "missing owner".to_string())?;
-        let slot = path_ref.slot.as_ref().ok_or_else(|| "missing slot".to_string())?;
-        let owner_step = self
-            .document
-            .path
-            .steps
-            .iter_mut()
-            .find(|step| step.id == *owner)
-            .ok_or_else(|| format!("unknown owner step: {owner}"))?;
+        let owner = path_ref.owner.as_ref().ok_or(ImperativeCoreError::MissingOwner)?;
+        let slot = path_ref.slot.as_ref().ok_or(ImperativeCoreError::MissingSlot)?;
+        let owner_step = self.document.path.steps.iter_mut().find(|step| step.id == *owner).ok_or_else(|| ImperativeCoreError::UnknownOwnerStep(owner.clone()))?;
         Ok(owner_step.bodies.entry(slot.clone()).or_insert_with(Path::new))
     }
 
     pub fn add_step(&mut self, kind: &str, index: Option<usize>) -> String {
-        self.add_step_at(&PathRef::default(), kind, index)
+        self.add_step_at(&PathRef::default(), kind, index).expect("root PathRef always resolves — resolve_path_mut only fails for a non-default owner/slot")
     }
 
-    pub fn add_step_at(&mut self, path_ref: &PathRef, kind: &str, index: Option<usize>) -> String {
+    pub fn add_step_at(&mut self, path_ref: &PathRef, kind: &str, index: Option<usize>) -> Result<String, ImperativeCoreError> {
         self.next_serial += 1;
         let id = format!("step-{}", self.next_serial);
-        let step = Step {
-            id: id.clone(),
-            kind: kind.into(),
-            params: Dictionary::new(),
-            bodies: BTreeMap::new(),
-        };
-        let path = self.resolve_path_mut(path_ref).expect("path");
+        let step = Step { id: id.clone(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() };
+        let path = self.resolve_path_mut(path_ref)?;
         let insert_at = index.unwrap_or(path.steps.len()).min(path.steps.len());
         path.steps.insert(insert_at, step);
-        id
+        Ok(id)
     }
 
     pub fn remove_step(&mut self, id: &str) -> bool {
@@ -256,15 +243,15 @@ impl ImperativeHost {
         true
     }
 
-    pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), String> {
+    pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), ImperativeCoreError> {
         self.set_step_params_at(&PathRef::default(), id, json)
     }
 
-    pub fn set_step_params_at(&mut self, path_ref: &PathRef, id: &str, json: &str) -> Result<(), String> {
-        let params: Dictionary = serde_json::from_str(json).map_err(|err| err.to_string())?;
+    pub fn set_step_params_at(&mut self, path_ref: &PathRef, id: &str, json: &str) -> Result<(), ImperativeCoreError> {
+        let params: Dictionary = serde_json::from_str(json)?;
         let path = self.resolve_path_mut(path_ref)?;
         let Some(step) = path.steps.iter_mut().find(|step| step.id == id) else {
-            return Err(format!("unknown step: {id}"));
+            return Err(ImperativeCoreError::UnknownStep(id.into()));
         };
         step.params = params;
         Ok(())
@@ -301,23 +288,19 @@ mod wasm_session {
     impl ImperativeSession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            Self {
-                state: Rc::new(RefCell::new(ImperativeSessionInner {
-                    host: ImperativeHost::default(),
-                })),
-            }
+            Self { state: Rc::new(RefCell::new(ImperativeSessionInner { host: ImperativeHost::default() })) }
         }
 
         #[wasm_bindgen(js_name = loadPathJson)]
         pub fn load_path_json(&self, json: &str) -> Result<(), JsValue> {
-            let host = ImperativeHost::load_json(json).map_err(|err| JsValue::from_str(&err))?;
+            let host = ImperativeHost::load_json(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
             self.state.borrow_mut().host = host;
             Ok(())
         }
 
         #[wasm_bindgen(js_name = pathJson)]
         pub fn path_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.to_json().map_err(|err| JsValue::from_str(&err))
+            self.state.borrow().host.to_json().map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = catalogueJson)]
@@ -333,7 +316,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = addStepAt)]
         pub fn add_step_at(&self, path_ref_json: &str, kind: &str, index: Option<usize>) -> Result<String, JsValue> {
             let path_ref: PathRef = serde_json::from_str(path_ref_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-            Ok(self.state.borrow_mut().host.add_step_at(&path_ref, kind, index))
+            self.state.borrow_mut().host.add_step_at(&path_ref, kind, index).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = removeStep)]
@@ -360,21 +343,13 @@ mod wasm_session {
 
         #[wasm_bindgen(js_name = setStepParamsJson)]
         pub fn set_step_params_json(&self, id: &str, json: &str) -> Result<(), JsValue> {
-            self.state
-                .borrow_mut()
-                .host
-                .set_step_params_json(id, json)
-                .map_err(|err| JsValue::from_str(&err))
+            self.state.borrow_mut().host.set_step_params_json(id, json).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen(js_name = setStepParamsAt)]
         pub fn set_step_params_at(&self, path_ref_json: &str, id: &str, json: &str) -> Result<(), JsValue> {
             let path_ref: PathRef = serde_json::from_str(path_ref_json).map_err(|err| JsValue::from_str(&err.to_string()))?;
-            self.state
-                .borrow_mut()
-                .host
-                .set_step_params_at(&path_ref, id, json)
-                .map_err(|err| JsValue::from_str(&err))
+            self.state.borrow_mut().host.set_step_params_at(&path_ref, id, json).map_err(|err| JsValue::from_str(&err.to_string()))
         }
 
         #[wasm_bindgen]
@@ -407,32 +382,21 @@ mod tests {
     fn host_adds_nested_step_in_control_body() {
         let mut host = ImperativeHost::default();
         let owner = host.add_step("control.if", None);
-        let path_ref = PathRef {
-            owner: Some(owner.clone()),
-            slot: Some("then".into()),
-        };
-        let nested = host.add_step_at(&path_ref, "log.print", None);
+        let path_ref = PathRef { owner: Some(owner.clone()), slot: Some("then".into()) };
+        let nested = host.add_step_at(&path_ref, "log.print", None).expect("add nested");
         assert_eq!(nested, "step-102");
         let owner_step = host.document.path.steps.iter().find(|step| step.id == owner).expect("owner");
         assert_eq!(owner_step.bodies.get("then").map(|path| path.steps.len()), Some(1));
     }
 
     fn step(id: &str, kind: &str) -> Step {
-        Step {
-            id: id.into(),
-            kind: kind.into(),
-            params: Dictionary::new(),
-            bodies: BTreeMap::new(),
-        }
+        Step { id: id.into(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() }
     }
 
     #[test]
     fn add_step_op_round_trips() {
         let document = default_document();
-        let op = ImperativeOp {
-            path_ref: PathRef::default(),
-            collection: vcs::CollectionOp::Add { index: 0, item: step("step-x", "log.print") },
-        };
+        let op = ImperativeOp { path_ref: PathRef::default(), collection: vcs::CollectionOp::Add { index: 0, item: step("step-x", "log.print") } };
         vcs::test_support::assert_operation_round_trip(&document, op.clone());
         vcs::test_support::assert_store_roundtrip(document, op);
     }
@@ -440,10 +404,7 @@ mod tests {
     #[test]
     fn remove_step_op_round_trips() {
         let document = default_document();
-        let op = ImperativeOp {
-            path_ref: PathRef::default(),
-            collection: vcs::CollectionOp::Remove { id: "step-1".into() },
-        };
+        let op = ImperativeOp { path_ref: PathRef::default(), collection: vcs::CollectionOp::Remove { id: "step-1".into() } };
         vcs::test_support::assert_operation_round_trip(&document, op.clone());
         vcs::test_support::assert_store_roundtrip(document, op);
     }
@@ -451,10 +412,7 @@ mod tests {
     #[test]
     fn move_step_op_round_trips() {
         let document = default_document();
-        let op = ImperativeOp {
-            path_ref: PathRef::default(),
-            collection: vcs::CollectionOp::Move { id: "step-1".into(), to_index: 1 },
-        };
+        let op = ImperativeOp { path_ref: PathRef::default(), collection: vcs::CollectionOp::Move { id: "step-1".into(), to_index: 1 } };
         vcs::test_support::assert_operation_round_trip(&document, op.clone());
         vcs::test_support::assert_store_roundtrip(document, op);
     }
@@ -462,13 +420,7 @@ mod tests {
     #[test]
     fn patch_step_params_op_round_trips() {
         let document = default_document();
-        let op = ImperativeOp {
-            path_ref: PathRef::default(),
-            collection: vcs::CollectionOp::Patch {
-                id: "step-1".into(),
-                patch: Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))),
-            },
-        };
+        let op = ImperativeOp { path_ref: PathRef::default(), collection: vcs::CollectionOp::Patch { id: "step-1".into(), patch: Dictionary::new().insert("key", neural_engine::Value::Atom(neural_engine::Atom::String("renamed".into()))) } };
         vcs::test_support::assert_operation_round_trip(&document, op.clone());
         vcs::test_support::assert_store_roundtrip(document, op);
     }
@@ -478,10 +430,7 @@ mod tests {
         let mut document = default_document();
         document.path.steps.push(step("step-if", "control.if"));
         let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
-        let op = ImperativeOp {
-            path_ref: path_ref.clone(),
-            collection: vcs::CollectionOp::Add { index: 0, item: step("step-nested", "log.print") },
-        };
+        let op = ImperativeOp { path_ref: path_ref.clone(), collection: vcs::CollectionOp::Add { index: 0, item: step("step-nested", "log.print") } };
         vcs::test_support::assert_operation_round_trip(&document, op.clone());
         let post = vcs::apply_operation(&document, &op);
         let owner_step = post.path.steps.iter().find(|entry| entry.id == "step-if").expect("owner step");

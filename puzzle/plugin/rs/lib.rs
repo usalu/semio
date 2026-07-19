@@ -7,8 +7,9 @@ pub mod d2 {
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
-        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PluginBundle, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, OsMediaCapability, PanelGroup, PanelTreeBuilder, PluginBundle, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
+        is_de_locale, tree_item, tree_item_with_action,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -172,8 +173,14 @@ pub mod d2 {
         view_state.active_utility_id.clone().unwrap_or_else(|| PUZZLE2D_UTILITY_SELECT.into())
     }
 
+    /// 🎯 `semio_framework_plugin::selection_ids`'s "ids" array plus a singular "id" fallback —
+    /// this app's actions accept either shape depending on the caller.
     fn selection_ids(args: Option<&Value>) -> Vec<String> {
-        args.and_then(|value| value.get("ids")).and_then(|value| serde_json::from_value(value.clone()).ok()).or_else(|| args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()])).unwrap_or_default()
+        let ids = semio_framework_plugin::selection_ids(args);
+        if !ids.is_empty() {
+            return ids;
+        }
+        args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(|id| vec![id.to_string()]).unwrap_or_default()
     }
 
     fn fixture_camera(fixture: &Value) -> (f64, f64, f64) {
@@ -1159,9 +1166,13 @@ pub mod d2 {
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+    /// ⚠️ Not routed through `semio_framework_plugin`'s `LocaleLabels`/`app_labels!`/`resolve_labels` — those
+    /// only resolve a locale (en/de) axis, but this app additionally resolves a "terminology" (native/reuse)
+    /// axis via `ViewState.terminology`, which the SDK's `Terminology` region does not model. Uses the SDK's
+    /// `is_de_locale` for the locale leg of the match, since that much is a drop-in match.
     fn puzzle2d_labels(view_state: &ViewState) -> &'static Puzzle2dLabels {
         let terminology = view_state.terminology.as_deref().unwrap_or("native");
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let is_de = is_de_locale(view_state);
         match (terminology, is_de) {
             ("reuse", true) => &PUZZLE2D_LABELS_REUSE_DE,
             ("reuse", false) => &PUZZLE2D_LABELS_REUSE_EN,
@@ -1172,27 +1183,6 @@ pub mod d2 {
     //#endregion 🔖Terminology
 
     //#region 🔖DocumentPanel
-    fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-        UiTreeItemNode {
-            loading: None,
-            id: id.into(),
-            label: label.into(),
-            description,
-            icon_id: None,
-            selected: None,
-            default_open: None,
-            action: Some(action),
-            hover_action: None,
-            unhover_action: None,
-            actions: None,
-            draggable: None,
-            drag_data: None,
-            items: None,
-            control: None,
-            is_hidden: None,
-        }
-    }
-
     fn node_label(node: &Value) -> String {
         node.get("text").and_then(|value| value.as_str()).filter(|value| !value.is_empty()).or_else(|| node.get("id").and_then(|value| value.as_str())).unwrap_or("node").into()
     }
@@ -1236,71 +1226,12 @@ pub mod d2 {
                 Some(tree_item_with_action(format!("puzzle2d-play-document.edge.{id}"), edge_label(edge, fixture), edge.get("edgeKind").and_then(|value| value.as_str()).map(str::to_string), puzzle2d_action("setSelection", Some(json!({ "ids": [id] })))))
             })
             .collect();
-        UiNode::Tree(UiTreeNode {
-            loading: None,
-            sections: vec![
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "puzzle2d-play-document.nodes".into(),
-                    label: Some(labels.nodes.into()),
-                    default_open: Some(true),
-                    items: if node_items.is_empty() {
-                        vec![UiTreeItemNode {
-                            loading: None,
-                            id: "puzzle2d-play-document.nodes.empty".into(),
-                            label: labels.none.into(),
-                            description: None,
-                            icon_id: None,
-                            selected: None,
-                            default_open: None,
-                            action: None,
-                            hover_action: None,
-                            unhover_action: None,
-                            actions: None,
-                            draggable: None,
-                            drag_data: None,
-                            items: None,
-                            control: None,
-                            is_hidden: None,
-                        }]
-                    } else {
-                        node_items
-                    },
-                },
-                UiTreeSectionNode {
-                    loading: None,
-                    id: "puzzle2d-play-document.edges".into(),
-                    label: Some(labels.edges.into()),
-                    default_open: Some(false),
-                    items: if edge_items.is_empty() {
-                        vec![UiTreeItemNode {
-                            loading: None,
-                            id: "puzzle2d-play-document.edges.empty".into(),
-                            label: labels.none.into(),
-                            description: None,
-                            icon_id: None,
-                            selected: None,
-                            default_open: None,
-                            action: None,
-                            hover_action: None,
-                            unhover_action: None,
-                            actions: None,
-                            draggable: None,
-                            drag_data: None,
-                            items: None,
-                            control: None,
-                            is_hidden: None,
-                        }]
-                    } else {
-                        edge_items
-                    },
-                },
-            ],
-            selected_ids: Some(document_tree_selected_ids(fixture, &envelope.runtime.selected_ids)),
-            highlighted_ids: None,
-            selection_change: Some(puzzle2d_action("setSelection", None)),
-            drop_action: None,
-        })
+        PanelTreeBuilder::new("puzzle2d-play-document")
+            .section_or_placeholder("puzzle2d-play-document.nodes", Some(labels.nodes.into()), true, node_items, labels.none)
+            .section_or_placeholder("puzzle2d-play-document.edges", Some(labels.edges.into()), false, edge_items, labels.none)
+            .selected(document_tree_selected_ids(fixture, &envelope.runtime.selected_ids))
+            .selection_change(puzzle2d_action("setSelection", None))
+            .build()
     }
     //#endregion 🔖DocumentPanel
 
@@ -1399,28 +1330,7 @@ pub mod d2 {
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(true),
-            items: if items.is_empty() {
-                vec![UiTreeItemNode {
-                    loading: None,
-                    id: format!("{section_id}.empty"),
-                    label: labels.none.into(),
-                    description: None,
-                    icon_id: None,
-                    selected: None,
-                    default_open: None,
-                    action: None,
-                    hover_action: None,
-                    unhover_action: None,
-                    actions: None,
-                    draggable: None,
-                    drag_data: None,
-                    items: None,
-                    control: None,
-                    is_hidden: None,
-                }]
-            } else {
-                items
-            },
+            items: if items.is_empty() { vec![tree_item(format!("{section_id}.empty"), labels.none)] } else { items },
         }
     }
 
@@ -2105,7 +2015,7 @@ pub mod d2 {
     }
     //#endregion 🔖CommandLabels
 
-    //#region 🔖AppFactory
+    //#region 🔖Manifest
     /// 🛠️ An internal (non-palette) action declaration — the pointer/gesture/inspector/engagement-bound
     /// vocabulary dispatched by the canvas/panels, never surfaced as a standalone command palette entry.
     fn puzzle2d_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
@@ -2234,28 +2144,19 @@ pub mod d2 {
         semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
         semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
     }
-    //#endregion 🔖AppFactory
+    //#endregion 🔖Manifest
 
     //#region 🧪Tests
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-        use semio_framework_plugin::app::AppActionRegistry;
+        use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
         use vcs::{Backbone, BackboneMessage, MemoryBackbone};
-
-        fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
-        }
-
-        fn new_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
-            VcsDocumentApp::new(Puzzle2dPlayApp::default())
-        }
 
         /// 🧰 A registry-backed app so kind discipline (View/Shell actions must emit no ops) and the utility
         /// contract are enforced exactly as in production (`VcsDocumentApp::with_registry`).
         fn registry_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
-            VcsDocumentApp::with_registry(Puzzle2dPlayApp::default(), AppActionRegistry::from_definition(&create_puzzle2d_app().definition))
+            testkit::new_app_with_registry::<Puzzle2dPlayApp>(create_puzzle2d_app)
         }
 
         fn brush_view_state() -> ViewState {
@@ -2263,64 +2164,64 @@ pub mod d2 {
         }
 
         fn concrete_forest_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
-            let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load concrete forest");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load concrete forest");
             app
         }
 
         #[test]
         fn renders_puzzle2d_board_scene() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             let node = app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render");
             assert!(serde_json::to_string(&node).unwrap().contains("board-2d"));
         }
 
         #[test]
         fn add_node_action_emits_upsert_op_and_appends_node() {
-            let mut app = new_app();
-            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
             assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular op");
             assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
         }
 
         #[test]
         fn set_active_example_loads_concrete_forest_via_ops() {
-            let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load example");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
             assert!(!fixture_nodes(&app.projection().expect("projection")).is_empty());
         }
 
         #[test]
         fn select_then_delete_selection_removes_the_node() {
-            let mut app = new_app();
-            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-            app.handle_action("setSelection", Some(&json!({ "ids": [node_id] })), &ViewState::default(), &meta("local")).expect("select");
-            app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete");
+            app.handle_action("setSelection", Some(&json!({ "ids": [node_id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
+            app.handle_action("deleteSelection", None, &ViewState::default(), &testkit::meta("local")).expect("delete");
             assert!(fixture_nodes(&app.projection().expect("projection")).is_empty());
         }
 
         #[test]
         fn undo_redo_round_trip_through_the_wrapper() {
-            let mut app = new_app();
-            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add");
             assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 0);
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
             assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
         }
 
         #[test]
         fn camera_drag_coalesces_into_one_undo_step() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             let camera_x = |app: &VcsDocumentApp<Puzzle2dPlayApp>| app.projection().expect("projection").get("camera").and_then(|camera| camera.get("x")).and_then(|value| value.as_f64()).unwrap_or(f64::NAN);
             let origin_x = camera_x(&app);
             for x in [1.0, 2.0, 3.0] {
-                app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &meta("local")).expect("camera");
+                app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("camera");
             }
             assert_eq!(camera_x(&app), 3.0);
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(camera_x(&app), origin_x, "the coalesced drag is a single undo step back to the loaded camera");
         }
 
@@ -2331,14 +2232,14 @@ pub mod d2 {
         /// (here: repeated selects) must leave the edge count untouched.
         #[test]
         fn repeated_actions_do_not_duplicate_edges() {
-            let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), &ViewState::default(), &meta("local")).expect("load nakagin");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
             let edge_count = |app: &VcsDocumentApp<Puzzle2dPlayApp>| fixture_edges(&app.projection().expect("projection")).len();
             let before = edge_count(&app);
             assert!(before > 0, "fixture must have edges for this regression test to be meaningful");
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             for _ in 0..5 {
-                app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+                app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             }
             assert_eq!(edge_count(&app), before, "selecting repeatedly must not grow the edges array");
         }
@@ -2350,11 +2251,11 @@ pub mod d2 {
         fn apply_board_events_select_persists_across_the_next_action() {
             let mut app = concrete_forest_app();
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             let rendered_once = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
             assert!(rendered_once.contains(&node_id), "selection must be visible immediately after the select action");
             // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
-            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &meta("local")).expect("no-op");
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
             let rendered_twice = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
             assert!(rendered_twice.contains(&node_id), "selection must survive a subsequent unrelated action");
         }
@@ -2364,8 +2265,8 @@ pub mod d2 {
         /// a plain `camera` board event (used for the live wheel-zoom echo) before it ever committed.
         #[test]
         fn apply_board_events_camera_event_commits() {
-            let mut app = new_app();
-            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &meta("local")).expect("camera event");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
             let camera = app.projection().expect("projection").get("camera").cloned().expect("camera field");
             assert_eq!(camera.get("x").and_then(Value::as_f64), Some(5.0));
             assert_eq!(camera.get("y").and_then(Value::as_f64), Some(6.0));
@@ -2379,7 +2280,7 @@ pub mod d2 {
         fn select_action_emits_no_ops() {
             let mut app = concrete_forest_app();
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             assert!(result.operations.is_empty(), "selection must not produce document ops");
         }
 
@@ -2391,7 +2292,7 @@ pub mod d2 {
             use semio_framework_core::kernel::UiDirtyScope;
             let mut app = concrete_forest_app();
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
-            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &meta("local")).expect("select");
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             match result.ui_scope {
                 UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, labels } => {
                     // 🐢 Regression: `window_bodies` must list the window *body keys* (matched against
@@ -2414,8 +2315,8 @@ pub mod d2 {
         #[test]
         fn camera_event_declares_window_only_ui_scope() {
             use semio_framework_core::kernel::UiDirtyScope;
-            let mut app = new_app();
-            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), &ViewState::default(), &meta("local")).expect("camera event");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
             match result.ui_scope {
                 UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, labels } => {
                     assert_eq!(window_bodies.len(), 3);
@@ -2431,8 +2332,8 @@ pub mod d2 {
         #[test]
         fn empty_board_events_declare_none_ui_scope() {
             use semio_framework_core::kernel::UiDirtyScope;
-            let mut app = new_app();
-            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &meta("local")).expect("no-op");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
             assert!(matches!(result.ui_scope, UiDirtyScope::None), "empty board events must declare None, got {:?}", result.ui_scope);
         }
 
@@ -2441,8 +2342,8 @@ pub mod d2 {
         #[test]
         fn add_node_action_declares_full_ui_scope() {
             use semio_framework_core::kernel::UiDirtyScope;
-            let mut app = new_app();
-            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &meta("local")).expect("add node");
+            let mut app = testkit::new_app::<Puzzle2dPlayApp>();
+            let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
             assert!(matches!(result.ui_scope, UiDirtyScope::Full), "addNode must stay Full, got {:?}", result.ui_scope);
         }
 
@@ -2492,18 +2393,18 @@ pub mod d2 {
         /// impossible under whole-document `setDocument` snapshots, which would clobber one side.
         #[test]
         fn two_instances_converge_disjoint_node_edits_via_backbone() {
-            let mut instance_a = new_app();
-            let mut instance_b = new_app();
+            let mut instance_a = testkit::new_app::<Puzzle2dPlayApp>();
+            let mut instance_b = testkit::new_app::<Puzzle2dPlayApp>();
             let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle2d-convergence", "mem://puzzle2d-convergence");
             instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
             instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
 
-            instance_a.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &meta("actor-a")).expect("a adds node");
-            instance_b.handle_action("addNode", Some(&json!({ "kind": "other" })), &ViewState::default(), &meta("actor-b")).expect("b adds node");
+            instance_a.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &testkit::meta("actor-a")).expect("a adds node");
+            instance_b.handle_action("addNode", Some(&json!({ "kind": "other" })), &ViewState::default(), &testkit::meta("actor-b")).expect("b adds node");
 
             // A neutral history action always calls store.dispatch(), which pumps inbound ops first.
-            instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-            instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
+            instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
+            instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
 
             assert_eq!(fixture_nodes(&instance_a.projection().expect("projection")).len(), 2, "instance A must contain both nodes");
             assert_eq!(fixture_nodes(&instance_b.projection().expect("projection")).len(), 2, "instance B must contain both nodes");
@@ -2511,10 +2412,10 @@ pub mod d2 {
 
         #[test]
         fn ingest_operations_is_idempotent() {
-            let mut sender = new_app();
+            let mut sender = testkit::new_app::<Puzzle2dPlayApp>();
             let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc");
             sender.attach_backbone(Box::new(near)).expect("attach");
-            sender.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &meta("local")).expect("add");
+            sender.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &testkit::meta("local")).expect("add");
 
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
@@ -2525,7 +2426,7 @@ pub mod d2 {
             assert!(!envelopes.is_empty(), "the applied op must flow onto the channel");
             let operations_json = serde_json::to_string(&envelopes).expect("serialize");
 
-            let mut receiver = new_app();
+            let mut receiver = testkit::new_app::<Puzzle2dPlayApp>();
             receiver.ingest_operations(&operations_json).expect("ingest once");
             receiver.ingest_operations(&operations_json).expect("ingest twice");
             assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same op twice must not double-apply");
@@ -2536,9 +2437,9 @@ pub mod d2 {
         #[test]
         fn utility_switch_emits_no_ops_and_no_history() {
             let mut app = registry_app();
-            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": PUZZLE2D_UTILITY_BRUSH })), &brush_view_state(), &meta("local")).expect("switch utility");
+            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": PUZZLE2D_UTILITY_BRUSH })), &brush_view_state(), &testkit::meta("local")).expect("switch utility");
             assert!(result.operations.is_empty(), "a utility switch must not produce document ops");
-            let can_undo = app.handle_action("undo", None, &ViewState::default(), &meta("local"));
+            let can_undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local"));
             assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a utility switch must not have created an undo step");
         }
 
@@ -2595,7 +2496,7 @@ pub mod d2 {
         #[test]
         fn view_actions_emit_no_ops_through_the_registry() {
             let mut app = registry_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &meta("local")).expect("load example");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let view_dispatches: Vec<(&str, Value)> = vec![
                 ("setSelection", json!({ "ids": [node_id.clone()] })),
@@ -2620,7 +2521,7 @@ pub mod d2 {
             ];
             for (action, args) in view_dispatches {
                 let args_ref = (!args.is_null()).then_some(&args);
-                let result = app.handle_action(action, args_ref, &brush_view_state(), &meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
+                let result = app.handle_action(action, args_ref, &brush_view_state(), &testkit::meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
                 assert!(result.operations.is_empty(), "view action '{action}' must not emit document ops");
             }
         }
@@ -2634,7 +2535,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, OsMediaCapability, PanelGroup, ResourceKindSpec,
-        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -4225,9 +4126,11 @@ pub mod d3 {
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native.
+    /// ⚠️ Not routed through the SDK's `LocaleLabels`/`app_labels!`/`resolve_labels` — see `puzzle2d_labels`'s
+    /// doc comment for why (an extra terminology axis the SDK's `Terminology` region does not model).
     fn puzzle3d_labels(view_state: &ViewState) -> &'static Puzzle3dLabels {
         let terminology = view_state.terminology.as_deref().unwrap_or("native");
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let is_de = is_de_locale(view_state);
         match (terminology, is_de) {
             ("reuse", true) => &PUZZLE3D_LABELS_REUSE_DE,
             ("reuse", false) => &PUZZLE3D_LABELS_REUSE_EN,
@@ -6263,19 +6166,10 @@ pub mod d3 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{app::AppActionRegistry, ActionMeta, PluginApp, VcsDocumentApp};
-
-        fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
-        }
-
-        fn new_app() -> VcsDocumentApp<Puzzle3dPlayApp> {
-            VcsDocumentApp::new(Puzzle3dPlayApp::default())
-        }
+        use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
         fn new_app_with_registry() -> VcsDocumentApp<Puzzle3dPlayApp> {
-            let definition = create_puzzle3d_app().definition;
-            VcsDocumentApp::with_registry(Puzzle3dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+            testkit::new_app_with_registry::<Puzzle3dPlayApp>(create_puzzle3d_app)
         }
 
         fn object_count(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> usize {
@@ -6284,23 +6178,23 @@ pub mod d3 {
 
         #[test]
         fn renders_world_scene() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
             assert!(serde_json::to_string(&node).unwrap().contains("world-3d"));
         }
 
         #[test]
         fn initial_projection_is_the_concrete_forest_fixture() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
             assert!(object_count(&app) > 0, "the concrete-forest default fixture ships with objects");
         }
 
         #[test]
         fn open_add_object_dialog_emits_the_open_dialog_effect_with_no_document_change() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let before = object_count(&app);
-            let result = app.handle_action("openAddObjectDialog", None, &ViewState::default(), &meta("local")).expect("openAddObjectDialog");
+            let result = app.handle_action("openAddObjectDialog", None, &ViewState::default(), &testkit::meta("local")).expect("openAddObjectDialog");
             assert!(
                 matches!(result.requested_effects.as_slice(), [HostEffect::OpenDialog { dialog_id, args }] if dialog_id == "addObject" && args.is_none()),
                 "expected a single OpenDialog effect for the addObject dialog, got {:?}",
@@ -6311,21 +6205,21 @@ pub mod d3 {
 
         #[test]
         fn set_active_example_swaps_the_document_and_undo_restores_it() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let loaded = object_count(&app);
             assert!(loaded > 0);
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             assert_eq!(object_count(&app), 0, "empty example clears the objects");
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(object_count(&app), loaded, "undo restores the concrete-forest objects");
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
             assert_eq!(object_count(&app), 0);
         }
 
         #[test]
         fn nakagin_example_loads_via_ops() {
-            let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), &ViewState::default(), &meta("local")).expect("nakagin");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("nakagin");
             let projection = app.projection().expect("projection");
             assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
             assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
@@ -6333,7 +6227,7 @@ pub mod d3 {
 
         #[test]
         fn document_and_inspector_panels_render() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             for body in [PUZZLE3D_PLAY_BODY_DOCUMENT, PUZZLE3D_PLAY_BODY_KINDS, PUZZLE3D_PLAY_BODY_INSPECTOR] {
                 let node = app.render(body, None, &ViewState::default()).expect("render");
                 assert!(!serde_json::to_string(&node).unwrap().is_empty());
@@ -6412,9 +6306,9 @@ pub mod d3 {
 
         #[test]
         fn context_menu_at_selects_vortex_and_prepends_suggest_objects() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
+            app.handle_action("contextMenuAt", Some(&json!({ "kind": "vortex", "id": vortex })), &ViewState::default(), &testkit::meta("local")).expect("contextMenuAt");
             let menu = context_menu_of(&render_composite(&mut app));
             let menu_json = serde_json::to_string(&menu).unwrap();
             assert!(menu_json.contains("Suggest objects"), "menu should be {menu_json}");
@@ -6423,14 +6317,14 @@ pub mod d3 {
 
         #[test]
         fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
-            let mut app = new_app();
-            app.handle_action("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &meta("local")).expect("addTargetVolume");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &testkit::meta("local")).expect("addTargetVolume");
             let projection = app.projection().expect("projection");
             let volume_id = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
-            app.handle_action("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
+            app.handle_action("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &ViewState::default(), &testkit::meta("local")).expect("contextMenuAt");
             let menu_json = serde_json::to_string(&context_menu_of(&render_composite(&mut app))).unwrap();
             assert!(menu_json.contains("setTargetVolumeFlag"), "menu should be {menu_json}");
-            app.handle_action("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &ViewState::default(), &meta("local")).expect("setTargetVolumeFlag");
+            app.handle_action("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &ViewState::default(), &testkit::meta("local")).expect("setTargetVolumeFlag");
             let projection = app.projection().expect("projection");
             let hidden = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("hidden")).and_then(Value::as_bool);
             assert_eq!(hidden, Some(true));
@@ -6438,9 +6332,9 @@ pub mod d3 {
 
         #[test]
         fn open_vortex_suggestions_opens_the_suggestion_popup() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            let result = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            let result = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
             assert!(
                 matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_kind_id, utility_id }] if window_kind_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id == "brush"),
                 "opening suggestions switches the host-owned utility to brush",
@@ -6457,10 +6351,10 @@ pub mod d3 {
 
         #[test]
         fn close_vortex_suggestions_clears_the_menu() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
-            app.handle_action("closeVortexSuggestions", None, &ViewState::default(), &meta("local")).expect("closeVortexSuggestions");
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
+            app.handle_action("closeVortexSuggestions", None, &ViewState::default(), &testkit::meta("local")).expect("closeVortexSuggestions");
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
         }
@@ -6474,9 +6368,9 @@ pub mod d3 {
             // host-owned `view_state.active_utility_id`, not `runtime.active_utility` — the render call must be
             // given a "brush" view state, exactly like `open_vortex_suggestions_opens_the_suggestion_popup`.
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
             let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
             let composite = serde_json::to_value(&node).unwrap();
             let interaction = interaction_of(&composite);
@@ -6485,7 +6379,7 @@ pub mod d3 {
             assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "the live preview must target the vortex the suggestion menu was opened on");
             assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "the live preview must resolve to a real candidate object kind");
 
-            app.handle_action("hoverSuggestion", Some(&json!({ "index": 1 })), &ViewState::default(), &meta("local")).expect("hoverSuggestion");
+            app.handle_action("hoverSuggestion", Some(&json!({ "index": 1 })), &ViewState::default(), &testkit::meta("local")).expect("hoverSuggestion");
             let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
             let composite = serde_json::to_value(&node).unwrap();
             let interaction = interaction_of(&composite);
@@ -6496,11 +6390,11 @@ pub mod d3 {
 
         #[test]
         fn accept_suggestion_appends_an_object_and_closes_the_menu() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let object_count_before = object_count(&app);
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local")).expect("openVortexSuggestions");
-            app.handle_action("acceptSuggestion", None, &ViewState::default(), &meta("local")).expect("acceptSuggestion");
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
+            app.handle_action("acceptSuggestion", None, &ViewState::default(), &testkit::meta("local")).expect("acceptSuggestion");
             assert_eq!(object_count(&app), object_count_before + 1);
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
@@ -6512,12 +6406,12 @@ pub mod d3 {
             // bug: a single action must never grind the whole precompute queue synchronously), so the
             // build converges over several ticks — exactly like the real 120ms `fillBuildTick` loop in
             // `world-3d-host.tsx` — rather than in one call.
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let object_count_before = object_count(&app);
             let fill_view = ViewState { active_utility_id: Some("fill".into()), ..ViewState::default() };
-            app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "fill" })), &fill_view, &meta("local")).expect("select fill utility");
+            app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill utility");
             for _ in 0..500 {
-                app.handle_action("fillBuildTick", None, &fill_view, &meta("local")).expect("fillBuildTick");
+                app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick");
             }
             let measures = app.window_measures(&fill_view);
             let window_measures = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
@@ -6528,9 +6422,9 @@ pub mod d3 {
             assert_eq!(object_count(&app), object_count_before, "background planning must not append generated objects below the slider count");
             let available_count = find_measure_slider_max(window_measures, "puzzle3d-fill-count").expect("expected a fill-count slider range") as usize;
             assert!(available_count > 0, "the fill slider range must expose collision-free compatible placements");
-            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &meta("local")).expect("setFillCount");
+            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("setFillCount");
             assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
-            app.handle_action("setFillCount", Some(&json!({ "value": 0 })), &fill_view, &meta("local")).expect("clear fill count");
+            app.handle_action("setFillCount", Some(&json!({ "value": 0 })), &fill_view, &testkit::meta("local")).expect("clear fill count");
             assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
         }
 
@@ -6579,9 +6473,9 @@ pub mod d3 {
             // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
             // candidates exist — the brush Utility Options group must then surface, tagged for "brush".
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &brush_view, &meta("local")).expect("openVortexSuggestions");
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &brush_view, &testkit::meta("local")).expect("openVortexSuggestions");
             let brush_app_measures = app.window_measures(&brush_view);
             let window_measures = brush_app_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
             assert_eq!(measure_group_tag(window_measures, "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())), "the brush Utility Options group surfaces once there are candidates to place");
@@ -6609,9 +6503,9 @@ pub mod d3 {
 
         #[test]
         fn add_object_kind_honors_drop_origin() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let before = object_count(&app);
-            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), &ViewState::default(), &meta("local")).expect("addObjectKind");
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
             assert_eq!(object_count(&app), before + 1);
             let projection = app.projection().expect("projection");
             let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("added object");
@@ -6626,9 +6520,9 @@ pub mod d3 {
             // 📝 P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
             // default and emit the object-add op under registry enforcement.
             let mut app = new_app_with_registry();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             let before = object_count(&app);
-            let result = app.handle_action("addObjectKind", None, &ViewState::default(), &meta("local")).expect("addObjectKind");
+            let result = app.handle_action("addObjectKind", None, &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
             assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits ops");
             assert_eq!(object_count(&app), before + 1, "the materialized default kind adds exactly one object");
             let projection = app.projection().expect("projection");
@@ -6643,7 +6537,7 @@ pub mod d3 {
             let mut app = new_app_with_registry();
             let before = app.projection().expect("projection");
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &meta("local")).expect("switch utility");
+            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
             assert!(result.operations.is_empty(), "utility switching never emits document ops");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
             assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
@@ -6672,21 +6566,21 @@ pub mod d3 {
 
         #[test]
         fn world_pick_null_clears_without_reselecting_first_object() {
-            let mut app = new_app();
-            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
             let selected_before_clear = selection_of(&render_composite(&mut app));
             assert!(selected_before_clear.get("ids").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()));
-            app.handle_action("worldPick", Some(&json!({ "id": null, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("clear");
+            app.handle_action("worldPick", Some(&json!({ "id": null, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("clear");
             let selected_after_clear = selection_of(&render_composite(&mut app));
             assert_eq!(selected_after_clear.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
         }
 
         #[test]
         fn world_pick_object_replaces_vortex_selection() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &meta("local")).expect("select vortex");
-            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick object");
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &testkit::meta("local")).expect("select vortex");
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick object");
             let node = render_composite(&mut app);
             let selection = selection_of(&node);
             assert!(selection.get("ids").and_then(Value::as_array).is_some_and(|ids| !ids.is_empty()));
@@ -6696,10 +6590,10 @@ pub mod d3 {
 
         #[test]
         fn world_vortex_select_clears_object_selection() {
-            let mut app = new_app();
-            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick object");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick object");
             let vortex = first_vortex_full_id(&app);
-            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &meta("local")).expect("select vortex");
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortex, "merge": "default" })), &ViewState::default(), &testkit::meta("local")).expect("select vortex");
             let selection = selection_of(&render_composite(&mut app));
             assert_eq!(selection.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
             let vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
@@ -6708,8 +6602,8 @@ pub mod d3 {
 
         #[test]
         fn gumball_active_only_for_transform_utilities_with_object_selection() {
-            let mut app = new_app();
-            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
             let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
             let move_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &move_view).expect("render")).unwrap());
             assert_eq!(move_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
@@ -6728,20 +6622,20 @@ pub mod d3 {
         #[test]
         fn gumball_translate_drag_coalesces_into_one_edit() {
             // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
-            let mut app = new_app();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
-            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &meta("local")).expect("add object");
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &testkit::meta("local")).expect("add object");
             let object_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
             let origin_before = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
                 app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
             };
             let start = origin_before(&app);
             for dx in [1.0, 2.0, 3.0] {
-                app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &ViewState { active_utility_id: Some("move".into()), ..ViewState::default() }, &meta("local")).expect("drag tick");
+                app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &ViewState { active_utility_id: Some("move".into()), ..ViewState::default() }, &testkit::meta("local")).expect("drag tick");
             }
             let dragged = origin_before(&app);
             assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(origin_before(&app), start, "one undo restores the whole coalesced gumball drag");
         }
         //#endregion 🧰 Window Actions & Utilities contract
@@ -6758,7 +6652,7 @@ pub mod d5 {
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
         ActionDescriptor, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
-        WindowEngagementInput, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+        WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -6956,9 +6850,11 @@ pub mod d5 {
     };
 
     /// 🗣️ Resolves the active label set from the shell-provided locale/terminology; unknown terminology ids fall back to native — mirrors `puzzle3d_labels`.
+    /// ⚠️ Not routed through the SDK's `LocaleLabels`/`app_labels!`/`resolve_labels` — see `puzzle2d_labels`'s
+    /// doc comment for why (an extra terminology axis the SDK's `Terminology` region does not model).
     fn puzzle5d_labels(view_state: &ViewState) -> &'static Puzzle5dLabels {
         let terminology = view_state.terminology.as_deref().unwrap_or("native");
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
+        let is_de = is_de_locale(view_state);
         match (terminology, is_de) {
             ("reuse", true) => &PUZZLE5D_LABELS_REUSE_DE,
             ("reuse", false) => &PUZZLE5D_LABELS_REUSE_EN,
@@ -9496,19 +9392,10 @@ pub mod d5 {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use semio_framework_plugin::{app::AppActionRegistry, ActionMeta, PluginApp, VcsDocumentApp};
-
-        fn meta(actor: &str) -> ActionMeta {
-            ActionMeta { actor: actor.into(), instance_id: 1 }
-        }
-
-        fn new_app() -> VcsDocumentApp<Puzzle5dPlayApp> {
-            VcsDocumentApp::new(Puzzle5dPlayApp::default())
-        }
+        use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
         fn new_app_with_registry() -> VcsDocumentApp<Puzzle5dPlayApp> {
-            let definition = create_puzzle5d_app().definition;
-            VcsDocumentApp::with_registry(Puzzle5dPlayApp::default(), AppActionRegistry::from_definition(&definition))
+            testkit::new_app_with_registry::<Puzzle5dPlayApp>(create_puzzle5d_app)
         }
 
         fn part_count(app: &VcsDocumentApp<Puzzle5dPlayApp>) -> usize {
@@ -9517,7 +9404,7 @@ pub mod d5 {
 
         #[test]
         fn renders_paired_board_and_world_scenes() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let board = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_2D, None, &ViewState::default()).expect("render 2d")).unwrap();
             assert!(board.contains("board-2d"));
             let world = serde_json::to_string(&app.render(PUZZLE5D_PLAY_BODY_3D, None, &ViewState::default()).expect("render 3d")).unwrap();
@@ -9526,27 +9413,27 @@ pub mod d5 {
 
         #[test]
         fn initial_projection_is_the_concrete_forest_document() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
             assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
         }
 
         #[test]
         fn set_active_example_swaps_the_document_and_undo_restores_it() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let loaded = part_count(&app);
             assert!(loaded > 0);
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             assert_eq!(part_count(&app), 0, "empty example clears the parts");
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(part_count(&app), loaded, "undo restores the concrete-forest parts");
-            app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
+            app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
             assert_eq!(part_count(&app), 0);
         }
 
         #[test]
         fn document_panel_renders() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let node = app.render(PUZZLE5D_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render");
             assert!(!serde_json::to_string(&node).unwrap().is_empty());
         }
@@ -9583,7 +9470,7 @@ pub mod d5 {
 
         #[test]
         fn window_engagements_cover_both_windows() {
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let engagements = app.window_engagements(&ViewState::default());
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_2D));
             assert!(engagements.contains_key(PUZZLE5D_PLAY_WINDOW_3D));
@@ -9594,9 +9481,9 @@ pub mod d5 {
         fn add_part_kind_materializes_the_declared_kind_default() {
             // 📝 P1 arg form: addPartKind with no args materializes the declared `partKind` default and adds a part.
             let mut app = new_app_with_registry();
-            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &meta("local")).expect("empty");
+            app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             let before = part_count(&app);
-            let result = app.handle_action("addPartKind", None, &ViewState::default(), &meta("local")).expect("addPartKind");
+            let result = app.handle_action("addPartKind", None, &ViewState::default(), &testkit::meta("local")).expect("addPartKind");
             assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits ops");
             assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
             let projection = app.projection().expect("projection");
@@ -9610,7 +9497,7 @@ pub mod d5 {
             let mut app = new_app_with_registry();
             let before = app.projection().expect("projection");
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &meta("local")).expect("switch utility");
+            let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
             assert!(result.operations.is_empty(), "utility switching never emits document ops");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
             assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
@@ -9620,7 +9507,7 @@ pub mod d5 {
         fn engagements_expose_no_utility_switch_options_for_either_window() {
             // 🧰 select/brush/fill switching lives only on the framework toolbar; neither the 2D nor the 3D
             // engagement HUD may duplicate it as options.
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let engagements = app.window_engagements(&ViewState::default());
             for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
                 assert!(engagements.get(window).expect("engagement").options.is_none(), "the {window} engagement must not re-expose utility switching as options");
@@ -9671,8 +9558,8 @@ pub mod d5 {
         #[test]
         fn engagement_submit_switches_utility_via_host_effect_for_both_windows() {
             // 🧰 Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
-            let mut app = new_app();
-            let result = app.handle_action("engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), &ViewState::default(), &meta("local")).expect("submit");
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+            let result = app.handle_action("engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
             let windows: Vec<&str> = result.requested_effects.iter().filter_map(|effect| match effect { HostEffect::SetActiveUtility { window_kind_id, utility_id } if utility_id == "brush" => Some(window_kind_id.as_str()), _ => None }).collect();
             assert!(windows.contains(&PUZZLE5D_PLAY_WINDOW_2D) && windows.contains(&PUZZLE5D_PLAY_WINDOW_3D), "brush switch is pushed to both windows, got {windows:?}");
         }
@@ -9680,7 +9567,7 @@ pub mod d5 {
         #[test]
         fn gumball_translate_drag_coalesces_into_one_edit() {
             // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
-            let mut app = new_app();
+            let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let part_id = app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("part id").to_string();
             let origin_x = |app: &VcsDocumentApp<Puzzle5dPlayApp>| -> f64 {
                 app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).and_then(|part| part.pointer("/3d/origin/0")).and_then(Value::as_f64).unwrap_or(0.0)
@@ -9688,10 +9575,10 @@ pub mod d5 {
             let start = origin_x(&app);
             let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
             for dx in [1.0, 2.0, 3.0] {
-                app.handle_action("translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &move_view, &meta("local")).expect("drag tick");
+                app.handle_action("translateSelection", Some(&json!({ "ids": [part_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &move_view, &testkit::meta("local")).expect("drag tick");
             }
             assert!((origin_x(&app) - start - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");
-            app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+            app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert!((origin_x(&app) - start).abs() < 1e-9, "one undo restores the whole coalesced gumball drag");
         }
         //#endregion 🧰 Window Actions & Utilities contract

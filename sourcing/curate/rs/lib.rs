@@ -132,9 +132,7 @@ pub fn mesh_spec_for(recipe: &GeometryRecipe) -> MeshDataSpec {
         GeometryRecipe::Box { width, height, depth } => box_mesh_spec(*width, *height, *depth),
         GeometryRecipe::Frame { width, height, depth, profile } => frame_mesh_spec(*width, *height, *depth, *profile),
         GeometryRecipe::Slab { width, depth, thickness } => box_mesh_spec(*width, *thickness, *depth),
-        GeometryRecipe::Mesh { positions, normals, indices } => {
-            MeshDataSpec { positions: positions.clone(), normals: normals.clone(), indices: indices.clone() }
-        }
+        GeometryRecipe::Mesh { positions, normals, indices } => MeshDataSpec { positions: positions.clone(), normals: normals.clone(), indices: indices.clone() },
     }
 }
 
@@ -144,11 +142,7 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
         GeometryRecipe::Box { width, height, depth } => width.max(*height).max(*depth),
         GeometryRecipe::Frame { width, height, depth, .. } => width.max(*height).max(*depth),
         GeometryRecipe::Slab { width, depth, thickness } => width.max(*depth).max(*thickness),
-        GeometryRecipe::Mesh { positions, .. } => positions
-            .chunks(3)
-            .flat_map(|p| p.iter().map(|v| v.abs() as f64 * 2.0))
-            .fold(0.0_f64, f64::max)
-            .max(1e-6),
+        GeometryRecipe::Mesh { positions, .. } => positions.chunks(3).flat_map(|p| p.iter().map(|v| v.abs() as f64 * 2.0)).fold(0.0_f64, f64::max).max(1e-6),
     }
 }
 //#endregion 🔖Geometry
@@ -237,8 +231,7 @@ impl CurateDocument {
                 let query = self.filters.query.trim().to_lowercase();
                 let matches_query = query.is_empty() || kind.name.to_lowercase().contains(&query);
                 let matches_module = self.filters.module_ids.is_empty() || self.filters.module_ids.contains(&kind.module_id);
-                let matches_typology = self.filters.typology_path.is_empty()
-                    || kind.typology_path.starts_with(&self.filters.typology_path);
+                let matches_typology = self.filters.typology_path.is_empty() || kind.typology_path.starts_with(&self.filters.typology_path);
                 let matches_availability = kind.availability >= self.filters.min_availability;
                 matches_query && matches_module && matches_typology && matches_availability
             })
@@ -352,16 +345,8 @@ pub mod beams {
                 "beams",
                 "Beams",
                 vec![
-                    TypologyNode::new(
-                        "solid-timber",
-                        "Solid Timber",
-                        vec![TypologyNode::new("glulam", "Glulam", vec![]), TypologyNode::new("kvh", "KVH", vec![])],
-                    ),
-                    TypologyNode::new(
-                        "steel",
-                        "Steel",
-                        vec![TypologyNode::new("ipe", "IPE", vec![]), TypologyNode::new("hea", "HEA", vec![])],
-                    ),
+                    TypologyNode::new("solid-timber", "Solid Timber", vec![TypologyNode::new("glulam", "Glulam", vec![]), TypologyNode::new("kvh", "KVH", vec![])]),
+                    TypologyNode::new("steel", "Steel", vec![TypologyNode::new("ipe", "IPE", vec![]), TypologyNode::new("hea", "HEA", vec![])]),
                 ],
             )
         }
@@ -417,15 +402,7 @@ pub mod windows {
             "Windows"
         }
         fn typology(&self) -> TypologyNode {
-            TypologyNode::new(
-                "windows",
-                "Windows",
-                vec![
-                    TypologyNode::new("casement", "Casement", vec![]),
-                    TypologyNode::new("fixed", "Fixed", vec![]),
-                    TypologyNode::new("tilt-turn", "Tilt & Turn", vec![]),
-                ],
-            )
+            TypologyNode::new("windows", "Windows", vec![TypologyNode::new("casement", "Casement", vec![]), TypologyNode::new("fixed", "Fixed", vec![]), TypologyNode::new("tilt-turn", "Tilt & Turn", vec![])])
         }
         fn demo_kinds(&self) -> Vec<ObjectKind> {
             vec![
@@ -471,15 +448,7 @@ pub mod slabs {
             "Slabs"
         }
         fn typology(&self) -> TypologyNode {
-            TypologyNode::new(
-                "slabs",
-                "Slabs",
-                vec![
-                    TypologyNode::new("concrete", "Concrete", vec![]),
-                    TypologyNode::new("clt", "CLT", vec![]),
-                    TypologyNode::new("hollow-core", "Hollow Core", vec![]),
-                ],
-            )
+            TypologyNode::new("slabs", "Slabs", vec![TypologyNode::new("concrete", "Concrete", vec![]), TypologyNode::new("clt", "CLT", vec![]), TypologyNode::new("hollow-core", "Hollow Core", vec![])])
         }
         fn demo_kinds(&self) -> Vec<ObjectKind> {
             vec![
@@ -556,10 +525,7 @@ mod tests {
     use super::*;
 
     fn sample_document() -> CurateDocument {
-        CurateDocument {
-            stock: sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(),
-            ..Default::default()
-        }
+        CurateDocument { stock: sourcing_modules().iter().flat_map(|module| module.demo_kinds()).collect(), ..Default::default() }
     }
 
     #[test]
@@ -665,8 +631,7 @@ mod tests {
         let sum_z: f64 = positions.iter().map(|(_, z)| z).sum();
         assert!(sum_x.abs() < 1e-9);
         assert!(sum_z.abs() < 1e-9);
-        let unique: std::collections::HashSet<(i64, i64)> =
-            positions.iter().map(|(x, z)| ((x * 1000.0) as i64, (z * 1000.0) as i64)).collect();
+        let unique: std::collections::HashSet<(i64, i64)> = positions.iter().map(|(x, z)| ((x * 1000.0) as i64, (z * 1000.0) as i64)).collect();
         assert_eq!(unique.len(), 9);
     }
 

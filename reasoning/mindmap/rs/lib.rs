@@ -40,13 +40,16 @@ use serde_json::{Map, Value};
 use vcs::{Operation, OperationDiff};
 
 pub const MINDMAP_WIRES_SCHEMA: &str = "reasoning.wires.fixture";
-pub const MINDMAP_BOARD_SCHEMA: &str = "puzzle.2d.fixture";
+/// 🕸️ Mindmap's own board fixture schema — recognized by the neutral force-graph-layout crate
+/// (`infinite_board_normal_undirected`) as an undirected graph, distinct from puzzle's directed
+/// `puzzle.2d.fixture` board.
+pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
 
 // #region 🔖Document
 /// 🧠 The mindmap-wires document: the semantic wires fixture (identities/relationships/kind catalogs)
-/// paired with its `puzzle.2d` board fixture (nodes/edges/camera). Both are kept as opaque JSON so
-/// this crate stays free of the puzzle/board schema types, while ops still address board nodes/edges
-/// and wires relationships by id for mergeable, granular edits.
+/// paired with its own `reasoning.mindmap.fixture` board fixture (nodes/edges/camera). Both are kept
+/// as opaque JSON so this crate stays free of any board-engine schema types, while ops still address
+/// board nodes/edges and wires relationships by id for mergeable, granular edits.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MindmapWiresDocument {

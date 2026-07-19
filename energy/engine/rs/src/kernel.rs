@@ -635,8 +635,8 @@ impl SimulationKernel {
                 );
                 zone_state.air.push_temp(result.temp_c);
                 zone_state.air.push_humidity(result.humidity_ratio);
-                zone_state.heating_demand_w = predicted.heating_w.max((heat_sp - result.temp_c).max(0.0) * zone.volume_m3 * 1.2);
-                zone_state.cooling_demand_w = predicted.cooling_w.max((result.temp_c - cool_sp).max(0.0) * zone.volume_m3 * 1.2);
+                zone_state.heating_demand_w = predicted.heating_w;
+                zone_state.cooling_demand_w = predicted.cooling_w;
 
                 for ils in model.ideal_loads.iter().filter(|i| i.zone_id == zone.id) {
                     let fault_factor = model

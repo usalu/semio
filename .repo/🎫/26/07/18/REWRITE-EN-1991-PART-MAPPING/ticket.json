@@ -1,8 +1,9 @@
 {
   "title": "Rewrite EN 1991 Part Mapping",
   "emoji": "📏",
-  "status": "open",
+  "status": "closed",
   "description": "Rewrite norm/en/1991/rs/lib.rs with correct Eurocode part mapping: part_1_1 through part_1_7, part_2 bridges, part_3 cranes, part_4 silos/tanks. Add na_de module with DE snow and wind zones. Add worked-example tests.",
+  "summary": "Phase 2 behavioral completeness for architect_program: full validate/analyze/report/search/trace/exchange/template/status_summary/adjacency enhancements plus new outputs.rs module. All 21 AnalysisKind and 21 ReportKind variants implemented with meaningful findings. 37 unit tests pass; cargo check -p architect_program succeeds.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2090"
   },

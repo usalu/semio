@@ -243,6 +243,10 @@ impl Affine {
     pub fn to_kurbo(&self) -> kurbo::Affine {
         self.0
     }
+    /// 🔢 Raw `[a, b, c, d, e, f]` matrix coefficients, for callers that need direct numeric access (e.g. north/south orientation checks) without importing `kurbo` themselves.
+    pub fn as_coeffs(&self) -> [f64; 6] {
+        self.0.as_coeffs()
+    }
 }
 
 impl std::ops::Mul for Affine {

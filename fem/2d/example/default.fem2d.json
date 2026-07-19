@@ -1,20 +1,37 @@
 {
   "nodes": [
     { "id": "n1", "x": 0.0, "y": 0.0 },
-    { "id": "n2", "x": 6.0, "y": 0.0 }
+    { "id": "n2", "x": 6.0, "y": 0.0 },
+    { "id": "rc0", "x": 10.0, "y": 0.0 },
+    { "id": "rc1", "x": 12.0, "y": 0.0 },
+    { "id": "rc2", "x": 12.0, "y": 1.0 },
+    { "id": "rc3", "x": 10.0, "y": 1.0 }
   ],
   "elements": [
     { "kind": "beam", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "ipe300" }
   ],
+  "regions": [
+    {
+      "id": "r1",
+      "name": "Slab",
+      "outline": [[10.0, 0.0], [12.0, 0.0], [12.0, 1.0], [10.0, 1.0]],
+      "holes": [[[10.8, 0.4], [11.2, 0.4], [11.2, 0.6], [10.8, 0.6]]],
+      "thickness": 0.02,
+      "materialId": "steel",
+      "meshSize": 0.15
+    }
+  ],
   "materials": [
-    { "id": "steel", "name": "Steel S235", "e": 210000000000.0 }
+    { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "nu": 0.3, "rho": 7850.0 }
   ],
   "sections": [
     { "id": "ipe300", "name": "IPE 300", "area": 0.005381, "iy": 0.00008356 }
   ],
   "supports": [
     { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty"] },
-    { "id": "s2", "nodeId": "n2", "fixed": ["Ty"] }
+    { "id": "s2", "nodeId": "n2", "fixed": ["Ty"] },
+    { "id": "s3", "nodeId": "rc0", "fixed": ["Tx", "Ty"] },
+    { "id": "s4", "nodeId": "rc1", "fixed": ["Tx", "Ty"] }
   ],
   "loadCases": [
     {
@@ -22,8 +39,21 @@
       "name": "Dead Load",
       "loads": [
         { "kind": "memberUdl", "id": "l1", "elementId": "e1", "wx": 0.0, "wy": -10000.0 }
-      ]
+      ],
+      "selfWeight": false
+    },
+    {
+      "id": "live",
+      "name": "Live Load",
+      "loads": [
+        { "kind": "nodal", "id": "l2", "nodeId": "n1", "dof": "Ty", "value": -2000.0 }
+      ],
+      "selfWeight": false
     }
   ],
+  "combinations": [
+    { "id": "uls", "name": "ULS", "terms": [["dead", 1.35], ["live", 1.5]] }
+  ],
+  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 50.0 },
   "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
 }

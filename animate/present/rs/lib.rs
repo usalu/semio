@@ -2,7 +2,7 @@
 
 pub mod present;
 
-pub use present::{compile_present_site, PresentCompileError, PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA};
+pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileError, PresentScene, PresentSection, PresentSlide, PRESENT_SCENE_SCHEMA, SceneAssetBundle};
 
 use vcs::{
     collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore,
@@ -231,6 +231,20 @@ pub fn build_tile_morph_prompt(source: &FigureTileSource, drafts: &[FigureTileDr
 }
 
 //#endregion 🔖TilePlay
+
+//#region 🔖VideoExport
+/// 🎬 Renders every unique `scene_hash` referenced by a {@link PresentScene}.
+pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Path) -> Result<Vec<SceneAssetBundle>, String> {
+    let hashes = scene.scene_hashes();
+    if hashes.is_empty() {
+        return Err("presentation has no scene hashes to export".into());
+    }
+    hashes
+        .into_iter()
+        .map(|hash| compile_scene_to_assets(&hash, output_dir).map_err(|error| error.message))
+        .collect()
+}
+//#endregion 🔖VideoExport
 
 //#region 🔖Ops
 //#region 🔖CollectionSupport

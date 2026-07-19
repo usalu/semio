@@ -1,8 +1,9 @@
 {
   "title": "Fix Forms Plugin SDK Imports",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "forms/plugin/rs/lib.rs (around lines 882-907) imports ProtocolBuilderConfig, PROTOCOL_BUILDER_LABELS_EN, render_protocol_builder, BlockPaletteEntry from semio_framework_plugin, but these symbols moved to the protocol crate as part of ticket #2033's SDK extraction. This leaves forms/plugin currently NOT compiling, blocking other concurrent work on the plugin SDK. Task: mirror the identical mechanical swap already applied in procedural/plugin/rs/lib.rs and flow/plugin/rs/lib.rs — add a dependency on the protocol crate to forms/plugin/rs/Cargo.toml (matching procedural/flow's style), fix the imports in forms/plugin/rs/lib.rs to pull from protocol instead of semio_framework_plugin, then run cargo check -p \u003cforms plugin package name\u003e and cargo test -p \u003csame\u003e until clean. Scope strictly limited to forms/plugin/rs/ and its Cargo.toml.",
+  "summary": "Verified this fix is already in place: forms/plugin/rs/lib.rs's forms_protocol_builder_config()/render_blueprint_builder() correctly import ProtocolBuilderConfig/PROTOCOL_BUILDER_LABELS_EN/render_protocol_builder via fully-qualified `protocol::` paths (protocol/rs/lib.rs re-exports these from its builder_kit module), and BlockPaletteEntry via `semio_framework_plugin::` (which re-exports it from ui_wgpu) — this exactly matches the sanctioned sibling pattern in protocol/plugin/rs/lib.rs (the only other consumer of these symbols). forms/plugin/rs/Cargo.toml already depends on the protocol crate. No residual broken import found. This work is superseded/rolled into ticket 26/07/18/NORMALIZE-FORMS-PLUGIN-CRATE-TO-CONSISTENCY-CONTRACT, which also fixed an unrelated genuine compile blocker discovered in the same crate (UiTreeItemNode's `loading` field was missing from every hand-rolled struct literal in build_document_tree/build_catalogue_tree — fixed by adopting the PanelKit SDK builders, which always initialize it).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2042"
   },

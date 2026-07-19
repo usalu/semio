@@ -160,11 +160,59 @@ pub struct BeamStation {
     pub m: f64,
 }
 
-/// 📤 Element-kind-specific internal-force recovery.
+/// 🧮 In-plane stress state at one Gauss point of a plane-stress/plane-strain continuum element.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PlaneStress {
+    pub sxx: f64,
+    pub syy: f64,
+    pub sxy: f64,
+    pub von_mises: f64,
+}
+
+/// 🧊 Full 3D stress state at one Gauss point of a solid element.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SolidStress {
+    pub sxx: f64,
+    pub syy: f64,
+    pub szz: f64,
+    pub sxy: f64,
+    pub syz: f64,
+    pub sxz: f64,
+    pub von_mises: f64,
+}
+
+/// 🧊 Bending moments per unit width at one Gauss point of a plate element.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct PlateMoments {
+    pub mx: f64,
+    pub my: f64,
+    pub mxy: f64,
+}
+
+/// 🐚 Membrane forces + bending moments per unit width at one Gauss point of a facet shell element.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct ShellState {
+    pub nxx: f64,
+    pub nyy: f64,
+    pub nxy: f64,
+    pub mxx: f64,
+    pub myy: f64,
+    pub mxy: f64,
+    pub von_mises_top: f64,
+    pub von_mises_bottom: f64,
+}
+
+/// 📤 Element-kind-specific internal-force recovery. Only Gauss-point values live here — nodal
+/// extrapolation/averaging across elements (for contour rendering) is a mesh-wide post-processing
+/// step owned by `analyses`, not by any single element.
 #[derive(Clone, Debug, PartialEq)]
 pub enum ElementResult {
     Bar { n: f64 },
     Beam { stations: Vec<BeamStation> },
+    Plane { gauss: Vec<PlaneStress> },
+    Plate { gauss: Vec<PlateMoments> },
+    Solid { gauss: Vec<SolidStress> },
+    Shell { gauss: Vec<ShellState> },
 }
 
 /// ✅ Global sanity checks on the solved system.

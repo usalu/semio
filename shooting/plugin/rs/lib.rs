@@ -433,30 +433,10 @@ fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
 //#endregion 🔖CommandLabels
 
 //#region 🔖Panels
-fn tree_item_with_action(
-    id: impl Into<String>,
-    label: impl Into<String>,
-    icon_id: Option<&str>,
-    action: ActionDescriptor,
-) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: icon_id.map(str::to_string),
-        selected: None,
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-        loading: None,
-    }
+/// 🌳 Layers an `icon_id` onto the SDK's `tree_item_with_action` skeleton — the SDK primitive's third
+/// parameter is `description`, not an icon, so the shooting-specific icon assignment stays local.
+fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: &str, action: ActionDescriptor) -> UiTreeItemNode {
+    UiTreeItemNode { icon_id: Some(icon_id.into()), ..tree_item_with_action(id, label, None, action) }
 }
 
 fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> UiNode {
@@ -464,10 +444,10 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
         .shots
         .iter()
         .map(|shot| {
-            tree_item_with_action(
+            tree_item_with_icon(
                 format!("shooting-shot:{}", shot.id),
                 shot.label.clone(),
-                Some("camera"),
+                "camera",
                 shooting_action("setSelection", Some(json!({ "shotIds": [shot.id], "assetIds": [] }))),
             )
         })
@@ -476,80 +456,44 @@ fn build_document_tree(fixture: &ShootingFixture, labels: &ShootingLabels) -> Ui
         .assets
         .iter()
         .map(|asset| {
-            tree_item_with_action(
+            tree_item_with_icon(
                 format!("shooting-asset:{}", asset.id),
                 asset.name.clone(),
-                Some("box"),
+                "box",
                 shooting_action("setSelection", Some(json!({ "shotIds": [], "assetIds": [asset.id] }))),
             )
         })
         .collect();
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "shooting-play-document.shots".into(),
-                label: Some(labels.shots.into()),
-                default_open: Some(true),
-                items: shot_items,
-                loading: None,
-            },
-            UiTreeSectionNode {
-                id: "shooting-play-document.assets".into(),
-                label: Some(labels.assets.into()),
-                default_open: Some(true),
-                items: asset_items,
-                loading: None,
-            },
-        ],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+    PanelTreeBuilder::new("shooting-play-document")
+        .section("shooting-play-document.shots", Some(labels.shots.into()), true, shot_items)
+        .section("shooting-play-document.assets", Some(labels.assets.into()), true, asset_items)
+        .build()
 }
 
 fn build_catalogue_tree(labels: &ShootingLabels) -> UiNode {
-    UiNode::Tree(UiTreeNode {
-        sections: vec![
-            UiTreeSectionNode {
-                id: "shooting-play-catalogue.shots".into(),
-                label: Some(labels.add_shot.into()),
-                default_open: Some(true),
-                items: vec![
-                    catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
-                    catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
-                    catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
-                    catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
-                ],
-                loading: None,
-            },
-            UiTreeSectionNode {
-                id: "shooting-play-catalogue.assets".into(),
-                label: Some(labels.add_asset.into()),
-                default_open: Some(true),
-                items: vec![tree_item_with_action(
-                    "shooting-play-catalogue.asset.glb",
-                    labels.glb_asset,
-                    Some("box"),
-                    shooting_action("addAsset", Some(json!({ "format": "glb" }))),
-                )],
-                loading: None,
-            },
-        ],
-        selected_ids: None,
-        highlighted_ids: None,
-        selection_change: None,
-        drop_action: None,
-        loading: None,
-    })
+    let shot_items = vec![
+        catalog_shot_item("svg-rect", labels.svg_rectangle, "svg", "rectangle"),
+        catalog_shot_item("png-rect", labels.png_rectangle, "png", "rectangle"),
+        catalog_shot_item("svg-ellipse", labels.svg_ellipse, "svg", "ellipse"),
+        catalog_shot_item("png-ellipse", labels.png_ellipse, "png", "ellipse"),
+    ];
+    let asset_items = vec![tree_item_with_icon(
+        "shooting-play-catalogue.asset.glb",
+        labels.glb_asset,
+        "box",
+        shooting_action("addAsset", Some(json!({ "format": "glb" }))),
+    )];
+    PanelTreeBuilder::new("shooting-play-catalogue")
+        .section("shooting-play-catalogue.shots", Some(labels.add_shot.into()), true, shot_items)
+        .section("shooting-play-catalogue.assets", Some(labels.add_asset.into()), true, asset_items)
+        .build()
 }
 
 fn catalog_shot_item(id: &str, label: &str, format: &str, shape: &str) -> UiTreeItemNode {
-    tree_item_with_action(
+    tree_item_with_icon(
         format!("shooting-play-catalogue.{id}"),
         label,
-        Some("camera"),
+        "camera",
         shooting_action("addShot", Some(json!({ "format": format, "shape": shape }))),
     )
 }
@@ -1422,7 +1366,7 @@ impl DocumentApp for ShootingPlayApp {
 
     fn render(&self, body_key: &str, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> UiNode {
         let fixture = doc.projection;
-        let labels = shooting_labels(view_state);
+        let labels = resolve_labels::<ShootingLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(SHOOTING_TRANSFORM_UTILITY_DEFAULT);
         match body_key {
             SHOOTING_PLAY_BODY_SCENE => render_model_scene(fixture, &self.runtime, active_utility),
@@ -1435,7 +1379,7 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     fn window_engagements(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-        let labels = shooting_labels(view_state);
+        let labels = resolve_labels::<ShootingLabels>(view_state);
         HashMap::from([
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_engagement(doc.projection, &self.runtime, labels)),
             (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_engagement(doc.projection, labels)),
@@ -1443,7 +1387,7 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     fn window_measures(&self, doc: &DocumentView<'_, ShootingFixture>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let labels = shooting_labels(view_state);
+        let labels = resolve_labels::<ShootingLabels>(view_state);
         HashMap::from([
             (SHOOTING_PLAY_WINDOW_SCENE.into(), shooting_model_measures(doc.projection, labels)),
             (SHOOTING_PLAY_WINDOW_ICON.into(), shooting_icon_measures(doc.projection, labels)),
@@ -1451,22 +1395,12 @@ impl DocumentApp for ShootingPlayApp {
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = shooting_labels(view_state);
-        let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-        AppLabelsOverlay {
-            window_kind_labels: HashMap::from([
-                (SHOOTING_PLAY_WINDOW_SCENE.to_string(), labels.window_scene.to_string()),
-                (SHOOTING_PLAY_WINDOW_ICON.to_string(), labels.window_icon.to_string()),
-            ]),
-            panel_tab_labels: HashMap::new(),
-            mode_labels: HashMap::new(),
-            action_labels: shooting_action_labels(is_de),
-            utility_labels: shooting_utility_labels(is_de),
-            example_labels: HashMap::new(),
-            action_arg_labels: HashMap::new(),
-            dialog_labels: HashMap::new(),
-            introduction_labels: HashMap::new(),
-        }
+        let labels = resolve_labels::<ShootingLabels>(view_state);
+        AppLabelsOverlay::default()
+            .window_kind_label(SHOOTING_PLAY_WINDOW_SCENE, labels.window_scene)
+            .window_kind_label(SHOOTING_PLAY_WINDOW_ICON, labels.window_icon)
+            .action_labels(shooting_action_labels(is_de_locale(view_state)))
+            .utility_labels(shooting_utility_labels(is_de_locale(view_state)))
     }
 }
 //#endregion 🔖ShootingPlayApp
@@ -1638,22 +1572,15 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use semio_framework_plugin::{ActionMeta, PluginApp, VcsDocumentApp};
-    use semio_framework_plugin::app::AppActionRegistry;
-    use vcs::{Backbone, BackboneMessage, MemoryBackbone};
-
-    fn meta(actor: &str) -> ActionMeta {
-        ActionMeta { actor: actor.into(), instance_id: 1 }
-    }
+    use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<ShootingPlayApp> {
-        VcsDocumentApp::new(ShootingPlayApp::default())
+        testkit::new_app::<ShootingPlayApp>()
     }
 
     /// 🧬 A wrapper carrying the real action registry so default-materialization + kind discipline run.
     fn new_app_with_registry() -> VcsDocumentApp<ShootingPlayApp> {
-        let definition = create_shooting_app().definition;
-        VcsDocumentApp::with_registry(ShootingPlayApp::default(), AppActionRegistry::from_definition(&definition))
+        testkit::new_app_with_registry::<ShootingPlayApp>(create_shooting_app)
     }
 
     #[test]
@@ -1695,8 +1622,8 @@ mod tests {
     #[test]
     fn save_and_load_camera_round_trip() {
         let mut app = new_app();
-        app.handle_action("setCameraDraftLabel", Some(&json!({ "value": "Hero" })), &ViewState::default(), &meta("local")).expect("draft");
-        let result = app.handle_action("saveCamera", None, &ViewState::default(), &meta("local")).expect("save");
+        app.handle_action("setCameraDraftLabel", Some(&json!({ "value": "Hero" })), &ViewState::default(), &testkit::meta("local")).expect("draft");
+        let result = app.handle_action("saveCamera", None, &ViewState::default(), &testkit::meta("local")).expect("save");
         assert_eq!(result.operations.len(), 1);
         let engagements = app.window_engagements(&ViewState::default());
         let possible = engagements[SHOOTING_PLAY_WINDOW_SCENE].possible_engagements.as_ref().unwrap();
@@ -1707,10 +1634,10 @@ mod tests {
             "setCamera",
             Some(&json!({ "camera": { "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0, "fov": 50.0 } })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("move camera away");
-        app.handle_action("loadSavedCamera", Some(&json!({ "id": saved_id })), &ViewState::default(), &meta("local")).expect("load");
+        app.handle_action("loadSavedCamera", Some(&json!({ "id": saved_id })), &ViewState::default(), &testkit::meta("local")).expect("load");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         let camera: Value = serde_json::from_str(payload["world3d"]["cameraJson"].as_str().unwrap()).unwrap();
@@ -1721,8 +1648,8 @@ mod tests {
     #[test]
     fn scene_setters_mutate_lighting_and_measures_reflect_them() {
         let mut app = new_app();
-        app.handle_action("setSunAzimuth", Some(&json!({ "value": 90.0 })), &ViewState::default(), &meta("local")).expect("azimuth");
-        app.handle_action("setShadowEnabled", Some(&json!({ "pressed": false })), &ViewState::default(), &meta("local")).expect("shadow");
+        app.handle_action("setSunAzimuth", Some(&json!({ "value": 90.0 })), &ViewState::default(), &testkit::meta("local")).expect("azimuth");
+        app.handle_action("setShadowEnabled", Some(&json!({ "pressed": false })), &ViewState::default(), &testkit::meta("local")).expect("shadow");
         let measures = app.window_measures(&ViewState::default());
         let model_measures = &measures[SHOOTING_PLAY_WINDOW_SCENE];
         assert!(model_measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { value, .. } if *value == 90.0)));
@@ -1734,7 +1661,7 @@ mod tests {
         let mut app = new_app();
         let measures = app.window_measures(&ViewState::default());
         assert!(measures[SHOOTING_PLAY_WINDOW_SCENE].iter().any(|measure| matches!(measure, WindowMeasure::Toggle { id, pressed, .. } if id == "shooting.measure.sun-enabled" && !*pressed)));
-        app.handle_action("toggleSun", None, &ViewState::default(), &meta("local")).expect("toggle");
+        app.handle_action("toggleSun", None, &ViewState::default(), &testkit::meta("local")).expect("toggle");
         let measures = app.window_measures(&ViewState::default());
         assert!(measures[SHOOTING_PLAY_WINDOW_SCENE].iter().any(|measure| matches!(measure, WindowMeasure::Toggle { id, pressed, .. } if id == "shooting.measure.sun-enabled" && *pressed)));
     }
@@ -1742,8 +1669,8 @@ mod tests {
     #[test]
     fn center_model_and_asset_activation_bump_fit_revision() {
         let mut app = new_app();
-        app.handle_action("setCenterModel", Some(&json!({ "pressed": false })), &ViewState::default(), &meta("local")).expect("off");
-        app.handle_action("setCenterModel", Some(&json!({ "pressed": true })), &ViewState::default(), &meta("local")).expect("on");
+        app.handle_action("setCenterModel", Some(&json!({ "pressed": false })), &ViewState::default(), &testkit::meta("local")).expect("off");
+        app.handle_action("setCenterModel", Some(&json!({ "pressed": true })), &ViewState::default(), &testkit::meta("local")).expect("on");
         let fit_json_before = {
             let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
             let payload: Value = serde_json::to_value(&node).unwrap();
@@ -1752,7 +1679,7 @@ mod tests {
         };
         assert_eq!(fit_json_before, 1);
         let asset_id = app.projection().expect("materialize projection").assets[0].id.clone();
-        app.handle_action("setActiveAsset", Some(&json!({ "value": asset_id })), &ViewState::default(), &meta("local")).expect("activate");
+        app.handle_action("setActiveAsset", Some(&json!({ "value": asset_id })), &ViewState::default(), &testkit::meta("local")).expect("activate");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         let fit: Value = serde_json::from_str(payload["world3d"]["fitJson"].as_str().unwrap()).unwrap();
@@ -1763,13 +1690,13 @@ mod tests {
     fn world_pick_and_hover_drive_selection_protocol() {
         let mut app = new_app();
         // worldPick is a View action: it drives runtime selection only, emitting no document ops.
-        let result = app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+        let result = app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
         assert!(result.operations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
         assert_eq!(selection["ids"], json!(["base"]), "the picked asset becomes the runtime selection");
-        app.handle_action("setHover", Some(&json!({ "objectId": "base" })), &ViewState::default(), &meta("local")).expect("hover");
-        app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("clear pick");
+        app.handle_action("setHover", Some(&json!({ "objectId": "base" })), &ViewState::default(), &testkit::meta("local")).expect("hover");
+        app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": Value::Null, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("clear pick");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
         let payload: Value = serde_json::to_value(&node).unwrap();
         let selection: Value = serde_json::from_str(payload["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
@@ -1779,7 +1706,7 @@ mod tests {
     #[test]
     fn export_import_and_download_ops() {
         let mut app = new_app();
-        let result = app.handle_action("exportActiveShot", None, &ViewState::default(), &meta("local")).expect("export active");
+        let result = app.handle_action("exportActiveShot", None, &ViewState::default(), &testkit::meta("local")).expect("export active");
         assert_eq!(result.requested_effects.len(), 1);
         match &result.requested_effects[0] {
             HostEffect::IconRenderExport { items } => {
@@ -1789,12 +1716,12 @@ mod tests {
             }
             other => panic!("expected IconRenderExport, got {other:?}"),
         }
-        let result = app.handle_action("exportAllShots", None, &ViewState::default(), &meta("local")).expect("export all");
+        let result = app.handle_action("exportAllShots", None, &ViewState::default(), &testkit::meta("local")).expect("export all");
         match &result.requested_effects[0] {
             HostEffect::IconRenderExport { items } => assert_eq!(items.len(), 2),
             other => panic!("expected IconRenderExport, got {other:?}"),
         }
-        let result = app.handle_action("saveDownload", None, &ViewState::default(), &meta("local")).expect("save download");
+        let result = app.handle_action("saveDownload", None, &ViewState::default(), &testkit::meta("local")).expect("save download");
         match &result.requested_effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
                 assert_eq!(filename, "shooting.fixture.json");
@@ -1803,12 +1730,12 @@ mod tests {
             }
             other => panic!("expected DownloadMediaExport, got {other:?}"),
         }
-        let result = app.handle_action("loadRequest", None, &ViewState::default(), &meta("local")).expect("load request");
+        let result = app.handle_action("loadRequest", None, &ViewState::default(), &testkit::meta("local")).expect("load request");
         match &result.requested_effects[0] {
             HostEffect::RequestFileOpen { import_action, .. } => assert_eq!(import_action, "setFixtureJson"),
             other => panic!("expected RequestFileOpen, got {other:?}"),
         }
-        let result = app.handle_action("importAssetRequest", None, &ViewState::default(), &meta("local")).expect("import asset request");
+        let result = app.handle_action("importAssetRequest", None, &ViewState::default(), &testkit::meta("local")).expect("import asset request");
         match &result.requested_effects[0] {
             HostEffect::RequestFileOpen { read_as, import_action, .. } => {
                 assert_eq!(read_as.as_deref(), Some("dataUrl"));
@@ -1820,7 +1747,7 @@ mod tests {
             "importAsset",
             Some(&json!({ "payload": "data:model/gltf-binary;base64,AAAA", "name": "chair.glb" })),
             &ViewState::default(),
-            &meta("local"),
+            &testkit::meta("local"),
         )
         .expect("import asset");
         let projection = app.projection().expect("materialize projection");
@@ -1905,16 +1832,16 @@ mod tests {
     #[test]
     fn set_active_shot_label_patches_active_shot() {
         let mut app = new_app();
-        app.handle_action("setActiveShotLabel", Some(&json!({ "value": "Hero Shot" })), &ViewState::default(), &meta("local")).expect("label");
+        app.handle_action("setActiveShotLabel", Some(&json!({ "value": "Hero Shot" })), &ViewState::default(), &testkit::meta("local")).expect("label");
         assert_eq!(active_shot(&app.projection().expect("materialize projection")).unwrap().label, "Hero Shot");
     }
 
     #[test]
     fn reset_fixture_restores_default_fixture() {
         let mut app = new_app();
-        app.handle_action("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &ViewState::default(), &meta("local")).expect("add shot");
+        app.handle_action("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &ViewState::default(), &testkit::meta("local")).expect("add shot");
         assert_eq!(app.projection().expect("materialize projection").shots.len(), 3);
-        app.handle_action("resetFixture", None, &ViewState::default(), &meta("local")).expect("reset");
+        app.handle_action("resetFixture", None, &ViewState::default(), &testkit::meta("local")).expect("reset");
         assert_eq!(app.projection().expect("materialize projection").shots.len(), 2);
     }
 
@@ -1982,7 +1909,7 @@ mod tests {
     #[test]
     fn add_shot_action_appends_shot() {
         let mut app = new_app();
-        app.handle_action("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &ViewState::default(), &meta("local")).expect("add shot");
+        app.handle_action("addShot", Some(&json!({ "format": "svg", "shape": "ellipse" })), &ViewState::default(), &testkit::meta("local")).expect("add shot");
         assert!(app.projection().expect("materialize projection").shots.iter().any(|shot| shot.format == "svg" && shot.shape == "ellipse"));
     }
 
@@ -1990,7 +1917,7 @@ mod tests {
     fn set_active_shot_updates_fixture() {
         let mut app = new_app();
         let second_id = app.projection().expect("materialize projection").shots.get(1).map(|shot| shot.id.clone()).expect("second shot");
-        app.handle_action("setActiveShot", Some(&json!({ "value": second_id })), &ViewState::default(), &meta("local")).expect("set active");
+        app.handle_action("setActiveShot", Some(&json!({ "value": second_id })), &ViewState::default(), &testkit::meta("local")).expect("set active");
         assert_eq!(app.projection().expect("materialize projection").active_shot_id, second_id);
     }
 
@@ -2005,12 +1932,14 @@ mod tests {
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
         let mut app = new_app();
-        app.handle_action("addShot", Some(&json!({ "format": "png", "shape": "rectangle" })), &ViewState::default(), &meta("local")).expect("add shot");
-        assert_eq!(app.projection().expect("materialize projection").shots.len(), 3);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
-        assert_eq!(app.projection().expect("materialize projection").shots.len(), 2);
-        app.handle_action("redo", None, &ViewState::default(), &meta("local")).expect("redo");
-        assert_eq!(app.projection().expect("materialize projection").shots.len(), 3);
+        testkit::assert_undo_redo_round_trip(
+            &mut app,
+            "addShot",
+            Some(&json!({ "format": "png", "shape": "rectangle" })),
+            |app| app.projection().expect("materialize projection").shots.len(),
+            2,
+            3,
+        );
     }
 
     #[test]
@@ -2021,12 +1950,12 @@ mod tests {
                 "setCamera",
                 Some(&json!({ "camera": { "position": position, "target": [0.0, 0.0, 0.0], "zoom": 1.0, "fov": 50.0 } })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("drag tick");
         }
         assert_eq!(app.projection().expect("materialize projection").camera.position, [3.0, 0.0, 0.0]);
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
         // The coalesced drag is one edit: undoing it restores the fixture's original camera, not an
         // intermediate drag position.
         assert_eq!(app.projection().expect("materialize projection").camera.position, default_fixture().camera.position);
@@ -2038,77 +1967,33 @@ mod tests {
     /// `setDocument` snapshots, which would have one side's write clobber the other's.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        let mut instance_a = new_app();
-        let mut instance_b = new_app();
-        let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://shooting-convergence", "mem://shooting-convergence");
-        instance_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
-        instance_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
-
-        // A renames the first shot.
-        instance_a
-            .handle_action("setActiveShotLabel", Some(&json!({ "value": "Renamed By A" })), &ViewState::default(), &meta("actor-a"))
-            .expect("a renames shot");
-
-        // B translates the first asset — a disjoint edit that must survive alongside A's.
-        let asset_id = instance_b.projection().expect("materialize projection").assets[0].id.clone();
-        instance_b
-            .handle_action(
-                "translateSelection",
-                Some(&json!({ "ids": [asset_id], "dx": 5.0, "dy": 6.0, "dz": 7.0 })),
-                &ViewState::default(),
-                &meta("actor-b"),
-            )
-            .expect("b translates asset");
-
-        // Exchange: any subsequent dispatch pumps inbound ops before applying its own (dispatch()
-        // always pumps first) — use "commitCheckpoint" as a neutral history action that always calls
-        // store.dispatch() (guaranteeing a pump) without ever touching applied_edit_ids the way
-        // "undo" would (neither ShootingOp nor CadOp override `Operation::author_id`, so every edit's
-        // actor defaults to the same "local" string — "undo" here would misclassify the just-received
-        // remote edit as local and immediately pop it back off).
-        instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
-        instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
-
-        let projection_a = instance_a.projection().expect("materialize projection");
-        let projection_b = instance_b.projection().expect("materialize projection");
-
-        assert_eq!(active_shot(&projection_a).unwrap().label, "Renamed By A", "instance A must keep its own edit");
-        assert_eq!(active_shot(&projection_b).unwrap().label, "Renamed By A", "instance B must converge on A's remote edit");
-        assert_eq!(projection_a.assets[0].origin, [5.0, 6.0, 7.0], "instance A must converge on B's remote edit");
-        assert_eq!(projection_b.assets[0].origin, [5.0, 6.0, 7.0], "instance B must keep its own edit");
+        testkit::assert_two_instances_converge::<ShootingPlayApp, (String, [f64; 3])>(
+            "mem://shooting-convergence",
+            ("setActiveShotLabel", Some(&json!({ "value": "Renamed By A" }))),
+            ("translateSelection", Some(&json!({ "ids": ["base"], "dx": 5.0, "dy": 6.0, "dz": 7.0 }))),
+            |app| {
+                let projection = app.projection().expect("materialize projection");
+                (active_shot(&projection).unwrap().label.clone(), projection.assets[0].origin)
+            },
+        );
     }
 
     #[test]
     fn ingest_operations_is_idempotent_for_shooting() {
-        let mut sender = new_app();
-        let (near, mut far) = MemoryBackbone::pair("mem://shooting-doc", "mem://shooting-doc");
-        sender.attach_backbone(Box::new(near)).expect("attach");
-        sender
-            .handle_action("setActiveShotLabel", Some(&json!({ "value": "Hero" })), &ViewState::default(), &meta("local"))
-            .expect("rename");
-
-        let mut envelopes = Vec::new();
-        for message in far.receive().expect("receive") {
-            if let BackboneMessage::Ops { envelopes: ops } = message {
-                envelopes.extend(ops);
-            }
-        }
-        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
-        let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
-
-        let mut receiver = new_app();
-        receiver.ingest_operations(&operations_json).expect("ingest once");
-        receiver.ingest_operations(&operations_json).expect("ingest twice");
-        assert_eq!(active_shot(&receiver.projection().expect("materialize projection")).unwrap().label, "Hero", "feeding the same op twice must not double-apply");
+        testkit::assert_ingest_idempotent::<ShootingPlayApp, String>(
+            "setActiveShotLabel",
+            Some(&json!({ "value": "Hero" })),
+            |app| active_shot(&app.projection().expect("materialize projection")).unwrap().label.clone(),
+        );
     }
 
     #[test]
     fn set_active_utility_clears_scratch_and_emits_no_history_entry() {
         let mut app = new_app();
-        app.handle_action("worldHover", Some(&json!({ "id": "base" })), &ViewState::default(), &meta("local")).expect("hover");
+        app.handle_action("worldHover", Some(&json!({ "id": "base" })), &ViewState::default(), &testkit::meta("local")).expect("hover");
         // Switching utilities is the framework-injected View action: it clears in-progress scratch and
         // must produce no document operations (zero history entries, nothing to sync).
-        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local")).expect("switch utility");
+        let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &testkit::meta("local")).expect("switch utility");
         assert!(result.operations.is_empty(), "utility switching never emits document ops");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
@@ -2124,12 +2009,12 @@ mod tests {
                 "translateSelection",
                 Some(&json!({ "ids": [asset_id], "dx": dx, "dy": 0.0, "dz": 0.0 })),
                 &ViewState::default(),
-                &meta("local"),
+                &testkit::meta("local"),
             )
             .expect("drag tick");
         }
         // A whole gumball drag (three ticks, same coalesce key) is ONE undo step, not one-op-per-tick.
-        app.handle_action("undo", None, &ViewState::default(), &meta("local")).expect("undo");
+        app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
         let restored = app.projection().expect("materialize projection");
         let original = default_fixture().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
         assert_eq!(restored.assets.iter().find(|asset| asset.id == asset_id).unwrap().origin, original, "undoing the coalesced drag restores the pre-drag origin");
@@ -2142,7 +2027,7 @@ mod tests {
         assert!(matches!(world_pick.kind, ActionKind::View), "worldPick is a View action");
         assert!(world_pick.args.is_empty(), "worldPick carries no required args");
         let mut app = new_app_with_registry();
-        let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &meta("local")).expect("pick");
+        let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
         assert!(result.operations.is_empty(), "worldPick (View) emits no ops even under registry enforcement");
     }
 
@@ -2150,13 +2035,13 @@ mod tests {
     fn add_shot_and_add_asset_materialize_declared_defaults() {
         let mut app = new_app_with_registry();
         // addShot fired with only a partial arg: the declared `shape` default must be materialized.
-        app.handle_action("addShot", Some(&json!({ "format": "svg" })), &ViewState::default(), &meta("local")).expect("add shot");
+        app.handle_action("addShot", Some(&json!({ "format": "svg" })), &ViewState::default(), &testkit::meta("local")).expect("add shot");
         let projection = app.projection().expect("materialize projection");
         let shot = projection.shots.last().unwrap();
         assert_eq!(shot.format, "svg");
         assert_eq!(shot.shape, "rectangle", "shape default materialized from the registry");
         // addAsset fired with no args at all: the declared `format` default must be materialized.
-        app.handle_action("addAsset", None, &ViewState::default(), &meta("local")).expect("add asset");
+        app.handle_action("addAsset", None, &ViewState::default(), &testkit::meta("local")).expect("add asset");
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.assets.last().unwrap().format, "glb", "format default materialized from the registry");
     }

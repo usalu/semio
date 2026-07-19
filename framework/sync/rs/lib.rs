@@ -356,23 +356,24 @@ impl DocumentHost {
         let (channel_backbone, remote) = ChannelBackbone::pair(&format!("actor://{document_id}"));
         let (cmd_tx, cmd_rx) = mpsc::unbounded_channel();
         let (event_tx, _event_rx) = broadcast::channel(256);
+        #[cfg(not(target_arch = "wasm32"))]
         let join = spawn_actor(config, remote, cmd_rx, event_tx.clone());
+        #[cfg(target_arch = "wasm32")]
+        spawn_actor(config, remote, cmd_rx, event_tx.clone());
         let entry = OpenDocument {
             cmd_tx: cmd_tx.clone(),
             events: event_tx,
             #[cfg(not(target_arch = "wasm32"))]
             join,
         };
-        #[cfg(target_arch = "wasm32")]
-        let _ = join;
-        self.inner.lock().expect("host registry").insert(document_id, entry);
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).insert(document_id, entry);
         DocumentChannels { cmd_tx, channel_backbone }
     }
 
     /// @emoji 📬 A fresh event receiver for `document_id`. If the document is not open the receiver's
     /// sender is dropped, so it simply reports closed.
     pub fn subscribe(&self, document_id: &str) -> broadcast::Receiver<DocumentEvent> {
-        let guard = self.inner.lock().expect("host registry");
+        let guard = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         match guard.get(document_id) {
             Some(document) => document.events.subscribe(),
             None => {
@@ -384,7 +385,7 @@ impl DocumentHost {
 
     /// @emoji 🔔 Sends a control message to a document's actor (e.g. a presence heartbeat or a wake).
     pub fn send(&self, document_id: &str, message: DocumentActorMsg) {
-        if let Some(document) = self.inner.lock().expect("host registry").get(document_id) {
+        if let Some(document) = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).get(document_id) {
             let _ = document.cmd_tx.send(message);
         }
     }
@@ -392,7 +393,7 @@ impl DocumentHost {
     /// @emoji ✂️ Stops a document's actor (flushing pending outbound ops first) and, on native, joins
     /// its thread.
     pub fn close(&self, document_id: &str) {
-        let document = self.inner.lock().expect("host registry").remove(document_id);
+        let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
         if let Some(document) = document {
             let _ = document.cmd_tx.send(DocumentActorMsg::Detach);
             #[cfg(not(target_arch = "wasm32"))]
@@ -404,7 +405,7 @@ impl DocumentHost {
 
     /// @emoji 🧹 Ids of every currently-open document.
     pub fn open_documents(&self) -> Vec<String> {
-        self.inner.lock().expect("host registry").keys().cloned().collect()
+        self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).keys().cloned().collect()
     }
 }
 
@@ -1023,18 +1024,14 @@ mod native_actor {
         cmd_rx: mpsc::UnboundedReceiver<DocumentActorMsg>,
         events: broadcast::Sender<DocumentEvent>,
     ) -> Option<std::thread::JoinHandle<()>> {
-        let join = std::thread::Builder::new()
+        let runtime = tokio::runtime::Builder::new_current_thread().enable_all().build().ok()?;
+        std::thread::Builder::new()
             .name(format!("sync-actor-{}", config.document_id))
             .spawn(move || {
-                let runtime = tokio::runtime::Builder::new_current_thread()
-                    .enable_all()
-                    .build()
-                    .expect("actor runtime");
                 let actor = DocumentActor::new(config, remote, cmd_rx, events);
                 runtime.block_on(actor.run());
             })
-            .expect("spawn sync actor thread");
-        Some(join)
+            .ok()
     }
 }
 

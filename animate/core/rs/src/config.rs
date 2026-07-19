@@ -66,6 +66,7 @@ pub struct AnimateConfig {
     pub cache: CacheConfig,
     pub background: [f64; 4],
     pub audio_track: Option<PathBuf>,
+    pub subtitles_path: Option<PathBuf>,
 }
 
 impl Default for AnimateConfig {
@@ -87,6 +88,7 @@ impl AnimateConfig {
             cache: CacheConfig::default(),
             background: [0.0, 0.0, 0.0, 1.0],
             audio_track: None,
+            subtitles_path: None,
         }
     }
 
@@ -113,6 +115,11 @@ impl AnimateConfig {
 
     pub fn with_audio_track(mut self, path: impl AsRef<Path>) -> Self {
         self.audio_track = Some(path.as_ref().to_path_buf());
+        self
+    }
+
+    pub fn with_subtitles_path(mut self, path: impl AsRef<Path>) -> Self {
+        self.subtitles_path = Some(path.as_ref().to_path_buf());
         self
     }
 
