@@ -419,7 +419,7 @@ fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_vcs_app`;
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_vcs_app`;
 /// currently empty since this manifest declares no utilities, kept for parity with `puzzle3d_utility_labels`.
 fn vcs_utility_labels(_is_de: bool) -> std::collections::HashMap<String, String> {
     std::collections::HashMap::new()

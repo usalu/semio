@@ -163,6 +163,7 @@ class PluginWorkerClient {
   moduleUrl;
   worker = null;
   pending = new Map;
+  onBackboneOutbound;
   constructor(pluginId, moduleUrl) {
     this.pluginId = pluginId;
     this.moduleUrl = moduleUrl;
@@ -177,6 +178,10 @@ class PluginWorkerClient {
   attachWorker(worker) {
     worker.onmessage = (event) => {
       const message = event.data;
+      if (message.type === "backboneOutbound" && message.uri && message.message != null) {
+        this.onBackboneOutbound?.(message.uri, message.message);
+        return;
+      }
       const requestId = message.requestId;
       if (!requestId)
         return;
@@ -243,7 +248,11 @@ class PluginWorkerClient {
     this.worker?.terminate();
     this.worker = null;
   }
+  postBackboneInbound(uri, messages) {
+    this.worker?.postMessage({ type: "backboneInbound", uri, messages });
+  }
 }
+var pluginWorkerClients = new Map;
 var pluginModuleHandleCache = new Map;
 if (import.meta.vitest) {
   let createMemoryStoragePort = function() {
@@ -400,6 +409,7 @@ var PLUGIN_BUILD_TARGETS = [
   { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "norm", cratePath: "norm/plugin/rs", wasmOut: "norm_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
   { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
   { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
@@ -611,7 +621,7 @@ function pluginHandleForBridge(handle) {
   };
 }
 var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "s";
+var pluginFilter = pluginFromUrl ?? "puzzle3d";
 var studioMode = pluginFilter === "s";
 var pluginRegistryMeta = new Map(PLUGIN_BUILD_TARGETS.map((target) => [target.pluginId, target]));
 var pluginRegistryEntries = PLUGIN_TARGETS.map((target) => ({

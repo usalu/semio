@@ -33,7 +33,7 @@ pub mod d2 {
     const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../2d/example/concrete-forest.2d.json");
     const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../2d/example/nakagin-capsule-tower.2d.json");
-    /// 🧰 The three canvas utilities declared to the framework toolbar (host-owned active utility, never a doc field).
+    /// 🧰 The three canvas utilities declared to the framework utility bar (host-owned active utility, never a doc field).
     const PUZZLE2D_UTILITY_SELECT: &str = "select";
     const PUZZLE2D_UTILITY_BRUSH: &str = "brush";
     const PUZZLE2D_UTILITY_FILL: &str = "fill";
@@ -873,7 +873,7 @@ pub mod d2 {
             control: None,
             controls: None,
             status: Some(vec![WindowEngagementStatus { id: "puzzle2d-board-status".into(), text: format!("{node_count} {} · {edge_count} {} · {} {lod}", labels.nodes, labels.edges, labels.lod) }]),
-            // 🧰 The select/brush/fill switcher now lives in the framework toolbar (declared via `.utility` +
+            // 🧰 The select/brush/fill switcher now lives in the framework utility bar (declared via `.utility` +
             // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
             options: None,
             possible_engagements: None,
@@ -1447,7 +1447,7 @@ pub mod d2 {
             }
         } else {
             for id in others {
-                let old = weights.get(*id).copied().unwrap_or(0.0);
+                let old = weights.get(id).copied().unwrap_or(0.0);
                 next.insert((*id).clone(), old / other_sum * remainder);
             }
         }
@@ -2052,7 +2052,7 @@ pub mod d2 {
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
 
-    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
+    /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
             (PUZZLE2D_UTILITY_SELECT, "Select", "Auswählen"),
@@ -2072,7 +2072,7 @@ pub mod d2 {
 
     /// 🧰 One canvas utility declaration (host-owned active utility). Select/brush/fill are this window's entire
     /// top-level exclusive utility set — not a sub-collection — so each carries `group: None` and renders as
-    /// its own flat toolbar icon (matching the `process` toolbar), never a collapsed dropdown.
+    /// its own flat utility bar icon (matching the `process` utility bar), never a collapsed dropdown.
     fn puzzle2d_utility(id: &str, label: &str, icon: &str, category: UtilityCategory) -> UtilityDefinition {
         UtilityDefinition { category: Some(category), ..UtilityDefinition::new(id, label, icon) }
     }
@@ -2161,7 +2161,7 @@ pub mod d2 {
                     ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
                 ])
                 // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document op). The
-                // select/brush/fill switcher is rendered by the framework toolbar for the interactive pane.
+                // select/brush/fill switcher is rendered by the framework utility bar for the interactive pane.
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "cursor", UtilityCategory::Selection))
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "brush", UtilityCategory::Utilities))
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_FILL, "Fill", "fill", UtilityCategory::Utilities))
@@ -2507,7 +2507,7 @@ pub mod d2 {
             assert_eq!(overview_utilities, vec![PUZZLE2D_UTILITY_SELECT, PUZZLE2D_UTILITY_BRUSH, PUZZLE2D_UTILITY_FILL]);
             assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID), "declaring utilities must inject the setActiveUtility action");
             // 🧰 D-1: select/brush/fill are this window's whole exclusive utility set, NOT a sub-collection, so
-            // each carries `group: None` and renders as a flat toolbar icon (never one collapsed dropdown).
+            // each carries `group: None` and renders as a flat utility bar icon (never one collapsed dropdown).
             for utility in &definition.utilities {
                 assert_eq!(utility.group, None, "utility {} must render flat (no shared group)", utility.id);
             }
@@ -4719,7 +4719,7 @@ pub mod d3 {
             })
     }
 
-    /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.utility` +
+    /// 🧰 The select/brush/fill switcher lives in the framework utility bar (declared via `.utility` +
     /// `.window_kind_utilities`); the fill-count slider, voxel edit-mode picker, voxel-dimension steppers and
     /// brush placement picker now live as tagged [`WindowMeasure::Group`]s in [`puzzle3d_window_measures`]
     /// (surfaced by [`partition_window_measures`] in the dedicated "Utility Options" rail only while their
@@ -4891,7 +4891,7 @@ pub mod d3 {
             }
         } else {
             for id in others {
-                let old = weights.get(*id).copied().unwrap_or(0.0);
+                let old = weights.get(id).copied().unwrap_or(0.0);
                 next.insert((*id).clone(), old / other_sum * remainder);
             }
         }
@@ -6028,7 +6028,7 @@ pub mod d3 {
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
 
-    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle3d_app`.
+    /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle3d_app`.
     fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("select", "Select", "Auswählen"),
@@ -6674,7 +6674,7 @@ pub mod d3 {
 
         #[test]
         fn engagement_exposes_no_utility_switch_options() {
-            // 🧰 select/brush/fill switching lives only on the framework toolbar (declared via `.utility` +
+            // 🧰 select/brush/fill switching lives only on the framework utility bar (declared via `.utility` +
             // `.window_kind_utilities`); the engagement HUD must not duplicate it as options.
             let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
             let engagement = puzzle3d_engagement(&scene, &PUZZLE3D_LABELS_NATIVE_EN);
@@ -8041,7 +8041,7 @@ pub mod d5 {
     //#endregion 🔖Brush
 
     //#region 🔖Engagement
-    /// 🧰 The select/brush/fill switcher lives in the framework toolbar (declared via `.utility` +
+    /// 🧰 The select/brush/fill switcher lives in the framework utility bar (declared via `.utility` +
     /// `.window_kind_utilities`); the fill-count slider and brush placement picker now live as tagged
     /// [`WindowMeasure::Group`]s in [`puzzle5d_window_measures`] (surfaced by [`partition_window_measures`]
     /// in the dedicated "Utility Options" rail only while their utility is active), so the engagement HUD is a
@@ -8139,7 +8139,7 @@ pub mod d5 {
             }
         } else {
             for id in others {
-                let old = weights.get(*id).copied().unwrap_or(0.0);
+                let old = weights.get(id).copied().unwrap_or(0.0);
                 next.insert((*id).clone(), old / other_sum * remainder);
             }
         }
@@ -9415,7 +9415,7 @@ pub mod d5 {
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
 
-    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
+    /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("select", "Select", "Auswählen"),
@@ -9694,7 +9694,7 @@ pub mod d5 {
 
         #[test]
         fn engagements_expose_no_utility_switch_options_for_either_window() {
-            // 🧰 select/brush/fill switching lives only on the framework toolbar; neither the 2D nor the 3D
+            // 🧰 select/brush/fill switching lives only on the framework utility bar; neither the 2D nor the 3D
             // engagement HUD may duplicate it as options.
             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let engagements = app.window_engagements(&ViewState::default());

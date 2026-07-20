@@ -943,7 +943,7 @@ fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
     ])
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_raster_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_raster_app`.
 fn raster_utility_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
@@ -1023,7 +1023,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
 }
 
 fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
-    let toolbar = vec![
+    let action_rows = vec![
         UiTreeItemNode {
             icon_id: Some("image".into()),
             ..tree_item_with_action(
@@ -1055,7 +1055,7 @@ fn render_layers_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, v
         .map(|layer| vec![layer_row_id(layer)])
         .unwrap_or_default();
     PanelTreeBuilder::new(RASTER_TREE_PREFIX)
-        .section(RASTER_TREE_PREFIX, Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [toolbar, layer_items].concat())
+        .section(RASTER_TREE_PREFIX, Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [action_rows, layer_items].concat())
         .selected(selected_ids)
         .highlighted(highlighted_ids)
         .selection_change(play_action(RASTER_PLAY_CONTROLLER_ID, "setSelection", None))
@@ -1161,7 +1161,6 @@ fn document_sync_json(document: &RasterDocument) -> String {
     if let Value::Object(ref mut map) = value {
         map.remove("assets");
         map.remove("camera");
-        map.remove("activeTool");
         map.remove("brushSize");
         map.remove("brushOpacity");
     }

@@ -637,7 +637,8 @@ mod tests {
         let mut documents_2 = documents_1;
         documents_2.insert("instance-a".to_string(), "{\"edited\":true}".to_string());
         let (_, report_2) = runner.run(&graph, &instances, &documents_2, &mut state, &mut cache).expect("second run");
-        assert_eq!(report_2.recomputed, vec!["node-a".to_string(), "node-b".to_string()], "node-a's document changed, and node-a's fixed FakeHost output means node-b's input fingerprint is unchanged, but node-a itself must still recompute");
+        assert_eq!(report_2.recomputed, vec!["node-a".to_string()], "node-a's own document changed, so node-a must recompute");
+        assert_eq!(report_2.clean, vec!["node-b".to_string()], "node-a's FakeHost output is fixed, so its output fingerprint is unchanged — node-b must stay clean (the early-cutoff this whole design exists for)");
     }
 
     #[test]

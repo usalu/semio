@@ -37,6 +37,13 @@ pub struct MarkovChain {
 }
 
 impl MarkovChain {
+    /// ⛓️ Row-major `num_contexts x alphabet_size` raw transition counts (diagnostic access to
+    /// the fitted state, e.g. for inspecting per-context sample sizes before trusting
+    /// [`MarkovChain::entropy_rate`] on sparsely observed contexts).
+    pub fn raw_counts(&self) -> &[f64] {
+        &self.counts
+    }
+
     /// ⛓️ Fits an order-`order` Markov chain to `seq` (symbols in `0..alphabet_size`). Requires
     /// `order >= 1` and `seq.len() >= order + 1`; rejects sequences that are too short with
     /// [`EntropyError::InsufficientData`] and out-of-range symbols or an overflowing

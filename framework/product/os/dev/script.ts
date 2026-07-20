@@ -34,21 +34,22 @@ const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 /** @emoji 📚 Generated playground catalog (variant -> crate pluginId + optional app id), loaded once for this process via `@semio-tech/repo-lib`'s `loadFrameworkOsPlaygroundCatalog` (backed by `framework/plugin/registry/generated/playgrounds.ts`). */
 const playgroundCatalog = loadFrameworkOsPlaygroundCatalog();
 
-/** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id to inject when the filter matched a catalog variant row. */
+/** @emoji 🧭 A resolved playground filter: the crate pluginId to build/load, plus the app id and shell brand id to inject when the filter matched a catalog variant row. */
 type ResolvedPlaygroundFilter = {
   readonly pluginId: string;
   readonly appId?: string;
+  readonly brand?: string;
 };
 
 /**
  * 🧭 Resolves `filterPlugin` (a playground variant id like "puzzle5d", or already a bare crate
  * pluginId like "note") against the generated playground catalog: a matching variant row yields
- * its crate pluginId and app id, otherwise `filterPlugin` is treated as already being a bare
- * pluginId (existing behavior for single-app crates where variant === pluginId).
+ * its crate pluginId, app id, and brand id, otherwise `filterPlugin` is treated as already being a
+ * bare pluginId (existing behavior for single-app crates where variant === pluginId).
  */
 function resolvePlaygroundFilter(filterPlugin: string): ResolvedPlaygroundFilter {
   const row = playgroundCatalog.find((entry) => entry.variant === filterPlugin);
-  return row ? { pluginId: row.pluginId, appId: row.app } : { pluginId: filterPlugin };
+  return row ? { pluginId: row.pluginId, appId: row.app, brand: row.brand } : { pluginId: filterPlugin };
 }
 
 /** @emoji 🎯 Resolves a raw filter to the crate pluginId `generatePluginRegistry`'s `filterPlaygroundPlugin` option expects, or `undefined` for the unfiltered/studio case. */
@@ -1097,6 +1098,7 @@ class DevScript extends BundleScript {
         VITE_SEMIO_RENDERER: renderer,
         VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
         ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
+        ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
         ...frameworkOsLockedPrefsEnv(),
       },
     });
@@ -1105,9 +1107,11 @@ class DevScript extends BundleScript {
 
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await new PluginBuildScript(this.root).run([]);
+    const variantSegment = segments[0] && !segments[0].startsWith("-") ? segments[0] : undefined;
+    const viteSegments = variantSegment ? segments.slice(1) : segments;
+    const plugin = variantSegment ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+    await new PluginBuildScript(this.root).run([plugin]);
     const renderer = process.env.SEMIO_RENDERER ?? "react";
-    const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
       const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
       const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, stdio: "inherit" });
@@ -1115,9 +1119,20 @@ class BuildScript extends BundleScript {
       return;
     }
     await buildEngineWasm(plugin, renderer);
-    spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...segments], {
+    const resolvedFilter = resolvePlaygroundFilter(plugin);
+    spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], {
       cwd: this.root,
       stdio: "inherit",
+      env: {
+        ...process.env,
+        SEMIO_PLUGIN: plugin,
+        SEMIO_RENDERER: renderer,
+        VITE_SEMIO_RENDERER: renderer,
+        VITE_SEMIO_PLUGIN: resolvedFilter.pluginId,
+        ...(resolvedFilter.appId ? { VITE_SEMIO_APP_ID: resolvedFilter.appId } : {}),
+        ...(resolvedFilter.brand && !process.env.SEMIO_BRAND ? { SEMIO_BRAND: resolvedFilter.brand } : {}),
+        ...frameworkOsLockedPrefsEnv(),
+      },
     });
   }
 }

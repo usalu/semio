@@ -302,13 +302,26 @@ impl PidLattice {
     /// is a 0-based source-index subset, and both the outer and inner order are irrelevant (the
     /// antichain is compared as a set of sets).
     pub fn partial_information(&self, node_sets: &[Vec<usize>]) -> Option<f64> {
+        self.node_index(node_sets).map(|i| self.base.from_nats(self.partial_info_nats[i]))
+    }
+
+    /// 🧩 Looks up the raw `I_min(alpha)` redundancy value (before Mobius inversion) at the node
+    /// described by `node_sets`, converted to `base` — the diagnostic quantity every
+    /// [`PidLattice::partial_information`] atom is derived from, useful for inspecting the
+    /// lattice's intermediate state (e.g. confirming monotonicity along [`is_below`]) rather than
+    /// only its final decomposition.
+    pub fn i_min(&self, node_sets: &[Vec<usize>], base: LogBase) -> Option<f64> {
+        self.node_index(node_sets).map(|i| base.from_nats(self.i_min_nats[i]))
+    }
+
+    fn node_index(&self, node_sets: &[Vec<usize>]) -> Option<usize> {
         let mut masks: Vec<u32> = node_sets
             .iter()
             .map(|subset| subset.iter().fold(0u32, |acc, &idx| acc | 1u32.checked_shl(idx as u32).unwrap_or(0)))
             .collect();
         masks.sort_unstable();
         masks.dedup();
-        self.nodes.iter().position(|n| n == &masks).map(|i| self.base.from_nats(self.partial_info_nats[i]))
+        self.nodes.iter().position(|n| n == &masks)
     }
 
     /// 🧩 The total joint mutual information `I(S1,S2,S3;T)`, converted to `base` (independent of

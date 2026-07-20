@@ -31,6 +31,13 @@ app = "puzzle5d-play"
 aliases = ["5d"]
 ports = { react = 6014, wgpu = 6114 }
 
+[[package.metadata.semio.playground]]
+variant = "aggregator"
+app = "puzzle3d-play"
+brand = "entwerfen-mit-bestand"
+aliases = ["mit-bestand", "entwerfen-mit-bestand"]
+ports = { react = 6023, wgpu = 6123 }
+
 [[package.metadata.semio.assets]]
 kind = "mesh-collection"
 route = "/mesh"

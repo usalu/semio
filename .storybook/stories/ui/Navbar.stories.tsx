@@ -8,7 +8,7 @@
 
 // #endregion 🧲Header
 
-import { Button, LevelProvider, Navbar, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone } from "@semio-tech/ui-react";
+import { Button, LevelProvider, Navbar, RibbonDivider, RibbonGroup, RibbonItem, RibbonZone, Toggle } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 
@@ -71,39 +71,39 @@ export const Default: Story = {
 
 // #endregion 🩺Navbar
 
-// 🔷#region 🌙Toolbar
-export const ToolbarDefault: Story = {
+// 🔷#region 🌙Ribbon
+export const RibbonDefault: Story = {
   args: { items: defaultItems },
   render: () => (
     <LevelProvider level="panel">
       <div className="p-4 bg-panel">
-        <ToolbarZone>
-          <ToolbarGroup>
-            <ToolbarItem>
-              <Button id="toolbar-undo" variant="ghost" icon={<Undo className="size-tiny" />} onClick={() => {}} />
-            </ToolbarItem>
-            <ToolbarItem>
-              <Button id="toolbar-redo" variant="ghost" icon={<Redo className="size-tiny" />} onClick={() => {}} />
-            </ToolbarItem>
-          </ToolbarGroup>
-          <ToolbarDivider />
-          <ToolbarGroup>
-            <ToolbarItem>
-              <Toggle id="toolbar-zoom-in" pressed={false} onPressedChange={() => {}} icon={<ZoomIn className="size-tiny" />} />
-            </ToolbarItem>
-            <ToolbarItem>
-              <Toggle id="toolbar-zoom-out" pressed={false} onPressedChange={() => {}} icon={<ZoomOut className="size-tiny" />} />
-            </ToolbarItem>
-          </ToolbarGroup>
-          <ToolbarDivider />
-          <ToolbarGroup>
-            <ToolbarItem>
+        <RibbonZone>
+          <RibbonGroup>
+            <RibbonItem>
+              <Button id="ribbon-undo" variant="ghost" icon={<Undo className="size-tiny" />} onClick={() => {}} />
+            </RibbonItem>
+            <RibbonItem>
+              <Button id="ribbon-redo" variant="ghost" icon={<Redo className="size-tiny" />} onClick={() => {}} />
+            </RibbonItem>
+          </RibbonGroup>
+          <RibbonDivider />
+          <RibbonGroup>
+            <RibbonItem>
+              <Toggle id="ribbon-zoom-in" pressed={false} onPressedChange={() => {}} icon={<ZoomIn className="size-tiny" />} />
+            </RibbonItem>
+            <RibbonItem>
+              <Toggle id="ribbon-zoom-out" pressed={false} onPressedChange={() => {}} icon={<ZoomOut className="size-tiny" />} />
+            </RibbonItem>
+          </RibbonGroup>
+          <RibbonDivider />
+          <RibbonGroup>
+            <RibbonItem>
               <span className="text-xs text-muted-foreground">100%</span>
-            </ToolbarItem>
-          </ToolbarGroup>
-        </ToolbarZone>
+            </RibbonItem>
+          </RibbonGroup>
+        </RibbonZone>
       </div>
     </LevelProvider>
   ),
 };
-// #endregion 🌙Toolbar
+// #endregion 🌙Ribbon

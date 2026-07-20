@@ -1,8 +1,11 @@
 //! 📸 Remodel scene document — schema-only photogrammetry/videogrammetry project state (media
 //! streams, calibration, ground control points, reconstruction params/job/results) shared as CRDT
-//! ops. The actual algorithms live in sibling `remodel_image`/`remodel_camera`/`remodel_feature`/
-//! `remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo`/`remodel_engine`
-//! crates, none of which this crate depends on.
+//! ops. The actual algorithms live in sibling `remodel_image`/`remodel_video`/`remodel_camera`/
+//! `remodel_feature`/`remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo`/
+//! `remodel_engine` crates, none of which this crate depends on: heavier runtime types (`Se3`,
+//! `Intrinsics`, `Distortion`, `WatertightReport`, decoded pyramids, match graphs, depth maps, TSDF
+//! volumes) are not designed for durable CRDT persistence, so every reference to their shape below is
+//! a plain-JSON (or `Packed*`) snapshot the plugin runtime fills in, never the library type itself.
 
 use base64::Engine as _;
 use semio_framework_core::MeshData;
@@ -13,99 +16,57 @@ use vcs::{Operation, OperationDiff};
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 
 //#region 🔖Packed
-/// 📦 A flat `f32` buffer that serializes as a base64 string of its little-endian bytes rather than a
-/// JSON array — point clouds and height grids commonly carry 10^5-10^6 elements, where per-element
-/// JSON text is both far larger on the wire and far slower to parse than one base64 blob.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct PackedF32(pub Vec<f32>);
+/// 📦 A flat `f32` buffer serialized as a base64 string of its little-endian bytes rather than a JSON
+/// array — point clouds and height grids commonly carry 10^5-10^6 elements, where per-element JSON
+/// text is both far larger on the wire and far slower to parse than one base64 blob.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PackedF32(pub String);
 
 impl PackedF32 {
-    pub fn from_vec(values: Vec<f32>) -> Self {
-        Self(values)
+    /// 📦 Encodes a `f32` slice as a base64 string of its little-endian bytes.
+    pub fn from_f32_slice(values: &[f32]) -> Self {
+        let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
+        Self(base64::engine::general_purpose::STANDARD.encode(bytes))
     }
 
-    pub fn as_slice(&self) -> &[f32] {
-        &self.0
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
+    /// 📦 Decodes back into a `f32` vec; a malformed payload (bad base64, length not a multiple of 4)
+    /// decodes as empty rather than panicking, since packed buffers only ever round-trip in-process.
+    pub fn to_f32_vec(&self) -> Vec<f32> {
+        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
+            return Vec::new();
+        };
+        let (chunks, remainder) = bytes.as_chunks::<4>();
+        if !remainder.is_empty() {
+            return Vec::new();
+        }
+        chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect()
     }
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-}
-
-impl Serialize for PackedF32 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        let bytes: Vec<u8> = self.0.iter().flat_map(|value| value.to_le_bytes()).collect();
-        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(bytes))
-    }
-}
-
-impl<'de> Deserialize<'de> for PackedF32 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let encoded = String::deserialize(deserializer)?;
-        let bytes = base64::engine::general_purpose::STANDARD
-            .decode(encoded.as_bytes())
-            .map_err(serde::de::Error::custom)?;
-        let (chunks, remainder) = bytes.as_chunks::<4>();
-        if !remainder.is_empty() {
-            return Err(serde::de::Error::custom("packed f32 byte length not a multiple of 4"));
-        }
-        Ok(Self(chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect()))
     }
 }
 
 /// 📦 A flat `u8` buffer (vertex colors, classification codes) that serializes as a base64 string
 /// directly — same rationale as {@link PackedF32}.
-#[derive(Clone, Debug, Default, PartialEq)]
-pub struct PackedU8(pub Vec<u8>);
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct PackedU8(pub String);
 
 impl PackedU8 {
-    pub fn from_vec(values: Vec<u8>) -> Self {
-        Self(values)
+    /// 📦 Encodes a `u8` slice as a base64 string.
+    pub fn from_u8_slice(values: &[u8]) -> Self {
+        Self(base64::engine::general_purpose::STANDARD.encode(values))
     }
 
-    pub fn as_slice(&self) -> &[u8] {
-        &self.0
-    }
-
-    pub fn len(&self) -> usize {
-        self.0.len()
+    /// 📦 Decodes back into a `u8` vec; a malformed payload decodes as empty.
+    pub fn to_u8_vec(&self) -> Vec<u8> {
+        base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()).unwrap_or_default()
     }
 
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-}
-
-impl Serialize for PackedU8 {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        serializer.serialize_str(&base64::engine::general_purpose::STANDARD.encode(&self.0))
-    }
-}
-
-impl<'de> Deserialize<'de> for PackedU8 {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: serde::Deserializer<'de>,
-    {
-        let encoded = String::deserialize(deserializer)?;
-        let bytes = base64::engine::general_purpose::STANDARD
-            .decode(encoded.as_bytes())
-            .map_err(serde::de::Error::custom)?;
-        Ok(Self(bytes))
     }
 }
 //#endregion 🔖Packed
@@ -113,7 +74,9 @@ impl<'de> Deserialize<'de> for PackedU8 {
 //#region 🔖Domain
 /// 🖼️ One embedded pixel asset (video frame, ortho tile, texture) referenced by id from
 /// `RemodelScene::assets`, `MediaStream.frames`, `RemodelMesh.texture_asset_id`, or
-/// `GeoProducts.ortho_asset_id`.
+/// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
+/// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
+/// lossless round trips.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageAsset {
@@ -123,7 +86,9 @@ pub struct ImageAsset {
     pub height: u32,
 }
 
-/// 🗂️ Which shape a `MediaStream`'s frames were captured as.
+/// 🗂️ Which shape a `MediaStream`'s frames were captured as. Video input is always eagerly extracted
+/// into individually-addressable `FrameRef`s before persistence (video bytes themselves are never
+/// stored) — `MediaKind::Video` only records that provenance, `MediaStream.source` carries the detail.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum MediaKind {
@@ -132,18 +97,36 @@ pub enum MediaKind {
     Video,
 }
 
-/// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
-/// `RemodelScene::assets`.
+/// 🎞️ Codec a `VideoSource` was demuxed from — a plain mirror of `remodel_video::VideoCodec` without
+/// its `FourCc` payload (an unrecognized four-character code collapses to `Unknown`, which is enough
+/// provenance for a QC/diagnostic label).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum VideoCodec {
+    Avc,
+    Hevc,
+    Vp9,
+    Av1,
+    Mjpeg,
+    #[default]
+    Unknown,
+}
+
+/// 🎥 Provenance of a `MediaStream` that originated from an actual video file (as opposed to a raw
+/// image-sequence import) — a lightweight mirror of `remodel_video::{Mp4Info, AviInfo}`, populated
+/// once at import time from `remodel_video::probe`. "Video input = image sequence with timestamps":
+/// by the time a stream reaches this document its frames are already individually-addressable
+/// `ImageAsset`s with true media timestamps; this struct only records where they came from.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct MediaStream {
-    pub id: String,
+pub struct VideoSource {
     pub name: String,
-    pub kind: MediaKind,
-    pub camera_id: String,
-    pub sync_offset_ms: f64,
-    pub fps_hint: Option<f32>,
-    pub frames: Vec<FrameRef>,
+    pub container: String,
+    pub codec: VideoCodec,
+    pub duration_ms: f64,
+    pub frame_count: u32,
+    pub width: u32,
+    pub height: u32,
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -154,22 +137,33 @@ pub struct FrameRef {
     pub asset_id: String,
 }
 
-/// 🎯 Lens model a `CameraCalibration` was solved under.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum CameraModel {
-    #[default]
-    Pinhole,
-    BrownConrady,
-    Fisheye,
+/// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
+/// `RemodelScene::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct MediaStream {
+    pub id: String,
+    pub name: String,
+    pub kind: MediaKind,
+    pub camera_id: Option<String>,
+    pub sync_offset_ms: f64,
+    pub fps_hint: f64,
+    pub frames: Vec<FrameRef>,
+    pub source: Option<VideoSource>,
 }
 
+/// 🎯 Per-camera intrinsics/distortion, a plain-JSON mirror of `remodel_camera::{Intrinsics,
+/// Distortion}` rather than a direct reuse of those types: `Distortion` is a Rust enum tuned for the
+/// solver's math (`BrownConrady{k1,k2,k3,p1,p2}` / `FisheyeEquidistant{k1,k2,k3,k4}`), which doesn't
+/// serialize into a stable arg-form-editable shape — the document instead always carries a flat
+/// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
+/// matching the "pinhole|brownConrady|fisheye" UI select.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct CameraCalibration {
     pub id: String,
     pub label: String,
-    pub model: CameraModel,
+    pub model: String,
     pub fx: f64,
     pub fy: f64,
     pub cx: f64,
@@ -181,6 +175,9 @@ pub struct CameraCalibration {
     pub locked: bool,
 }
 
+/// 🎯 One rig member's pose relative to the rig origin — a plain mirror of `remodel_camera`'s
+/// `RigExtrinsic{camera_id, pose_in_rig: Se3}`, flattened to a quaternion + translation since `Se3`
+/// (a `mathematical_lie` manifold type) is a plugin-runtime concern, not a document one.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RigExtrinsic {
@@ -216,24 +213,26 @@ pub struct GcpObservation {
 #[serde(rename_all = "camelCase", default)]
 pub struct GroundControlPoint {
     pub id: String,
-    pub label: String,
-    pub world: [f64; 3],
-    pub enabled: bool,
+    pub name: String,
+    pub world_position: [f64; 3],
     pub observations: Vec<GcpObservation>,
 }
 
-/// ⏭️ Frame sampling/decode limits `remodel_engine` applies before feature extraction.
+/// ⏭️ Frame sampling/decode limits `remodel_engine` applies before feature extraction. `min_sharpness`
+/// is the blur gate: a candidate frame is dropped when its sharpness falls below this fraction of the
+/// rolling median sharpness of the last ~15 accepted frames.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct IngestParams {
     pub frame_sample_stride: u32,
     pub max_frames: u32,
     pub downscale_long_edge_px: u32,
+    pub min_sharpness: f32,
 }
 
 impl Default for IngestParams {
     fn default() -> Self {
-        Self { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600 }
+        Self { frame_sample_stride: 5, max_frames: 200, downscale_long_edge_px: 1600, min_sharpness: 0.3 }
     }
 }
 
@@ -357,15 +356,12 @@ impl Default for DenseParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "kebab-case")]
-pub enum TextureSize {
-    S1024,
-    #[default]
-    S2048,
-    S4096,
-}
-
+/// 🧊 UI-facing meshing knobs `remodel_engine` translates into `remodel_mesh`'s own internal
+/// `MeshParams`/`TsdfVolume` construction args (this document does not depend on `remodel_mesh`, so
+/// the two `MeshParams` types are intentionally separate). `guarantee_watertight`,
+/// `hole_fill_max_boundary_verts`, and `self_intersection_check` are the watertight-guarantee knobs:
+/// when `guarantee_watertight` is set and repair/hole-fill can't recover a closed 2-manifold, the
+/// `🔖Close` fallback triggers and re-validates until the result passes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeshParams {
@@ -374,7 +370,10 @@ pub struct MeshParams {
     pub decimate_target_triangles: u32,
     pub smoothing_iterations: u32,
     pub texture_enabled: bool,
-    pub texture_size: TextureSize,
+    pub texture_size: u32,
+    pub guarantee_watertight: bool,
+    pub hole_fill_max_boundary_verts: u32,
+    pub self_intersection_check: bool,
 }
 
 impl Default for MeshParams {
@@ -385,7 +384,10 @@ impl Default for MeshParams {
             decimate_target_triangles: 200_000,
             smoothing_iterations: 2,
             texture_enabled: true,
-            texture_size: TextureSize::default(),
+            texture_size: 2048,
+            guarantee_watertight: true,
+            hole_fill_max_boundary_verts: 512,
+            self_intersection_check: false,
         }
     }
 }
@@ -435,9 +437,9 @@ impl Default for GeoParams {
 }
 
 /// ⚙️ Full reconstruction parameter set, one sub-struct per pipeline stage — `remodel_engine` reads
-/// these directly to configure `remodel_image`/`remodel_camera`/`remodel_feature`/`remodel_sfm`/
-/// `remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo` without this crate depending on any
-/// of them.
+/// these directly to configure `remodel_image`/`remodel_video`/`remodel_camera`/`remodel_feature`/
+/// `remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo` without this crate
+/// depending on any of them.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionParams {
@@ -477,26 +479,38 @@ pub enum ReconstructionStage {
     Failed,
 }
 
-/// 📷 A single recovered camera pose, streamed early for live preview during sparse reconstruction.
+/// 📷 A single recovered camera pose — streamed early into `ReconstructionJob.camera_poses_preview`
+/// for live preview during sparse reconstruction, and reused verbatim as `CameraTrajectory.poses` once
+/// the run finishes (no separate heavier pose type: both are the same lightweight snapshot).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CameraPosePreview {
-    pub frame_index: u32,
-    pub position: [f32; 3],
-    pub target: [f32; 3],
+    pub camera_id: String,
+    pub rotation_wxyz: [f32; 4],
+    pub translation: [f32; 3],
 }
 
+impl Default for CameraPosePreview {
+    fn default() -> Self {
+        Self { camera_id: String::new(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0; 3] }
+    }
+}
+
+/// 🚧 Live reconstruction run state — deliberately holds no algorithm scratch (descriptors, match
+/// graphs, depth maps, TSDF volumes; those stay in the plugin's `PipelineScratch`), only what the UI
+/// needs to render progress and what undo/redo needs to restore. `native_port` (a phantom pointer at
+/// a `remodel-native` service that was never implemented) has been removed entirely — there is no
+/// out-of-process reconstruction backend, only in-process WASM-safe classical algorithms.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionJob {
-    pub job_id: Option<String>,
+    pub id: String,
     pub stage: ReconstructionStage,
     pub progress_0_1: f32,
-    pub stage_label: String,
-    pub error: Option<String>,
     pub cancel_requested: bool,
     pub stage_cursor: u32,
-    pub started_at_ms: i64,
+    pub started_at_ms: Option<f64>,
+    pub error: Option<String>,
     pub camera_poses_preview: Vec<CameraPosePreview>,
     pub sparse_point_cloud_preview: PackedF32,
 }
@@ -510,52 +524,68 @@ pub enum MeshSource {
     Imported,
 }
 
-/// 🧵 The reconstructed (or placeholder/imported) mesh, reusing the canonical interchange type, plus
-/// optional UVs/texture for a textured export.
+/// ✅ A plain-JSON mirror of `remodel_mesh::WatertightReport`'s summary fields (all scalars — the
+/// report itself carries no array data, so this is a snapshot only in the sense of avoiding a hard
+/// dependency on `remodel_mesh`, not in the sense of trimming size).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WatertightReportSnapshot {
+    pub vertex_count: u32,
+    pub triangle_count: u32,
+    pub boundary_edge_count: u32,
+    pub boundary_loop_count: u32,
+    pub non_manifold_edge_count: u32,
+    pub non_manifold_vertex_count: u32,
+    pub connected_components: u32,
+    pub consistently_oriented: bool,
+    pub euler_characteristic: i64,
+    pub genus: Option<i64>,
+    pub signed_volume: f64,
+    pub self_intersection_pairs: Option<u32>,
+    pub closed_fallback_used: bool,
+    pub is_closed: bool,
+    pub is_two_manifold: bool,
+    pub is_watertight: bool,
+}
+
+/// 🧵 The reconstructed (or placeholder/imported) mesh, reusing the canonical interchange type
+/// (`MeshData` already carries its own `uvs`, so `RemodelMesh` doesn't duplicate them). Always present
+/// (never `Option`) so the 3D view always has something to render — `default_remodel_scene()` seeds it
+/// with a placeholder box.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RemodelMesh {
     pub mesh: MeshData,
-    pub uvs: Option<PackedF32>,
-    pub texture_asset_id: Option<String>,
     pub source: MeshSource,
+    pub texture_asset_id: Option<String>,
+    pub watertight: Option<WatertightReportSnapshot>,
 }
 
+/// ☁️ Sparse point cloud from bundle adjustment (`points` = flat xyz triples).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SparseCloud {
-    pub positions: PackedF32,
-    pub colors: PackedU8,
-    pub mean_reprojection_px: f32,
-    pub point_count: u32,
+    pub points: PackedF32,
+    pub colors: Option<PackedU8>,
 }
 
-/// ☁️ Dense point cloud with per-point LAS-style classification (0 unclassified, 2 ground, 6 building).
+/// ☁️ Dense point cloud with optional per-point LAS-style classification codes (0 unclassified, 2
+/// ground, 6 building, …) — `remodel_dense::PointClass` is a bespoke enum without numeric LAS
+/// discriminants, so `remodel_engine` maps it to LAS codes when it distills this snapshot.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseCloud {
     pub positions: PackedF32,
-    pub colors: PackedU8,
-    pub confidence: PackedF32,
-    pub classification: PackedU8,
-    pub point_count: u32,
+    pub colors: Option<PackedU8>,
+    pub confidence: Option<PackedF32>,
+    pub classification: Option<PackedU8>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CameraPose {
-    pub stream_id: String,
-    pub frame_index: u32,
-    pub timestamp_ms: f64,
-    pub camera_id: String,
-    pub position: [f32; 3],
-    pub rotation_wxyz: [f32; 4],
-}
-
+/// 🎥 Recovered camera trajectory across all registered frames.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraTrajectory {
-    pub poses: Vec<CameraPose>,
+    pub poses: Vec<CameraPosePreview>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -566,60 +596,43 @@ pub enum TrackClass {
     Moving,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TrackKeyframe {
-    pub timestamp_ms: f64,
-    pub position: [f32; 3],
-}
-
+/// 🏃 A distilled summary of one `remodel_motion` track — full per-frame keyframe paths
+/// (`Track2d`/`Trajectory3d` in the motion crate) are plugin-runtime scratch, not durable document
+/// state; only enough is kept here to list/label tracks and drive the report table.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct MotionTrack {
+pub struct MotionTrackSummary {
     pub id: String,
-    pub label: String,
+    pub length: u32,
     pub class: TrackClass,
-    pub keyframes: Vec<TrackKeyframe>,
     pub mean_speed_m_s: f32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase", default)]
-pub struct HeightGrid {
-    pub origin: [f64; 2],
-    pub cell_size_m: f64,
-    pub width: u32,
-    pub height: u32,
-    pub heights: PackedF32,
-}
-
+/// 🗺️ Georeferenced raster products, each stored as a pixel `ImageAsset` (DSM/DTM as 16-bit-encoded
+/// PNG, ortho as an RGB PNG) rather than an embedded float grid — rasters are pixels, so they follow
+/// the same persistence rule as every other image in this document instead of a bespoke height-grid
+/// packed-array shape.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoProducts {
-    pub dsm: Option<HeightGrid>,
-    pub dtm: Option<HeightGrid>,
+    pub dsm_asset_id: Option<String>,
+    pub dtm_asset_id: Option<String>,
     pub ortho_asset_id: Option<String>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct QcStageEntry {
-    pub stage: ReconstructionStage,
-    pub duration_ms: u32,
-    pub item_count: u32,
-}
-
-/// ✅ Aggregate quality-control summary produced at the end of a run.
+/// ✅ A plain-JSON mirror of the QC-relevant fields of `remodel_geo::QualityReport`, plus the
+/// watertight snapshot (mirroring `QualityReport.watertight: Option<WatertightReport>`) and a few
+/// cheap scalar summaries (`remodel_engine` computes these once at the end of a run; the underlying
+/// per-camera covariance/per-point-sigma arrays and density/overlap rasters stay plugin-runtime).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
-pub struct QcReport {
-    pub per_stage: Vec<QcStageEntry>,
-    pub mean_reprojection_error_px: f32,
-    pub median_track_length: f32,
+pub struct QcReportSnapshot {
+    pub reprojection_rms_px: f64,
+    pub gcp_checkpoint_rmse: Option<f64>,
+    pub watertight: Option<WatertightReportSnapshot>,
+    pub mean_track_length: f32,
     pub registered_frame_ratio: f32,
     pub dense_coverage_ratio: f32,
-    pub calibration_rms_px: f32,
-    pub gcp_rmse_m: Option<f32>,
     pub warnings: Vec<String>,
 }
 
@@ -629,60 +642,17 @@ pub struct QcReport {
 pub struct ReconstructionResults {
     pub sparse: Option<SparseCloud>,
     pub dense: Option<DenseCloud>,
-    pub mesh: Option<RemodelMesh>,
+    pub mesh: RemodelMesh,
     pub trajectory: Option<CameraTrajectory>,
-    pub tracks: Vec<MotionTrack>,
+    pub tracks: Vec<MotionTrackSummary>,
     pub geo: Option<GeoProducts>,
-    pub qc: Option<QcReport>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SelectionState {
-    #[serde(default = "default_selection_mode")]
-    pub mode: String,
-    #[serde(default)]
-    pub ids: Vec<u32>,
-}
-
-impl Default for SelectionState {
-    fn default() -> Self {
-        Self { mode: default_selection_mode(), ids: Vec::new() }
-    }
-}
-
-fn default_selection_mode() -> String {
-    "face".into()
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CameraState {
-    #[serde(default = "default_camera_position")]
-    pub position: [f64; 3],
-    #[serde(default)]
-    pub target: [f64; 3],
-    #[serde(default = "default_camera_fov")]
-    pub fov: f64,
-}
-
-impl Default for CameraState {
-    fn default() -> Self {
-        Self { position: default_camera_position(), target: [0.0, 0.0, 0.0], fov: default_camera_fov() }
-    }
-}
-
-fn default_camera_position() -> [f64; 3] {
-    [8.0, -8.0, 6.0]
-}
-
-fn default_camera_fov() -> f64 {
-    45.0
+    pub qc: Option<QcReportSnapshot>,
 }
 
 /// 🗂️ Top-level remodel project document — only persistent, undoable reconstruction state. Ephemeral
-/// viewport state (camera/selection) lives in the plugin runtime and the active utility is host-owned
-/// session state (`view_state.active_utility_id`), never in the document.
+/// viewport state (camera/selection/cursors), algorithm scratch (descriptors, match graphs, depth
+/// maps, TSDF volumes), and the active utility (host-owned `view_state.active_utility_id`) all live in
+/// the plugin runtime, never in this document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelScene {
@@ -717,7 +687,7 @@ pub fn default_remodel_scene() -> RemodelScene {
         gcps: Vec::new(),
         job: ReconstructionJob::default(),
         results: ReconstructionResults {
-            mesh: Some(RemodelMesh { mesh: semio_framework_core::mesh_from_kind("box"), source: MeshSource::Placeholder, ..RemodelMesh::default() }),
+            mesh: RemodelMesh { mesh: semio_framework_core::mesh_from_kind("box"), source: MeshSource::Placeholder, ..RemodelMesh::default() },
             ..ReconstructionResults::default()
         },
     }
@@ -730,7 +700,7 @@ pub fn default_remodel_scene() -> RemodelScene {
 /// There is no `setDocument` catch-all: reconstruction is field-granular (import a stream, tune one
 /// param group, publish a partial result) and each op carries its own inverse from the pre-edit state.
 /// `SetAsset` is per-key (not a whole-map replace) so two peers importing different frames converge
-/// without clobbering each other's assets.
+/// without clobbering each other's assets — see `concurrent_set_asset_ops_converge_regardless_of_order`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "op", rename_all = "camelCase")]
 pub enum RemodelOp {
@@ -740,7 +710,7 @@ pub enum RemodelOp {
     SetAsset {
         key: String,
         #[serde(default)]
-        asset: Option<ImageAsset>,
+        value: Option<ImageAsset>,
     },
     SetCalibration {
         calibration: CalibrationState,
@@ -783,16 +753,18 @@ pub enum RemodelOp {
         #[serde(default)]
         dense: Option<DenseCloud>,
     },
+    /// 📦 Boxed: `RemodelMesh` (a full `MeshData` plus an optional watertight snapshot) is far larger
+    /// than any sibling variant, and `clippy::large_enum_variant` flags the resulting size disparity
+    /// across `RemodelOp`/`RemodelDiff` — boxing keeps every other variant cheap to move.
     SetMeshResult {
-        #[serde(default)]
-        mesh: Option<RemodelMesh>,
+        mesh: Box<RemodelMesh>,
     },
     SetTrajectory {
         #[serde(default)]
         trajectory: Option<CameraTrajectory>,
     },
     SetTracks {
-        tracks: Vec<MotionTrack>,
+        tracks: Vec<MotionTrackSummary>,
     },
     SetGeoProducts {
         #[serde(default)]
@@ -800,7 +772,7 @@ pub enum RemodelOp {
     },
     SetQc {
         #[serde(default)]
-        qc: Option<QcReport>,
+        qc: Option<QcReportSnapshot>,
     },
 }
 
@@ -815,7 +787,7 @@ pub enum RemodelDiff {
     SetAsset {
         key: String,
         #[serde(default)]
-        asset: Option<ImageAsset>,
+        value: Option<ImageAsset>,
     },
     SetCalibration {
         calibration: CalibrationState,
@@ -859,15 +831,14 @@ pub enum RemodelDiff {
         dense: Option<DenseCloud>,
     },
     SetMeshResult {
-        #[serde(default)]
-        mesh: Option<RemodelMesh>,
+        mesh: Box<RemodelMesh>,
     },
     SetTrajectory {
         #[serde(default)]
         trajectory: Option<CameraTrajectory>,
     },
     SetTracks {
-        tracks: Vec<MotionTrack>,
+        tracks: Vec<MotionTrackSummary>,
     },
     SetGeoProducts {
         #[serde(default)]
@@ -875,7 +846,7 @@ pub enum RemodelDiff {
     },
     SetQc {
         #[serde(default)]
-        qc: Option<QcReport>,
+        qc: Option<QcReportSnapshot>,
     },
 }
 
@@ -883,9 +854,9 @@ pub fn apply_remodel_op(scene: &RemodelScene, op: &RemodelOp) -> RemodelScene {
     let mut next = scene.clone();
     match op {
         RemodelOp::SetStreams { streams } => next.streams = streams.clone(),
-        RemodelOp::SetAsset { key, asset } => match asset {
-            Some(asset) => {
-                next.assets.insert(key.clone(), asset.clone());
+        RemodelOp::SetAsset { key, value } => match value {
+            Some(value) => {
+                next.assets.insert(key.clone(), value.clone());
             }
             None => {
                 next.assets.remove(key);
@@ -904,7 +875,7 @@ pub fn apply_remodel_op(scene: &RemodelScene, op: &RemodelOp) -> RemodelScene {
         RemodelOp::SetJob { job } => next.job = job.clone(),
         RemodelOp::SetSparse { sparse } => next.results.sparse = sparse.clone(),
         RemodelOp::SetDense { dense } => next.results.dense = dense.clone(),
-        RemodelOp::SetMeshResult { mesh } => next.results.mesh = mesh.clone(),
+        RemodelOp::SetMeshResult { mesh } => next.results.mesh = mesh.as_ref().clone(),
         RemodelOp::SetTrajectory { trajectory } => next.results.trajectory = trajectory.clone(),
         RemodelOp::SetTracks { tracks } => next.results.tracks = tracks.clone(),
         RemodelOp::SetGeoProducts { geo } => next.results.geo = geo.clone(),
@@ -918,7 +889,7 @@ impl OperationDiff<RemodelScene> for RemodelDiff {
         let op = match self {
             RemodelDiff::Empty => return projection.clone(),
             RemodelDiff::SetStreams { streams } => RemodelOp::SetStreams { streams: streams.clone() },
-            RemodelDiff::SetAsset { key, asset } => RemodelOp::SetAsset { key: key.clone(), asset: asset.clone() },
+            RemodelDiff::SetAsset { key, value } => RemodelOp::SetAsset { key: key.clone(), value: value.clone() },
             RemodelDiff::SetCalibration { calibration } => RemodelOp::SetCalibration { calibration: calibration.clone() },
             RemodelDiff::SetGcps { gcps } => RemodelOp::SetGcps { gcps: gcps.clone() },
             RemodelDiff::SetIngestParams { params } => RemodelOp::SetIngestParams { params: params.clone() },
@@ -954,7 +925,7 @@ impl Operation<RemodelScene> for RemodelOp {
     fn diff(&self, _projection: &RemodelScene) -> RemodelDiff {
         match self {
             RemodelOp::SetStreams { streams } => RemodelDiff::SetStreams { streams: streams.clone() },
-            RemodelOp::SetAsset { key, asset } => RemodelDiff::SetAsset { key: key.clone(), asset: asset.clone() },
+            RemodelOp::SetAsset { key, value } => RemodelDiff::SetAsset { key: key.clone(), value: value.clone() },
             RemodelOp::SetCalibration { calibration } => RemodelDiff::SetCalibration { calibration: calibration.clone() },
             RemodelOp::SetGcps { gcps } => RemodelDiff::SetGcps { gcps: gcps.clone() },
             RemodelOp::SetIngestParams { params } => RemodelDiff::SetIngestParams { params: params.clone() },
@@ -979,7 +950,7 @@ impl Operation<RemodelScene> for RemodelOp {
     fn backwards(&self, projection: &RemodelScene) -> Vec<Self> {
         vec![match self {
             RemodelOp::SetStreams { .. } => RemodelOp::SetStreams { streams: projection.streams.clone() },
-            RemodelOp::SetAsset { key, .. } => RemodelOp::SetAsset { key: key.clone(), asset: projection.assets.get(key).cloned() },
+            RemodelOp::SetAsset { key, .. } => RemodelOp::SetAsset { key: key.clone(), value: projection.assets.get(key).cloned() },
             RemodelOp::SetCalibration { .. } => RemodelOp::SetCalibration { calibration: projection.calibration.clone() },
             RemodelOp::SetGcps { .. } => RemodelOp::SetGcps { gcps: projection.gcps.clone() },
             RemodelOp::SetIngestParams { .. } => RemodelOp::SetIngestParams { params: projection.params.ingest.clone() },
@@ -993,7 +964,7 @@ impl Operation<RemodelScene> for RemodelOp {
             RemodelOp::SetJob { .. } => RemodelOp::SetJob { job: projection.job.clone() },
             RemodelOp::SetSparse { .. } => RemodelOp::SetSparse { sparse: projection.results.sparse.clone() },
             RemodelOp::SetDense { .. } => RemodelOp::SetDense { dense: projection.results.dense.clone() },
-            RemodelOp::SetMeshResult { .. } => RemodelOp::SetMeshResult { mesh: projection.results.mesh.clone() },
+            RemodelOp::SetMeshResult { .. } => RemodelOp::SetMeshResult { mesh: Box::new(projection.results.mesh.clone()) },
             RemodelOp::SetTrajectory { .. } => RemodelOp::SetTrajectory { trajectory: projection.results.trajectory.clone() },
             RemodelOp::SetTracks { .. } => RemodelOp::SetTracks { tracks: projection.results.tracks.clone() },
             RemodelOp::SetGeoProducts { .. } => RemodelOp::SetGeoProducts { geo: projection.results.geo.clone() },
@@ -1008,13 +979,14 @@ impl Operation<RemodelScene> for RemodelOp {
 mod tests {
     use super::*;
 
+    //#region Domain
     #[test]
     fn default_scene_has_placeholder_mesh() {
         let scene = default_remodel_scene();
-        let mesh = scene.results.mesh.clone().expect("placeholder result");
-        assert_eq!(mesh.source, MeshSource::Placeholder);
-        assert!(!mesh.mesh.positions.is_empty());
-        assert!(!mesh.mesh.indices.is_empty());
+        assert_eq!(scene.results.mesh.source, MeshSource::Placeholder);
+        assert!(!scene.results.mesh.mesh.positions.is_empty());
+        assert!(!scene.results.mesh.mesh.indices.is_empty());
+        assert_eq!(scene.results.mesh.watertight, None);
         assert!(scene.streams.is_empty());
         assert!(scene.assets.is_empty());
         assert!(scene.gcps.is_empty());
@@ -1042,16 +1014,25 @@ mod tests {
             id: "stream-1".into(),
             name: "front".into(),
             kind: MediaKind::Video,
-            camera_id: "cam-1".into(),
+            camera_id: Some("cam-1".into()),
             sync_offset_ms: 12.5,
-            fps_hint: Some(30.0),
+            fps_hint: 30.0,
             frames: vec![FrameRef { index: 0, timestamp_ms: 0.0, asset_id: "asset-1".into() }],
+            source: Some(VideoSource {
+                name: "front.mp4".into(),
+                container: "mp4".into(),
+                codec: VideoCodec::Avc,
+                duration_ms: 6633.3,
+                frame_count: 199,
+                width: 1920,
+                height: 1080,
+            }),
         });
-        scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/png".into(), data: "abcd".into(), width: 4, height: 4 });
+        scene.assets.insert("asset-1".into(), ImageAsset { mime: "image/jpeg".into(), data: "abcd".into(), width: 4, height: 4 });
         scene.calibration.cameras.push(CameraCalibration {
             id: "cam-1".into(),
             label: "Front".into(),
-            model: CameraModel::BrownConrady,
+            model: "brownConrady".into(),
             fx: 1000.0,
             fy: 1000.0,
             cx: 512.0,
@@ -1064,73 +1045,59 @@ mod tests {
         scene.calibration.rig.push(RigExtrinsic::default());
         scene.gcps.push(GroundControlPoint {
             id: "gcp-1".into(),
-            label: "Corner".into(),
-            world: [1.0, 2.0, 3.0],
-            enabled: true,
+            name: "Corner".into(),
+            world_position: [1.0, 2.0, 3.0],
             observations: vec![GcpObservation { stream_id: "stream-1".into(), frame_index: 0, pixel: [10.0, 20.0] }],
         });
+        scene.params.ingest.min_sharpness = 0.4;
+        scene.params.mesh.texture_size = 4096;
         scene.results.sparse = Some(SparseCloud {
-            positions: PackedF32::from_vec(vec![0.0, 0.0, 0.0, 1.0, 1.0, 1.0]),
-            colors: PackedU8::from_vec(vec![255, 0, 0, 0, 255, 0]),
-            mean_reprojection_px: 0.8,
-            point_count: 2,
+            points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0, 1.0, 1.0, 1.0]),
+            colors: Some(PackedU8::from_u8_slice(&[255, 0, 0, 0, 255, 0])),
         });
         scene.results.dense = Some(DenseCloud {
-            positions: PackedF32::from_vec(vec![0.0, 0.0, 0.0]),
-            colors: PackedU8::from_vec(vec![0, 0, 255]),
-            confidence: PackedF32::from_vec(vec![0.9]),
-            classification: PackedU8::from_vec(vec![2]),
-            point_count: 1,
+            positions: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]),
+            colors: Some(PackedU8::from_u8_slice(&[0, 0, 255])),
+            confidence: Some(PackedF32::from_f32_slice(&[0.9])),
+            classification: Some(PackedU8::from_u8_slice(&[2])),
+        });
+        scene.results.mesh.watertight = Some(WatertightReportSnapshot {
+            vertex_count: 512,
+            triangle_count: 1020,
+            boundary_edge_count: 0,
+            boundary_loop_count: 0,
+            non_manifold_edge_count: 0,
+            non_manifold_vertex_count: 0,
+            connected_components: 1,
+            consistently_oriented: true,
+            euler_characteristic: 2,
+            genus: Some(0),
+            signed_volume: 12.5,
+            self_intersection_pairs: Some(0),
+            closed_fallback_used: false,
+            is_closed: true,
+            is_two_manifold: true,
+            is_watertight: true,
         });
         scene.results.trajectory = Some(CameraTrajectory {
             poses: vec![
-                CameraPose {
-                    stream_id: "stream-1".into(),
-                    frame_index: 0,
-                    timestamp_ms: 0.0,
-                    camera_id: "cam-1".into(),
-                    position: [0.0, 0.0, 0.0],
-                    rotation_wxyz: [1.0, 0.0, 0.0, 0.0],
-                },
-                CameraPose {
-                    stream_id: "stream-1".into(),
-                    frame_index: 1,
-                    timestamp_ms: 33.3,
-                    camera_id: "cam-1".into(),
-                    position: [0.1, 0.0, 0.0],
-                    rotation_wxyz: [0.999, 0.001, 0.0, 0.0],
-                },
+                CameraPosePreview { camera_id: "cam-1".into(), rotation_wxyz: [1.0, 0.0, 0.0, 0.0], translation: [0.0, 0.0, 0.0] },
+                CameraPosePreview { camera_id: "cam-1".into(), rotation_wxyz: [0.999, 0.001, 0.0, 0.0], translation: [0.1, 0.0, 0.0] },
             ],
         });
-        scene.results.tracks.push(MotionTrack {
-            id: "track-1".into(),
-            label: "walker".into(),
-            class: TrackClass::Moving,
-            keyframes: vec![
-                TrackKeyframe { timestamp_ms: 0.0, position: [0.0, 0.0, 0.0] },
-                TrackKeyframe { timestamp_ms: 100.0, position: [1.0, 0.0, 0.0] },
-            ],
-            mean_speed_m_s: 1.2,
-        });
+        scene.results.tracks.push(MotionTrackSummary { id: "track-1".into(), length: 42, class: TrackClass::Moving, mean_speed_m_s: 1.2 });
         scene.results.geo = Some(GeoProducts {
-            dsm: Some(HeightGrid {
-                origin: [0.0, 0.0],
-                cell_size_m: 0.5,
-                width: 2,
-                height: 2,
-                heights: PackedF32::from_vec(vec![1.0, 2.0, 3.0, 4.0]),
-            }),
-            dtm: None,
-            ortho_asset_id: None,
+            dsm_asset_id: Some("asset-dsm".into()),
+            dtm_asset_id: Some("asset-dtm".into()),
+            ortho_asset_id: Some("asset-ortho".into()),
         });
-        scene.results.qc = Some(QcReport {
-            per_stage: vec![QcStageEntry { stage: ReconstructionStage::Done, duration_ms: 1200, item_count: 4 }],
-            mean_reprojection_error_px: 0.5,
-            median_track_length: 6.0,
+        scene.results.qc = Some(QcReportSnapshot {
+            reprojection_rms_px: 0.5,
+            gcp_checkpoint_rmse: Some(0.02),
+            watertight: scene.results.mesh.watertight.clone(),
+            mean_track_length: 6.0,
             registered_frame_ratio: 1.0,
             dense_coverage_ratio: 0.95,
-            calibration_rms_px: 0.3,
-            gcp_rmse_m: Some(0.02),
             warnings: vec!["low overlap on frame 12".into()],
         });
 
@@ -1140,125 +1107,33 @@ mod tests {
     }
 
     #[test]
-    fn packed_f32_roundtrips_as_base64_string() {
-        let packed = PackedF32::from_vec(vec![1.5, -2.25, 3.0]);
+    fn packed_f32_roundtrips_exactly() {
+        let values = vec![1.5_f32, -2.25, 3.0, f32::MIN_POSITIVE, -0.0];
+        let packed = PackedF32::from_f32_slice(&values);
         let value = serde_json::to_value(&packed).expect("serialize");
         assert!(value.is_string(), "PackedF32 must serialize as a base64 string, got {value:?}");
         let parsed: PackedF32 = serde_json::from_value(value).expect("deserialize");
         assert_eq!(parsed, packed);
+        assert_eq!(parsed.to_f32_vec(), values);
 
         let empty = PackedF32::default();
-        let empty_value = serde_json::to_value(&empty).expect("serialize");
-        assert_eq!(empty_value, serde_json::Value::String(String::new()));
-        let empty_parsed: PackedF32 = serde_json::from_value(empty_value).expect("deserialize");
-        assert!(empty_parsed.is_empty());
+        assert!(empty.is_empty());
+        assert_eq!(empty.to_f32_vec(), Vec::<f32>::new());
     }
 
     #[test]
-    fn packed_u8_roundtrips_as_base64_string() {
-        let packed = PackedU8::from_vec(vec![0, 128, 255, 64]);
+    fn packed_u8_roundtrips_exactly() {
+        let values = vec![0_u8, 128, 255, 64];
+        let packed = PackedU8::from_u8_slice(&values);
         let value = serde_json::to_value(&packed).expect("serialize");
         assert!(value.is_string(), "PackedU8 must serialize as a base64 string, got {value:?}");
         let parsed: PackedU8 = serde_json::from_value(value).expect("deserialize");
         assert_eq!(parsed, packed);
+        assert_eq!(parsed.to_u8_vec(), values);
 
         let empty = PackedU8::default();
-        let empty_value = serde_json::to_value(&empty).expect("serialize");
-        assert_eq!(empty_value, serde_json::Value::String(String::new()));
-        let empty_parsed: PackedU8 = serde_json::from_value(empty_value).expect("deserialize");
-        assert!(empty_parsed.is_empty());
-    }
-
-    #[test]
-    fn set_asset_op_applies_and_reverts_including_absent_case() {
-        let scene = default_remodel_scene();
-        assert!(!scene.assets.contains_key("frame-1"));
-
-        let asset = ImageAsset { mime: "image/png".into(), data: "zzz".into(), width: 2, height: 2 };
-        let insert_op = RemodelOp::SetAsset { key: "frame-1".into(), asset: Some(asset.clone()) };
-        let after_insert = apply_remodel_op(&scene, &insert_op);
-        assert_eq!(after_insert.assets.get("frame-1"), Some(&asset));
-        assert_eq!(insert_op.diff(&scene).apply(&scene).assets.get("frame-1"), Some(&asset));
-
-        let insert_inverse = insert_op.backwards(&scene);
-        assert_eq!(insert_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), asset: None }]);
-        let reverted = insert_inverse.iter().fold(after_insert.clone(), |current, op| apply_remodel_op(&current, op));
-        assert_eq!(reverted, scene);
-
-        let remove_op = RemodelOp::SetAsset { key: "frame-1".into(), asset: None };
-        let remove_inverse = remove_op.backwards(&after_insert);
-        assert_eq!(remove_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), asset: Some(asset.clone()) }]);
-        let after_remove = apply_remodel_op(&after_insert, &remove_op);
-        assert!(!after_remove.assets.contains_key("frame-1"));
-        let restored = remove_inverse.iter().fold(after_remove, |current, op| apply_remodel_op(&current, op));
-        assert_eq!(restored.assets.get("frame-1"), Some(&asset));
-    }
-
-    #[test]
-    fn set_feature_params_op_applies_and_reverts() {
-        let scene = default_remodel_scene();
-        let mut params = scene.params.feature.clone();
-        params.target_count = 8000;
-        let op = RemodelOp::SetFeatureParams { params: params.clone() };
-        let next = apply_remodel_op(&scene, &op);
-        assert_eq!(next.params.feature.target_count, 8000);
-        assert_eq!(op.diff(&scene).apply(&scene).params.feature.target_count, 8000);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetFeatureParams { params: scene.params.feature.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
-        assert_eq!(reverted.params.feature, scene.params.feature);
-    }
-
-    #[test]
-    fn set_gcps_op_applies_and_reverts() {
-        let scene = default_remodel_scene();
-        let gcps = vec![GroundControlPoint {
-            id: "gcp-1".into(),
-            label: "A".into(),
-            world: [0.0, 0.0, 0.0],
-            enabled: true,
-            observations: Vec::new(),
-        }];
-        let op = RemodelOp::SetGcps { gcps: gcps.clone() };
-        let next = apply_remodel_op(&scene, &op);
-        assert_eq!(next.gcps, gcps);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetGcps { gcps: scene.gcps.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
-        assert_eq!(reverted.gcps, scene.gcps);
-    }
-
-    #[test]
-    fn set_sparse_op_applies_and_reverts() {
-        let scene = default_remodel_scene();
-        let sparse = SparseCloud {
-            positions: PackedF32::from_vec(vec![0.0, 0.0, 0.0]),
-            colors: PackedU8::from_vec(vec![255, 255, 255]),
-            mean_reprojection_px: 0.3,
-            point_count: 1,
-        };
-        let op = RemodelOp::SetSparse { sparse: Some(sparse.clone()) };
-        let next = apply_remodel_op(&scene, &op);
-        assert_eq!(next.results.sparse, Some(sparse));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetSparse { sparse: scene.results.sparse.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
-        assert_eq!(reverted.results.sparse, scene.results.sparse);
-    }
-
-    #[test]
-    fn set_job_op_applies_and_reverts() {
-        let scene = default_remodel_scene();
-        let mut job = scene.job.clone();
-        job.stage = ReconstructionStage::BundleAdjusting;
-        job.progress_0_1 = 0.42;
-        let op = RemodelOp::SetJob { job: job.clone() };
-        let next = apply_remodel_op(&scene, &op);
-        assert_eq!(next.job.stage, ReconstructionStage::BundleAdjusting);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetJob { job: scene.job.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
-        assert_eq!(reverted.job, scene.job);
+        assert!(empty.is_empty());
+        assert_eq!(empty.to_u8_vec(), Vec::<u8>::new());
     }
 
     #[test]
@@ -1287,5 +1162,269 @@ mod tests {
             assert_eq!(serde_json::to_string(&stage).expect("serialize"), expected);
         }
     }
+    //#endregion Domain
+
+    //#region Ops
+    #[test]
+    fn set_streams_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let streams = vec![MediaStream { id: "s1".into(), name: "cam".into(), ..MediaStream::default() }];
+        let op = RemodelOp::SetStreams { streams: streams.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.streams, streams);
+        assert_eq!(op.diff(&scene).apply(&scene).streams, streams);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetStreams { streams: scene.streams.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.streams, scene.streams);
+    }
+
+    #[test]
+    fn set_asset_op_applies_and_reverts_including_absent_case() {
+        let scene = default_remodel_scene();
+        assert!(!scene.assets.contains_key("frame-1"));
+
+        let asset = ImageAsset { mime: "image/jpeg".into(), data: "zzz".into(), width: 2, height: 2 };
+        let insert_op = RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) };
+        let after_insert = apply_remodel_op(&scene, &insert_op);
+        assert_eq!(after_insert.assets.get("frame-1"), Some(&asset));
+        assert_eq!(insert_op.diff(&scene).apply(&scene).assets.get("frame-1"), Some(&asset));
+
+        let insert_inverse = insert_op.backwards(&scene);
+        assert_eq!(insert_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), value: None }]);
+        let reverted = insert_inverse.iter().fold(after_insert.clone(), |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted, scene);
+
+        let remove_op = RemodelOp::SetAsset { key: "frame-1".into(), value: None };
+        let remove_inverse = remove_op.backwards(&after_insert);
+        assert_eq!(remove_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) }]);
+        let after_remove = apply_remodel_op(&after_insert, &remove_op);
+        assert!(!after_remove.assets.contains_key("frame-1"));
+        let restored = remove_inverse.iter().fold(after_remove, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(restored.assets.get("frame-1"), Some(&asset));
+    }
+
+    #[test]
+    fn set_calibration_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let mut calibration = scene.calibration.clone();
+        calibration.cameras.push(CameraCalibration { id: "cam-1".into(), model: "pinhole".into(), ..CameraCalibration::default() });
+        let op = RemodelOp::SetCalibration { calibration: calibration.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.calibration, calibration);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetCalibration { calibration: scene.calibration.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.calibration, scene.calibration);
+    }
+
+    #[test]
+    fn set_gcps_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let gcps = vec![GroundControlPoint { id: "gcp-1".into(), name: "A".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() }];
+        let op = RemodelOp::SetGcps { gcps: gcps.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.gcps, gcps);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetGcps { gcps: scene.gcps.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.gcps, scene.gcps);
+    }
+
+    #[test]
+    fn set_job_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let mut job = scene.job.clone();
+        job.stage = ReconstructionStage::BundleAdjusting;
+        job.progress_0_1 = 0.42;
+        job.started_at_ms = Some(1000.0);
+        let op = RemodelOp::SetJob { job: job.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.job, job);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetJob { job: scene.job.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.job, scene.job);
+    }
+
+    #[test]
+    fn set_sparse_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let sparse = SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[255, 255, 255])) };
+        let op = RemodelOp::SetSparse { sparse: Some(sparse.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.sparse, Some(sparse));
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetSparse { sparse: scene.results.sparse.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.sparse, scene.results.sparse);
+    }
+
+    #[test]
+    fn set_dense_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let dense = DenseCloud {
+            positions: PackedF32::from_f32_slice(&[1.0, 2.0, 3.0]),
+            colors: None,
+            confidence: Some(PackedF32::from_f32_slice(&[0.8])),
+            classification: Some(PackedU8::from_u8_slice(&[2])),
+        };
+        let op = RemodelOp::SetDense { dense: Some(dense.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.dense, Some(dense));
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetDense { dense: scene.results.dense.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.dense, scene.results.dense);
+    }
+
+    #[test]
+    fn set_mesh_result_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let mesh = RemodelMesh {
+            mesh: semio_framework_core::mesh_from_kind("box"),
+            source: MeshSource::Reconstructed,
+            texture_asset_id: Some("tex-1".into()),
+            watertight: Some(WatertightReportSnapshot { is_watertight: true, is_two_manifold: true, is_closed: true, ..WatertightReportSnapshot::default() }),
+        };
+        let op = RemodelOp::SetMeshResult { mesh: Box::new(mesh.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.mesh, mesh);
+        assert_eq!(op.diff(&scene).apply(&scene).results.mesh, mesh);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.mesh, scene.results.mesh);
+    }
+
+    #[test]
+    fn set_trajectory_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let trajectory = CameraTrajectory { poses: vec![CameraPosePreview { camera_id: "cam-1".into(), ..CameraPosePreview::default() }] };
+        let op = RemodelOp::SetTrajectory { trajectory: Some(trajectory.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.trajectory, Some(trajectory));
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetTrajectory { trajectory: scene.results.trajectory.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.trajectory, scene.results.trajectory);
+    }
+
+    #[test]
+    fn set_tracks_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let tracks = vec![MotionTrackSummary { id: "t1".into(), length: 12, class: TrackClass::Moving, mean_speed_m_s: 0.5 }];
+        let op = RemodelOp::SetTracks { tracks: tracks.clone() };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.tracks, tracks);
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetTracks { tracks: scene.results.tracks.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.tracks, scene.results.tracks);
+    }
+
+    #[test]
+    fn set_geo_products_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let geo = GeoProducts { dsm_asset_id: Some("dsm".into()), dtm_asset_id: None, ortho_asset_id: Some("ortho".into()) };
+        let op = RemodelOp::SetGeoProducts { geo: Some(geo.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.geo, Some(geo));
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetGeoProducts { geo: scene.results.geo.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.geo, scene.results.geo);
+    }
+
+    #[test]
+    fn set_qc_op_applies_and_reverts() {
+        let scene = default_remodel_scene();
+        let qc = QcReportSnapshot { reprojection_rms_px: 0.6, warnings: vec!["w".into()], ..QcReportSnapshot::default() };
+        let op = RemodelOp::SetQc { qc: Some(qc.clone()) };
+        let next = apply_remodel_op(&scene, &op);
+        assert_eq!(next.results.qc, Some(qc));
+        let inverse = op.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOp::SetQc { qc: scene.results.qc.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(reverted.results.qc, scene.results.qc);
+    }
+
+    /// 🔁 The 8 `Set<Stage>Params` ops are mechanically identical (LWW-replace one
+    /// `ReconstructionParams` sub-field, inverse restores the pre-edit value) — generated once per
+    /// param family instead of copy-pasted, per the "concise code" rule.
+    macro_rules! param_op_roundtrip_test {
+        ($test_name:ident, $variant:ident, $field:ident, $params_ty:ty, $mutate:expr) => {
+            #[test]
+            fn $test_name() {
+                let scene = default_remodel_scene();
+                let mut params: $params_ty = scene.params.$field.clone();
+                let mutate: fn(&mut $params_ty) = $mutate;
+                mutate(&mut params);
+                let op = RemodelOp::$variant { params: params.clone() };
+                let next = apply_remodel_op(&scene, &op);
+                assert_eq!(next.params.$field, params);
+                assert_eq!(op.diff(&scene).apply(&scene).params.$field, params);
+                let inverse = op.backwards(&scene);
+                assert_eq!(inverse, vec![RemodelOp::$variant { params: scene.params.$field.clone() }]);
+                let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+                assert_eq!(reverted.params.$field, scene.params.$field);
+            }
+        };
+    }
+
+    param_op_roundtrip_test!(set_ingest_params_op_applies_and_reverts, SetIngestParams, ingest, IngestParams, |p| p.min_sharpness = 0.6);
+    param_op_roundtrip_test!(set_feature_params_op_applies_and_reverts, SetFeatureParams, feature, FeatureParams, |p| p.target_count = 8000);
+    param_op_roundtrip_test!(set_match_params_op_applies_and_reverts, SetMatchParams, matching, MatchParams, |p| p.ratio_test = 0.6);
+    param_op_roundtrip_test!(set_sfm_params_op_applies_and_reverts, SetSfmParams, sfm, SfmParams, |p| p.ransac_iterations = 2000);
+    param_op_roundtrip_test!(set_dense_params_op_applies_and_reverts, SetDenseParams, dense, DenseParams, |p| p.max_points = 100);
+    param_op_roundtrip_test!(set_mesh_params_op_applies_and_reverts, SetMeshParams, mesh, MeshParams, |p| p.guarantee_watertight = false);
+    param_op_roundtrip_test!(set_motion_params_op_applies_and_reverts, SetMotionParams, motion, MotionParams, |p| p.enabled = true);
+    param_op_roundtrip_test!(set_geo_params_op_applies_and_reverts, SetGeoParams, geo, GeoParams, |p| p.enabled = true);
+    //#endregion Ops
+
+    //#region Convergence
+    /// 🔀 The CRDT convergence contract: two collaborators concurrently importing different frames
+    /// (`SetAsset` on disjoint keys) must converge to an identical scene regardless of application
+    /// order, and neither import may clobber the other's key. This is what makes `SetAsset` per-key
+    /// rather than a whole-`assets`-map replace — a whole-map design would fail this test, since
+    /// applying instance B's op after instance A's would silently drop A's key if B's captured map
+    /// snapshot predates A's insert.
+    #[test]
+    fn concurrent_set_asset_ops_converge_regardless_of_order() {
+        let base = default_remodel_scene();
+        let asset_a = ImageAsset { mime: "image/jpeg".into(), data: "frame-one".into(), width: 8, height: 8 };
+        let asset_b = ImageAsset { mime: "image/jpeg".into(), data: "frame-two".into(), width: 8, height: 8 };
+        let op_a = RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset_a.clone()) };
+        let op_b = RemodelOp::SetAsset { key: "frame-2".into(), value: Some(asset_b.clone()) };
+
+        let a_then_b = apply_remodel_op(&apply_remodel_op(&base, &op_a), &op_b);
+        let b_then_a = apply_remodel_op(&apply_remodel_op(&base, &op_b), &op_a);
+
+        assert_eq!(a_then_b, b_then_a, "concurrent SetAsset on disjoint keys must converge regardless of order");
+        assert_eq!(a_then_b.assets.get("frame-1"), Some(&asset_a), "instance A's import must survive instance B's op");
+        assert_eq!(a_then_b.assets.get("frame-2"), Some(&asset_b), "instance B's import must survive instance A's op");
+        assert_eq!(a_then_b.assets.len(), base.assets.len() + 2);
+    }
+
+    /// 🔀 Same convergence contract across two *disjoint op families* at once (one instance tunes
+    /// feature-detector params, the other adds a GCP) — proves field-granular LWW converges not just
+    /// within one op family but across the whole op vocabulary.
+    #[test]
+    fn concurrent_edits_across_different_op_families_converge() {
+        let base = default_remodel_scene();
+        let mut feature_params = base.params.feature.clone();
+        feature_params.target_count = 9000;
+        let op_feature = RemodelOp::SetFeatureParams { params: feature_params.clone() };
+        let gcps = vec![GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: Vec::new() }];
+        let op_gcp = RemodelOp::SetGcps { gcps: gcps.clone() };
+
+        let feature_then_gcp = apply_remodel_op(&apply_remodel_op(&base, &op_feature), &op_gcp);
+        let gcp_then_feature = apply_remodel_op(&apply_remodel_op(&base, &op_gcp), &op_feature);
+
+        assert_eq!(feature_then_gcp, gcp_then_feature);
+        assert_eq!(feature_then_gcp.params.feature, feature_params);
+        assert_eq!(feature_then_gcp.gcps, gcps);
+    }
+    //#endregion Convergence
 }
 //#endregion 🧪Tests

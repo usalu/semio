@@ -87,7 +87,7 @@ export const PanelBottomRight: Story = {
     const [visible, setVisible] = useState(true);
     return (
       <div className="relative h-[400px] w-[600px] border bg-base">
-        <Panel anchor="bottom-right" visible={visible} onVisibleChange={setVisible} size={size} onSizeChange={setSize} tabs={[leafTab("actions", Layers, "Actions", 0, "Action tools"), leafTab("history", Info, "History", 1, "History tools")]} />
+        <Panel anchor="bottom-right" visible={visible} onVisibleChange={setVisible} size={size} onSizeChange={setSize} tabs={[leafTab("actions", Layers, "Actions", 0, "Actions"), leafTab("history", Info, "History", 1, "History")]} />
       </div>
     );
   },

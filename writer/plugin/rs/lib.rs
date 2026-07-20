@@ -814,7 +814,7 @@ fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_writer_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_writer_app`.
 /// Writer declares no utilities today; kept for parity with the other apps' `app_labels()` wiring.
 fn writer_utility_labels(_is_de: bool) -> HashMap<String, String> {
     HashMap::new()
@@ -1784,11 +1784,11 @@ mod tests {
         assert_eq!(main.possible_engagements.as_ref().map(|v| v.len()), Some(3));
     }
 
-    // 🧰 `VcsDocumentApp::tools()` (a per-app custom toolbar) no longer exists — toolbars are now
-    // derived by the renderer from the utility registry (`writer_utility_labels` above; writer
-    // declares no utilities). Format/lint were never single-sourced from that removed toolbar
-    // though: they're `WindowEngagementPossible` entries in `window_engagements()`, which is still
-    // the one surface for them — assert on that surface instead.
+    // 🧰 `VcsDocumentApp::tools()` (a per-app custom utility bar) no longer exists — utility bars
+    // are now derived by the renderer from the utility registry (`writer_utility_labels` above;
+    // writer declares no utilities). Format/lint were never single-sourced from that removed
+    // utility bar though: they're `WindowEngagementPossible` entries in `window_engagements()`,
+    // which is still the one surface for them — assert on that surface instead.
     #[test]
     fn window_engagements_include_format_and_lint_possible_engagements() {
         let mut app = new_app::<WriterPlayApp>();

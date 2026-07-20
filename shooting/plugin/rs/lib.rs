@@ -422,7 +422,7 @@ fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
     ])
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_shooting_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_shooting_app`.
 fn shooting_utility_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         ("move", "Move", "Verschieben"),
@@ -1778,7 +1778,7 @@ mod tests {
         assert!(!definition.actions.iter().any(|action| action.id == "setTransformTool"), "the custom setTransformTool action is gone");
         let mut app = new_app();
         let engagements = app.window_engagements(&ViewState::default());
-        assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived toolbar");
+        assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].options.is_none(), "the gumball selector moved to the host-derived utility bar");
         assert!(engagements[SHOOTING_PLAY_WINDOW_SCENE].status.as_ref().unwrap()[0].text.contains("assets"));
         assert!(engagements[SHOOTING_PLAY_WINDOW_ICON].status.as_ref().unwrap()[0].text.contains("256×256"));
     }

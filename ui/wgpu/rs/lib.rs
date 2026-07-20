@@ -386,7 +386,7 @@ pub enum WindowMeasure {
         default_open: Option<bool>,
         /// 🎯 When `Some(utility_id)`, this group is *utility-scoped chrome*: the shell surfaces it only while
         /// `ViewState.active_utility_id == utility_id`, and renders it in the dedicated "Utility Options" rail
-        /// beside the toolbar — never in the always-on Measures overlay. When absent, the group is a
+        /// beside the utility bar — never in the always-on Measures overlay. When absent, the group is a
         /// general measure and stays in the Measures overlay exactly as before. See [`partition_window_measures`].
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "activeUtilityId"))]
@@ -913,7 +913,7 @@ mod layout_wire_format_tests {
 
 pub mod utilities {
 // #region utilities
-//! 🧰 Declarative per-mode toolbar utility trees.
+//! 🧰 Declarative per-mode utility bar utility trees.
 
 use super::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
@@ -1085,7 +1085,7 @@ pub fn utility_collection(
 }
 
 //#region 🔖DeriveUtilityNodes
-/// @emoji 🧰 A resolved utility ready to be laid out into the toolbar. `framework_core` maps its
+/// @emoji 🧰 A resolved utility ready to be laid out into the utility bar. `framework_core` maps its
 /// `UtilityDefinition` onto this before calling `derive_utility_nodes` — `ui_wgpu` can't reference
 /// `framework_core::UtilityDefinition` directly (that crate depends on `ui_wgpu`, not the reverse).
 #[derive(Clone, Debug, PartialEq)]
@@ -1097,11 +1097,11 @@ pub struct DerivedUtilitySpec {
     pub category: Option<UtilityCategory>,
 }
 
-/// @emoji 🧰 Derives the toolbar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
+/// @emoji 🧰 Derives the utility bar `UtilityNode` tree from resolved utilities and the host-owned active utility id.
 /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
 /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
 /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
-/// utilities stay flat siblings. This is the single source of truth for the toolbar — `DocumentApp::utilities`
+/// utilities stay flat siblings. This is the single source of truth for the utility bar — `DocumentApp::utilities`
 /// no longer exists.
 pub fn derive_utility_nodes(
     controller_id: &str,
@@ -1166,7 +1166,7 @@ mod utility_node_wire_format_tests {
     use super::*;
     use super::super::layout::ActionDescriptor;
 
-    const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.tool\",\"label\":\"Tool\",\"title\":\"Tool\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runTool\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleTool\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+    const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.utility\",\"label\":\"Utility\",\"title\":\"Utility\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runUtility\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleUtility\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
     #[test]
     fn utility_node_serializes_to_golden_json() {
@@ -1174,9 +1174,9 @@ mod utility_node_wire_format_tests {
             UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
             utility_button(
                 "btn1",
-                "icon.tool",
-                "Tool",
-                ActionDescriptor { controller_id: "ctrl".into(), action: "runTool".into(), args: None },
+                "icon.utility",
+                "Utility",
+                ActionDescriptor { controller_id: "ctrl".into(), action: "runUtility".into(), args: None },
             )
             .with_category(UtilityCategory::History),
             utility_toggle(
@@ -1184,7 +1184,7 @@ mod utility_node_wire_format_tests {
                 "icon.toggle",
                 "Toggle",
                 true,
-                ActionDescriptor { controller_id: "ctrl".into(), action: "toggleTool".into(), args: None },
+                ActionDescriptor { controller_id: "ctrl".into(), action: "toggleUtility".into(), args: None },
             ),
             utility_collection("col1", "icon.group", "Group", vec![utility_separator("sep2")]),
         ];
@@ -11463,7 +11463,7 @@ impl Rgba {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum GlassTier {
     Panel,
-    Toolbar,
+    Ribbon,
     Menu,
     WindowOptions,
 }
@@ -11617,7 +11617,7 @@ impl Theme {
                 blur_px: chrome_metrics::GLASS_PANEL_BLUR_PX as f32,
                 saturate: self.glass_saturate,
             },
-            GlassTier::Toolbar => GlassStyle {
+            GlassTier::Ribbon => GlassStyle {
                 tint: self.panel,
                 alpha: 0.3,
                 blur_px: chrome_metrics::GLASS_BLUR_PX as f32,

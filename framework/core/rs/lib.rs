@@ -3256,7 +3256,7 @@ pub struct UtilityDefinition {
     pub id: String,
     pub label: String,
     pub icon_id: String,
-    /// 🧺 Visual toolbar collection this utility groups into; `None` = a flat top-level toolbar entry.
+    /// 🧺 Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub group: Option<String>,
@@ -3966,7 +3966,7 @@ pub fn missing_required_args(
 
 /// @emoji 🚦 Whether an action is eligible to appear in a window's Actions panel — excludes the six
 /// framework History actions (rendered by the History rail) and the injected `setActiveUtility` (an
-/// internal View action wired to the toolbar, never the panel).
+/// internal View action wired to the utility bar, never the panel).
 fn action_is_panel_eligible(action: &ActionDefinition) -> bool {
     action.kind != ActionKind::History && action.id != SET_ACTIVE_UTILITY_ACTION_ID
 }
@@ -4157,7 +4157,7 @@ pub struct AppLabelsOverlay {
     /// 🗣️ Locale-aware overrides for `AppDefinition.actions[].label` (operations/view-actions/shell-actions), keyed by action id — covers the command palette and any other UI surfacing an action's static English label.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub action_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `AppDefinition.utilities[].label` (toolbar tools), keyed by utility id.
+    /// 🗣️ Locale-aware overrides for `AppDefinition.utilities[].label` (utility bar utilities), keyed by utility id.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub utility_labels: std::collections::HashMap<String, String>,
     /// 🗣️ Locale-aware overrides for `AppDefinition.examples[].label` (example/fixture picker), keyed by example id.
@@ -4172,7 +4172,7 @@ pub struct AppLabelsOverlay {
     /// 🗣️ Locale-aware overrides for `IntroductionDefinition` text, keyed `"intro.title"` / `"intro.step.{stepId}.title"` / `".body"`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub introduction_labels: std::collections::HashMap<String, String>,
-    /// 🗣️ Locale-aware overrides for `UtilityDefinition.group` collection labels (toolbar group headers, e.g. "transform"), keyed by group id.
+    /// 🗣️ Locale-aware overrides for `UtilityDefinition.group` collection labels (ribbon group headers, e.g. "transform"), keyed by group id.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub group_labels: std::collections::HashMap<String, String>,
 }

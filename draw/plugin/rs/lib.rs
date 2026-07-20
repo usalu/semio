@@ -729,7 +729,7 @@ fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_draw_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_draw_app`.
 fn draw_utility_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("selectMarquee", "Marquee Select", "Rahmenauswahl"),
@@ -811,7 +811,7 @@ fn boolean_child_item(doc: &DrawDocument, boolean_id: &str, child_id: &str) -> U
 }
 
 fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionState, labels: &DrawPlayLabels) -> UiNode {
-    let toolbar_items = vec![
+    let action_items = vec![
         tree_button("draw-play-layers.add.path", labels.add_path, "pen-tool", "addLayer", json!({ "kind": "path" })),
         tree_button("draw-play-layers.add.rect", labels.add_rectangle, "square", "addLayer", json!({ "kind": "shape:rect" })),
         tree_button("draw-play-layers.add.text", labels.add_text, "type", "addLayer", json!({ "kind": "text" })),
@@ -835,7 +835,7 @@ fn render_layers_panel(document: &DrawDocument, interaction: &DrawInteractionSta
         .into_iter()
         .collect();
     let builder = PanelTreeBuilder::new("draw-play-layers")
-        .section("draw-play-layers", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, toolbar_items.into_iter().chain(layer_items).collect())
+        .section("draw-play-layers", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, action_items.into_iter().chain(layer_items).collect())
         .selected(selected_tree_ids)
         .selection_change(draw_play_action("setSelection", None));
     if highlighted_ids.is_empty() { builder.build() } else { builder.highlighted(highlighted_ids).build() }

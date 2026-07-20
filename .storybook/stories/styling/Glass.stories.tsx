@@ -1,7 +1,7 @@
 // #region 🧲Header
 // 💻 .storybook/stories/styling/Glass.stories.tsx
 // Specs: Docs gallery for `GlassTierProvider`/`useGlassTier`/`getGlassSurfaceClass` (`@semio-tech/ui-react`) across every `GlassTier`.
-// Summary: `getGlassSurfaceClass` maps a `GlassTier` ("panel"|"toolbar"|"menu"|"windowOptions") to one of the `ui-glass-*` Tailwind `@utility` classes defined in `ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill over `--panel`/`--temporary`). Each swatch renders over a colorful backdrop so the blur/alpha differences across tiers are visible without needing WebGL or a running plugin.
+// Summary: `getGlassSurfaceClass` maps a `GlassTier` ("panel"|"ribbon"|"menu"|"windowOptions") to one of the `ui-glass-*` Tailwind `@utility` classes defined in `ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill over `--panel`/`--temporary`). Each swatch renders over a colorful backdrop so the blur/alpha differences across tiers are visible without needing WebGL or a running plugin.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
@@ -12,7 +12,7 @@ import { getGlassSurfaceClass, GlassTierProvider, useGlassTier, type GlassTier }
 import { galleryPageStyle } from "../../styling/index.tsx";
 
 //#region 🔖Tiers
-const GLASS_TIERS: readonly GlassTier[] = ["panel", "toolbar", "menu", "windowOptions"];
+const GLASS_TIERS: readonly GlassTier[] = ["panel", "ribbon", "menu", "windowOptions"];
 
 /** @emoji 🌈 Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
 const BACKDROP_STYLE = {
@@ -58,7 +58,7 @@ function GlassGallery(): ReactElement {
         </div>
       </div>
       <p style={{ fontSize: 12, opacity: 0.6, maxWidth: 640 }}>
-        Each card is a `GlassTierProvider` boundary around a `useGlassTier()` reader — `getGlassSurfaceClass(tier)` resolves to `ui-glass-panel` / `ui-glass-toolbar` / `ui-glass-menu` /
+        Each card is a `GlassTierProvider` boundary around a `useGlassTier()` reader — `getGlassSurfaceClass(tier)` resolves to `ui-glass-panel` / `ui-glass-ribbon` / `ui-glass-menu` /
         `ui-glass-window-options`, whose blur radius and fill alpha come from the active theme's <code>chrome.glassBlurPx</code>/<code>chrome.glassPanelBlurPx</code>/
         <code>chrome.glassWindowOptionsBlurPx</code> metrics and <code>opacities.glassPanelAlpha</code>/<code>glassMenuAlpha</code>/<code>glassWindowOptionsAlpha</code> (see the `theme` toolbar).
       </p>

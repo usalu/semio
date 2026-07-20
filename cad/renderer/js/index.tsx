@@ -3691,7 +3691,7 @@ export interface InteractionSpatialViewProps {
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly theme?: InteractionSpatialViewTheme;
   readonly slots?: InteractionSpatialViewSlots;
-  /** @emoji 🎛 When set with targets, shows a gumball at the selection centroid (toolbar move/rotate/scale). */
+  /** @emoji 🎛 When set with targets, shows a gumball at the selection centroid (utility bar move/rotate/scale). */
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly transformGumballTargets?: readonly SelectionTarget[];
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
@@ -4524,7 +4524,7 @@ export interface InteractionReplProps extends InteractionReplHostValues, Interac
   readonly autoFitBehavior?: SpatialAutoFitBehavior;
   readonly committedMeshesKeepPrevious?: boolean;
   readonly tessellationTolerance?: number;
-  /** @emoji 🎛 Toolbar gumball mode; hidden while an interaction session is active. */
+  /** @emoji 🎛 Utility bar gumball mode; hidden while an interaction session is active. */
   readonly transformGumballConfig?: CadGumballConfig | null;
   readonly onTransformGumballCommit?: (diff: ModelDiff) => void;
   readonly worldReferences?: readonly WorldReferenceProps[];

@@ -8086,8 +8086,15 @@ name = "remodel-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
- "kernel_3d_mesh",
+ "remodel_camera",
+ "remodel_dense",
  "remodel_document",
+ "remodel_engine",
+ "remodel_geo",
+ "remodel_image",
+ "remodel_mesh",
+ "remodel_sfm",
+ "remodel_video",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",

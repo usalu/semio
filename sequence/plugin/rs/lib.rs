@@ -248,7 +248,7 @@ fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
     )
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_sequence_app`;
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_sequence_app`;
 /// this manifest declares none, so this is an empty overlay kept for parity with the shared `app_labels` wiring.
 fn sequence_utility_labels(_is_de: bool) -> HashMap<String, String> {
     HashMap::new()
@@ -780,9 +780,9 @@ mod tests {
     }
 
     // 🧰 `footer_tools_include_run_stop_reorganize_and_orientation` asserted on `VcsDocumentApp::tools()`,
-    // which no longer exists (toolbars are derived by the renderer from the utility registry now — see
+    // which no longer exists (utility bars are derived by the renderer from the utility registry now — see
     // `sequence_utility_labels` above; this manifest declares no utilities, so run/stop/reorganize have
-    // no toolbar-tool equivalent to assert on). Its behavioral coverage lives on in
+    // no utility-bar equivalent to assert on). Its behavioral coverage lives on in
     // `run_stores_result_and_renders_in_script`, `stop_action_clears_last_run_result`, and
     // `reorganize_action_spreads_step_positions_apart`.
 
@@ -851,7 +851,7 @@ mod tests {
         let document_json = serde_json::to_string(&app.render(SEQUENCE_PLAY_BODY_DOCUMENT, None, &ViewState::default()).expect("render")).unwrap();
         assert!(document_json.contains("\"Steps\""));
         assert!(document_json.contains("\"Flow edges\""));
-        // 🧰 Run/stop/reorganize no longer render as toolbar tools (see note on the removed
+        // 🧰 Run/stop/reorganize no longer render as utility bar utilities (see note on the removed
         // `footer_tools_include_run_stop_reorganize_and_orientation` test above) — their locale
         // translation now surfaces only through the action-label overlay.
         let action_labels = app.app_labels(&ViewState::default()).action_labels;

@@ -1,0 +1,13 @@
+{
+  "title": "Deterministic Media Graph Node Ids",
+  "emoji": "🎲",
+  "status": "open",
+  "description": "Fix non-deterministic media-graph node id minting in framework/product/os/core/rs/lib.rs. apply_os_operation's OsOp::SpawnAppInstance arm currently calls create_os_id(\"node\") fresh every time the op is replayed (uses a process-global atomic counter), which breaks determinism: replaying the same edit history on two different stores produces different node ids. Fix: add a node_id: String field to OsOp::SpawnAppInstance, mint it once in OsStore::spawn_app_instance at dispatch time (mirroring how instance_id/document_id are already minted there), and have apply_os_operation's SpawnAppInstance arm use the op's own node_id instead of re-minting. Also fix the op's inverse/undo logic (RemoveAppInstance's inverse reconstructing SpawnAppInstance) to reuse the removed node's id rather than minting a fresh one. Hand-fix every other OsOp::SpawnAppInstance construction site repo-wide (Rust and any JSON/TS fixture constructions). Check for other OsOp variants with the same bug pattern (calling create_os_id(\"node\") during apply/replay instead of at dispatch time). This fixes the only remaining divergence in host::tests::concurrent_delete_and_wire_reconciles_without_a_dangling_edge (peers converge on same content but different node id strings).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2175"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪a4f98572f32c4d52b61a176e19fc08d9"
+  ]
+}

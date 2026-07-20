@@ -17,7 +17,7 @@ pub struct Feature {
 
 // #region 🔖StandardFeatures
 fn feature_histogram_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-    crate::continuous::entropy_continuous(x, crate::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats)
+    crate::continuous::entropy_continuous(x, &crate::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats)
 }
 
 fn feature_sample_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {

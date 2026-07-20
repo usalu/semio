@@ -887,6 +887,11 @@ where
             .unwrap_or(0);
         self.current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         self.envelope = envelope;
+        // 🌱 These ids are adopted directly, not through `dag.insert`, so the dag never learns they're
+        // satisfied — seed it or a later remote envelope whose `deps` reference one would sit `Pending`
+        // forever (see `OpDag::seed_applied`). Covers every `set_state` caller: `set_envelope`
+        // (store reconstruction from a persisted/cloned document), checkpoint checkout, etc.
+        self.dag.seed_applied(applied_edit_ids.iter().cloned());
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
         self.conflicts = Vec::new();

@@ -3,9 +3,10 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../plugin/registry/generated/playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../plugin/registry/script.ts";
+import { resolveShellBrandById } from "../brand/index.ts";
 import { semioBackboneVitePlugin, semioBlobVitePlugin } from "../script.ts";
 
 const configDir = path.dirname(fileURLToPath(import.meta.url));
@@ -15,6 +16,8 @@ const pluginModulesDir = path.join(playDir, "plugin-modules");
 const rendererModulesDir = path.join(playDir, "renderer-modules");
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+const brandId = process.env.SEMIO_BRAND ?? PLAYGROUND_BUILD_TARGETS.find((target) => target.variant === plugin || target.aliases.includes(plugin))?.brand;
+const brand = resolveShellBrandById(brandId);
 const uiAssetsRoot = path.join(repoRoot, "ui/asset");
 
 //#region 🔖RegistryDrivenAssetsAndEngines
@@ -68,6 +71,7 @@ export default defineConfig({
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     ...uiAssetsVitePlugin(uiAssetsRoot),
+    ...semioBrandHtmlVitePlugins(repoRoot, brand),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
   ],
@@ -78,5 +82,6 @@ export default defineConfig({
   define: {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),
     "import.meta.env.VITE_SEMIO_RENDERER": JSON.stringify(renderer),
+    "import.meta.env.VITE_SEMIO_BRAND": JSON.stringify(brand?.id ?? ""),
   },
 });

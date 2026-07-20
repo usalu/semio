@@ -549,30 +549,29 @@ export function semioFaviconSvgMarkup(svgPath: string): string | undefined {
   return raw.replace(open, `${open}${SEMIO_FAVICON_BLEED_RECT}`);
 }
 
-function createSemioFaviconMiddleware(favicons: { readonly svg: string; readonly ico: string }): Connect.NextHandleFunction {
+/** @emoji 🔖 Resolved favicon content for one host: inline SVG markup plus an optional ICO fallback path. */
+type FaviconContent = { readonly svgMarkup?: string; readonly icoPath?: string };
+
+function createFaviconMiddleware(content: FaviconContent): Connect.NextHandleFunction {
   return (req, res, next) => {
     const url = req.url?.split(/[?#]/, 1)[0];
-    if (url === "/favicon.svg") {
-      const markup = semioFaviconSvgMarkup(favicons.svg);
-      if (markup) {
-        res.setHeader("Content-Type", "image/svg+xml");
-        res.end(markup);
-        return;
-      }
+    if (url === "/favicon.svg" && content.svgMarkup) {
+      res.setHeader("Content-Type", "image/svg+xml");
+      res.end(content.svgMarkup);
+      return;
     }
-    if (url === "/favicon.ico" && existsSync(favicons.ico)) {
+    if (url === "/favicon.ico" && content.icoPath && existsSync(content.icoPath)) {
       res.setHeader("Content-Type", "image/x-icon");
-      createReadStream(favicons.ico).pipe(res);
+      createReadStream(content.icoPath).pipe(res);
       return;
     }
     next();
   };
 }
 
-/** @emoji 🔖 Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/favicon.ico`. */
-export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
-  const favicons = semioFaviconSources(repoRoot);
-  const serveFavicon = createSemioFaviconMiddleware(favicons);
+/** @emoji 🔖 Vite: serve and copy the given favicon content at `/favicon.svg` and `/favicon.ico`. */
+function faviconVitePlugins(content: FaviconContent): Plugin[] {
+  const serveFavicon = createFaviconMiddleware(content);
   let viteRoot = process.cwd();
   return [
     {
@@ -595,13 +594,40 @@ export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
       closeBundle() {
         const dist = resolve(viteRoot, "dist");
         mkdirSync(dist, { recursive: true });
-        const markup = semioFaviconSvgMarkup(favicons.svg);
-        if (markup) {
-          writeFileSync(resolve(dist, "favicon.svg"), markup);
+        if (content.svgMarkup) {
+          writeFileSync(resolve(dist, "favicon.svg"), content.svgMarkup);
         }
-        if (existsSync(favicons.ico)) {
-          cpSync(favicons.ico, resolve(dist, "favicon.ico"));
+        if (content.icoPath && existsSync(content.icoPath)) {
+          cpSync(content.icoPath, resolve(dist, "favicon.ico"));
         }
+      },
+    },
+  ];
+}
+
+/** @emoji 🔖 Vite: serve and copy semio emblem favicons at `/favicon.svg` and `/favicon.ico`. */
+export function semioFaviconVitePlugin(repoRoot: string): Plugin[] {
+  const favicons = semioFaviconSources(repoRoot);
+  return faviconVitePlugins({ svgMarkup: semioFaviconSvgMarkup(favicons.svg), icoPath: favicons.ico });
+}
+
+/** @emoji 🏷️ The host-chrome surface of a shell brand (structural subset of `framework/core/js`'s `ShellBrand`, so this styling layer never imports framework types). */
+export type ShellBrandHostChrome = {
+  readonly windowTitle: string;
+  readonly logoSvg?: string;
+  readonly faviconIcoPath?: string;
+};
+
+/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle` and serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one); no brand ⇒ canonical semio favicons untouched. */
+export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): Plugin[] {
+  if (!brand) return semioFaviconVitePlugin(repoRoot);
+  return [
+    ...faviconVitePlugins({ svgMarkup: brand.logoSvg, icoPath: brand.faviconIcoPath ? resolve(repoRoot, brand.faviconIcoPath) : undefined }),
+    {
+      name: "semio-brand-html",
+      transformIndexHtml: {
+        order: "pre",
+        handler: (html) => html.replace(/<title>[^<]*<\/title>/, `<title>${brand.windowTitle}</title>`),
       },
     },
   ];

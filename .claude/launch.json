@@ -27,6 +27,12 @@
       "port": 6014
     },
     {
+      "name": "mit-bestand-aggregator-react-dev",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["run", "dev:mit-bestand:aggregator"],
+      "port": 6023
+    },
+    {
       "name": "cad-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:cad"],

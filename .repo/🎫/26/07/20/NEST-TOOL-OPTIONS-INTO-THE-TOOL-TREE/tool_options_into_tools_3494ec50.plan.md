@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: verify
     content: Run framework-renderer-react + puzzle-plugin + affected plugin tests; confirm ribbon shows distribution tree only when brush is active
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

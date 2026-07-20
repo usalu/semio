@@ -92,11 +92,11 @@ import {
   type UiLabelValue,
   type UiLocale,
   type UiTerminologyLabelSet,
-  type UiToolbarParentCategory,
+  type UiRibbonParentCategory,
 } from "@semio-tech/ui-react";
 
-/** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiToolbarParentCategory}. */
-type ComposeSketchpadToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
+/** @emoji 🪁 Sketchpad toolbar parent labels keyed by {@link UiRibbonParentCategory}. */
+type ComposeSketchpadToolbarParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
 
 export const composeSketchpadToolbarParentDe: ComposeSketchpadToolbarParentEntries = {
   history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
@@ -10351,11 +10351,11 @@ export function sketchpadResolveControlLabelId(id: string): ComposeSketchpadCont
   if (id.startsWith("ui.panelToggle.")) {
     return `compose.sketchpad.navbar.panelToggle.${id.slice("ui.panelToggle.".length)}`;
   }
-  if (id.startsWith("ui.toolbar.parent.")) {
-    return `compose.sketchpad.toolbar.parent.${id.slice("ui.toolbar.parent.".length)}`;
+  if (id.startsWith("ui.ribbon.parent.")) {
+    return `compose.sketchpad.toolbar.parent.${id.slice("ui.ribbon.parent.".length)}`;
   }
-  if (id.startsWith("ui.toolbar.group.")) {
-    return `compose.sketchpad.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`;
+  if (id.startsWith("ui.ribbon.group.")) {
+    return `compose.sketchpad.toolbar.parent.${id.slice("ui.ribbon.group.".length)}`;
   }
   return id;
 }
@@ -15566,7 +15566,7 @@ if (import.meta.vitest) {
     });
 
     it("defines every toolbar parent category with label objects in en and de", () => {
-      const categories: readonly UiToolbarParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings"];
+      const categories: readonly UiRibbonParentCategory[] = ["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings"];
       for (const locale of ["en", "de"] as const) {
         const parent = composeSketchpadTranslationBundles[locale].translation.compose.sketchpad.toolbar.parent;
         for (const category of categories) {

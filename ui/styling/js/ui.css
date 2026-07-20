@@ -510,7 +510,7 @@
 }
 
 /* Toolbar anchor: left-aligned content growing through the remaining footer width. */
-[data-slot="toolbar-anchor"] {
+[data-slot="ribbon-anchor"] {
   flex: 1 1 0%;
   min-width: 0;
   height: 100%;
@@ -520,7 +520,7 @@
   pointer-events: none;
 }
 
-[data-slot="toolbar-anchor"] > * {
+[data-slot="ribbon-anchor"] > * {
   flex: 0 1 auto;
   width: fit-content;
   max-width: 100%;
@@ -528,7 +528,7 @@
   pointer-events: auto;
 }
 
-[data-slot="toolbar-anchor"] [role="toolbar"] {
+[data-slot="ribbon-anchor"] [role="toolbar"] {
   max-height: 100%;
 }
 
@@ -593,9 +593,9 @@
 
 .touch {
   --ui-spacing: var(--spacing-touch);
-  --toolbar-item-height: var(--size-large);
-  --toolbar-gap: var(--spacing-single);
-  --toolbar-padding-inline: var(--spacing-single);
+  --ribbon-item-height: var(--size-large);
+  --ribbon-gap: var(--spacing-single);
+  --ribbon-padding-inline: var(--spacing-single);
   --text-xs: 0.75rem;
   --text-xs--line-height: calc(1 / 0.75);
   --text-sm: 0.875rem;
@@ -752,11 +752,11 @@
   --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
   --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
   --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
-  --toolbar-item-height: var(--size-medium);
-  --toolbar-gap: var(--spacing-single);
-  --toolbar-group-gap: var(--spacing-single);
-  --toolbar-padding-inline: var(--spacing-single);
-  --toolbar-divider-height: var(--size-small);
+  --ribbon-item-height: var(--size-medium);
+  --ribbon-gap: var(--spacing-single);
+  --ribbon-group-gap: var(--spacing-single);
+  --ribbon-padding-inline: var(--spacing-single);
+  --ribbon-divider-height: var(--size-small);
   --text-2xs: 0.6rem;
   --text-2xs--line-height: calc(0.9 / 0.6);
   --text-xs: 0.7rem;
@@ -801,7 +801,7 @@
   --glass-saturate: 1.45;
   --glass-panel-alpha: 0.72;
   --glass-window-options-alpha: 0.22;
-  --glass-toolbar-alpha: 0.3;
+  --glass-ribbon-alpha: 0.3;
   --glass-menu-alpha: 0.36;
   /* 🎓 Deliberately more transparent than --glass-panel-alpha so an introduction's info box reads as
      less see-through than the veil it sits on. */
@@ -1566,10 +1566,10 @@ table thead.border-b {
   border-bottom-color: var(--border-normal-color);
 }
 
-@utility ui-glass-toolbar {
+@utility ui-glass-ribbon {
   -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-toolbar-alpha) * 100%), transparent);
+  background-color: color-mix(in srgb, var(--panel) calc(var(--glass-ribbon-alpha) * 100%), transparent);
 }
 
 @utility ui-glass-menu {

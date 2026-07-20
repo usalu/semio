@@ -1476,10 +1476,10 @@ const UsersIcon = createIconComponent("users");
 
 // #region 🖱️ContextMenu
 
-export type GlassTier = "panel" | "toolbar" | "menu" | "windowOptions";
+export type GlassTier = "panel" | "ribbon" | "menu" | "windowOptions";
 
 export const glassPanelClass = "ui-glass-panel";
-export const glassToolbarClass = "ui-glass-toolbar";
+export const glassRibbonClass = "ui-glass-ribbon";
 export const glassMenuClass = "ui-glass-menu";
 export const glassWindowOptionsClass = "ui-glass-window-options";
 
@@ -1498,8 +1498,8 @@ export function getGlassSurfaceClass(tier: GlassTier): string {
   switch (tier) {
     case "panel":
       return glassPanelClass;
-    case "toolbar":
-      return glassToolbarClass;
+    case "ribbon":
+      return glassRibbonClass;
     case "windowOptions":
       return glassWindowOptionsClass;
     default:
@@ -2412,11 +2412,11 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.panelToggle.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
-  if (id.startsWith("ui.toolbar.group.")) {
-    return _controlLabelIdResolver(`ui.toolbar.parent.${id.slice("ui.toolbar.group.".length)}`);
+  if (id.startsWith("ui.ribbon.group.")) {
+    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice("ui.ribbon.group.".length)}`);
   }
-  if (id.startsWith("ui.toolbar.") && id.includes(".group.")) {
-    return _controlLabelIdResolver(`ui.toolbar.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
+  if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
+    return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
   }
   if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
     return _controlLabelIdResolver("ui.engagement.suggestions");
@@ -2525,13 +2525,13 @@ export type UiLabelValue = {
   readonly hotkey?: string;
 };
 
-/** @emoji 🪁 Toolbar collection ids for ribbon collection toggles. */
-export type UiToolbarParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "tools" | "sync";
+/** @emoji 🪁 Ribbon collection ids for ribbon collection toggles. */
+export type UiRibbonParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "utilities" | "sync";
 
-/** @emoji 🪁 i18n key for a toolbar collection toggle. */
-export type UiToolbarParentKey = `ui.toolbar.parent.${string}`;
+/** @emoji 🪁 i18n key for a ribbon collection toggle. */
+export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
 
-type UiToolbarParentEntries = { readonly [K in UiToolbarParentCategory]: UiLabelValue };
+type UiRibbonParentEntries = { readonly [K in UiRibbonParentCategory]: UiLabelValue };
 
 type DeepUiTranslationKeys<T, Prefix extends string = ""> = T extends UiLabelValue
   ? Prefix extends ""
@@ -2586,8 +2586,8 @@ export type UiTranslationSchema = {
       readonly documentEmpty: UiLabelValue;
       readonly spawnedAppsSuffix: UiLabelValue;
       readonly sync: UiLabelValue;
-      readonly tools: UiLabelValue;
-      readonly toolsHistory: UiLabelValue;
+      readonly actions: UiLabelValue;
+      readonly history: UiLabelValue;
     };
     readonly find: {
       readonly toggle: UiLabelValue;
@@ -2698,11 +2698,11 @@ export type UiTranslationSchema = {
       readonly setTerminology: UiLabelValue;
       readonly setExpertise: UiLabelValue;
     };
-    readonly toolbar: {
+    readonly ribbon: {
       readonly group: {
         readonly parent: UiLabelValue;
       };
-      readonly parent: UiToolbarParentEntries;
+      readonly parent: UiRibbonParentEntries;
     };
     readonly common: {
       readonly mixedValues: UiLabelValue;
@@ -2825,14 +2825,22 @@ export type UiTranslationSchema = {
     readonly manual: UiLabelValue;
     readonly tutorial: UiLabelValue;
   };
+  readonly introduction: {
+    readonly skip: UiLabelValue;
+    readonly back: UiLabelValue;
+    readonly next: UiLabelValue;
+    readonly done: UiLabelValue;
+    readonly activateToContinue: UiLabelValue;
+    readonly performToContinue: UiLabelValue;
+  };
 };
 
 /** @emoji 🪁 Dot-path union of keys in {@link UiTranslationSchema}. */
 export type UiTranslationKey = DeepUiTranslationKeys<UiTranslationSchema>;
 
-/** @emoji 🪁 Compile-time check that toolbar collection ids have chrome translation keys. */
-export type AssertUiToolbarParentKeysCovered<Categories extends string> = {
-  readonly [K in Categories]: `ui.toolbar.parent.${K}` extends UiTranslationKey ? true : false;
+/** @emoji 🪁 Compile-time check that ribbon collection ids have chrome translation keys. */
+export type AssertUiRibbonParentKeysCovered<Categories extends string> = {
+  readonly [K in Categories]: `ui.ribbon.parent.${K}` extends UiTranslationKey ? true : false;
 }[Categories] extends true
   ? true
   : false;
@@ -2866,7 +2874,7 @@ export interface UiI18nPort {
   readonly isInitialized: boolean;
 }
 
-const _assertUiToolbarParentKeys: AssertUiToolbarParentKeysCovered<UiToolbarParentCategory> = true;
+const _assertUiRibbonParentKeys: AssertUiRibbonParentKeysCovered<UiRibbonParentCategory> = true;
 
 const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocale> = true;
 
@@ -2875,10 +2883,10 @@ const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<U
 // #endregion 🔑Schema & Keys
 
 // #region 🇩🇪 German Bundle
-// German (`de`) translation bundle: toolbar-parent labels here, plus the nested `de` translation tree further below
+// German (`de`) translation bundle: ribbon-parent labels here, plus the nested `de` translation tree further below
 // inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
 
-const uiToolbarParentDe: UiToolbarParentEntries = {
+const uiRibbonParentDe: UiRibbonParentEntries = {
   history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
   hand: { label: { normal: "Hand", beginner: "Hand" } },
   selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
@@ -2903,10 +2911,10 @@ const uiToolbarParentDe: UiToolbarParentEntries = {
 // #endregion 🇩🇪 German Bundle
 
 // #region 🇬🇧 English Bundle
-// English (`en`) translation bundle: toolbar-parent labels here, plus the nested `en` translation tree further below
+// English (`en`) translation bundle: ribbon-parent labels here, plus the nested `en` translation tree further below
 // inside {@link uiChromeTranslationBundles} (kept as one object so both locales satisfy the same schema).
 
-const uiToolbarParentEn: UiToolbarParentEntries = {
+const uiRibbonParentEn: UiRibbonParentEntries = {
   history: { label: { normal: "History", beginner: "History" } },
   hand: { label: { normal: "Hand", beginner: "Hand" } },
   selection: { label: { normal: "Selection", beginner: "Selection" } },
@@ -3014,8 +3022,8 @@ export const uiChromeTranslationBundles = {
           documentEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "gestartete App(s)", beginner: "gestartete App(s)" } },
           sync: { label: { normal: "Synchronisierung", beginner: "Synchronisierung" } },
-          tools: { label: { normal: "Aktionen", beginner: "Aktionen" } },
-          toolsHistory: { label: { normal: "Verlauf", beginner: "Verlauf" } },
+          actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+          history: { label: { normal: "Verlauf", beginner: "Verlauf" } },
         },
         find: {
           toggle: {
@@ -3216,7 +3224,7 @@ export const uiChromeTranslationBundles = {
           setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
           setExpertise: { label: { normal: "Erfahrungsniveau festlegen", beginner: "Erfahrungsniveau festlegen" } },
         },
-        toolbar: {
+        ribbon: {
           group: {
             parent: {
               label: {
@@ -3225,7 +3233,7 @@ export const uiChromeTranslationBundles = {
               },
             },
           },
-          parent: uiToolbarParentDe,
+          parent: uiRibbonParentDe,
         },
         common: {
           mixedValues: {
@@ -3468,6 +3476,14 @@ export const uiChromeTranslationBundles = {
           },
         },
       },
+      introduction: {
+        skip: { label: { normal: "Überspringen", beginner: "Überspringen" } },
+        back: { label: { normal: "Zurück", beginner: "Zurück" } },
+        next: { label: { normal: "Weiter", beginner: "Weiter" } },
+        done: { label: { normal: "Fertig", beginner: "Fertig" } },
+        activateToContinue: { label: { normal: 'Aktivieren Sie „{{target}}“, um fortzufahren', beginner: 'Aktivieren Sie „{{target}}“, um fortzufahren' } },
+        performToContinue: { label: { normal: '„{{target}}“ ausführen, um fortzufahren', beginner: '„{{target}}“ ausführen, um fortzufahren' } },
+      },
     } satisfies UiTranslationSchema,
   },
   // #endregion 🇩🇪 German Bundle
@@ -3555,8 +3571,8 @@ export const uiChromeTranslationBundles = {
           documentEmpty: { label: { normal: "—", beginner: "—" } },
           spawnedAppsSuffix: { label: { normal: "spawned app(s)", beginner: "spawned app(s)" } },
           sync: { label: { normal: "Sync", beginner: "Sync" } },
-          tools: { label: { normal: "Actions", beginner: "Actions" } },
-          toolsHistory: { label: { normal: "History", beginner: "History" } },
+          actions: { label: { normal: "Actions", beginner: "Actions" } },
+          history: { label: { normal: "History", beginner: "History" } },
         },
         find: {
           toggle: {
@@ -3757,16 +3773,16 @@ export const uiChromeTranslationBundles = {
           setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
           setExpertise: { label: { normal: "Set Expertise", beginner: "Set Expertise" } },
         },
-        toolbar: {
+        ribbon: {
           group: {
             parent: {
               label: {
-                normal: "Tool",
-                beginner: "Tool",
+                normal: "Utility",
+                beginner: "Utility",
               },
             },
           },
-          parent: uiToolbarParentEn,
+          parent: uiRibbonParentEn,
         },
         common: {
           mixedValues: {
@@ -4008,6 +4024,14 @@ export const uiChromeTranslationBundles = {
             beginner: "Tutorial",
           },
         },
+      },
+      introduction: {
+        skip: { label: { normal: "Skip", beginner: "Skip" } },
+        back: { label: { normal: "Back", beginner: "Back" } },
+        next: { label: { normal: "Next", beginner: "Next" } },
+        done: { label: { normal: "Done", beginner: "Done" } },
+        activateToContinue: { label: { normal: 'Activate "{{target}}" to continue', beginner: 'Activate "{{target}}" to continue' } },
+        performToContinue: { label: { normal: 'Perform "{{target}}" to continue', beginner: 'Perform "{{target}}" to continue' } },
       },
     } satisfies UiTranslationSchema,
   },
@@ -4679,11 +4703,14 @@ function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
 }
 
 /** @emoji 🎓 Live-tracks the DOM rect of an introduction step's anchor, re-measuring on element resize
- * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/toolbar) instead
+ * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/utility bar) instead
  * of failing closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller
  * treats as a `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first
  * mounted selector wins in order — the primary anchor first, then each fallback (e.g. a folded Utilities
- * rail's unfold chip while the utility button is still hidden). */
+ * rail's unfold chip while the utility button is still hidden). Attaching to a fallback keeps polling for
+ * a higher-priority selector to mount (e.g. the real utility button appearing once the rail unfolds) and
+ * upgrades to it — otherwise the info box would stay pinned to the folded chip's rect while the unfolded
+ * content it's meant to point at renders underneath it. */
 function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = []): IntroductionAnchorResolution {
   const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
 
@@ -4702,13 +4729,11 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
       if (element) setResolution({ rect: domRectToIntroductionRect(element.getBoundingClientRect()), viaFallback: activeSelectorIndex > 0 });
     };
     const attach = (): boolean => {
-      observer?.disconnect();
-      observer = null;
-      element = null;
-      activeSelectorIndex = -1;
       for (let index = 0; index < selectors.length; index += 1) {
+        if (index >= activeSelectorIndex && activeSelectorIndex !== -1) break;
         const candidate = document.querySelector(selectors[index]!);
         if (!candidate) continue;
+        observer?.disconnect();
         element = candidate;
         activeSelectorIndex = index;
         measure();
@@ -4716,13 +4741,17 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
         observer.observe(candidate);
         return true;
       }
-      setResolution({ rect: null, viaFallback: false });
-      return false;
+      return activeSelectorIndex !== -1;
+    };
+    const attachOrRetry = (): boolean => {
+      const attached = attach();
+      if (!attached) setResolution({ rect: null, viaFallback: false });
+      return attached && activeSelectorIndex === 0;
     };
 
-    if (!attach()) {
+    if (!attachOrRetry()) {
       retryTimer = setInterval(() => {
-        if (attach() && retryTimer) {
+        if (attachOrRetry() && retryTimer) {
           clearInterval(retryTimer);
           retryTimer = null;
         }
@@ -4837,6 +4866,13 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     return () => observer.disconnect();
   }, [stepIndex]);
 
+  const skipLabel = useLabel("ui.introduction.skip");
+  const backLabel = useLabel("ui.introduction.back");
+  const nextLabel = useLabel("ui.introduction.next");
+  const doneLabel = useLabel("ui.introduction.done");
+  const activateToContinueTemplate = useLabel("ui.introduction.activateToContinue");
+  const performToContinueTemplate = useLabel("ui.introduction.performToContinue");
+
   const isLast = stepIndex >= introduction.steps.length - 1;
   const skip = reactHostPort.useCallback(() => onDismiss(false), [onDismiss]);
   const next = reactHostPort.useCallback(() => {
@@ -4857,7 +4893,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const cutout = emphasis === "none" ? null : anchorRect;
   const bands = introductionVeilBands(viewport, cutout);
   const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
-  // 🎓 A targeted anchor that hasn't mounted yet (a folded toolbar/panel) must not trap the user behind
+  // 🎓 A targeted anchor that hasn't mounted yet (a folded utility bar/panel) must not trap the user behind
   // an opaque-to-clicks veil — only `Screen` steps (and steps whose anchor did resolve) block pointer
   // events; an unresolved targeted anchor lets clicks through so the user can reveal it themselves.
   const veilBlocksPointer = step.anchor.kind === "screen" || anchorRect != null;
@@ -4879,13 +4915,16 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         </div>
         <p className="mb-double text-xs text-muted-foreground">{step.body}</p>
         <div className="flex items-center justify-between gap-single">
-          <Button id="ui.introduction.skip" variant="ghost" icon="x" text="Skip" onClick={skip} />
+          <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel ?? "Skip"} onClick={skip} />
           <div className="flex items-center gap-single">
-            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text="Back" onClick={back} />}
+            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel ?? "Back"} onClick={back} />}
             {advance.kind === "next" ? (
-              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? "Done" : "Next"} onClick={next} />
+              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={(isLast ? doneLabel : nextLabel) ?? (isLast ? "Done" : "Next")} onClick={next} />
             ) : (
-              <span className="text-xs text-muted-foreground">{advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`}</span>
+              <span className="text-xs text-muted-foreground">
+                {(advance.kind === "utility" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
+                  (advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
+              </span>
             )}
           </div>
         </div>
@@ -5094,8 +5133,8 @@ export const floatingMenuItemClass = cn("relative flex w-full cursor-default ite
 /** @emoji 🪟 Frosted editor aside chrome for technology renderers. */
 export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", panelGlassFrameClass);
 
-/** @emoji 🪟 Frosted compact toolbar chrome (projection switch, align controls). */
-export const floatingToolbarSurfaceClass = cn(glassToolbarClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
+/** @emoji 🪟 Frosted compact ribbon chrome (projection switch, align controls). */
+export const floatingRibbonSurfaceClass = cn(glassRibbonClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 /** @emoji 🪟 Frosted inline field/action shell inside editor asides. */
 export const floatingFieldSurfaceClass = cn(glassMenuClass, "relative overflow-visible rounded-md border", borderNormalClass);
@@ -11470,6 +11509,13 @@ export function SemioLogo({ className, style }: { className?: string; style?: Re
 }
 //#endregion 🩺SemioLogo
 
+//#region 🏷️ShellBrandLogo
+/** @emoji 🏷️ Renders a shell brand's raw inline-SVG mark in navbar chrome (first-party repo content authored in `framework/product/os/dev/brand`, injected as markup). */
+export function ShellBrandLogo({ svg, className, style }: { svg: string; className?: string; style?: React.CSSProperties }) {
+  return <span className={cn("inline-flex items-center [&>svg]:h-full [&>svg]:w-auto", className)} style={style} dangerouslySetInnerHTML={{ __html: svg }} />;
+}
+//#endregion 🏷️ShellBrandLogo
+
 //#region 🏛️ZukunftBauLogo
 /** @emoji 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
 export function ZukunftBauLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -16301,7 +16347,7 @@ export { PageNavigation };
 
 // #region 🧭Panel
 // Collapsible panel growing from one of the display's six anchors (four corners plus a top/bottom middle), with tabbed content.
-// Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻Toolbar Components).
+// Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻Ribbon Components).
 
 export interface TreePanelConfig {
   sections: TreeDataSection[];
@@ -17038,7 +17084,7 @@ export { Ribbon };
 
 // #endregion 🎀Ribbon
 
-// #endregion 🩻Toolbar Components
+// #endregion 🩻Ribbon Components
 
 // #region 🧭Shell
 
@@ -26008,7 +26054,7 @@ if (import.meta.vitest) {
           possibleEngagements={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
-            { id: "puzzle3d.tool.fill", label: "Fill", detail: "f", onSelect: () => selected.push("puzzle3d.tool.fill") },
+            { id: "puzzle3d.utility.fill", label: "Fill", detail: "f", onSelect: () => selected.push("puzzle3d.utility.fill") },
           ]}
         />,
       );
@@ -26017,10 +26063,10 @@ if (import.meta.vitest) {
       fireEvent.change(field, { target: { value: "f" } });
       await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ill"));
       fireEvent.keyDown(field, { key: " " });
-      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill"]));
+      await waitFor(() => expect(selected).toEqual(["puzzle3d.utility.fill"]));
       fireEvent.change(field, { target: { value: "Sp" } });
       fireEvent.keyDown(field, { key: "Enter" });
-      await waitFor(() => expect(selected).toEqual(["puzzle3d.tool.fill", "primitive.sphere"]));
+      await waitFor(() => expect(selected).toEqual(["puzzle3d.utility.fill", "primitive.sphere"]));
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
@@ -26104,8 +26150,8 @@ if (import.meta.vitest) {
           input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
           control={{
             kind: "toggleGroup",
-            id: "engagement-tool-group",
-            label: "Tool",
+            id: "engagement-utility-group",
+            label: "Utility",
             value: "brush",
             options: [
               { id: "select", label: "Select" },
@@ -28572,8 +28618,8 @@ if (treeVitest) {
       expect(panelKindFromPanelToggleControlId("playground.panel.workbench")).toBe("workbench");
     });
 
-    it("resolves toolbar collection ids in en and de", () => {
-      const categories: readonly UiToolbarParentCategory[] = [
+    it("resolves ribbon collection ids in en and de", () => {
+      const categories: readonly UiRibbonParentCategory[] = [
         "history",
         "hand",
         "selection",
@@ -28591,19 +28637,19 @@ if (treeVitest) {
         "mode",
         "targets",
         "export",
-        "tools",
+        "utilities",
         "sync",
       ];
       for (const locale of ["en", "de"] as const) {
         void uiI18n.changeLanguage(locale);
         for (const category of categories) {
-          const key = `ui.toolbar.parent.${category}` as UiToolbarParentKey;
+          const key = `ui.ribbon.parent.${category}` as UiRibbonParentKey;
           const label = resolveTranslationLabel(uiI18n.t(key as UiTranslationKey));
           expect(label, `${locale}:${key}`).toBeTruthy();
           expect(label).not.toBe(key);
         }
-        expect(resolveControlLabelId(`ui.toolbar.group.${categories[0]}`)).toBe(`ui.toolbar.parent.${categories[0]}`);
-        expect(resolveControlLabelId(`ui.toolbar.example-window.group.${categories[0]}`)).toBe(`ui.toolbar.parent.${categories[0]}`);
+        expect(resolveControlLabelId(`ui.ribbon.group.${categories[0]}`)).toBe(`ui.ribbon.parent.${categories[0]}`);
+        expect(resolveControlLabelId(`ui.ribbon.example-window.group.${categories[0]}`)).toBe(`ui.ribbon.parent.${categories[0]}`);
       }
       void uiI18n.changeLanguage("en");
     });
@@ -28741,16 +28787,16 @@ if (treeVitest) {
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
-      const toolbarMarkup = renderToStaticMarkup(
-        <ToolbarZone>
-          <ToolbarItem>
-            <ToggleGroup kind="single" value="tool" items={[{ value: "tool", id: "ui.toolbar.group.tool", icon: "save", text: "Tool" }]} />
-          </ToolbarItem>
-        </ToolbarZone>,
+      const ribbonMarkup = renderToStaticMarkup(
+        <RibbonZone>
+          <RibbonItem>
+            <ToggleGroup kind="single" value="tool" items={[{ value: "tool", id: "ui.ribbon.group.tool", icon: "save", text: "Tool" }]} />
+          </RibbonItem>
+        </RibbonZone>,
       );
-      expect(toolbarMarkup).toMatch(/\bborder\b/);
-      expect(toolbarMarkup).toContain(borderNormalClass);
-      expect(toolbarMarkup).not.toContain("border-emphasized");
+      expect(ribbonMarkup).toMatch(/\bborder\b/);
+      expect(ribbonMarkup).toContain(borderNormalClass);
+      expect(ribbonMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
       expect(panelMarkup).toContain('data-slot="panel"');
       expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
@@ -28775,21 +28821,21 @@ if (treeVitest) {
       expect(groupMatch?.[1]).toContain("border");
     });
 
-    it("renders adjacent toolbar toggle group items for segmented focus borders", () => {
+    it("renders adjacent ribbon toggle group items for segmented focus borders", () => {
       const markup = renderToStaticMarkup(
-        <ToolbarZone>
-          <ToolbarItem>
+        <RibbonZone>
+          <RibbonItem>
             <ToggleGroup
               kind="single"
               value="save"
               items={[
-                { value: "transform", id: "ui.toolbar.group.transform", icon: "move-3d", text: "Transform" },
-                { value: "save", id: "ui.toolbar.group.save", icon: "save", text: "Save" },
-                { value: "transfer", id: "ui.toolbar.group.transfer", icon: "arrow-right-left", text: "Transfer" },
+                { value: "transform", id: "ui.ribbon.group.transform", icon: "move-3d", text: "Transform" },
+                { value: "save", id: "ui.ribbon.group.save", icon: "save", text: "Save" },
+                { value: "transfer", id: "ui.ribbon.group.transfer", icon: "arrow-right-left", text: "Transfer" },
               ]}
             />
-          </ToolbarItem>
-        </ToolbarZone>,
+          </RibbonItem>
+        </RibbonZone>,
       );
       expect(markup).toContain('data-slot="toggle-group-item"');
       expect(markup.match(/data-slot="toggle-group-item"/g)?.length).toBe(3);
@@ -28815,9 +28861,9 @@ if (treeVitest) {
       expect(rowMatches.length).toBe(2);
       for (const match of rowMatches) expect(match[1]).not.toMatch(/\bgap-single\b/);
 
-      const inlineMarkup = renderToStaticMarkup(<Ribbon id="ui.toolbar" direction="inline" rows={rows} />);
+      const inlineMarkup = renderToStaticMarkup(<Ribbon id="ui.ribbon" direction="inline" rows={rows} />);
       expect(inlineMarkup).toContain('role="toolbar"');
-      expect(inlineMarkup).toContain('data-slot="toolbar-zone"');
+      expect(inlineMarkup).toContain('data-slot="ribbon-zone"');
       expect(inlineMarkup).not.toContain('data-slot="ribbon-row"');
     });
 

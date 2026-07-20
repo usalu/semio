@@ -1,8 +1,9 @@
 {
   "title": "Nest Tool Options Into The Tool Tree",
   "emoji": "🧰",
-  "status": "open",
+  "status": "closed",
   "description": "Nest utility-scoped window measures inside the tool ribbon (not a separate rail), migrate tool-specific options out of general Window Options across playground apps, and make puzzle distribution groups true probability trees whose sliders always sum to 1.",
+  "summary": "Nested utility-scoped window measures inside the tool ribbon and migrated tool-specific options out of general Window Options across playground apps.\n\n## Framework\n- `UtilityTree` accepts `utilityOptions` and renders them as an extra ribbon row when `direction` is `up`; hardcoded `SelectionUtilityOptions` only when plugin measures are absent.\n- `utilityBarNode` threads partitioned utility options into the toolbar; window chrome no longer passes a separate `utilityOptions` prop to `Window`.\n- Removed the detached `window-utility-options` stack from `Window`.\n- WGPU `render_window_utility_options_rail` renders a compact strip above the footer (no detached \"Utility Options\" header card).\n- Added `UtilityTree` utilityOptions ribbon test (framework-renderer-react: 180/180 pass).\n\n## Puzzle (2D/3D/5D)\n- Brush utility options now include suggestion offset, overlap, distribution trees, and optional placement picker — all tagged `active_utility_id: Some(\"brush\")`.\n- Fill utility options unchanged (count/mode/voxels).\n- Added `uniform` + `normalize_kind_weight_group` + `ensure_catalog_kind_weights` per dimension; weight handlers renormalize siblings so each distribution group sums to 1.\n- Distribution group labels show total percentage; nested kind sliders remain collapsible trees.\n- Added `kind_weight_group_normalizes_to_sum_one` test (2D).\n\n## Other apps\n- **Lowpoly**: selection kind + method moved to utility options tagged for default transform utility (`move`).\n- **Note**: pencil width and eraser radius split into per-utility option groups (`pencil`, `eraserStroke`, `eraserPoint`).\n- **Raster**: added `window_measures` with brush/eraser size+opacity utility option groups; handlers accept slider `value` payloads.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2168"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "3494ec50",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/tool_options_into_tools_3494ec50.plan.md"
+    "local": "tool_options_into_tools_3494ec50.plan.md"
   },
   "sessions": [
     "⚪80cd55ec23364d4e90e096022373965d"

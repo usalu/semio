@@ -642,7 +642,7 @@ semio_framework_plugin::app_labels! {
         primitive_ico_sphere: &'static str = en: "Ico Sphere", de: "Ikokugel";
         object: &'static str = en: "Object", de: "Objekt";
         transform: &'static str = en: "Transform", de: "Transformation";
-        utility_params: &'static str = en: "Tool Params", de: "Werkzeugparameter";
+        utility_params: &'static str = en: "Utility Params", de: "Werkzeugparameter";
         window_main: &'static str = en: "Model", de: "Modell";
         window_uv: &'static str = en: "UV", de: "UV";
         // inspector field labels
@@ -650,7 +650,7 @@ semio_framework_plugin::app_labels! {
         smooth_shading: &'static str = en: "Smooth Shading", de: "Weiche Schattierung";
         selection: &'static str = en: "Selection", de: "Auswahl";
         selection_mode: &'static str = en: "Selection Mode", de: "Auswahlmodus";
-        tool: &'static str = en: "Tool", de: "Werkzeug";
+        utility: &'static str = en: "Utility", de: "Werkzeug";
         selected: &'static str = en: "selected", de: "ausgewaehlt";
         extrude: &'static str = en: "Extrude", de: "Extrudieren";
         triangulate: &'static str = en: "Triangulate", de: "Triangulieren";
@@ -758,7 +758,7 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_lowpoly_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_lowpoly_app`.
 fn lowpoly_utility_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("move", "Move", "Verschieben"),
@@ -998,7 +998,7 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
             default_open: None,
             fields: vec![ui_inspector_readonly_field(
                 "lowpoly-play-inspector.transform.utility",
-                labels.tool,
+                labels.utility,
                 active_utility,
             )],
         },
@@ -1052,7 +1052,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str, labels: &L
     let selected_count = runtime.selection.ids.len();
     WindowEngagement {
         session_active: Some(true),
-        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (declared via `.utility` +
+        // 🧰 The move/rotate/scale transform switcher now lives in the framework utility bar (declared via `.utility` +
         // `.window_kind_utilities`), so the engagement keeps only its non-utility options below.
         options: Some(vec![
             WindowEngagementOption {
@@ -2608,7 +2608,7 @@ mod tests {
 
     #[test]
     fn engagement_options_contain_no_utility_switcher() {
-        // 🧰 move/rotate/scale switching lives only on the framework toolbar; the engagement keeps its
+        // 🧰 move/rotate/scale switching lives only on the framework utility bar; the engagement keeps its
         // genuine non-utility options (snap/smooth/show-edges) but must never dispatch setActiveUtility.
         let projection = projection(&new_app());
         let runtime = LowpolyPlayRuntime::default();
@@ -2616,7 +2616,7 @@ mod tests {
         let options = engagement.options.expect("lowpoly engagement keeps its non-utility options");
         assert!(
             options.iter().all(|option| option.action.as_ref().map(|action| action.action != SET_ACTIVE_UTILITY_ACTION_ID).unwrap_or(true)),
-            "no engagement option may dispatch the framework setActiveUtility action; transform switching lives on the toolbar",
+            "no engagement option may dispatch the framework setActiveUtility action; transform switching lives on the utility bar",
         );
     }
 

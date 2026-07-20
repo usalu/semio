@@ -1264,6 +1264,26 @@
       }
     },
     {
+      "name": "🛠️dev🏚️mitbestand🧱aggregator⚛️react",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run dev:mit-bestand:aggregator",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "S_OS_PORT": "6023",
+        "SEMIO_RENDERER": "react"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 212
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://(?:127\\.0\\.0\\.1|localhost):6023)",
+        "uriFormat": "%s"
+      }
+    },
+    {
       "name": "🛠️dev🧩puzzle🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
@@ -3157,6 +3177,17 @@
       "presentation": {
         "group": "4_build",
         "order": 131
+      }
+    },
+    {
+      "name": "📦build🏚️mitbestand🧱aggregator",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun run build:mit-bestand:aggregator",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_build",
+        "order": 132
       }
     },
     {

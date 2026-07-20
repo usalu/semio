@@ -78,7 +78,7 @@ import {
   appWindowDocumentLabel,
   applyUiRefreshResponseToCache,
   resolveAppDocument,
-  buildToolbarRibbonSegments,
+  buildUtilityRibbonSegments,
   buildUiRefreshRequest,
   dedupeUtilityNodesById,
   flattenPanelTabLeaves,
@@ -105,6 +105,8 @@ import {
   buildOsCommands,
   createLatestAsyncDispatcher,
   dispatchOsCommand,
+  mergeShellLockSources,
+  resolveShellDefaults,
   resolveShellLocks,
   type ResolvedCommand,
   shellReducer,
@@ -425,7 +427,7 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
   ];
   const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.document" }, bodyKey: "puzzle2d.play.layers" }];
 
-  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (toolbars are now registry-derived, not a plugin section)", () => {
+  it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
     expect(request?.windows?.map((w) => w.key)).toEqual(["overview", "detail"]);
     expect(request?.panels?.map((p) => p.key)).toEqual(["framework.panel.document"]);
@@ -2156,7 +2158,7 @@ describe("partitionWindowMeasures", () => {
   });
 });
 
-describe("toolbar ribbon", () => {
+describe("utility ribbon", () => {
   it("sorts utility nodes by order", () => {
     const sorted = sortUtilityNodes([
       { id: "b", kind: "button", iconId: "box", order: 2, controllerId: "x", action: "b" },
@@ -2195,15 +2197,15 @@ describe("toolbar ribbon", () => {
       },
     ];
 
-    const noActive = buildToolbarRibbonSegments(tree, []);
+    const noActive = buildUtilityRibbonSegments(tree, []);
     expect(noActive).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
 
-    const oneActive = buildToolbarRibbonSegments(tree, ["construct"]);
+    const oneActive = buildUtilityRibbonSegments(tree, ["construct"]);
     expect(oneActive[0]).toMatchObject({ kind: "picker", depth: 0 });
     expect(oneActive[1]).toMatchObject({ kind: "picker", depth: 1, collections: tree[1].children });
     expect(oneActive).toHaveLength(2);
 
-    const twoActive = buildToolbarRibbonSegments(tree, ["construct", "construct-tools"]);
+    const twoActive = buildUtilityRibbonSegments(tree, ["construct", "construct-tools"]);
     const utilitiesSegment = twoActive.find((segment) => segment.kind === "utilities" && segment.items.some((item) => item.id === "box"));
     expect(utilitiesSegment).toMatchObject({ depth: 2 });
   });
@@ -2217,11 +2219,11 @@ describe("toolbar ribbon", () => {
         children: [{ id: "zoom-in", kind: "button", iconId: "zoom-in", controllerId: "x", action: "zoomIn" }],
       },
     ];
-    expect(buildToolbarRibbonSegments(tree, ["nonexistent"])).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
+    expect(buildUtilityRibbonSegments(tree, ["nonexistent"])).toEqual([{ kind: "picker", collections: tree, depth: 0 }]);
   });
 
   it("emits a picker segment alongside loose leaves at the same depth", () => {
-    const segments = buildToolbarRibbonSegments(
+    const segments = buildUtilityRibbonSegments(
       [
         { id: "undo", kind: "button", iconId: "undo", controllerId: "x", action: "undo" },
         {
@@ -2290,7 +2292,7 @@ describe("toolbar ribbon", () => {
     };
     const grouped = groupUtilityNodesByCategory([selectionCollection]);
     expect(grouped).toEqual([{ ...selectionCollection, order: 0 }]);
-    const segments = buildToolbarRibbonSegments(grouped, ["lowpoly-tools-selection"]);
+    const segments = buildUtilityRibbonSegments(grouped, ["lowpoly-tools-selection"]);
     const utilitiesSegment = segments.find((segment) => segment.kind === "utilities" && segment.items.some((item) => item.id === "mesh"));
     expect(utilitiesSegment).toBeTruthy();
   });
@@ -2318,7 +2320,7 @@ describe("toolbar ribbon", () => {
     expect(deduped).toEqual([history, { id: "leaf-a", kind: "button", iconId: "box", controllerId: "x", action: "a" }]);
   });
 
-  it("renders ribbon toolbar with picker and batched toggles", () => {
+  it("renders utility ribbon with picker and batched toggles", () => {
     const markup = renderToStaticMarkup(
       createElement(UtilityTree, {
         utilities: [
@@ -2355,11 +2357,11 @@ describe("toolbar ribbon", () => {
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain('id="ui.toolbar"');
+    expect(markup).toContain('id="ui.utilities"');
     expect(markup).toContain('data-slot="toggle-group"');
   });
 
-  it("stacks the window toolbar ribbon upward, showing only the base picker row until a group is activated", () => {
+  it("stacks the window utility bar ribbon upward, showing only the base picker row until a group is activated", () => {
     const markup = renderToStaticMarkup(
       createElement(UtilityTree, {
         direction: "up",
@@ -2399,19 +2401,19 @@ describe("toolbar ribbon", () => {
   it("renders UtilityTree with a custom id for per-window namespacing", () => {
     const markup = renderToStaticMarkup(
       createElement(UtilityTree, {
-        id: "ui.toolbar.model",
+        id: "ui.utilities.model",
         utilities: [{ id: "box", kind: "button", iconId: "box", controllerId: "x", action: "box" }],
         onAction: noopAction,
       }),
     );
-    expect(markup).toContain('id="ui.toolbar.model"');
-    expect(markup).not.toContain('id="ui.toolbar"');
+    expect(markup).toContain('id="ui.utilities.model"');
+    expect(markup).not.toContain('id="ui.utilities"');
   });
 
   it("renders utilityOptions as an extra ribbon row when direction is up", () => {
     const markup = renderToStaticMarkup(
       createElement(UtilityTree, {
-        id: "ui.toolbar.w",
+        id: "ui.utilities.w",
         direction: "up",
         utilities: [{ id: "brush", kind: "toggle", iconId: "brush", pressed: true, controllerId: "x", action: "setActiveUtility" }],
         utilityOptions: createElement("span", { "data-testid": "brush-options" }, "Brush size"),
@@ -2706,7 +2708,7 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(resolveUtilities(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">).map((t) => t.id)).toEqual(["select", "brush", "erase"]);
   });
 
-  it("derives grouped toolbar nodes with the active utility pressed and a setActiveUtility onChange tagged by window", () => {
+  it("derives grouped utility nodes with the active utility pressed and a setActiveUtility onChange tagged by window", () => {
     const nodes = resolveUtilityNodes(app, { utilities: [] } as unknown as Pick<AppWindowKindDefinition, "utilities">, "brush", "w1");
     const select = nodes.find((node) => node.id === "select");
     expect(select && select.kind === "toggle" ? select.pressed : undefined).toBe(false);
@@ -2840,6 +2842,24 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(state.uiPrefs.uiTerminology).toBe("reuse");
     expect(state.uiPrefs.uiThemeId).toBe("semio");
     expect(state.uiPrefs.uiAppearance).toBe("dark");
+  });
+
+  it("mergeShellLockSources keeps brand locks locked and lets a defined env lock win per key", () => {
+    expect(mergeShellLockSources({ locale: "de", terminology: "reuse" }, { locale: "en", themeId: undefined })).toEqual({ locale: "en", terminology: "reuse" });
+    expect(mergeShellLockSources({ locale: "de" }, undefined)).toEqual({ locale: "de" });
+    expect(mergeShellLockSources(undefined, { locale: "en" })).toEqual({ locale: "en" });
+    expect(mergeShellLockSources(undefined, undefined)).toBeUndefined();
+  });
+
+  it("resolveShellDefaults prefers env defaults over brand defaults and initialShellState seeds without locking", () => {
+    const brand = { id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", defaults: { exampleId: "concrete-forest" } };
+    expect(resolveShellDefaults(brand, { exampleId: "nakagin-capsule-tower" })).toEqual({ exampleId: "nakagin-capsule-tower" });
+    expect(resolveShellDefaults(brand, undefined)).toEqual({ exampleId: "concrete-forest" });
+    expect(resolveShellDefaults(undefined, undefined)).toEqual({ exampleId: undefined });
+    const state = initialShellState({ plugins: [], defaults: { exampleId: "concrete-forest" } });
+    expect(state.layout.activeExampleId).toBe("concrete-forest");
+    const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" } });
+    expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {

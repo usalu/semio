@@ -3774,7 +3774,7 @@ fn ui_refresh_section<T: Serialize>(value: &T, known_hash: Option<&str>) -> (Str
 /// `render`/`windowEngagements`/`windowMeasures`/`appLabels` WASM round trips a full `refreshUi` used
 /// to make with **one** call. `request_json` lists every section the host wants (windows/panels by
 /// `{key, bodyKey, hash}`, engagements/measures/labels each `{hash}`); the response includes a payload
-/// only for sections whose hash differs from what the host already holds. Toolbars are no longer a
+/// only for sections whose hash differs from what the host already holds. Utility bars are no longer a
 /// plugin section — the renderer derives them from the utility registry via `derive_utility_nodes`.
 pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String, String> {
     #[derive(Deserialize)]

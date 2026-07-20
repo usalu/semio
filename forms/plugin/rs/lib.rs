@@ -752,8 +752,8 @@ fn forms_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_forms_app`.
-/// The forms manifest declares no toolbar utilities, so this always resolves empty; kept for parity with the
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_forms_app`.
+/// The forms manifest declares no utilities for the utility bar, so this always resolves empty; kept for parity with the
 /// other play apps' terminology plumbing.
 fn forms_utility_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[])

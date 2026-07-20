@@ -1187,6 +1187,33 @@ export type IntroductionAdvance = GeneratedIntroductionAdvance;
 /** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type DialogDefinition = GeneratedDialogDefinition;
 
+//#region 🏷️ShellBrand
+/** 🔒 Shell preferences a brand pins at boot: each set axis is fixed and its in-app switcher hidden (validated by the renderer's `resolveShellLocks`). */
+export type ShellBrandLocks = {
+  readonly exampleId?: string;
+  readonly locale?: string;
+  readonly terminology?: string;
+  readonly themeId?: string;
+  readonly appearance?: string;
+};
+
+/** 🎛️ Shell preferences a brand seeds at boot without pinning them: the value applies on first launch but the in-app switcher stays visible. */
+export type ShellBrandDefaults = {
+  readonly exampleId?: string;
+};
+
+/** 🏷️ Boot-time branding for a standalone shell artifact — identity (window title, logo mark, favicon), locked and defaulted shell preferences, and an optional brand-owned {@link IntroductionDefinition} replacing the app's own (already localized, rendered verbatim). */
+export type ShellBrand = {
+  readonly id: string;
+  readonly windowTitle: string;
+  readonly logoSvg?: string;
+  readonly faviconIcoPath?: string;
+  readonly locks?: ShellBrandLocks;
+  readonly defaults?: ShellBrandDefaults;
+  readonly introduction?: IntroductionDefinition;
+};
+//#endregion 🏷️ShellBrand
+
 /** @emoji 🕹️ Mirrors `semio_framework_core::history_action_definitions` — the six framework-owned
  * History actions every app receives, used by the shell to render the same set without a wasm round trip. */
 export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAlternative", "switchAlternative", "checkoutCheckpoint"] as const;
@@ -1361,7 +1388,7 @@ export type PluginHotSwapEvent = {
 /** @emoji 🐢 One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
-/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Toolbars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
+/** @emoji 🐢 One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
@@ -1424,7 +1451,7 @@ export function resolveLayoutForMode(
 }
 
 //#region 🧰ActionArgsAndUtilities
-/** 🧰 A resolved utility ready for the toolbar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
+/** 🧰 A resolved utility ready for the utility bar — the TS twin of Rust `DerivedUtilitySpec` in `ui_wgpu`. */
 export type DerivedUtilitySpec = {
   readonly id: string;
   readonly label: string;
@@ -1435,7 +1462,7 @@ export type DerivedUtilitySpec = {
 };
 
 /**
- * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`ui/wgpu/rs/lib.rs`): builds the toolbar node tree
+ * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`ui/wgpu/rs/lib.rs`): builds the utility bar node tree
  * from resolved utilities + the host-owned active utility id. Each utility becomes a `toggle` whose `pressed`
  * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; utilities
  * sharing a `group` collapse into one `collection` placed where the group first appears.

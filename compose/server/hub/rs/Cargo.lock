@@ -2680,6 +2680,7 @@ dependencies = [
 name = "semio-framework-core"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "serde",
  "serde_json",
  "thiserror",

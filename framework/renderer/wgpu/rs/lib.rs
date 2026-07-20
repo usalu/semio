@@ -1404,7 +1404,7 @@ fn render_stack(
     let cap_glass = ctx.draw.push_glass(
         [cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h],
         0.0,
-        GlassTier::Toolbar,
+        GlassTier::Ribbon,
         theme,
     );
     ctx.draw.begin_glass_content(cap_glass);
@@ -15553,10 +15553,10 @@ impl ShellState {
             let resolved = self.resolve_external_slots(node, &view_state).await?;
             self.panel_ui.insert(tab.id().to_string(), resolved);
         }
-        // 🧰 The toolbar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
+        // 🧰 The utility bar is derived from the app's declared `AppDefinition.utilities` (scoped to the active
         // window kind) via `ui_wgpu::derive_utility_nodes` — the old per-call `plugin.utilities()` fetch and the
         // `find_active_utility_id` "first pressed toggle" heuristic are gone (Architecture Decision 5).
-        self.active_utilities = self.derive_toolbar_nodes(&session);
+        self.active_utilities = self.derive_utility_nodes(&session);
         self.active_utilities.extend(framework_sync_utilities(self.sync_backbone_uri.as_deref()));
         self.window_engagements = plugin
             .window_engagements(session.instance_id, &view_state)
@@ -16431,7 +16431,7 @@ impl ShellState {
                             .and_then(|args| args.get("windowKindId"))
                             .and_then(|value| value.as_str())
                             .map(String::from)
-                            .unwrap_or_else(|| self.active_toolbar_window_kind(&session).id.clone());
+                            .unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
                         self.apply_set_active_utility(&window_kind_id, utility_id);
                     }
                 }
@@ -18686,7 +18686,7 @@ impl ShellState {
         }
         let action_id = action_def.expect("checked has_args").id;
         let window_id = action_host_window_id(&session.app, &action_id)
-            .unwrap_or_else(|| self.active_toolbar_window_kind(&session).id.clone());
+            .unwrap_or_else(|| self.active_utility_bar_window_kind(&session).id.clone());
         let already_expanded = self.active_window_id.as_deref() == Some(window_id.as_str())
             && self.action_panel_expanded.get(&window_id).map(String::as_str) == Some(action_id.as_str());
         if already_expanded {
@@ -19452,10 +19452,10 @@ where
 }
 
 //#region ActionPanelAndUtilities
-/// 🧰 Resolves the utilities a window kind presents in the toolbar — the utility mirror of
+/// 🧰 Resolves the utilities a window kind presents in the utility bar — the utility mirror of
 /// {@link semio_framework_core::resolve_window_actions}: explicit `window_kind.utilities` refs in declared
 /// order, plus any app utility referenced by no window kind (an "orphan" appearing on every window — the
-/// scoping fallback that prevents blank toolbars mid-migration, Architecture Decision 8).
+/// scoping fallback that prevents blank utility bars mid-migration, Architecture Decision 8).
 pub(crate) fn resolve_window_utilities<'a>(
     app: &'a semio_framework_core::AppDefinition,
     window_kind: &semio_framework_core::WindowKindDefinition,
@@ -19597,7 +19597,7 @@ impl ShellState {
     // #region utility-derivation
     /// 🧰 The window kind whose utilities/actions the shell chrome currently scopes to (the focused window,
     /// else the view-state's active kind, else the app's first kind).
-    fn active_toolbar_window_kind<'a>(
+    fn active_utility_bar_window_kind<'a>(
         &self,
         session: &'a ActiveSession,
     ) -> &'a semio_framework_core::WindowKindDefinition {
@@ -19610,13 +19610,13 @@ impl ShellState {
             .unwrap_or_else(|| session.app.window_kinds.first())
     }
 
-    /// 🧰 Derives the footer toolbar `UtilityNode`s from the app's declared utilities scoped to the active
+    /// 🧰 Derives the footer utility bar `UtilityNode`s from the app's declared utilities scoped to the active
     /// window kind, marking the host-owned active utility pressed (Architecture Decision 5).
-    fn derive_toolbar_nodes(&self, session: &ActiveSession) -> Vec<UtilityNode> {
+    fn derive_utility_nodes(&self, session: &ActiveSession) -> Vec<UtilityNode> {
         if session.app.utilities.is_empty() {
             return Vec::new();
         }
-        let window_kind = self.active_toolbar_window_kind(session);
+        let window_kind = self.active_utility_bar_window_kind(session);
         let resolved = resolve_window_utilities(&session.app, window_kind);
         if resolved.is_empty() {
             return Vec::new();
@@ -22845,7 +22845,7 @@ impl ShellState {
     }
 
     /// 🎯 Bottom-left utility-scoped measure strip: the utility-scoped bucket of `partition_window_measures`,
-    /// rendered as a compact overlay directly above the footer toolbar (no detached "Utility Options" card).
+    /// rendered as a compact overlay directly above the footer utility bar (no detached "Utility Options" card).
     /// Reuses [`Self::render_window_measure`] so Select/Slider/Toggle controls behave exactly as in the
     /// general Measures rail.
     fn render_utility_options_rail(
@@ -23428,7 +23428,7 @@ impl ShellState {
 
     // #region ActionsRail
     /// 📇 Renders a window's Actions rail (Architecture Decision 8, P1) anchored bottom-right — the free
-    /// corner (measures top-right, engagement top-left, toolbar bottom-left). Folded to a chip by
+    /// corner (measures top-right, engagement top-left, utility bar bottom-left). Folded to a chip by
     /// default; unfolded it lists window-scoped actions in manifest order: zero-arg rows ARE the execute
     /// button, arg-carrying rows are accordion disclosures over a staged form. Returns the fold chip hit.
     fn render_window_actions_rail(

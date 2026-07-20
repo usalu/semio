@@ -655,7 +655,7 @@ fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_layout_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_layout_app`.
 /// The layout app currently declares no utilities, so this returns an empty map — kept for parity with the
 /// other crates' overlay-wiring shape and to compile-check the moment a utility is added.
 fn layout_utility_labels(_is_de: bool) -> HashMap<String, String> {

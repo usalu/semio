@@ -68,7 +68,7 @@ test("styling/Tokens Colors: renders the STYLING_TOKENS palette as a table", asy
 test("styling/Glass AllTiers: renders every GlassTier's surface class swatch", async ({ page }) => {
   await expectStylingStory(page, "🎨styling-glass--all-tiers");
   await expect(page.getByText("panel", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("toolbar", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("ribbon", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("menu", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("windowOptions", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(".ui-glass-panel", { exact: false }).first()).toBeVisible();

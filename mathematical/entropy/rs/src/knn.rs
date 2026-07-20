@@ -80,7 +80,7 @@ impl KdTree {
         if dim == 0 {
             return Err(EntropyError::InvalidConfig { field: "dim", reason: "must be at least 1" });
         }
-        if points.len() % dim != 0 {
+        if !points.len().is_multiple_of(dim) {
             return Err(EntropyError::ShapeMismatch { what: "points", expected: dim, actual: points.len() % dim });
         }
         let n = points.len() / dim;
@@ -162,7 +162,7 @@ impl KdTree {
 /// in tests and as a drop-in for callers with `n` small enough that tree overhead does not pay
 /// off.
 pub fn brute_force_knn(points: &[f64], dim: usize, query: &[f64], k: usize, metric: Metric, exclude: Option<usize>) -> Result<Vec<(usize, f64)>, EntropyError> {
-    if dim == 0 || points.len() % dim != 0 {
+    if dim == 0 || !points.len().is_multiple_of(dim) {
         return Err(EntropyError::InvalidConfig { field: "dim", reason: "must evenly divide points length" });
     }
     let n = points.len() / dim;

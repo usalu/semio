@@ -97,12 +97,13 @@ import {
   PopoverContent,
   Ribbon,
   SemioLogo,
+  ShellBrandLogo,
   singleTreeLeaf,
   ToggleGroup,
-  ToolbarDivider,
-  ToolbarGroup,
-  ToolbarItem,
-  ToolbarZone,
+  RibbonDivider,
+  RibbonGroup,
+  RibbonItem,
+  RibbonZone,
   findPanelTabNode,
   findPanelTabPath,
   panelTabChildren,
@@ -234,7 +235,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
   type DragEndEvent,
-  type UiToolbarParentCategory,
+  type UiRibbonParentCategory,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
 import {
@@ -371,6 +372,7 @@ import {
   setPluginBackboneOutboundRelay,
   inkCanvasActions,
   type EventFeedEntry,
+  type ShellBrand,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-cavas-react-renderer";
@@ -1100,6 +1102,8 @@ export type FrameworkOsBootOptions = {
   readonly plugins?: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
   readonly locks?: FrameworkOsLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly brand?: ShellBrand;
 };
 
 //#region 🔒FrameworkOsLocks
@@ -1161,6 +1165,25 @@ export function resolveShellLocks(locks: FrameworkOsLocks | undefined): Resolved
 
 /** 🔒 Stable empty-locks reference so an omitted `locks` prop never busts memo dependency arrays. */
 const EMPTY_SHELL_LOCKS: ResolvedShellLocks = {};
+
+/** 🔒 Overlays env locks onto a brand's locks per key — a lock set by either source stays locked, an env value wins over the brand value. */
+export function mergeShellLockSources(brandLocks: FrameworkOsLocks | undefined, envLocks: FrameworkOsLocks | undefined): FrameworkOsLocks | undefined {
+  if (!brandLocks || !envLocks) return envLocks ?? brandLocks;
+  return { ...brandLocks, ...Object.fromEntries(Object.entries(envLocks).filter(([, value]) => value !== undefined)) };
+}
+
+/** 🎛️ Boot-time default values that seed shell state without locking it — the matching in-app switcher stays visible, unlike locks. */
+export type FrameworkOsDefaults = {
+  readonly exampleId?: string;
+};
+
+/** 🎛️ Resolves boot defaults: an env-provided default wins over the brand's. */
+export function resolveShellDefaults(brand: ShellBrand | undefined, defaults: FrameworkOsDefaults | undefined): FrameworkOsDefaults {
+  return { exampleId: defaults?.exampleId ?? brand?.defaults?.exampleId };
+}
+
+/** 🎛️ Stable empty-defaults reference so an omitted `defaults` prop never busts memo dependency arrays. */
+const EMPTY_SHELL_DEFAULTS: FrameworkOsDefaults = {};
 //#endregion 🔒FrameworkOsLocks
 
 type SyncCardKind = "file" | "folder" | "remote";
@@ -1569,8 +1592,9 @@ export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurf
 //#endregion selectors
 
 /** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
-export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[]; readonly locks?: ResolvedShellLocks }): ShellState {
+export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[]; readonly locks?: ResolvedShellLocks; readonly defaults?: FrameworkOsDefaults }): ShellState {
   const locks = _props.locks ?? {};
+  const defaults = _props.defaults ?? {};
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
@@ -1584,7 +1608,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
       treeOpenStates: {},
       activeWindowId: null,
       shellLayout: null,
-      activeExampleId: locks.exampleId ?? "",
+      activeExampleId: locks.exampleId ?? defaults.exampleId ?? "",
       mobilePanelPath: [],
       extraWindowInstances: [],
     },
@@ -2622,12 +2646,12 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
   return resolved;
 }
 
-/** 🧰 Chrome-known toolbar-group ids that already have a `ui.toolbar.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
-const CHROME_KNOWN_TOOLBAR_PARENT_CATEGORIES = new Set(["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "tools", "sync"]);
+/** 🧰 Chrome-known ribbon-group ids that already have a `ui.ribbon.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
+const CHROME_KNOWN_RIBBON_PARENT_CATEGORIES = new Set(["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "utilities", "sync"]);
 
-/** 🧰 Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.toolbar.parent.*` chrome vocabulary for known category ids, else the raw id. */
+/** 🧰 Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id. */
 function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
-  const fallback = CHROME_KNOWN_TOOLBAR_PARENT_CATEGORIES.has(group) ? shellLabel(`ui.toolbar.parent.${group as UiToolbarParentCategory}`) : group;
+  const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(group) ? shellLabel(`ui.ribbon.parent.${group as UiRibbonParentCategory}`) : group;
   return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
 }
 
@@ -2643,7 +2667,7 @@ function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: P
   };
 }
 
-/** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
+/** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived utility tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
 function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: string): UtilityNode[] {
   return nodes.map((node) => {
     if (node.kind === "collection") return { ...node, children: tagSetActiveUtilityWindow(node.children, windowId) };
@@ -2655,7 +2679,7 @@ function tagSetActiveUtilityWindow(nodes: readonly UtilityNode[], windowId: stri
 }
 
 /**
- * 🧰 Builds the window toolbar `UtilityNode[]` for one window purely from the static utility registry plus
+ * 🧰 Builds the window utility bar `UtilityNode[]` for one window purely from the static utility registry plus
  * the host-owned active utility id — the replacement for the deleted plugin `list-tools` sourcing. Each
  * `setActiveUtility` descriptor is tagged with `windowId` so activation is scoped to this exact window.
  */
@@ -2946,7 +2970,7 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
           ]}
         />
       </div>
-      <ToolbarDivider />
+      <RibbonDivider />
       <div className="flex items-center gap-single">
         <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">Mode</span>
         <ToggleGroup
@@ -2983,7 +3007,7 @@ function windowMeasuresChrome(
 }
 
 /** @emoji 🎓 Whether a utility node tree has a node (leaf or group) with the given id anywhere in it — used
- * to decide if this window's toolbar is the one an introduction step's `Utility` anchor targets. */
+ * to decide if this window's utility bar is the one an introduction step's `Utility` anchor targets. */
 function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: string): boolean {
   return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
 }
@@ -3010,7 +3034,7 @@ function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId:
       grouped.push(node);
     }
   }
-  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} />;
+  return <UtilityTree id={`ui.utilities.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} />;
 }
 
 //#region 🧰WindowActionPane
@@ -3719,11 +3743,13 @@ export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: P
 export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Promise<void> {
   const root = document.getElementById(options.rootId ?? "root");
   if (!root) throw new Error("missing #root");
-  const locks = resolveShellLocks(options.locks);
+  const locks = resolveShellLocks(mergeShellLockSources(options.brand?.locks, options.locks));
+  const defaults = resolveShellDefaults(options.brand, options.defaults);
+  if (options.brand) document.title = options.brand.windowTitle;
   bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance());
   // 🐢 No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
-  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} />);
+  createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} />);
 }
 //#endregion Boot
 
@@ -3757,11 +3783,15 @@ export function FrameworkOsShell({
   plugins,
   appId,
   locks: locksProp,
+  defaults: defaultsProp,
+  brand,
 }: {
   readonly pluginFilter?: string;
   readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
   readonly appId?: string;
   readonly locks?: ResolvedShellLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly brand?: ShellBrand;
 }) {
   // 🏠🧳 `hostConfig` is the sole piece of per-plugin identity knowledge the shell needs (which app id is
   // "landing", which is "host") — every controller id / default panel tab derives from the *loaded*
@@ -3770,7 +3800,8 @@ export function FrameworkOsShell({
   const studioMode = hostConfig !== undefined;
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
-  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks }));
+  const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
@@ -3874,13 +3905,21 @@ export function FrameworkOsShell({
     sessionRef.current = session;
   }, [session]);
 
+  // 🎓 A brand-owned introduction fully replaces the app's own (already localized, rendered verbatim);
+  // its first-run-seen flag is brand-scoped so the branded tour plays even on a device that saw the
+  // unbranded one.
+  const activeIntroduction = brand?.introduction ?? session?.app.introduction;
+  const introductionSeenKey = session ? (brand ? `${brand.id}:${session.app.id}` : session.app.id) : "";
+  const activeIntroductionRef = useRef(activeIntroduction);
+  activeIntroductionRef.current = activeIntroduction;
+
   // 🎓 Auto-starts an app's introduction the first time it launches on this device; replaying stays
   // available afterward via the shell-owned Introduce App command.
   useEffect(() => {
-    if (!session?.app.introduction) return;
-    if (readStoredIntroductionSeen(session.app.id)) return;
+    if (!session || !activeIntroduction) return;
+    if (readStoredIntroductionSeen(introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, session?.app.introduction]);
+  }, [session?.app.id, activeIntroduction, introductionSeenKey]);
 
   // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
   // active window without re-creating those callbacks on every utility switch.
@@ -3946,8 +3985,12 @@ export function FrameworkOsShell({
   }, []);
 
   useEffect(() => {
-    if (activeAppTitle) document.title = activeAppTitle;
-  }, [activeAppTitle]);
+    if (brand) {
+      document.title = brand.windowTitle;
+    } else if (activeAppTitle) {
+      document.title = activeAppTitle;
+    }
+  }, [activeAppTitle, brand]);
 
   useEffect(() => {
     let cancelled = false;
@@ -4644,14 +4687,14 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
         return;
       }
-      const introductionStep = introductionStepIndexRef.current != null ? (session.app.introduction?.steps[introductionStepIndexRef.current] ?? null) : null;
+      const introductionStep = introductionStepIndexRef.current != null ? (activeIntroductionRef.current?.steps[introductionStepIndexRef.current] ?? null) : null;
       const advanceIntroductionStep = () => {
         const stepIndex = introductionStepIndexRef.current;
-        const introduction = session.app.introduction;
+        const introduction = activeIntroductionRef.current;
         if (stepIndex == null || !introduction) return;
         if (stepIndex >= introduction.steps.length - 1) {
           dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-          writeStoredIntroductionSeen(session.app.id);
+          writeStoredIntroductionSeen(introductionSeenKey);
         } else {
           dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
         }
@@ -4795,6 +4838,7 @@ export function FrameworkOsShell({
       hostControllerId,
       landingControllerId,
       hostCatalogueTabId,
+      introductionSeenKey,
     ],
   );
 
@@ -4962,8 +5006,8 @@ export function FrameworkOsShell({
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], session?.app.introduction != null, locks),
-    [uiThemeList, session?.app.terminologies, session?.app.introduction, uiLocale, uiTerminology, locks],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks],
   );
 
   const draftThemePatch = useCallback(
@@ -5288,10 +5332,10 @@ export function FrameworkOsShell({
     return singleTreeLeaf({
       id: "framework.utilities.history",
       icon: shellTabIcon(UTILITY_CATEGORY_ICON_ID.history),
-      name: shellLabel("ui.panel.toolsHistory"),
+      name: shellLabel("ui.panel.history"),
       order: 1,
       tree: {
-        sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.toolbar.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }],
+        sections: [{ id: "framework.utilities.history.root", label: "", items: [{ id: "framework.utilities.history.tree", label: "", control: <UtilityTree id="ui.utilities.footer.history" utilities={grouped} onAction={onAction} direction="up" /> }] }],
       },
     });
   }, [onAction, session, uiLocale]);
@@ -5482,10 +5526,10 @@ export function FrameworkOsShell({
 
   /** @emoji 🎓 The current introduction step's anchor, decomposed by kind — `null` unless that kind is
    * active, so every reveal override below (here and in `modeWindows`) is a plain truthiness check. A
-   * folded toolbar/Actions rail/dock panel would otherwise hide the step's anchor from ever mounting (see
+   * folded utility bar/Actions rail/dock panel would otherwise hide the step's anchor from ever mounting (see
    * `useIntroductionAnchorRect`), leaving the step centered with no highlight and no way for the user to
    * find what to do. */
-  const activeIntroductionStepAnchor: IntroductionAnchor | null = session?.app.introduction && introductionStepIndex != null ? (session.app.introduction.steps[introductionStepIndex]?.anchor ?? null) : null;
+  const activeIntroductionStepAnchor: IntroductionAnchor | null = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex]?.anchor ?? null) : null;
   const introductionUtilityId = activeIntroductionStepAnchor?.kind === "utility" ? activeIntroductionStepAnchor.id : null;
   const introductionActionId = activeIntroductionStepAnchor?.kind === "action" ? activeIntroductionStepAnchor.id : null;
   const introductionPanelTabId = activeIntroductionStepAnchor?.kind === "panelTab" ? activeIntroductionStepAnchor.id : null;
@@ -5614,11 +5658,13 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
   }, [exampleOptions, session?.app.id, session?.pluginId]);
 
+  // 🎛️ Announces the boot example to the fresh session exactly once per instance — the same path
+  // whether the example is locked, defaulted, or absent (an empty id resets the plugin's default fixture).
   useEffect(() => {
-    if (exampleOptions.length === 0 || activeExampleId || !session) return;
+    if (exampleOptions.length === 0 || !session) return;
     if (noExampleResetInstanceIdRef.current === session.instanceId) return;
     noExampleResetInstanceIdRef.current = session.instanceId;
-    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: "" } });
+    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: activeExampleId || "" } });
   }, [activeExampleId, exampleOptions, onAction, session]);
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
@@ -5660,7 +5706,7 @@ export function FrameworkOsShell({
     // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
     const centerContent: ReactNode[] = [
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
-        <SemioLogo className="size-workbench shrink-0" />
+        {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
           {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
         </span>
@@ -5715,7 +5761,7 @@ export function FrameworkOsShell({
         ),
       },
     ];
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology, studioMode, landingAppId]);
+  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, brand, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology, studioMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -5760,7 +5806,7 @@ export function FrameworkOsShell({
         // window, unfolds its Actions rail, and expands this action's staged form instead of dispatching.
         label: argCarrying ? `${resolvedActionLabel}…` : resolvedActionLabel,
         description: action.keys ?? keysByActionId.get(action.id),
-        category: action.category ?? (action.kind === "history" ? shellLabel("ui.toolbar.parent.history") : shellLabel("ui.toolbar.parent.actions")),
+        category: action.category ?? (action.kind === "history" ? shellLabel("ui.ribbon.parent.history") : shellLabel("ui.ribbon.parent.actions")),
         onSelect: () => {
           if (argCarrying) {
             const windowId = hostWindowForAction(action.id);
@@ -5782,7 +5828,7 @@ export function FrameworkOsShell({
         id: `keybinding.${binding.keys}`,
         label: binding.action.action,
         description: binding.keys,
-        category: shellLabel("ui.toolbar.parent.actions"),
+        category: shellLabel("ui.ribbon.parent.actions"),
         onSelect: () => onAction(binding.action),
       });
     }
@@ -6130,15 +6176,15 @@ export function FrameworkOsShell({
         </div>
         <UISearch items={searchItems} open={searchOpen} onOpenChange={(value) => dispatch({ type: "SET_SEARCH_OPEN", value })} />
         <UIFind open={findOpen} onOpenChange={(value) => dispatch({ type: "SET_FIND_OPEN", value })} />
-        {session?.app.introduction && introductionStepIndex != null && (
+        {session && activeIntroduction && introductionStepIndex != null && (
           <UIIntroduction
-            introduction={resolveIntroductionDefinition(session.app.introduction, appLabelsOverlay)}
+            introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
             anchorFallbackSelectors={introductionAnchorFallbackSelectors}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
               dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-              writeStoredIntroductionSeen(session.app.id);
+              writeStoredIntroductionSeen(introductionSeenKey);
             }}
           />
         )}
@@ -6851,13 +6897,13 @@ type UtilityTreeProps = {
   readonly utilities: readonly UtilityNode[];
   readonly onAction: (action: ActionDescriptor) => void;
   readonly id?: string;
-  /** @emoji 🎀 `up` stacks a new ribbon line above the base row per pressed collection (window toolbar); `inline` keeps the horizontal drill-down (footer). */
+  /** @emoji 🎀 `up` stacks a new ribbon line above the base row per pressed collection (window utility bar); `inline` keeps the horizontal drill-down (footer). */
   readonly direction?: RibbonDirection;
   /** @emoji 🎓 A utility id the introduction walkthrough is anchored on — when it names a leaf nested inside
    * a collapsed group picker, the picker auto-drills into that group so the leaf actually mounts (see
    * {@link findUtilityGroupPath}). `null`/not-found leaves `activePath` alone. */
   readonly revealUtilityId?: string | null;
-  /** @emoji 🎯 Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the tools. */
+  /** @emoji 🎯 Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the utilities. */
   readonly utilityOptions?: ReactNode;
 };
 
@@ -6875,7 +6921,7 @@ function utilityIcon(iconId: string): IconName {
   return iconId in ICONS ? (iconId as IconName) : "circle";
 }
 
-/** @emoji 🔢 Sorts toolbar nodes by `order`. */
+/** @emoji 🔢 Sorts utility nodes by `order`. */
 export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
   return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
 }
@@ -6919,7 +6965,7 @@ export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" 
     }));
 }
 
-/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildUtilityRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
 export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
   const buckets = new Map<UtilityCategory, UtilityNode[]>();
   for (const node of nodes) {
@@ -6967,14 +7013,14 @@ function hasInteractiveUtilityLeaves(items: readonly UtilityLeaf[]): boolean {
 
 type UtilityCollectionNode = Extract<UtilityNode, { readonly kind: "collection" }>;
 
-export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "utilities"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
+export type UtilityRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "utilities"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
 
-/** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
-export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
+/** @emoji 🎀 Builds drill-down ribbon segments from a utility tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
+export function buildUtilityRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): UtilityRibbonSegment[] {
   const sorted = sortUtilityNodes(nodes);
   const collections = sorted.filter((node): node is UtilityCollectionNode => node.kind === "collection" && !node.disabled);
   const looseLeaves = sorted.filter((node): node is UtilityLeaf => node.kind !== "collection");
-  const segments: ToolbarRibbonSegment[] = [];
+  const segments: UtilityRibbonSegment[] = [];
 
   if (collections.length > 0) segments.push({ kind: "picker", collections, depth });
   if (hasInteractiveUtilityLeaves(looseLeaves)) segments.push({ kind: "utilities", items: looseLeaves, depth });
@@ -6983,7 +7029,7 @@ export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: 
   const activeId = path[depth];
   const active = activeId ? collections.find((node) => node.id === activeId) : undefined;
   if (!active) return segments;
-  return [...segments, ...buildToolbarRibbonSegments(active.children, path, depth + 1)];
+  return [...segments, ...buildUtilityRibbonSegments(active.children, path, depth + 1)];
 }
 
 /** @emoji 🎀 Validates an active-group path against the current utility tree: keeps each entry only while it still names an enabled collection at that level, truncating at the first miss rather than substituting a default. */
@@ -7016,7 +7062,7 @@ export function findUtilityGroupPath(nodes: readonly UtilityNode[], targetId: st
   return null;
 }
 
-function UtilityToolbarItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
+function UtilityRibbonItems({ items, onAction }: { readonly items: readonly UtilityLeaf[]; readonly onAction: (action: ActionDescriptor) => void }): ReactElement {
   const sorted = useMemo(() => sortUtilityNodes(items) as UtilityLeaf[], [items]);
   const nodes = useMemo(() => {
     const rendered: ReactElement[] = [];
@@ -7028,7 +7074,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
       const run = buttonRun;
       buttonRun = [];
       rendered.push(
-        <ToolbarItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
+        <RibbonItem key={`buttons-${run.map((entry) => entry.id).join("-")}`}>
           <ButtonGroup>
             {run.map((entry) => {
               const action = resolveLeafAction(entry);
@@ -7047,7 +7093,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
               );
             })}
           </ButtonGroup>
-        </ToolbarItem>,
+        </RibbonItem>,
       );
     };
 
@@ -7056,7 +7102,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
       const run = toggleRun;
       toggleRun = [];
       rendered.push(
-        <ToolbarItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
+        <RibbonItem key={`toggles-${run.map((entry) => entry.id).join("-")}`}>
           <ToggleGroup
             kind="multiple"
             value={run.filter((entry) => entry.pressed).map((entry) => entry.id)}
@@ -7075,7 +7121,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
               text: entry.text ?? entry.label,
             }))}
           />
-        </ToolbarItem>,
+        </RibbonItem>,
       );
     };
 
@@ -7087,7 +7133,7 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
     for (const item of sorted) {
       if (item.kind === "separator") {
         flushRuns();
-        rendered.push(<ToolbarDivider key={item.id} />);
+        rendered.push(<RibbonDivider key={item.id} />);
         continue;
       }
       if (item.kind === "toggle") {
@@ -7102,14 +7148,14 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
     return rendered;
   }, [onAction, sorted]);
 
-  return <ToolbarGroup>{nodes}</ToolbarGroup>;
+  return <RibbonGroup>{nodes}</RibbonGroup>;
 }
 
-function toolbarRibbonSegmentKey(segment: ToolbarRibbonSegment, index: number): string {
+function utilityRibbonSegmentKey(segment: UtilityRibbonSegment, index: number): string {
   return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `utilities-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
 }
 
-export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline", revealUtilityId = null, utilityOptions }: UtilityTreeProps): ReactElement | null {
+export function UtilityTree({ utilities, onAction, id = "ui.utilities", direction = "inline", revealUtilityId = null, utilityOptions }: UtilityTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -7122,13 +7168,13 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
     if (path) setActivePath((previousPath) => (previousPath.length === path.length && previousPath.every((entry, index) => entry === path[index]) ? previousPath : path));
   }, [revealUtilityId, utilities]);
 
-  const segments = useMemo(() => buildToolbarRibbonSegments(utilities, activePath), [utilities, activePath]);
+  const segments = useMemo(() => buildUtilityRibbonSegments(utilities, activePath), [utilities, activePath]);
 
   if (!hasInteractiveUtilityNodes(utilities) && !utilityOptions) return null;
 
-  const renderSegment = (segment: ToolbarRibbonSegment): ReactNode =>
+  const renderSegment = (segment: UtilityRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
-      <ToolbarItem>
+      <RibbonItem>
         <ToggleGroup
           kind="single"
           value={activePath[segment.depth] ?? ""}
@@ -7142,12 +7188,12 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
             text: entry.text ?? entry.label,
           }))}
         />
-      </ToolbarItem>
+      </RibbonItem>
     ) : (
-      <UtilityToolbarItems items={segment.items} onAction={onAction} />
+      <UtilityRibbonItems items={segment.items} onAction={onAction} />
     );
 
-  const windowId = id.startsWith("ui.toolbar.") ? id.slice("ui.toolbar.".length) : "";
+  const windowId = id.startsWith("ui.utilities.") ? id.slice("ui.utilities.".length) : "";
 
   const findPressedSelectionUtility = (nodes: readonly UtilityNode[]): UtilityNode | undefined => {
     for (const node of nodes) {
@@ -7166,11 +7212,11 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
 
   const rows: RibbonRow[] =
     direction === "inline"
-      ? segments.map((segment, index) => ({ key: toolbarRibbonSegmentKey(segment, index), content: renderSegment(segment) }))
+      ? segments.map((segment, index) => ({ key: utilityRibbonSegmentKey(segment, index), content: renderSegment(segment) }))
       : Array.from(
           segments.reduce((byDepth, segment, index) => {
             const zones = byDepth.get(segment.depth) ?? [];
-            zones.push(<ToolbarZone key={toolbarRibbonSegmentKey(segment, index)}>{renderSegment(segment)}</ToolbarZone>);
+            zones.push(<RibbonZone key={utilityRibbonSegmentKey(segment, index)}>{renderSegment(segment)}</RibbonZone>);
             byDepth.set(segment.depth, zones);
             return byDepth;
           }, new Map<number, ReactElement[]>()),
@@ -7182,20 +7228,20 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
     rows.push({
       key: "row-utility-options",
       content: (
-        <ToolbarZone>
-          <ToolbarItem>{utilityOptions}</ToolbarItem>
-        </ToolbarZone>
+        <RibbonZone>
+          <RibbonItem>{utilityOptions}</RibbonItem>
+        </RibbonZone>
       ),
     });
   } else if (hasActiveSelection && direction !== "inline") {
     rows.push({
       key: "row-selection-options",
       content: (
-        <ToolbarZone>
-          <ToolbarItem>
+        <RibbonZone>
+          <RibbonItem>
             <SelectionUtilityOptions activeUtilityId={activeSelectionUtility.id} windowId={windowId} onAction={onAction} />
-          </ToolbarItem>
-        </ToolbarZone>
+          </RibbonItem>
+        </RibbonZone>
       ),
     });
   }

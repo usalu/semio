@@ -322,7 +322,7 @@ fn find_modification(module_id: &str, machine_id: &str, modification_kind_id: &s
 }
 
 /// 🔎 Finds the geometry module's machine offering a given `measure` kind ("cut"/"drill"/"attach")
-/// — the routing target for the toolbar, click/drag placement, and module-less `addStep` callers.
+/// — the routing target for the utility bar, click/drag placement, and module-less `addStep` callers.
 fn geometry_machine_for_measure(measure_kind: MeasureKind) -> (&'static Machine, &'static ModificationKind) {
     for machine in GEOMETRY_MODULE.machines {
         for kind in machine.modification_kinds {
@@ -1162,7 +1162,7 @@ fn process3d_engagement(fixture: &process_3d::Process3dDocument, runtime: &Proce
     let volume = processed_volume(fixture).unwrap_or(0.0);
     WindowEngagement {
         session_active: Some(active_utility != "select"),
-        // 🧰 The select/cut/drill/attach switcher now lives in the framework toolbar (declared via `.utility` +
+        // 🧰 The select/cut/drill/attach switcher now lives in the framework utility bar (declared via `.utility` +
         // `.window_kind_utilities`), so the engagement no longer duplicates it as toggle options.
         options: None,
         input: Some(WindowEngagementInput {
@@ -1620,9 +1620,9 @@ fn create_process3d_app() -> App {
                     ActionArgOption::new("glb", "GLB"),
                 ]).required().default_value("step"),
             ])
-            // 🧰 Flat top-level exclusive toolbar scoped to the workpiece window (active utility is
+            // 🧰 Flat top-level exclusive utility bar scoped to the workpiece window (active utility is
             // host-owned). These four are the window's entire utility set — not a sub-collection — so
-            // each carries `group: None` and renders as its own flat toolbar icon.
+            // each carries `group: None` and renders as its own flat utility bar icon.
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", "Cut", "scissors") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
@@ -1676,7 +1676,7 @@ mod tests {
     }
 
     /// 🧰 A session view state with a specific host-owned active utility (mirrors how the shell threads
-    /// `active_utility_id` after a toolbar switch).
+    /// `active_utility_id` after a utility bar switch).
     fn view_with_utility(utility: &str) -> ViewState {
         ViewState { active_utility_id: Some(utility.into()), ..ViewState::default() }
     }
@@ -1820,7 +1820,7 @@ mod tests {
         let app = Process3dPlayApp::default();
         let doc = process_3d::Process3dDocument::default();
         let engagement = process3d_engagement(&doc, &app.runtime, "cut", &Process3dLabels::EN);
-        assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework toolbar; the engagement must not duplicate it as options",);
+        assert!(engagement.options.is_none(), "select/cut/drill/attach switching lives only on the framework utility bar; the engagement must not duplicate it as options",);
     }
 
     #[test]

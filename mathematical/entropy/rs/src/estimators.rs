@@ -70,7 +70,7 @@ fn miller_madow_nats(counts: &Counts) -> f64 {
 /// 📊 Grassberger's `G(n) = psi(n) + 0.5 * (-1)^n * (psi((n+1)/2) - psi(n/2))`, defined for `n >= 1`.
 fn grassberger_g(n: u64) -> f64 {
     let nf = n as f64;
-    let sign = if n % 2 == 0 { 1.0 } else { -1.0 };
+    let sign = if n.is_multiple_of(2) { 1.0 } else { -1.0 };
     digamma(nf) + 0.5 * sign * (digamma((nf + 1.0) / 2.0) - digamma(nf / 2.0))
 }
 
@@ -156,7 +156,7 @@ fn invert_xi(target: f64, k: f64) -> f64 {
 fn gauss_legendre(n: usize) -> (Vec<f64>, Vec<f64>) {
     let mut nodes = vec![0.0_f64; n];
     let mut weights = vec![0.0_f64; n];
-    let m = (n + 1) / 2;
+    let m = n.div_ceil(2);
     for i in 0..m {
         let mut z = ((core::f64::consts::PI * (i as f64 + 0.75)) / (n as f64 + 0.5)).cos();
         let mut pp;

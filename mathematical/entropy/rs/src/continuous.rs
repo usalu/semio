@@ -156,7 +156,9 @@ impl KdeDensity {
 fn histogram_entropy_nats(x: &[f64], bins: &BinsSpec) -> Result<(f64, usize), EntropyError> {
     let n = x.len() as f64;
     let (min, max) = x.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)));
-    if !(max > min) {
+    // 🔐 x is already validated finite by every caller, so a plain `<=` (no NaN concern) is
+    // both correct and clearer than negating `>`.
+    if max <= min {
         return Err(EntropyError::DegenerateInput { what: "constant series has zero range" });
     }
     let edges: Vec<f64> = match bins {
@@ -230,9 +232,9 @@ fn kozachenko_leonenko_nats(x: &[f64], k: usize) -> Result<f64, EntropyError> {
     }
     let tree = KdTree::build(x, 1)?;
     let mut sum_log_eps = 0.0_f64;
-    for i in 0..n {
-        let neighbors = tree.k_nearest(&[x[i]], k, Metric::Chebyshev, Some(i));
-        let eps = neighbors.last().map(|&(_, d)| d).unwrap_or(0.0);
+    for (i, &xi) in x.iter().enumerate() {
+        let neighbors = tree.k_nearest(&[xi], k, Metric::Chebyshev, Some(i));
+        let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
         if eps <= 0.0 {
             return Err(EntropyError::DegenerateInput { what: "duplicate points cause zero k-th neighbor distance" });
         }
@@ -328,7 +330,7 @@ fn method_name(method: &ContinuousMethod) -> &'static str {
 
 /// 📈 Estimates the differential entropy of the distribution underlying `x` (raw continuous
 /// samples) using the given `method`.
-pub fn entropy_continuous(x: &[f64], method: ContinuousMethod, base: LogBase) -> Result<Estimate, EntropyError> {
+pub fn entropy_continuous(x: &[f64], method: &ContinuousMethod, base: LogBase) -> Result<Estimate, EntropyError> {
     base.validate()?;
     validate_series(x, "continuous input")?;
     let n = x.len();
@@ -337,7 +339,7 @@ pub fn entropy_continuous(x: &[f64], method: ContinuousMethod, base: LogBase) ->
     }
 
     let mut diagnostics = Vec::new();
-    let nats = match &method {
+    let nats = match method {
         ContinuousMethod::Histogram(bins) => {
             let (nats, k) = histogram_entropy_nats(x, bins)?;
             diagnostics.push(("bins", k as f64));
@@ -374,7 +376,7 @@ pub fn entropy_continuous(x: &[f64], method: ContinuousMethod, base: LogBase) ->
     Ok(Estimate {
         value: base.from_nats(nats),
         base,
-        method: method_name(&method),
+        method: method_name(method),
         n,
         n_effective: n as f64,
         std_error: None,
@@ -398,7 +400,7 @@ mod tests {
     #[test]
     fn gaussian_mle_matches_closed_form() {
         let x = box_muller_gaussian(5000, 1);
-        let est = entropy_continuous(&x, ContinuousMethod::GaussianMle, LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats).unwrap();
         let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
         assert!((est.value - expected).abs() < 0.05, "got {}", est.value);
     }
@@ -406,7 +408,7 @@ mod tests {
     #[test]
     fn knn_entropy_matches_gaussian_closed_form() {
         let x = box_muller_gaussian(3000, 2);
-        let est = entropy_continuous(&x, ContinuousMethod::Knn { k: 5 }, LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Knn { k: 5 }, LogBase::Nats).unwrap();
         let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
         assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
     }
@@ -415,7 +417,7 @@ mod tests {
     fn kde_entropy_matches_gaussian_closed_form() {
         let x = box_muller_gaussian(2000, 3);
         let cfg = KdeConfig { kernel: Kernel::Gaussian, bandwidth: Bandwidth::Silverman };
-        let est = entropy_continuous(&x, ContinuousMethod::Kde(cfg), LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Kde(cfg), LogBase::Nats).unwrap();
         let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
         assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
     }
@@ -423,7 +425,7 @@ mod tests {
     #[test]
     fn vasicek_entropy_matches_gaussian_closed_form() {
         let x = box_muller_gaussian(5000, 4);
-        let est = entropy_continuous(&x, ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
         let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
         assert!((est.value - expected).abs() < 0.05, "got {}", est.value);
     }
@@ -431,7 +433,7 @@ mod tests {
     #[test]
     fn correa_entropy_matches_gaussian_closed_form() {
         let x = box_muller_gaussian(3000, 5);
-        let est = entropy_continuous(&x, ContinuousMethod::Correa { m: 0 }, LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Correa { m: 0 }, LogBase::Nats).unwrap();
         let expected = 0.5 * (2.0 * core::f64::consts::PI * core::f64::consts::E).ln();
         assert!((est.value - expected).abs() < 0.1, "got {}", est.value);
     }
@@ -440,7 +442,7 @@ mod tests {
     fn uniform_entropy_near_zero() {
         let mut rng = crate::numeric::Xorshift64::new(6);
         let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
-        let est = entropy_continuous(&x, ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
         assert!(est.value.abs() < 0.05, "got {}", est.value);
     }
 
@@ -448,22 +450,22 @@ mod tests {
     fn histogram_entropy_reasonable_for_uniform() {
         let mut rng = crate::numeric::Xorshift64::new(7);
         let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
-        let est = entropy_continuous(&x, ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats).unwrap();
+        let est = entropy_continuous(&x, &ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats).unwrap();
         assert!(est.value.abs() < 0.2, "got {}", est.value);
     }
 
     #[test]
     fn rejects_constant_series() {
         let x = vec![1.0; 100];
-        assert!(entropy_continuous(&x, ContinuousMethod::GaussianMle, LogBase::Nats).is_err());
-        assert!(entropy_continuous(&x, ContinuousMethod::Knn { k: 3 }, LogBase::Nats).is_err());
+        assert!(entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats).is_err());
+        assert!(entropy_continuous(&x, &ContinuousMethod::Knn { k: 3 }, LogBase::Nats).is_err());
     }
 
     #[test]
     fn rejects_too_few_samples() {
         let x = vec![1.0];
         assert!(matches!(
-            entropy_continuous(&x, ContinuousMethod::GaussianMle, LogBase::Nats),
+            entropy_continuous(&x, &ContinuousMethod::GaussianMle, LogBase::Nats),
             Err(EntropyError::InsufficientData { .. })
         ));
     }
@@ -488,7 +490,7 @@ mod tests {
             // 🔐 differential entropy of Exp(1) is 1 nat.
             let mut rng = crate::numeric::Xorshift64::new(9);
             let x: Vec<f64> = (0..5000).map(|_| -rng.next_f64().max(1e-12).ln()).collect();
-            let est = entropy_continuous(&x, ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
+            let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
             assert!((est.value - 1.0).abs() < 0.05, "got {}", est.value);
         }
 
@@ -503,7 +505,7 @@ mod tests {
                 ContinuousMethod::Kde(KdeConfig::default()),
             ];
             for method in methods {
-                let est = entropy_continuous(&x, method.clone(), LogBase::Nats).unwrap();
+                let est = entropy_continuous(&x, &method, LogBase::Nats).unwrap();
                 assert!((est.value - expected).abs() < 0.15, "{:?} -> {}", method, est.value);
             }
         }

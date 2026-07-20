@@ -141,8 +141,6 @@ struct DocumentJson {
     camera: CameraJson,
     layers: Vec<LayerNodeJson>,
     #[serde(default)]
-    active_tool: Option<String>,
-    #[serde(default)]
     brush_size: Option<f32>,
     #[serde(default)]
     brush_opacity: Option<f32>,

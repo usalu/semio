@@ -14,7 +14,7 @@ package = "semio:remodel"
 
 [[package.metadata.semio.playground]]
 variant = "remodel"
-ports = { react = 6082, wgpu = 6182 }
+ports = { react = 6063, wgpu = 6163 }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -22,10 +22,17 @@ path = "lib.rs"
 
 [dependencies]
 remodel_document = { path = "../../rs" }
+remodel_engine = { path = "../../engine/rs" }
+remodel_image = { path = "../../image/rs" }
+remodel_video = { path = "../../video/rs" }
+remodel_camera = { path = "../../camera/rs" }
+remodel_sfm = { path = "../../sfm/rs" }
+remodel_dense = { path = "../../dense/rs" }
+remodel_mesh = { path = "../../mesh/rs" }
+remodel_geo = { path = "../../geo/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
-kernel_3d_mesh = { path = "../../../kernel/3d/mesh/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22.1"

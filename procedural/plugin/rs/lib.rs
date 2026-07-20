@@ -2018,7 +2018,7 @@ pub mod app_3d {
     }
 
     /// 🎚️ Level-of-detail display measure for the flow window — the migrated home of the old LOD
-    /// toolbar toggles (a display option, never an interactive utility). Dispatches `setLodMode` (a View action).
+    /// utility bar toggles (a display option, never an interactive utility). Dispatches `setLodMode` (a View action).
     fn procedural3d_lod_measure(lod_mode: &str) -> WindowMeasure {
         let current = if lod_mode.is_empty() { "solid" } else { lod_mode };
         WindowMeasure::Select {
@@ -2140,7 +2140,7 @@ pub mod app_3d {
         semio_framework_plugin::localized_label_map(is_de, ENTRIES)
     }
 
-    /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_procedural3d_app`.
+    /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_procedural3d_app`.
     fn procedural3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("move", "Move", "Verschieben"),

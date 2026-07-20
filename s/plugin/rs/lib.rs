@@ -300,7 +300,7 @@ pub mod app_home {
     app_labels! {
         /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
         struct SHomeLabels {
-            vfs_empty_message: &'static str = en: "No studios yet. Create one from the toolbar.", de: "Noch keine Studios vorhanden. Erstelle eines über die Werkzeugleiste.";
+            vfs_empty_message: &'static str = en: "No studios yet. Create one from the navbar.", de: "Noch keine Studios vorhanden. Erstelle eines über die Navigationsleiste.";
             window_main: &'static str = en: "Studios", de: "Studios";
         }
     }
@@ -627,7 +627,7 @@ pub mod app_home {
             let home_doc = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
             let home_view = DocumentView { projection: &home_doc, history: &history };
             let home_node = home.render(S_HOME_BODY, &home_view, &ViewState::default());
-            assert!(serde_json::to_string(&home_node).unwrap().contains("No studios yet. Create one from the toolbar."));
+            assert!(serde_json::to_string(&home_node).unwrap().contains("No studios yet. Create one from the navbar."));
         }
 
         #[test]

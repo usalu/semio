@@ -2423,7 +2423,7 @@ fn default_selection_method() -> String {
 }
 
 /// @emoji 🕹️ The default active transform utility when the host has not yet set one — mirrors the
-/// framework toolbar's first-declared utility (`move`), read from `ViewState::active_utility_id`.
+/// framework utility bar's first-declared utility (`move`), read from `ViewState::active_utility_id`.
 const CAD_DEFAULT_UTILITY_ID: &str = "move";
 
 impl Default for CadPlayRuntime {
@@ -3447,7 +3447,7 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
     ])
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_cad_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_cad_app`.
 fn cad_utility_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
         ("move", "Move", "Verschieben"),
@@ -4194,7 +4194,7 @@ fn cad_window_engagement(envelope: &CadPlayView, pane: CadPaneId, labels: &CadLa
         .unwrap_or_else(|| envelope.runtime.engagement_step.clone());
     WindowEngagement {
         session_active: Some(session_active),
-        // 🧰 The move/rotate/scale transform switcher now lives in the framework toolbar (derived
+        // 🧰 The move/rotate/scale transform switcher now lives in the framework utility bar (derived
         // from `UtilityDefinition`s + `ViewState::active_utility_id`); the engagement HUD no longer
         // duplicates it — utilities must have exactly one surface.
         options: None,
@@ -5168,7 +5168,7 @@ fn cad_quad_layout() -> WindowLayout {
 }
 
 /// @emoji 🧰 A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
-/// the framework toolbar (`UtilityCategory::Utilities`). Switching it is a pure `setActiveUtility` View action
+/// the framework utility bar (`UtilityCategory::Utilities`). Switching it is a pure `setActiveUtility` View action
 /// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
 /// transform mode is a content-editing mode, not a passive viewing aid.
 fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition {
@@ -5614,7 +5614,7 @@ mod tests {
         let mut app = new_app();
         let engagements = app.window_engagements(&ViewState::default());
         for engagement in engagements.values() {
-            assert!(engagement.options.is_none(), "utility switching now lives in the framework toolbar, not the engagement HUD");
+            assert!(engagement.options.is_none(), "utility switching now lives in the framework utility bar, not the engagement HUD");
         }
     }
 

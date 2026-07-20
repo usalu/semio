@@ -1,0 +1,13 @@
+{
+  "title": "Introduce General Shell Branding With Entwerfen mit Bestand Aggregator",
+  "emoji": "🏷️",
+  "status": "open",
+  "description": "Introduce a first-class ShellBrand mechanism so framework shell apps can ship as differently-branded standalone builds: brand identity (window title, logo SVG, favicon), locked preference axes, defaulted axes (new SEMIO_DEFAULT_EXAMPLE channel), and a brand-owned introduction. Wire a registry `brand` column on playground rows and use it to add the \"Entwerfen mit Bestand Aggregator\" variant — a branded standalone puzzle3d with locked German locale, locked reuse terminology, locked semio theme, switchable appearance, typographic wordmark logo, custom German introduction, and Abbau Aufbau (concrete-forest) as default-but-switchable example — including dev/build configs, package.json scripts, and launch.json entries on port 6023.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2173"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪d2e94c87e4494f8196e085a95cc495ed"
+  ]
+}

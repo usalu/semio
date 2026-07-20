@@ -107,7 +107,7 @@ pub fn collision_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> 
 pub fn min_entropy(p: &[f64], base: LogBase) -> Result<f64, EntropyError> {
     base.validate()?;
     let p = validate_probabilities(p, Tolerances::default())?;
-    let max_p = p.iter().cloned().fold(0.0_f64, f64::max);
+    let max_p = p.iter().copied().fold(0.0_f64, f64::max);
     if max_p <= 0.0 {
         return Err(EntropyError::UndefinedResult { reason: "all probabilities are zero" });
     }
@@ -149,7 +149,9 @@ pub fn sharma_mittal_entropy(p: &[f64], alpha: f64, beta: f64) -> Result<f64, En
 /// 📐 Kaniadakis (kappa-) entropy: `S_kappa(p) = -sum p_i * (p_i^kappa - p_i^{-kappa}) / (2 kappa)`,
 /// defined for `kappa` in `(-1, 1) \ {0}`; the `kappa -> 0` limit is Shannon entropy in nats.
 pub fn kaniadakis_entropy(p: &[f64], kappa: f64) -> Result<f64, EntropyError> {
-    if !(kappa.abs() < 1.0) {
+    // 🔐 `kappa.is_nan()` is explicit here (rather than relying on `!(kappa.abs() < 1.0)`'s
+    // NaN-through-negation behavior) so a NaN input is rejected exactly as before.
+    if kappa.is_nan() || kappa.abs() >= 1.0 {
         return Err(EntropyError::InvalidConfig { field: "kappa", reason: "must satisfy |kappa| < 1" });
     }
     let p = validate_probabilities(p, Tolerances::default())?;

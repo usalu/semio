@@ -2793,6 +2793,18 @@ impl MeshPipeline {
     }
 }
 
+/// 🧩 Whether the post-repair mesh still needs the guaranteed [`close_voxel`] fallback.
+/// [`WatertightReport::is_watertight`] alone is blind to fragmentation: [`fill_holes`] dispatches
+/// per boundary *loop*, so a mesh made of hundreds/thousands of small disconnected islands (a
+/// badly under-registered SfM/TSDF reconstruction, not a hand-crafted single-shape defect) can
+/// have every one of its tiny per-island holes legitimately ear-fanned/DP-triangulated shut —
+/// closed, 2-manifold, consistently oriented, and yet still just a swarm of sealed confetti
+/// rather than the one coherent solid this pipeline promises. `connected_components > 1` is the
+/// fragmentation signal `is_watertight` can't see on its own, so it gates the guarantee here too.
+fn needs_close_fallback(report: &WatertightReport) -> bool {
+    !report.is_watertight || report.connected_components > 1
+}
+
 /// ⚙️ Advances the pipeline through at most `budget` stages (each stage runs to completion
 /// internally — none of these algorithms are individually interruptible mid-computation, so
 /// `budget` governs how many whole stages this call performs rather than finer-grained progress).
@@ -2818,7 +2830,7 @@ pub fn mesh_pipeline_step(state: &mut MeshPipeline, budget: usize) -> MeshPipeli
             }
             Stage::Validate1 => {
                 let report = validate_watertight(&state.mesh, false);
-                let needs_close = state.params.guarantee_watertight && !report.is_watertight;
+                let needs_close = state.params.guarantee_watertight && needs_close_fallback(&report);
                 state.report = Some(report);
                 if !needs_close {
                     state.stage_index = Stage::OrientOutward as usize;
@@ -3356,6 +3368,62 @@ mod tests {
         assert!(matches!(status, MeshPipelineStatus::Done), "pipeline status: {status:?}");
         let report = pipeline.report().expect("pipeline recorded a watertight report");
         assert!(report.closed_fallback_used, "expected the pathological mesh to trigger close_voxel, report: {report:?}");
+        assert!(report.is_watertight, "expected close_voxel's output to be watertight, report: {report:?}");
+    }
+
+    /// 🪸 A tiny UV-sphere island with one small planted hole (an ear-fannable, individually
+    /// closable defect on its own), positioned far from the origin so it shares no vertices or
+    /// bounding volume with any other island.
+    fn make_tiny_holed_island(index: usize) -> TriMesh {
+        let mut island = make_uv_sphere(0.05, 6, 6);
+        delete_patch(&mut island, 0, 6);
+        let offset = [(index % 12) as f64 * 0.6, ((index / 12) % 12) as f64 * 0.6, (index / 144) as f64 * 0.6];
+        for p in &mut island.positions {
+            *p = add3(*p, offset);
+        }
+        island
+    }
+
+    /// 🪸 Simulates a badly under-registered SfM/TSDF reconstruction reaching `remodel_mesh`: not
+    /// one hand-crafted pathological shape, but hundreds of small, mutually disjoint, individually
+    /// well-formed islands — the real-world failure mode a fresh 48-frame orbiting-cube end-to-end
+    /// diagnostic actually produced (34280 vertices / 44244 triangles / 1321 components / 22234
+    /// boundary edges going into this pipeline).
+    fn make_scattered_fragment_soup(count: usize) -> TriMesh {
+        let mut mesh = TriMesh::new();
+        for i in 0..count {
+            let island = make_tiny_holed_island(i);
+            let shift = mesh.positions.len() as u32;
+            for tri in &island.triangles {
+                mesh.triangles.push([tri[0] + shift, tri[1] + shift, tri[2] + shift]);
+            }
+            mesh.positions.extend(island.positions);
+        }
+        mesh
+    }
+
+    #[test]
+    fn pipeline_falls_back_to_close_on_catastrophically_fragmented_reconstruction() {
+        let mesh = make_scattered_fragment_soup(300);
+        let raw_report = validate_watertight(&mesh, false);
+        assert!(raw_report.connected_components >= 250, "expected the fragment soup to actually be badly fragmented, report: {raw_report:?}");
+        assert!(raw_report.boundary_edge_count > 0, "expected the raw fragment soup to have real boundary edges, report: {raw_report:?}");
+        let params = MeshParams::default();
+        assert!(params.guarantee_watertight, "sanity: the guarantee must default on, exactly as the real diagnostic observed");
+        let mut pipeline = MeshPipeline::from_mesh(mesh, params);
+        let mut status = mesh_pipeline_step(&mut pipeline, 1);
+        let mut guard = 0;
+        while !matches!(status, MeshPipelineStatus::Done | MeshPipelineStatus::Failed(_)) {
+            status = mesh_pipeline_step(&mut pipeline, 1);
+            guard += 1;
+            assert!(guard < 100, "pipeline did not terminate within a reasonable number of steps");
+        }
+        assert!(matches!(status, MeshPipelineStatus::Done), "pipeline status: {status:?}");
+        let report = pipeline.report().expect("pipeline recorded a watertight report");
+        assert!(
+            report.closed_fallback_used,
+            "expected hundreds of small individually-closable islands to still trip the close_voxel guarantee (fill_holes can legitimately seal every island's tiny hole one at a time without the aggregate mesh ever being one coherent solid), report: {report:?}"
+        );
         assert!(report.is_watertight, "expected close_voxel's output to be watertight, report: {report:?}");
     }
     // #endregion 🔖ContractTest

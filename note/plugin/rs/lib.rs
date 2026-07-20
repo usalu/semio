@@ -1093,7 +1093,7 @@ fn note_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, ENTRIES)
 }
 
-/// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_note_app`.
+/// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_note_app`.
 fn note_utility_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
         ("selectDirect", "Direct", "Direkt"),
@@ -1135,7 +1135,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
 }
 
 fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_state: &ViewState, labels: &NotePlayLabels) -> UiNode {
-    let toolbar: Vec<UiTreeItemNode> = [
+    let action_rows: Vec<UiTreeItemNode> = [
         ("text", labels.add_text, "type"),
         ("table", labels.add_table, "table"),
         ("math", labels.add_math, "sigma"),
@@ -1166,7 +1166,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
         .filter_map(|id| find_block(&document.blocks, id).map(block_tree_row_id))
         .collect();
     PanelTreeBuilder::new("note-play-blocks")
-        .section("note-play-blocks", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [toolbar, block_items].concat())
+        .section("note-play-blocks", Some(FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL.into()), true, [action_rows, block_items].concat())
         .selected(selected_ids)
         .selection_change(play_action(NOTE_PLAY_CONTROLLER_ID, "setSelection", None))
         .build()
@@ -1575,7 +1575,7 @@ fn note_navigator_engagement(active_utility: &str) -> WindowEngagement {
     }
 }
 
-/// 🧰 One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/toolbar).
+/// 🧰 One canvas utility declaration (id/label/icon reused verbatim from the retired `utilities()`/utility bar).
 fn note_utility(id: &str, label: &str, icon: &str, group: &str, category: UtilityCategory) -> UtilityDefinition {
     UtilityDefinition { group: Some(group.into()), category: Some(category), ..UtilityDefinition::new(id, label, icon) }
 }
