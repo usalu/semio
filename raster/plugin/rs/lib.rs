@@ -677,7 +677,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical,
     ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor,
     AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
-    Paint2dScene, ResourceKindSpec, UtilityCategory, UtilityDefinition, is_de_locale, localized_label_map, resolve_labels,
+    Paint2dScene, ResourceKindSpec, UtilityCategory, UtilityDefinition, WindowMeasure, is_de_locale, localized_label_map, resolve_labels,
     selection_ids, tree_item_with_action,
     UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -921,7 +921,7 @@ semio_framework_plugin::app_labels! {
 /// command palette and Actions rail get a translated label without threading locale through the builder chain.
 fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
-        ("addLayer", "Add Layer", "Ebene hinzufuegen"),
+        ("addLayer", "Add Layer", "Ebene hinzufügen"),
         ("setDocument", "Set Document", "Dokument festlegen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
@@ -929,15 +929,15 @@ fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setLayerVisible", "Set Layer Visible", "Ebenensichtbarkeit festlegen"),
         ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
         ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
-        ("deleteLayer", "Delete Layer", "Ebene loeschen"),
+        ("deleteLayer", "Delete Layer", "Ebene löschen"),
         ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
         ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
         ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
         ("moveLayer", "Move Layer", "Ebene verschieben"),
-        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("selectAll", "Select All", "Alles auswählen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setHover", "Set Hover", "Hover festlegen"),
-        ("setBrushSize", "Set Brush Size", "Pinselgroesse festlegen"),
+        ("setBrushSize", "Set Brush Size", "Pinselgröße festlegen"),
         ("setBrushOpacity", "Set Brush Opacity", "Pinseldeckkraft festlegen"),
         ("setCompositeViewport", "Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"),
     ])
@@ -1221,6 +1221,46 @@ impl Default for RasterPlayRuntime {
     }
 }
 
+fn raster_action(action: &str, args: Option<Value>) -> ActionDescriptor {
+    play_action(RASTER_PLAY_CONTROLLER_ID, action, args)
+}
+
+fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, label: &str) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: format!("raster-utility-options-{utility}"),
+        label: label.into(),
+        default_open: Some(true),
+        active_utility_id: Some(utility.into()),
+        children: vec![
+            WindowMeasure::Slider {
+                id: format!("raster-{utility}-size"),
+                label: Some("Size".into()),
+                value: runtime.brush_size as f64,
+                min: 1.0,
+                max: 128.0,
+                step: Some(1.0),
+                on_change: raster_action("setBrushSize", None),
+            },
+            WindowMeasure::Slider {
+                id: format!("raster-{utility}-opacity"),
+                label: Some("Opacity".into()),
+                value: runtime.brush_opacity as f64,
+                min: 0.0,
+                max: 1.0,
+                step: Some(0.05),
+                on_change: raster_action("setBrushOpacity", None),
+            },
+        ],
+    }
+}
+
+fn raster_window_measures(runtime: &RasterPlayRuntime) -> Vec<WindowMeasure> {
+    vec![
+        raster_paint_utility_options(runtime, "paintBrush", "Brush"),
+        raster_paint_utility_options(runtime, "paintEraser", "Eraser"),
+    ]
+}
+
 impl DocumentApp for RasterPlayApp {
     type Projection = RasterDocument;
     type Op = RasterOp;
@@ -1248,13 +1288,13 @@ impl DocumentApp for RasterPlayApp {
         match action {
             // 👁️ View actions — mutate ephemeral runtime, emit no ops.
             "setBrushSize" => {
-                if let Some(size) = args.and_then(|value| value.get("brushSize")).and_then(|value| value.as_f64()) {
+                if let Some(size) = args.and_then(|value| value.get("value").or_else(|| value.get("brushSize"))).and_then(|value| value.as_f64()) {
                     self.runtime.brush_size = size as f32;
                 }
                 ActionEmit::default()
             }
             "setBrushOpacity" => {
-                if let Some(opacity) = args.and_then(|value| value.get("opacity")).and_then(|value| value.as_f64()) {
+                if let Some(opacity) = args.and_then(|value| value.get("value").or_else(|| value.get("opacity"))).and_then(|value| value.as_f64()) {
                     self.runtime.brush_opacity = (opacity as f32).clamp(0.0, 1.0);
                 }
                 ActionEmit::default()
@@ -1422,6 +1462,11 @@ impl DocumentApp for RasterPlayApp {
         }
     }
 
+    fn window_measures(&self, _doc: &DocumentView<'_, RasterDocument>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let measures = raster_window_measures(&self.runtime);
+        HashMap::from([(RASTER_PLAY_WINDOW_COMPOSITE.into(), measures)])
+    }
+
     fn render(&self, body_key: &str, doc: &DocumentView<'_, RasterDocument>, view_state: &ViewState) -> UiNode {
         let document = doc.projection;
         let labels = resolve_labels::<RasterPlayLabels>(view_state);
@@ -1545,8 +1590,8 @@ fn create_raster_app() -> App {
             ])
             // 🧰 Composite-window utilities — one exclusive set, active utility host-owned (never a document op).
             .utility(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
-            .utility(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Tools))
-            .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Tools))
+            .utility(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Utilities))
+            .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Utilities))
             .window_kind_utilities(RASTER_PLAY_WINDOW_COMPOSITE, vec![
                 "selectMarquee".into(), "paintBrush".into(), "paintEraser".into(),
             ])

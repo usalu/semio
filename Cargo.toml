@@ -215,6 +215,12 @@ incremental = true
 codegen-units = 256
 lto = "off"
 
+# LLVM 22's WASM linker crashes in ElemSection::writeBody when the VCS cdylib is
+# split across the workspace-wide 256 codegen units. Keep the fast default for
+# the rest of the workspace and bound this component to a stable shard count.
+[profile.release.package.vcs]
+codegen-units = 16
+
 # 🧹 RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced
 # at verification gates via `cargo clippy -- -D warnings`. NEVER set RUSTFLAGS to

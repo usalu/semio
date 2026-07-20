@@ -152,7 +152,7 @@ struct WorldSelectionRecord {
     granularity: Option<String>,
     #[serde(default, deserialize_with = "deserialize_optional_string_vec")]
     component_ids: Option<Vec<String>>,
-    transform_tool: Option<String>,
+    transform_mode: Option<String>,
     interaction_mode: Option<String>,
     gumball_target: Option<[f64; 3]>,
     selection_mode: Option<String>,
@@ -367,7 +367,7 @@ pub struct World3dState {
     drag_object_z: f32,
     drag_last_position: Option<[f32; 3]>,
     selected_ids: Vec<String>,
-    transform_tool: String,
+    transform_mode: String,
     gumball_handle: Option<GumballHandle>,
     gumball_pivot: Vec3,
     gumball_drag_anchor: f32,
@@ -454,7 +454,7 @@ impl World3dState {
             drag_object_z: 0.0,
             drag_last_position: None,
             selected_ids: Vec::new(),
-            transform_tool: "translate".into(),
+            transform_mode: "translate".into(),
             gumball_handle: None,
             gumball_pivot: Vec3::ZERO,
             gumball_drag_anchor: 0.0,
@@ -1423,7 +1423,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
             }
         }
     }
-    if matches!(state.transform_tool.as_str(), "rotate" | "rotateSelection") {
+    if matches!(state.transform_mode.as_str(), "rotate" | "rotateSelection") {
         for handle in [GumballHandle::RotateX, GumballHandle::RotateY, GumballHandle::RotateZ] {
             let Some(normal) = handle.plane_normal() else {
                 continue;
@@ -1437,7 +1437,7 @@ fn pick_gumball_handle_at(state: &World3dState, x: f32, y: f32, _inner: Rect) ->
             }
         }
     }
-    if matches!(state.transform_tool.as_str(), "scale" | "scaleSelection") {
+    if matches!(state.transform_mode.as_str(), "scale" | "scaleSelection") {
         for handle in [GumballHandle::ScaleX, GumballHandle::ScaleY, GumballHandle::ScaleZ] {
             let Some(axis) = handle.axis_dir() else {
                 continue;
@@ -1792,7 +1792,7 @@ pub fn sync_world3d_state(state: &mut World3dState, scene: &UiComponentSceneNode
     state.show_edges = selection.show_edges.unwrap_or(true);
     state.selection_targets = selection.targets.unwrap_or_default();
     state.active_object_id = selection.active_object_id;
-    state.transform_tool = selection.transform_tool.unwrap_or_else(|| "translate".into());
+    state.transform_mode = selection.transform_mode.unwrap_or_else(|| "translate".into());
     let current_lod = scene_lod(state);
     rebuild_instance_draws(state, current_lod);
     state.resolved_lod_pick = Some(current_lod);

@@ -33,7 +33,7 @@ impl SpatialConfig {
 // #region 🔖Binning
 fn bin_pixels(pixels: &[f64], bins: usize) -> Result<Vec<usize>, EntropyError> {
     let (min, max) = pixels.iter().fold((f64::INFINITY, f64::NEG_INFINITY), |(lo, hi), &v| (lo.min(v), hi.max(v)));
-    if !(max > min) {
+    if max <= min {
         return Err(EntropyError::DegenerateInput { what: "constant image has zero dynamic range" });
     }
     Ok(pixels
@@ -125,15 +125,20 @@ mod tests {
     }
 
     #[test]
-    fn checkerboard_has_higher_glcm_entropy_than_flat_gradient() {
-        let width = 8;
-        let height = 8;
-        let checker: Vec<f64> = (0..width * height).map(|i| (((i / width) + (i % width)) % 2) as f64).collect();
+    fn noisy_image_has_higher_glcm_entropy_than_smooth_gradient() {
+        // 🔐 A checkerboard is NOT a good "high texture" counter-example here: it alternates
+        // between exactly two values, so its dx=1 co-occurrence matrix is nearly deterministic
+        // (low entropy). Genuine per-pixel noise, which visits many distinct adjacent-value
+        // pairs unpredictably, is the correct high-entropy comparison against a smooth gradient.
+        let width = 16;
+        let height = 16;
+        let mut rng = crate::numeric::Xorshift64::new(9);
+        let noise: Vec<f64> = (0..width * height).map(|_| rng.next_f64()).collect();
         let gradient: Vec<f64> = (0..width * height).map(|i| (i % width) as f64).collect();
         let cfg = SpatialConfig::new(SpatialMethod::Glcm { dx: 1, dy: 0 }, 4).unwrap();
-        let h_checker = entropy_2d(&checker, width, height, cfg).unwrap().value;
+        let h_noise = entropy_2d(&noise, width, height, cfg).unwrap().value;
         let h_gradient = entropy_2d(&gradient, width, height, cfg).unwrap().value;
-        assert!(h_checker > h_gradient, "checker={h_checker} gradient={h_gradient}");
+        assert!(h_noise > h_gradient, "noise={h_noise} gradient={h_gradient}");
     }
 
     #[test]

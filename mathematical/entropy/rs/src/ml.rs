@@ -12,7 +12,7 @@ pub fn predictive_entropy(probs: &[f64], n_classes: usize, base: LogBase) -> Res
     if n_classes == 0 {
         return Err(EntropyError::InvalidConfig { field: "n_classes", reason: "must be at least 1" });
     }
-    if probs.is_empty() || probs.len() % n_classes != 0 {
+    if probs.is_empty() || !probs.len().is_multiple_of(n_classes) {
         return Err(EntropyError::ShapeMismatch { what: "probs", expected: n_classes, actual: probs.len() % n_classes.max(1) });
     }
     let n_samples = probs.len() / n_classes;
@@ -48,7 +48,7 @@ pub fn bald_mutual_information(ensemble_probs: &[f64], n_members: usize, n_class
         return Err(EntropyError::InvalidConfig { field: "n_members/n_classes", reason: "must be at least 1" });
     }
     let per_sample_len = n_members * n_classes;
-    if ensemble_probs.is_empty() || ensemble_probs.len() % per_sample_len != 0 {
+    if ensemble_probs.is_empty() || !ensemble_probs.len().is_multiple_of(per_sample_len) {
         return Err(EntropyError::ShapeMismatch { what: "ensemble_probs", expected: per_sample_len, actual: ensemble_probs.len() % per_sample_len.max(1) });
     }
     let n_samples = ensemble_probs.len() / per_sample_len;

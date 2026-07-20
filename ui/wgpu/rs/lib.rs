@@ -923,7 +923,7 @@ use serde::{Deserialize, Serialize};
 #[serde(rename_all = "camelCase")]
 pub enum UtilityCategory {
     Selection,
-    Tools,
+    Utilities,
     History,
     Sync,
 }
@@ -996,10 +996,10 @@ pub enum UtilityNode {
 impl UtilityNode {
     pub fn category(&self) -> UtilityCategory {
         match self {
-            UtilityNode::Separator { .. } => UtilityCategory::Tools,
-            UtilityNode::Button { category, .. } => category.unwrap_or(UtilityCategory::Tools),
-            UtilityNode::Toggle { category, .. } => category.unwrap_or(UtilityCategory::Tools),
-            UtilityNode::Collection { category, .. } => category.unwrap_or(UtilityCategory::Tools),
+            UtilityNode::Separator { .. } => UtilityCategory::Utilities,
+            UtilityNode::Button { category, .. } => category.unwrap_or(UtilityCategory::Utilities),
+            UtilityNode::Toggle { category, .. } => category.unwrap_or(UtilityCategory::Utilities),
+            UtilityNode::Collection { category, .. } => category.unwrap_or(UtilityCategory::Utilities),
         }
     }
 

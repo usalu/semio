@@ -2733,6 +2733,13 @@ export type UiTranslationSchema = {
       readonly selectTarget: UiLabelValue;
       readonly selectOption: UiLabelValue;
       readonly noOptionsFound: UiLabelValue;
+      readonly close: UiLabelValue;
+      readonly newWindow: UiLabelValue;
+      readonly minimize: UiLabelValue;
+      readonly maximize: UiLabelValue;
+      readonly action: UiLabelValue;
+      readonly actions: UiLabelValue;
+      readonly utilities: UiLabelValue;
     };
     readonly contextMenu: {
       readonly select: UiLabelValue;
@@ -2877,7 +2884,7 @@ const uiToolbarParentDe: UiToolbarParentEntries = {
   selection: { label: { normal: "Auswahl", beginner: "Auswahl" } },
   lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
   filter: { label: { normal: "Filter", beginner: "Filter" } },
-  open: { label: { normal: "Oeffnen", beginner: "Oeffnen" } },
+  open: { label: { normal: "Öffnen", beginner: "Öffnen" } },
   save: { label: { normal: "Speichern", beginner: "Speichern" } },
   transfer: { label: { normal: "Transfer", beginner: "Transfer" } },
   transform: { label: { normal: "Transformieren", beginner: "Transformieren" } },
@@ -2931,8 +2938,8 @@ export const uiChromeTranslationBundles = {
         nav: {
           back: {
             label: {
-              normal: "Zurueck",
-              beginner: "Zurueck",
+              normal: "Zurück",
+              beginner: "Zurück",
             },
           },
           forward: {
@@ -2994,7 +3001,7 @@ export const uiChromeTranslationBundles = {
           },
         },
         palette: {
-          undo: { label: { normal: "Rueckgaengig", beginner: "Rueckgaengig" } },
+          undo: { label: { normal: "Rückgängig", beginner: "Rückgängig" } },
           redo: { label: { normal: "Wiederholen", beginner: "Wiederholen" } },
           goHome: { label: { normal: "Nach Hause", beginner: "Nach Hause" } },
           spawnPrefix: { label: { normal: "Erzeugen", beginner: "Erzeugen" } },
@@ -3089,8 +3096,8 @@ export const uiChromeTranslationBundles = {
           },
           overview: {
             label: {
-              normal: "Uebersicht",
-              beginner: "Uebersicht",
+              normal: "Übersicht",
+              beginner: "Übersicht",
             },
           },
           workbench: {
@@ -3126,7 +3133,7 @@ export const uiChromeTranslationBundles = {
           saveLayout: { label: { normal: "Layout speichern", beginner: "Layout speichern" } },
           saveLayoutPlaceholder: { label: { normal: "Layoutname", beginner: "Layoutname" } },
           saveCurrentLayout: { label: { normal: "Aktuelles Layout speichern", beginner: "Aktuelles Layout speichern" } },
-          deleteLayout: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+          deleteLayout: { label: { normal: "Löschen", beginner: "Löschen" } },
           emptyShell: {
             label: {
               normal: "Fenster aus Anzeige in der Navigationsleiste hierher ziehen oder ein gespeichertes Layout wiederherstellen.",
@@ -3135,7 +3142,7 @@ export const uiChromeTranslationBundles = {
           },
           layouts: { label: { normal: "Layouts", beginner: "Layouts" } },
           saved: { label: { normal: "Gespeichert", beginner: "Gespeichert" } },
-          unavailable: { label: { normal: "Anzeige nicht verfuegbar", beginner: "Anzeige nicht verfuegbar" } },
+          unavailable: { label: { normal: "Anzeige nicht verfügbar", beginner: "Anzeige nicht verfügbar" } },
         },
         settings: {
           tab: {
@@ -3172,14 +3179,14 @@ export const uiChromeTranslationBundles = {
             select: { label: { normal: "Thema", beginner: "Thema" } },
             save: { label: { normal: "Speichern unter", beginner: "Speichern unter" } },
             savePlaceholder: { label: { normal: "Themenname", beginner: "Themenname" } },
-            reset: { label: { normal: "Zuruecksetzen", beginner: "Zuruecksetzen" } },
+            reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
             export: { label: { normal: "Exportieren", beginner: "Exportieren" } },
             import: { label: { normal: "Importieren", beginner: "Importieren" } },
-            delete: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+            delete: { label: { normal: "Löschen", beginner: "Löschen" } },
             colors: { label: { normal: "Farben", beginner: "Farben" } },
             spacing: { label: { normal: "Abstand", beginner: "Abstand" } },
             fonts: { label: { normal: "Schriftarten", beginner: "Schriftarten" } },
-            strokes: { label: { normal: "Strichstaerken", beginner: "Strichstaerken" } },
+            strokes: { label: { normal: "Strichstärken", beginner: "Strichstärken" } },
             radii: { label: { normal: "Rundungen", beginner: "Rundungen" } },
             opacities: { label: { normal: "Deckkraft", beginner: "Deckkraft" } },
             metrics: { label: { normal: "Masse", beginner: "Masse" } },
@@ -3193,11 +3200,11 @@ export const uiChromeTranslationBundles = {
               board: { label: { normal: "Board", beginner: "Board" } },
               map: { label: { normal: "Karte", beginner: "Karte" } },
               canvas: { label: { normal: "Leinwand", beginner: "Leinwand" } },
-              chrome: { label: { normal: "Oberflaeche", beginner: "Oberflaeche" } },
+              chrome: { label: { normal: "Oberfläche", beginner: "Oberfläche" } },
             },
           },
-          unavailable: { label: { normal: "Einstellungen nicht verfuegbar", beginner: "Einstellungen nicht verfuegbar" } },
-          resetDock: { label: { normal: "Panels zuruecksetzen", beginner: "Panels zuruecksetzen" } },
+          unavailable: { label: { normal: "Einstellungen nicht verfügbar", beginner: "Einstellungen nicht verfügbar" } },
+          resetDock: { label: { normal: "Panels zurücksetzen", beginner: "Panels zurücksetzen" } },
         },
         command: {
           introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
@@ -3229,78 +3236,85 @@ export const uiChromeTranslationBundles = {
           },
           name: { label: { normal: "Name", beginner: "Name" } },
           save: { label: { normal: "Speichern", beginner: "Speichern" } },
-          loading: { label: { normal: "Laedt…", beginner: "Laedt…" } },
+          loading: { label: { normal: "Lädt…", beginner: "Lädt…" } },
           loadingPlugins: { label: { normal: "Plugins werden geladen…", beginner: "Plugins werden geladen…" } },
           renderError: { label: { normal: "Renderfehler", beginner: "Renderfehler" } },
           noPluginsLoaded: { label: { normal: "Keine Plugins geladen", beginner: "Keine Plugins geladen" } },
           missingWindow: { label: { normal: "Fehlendes Fenster", beginner: "Fehlendes Fenster" } },
           home: { label: { normal: "Startseite", beginner: "Startseite" } },
-          backToMediaGraph: { label: { normal: "Zurueck zum Media Graph", beginner: "Zurueck zum Media Graph" } },
-          execute: { label: { normal: "Ausfuehren", beginner: "Ausfuehren" } },
-          reset: { label: { normal: "Zuruecksetzen", beginner: "Zuruecksetzen" } },
+          backToMediaGraph: { label: { normal: "Zurück zum Media Graph", beginner: "Zurück zum Media Graph" } },
+          execute: { label: { normal: "Ausführen", beginner: "Ausführen" } },
+          reset: { label: { normal: "Zurücksetzen", beginner: "Zurücksetzen" } },
           windowOptions: { label: { normal: "Fensteroptionen", beginner: "Fensteroptionen" } },
           focus: { label: { normal: "Fokussieren", beginner: "Fokussieren" } },
           unfocus: { label: { normal: "Fokus aufheben", beginner: "Fokus aufheben" } },
           example: { label: { normal: "Beispiel", beginner: "Beispiel" } },
           noExample: { label: { normal: "Kein Beispiel", beginner: "Kein Beispiel" } },
-          loadingSurface: { label: { normal: "Oberflaeche wird geladen…", beginner: "Oberflaeche wird geladen…" } },
+          loadingSurface: { label: { normal: "Oberfläche wird geladen…", beginner: "Oberfläche wird geladen…" } },
           unknownComponent: { label: { normal: "Unbekannte Komponente", beginner: "Unbekannte Komponente" } },
-          select: { label: { normal: "Auswaehlen", beginner: "Auswaehlen" } },
+          select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
           commandPalette: { label: { normal: "Befehlspalette", beginner: "Befehlspalette" } },
           searchForCommand: { label: { normal: "Nach einem Befehl suchen…", beginner: "Nach einem Befehl suchen…" } },
           find: { label: { normal: "Finden…", beginner: "Finden…" } },
           noData: { label: { normal: "Keine Daten", beginner: "Keine Daten" } },
           noFileSystemNodes: { label: { normal: "Keine Dateisystemknoten", beginner: "Keine Dateisystemknoten" } },
-          selectTarget: { label: { normal: "Ziel auswaehlen", beginner: "Ziel auswaehlen" } },
-          selectOption: { label: { normal: "Option auswaehlen…", beginner: "Option auswaehlen…" } },
+          selectTarget: { label: { normal: "Ziel auswählen", beginner: "Ziel auswählen" } },
+          selectOption: { label: { normal: "Option auswählen…", beginner: "Option auswählen…" } },
           noOptionsFound: { label: { normal: "Keine Optionen gefunden.", beginner: "Keine Optionen gefunden." } },
+          close: { label: { normal: "Schliessen", beginner: "Schliessen" } },
+          newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
+          minimize: { label: { normal: "Minimieren", beginner: "Minimieren" } },
+          maximize: { label: { normal: "Maximieren", beginner: "Maximieren" } },
+          action: { label: { normal: "Aktion", beginner: "Aktion" } },
+          actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
+          utilities: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
         },
         contextMenu: {
-          select: { label: { normal: "Auswaehlen", beginner: "Auswaehlen" } },
-          deselect: { label: { normal: "Abwaehlen", beginner: "Abwaehlen" } },
-          selectAll: { label: { normal: "Alles auswaehlen", beginner: "Alles auswaehlen" } },
+          select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
+          deselect: { label: { normal: "Abwählen", beginner: "Abwählen" } },
+          selectAll: { label: { normal: "Alles auswählen", beginner: "Alles auswählen" } },
           clearSelection: { label: { normal: "Auswahl aufheben", beginner: "Auswahl aufheben" } },
-          selectSameKind: { label: { normal: "Gleiche Art auswaehlen", beginner: "Gleiche Art auswaehlen" } },
+          selectSameKind: { label: { normal: "Gleiche Art auswählen", beginner: "Gleiche Art auswählen" } },
           duplicate: { label: { normal: "Duplizieren", beginner: "Duplizieren" } },
-          delete: { label: { normal: "Loeschen", beginner: "Loeschen" } },
+          delete: { label: { normal: "Löschen", beginner: "Löschen" } },
           zoomToSelection: { label: { normal: "Auf Auswahl zoomen", beginner: "Auf Auswahl zoomen" } },
           focusZoom: { label: { normal: "Fokus / Zoom darauf", beginner: "Fokus / Zoom darauf" } },
-          openSource: { label: { normal: "Quelle oeffnen", beginner: "Quelle oeffnen" } },
+          openSource: { label: { normal: "Quelle öffnen", beginner: "Quelle öffnen" } },
           fitWorld: { label: { normal: "Welt einpassen", beginner: "Welt einpassen" } },
           cut: { label: { normal: "Ausschneiden", beginner: "Ausschneiden" } },
           copy: { label: { normal: "Kopieren", beginner: "Kopieren" } },
-          paste: { label: { normal: "Einfuegen", beginner: "Einfuegen" } },
+          paste: { label: { normal: "Einfügen", beginner: "Einfügen" } },
           rename: { label: { normal: "Umbenennen", beginner: "Umbenennen" } },
           formatDocument: { label: { normal: "Dokument formatieren", beginner: "Dokument formatieren" } },
-          lintDocument: { label: { normal: "Dokument pruefen", beginner: "Dokument pruefen" } },
-          suggestCompletions: { label: { normal: "Vervollstaendigungen vorschlagen", beginner: "Vervollstaendigungen vorschlagen" } },
-          selectToken: { label: { normal: "Token auswaehlen", beginner: "Token auswaehlen" } },
-          selectLine: { label: { normal: "Zeile auswaehlen", beginner: "Zeile auswaehlen" } },
+          lintDocument: { label: { normal: "Dokument prüfen", beginner: "Dokument prüfen" } },
+          suggestCompletions: { label: { normal: "Vervollständigungen vorschlagen", beginner: "Vervollständigungen vorschlagen" } },
+          selectToken: { label: { normal: "Token auswählen", beginner: "Token auswählen" } },
+          selectLine: { label: { normal: "Zeile auswählen", beginner: "Zeile auswählen" } },
         },
         host: {
           emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
           preview: { label: { normal: "Vorschau", beginner: "Vorschau" } },
-          sourceAvailable: { label: { normal: "Quelle verfuegbar", beginner: "Quelle verfuegbar" } },
+          sourceAvailable: { label: { normal: "Quelle verfügbar", beginner: "Quelle verfügbar" } },
           blockImage: { label: { normal: "Bild", beginner: "Bild" } },
           blockTable: { label: { normal: "Tabelle", beginner: "Tabelle" } },
           blockMath: { label: { normal: "Mathe", beginner: "Mathe" } },
           blockInk: { label: { normal: "Tinte", beginner: "Tinte" } },
           blockGroup: { label: { normal: "Gruppe", beginner: "Gruppe" } },
           blockText: { label: { normal: "Text", beginner: "Text" } },
-          checkingPlacement: { label: { normal: "Pruefe kollisionsfreie Platzierungen…", beginner: "Pruefe kollisionsfreie Platzierungen…" } },
+          checkingPlacement: { label: { normal: "Prüfe kollisionsfreie Platzierungen…", beginner: "Prüfe kollisionsfreie Platzierungen…" } },
           noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
-          canvasUnavailable: { label: { normal: "Leinwand nicht verfuegbar", beginner: "Leinwand nicht verfuegbar" } },
+          canvasUnavailable: { label: { normal: "Leinwand nicht verfügbar", beginner: "Leinwand nicht verfügbar" } },
         },
         blockList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
-          addStep: { label: { normal: "Schritt hinzufuegen", beginner: "Schritt hinzufuegen" } },
+          addStep: { label: { normal: "Schritt hinzufügen", beginner: "Schritt hinzufügen" } },
         },
         docs: {
           navigation: {
             previous: {
               label: {
-                normal: "Zurueck",
-                beginner: "Zurueck",
+                normal: "Zurück",
+                beginner: "Zurück",
               },
             },
             next: {
@@ -3337,19 +3351,19 @@ export const uiChromeTranslationBundles = {
           actionActive: {
             label: {
               normal: "Aktion oder Wert",
-              beginner: "Aktion oder Zahl fuer den aktuellen Schritt",
+              beginner: "Aktion oder Zahl für den aktuellen Schritt",
             },
           },
           actions: {
             label: {
               normal: "Aktionen",
-              beginner: "Schnellaktionen fuer den aktuellen Schritt",
+              beginner: "Schnellaktionen für den aktuellen Schritt",
             },
           },
           suggestions: {
             label: {
-              normal: "Vorschlaege",
-              beginner: "Liste der passenden Aktionen oeffnen",
+              normal: "Vorschläge",
+              beginner: "Liste der passenden Aktionen öffnen",
             },
           },
           noMatches: {
@@ -3371,13 +3385,13 @@ export const uiChromeTranslationBundles = {
           desktop: {
             label: {
               normal: "Desktop-Layout",
-              beginner: "Verwendet das Standard-Layout, optimiert fuer Maus und Tastatur.",
+              beginner: "Verwendet das Standard-Layout, optimiert für Maus und Tastatur.",
             },
           },
           tablet: {
             label: {
               normal: "Tablet-Layout",
-              beginner: "Verwendet das Tablet-Layout mit groesseren, touch-freundlichen Bedienelementen.",
+              beginner: "Verwendet das Tablet-Layout mit größeren, touch-freundlichen Bedienelementen.",
             },
           },
           mobile: {
@@ -3788,6 +3802,13 @@ export const uiChromeTranslationBundles = {
           selectTarget: { label: { normal: "Select target", beginner: "Select target" } },
           selectOption: { label: { normal: "Select option…", beginner: "Select option…" } },
           noOptionsFound: { label: { normal: "No options found.", beginner: "No options found." } },
+          close: { label: { normal: "Close", beginner: "Close" } },
+          newWindow: { label: { normal: "New Window", beginner: "New Window" } },
+          minimize: { label: { normal: "Minimize", beginner: "Minimize" } },
+          maximize: { label: { normal: "Maximize", beginner: "Maximize" } },
+          action: { label: { normal: "Action", beginner: "Action" } },
+          actions: { label: { normal: "Actions", beginner: "Actions" } },
+          utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
         },
         contextMenu: {
           select: { label: { normal: "Select", beginner: "Select" } },
@@ -4639,9 +4660,9 @@ export function introductionAnchorSelector(anchor: IntroductionAnchor): string |
   }
 }
 
-/** @emoji 🧰 CSS selector for a window's folded Tools-rail unfold chip — used when a utility anchor is still hidden inside the folded toolbar. */
-export function introductionWindowToolbarUnfoldSelector(windowId: string): string {
-  return `[id="${windowId}-window-toolbar-unfold"]`;
+/** @emoji 🧰 CSS selector for a window's folded Utilities-rail unfold chip — used when a utility anchor is still hidden inside the folded utility bar. */
+export function introductionUtilityBarUnfoldSelector(windowId: string): string {
+  return `[id="${windowId}-utility-bar-unfold"]`;
 }
 
 /** @emoji 🎛 CSS selector for a window's folded Actions-rail unfold chip — used when an action anchor is still hidden inside the folded action pane. */
@@ -4661,7 +4682,7 @@ function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
  * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/toolbar) instead
  * of failing closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller
  * treats as a `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first
- * mounted selector wins in order — the primary anchor first, then each fallback (e.g. a folded Tools
+ * mounted selector wins in order — the primary anchor first, then each fallback (e.g. a folded Utilities
  * rail's unfold chip while the utility button is still hidden). */
 function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = []): IntroductionAnchorResolution {
   const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
@@ -6346,11 +6367,11 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 /** @emoji 📐 Action input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
 
-/** @emoji 📐 Outer overlay for the floating window toolbar along the bottom-left edge. */
-export const windowToolbarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
+/** @emoji 📐 Outer overlay for the floating window utility bar along the bottom-left edge. */
+export const utilityBarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
-/** @emoji 📐 Horizontal tool row beside the toolbar chrome toggle: fixed to the chrome's height, never taller. */
-export const windowToolbarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
+/** @emoji 📐 Horizontal utility row beside the utility bar chrome toggle: fixed to the chrome's height, never taller. */
+export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
 
 /** @emoji 📐 Outer overlay for the floating window Actions rail along the bottom-right edge (the free corner). */
 export const windowActionPaneOverlayClass = "pointer-events-none absolute bottom-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
@@ -11639,19 +11660,22 @@ export interface DesktopTitlebarProps {
 
 /** @emoji 🪟 Draggable title bar row with a title, extra chrome, and window controls. @see https://www.electronjs.org/docs/latest/tutorial/custom-title-bar */
 export function DesktopTitlebar({ title, controls, children }: DesktopTitlebarProps): React.ReactElement {
+  const minimizeLabel = useLabel("ui.common.minimize");
+  const maximizeLabel = useLabel("ui.common.maximize");
+  const closeLabel = useLabel("ui.common.close");
   return (
     <div data-slot="desktop-titlebar" className={cn(borderNormalBottomClass, "flex h-large shrink-0 items-center gap-single px-single")} style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
       <span className="truncate text-sm font-semibold">{title}</span>
       {children}
       {controls ? (
         <div className="ms-auto flex items-center gap-tiny" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button type="button" onClick={controls.minimize} aria-label="Minimize" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+          <button type="button" onClick={controls.minimize} aria-label={minimizeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
             <Icon icon="minus" size="tiny" />
           </button>
-          <button type="button" onClick={controls.maximize} aria-label="Maximize" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
+          <button type="button" onClick={controls.maximize} aria-label={maximizeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-hover-window hover:text-foreground">
             <Icon icon="square" size="tiny" />
           </button>
-          <button type="button" onClick={controls.close} aria-label="Close" className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-destructive-bg hover:text-destructive-foreground">
+          <button type="button" onClick={controls.close} aria-label={closeLabel} className="cursor-pointer rounded-sm p-single text-muted-foreground transition-colors hover:bg-destructive-bg hover:text-destructive-foreground">
             <Icon icon="x" size="tiny" />
           </button>
         </div>
@@ -15886,26 +15910,27 @@ interface WindowEngagementChromeProps {
 
 /** @emoji ⌨️ Title bar for the window action rail: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
+  const actionLabel = useLabel("ui.common.action");
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text="Action" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text="Action" className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
     </div>
   );
 };
 
 // #endregion 🪟WindowEngagementChrome
 
-// #region 🪟WindowToolbarChrome
+// #region 🪟UtilityBarChrome
 
-interface WindowToolbarChromeProps {
+interface UtilityBarChromeProps {
   windowId: string;
   folded: boolean;
   disabled?: boolean;
@@ -15913,24 +15938,25 @@ interface WindowToolbarChromeProps {
   onUnfold: () => void;
 }
 
-/** @emoji 🧰 Title bar for the window toolbar strip: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no tools, so every window carries the bottom-left panel. */
-const WindowToolbarChrome: React.FC<WindowToolbarChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
+/** @emoji 🧰 Title bar for the window utility bar: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no utilities, so every window carries the bottom-left panel. */
+const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
+  const utilitiesLabel = useLabel("ui.common.utilities");
   if (folded) {
     return (
-      <div data-slot="window-toolbar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-toolbar-unfold`} icon="chevron-right" text="Tools" className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
+      <div data-slot="utility-bar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
+        <ActionGroupItem id={`${windowId}-utility-bar-unfold`} icon="chevron-right" text={utilitiesLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
       </div>
     );
   }
 
   return (
-    <div data-slot="window-toolbar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-toolbar-fold`} icon="chevron-left" text="Tools" className={windowRailChromeLabelActionClass} onClick={onFold} />
+    <div data-slot="utility-bar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
+      <ActionGroupItem id={`${windowId}-utility-bar-fold`} icon="chevron-left" text={utilitiesLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
     </div>
   );
 };
 
-// #endregion 🪟WindowToolbarChrome
+// #endregion 🪟UtilityBarChrome
 
 // #region 🪟WindowActionPaneChrome
 
@@ -15942,19 +15968,20 @@ interface WindowActionPaneChromeProps {
   onUnfold: () => void;
 }
 
-/** @emoji 🎛 Title bar for the bottom-right window Actions rail: single fold/unfold toggle, mirror of {@link WindowToolbarChrome} but right-anchored (chevrons point toward the free corner). Always rendered so every window with actions carries the rail. */
+/** @emoji 🎛 Title bar for the bottom-right window Actions rail: single fold/unfold toggle, mirror of {@link UtilityBarChrome} but right-anchored (chevrons point toward the free corner). Always rendered so every window with actions carries the rail. */
 const WindowActionPaneChrome: React.FC<WindowActionPaneChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
+  const actionsLabel = useLabel("ui.common.actions");
   if (folded) {
     return (
       <div data-slot="window-action-pane-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-start border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-action-pane-unfold`} icon="chevron-left" text="Actions" className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
+        <ActionGroupItem id={`${windowId}-window-action-pane-unfold`} icon="chevron-left" text={actionsLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-action-pane-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-action-pane-fold`} icon="chevron-right" text="Actions" className={windowRailChromeLabelActionClass} onClick={onFold} />
+      <ActionGroupItem id={`${windowId}-window-action-pane-fold`} icon="chevron-right" text={actionsLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
     </div>
   );
 };
@@ -16921,49 +16948,49 @@ export const ShellSettingsPanel: React.FC<ShellSettingsPanelProps> = ({ locale, 
 
 // #endregion 📷Panel Components
 
-// #region 🩻Toolbar Components
+// #region 🩻Ribbon Components
 
-interface ToolbarZoneProps extends React.ComponentProps<"div"> {
+interface RibbonZoneProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
 }
 
-function ToolbarZone({ className, children, ...props }: ToolbarZoneProps) {
+function RibbonZone({ className, children, ...props }: RibbonZoneProps) {
   return (
-    <div data-slot="toolbar-zone" className={cn("flex h-medium shrink-0 items-center gap-single min-w-0", className)} {...props}>
+    <div data-slot="ribbon-zone" className={cn("flex h-medium shrink-0 items-center gap-single min-w-0", className)} {...props}>
       {children}
     </div>
   );
 }
 
-interface ToolbarGroupProps extends React.ComponentProps<"div"> {
+interface RibbonGroupProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
 }
 
-function ToolbarGroup({ className, children, ...props }: ToolbarGroupProps) {
+function RibbonGroup({ className, children, ...props }: RibbonGroupProps) {
   return (
-    <div data-slot="toolbar-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
+    <div data-slot="ribbon-group" role="group" className={cn("flex shrink-0 items-center gap-single h-full", className)} {...props}>
       {children}
     </div>
   );
 }
 
-function ToolbarDivider({ className, ...props }: React.ComponentProps<"div">) {
-  return <div data-slot="toolbar-divider" className={cn("w-px h-small bg-border my-auto shrink-0", className)} {...props} />;
+function RibbonDivider({ className, ...props }: React.ComponentProps<"div">) {
+  return <div data-slot="ribbon-divider" className={cn("w-px h-small bg-border my-auto shrink-0", className)} {...props} />;
 }
 
-interface ToolbarItemProps extends React.ComponentProps<"div"> {
+interface RibbonItemProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
 }
 
-function ToolbarItem({ className, children, ...props }: ToolbarItemProps) {
+function RibbonItem({ className, children, ...props }: RibbonItemProps) {
   return (
-    <div data-slot="toolbar-item" className={cn("shrink-0 flex items-center h-full min-w-0", className)} {...props}>
+    <div data-slot="ribbon-item" className={cn("shrink-0 flex items-center h-full min-w-0", className)} {...props}>
       {children}
     </div>
   );
 }
 
-export { ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone };
+export { RibbonDivider, RibbonGroup, RibbonItem, RibbonZone };
 
 // #region 🎀Ribbon
 // A ribbon is a chrome strip that grows by stacked rows — one per tree level — instead of staying a single line.
@@ -16985,13 +17012,13 @@ export interface RibbonProps {
   readonly className?: string;
 }
 
-/** @emoji 🎀 Chrome strip that grows by stacked rows — one per tree level. `up` stacks rows above the base (window toolbar); `down` stacks rows below the base (nested panel tabs); `inline` keeps the current horizontal drill-down (footer). */
+/** @emoji 🎀 Chrome strip that grows by stacked rows — one per tree level. `up` stacks rows above the base (window utility bar); `down` stacks rows below the base (nested panel tabs); `inline` keeps the current horizontal drill-down (footer). */
 function Ribbon({ id, direction, rows, className }: RibbonProps) {
   if (direction === "inline") {
     return (
       <div role="toolbar" id={id} data-slot="ribbon" data-direction={direction} className={cn("pointer-events-auto flex w-fit max-w-full shrink-0 items-center justify-start gap-single", className)}>
         {rows.map((row) => (
-          <ToolbarZone key={row.key}>{row.content}</ToolbarZone>
+          <RibbonZone key={row.key}>{row.content}</RibbonZone>
         ))}
       </div>
     );
@@ -17895,12 +17922,12 @@ export interface WindowConfig {
   onClose?: () => void;
   controls?: React.ReactNode;
   measures?: React.ReactNode;
-  toolbar?: React.ReactNode;
-  /** @emoji 🎛 Controlled fold state for the Tools rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
-  toolbarFolded?: boolean;
-  /** @emoji 🎛 Fires when the user or a redirect toggles the Tools rail fold state. */
-  onToolbarFoldedChange?: (folded: boolean) => void;
-  /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the toolbar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
+  utilityBar?: React.ReactNode;
+  /** @emoji 🎛 Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
+  utilityBarFolded?: boolean;
+  /** @emoji 🎛 Fires when the user or a redirect toggles the Utilities rail fold state. */
+  onUtilityBarFoldedChange?: (folded: boolean) => void;
+  /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the utility bar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
   utilityOptions?: React.ReactNode;
   /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
   actionPane?: React.ReactNode;
@@ -17988,10 +18015,9 @@ const Window: React.FC<WindowProps> = ({
   onClose,
   controls,
   measures,
-  toolbar,
-  toolbarFolded: toolbarFoldedProp,
-  onToolbarFoldedChange,
-  utilityOptions,
+  utilityBar,
+  utilityBarFolded: utilityBarFoldedProp,
+  onUtilityBarFoldedChange,
   actionPane,
   actionsFolded: actionsFoldedProp,
   onActionsFoldedChange,
@@ -18001,18 +18027,22 @@ const Window: React.FC<WindowProps> = ({
   fill = false,
 }) => {
   const bgClass = "bg-window";
+  const newWindowLabel = useLabel("ui.common.newWindow");
+  const closeLabel = useLabel("ui.common.close");
+  const controlsFocusLabel = useLabel("ui.common.focus");
+  const controlsUnfocusLabel = useLabel("ui.common.unfocus");
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
-  // 🎛 Controlled-with-default fold state for the bottom-left Tools rail (default true).
-  const [toolbarFoldedInternal, setToolbarFoldedInternal] = reactHostPort.useState(true);
-  const toolbarFolded = toolbarFoldedProp ?? toolbarFoldedInternal;
-  const setToolbarFolded = (folded: boolean) => {
-    onToolbarFoldedChange?.(folded);
-    if (toolbarFoldedProp === undefined) setToolbarFoldedInternal(folded);
+  // 🎛 Controlled-with-default fold state for the bottom-left Utilities rail (default true).
+  const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
+  const utilityBarFolded = utilityBarFoldedProp ?? utilityBarFoldedInternal;
+  const setUtilityBarFolded = (folded: boolean) => {
+    onUtilityBarFoldedChange?.(folded);
+    if (utilityBarFoldedProp === undefined) setUtilityBarFoldedInternal(folded);
   };
   // 🎛 Controlled-with-default fold state for the bottom-right Actions rail (default true).
   const [actionsFoldedInternal, setActionsFoldedInternal] = reactHostPort.useState(true);
@@ -18093,9 +18123,9 @@ const Window: React.FC<WindowProps> = ({
       {controls}
       {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
-          {onOpenInNewWindow && <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text="New Window" />}
-          {(onMaximize || onMinimize) && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? "Unfocus" : "Focus"} />}
-          {onClose && <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text="Close" />}
+          {onOpenInNewWindow && <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
+          {(onMaximize || onMinimize) && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
+          {onClose && <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text={closeLabel} />}
         </ActionGroup>
       )}
     </div>
@@ -18204,19 +18234,12 @@ const Window: React.FC<WindowProps> = ({
           ) : null}
           {!measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
-              <div data-slot="window-toolbar-overlay" data-folded={toolbarFolded ? "true" : undefined} className={windowToolbarOverlayClass}>
-                {utilityOptions ? (
-                  <div data-dim data-slot="window-utility-options" className={cn(windowMeasuresStackClass, windowMeasuresStackFoldedClass, "mb-single")}>
-                    <div data-slot="window-utility-options-body" className={windowMeasuresBodyClass}>
-                      {utilityOptions}
-                    </div>
-                  </div>
-                ) : null}
-                <div data-dim data-slot="window-toolbar" data-folded={toolbarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
-                  <WindowToolbarChrome windowId={id} folded={toolbarFolded} disabled={!toolbar} onFold={() => setToolbarFolded(true)} onUnfold={() => setToolbarFolded(false)} />
-                  {!toolbarFolded && toolbar ? (
-                    <div data-slot="window-toolbar-body" className={windowToolbarBodyClass}>
-                      {toolbar}
+              <div data-slot="utility-bar-overlay" data-folded={utilityBarFolded ? "true" : undefined} className={utilityBarOverlayClass}>
+                <div data-dim data-slot="utility-bar" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
+                  <UtilityBarChrome windowId={id} folded={utilityBarFolded} disabled={!utilityBar} onFold={() => setUtilityBarFolded(true)} onUnfold={() => setUtilityBarFolded(false)} />
+                  {!utilityBarFolded && utilityBar ? (
+                    <div data-slot="utility-bar-body" className={utilityBarBodyClass}>
+                      {utilityBar}
                     </div>
                   ) : null}
                 </div>
@@ -23055,6 +23078,9 @@ interface ModeDockTabBarProps {
 
 const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
+  const dockFocusLabel = useLabel("ui.common.focus");
+  const dockUnfocusLabel = useLabel("ui.common.unfocus");
+  const dockCloseLabel = useLabel("ui.common.close");
   const isMaximized = dock?.maximizedStackPath === stackPath;
   const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
@@ -23121,7 +23147,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         onClick={() => dock?.toggleMaximize(stackPath)}
       >
         {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-        <span className="text-tiny whitespace-nowrap">{isMaximized ? "Unfocus" : "Focus"}</span>
+        <span className="text-tiny whitespace-nowrap">{isMaximized ? dockUnfocusLabel : dockFocusLabel}</span>
       </button>
       {activeId ? (
         <button
@@ -23131,7 +23157,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           onClick={() => dock?.closeWindow(activeId)}
         >
           <CloseIcon className="size-small" />
-          <span className="text-tiny whitespace-nowrap">Close</span>
+          <span className="text-tiny whitespace-nowrap">{dockCloseLabel}</span>
         </button>
       ) : null}
     </div>
@@ -23786,7 +23812,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const hasWindows = orderedWindowIds.length > 0;
   const emptyShellNotice = resolveTranslationLabel(uiI18n.t("ui.display.emptyShell"));
 
-  /** @emoji 📱 Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, toolbar, measures, engagement) as desktop. */
+  /** @emoji 📱 Mobile has no split-pane window manager: every window collapses into one tab stack, rendered through the same {@link ModeDockStack} chrome (tab bar, utility bar, measures, engagement) as desktop. */
   const mobileFlatStack: WindowLayoutStackNode | null = mobile
     ? {
         kind: "stack",
@@ -24047,17 +24073,17 @@ if (import.meta.vitest) {
     });
 
     it("maps folded window chrome toggles for utility/action fallbacks", () => {
-      expect(introductionWindowToolbarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-toolbar-unfold"]');
+      expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-utility-bar-unfold"]');
       expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-action-pane-unfold"]');
     });
   });
 
   describe("UIIntroduction folded-chrome fallbacks", () => {
-    it("highlights a fallback Tools-rail unfold chip while the utility anchor is still hidden", async () => {
+    it("highlights a fallback Utilities-rail unfold chip while the utility anchor is still hidden", async () => {
       const { container } = render(
         <div>
-          <button type="button" id="puzzle3d-main-window-toolbar-unfold">
-            Tools
+          <button type="button" id="puzzle3d-main-utility-bar-unfold">
+            Utilities
           </button>
           <UIIntroduction
             introduction={{
@@ -24075,7 +24101,7 @@ if (import.meta.vitest) {
               ],
             }}
             stepIndex={0}
-            anchorFallbackSelectors={[introductionWindowToolbarUnfoldSelector("puzzle3d-main")]}
+            anchorFallbackSelectors={[introductionUtilityBarUnfoldSelector("puzzle3d-main")]}
             onStepIndexChange={vi.fn()}
             onDismiss={vi.fn()}
           />
@@ -26666,10 +26692,10 @@ if (import.meta.vitest) {
     it("Window panel overlays use the window frame inset without adding a second edge gap", () => {
       expect(windowMeasuresOverlayClass).toContain("p-0");
       expect(windowEngagementOverlayClass).toContain("p-0");
-      expect(windowToolbarOverlayClass).toContain("p-0");
+      expect(utilityBarOverlayClass).toContain("p-0");
       expect(windowMeasuresOverlayClass).not.toContain("p-single");
       expect(windowEngagementOverlayClass).not.toContain("p-single");
-      expect(windowToolbarOverlayClass).not.toContain("p-single");
+      expect(utilityBarOverlayClass).not.toContain("p-single");
     });
 
     it("Window measures overlay uses a fixed right rail without clipping overflow", () => {
@@ -26801,47 +26827,47 @@ if (import.meta.vitest) {
       expect(stack.style.height).toBe("");
     });
 
-    it("Window toolbar folds and unfolds like window options, on the same surface", () => {
+    it("Window utility bar folds and unfolds like window options, on the same surface", () => {
       const { container, rerender } = render(
-        <Window id="toolbar-window" toolbar={<button type="button">Tool</button>}>
+        <Window id="utility-bar-window" utilityBar={<button type="button">Utility</button>}>
           <div>Body</div>
         </Window>,
       );
-      const strip = container.querySelector('[data-slot="window-toolbar"]') as HTMLElement;
+      const strip = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
       expect(strip).toBeTruthy();
       expect(strip.className).toContain("ui-glass-window-options");
       expect(strip.className).toContain("flex-row");
       expect(strip.className).toContain("w-fit");
-      expect(screen.queryByText("Tool")).toBeNull();
-      fireEvent.click(container.querySelector('[id="toolbar-window-window-toolbar-unfold"]')!);
-      expect(screen.getByText("Tool")).toBeTruthy();
-      const chrome = container.querySelector('[data-slot="window-toolbar-chrome"]');
-      const body = container.querySelector('[data-slot="window-toolbar-body"]');
+      expect(screen.queryByText("Utility")).toBeNull();
+      fireEvent.click(container.querySelector('[id="utility-bar-window-utility-bar-unfold"]')!);
+      expect(screen.getByText("Utility")).toBeTruthy();
+      const chrome = container.querySelector('[data-slot="utility-bar-chrome"]');
+      const body = container.querySelector('[data-slot="utility-bar-body"]');
       expect(chrome?.nextElementSibling).toBe(body);
       expect(chrome?.className).toContain("border-r");
-      fireEvent.click(container.querySelector('[id="toolbar-window-window-toolbar-fold"]')!);
-      expect(screen.queryByText("Tool")).toBeNull();
+      fireEvent.click(container.querySelector('[id="utility-bar-window-utility-bar-fold"]')!);
+      expect(screen.queryByText("Utility")).toBeNull();
       rerender(
-        <Window id="toolbar-window">
+        <Window id="utility-bar-window">
           <div>Body</div>
         </Window>,
       );
-      expect(container.querySelector('[data-slot="window-toolbar"]')).toBeTruthy();
-      expect((container.querySelector('[id="toolbar-window-window-toolbar-unfold"]') as HTMLButtonElement).disabled).toBe(true);
+      expect(container.querySelector('[data-slot="utility-bar"]')).toBeTruthy();
+      expect((container.querySelector('[id="utility-bar-window-utility-bar-unfold"]') as HTMLButtonElement).disabled).toBe(true);
     });
 
-    it("Window toolbar anchors bottom-left and hides when measures span the window", () => {
+    it("Window utility bar anchors bottom-left and hides when measures span the window", () => {
       const { container } = render(
-        <Window id="toolbar-measures-window" toolbar={<button type="button">Tool</button>} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="utility-bar-measures-window" utilityBar={<button type="button">Utility</button>} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-toolbar-overlay"]') as HTMLElement;
+      const overlay = container.querySelector('[data-slot="utility-bar-overlay"]') as HTMLElement;
       expect(overlay.className).toContain("bottom-0");
       expect(overlay.className).toContain("left-0");
-      fireEvent.click(container.querySelector("#toolbar-measures-window-window-measures-unfold")!);
-      fireEvent.click(container.querySelector("#toolbar-measures-window-window-measures-span")!);
-      expect(container.querySelector('[data-slot="window-toolbar-overlay"]')).toBeNull();
+      fireEvent.click(container.querySelector("#utility-bar-measures-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector("#utility-bar-measures-window-window-measures-span")!);
+      expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeNull();
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {

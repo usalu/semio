@@ -360,8 +360,11 @@ mod tests {
         let y: Vec<f64> = (0..200).map(|_| rng.next_gaussian()).collect();
         let diff_means = |a: &[f64], b: &[f64]| mean(a) - mean(b);
 
+        // 🔬 under the true null, permutation p-values are approximately uniform(0,1); a fixed
+        // seed can land anywhere in that range, so assert only "not significant" (p > 0.05)
+        // rather than a specific large value.
         let p_null = permutation_test(&x, &y, diff_means, 1000, 44).unwrap();
-        assert!(p_null > 0.2, "p_null={p_null}");
+        assert!(p_null > 0.05, "p_null={p_null}");
 
         let y_shifted: Vec<f64> = x.iter().map(|&v| v + 5.0).collect();
         let p_effect = permutation_test(&x, &y_shifted, diff_means, 1000, 55).unwrap();
@@ -445,16 +448,14 @@ mod tests {
         sorted_x.sort_by(f64::total_cmp);
 
         let iaaft_cfg = SurrogateConfig::new(SurrogateKind::Iaaft { iterations: 20 }, 1, 222).unwrap();
-        let iaaft_surrogate = surrogate_series(&x, &iaaft_cfg).unwrap().pop().unwrap();
-        let mut sorted_iaaft = iaaft_surrogate.clone();
+        let mut sorted_iaaft = surrogate_series(&x, &iaaft_cfg).unwrap().pop().unwrap();
         sorted_iaaft.sort_by(f64::total_cmp);
         for (a, b) in sorted_iaaft.iter().zip(sorted_x.iter()) {
             assert!((a - b).abs() < 1e-9);
         }
 
         let phase_cfg = SurrogateConfig::new(SurrogateKind::PhaseRandomized, 1, 333).unwrap();
-        let phase_surrogate = surrogate_series(&x, &phase_cfg).unwrap().pop().unwrap();
-        let mut sorted_phase = phase_surrogate.clone();
+        let mut sorted_phase = surrogate_series(&x, &phase_cfg).unwrap().pop().unwrap();
         sorted_phase.sort_by(f64::total_cmp);
         let differs = sorted_phase.iter().zip(sorted_x.iter()).any(|(a, b)| (a - b).abs() > 1e-6);
         assert!(differs, "phase-randomized surrogate unexpectedly preserved the exact distribution");

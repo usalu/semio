@@ -148,6 +148,11 @@ const NON_EMPTY_SUBSET_MASKS: [u32; 7] = [1, 2, 3, 4, 5, 6, 7];
 /// `min` over three independently-estimated specific informations can only be `<=` any one of
 /// them) and the single-full-set node `{{0,1,2}}` at the *top* (largest `I_min`, exactly the
 /// total joint mutual information, an upper bound for every other node by data processing).
+// 🧩 `a & b == a` tests "is `a` a submask of `b`", not a fixed-value membership check — despite
+// the closure's shape, this is not a `Vec::contains` rewrite (clippy's `manual_contains` lint
+// pattern-matches too eagerly here since the target value is self-referential on the loop
+// variable `a`).
+#[allow(clippy::manual_contains)]
 fn is_below(alpha: &LatticeNode, beta: &LatticeNode) -> bool {
     beta.iter().all(|&b| alpha.iter().any(|&a| (a & b) == a))
 }
@@ -299,7 +304,7 @@ impl PidLattice {
     pub fn partial_information(&self, node_sets: &[Vec<usize>]) -> Option<f64> {
         let mut masks: Vec<u32> = node_sets
             .iter()
-            .map(|subset| subset.iter().fold(0u32, |acc, &idx| acc | (1 << idx)))
+            .map(|subset| subset.iter().fold(0u32, |acc, &idx| acc | 1u32.checked_shl(idx as u32).unwrap_or(0)))
             .collect();
         masks.sort_unstable();
         masks.dedup();
@@ -439,7 +444,9 @@ mod tests {
         let looked_up = lattice.partial_information(&[vec![0, 1, 2]]).unwrap();
         let full_set_idx = lattice.nodes.iter().position(|node| node == &vec![7u32]).unwrap();
         assert!((looked_up - lattice.partial_info_nats[full_set_idx]).abs() < 1e-12);
-        assert!(lattice.partial_information(&[vec![0], vec![1], vec![99]]).is_none() == false || true);
+        // 🔐 an antichain referencing a source index that doesn't correspond to any lattice node
+        // (99 is out of range for a 3-source lattice) must return `None`, not panic.
+        assert!(lattice.partial_information(&[vec![0], vec![1], vec![99]]).is_none());
     }
     // #endregion 🔖Lattice
 }

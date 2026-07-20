@@ -4172,6 +4172,9 @@ pub struct AppLabelsOverlay {
     /// 🗣️ Locale-aware overrides for `IntroductionDefinition` text, keyed `"intro.title"` / `"intro.step.{stepId}.title"` / `".body"`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub introduction_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `UtilityDefinition.group` collection labels (toolbar group headers, e.g. "transform"), keyed by group id.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub group_labels: std::collections::HashMap<String, String>,
 }
 
 impl AppLabelsOverlay {
@@ -4456,6 +4459,32 @@ pub enum HostEffect {
         #[serde(default)]
         multiple: bool,
     },
+    /// @emoji 🎞️ Asks the shell to decode a video (via file picker, or `payload` bytes when the
+    /// caller already has them, e.g. a drop zone) and re-dispatch `frame_action` once per sampled
+    /// frame with `{payload: dataUrl(image/jpeg), name, frameIndex, timestampMs, index, total, width,
+    /// height, ...args}`, then `done_action` once with `{name, durationMs, frameCount, sampledCount,
+    /// width, height, codec, ...args}`. `sample_stride`/`max_frames`/`max_long_edge_px`/`fps_hint` are
+    /// hints only (0 = host default); a host that can't decode the codec dispatches `fallback_action`
+    /// once instead, with `{payload: dataUrl(raw container bytes), name, ...args}` — mirrors
+    /// `RequestFileOpen`'s per-file re-dispatch shape but fans out video frames instead of files.
+    RequestMediaFrames {
+        accept: String,
+        frame_action: String,
+        done_action: String,
+        fallback_action: String,
+        #[serde(default)]
+        sample_stride: u32,
+        #[serde(default)]
+        max_frames: u32,
+        #[serde(default)]
+        max_long_edge_px: u32,
+        #[serde(default)]
+        fps_hint: f64,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        payload: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        args: Option<Value>,
+    },
     /// @emoji ✨ Spawns a plugin instance (idempotent on `os_instance_id`) without focusing it.
     SpawnPluginInstance {
         program_id: String,
@@ -4732,6 +4761,19 @@ impl OpDag {
         self.applied.insert(id.to_string());
         self.applied_order.push(id.to_string());
         self.pending.retain(|pending| pending != id);
+    }
+
+    /// 🌱 Seeds the applied-set from ids the caller already knows about via an out-of-band mechanism
+    /// (e.g. a full-document snapshot merge) — without this, a later envelope whose `deps` reference
+    /// one of these ids stays `Pending` forever, since `insert` only recognizes a dependency as
+    /// satisfied through this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer
+    /// adopted by some other route.
+    pub fn seed_applied(&mut self, ids: impl IntoIterator<Item = String>) {
+        for id in ids {
+            if !self.applied.contains(&id) {
+                self.mark_applied(&id);
+            }
+        }
     }
 
     fn drain_ready(&mut self) {
@@ -5352,6 +5394,129 @@ mod app_document_tests {
         assert_eq!(json, r#"{"openDialog":{"dialogId":"addObject"}}"#);
         let round: HostEffect = serde_json::from_str(&json).unwrap();
         assert_eq!(round, effect);
+    }
+
+    #[test]
+    fn dispatch_action_effect_round_trips_camel_case() {
+        let effect = HostEffect::DispatchAction {
+            action: "advanceReconstruction".into(),
+            args: Some(json!({"jobId": "job-1"})),
+            delay_ms: 250,
+        };
+        let json = serde_json::to_string(&effect).unwrap();
+        assert_eq!(json, r#"{"dispatchAction":{"action":"advanceReconstruction","args":{"jobId":"job-1"},"delayMs":250}}"#);
+        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, effect);
+        // `args` omitted entirely when unset, not serialized as `null`.
+        let bare = HostEffect::DispatchAction { action: "tick".into(), args: None, delay_ms: 0 };
+        let bare_json = serde_json::to_string(&bare).unwrap();
+        assert!(!bare_json.contains("\"args\""), "omitted when unset: {bare_json}");
+        assert_eq!(serde_json::from_str::<HostEffect>(&bare_json).unwrap(), bare);
+    }
+
+    #[test]
+    fn request_file_open_effect_round_trips_multiple() {
+        let effect = HostEffect::RequestFileOpen {
+            accept: ".png,.jpg".into(),
+            read_as: Some("dataUrl".into()),
+            import_action: "importFramePayload".into(),
+            multiple: true,
+        };
+        let json = serde_json::to_string(&effect).unwrap();
+        assert!(json.contains("\"multiple\":true"), "{json}");
+        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, effect);
+        // `multiple` defaults to false when absent from the wire (older callers/plugins).
+        let defaulted: HostEffect = serde_json::from_str(
+            r#"{"requestFileOpen":{"accept":".png","importAction":"importFramePayload"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            defaulted,
+            HostEffect::RequestFileOpen {
+                accept: ".png".into(),
+                read_as: None,
+                import_action: "importFramePayload".into(),
+                multiple: false,
+            }
+        );
+    }
+
+    #[test]
+    fn request_media_frames_effect_round_trips_camel_case() {
+        let effect = HostEffect::RequestMediaFrames {
+            accept: "video/mp4,video/quicktime".into(),
+            frame_action: "importVideoFramePayload".into(),
+            done_action: "importVideoDone".into(),
+            fallback_action: "importVideoBytesPayload".into(),
+            sample_stride: 5,
+            max_frames: 200,
+            max_long_edge_px: 1600,
+            fps_hint: 30.0,
+            payload: None,
+            args: Some(json!({"streamId": "s1"})),
+        };
+        let json = serde_json::to_string(&effect).unwrap();
+        assert!(json.contains("\"requestMediaFrames\""), "{json}");
+        assert!(json.contains("\"sampleStride\":5"), "{json}");
+        assert!(json.contains("\"maxLongEdgePx\":1600"), "{json}");
+        assert!(!json.contains("\"payload\""), "omitted when unset: {json}");
+        let round: HostEffect = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, effect);
+        // Numeric hints default to 0 (host-default) and `payload`/`args` may be entirely absent.
+        let defaulted: HostEffect = serde_json::from_str(
+            r#"{"requestMediaFrames":{"accept":"video/mp4","frameAction":"f","doneAction":"d","fallbackAction":"b"}}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            defaulted,
+            HostEffect::RequestMediaFrames {
+                accept: "video/mp4".into(),
+                frame_action: "f".into(),
+                done_action: "d".into(),
+                fallback_action: "b".into(),
+                sample_stride: 0,
+                max_frames: 0,
+                max_long_edge_px: 0,
+                fps_hint: 0.0,
+                payload: None,
+                args: None,
+            }
+        );
+        // `payload`-carrying variant (drop-zone bytes already in memory, no picker needed).
+        let with_payload = HostEffect::RequestMediaFrames {
+            accept: "video/*".into(),
+            frame_action: "f".into(),
+            done_action: "d".into(),
+            fallback_action: "b".into(),
+            sample_stride: 1,
+            max_frames: 0,
+            max_long_edge_px: 0,
+            fps_hint: 0.0,
+            payload: Some("data:video/mp4;base64,AAAA".into()),
+            args: None,
+        };
+        let payload_json = serde_json::to_string(&with_payload).unwrap();
+        assert!(payload_json.contains("\"payload\":\"data:video/mp4;base64,AAAA\""), "{payload_json}");
+        assert_eq!(serde_json::from_str::<HostEffect>(&payload_json).unwrap(), with_payload);
+    }
+
+    #[test]
+    fn os_media_format_ply_and_las_round_trip() {
+        use crate::mesh::OsMediaFormat;
+        for (format, ext, mime, binary) in [
+            (OsMediaFormat::Ply, "ply", "model/ply", false),
+            (OsMediaFormat::Las, "las", "application/vnd.las", true),
+        ] {
+            assert_eq!(format.as_str(), ext);
+            assert_eq!(format.mime_type(), mime);
+            assert_eq!(format.is_binary(), binary);
+            assert_eq!(OsMediaFormat::parse(ext), Some(format));
+            let json = serde_json::to_string(&format).unwrap();
+            assert_eq!(json, format!("\"{ext}\""));
+            let round: OsMediaFormat = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, format);
+        }
     }
     //#endregion 🔖ActionArgsAndUtilitiesTests
 

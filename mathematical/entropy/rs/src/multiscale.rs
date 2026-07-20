@@ -32,7 +32,7 @@ fn coarse_grain(x: &[f64], scale: usize, grain: Grain) -> Vec<f64> {
                     let mut sorted = window.to_vec();
                     sorted.sort_by(|a, b| a.total_cmp(b));
                     let mid = sorted.len() / 2;
-                    if sorted.len() % 2 == 0 {
+                    if sorted.len().is_multiple_of(2) {
                         0.5 * (sorted[mid - 1] + sorted[mid])
                     } else {
                         sorted[mid]
@@ -103,7 +103,7 @@ pub struct MultiscaleResult {
 /// 📶 Coarse-grains `x` at scales `1..=cfg.scales` and computes `cfg.inner`'s entropy at each,
 /// stopping early (without error) once a scale's coarse-grained series becomes too short for the
 /// inner method — [`MultiscaleResult::scales`] reports exactly which scales succeeded.
-pub fn multiscale_entropy(x: &[f64], cfg: MultiscaleConfig, base: LogBase) -> Result<MultiscaleResult, EntropyError> {
+pub fn multiscale_entropy(x: &[f64], cfg: &MultiscaleConfig, base: LogBase) -> Result<MultiscaleResult, EntropyError> {
     if x.is_empty() {
         return Err(EntropyError::EmptyInput { what: "x" });
     }
@@ -161,7 +161,7 @@ mod tests {
         let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
         let inner = MsInner::Permutation(OrdinalConfig::new(3, 1).unwrap());
         let cfg = MultiscaleConfig::new(5, Grain::Mean, inner).unwrap();
-        let result = multiscale_entropy(&x, cfg, LogBase::Bits).unwrap();
+        let result = multiscale_entropy(&x, &cfg, LogBase::Bits).unwrap();
         assert_eq!(result.scales, vec![1, 2, 3, 4, 5]);
         assert_eq!(result.per_scale.len(), 5);
     }
@@ -171,7 +171,7 @@ mod tests {
         let x: Vec<f64> = (0..20).map(|i| i as f64).collect();
         let inner = MsInner::Permutation(OrdinalConfig::new(3, 1).unwrap());
         let cfg = MultiscaleConfig::new(20, Grain::Mean, inner).unwrap();
-        let result = multiscale_entropy(&x, cfg, LogBase::Bits).unwrap();
+        let result = multiscale_entropy(&x, &cfg, LogBase::Bits).unwrap();
         assert!(result.scales.len() < 20);
     }
 
@@ -184,16 +184,17 @@ mod tests {
             let n = 4000;
             let white: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
             // 🔐 a crude 1/f-like signal via running-sum (integrated white noise).
-            let mut pink = vec![0.0; n];
             let mut acc = 0.0;
-            for i in 0..n {
+            let pink: Vec<f64> = std::iter::repeat_with(|| {
                 acc = 0.98 * acc + rng.next_gaussian();
-                pink[i] = acc;
-            }
+                acc
+            })
+            .take(n)
+            .collect();
             let inner = MsInner::SampleEntropy(RegularityConfig::new(2, crate::Tolerance::Auto).unwrap());
             let cfg = MultiscaleConfig::new(4, Grain::Mean, inner).unwrap();
-            let white_result = multiscale_entropy(&white, cfg.clone(), LogBase::Nats).unwrap();
-            let pink_result = multiscale_entropy(&pink, cfg, LogBase::Nats).unwrap();
+            let white_result = multiscale_entropy(&white, &cfg, LogBase::Nats).unwrap();
+            let pink_result = multiscale_entropy(&pink, &cfg, LogBase::Nats).unwrap();
             assert!((white_result.complexity_index - pink_result.complexity_index).abs() > 1e-6);
         }
     }

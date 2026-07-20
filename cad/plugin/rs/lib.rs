@@ -3113,7 +3113,7 @@ fn world_selection_json(document: &CadScene, runtime: &CadPlayRuntime, active_ut
     ))
     .unwrap_or_else(|_| json!({}));
     if let Some(object) = value.as_object_mut() {
-        object.insert("transformTool".into(), json!(active_utility));
+        object.insert("transformMode".into(), json!(active_utility));
         object.insert("gumballActive".into(), json!(gumball_active(runtime)));
         object.insert(
             "engagementSessionActive".into(),
@@ -3402,12 +3402,12 @@ fn typology_label(typology: &'static str, labels: &CadLabels) -> &'static str {
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(is_de, &[
-        ("addObject", "Add Object", "Objekt hinzufuegen"),
+        ("addObject", "Add Object", "Objekt hinzufügen"),
         ("patchObject", "Patch Object", "Objekt aktualisieren"),
         ("patchSelection", "Patch Selection", "Auswahl aktualisieren"),
-        ("deleteObject", "Delete Object", "Objekt loeschen"),
+        ("deleteObject", "Delete Object", "Objekt löschen"),
         ("duplicateObject", "Duplicate Object", "Objekt duplizieren"),
-        ("addNode", "Add Node", "Knoten hinzufuegen"),
+        ("addNode", "Add Node", "Knoten hinzufügen"),
         ("renameNode", "Rename Node", "Knoten umbenennen"),
         ("translateSelection", "Translate Selection", "Auswahl verschieben"),
         ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
@@ -3415,13 +3415,13 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("applyTransformation", "Apply Transformation", "Transformation anwenden"),
         ("importCadFile", "Import CAD File", "CAD-Datei importieren"),
         ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldSelect", "World Select", "Welt auswählen"),
         ("worldHover", "World Hover", "Welt-Hover"),
         ("setHover", "Set Hover", "Hover festlegen"),
         ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
@@ -3429,12 +3429,12 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
         ("referenceHover", "Reference Hover", "Referenz-Hover"),
         ("engagementInput", "Engagement Input", "Eingabe"),
-        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswaehlen"),
+        ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswählen"),
         ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
         ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
         ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
-        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrueckt"),
+        ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrückt"),
         ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
         ("toggleSun", "Toggle Sun", "Sonne umschalten"),
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
@@ -5168,13 +5168,13 @@ fn cad_quad_layout() -> WindowLayout {
 }
 
 /// @emoji 🧰 A cad transform-gumball utility: an exclusive member of the `transform` group rendered in
-/// the framework toolbar (`UtilityCategory::Tools`). Switching it is a pure `setActiveUtility` View action
+/// the framework toolbar (`UtilityCategory::Utilities`). Switching it is a pure `setActiveUtility` View action
 /// (`ViewState::active_utility_id`) — it gates the action panel while active (the default), since a
 /// transform mode is a content-editing mode, not a passive viewing aid.
 fn cad_transform_utility(id: &str, label: &str, icon: &str) -> UtilityDefinition {
     UtilityDefinition {
         group: Some("transform".into()),
-        category: Some(UtilityCategory::Tools),
+        category: Some(UtilityCategory::Utilities),
         ..UtilityDefinition::new(id, label, icon)
     }
 }
@@ -5584,7 +5584,7 @@ mod tests {
         let scene = default_document();
         drive(&mut app, &scene, "setSelection", Some(json!({ "objectIds": ["object-box-1"] })));
         let selection = world_selection_json(&scene, &app.runtime, "rotate");
-        assert!(selection.contains("\"transformTool\":\"rotate\""), "gumball utility sourced from ViewState::active_utility_id");
+        assert!(selection.contains("\"transformMode\":\"rotate\""), "gumball utility sourced from ViewState::active_utility_id");
         assert!(selection.contains("\"gumballActive\":true"));
         assert!(selection.contains("\"gumballTarget\""));
     }
@@ -5606,7 +5606,7 @@ mod tests {
         let node = app.render(CAD_PLAY_BODY_SHAPE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         // The world selection blob is embedded as an escaped JSON string inside the scene node.
-        assert!(json.contains(r#"transformTool\":\"scale"#), "render sources gumball utility from ViewState::active_utility_id");
+        assert!(json.contains(r#"transformMode\":\"scale"#), "render sources gumball utility from ViewState::active_utility_id");
     }
 
     #[test]

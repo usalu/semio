@@ -7911,6 +7911,7 @@ public partial class Kit : Entity<Kit>
 
     public static KitDiff CreateDiff(Kit kit)
     {
+        kit.EnsureTypologies();
         return new KitDiff
         {
             Name = kit.Name,
@@ -7922,17 +7923,29 @@ public partial class Kit : Entity<Kit>
             Remote = kit.Remote,
             Homepage = kit.Homepage,
             License = kit.License,
-            Types = new TypesDiff
+            Typologies = new TypologiesDiff
             {
-                Removed = new List<TypeId>(),
-                Modified = kit.Types.Select(t => new TypeModification { Type = t, Diff = Type.CreateDiff(t) }).ToList(),
-                Added = new List<Type>()
-            },
-            Designs = new DesignsDiff
-            {
-                Removed = new List<DesignId>(),
-                Modified = kit.Designs.Select(d => new DesignModification { Design = d, Diff = Design.CreateDiff(d) }).ToList(),
-                Added = new List<Design>()
+                Removed = new List<TypologyId>(),
+                Added = new List<Typology>(),
+                Modified = kit.Typologies.Select(topo => new TypologyModification
+                {
+                    Typology = topo,
+                    Diff = new TypologyDiff
+                    {
+                        Types = new TypesDiff
+                        {
+                            Removed = new List<TypeId>(),
+                            Modified = topo.Types.Select(t => new TypeModification { Type = t, Diff = Type.CreateDiff(t) }).ToList(),
+                            Added = new List<Type>()
+                        },
+                        Designs = new DesignsDiff
+                        {
+                            Removed = new List<DesignId>(),
+                            Modified = topo.Designs.Select(d => new DesignModification { Design = d, Diff = Design.CreateDiff(d) }).ToList(),
+                            Added = new List<Design>()
+                        }
+                    }
+                }).ToList()
             },
             Files = new FilesDiff
             {
@@ -10495,6 +10508,42 @@ public static class Hashing
         return w.Digest();
     }
 
+    public static string HashTypology(Typology t)
+    {
+        var w = new HashWriter();
+        w.WriteString("Typology");
+        if (t.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(t.Description);
+        }
+        if (t.Designs?.Count > 0)
+        {
+            w.WriteString("designs");
+            w.WriteHashList(t.Designs.Select(HashDesign).ToList());
+        }
+        if (t.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(t.Folder);
+        }
+        if (t.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(t.Icon);
+        }
+        w.WriteString("id");
+        w.WriteString(t.Id);
+        w.WriteString("name");
+        w.WriteString(t.Name);
+        if (t.Types?.Count > 0)
+        {
+            w.WriteString("types");
+            w.WriteHashList(t.Types.Select(HashType).ToList());
+        }
+        return w.Digest();
+    }
+
     public static string HashKit(Kit k)
     {
         var w = new HashWriter();
@@ -11208,6 +11257,54 @@ public static class Hashing
             d.Added ?? new List<Type>());
     }
 
+    public static string HashTypologyDiff(TypologyDiff d)
+    {
+        var w = new HashWriter();
+        w.WriteString("TypologyDiff");
+        if (d.Description != null)
+        {
+            w.WriteString("description");
+            w.WriteString(d.Description);
+        }
+        if (d.Designs != null)
+        {
+            w.WriteString("designs");
+            w.WriteHash(HashDesignsDiff(d.Designs));
+        }
+        if (d.Folder != null)
+        {
+            w.WriteString("folder");
+            w.WriteString(d.Folder);
+        }
+        if (d.Icon != null)
+        {
+            w.WriteString("icon");
+            w.WriteString(d.Icon);
+        }
+        if (d.Name != null)
+        {
+            w.WriteString("name");
+            w.WriteString(d.Name);
+        }
+        if (d.Types != null)
+        {
+            w.WriteString("types");
+            w.WriteHash(HashTypesDiff(d.Types));
+        }
+        return w.Digest();
+    }
+
+    public static string HashTypologiesDiff(TypologiesDiff d)
+    {
+        return HashCollectionDiffGeneric(
+            "TypologiesDiff", "TypologyModification", "typology",
+            (Typology t) => HashTypology(t),
+            (TypologyDiff td) => HashTypologyDiff(td),
+            d.Removed?.Select(r => r.Id).ToList() ?? new List<string>(),
+            d.Modified?.Select(u => (u.Typology.Id, u.Diff)).ToList() ?? new List<(string, TypologyDiff)>(),
+            d.Added ?? new List<Typology>());
+    }
+
     public static string HashSideDiff(SideDiff d)
     {
         var w = new HashWriter();
@@ -11492,11 +11589,6 @@ public static class Hashing
             w.WriteHash(HashConceptsDiff(d.Concepts));
         }
         WriteDiffNullableString(w, "description", d.Description, d.ShouldSerializeDescription());
-        if (d.ShouldSerializeDesigns() && d.Designs != null)
-        {
-            w.WriteString("designs");
-            w.WriteHash(HashDesignsDiff(d.Designs));
-        }
         if (d.ShouldSerializeFiles() && d.Files != null)
         {
             w.WriteString("files");
@@ -11524,10 +11616,10 @@ public static class Hashing
             w.WriteString("tags");
             w.WriteHash(HashTagsDiff(d.Tags));
         }
-        if (d.ShouldSerializeTypes() && d.Types != null)
+        if (d.ShouldSerializeTypologies() && d.Typologies != null)
         {
-            w.WriteString("types");
-            w.WriteHash(HashTypesDiff(d.Types));
+            w.WriteString("typologies");
+            w.WriteHash(HashTypologiesDiff(d.Typologies));
         }
         WriteDiffOptString(w, "version", d.Version, d.ShouldSerializeVersion());
         return w.Digest();
@@ -13895,9 +13987,7 @@ public static class ComposeDiff
         var diffObj = JObject.Parse(ComposeJson.Codec.SerializeKitDiffValidation(diff));
         JObject? outDiff = heal ? (JObject)diffObj.DeepClone() : null;
         var refs = RefSets.FromKit(kitObj);
-        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "types", "type", "types", null, refs);
-        RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "designs", "design", "designs",
-            (c, km, item, dm, p, r) => ValidateDesignDiffNested(c, km, item, dm, p, r), refs);
+        RunTypologiesIdCollection(ctx, kitObj, diffObj, outDiff, heal, refs);
         RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "tags", "tag", "tags", null, refs);
         RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "concepts", "concept", "concepts", null, refs);
         RunTopLevelIdCollection(ctx, kitObj, diffObj, outDiff, heal, "ports", "port", "ports", null, refs);
@@ -13953,8 +14043,8 @@ public static class ComposeDiff
         }
 
         public static RefSets FromKit(JObject kitObj) => new(
-            IdSetFromEntities(kitObj["types"]),
-            IdSetFromEntities(kitObj["designs"]),
+            IdSetFromNestedEntities(kitObj["typologies"] as JArray, "types"),
+            IdSetFromNestedEntities(kitObj["typologies"] as JArray, "designs"),
             IdSetFromEntities(kitObj["authors"]));
     }
 
@@ -13965,6 +14055,16 @@ public static class ComposeDiff
         foreach (var x in arr)
             if (x is JObject o && o["id"]?.Value<string>() is { } g && !string.IsNullOrEmpty(g))
                 s.Add(g);
+        return s;
+    }
+
+    private static HashSet<string> IdSetFromNestedEntities(JArray? typologies, string key)
+    {
+        var s = new HashSet<string>();
+        if (typologies == null) return s;
+        foreach (var t in typologies)
+            if (t is JObject topo)
+                s.UnionWith(IdSetFromEntities(topo[key]));
         return s;
     }
 
@@ -13993,6 +14093,57 @@ public static class ComposeDiff
         if (!heal || outDiff == null) return;
         if (fixedObj != null && fixedObj.Properties().Any()) outDiff[key] = fixedObj;
         else outDiff.Remove(key);
+    }
+
+    /// <summary>🏛️Validates (and, when healing, prunes) the top-level typologies collection plus each modified typology's nested types/designs diffs.</summary>
+    private static void RunTypologiesIdCollection(KitDiffValidationContext ctx, JObject kitObj, JObject diffObj, JObject? outDiff, bool heal, RefSets refs)
+    {
+        const string key = "typologies";
+        if (diffObj[key] is not JObject part) return;
+        var baseArr = kitObj[key] as JArray;
+        var baseTypologyBy = new Dictionary<string, JObject>();
+        foreach (var topo in ToJObjectList(baseArr))
+            if (topo["id"]?.Value<string>() is { } tg && !string.IsNullOrEmpty(tg))
+                baseTypologyBy[tg] = topo;
+
+        var fixedObj = ValidateIdCollectionDiff(ctx, key, "typology", baseArr, part, null);
+
+        if (DiffUpdatesArray(part) is JArray updates)
+            foreach (var u in updates)
+                if (u is JObject um && um["typology"] is JObject tIdObj)
+                {
+                    var tg = tIdObj["id"]?.Value<string>() ?? "";
+                    if (string.IsNullOrEmpty(tg) || !baseTypologyBy.TryGetValue(tg, out var baseTopo)) continue;
+                    if (um["diff"] is not JObject dm) continue;
+                    var path = $"{key}.typology[{tg}]";
+
+                    var healedTypesObj = dm["types"] is JObject typesDm
+                        ? ValidateIdCollectionDiff(ctx, $"{path}.types", "type", baseTopo["types"] as JArray, typesDm, null)
+                        : null;
+                    var healedDesignsObj = dm["designs"] is JObject designsDm
+                        ? ValidateIdCollectionDiff(ctx, $"{path}.designs", "design", baseTopo["designs"] as JArray, designsDm,
+                            (c, item, ddm, dp) => ValidateDesignDiffNested(c, kitObj, item, ddm, dp, refs))
+                        : null;
+
+                    if (!heal) continue;
+                    var healedUm = FindMatchingUpdate(fixedObj, "typology", tg);
+                    if (healedUm?["diff"] is not JObject healedDm) continue;
+                    if (healedTypesObj != null) healedDm["types"] = healedTypesObj; else healedDm.Remove("types");
+                    if (healedDesignsObj != null) healedDm["designs"] = healedDesignsObj; else healedDm.Remove("designs");
+                }
+
+        if (!heal || outDiff == null) return;
+        if (fixedObj != null && fixedObj.Properties().Any()) outDiff[key] = fixedObj;
+        else outDiff.Remove(key);
+    }
+
+    private static JObject? FindMatchingUpdate(JObject? collection, string idKey, string id)
+    {
+        if (collection == null || DiffUpdatesArray(collection) is not JArray arr) return null;
+        foreach (var u in arr)
+            if (u is JObject um && um[idKey] is JObject idObj && idObj["id"]?.Value<string>() == id)
+                return um;
+        return null;
     }
 
     private static JArray? FilterUpdatesById(JArray updates, string idKey, string gid)
@@ -14282,16 +14433,12 @@ public static class KitInPlaceDiff
         if (diff.ShouldSerializeCreatedAt()) kit.CreatedAt = diff.CreatedAt ?? kit.CreatedAt;
         if (diff.ShouldSerializeModificationdAt()) kit.ModificationdAt = diff.ModificationdAt ?? kit.ModificationdAt;
 
-        if (diff.Types != null)
+        if (diff.Typologies != null)
         {
-            kit.Types ??= new List<Type>();
-            ApplyTypesDiff(kit.Types, diff.Types);
-        }
-
-        if (diff.Designs != null)
-        {
-            kit.Designs ??= new List<Design>();
-            ApplyDesignsDiff(kit.Designs, diff.Designs);
+            kit.EnsureTypologies();
+            kit.Typologies ??= new List<Typology>();
+            ApplyTypologiesDiff(kit.Typologies, diff.Typologies);
+            kit.FlattenFromTypologies();
         }
 
         if (diff.Tags != null)
@@ -14495,6 +14642,40 @@ public static class KitInPlaceDiff
 
         if (diff.Added != null)
             attributes.AddRange(diff.Added);
+    }
+
+    private static void ApplyTypologiesDiff(List<Typology> typologies, TypologiesDiff diff)
+    {
+        if (diff.Removed != null)
+            typologies.RemoveAll(t => diff.Removed.Any(r => r.Id == t.Id));
+
+        if (diff.Modified != null)
+        {
+            foreach (var update in diff.Modified)
+            {
+                var topo = typologies.FirstOrDefault(t => t.Id == update.Typology.Id);
+                if (topo != null && update.Diff != null)
+                {
+                    if (update.Diff.Name != null) topo.Name = update.Diff.Name;
+                    if (update.Diff.Description != null) topo.Description = update.Diff.Description;
+                    if (update.Diff.Icon != null) topo.Icon = update.Diff.Icon;
+                    if (update.Diff.Folder != null) topo.Folder = update.Diff.Folder;
+                    if (update.Diff.Types != null)
+                    {
+                        topo.Types ??= new List<Type>();
+                        ApplyTypesDiff(topo.Types, update.Diff.Types);
+                    }
+                    if (update.Diff.Designs != null)
+                    {
+                        topo.Designs ??= new List<Design>();
+                        ApplyDesignsDiff(topo.Designs, update.Diff.Designs);
+                    }
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            typologies.AddRange(diff.Added);
     }
 
     private static void ApplyTypesDiff(List<Type> types, TypesDiff diff)

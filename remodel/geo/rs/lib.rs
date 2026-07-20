@@ -1029,7 +1029,7 @@ mod tests {
         let scene = remodel_sfm::synthetic_scene(9001, 6, 12, false);
         let scene_obs = remodel_sfm::project_observations(&scene, 0.0, 0.0, 9001);
         let cameras: Vec<(CameraPose, Intrinsics)> = scene.cameras.iter().map(|&(intr, pose)| (pose, intr)).collect();
-        let points = scene.points_world.clone();
+        let points = scene.points_world;
         let mut by_point: Vec<Vec<(usize, [f64; 2])>> = vec![Vec::new(); points.len()];
         for o in &scene_obs {
             by_point[o.point_index].push((o.camera_index, o.pixel));
@@ -1091,7 +1091,7 @@ mod tests {
         }
         assert!(checked > 100, "expected many populated dtm cells, got {checked}");
 
-        let mut holey = dtm.clone();
+        let mut holey = dtm;
         let hole_idx = holey.index(10, 10);
         let true_val = holey.values[hole_idx];
         holey.valid[hole_idx] = false;
@@ -1206,7 +1206,7 @@ mod tests {
     fn quality_report_populates_sane_fields_from_real_sfm_output() {
         let scene = remodel_sfm::synthetic_scene(4242, 5, 40, false);
         let scene_obs = remodel_sfm::project_observations(&scene, 0.3, 0.0, 4242);
-        let points = scene.points_world.clone();
+        let points = scene.points_world;
         let recon_cameras: Vec<(usize, CameraPose)> = scene.cameras.iter().enumerate().map(|(i, &(_, pose))| (i, pose)).collect();
         let intrinsics = scene.cameras[0].0;
         let recon = Reconstruction { cameras: recon_cameras, points: points.clone(), point_track_ids: (0..points.len()).collect(), intrinsics };

@@ -1548,6 +1548,8 @@ pub trait AppLabelsOverlayExt: Sized {
     fn action_arg_label(self, key: impl Into<String>, label: impl Into<String>) -> Self;
     fn dialog_labels(self, labels: HashMap<String, String>) -> Self;
     fn introduction_labels(self, labels: HashMap<String, String>) -> Self;
+    fn group_label(self, id: impl Into<String>, label: impl Into<String>) -> Self;
+    fn group_labels(self, labels: HashMap<String, String>) -> Self;
 }
 
 impl AppLabelsOverlayExt for AppLabelsOverlay {
@@ -1587,6 +1589,14 @@ impl AppLabelsOverlayExt for AppLabelsOverlay {
         self.introduction_labels = labels;
         self
     }
+    fn group_label(mut self, id: impl Into<String>, label: impl Into<String>) -> Self {
+        self.group_labels.insert(id.into(), label.into());
+        self
+    }
+    fn group_labels(mut self, labels: HashMap<String, String>) -> Self {
+        self.group_labels = labels;
+        self
+    }
 }
 
 #[cfg(test)]
@@ -1617,11 +1627,11 @@ mod terminology_tests {
 
     #[test]
     fn localized_label_map_selects_by_locale() {
-        let entries: &[(&str, &str, &str)] = &[("addStep", "Add Step", "Schritt hinzufuegen")];
+        let entries: &[(&str, &str, &str)] = &[("addStep", "Add Step", "Schritt hinzufügen")];
         let en = localized_label_map(false, entries);
         let de = localized_label_map(true, entries);
         assert_eq!(en.get("addStep").map(String::as_str), Some("Add Step"));
-        assert_eq!(de.get("addStep").map(String::as_str), Some("Schritt hinzufuegen"));
+        assert_eq!(de.get("addStep").map(String::as_str), Some("Schritt hinzufügen"));
     }
 
     #[test]
@@ -1629,7 +1639,7 @@ mod terminology_tests {
         let overlay = AppLabelsOverlay::default()
             .window_kind_label("main", "Main")
             .mode_label("edit", "Edit")
-            .action_labels(localized_label_map(false, &[("addStep", "Add Step", "Schritt hinzufuegen")]));
+            .action_labels(localized_label_map(false, &[("addStep", "Add Step", "Schritt hinzufügen")]));
         assert_eq!(overlay.window_kind_labels.get("main").map(String::as_str), Some("Main"));
         assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Edit"));
         assert_eq!(overlay.action_labels.get("addStep").map(String::as_str), Some("Add Step"));
@@ -2272,7 +2282,7 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_accepts_introduction_anchored_at_declared_window_utility_and_action() {
+    fn build_definition_accepts_introduction_anchored_at_declared_utility_and_action() {
         use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")

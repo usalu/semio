@@ -204,9 +204,9 @@ mod tests {
         for w in seq.windows(2) {
             expected[w[0] as usize][w[1] as usize] += 1.0;
         }
-        for context in 0..2 {
-            for next in 0..2 {
-                assert_eq!(chain.counts[context * 2 + next], expected[context][next], "context={context} next={next}");
+        for (context, row) in expected.iter().enumerate() {
+            for (next, &expected_count) in row.iter().enumerate() {
+                assert_eq!(chain.counts[context * 2 + next], expected_count, "context={context} next={next}");
             }
         }
     }

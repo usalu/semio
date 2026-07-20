@@ -206,7 +206,7 @@ fn world_selection_json(fixture: &ShootingFixture, runtime: &ShootingPlayRuntime
         object.insert("granularity".into(), json!("mesh"));
         object.insert("selectionMode".into(), json!("mesh"));
         object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-        object.insert("transformTool".into(), json!(active_utility));
+        object.insert("transformMode".into(), json!(active_utility));
         object.insert("activeObjectId".into(), json!(fixture.active_asset_id));
         object.insert("gumballActive".into(), json!(!runtime.selected_asset_ids.is_empty()));
         if let Some(target) = selection_centroid(fixture, &runtime.selected_asset_ids) {
@@ -397,22 +397,22 @@ fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
         ("patchShots", "Patch Shots", "Aufnahmen aktualisieren"),
         ("patchAsset", "Patch Asset", "Objekt aktualisieren"),
         ("patchAssets", "Patch Assets", "Objekte aktualisieren"),
-        ("addShot", "Add Shot", "Aufnahme hinzufuegen"),
-        ("addAsset", "Add Asset", "Objekt hinzufuegen"),
+        ("addShot", "Add Shot", "Aufnahme hinzufügen"),
+        ("addAsset", "Add Asset", "Objekt hinzufügen"),
         ("importAsset", "Import Asset", "Objekt importieren"),
-        ("resetFixture", "Reset Fixture", "Vorgabe zuruecksetzen"),
+        ("resetFixture", "Reset Fixture", "Vorgabe zurücksetzen"),
         ("translateSelection", "Translate Selection", "Auswahl verschieben"),
         ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
         ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setCameraDraftLabel", "Set Camera Draft Label", "Kamera-Entwurfsbezeichnung festlegen"),
         ("setCenterModel", "Set Center Model", "Modellzentrierung festlegen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldSelect", "World Select", "Welt auswählen"),
         ("worldHover", "World Hover", "Welt-Hover"),
         ("setHover", "Set Hover", "Hover festlegen"),
         ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
         ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+        ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
         ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
         ("saveDownload", "Save Download", "Download speichern"),
         ("loadRequest", "Load Request", "Ladeanfrage"),
@@ -2003,7 +2003,7 @@ mod tests {
         assert!(result.operations.is_empty(), "utility switching never emits document ops");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
-        assert_eq!(selection["transformTool"], json!("rotate"), "the gumball follows the host-owned active utility");
+        assert_eq!(selection["transformMode"], json!("rotate"), "the gumball follows the host-owned active utility");
     }
 
     #[test]

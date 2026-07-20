@@ -70,7 +70,7 @@ pub fn random_walk_entropy_rate(edges: &[(u32, u32)], n_nodes: usize, weights: O
         if a >= n_nodes || b >= n_nodes {
             return Err(EntropyError::ShapeMismatch { what: "edge endpoint", expected: n_nodes, actual: a.max(b) + 1 });
         }
-        let w = weights.map(|ws| ws[i]).unwrap_or(1.0);
+        let w = weights.map_or(1.0, |ws| ws[i]);
         if w < 0.0 || !w.is_finite() {
             return Err(EntropyError::InvalidProbability { index: i, value: w });
         }

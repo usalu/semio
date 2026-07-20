@@ -26,7 +26,6 @@ let shippedModelDefinitionAssetsCache: ModelDefinitionAssetModules | null = null
 
 function shippedModelDefinitionAssets(): ModelDefinitionAssetModules {
   if (shippedModelDefinitionAssetsCache) return shippedModelDefinitionAssetsCache;
-  console.log("[DEBUG] typeof import.meta.glob:", typeof import.meta.glob);
   if (typeof import.meta.glob !== "function") {
     shippedModelDefinitionAssetsCache = emptyModelDefinitionAssets();
     return shippedModelDefinitionAssetsCache;
@@ -61,7 +60,6 @@ export function bootstrapCadModules(): void {
   aecBuildingEnergy.register();
   aecBuildingStructure.register();
   cadModulesBootstrapped = true;
-  console.log("[DEBUG] bootstrapCadModules: spatial-shape, aec-building, aec-building-energy, aec-building-structure");
 }
 
 export { spatialShape, aecBuilding, aecBuildingEnergy, aecBuildingStructure };

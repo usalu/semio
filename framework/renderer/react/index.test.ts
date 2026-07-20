@@ -55,6 +55,7 @@ import {
   brushObjectPlacementArgs,
   parsePuzzle3dCatalogueDragPayload,
   resolveMeshStyle,
+  resolveMeshSelectionPreviewStyle,
   resolveVortexPointerDownIntent,
   resolveWorldContextMenuTarget,
   snapWorldPointToGrid,
@@ -118,6 +119,11 @@ import {
   type UISearchItem,
   useUIFind,
   interpretUiNode,
+  dispatchOpenedFiles,
+  scheduleDispatchAction,
+  sampleMediaFrameTimestampsMs,
+  runTier2VideoFrames,
+  runRequestMediaFrames,
 } from "./index.tsx";
 
 //#region 🔌jsdom polyfills
@@ -1407,6 +1413,14 @@ describe("framework renderer hosts", () => {
     expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true })).toBe("disabled");
   });
 
+  it("renders the new group selection as active and only objects leaving the old selection as highlighted", () => {
+    expect(resolveMeshSelectionPreviewStyle({ selected: false }, true)).toBe("selected");
+    expect(resolveMeshSelectionPreviewStyle({ selected: true }, true)).toBe("selected");
+    expect(resolveMeshSelectionPreviewStyle({ selected: true }, false)).toBe("highlighted");
+    expect(resolveMeshSelectionPreviewStyle({ selected: false }, false)).toBe("neutral");
+    expect(resolveMeshSelectionPreviewStyle({ selected: true, disabled: true }, false)).toBe("disabled");
+  });
+
   it("builds addBrushObject args from a parsed brush preview, or null when there is nothing to place", () => {
     expect(brushObjectPlacementArgs(null)).toBeNull();
     const args = brushObjectPlacementArgs({
@@ -2190,8 +2204,8 @@ describe("toolbar ribbon", () => {
     expect(oneActive).toHaveLength(2);
 
     const twoActive = buildToolbarRibbonSegments(tree, ["construct", "construct-tools"]);
-    const toolsSegment = twoActive.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "box"));
-    expect(toolsSegment).toMatchObject({ depth: 2 });
+    const utilitiesSegment = twoActive.find((segment) => segment.kind === "utilities" && segment.items.some((item) => item.id === "box"));
+    expect(utilitiesSegment).toMatchObject({ depth: 2 });
   });
 
   it("ignores a path entry that no longer names an enabled collection at that level", () => {
@@ -2221,7 +2235,7 @@ describe("toolbar ribbon", () => {
     );
     expect(segments).toEqual([
       { kind: "picker", collections: [expect.objectContaining({ id: "view" })], depth: 0 },
-      { kind: "tools", items: [expect.objectContaining({ id: "undo" })], depth: 0 },
+      { kind: "utilities", items: [expect.objectContaining({ id: "undo" })], depth: 0 },
     ]);
   });
 
@@ -2252,17 +2266,17 @@ describe("toolbar ribbon", () => {
       { id: "tool", kind: "toggle", iconId: "pen", controllerId: "x", action: "pen" },
       { id: "sync", kind: "toggle", iconId: "cloud", controllerId: "x", action: "sync", category: "sync" },
     ]);
-    expect(grouped.map((node) => node.id)).toEqual(["selection", "tools", "history", "sync"]);
+    expect(grouped.map((node) => node.id)).toEqual(["selection", "utilities", "history", "sync"]);
     expect(grouped.every((node) => node.kind === "collection")).toBe(true);
   });
 
   it("drops separator-only category buckets so an empty group never appears as a picker option", () => {
     const grouped = groupUtilityNodesByCategory([
-      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "utilities" },
       { id: "sep", kind: "separator" },
     ]);
     expect(grouped).toHaveLength(1);
-    expect(grouped[0].id).toBe("tools");
+    expect(grouped[0].id).toBe("utilities");
   });
 
   it("reuses a category's single already-meaningful collection instead of re-wrapping it, avoiding a duplicate-looking picker level", () => {
@@ -2277,16 +2291,16 @@ describe("toolbar ribbon", () => {
     const grouped = groupUtilityNodesByCategory([selectionCollection]);
     expect(grouped).toEqual([{ ...selectionCollection, order: 0 }]);
     const segments = buildToolbarRibbonSegments(grouped, ["lowpoly-tools-selection"]);
-    const toolsSegment = segments.find((segment) => segment.kind === "tools" && segment.items.some((item) => item.id === "mesh"));
-    expect(toolsSegment).toBeTruthy();
+    const utilitiesSegment = segments.find((segment) => segment.kind === "utilities" && segment.items.some((item) => item.id === "mesh"));
+    expect(utilitiesSegment).toBeTruthy();
   });
 
   it("still wraps a category with multiple top-level nodes in a synthetic collection", () => {
     const grouped = groupUtilityNodesByCategory([
-      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "tools" },
-      { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "tools" },
+      { id: "a", kind: "button", iconId: "box", controllerId: "x", action: "a", category: "utilities" },
+      { id: "b", kind: "button", iconId: "box", controllerId: "x", action: "b", category: "utilities" },
     ]);
-    expect(grouped).toEqual([{ id: "tools", kind: "collection", iconId: "wrench", text: "tools", order: 0, category: "tools", children: expect.any(Array) }]);
+    expect(grouped).toEqual([{ id: "utilities", kind: "collection", iconId: "wrench", text: "utilities", order: 0, category: "utilities", children: expect.any(Array) }]);
   });
 
   it("scopes grouping to the given categories only", () => {
@@ -2294,8 +2308,8 @@ describe("toolbar ribbon", () => {
       { id: "sel", kind: "toggle", iconId: "cursor", controllerId: "x", action: "sel", category: "selection" },
       { id: "hist", kind: "button", iconId: "undo", controllerId: "x", action: "undo", category: "history" },
     ];
-    expect(groupUtilityNodesByCategory(nodes, ["selection", "tools"]).map((node) => node.id)).toEqual(["selection"]);
-    expect(groupUtilityNodesByCategory(nodes, ["tools", "history"]).map((node) => node.id)).toEqual(["history"]);
+    expect(groupUtilityNodesByCategory(nodes, ["selection", "utilities"]).map((node) => node.id)).toEqual(["selection"]);
+    expect(groupUtilityNodesByCategory(nodes, ["utilities", "history"]).map((node) => node.id)).toEqual(["history"]);
   });
 
   it("deduplicates utility nodes by id across window utility lists for a single shared footer entry", () => {
@@ -2392,6 +2406,20 @@ describe("toolbar ribbon", () => {
     );
     expect(markup).toContain('id="ui.toolbar.model"');
     expect(markup).not.toContain('id="ui.toolbar"');
+  });
+
+  it("renders utilityOptions as an extra ribbon row when direction is up", () => {
+    const markup = renderToStaticMarkup(
+      createElement(UtilityTree, {
+        id: "ui.toolbar.w",
+        direction: "up",
+        utilities: [{ id: "brush", kind: "toggle", iconId: "brush", pressed: true, controllerId: "x", action: "setActiveUtility" }],
+        utilityOptions: createElement("span", { "data-testid": "brush-options" }, "Brush size"),
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain('data-testid="brush-options"');
+    expect(markup).toContain("Brush size");
   });
 });
 
@@ -2668,8 +2696,8 @@ describe("palette redirect and keybinding rule (P3/P4)", () => {
 describe("registry-derived utilities and activation (P5)", () => {
   const utilities: UtilityDefinition[] = [
     { id: "select", label: "Select", iconId: "mouse-pointer", category: "selection", allowsActionsWhileActive: true },
-    { id: "brush", label: "Brush", iconId: "brush", group: "paint", category: "tools", allowsActionsWhileActive: false },
-    { id: "erase", label: "Erase", iconId: "eraser", group: "paint", category: "tools", allowsActionsWhileActive: false },
+    { id: "brush", label: "Brush", iconId: "brush", group: "paint", category: "utilities", allowsActionsWhileActive: false },
+    { id: "erase", label: "Erase", iconId: "eraser", group: "paint", category: "utilities", allowsActionsWhileActive: false },
   ];
   const app = { controllerId: "draw", utilities } satisfies Pick<AppDefinition, "controllerId" | "utilities">;
 
@@ -2920,5 +2948,161 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const executeRow = resolved.sections[0]!.items!.find((item: { id: string }) => item.id === "command.os.resetDock") as unknown as { onClick: (event: never, context: never) => void };
     executeRow.onClick({} as never, {} as never);
     expect(onCommand).toHaveBeenCalledWith({ kind: "os" }, "os.resetDock", undefined);
+  });
+});
+
+describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, D5 RequestMediaFrames)", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("scheduleDispatchAction (D2): fires dispatchOne with action/args only after delayMs elapses", () => {
+    vi.useFakeTimers();
+    const dispatchOne = vi.fn().mockResolvedValue(undefined);
+    scheduleDispatchAction("advanceReconstruction", { jobId: "job-1" }, 250, dispatchOne);
+    expect(dispatchOne).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(249);
+    expect(dispatchOne).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("advanceReconstruction", { jobId: "job-1" });
+  });
+
+  it("scheduleDispatchAction (D2): delayMs 0 still defers to a scheduled tick, not a synchronous call", () => {
+    vi.useFakeTimers();
+    const dispatchOne = vi.fn().mockResolvedValue(undefined);
+    scheduleDispatchAction("tick", undefined, 0, dispatchOne);
+    expect(dispatchOne).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(0);
+    expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("tick", undefined);
+  });
+
+  it("dispatchOpenedFiles (D3): single-file (multiple=false) makes exactly one call with {payload, name} and no index/total", async () => {
+    const dispatchOne = vi.fn().mockResolvedValue(undefined);
+    await dispatchOpenedFiles([{ contents: "abc", name: "a.png" }], "importFramePayload", false, dispatchOne);
+    expect(dispatchOne).toHaveBeenCalledExactlyOnceWith("importFramePayload", { payload: "abc", name: "a.png" });
+  });
+
+  it("dispatchOpenedFiles (D3): multiple=true dispatches once per file, in order, each extended with {index, total}", async () => {
+    const calls: unknown[][] = [];
+    const dispatchOne = vi.fn().mockImplementation(async (action: string, args: unknown) => {
+      calls.push([action, args]);
+    });
+    const opened = [
+      { contents: "a", name: "a.png" },
+      { contents: "b", name: "b.png" },
+      { contents: "c", name: "c.png" },
+    ];
+    await dispatchOpenedFiles(opened, "importFramePayload", true, dispatchOne);
+    expect(dispatchOne).toHaveBeenCalledTimes(3);
+    expect(calls).toEqual([
+      ["importFramePayload", { payload: "a", name: "a.png", index: 0, total: 3 }],
+      ["importFramePayload", { payload: "b", name: "b.png", index: 1, total: 3 }],
+      ["importFramePayload", { payload: "c", name: "c.png", index: 2, total: 3 }],
+    ]);
+  });
+
+  it("sampleMediaFrameTimestampsMs (D5): steps by sampleStride/fpsHint seconds, capped at maxFrames", () => {
+    // Expected timestamps mirror the implementation's own `k * stepMs` computation exactly (bit-for-bit)
+    // rather than independently-derived literals — plain float division/multiplication isn't perfectly
+    // associative, so e.g. `k * (5 / 30 * 1000)` and `(k * 5000) / 30` can differ by a ULP.
+    const stepAt5_30 = (5 / 30) * 1000;
+    expect(sampleMediaFrameTimestampsMs(1000, 5, 0, 30)).toEqual([0, 1, 2, 3, 4, 5].map((k) => k * stepAt5_30));
+    expect(sampleMediaFrameTimestampsMs(1000, 5, 2, 30)).toEqual([0, stepAt5_30]);
+    // sampleStride 0 floors to 1, fpsHint 0 falls back to 30 — never divides by zero.
+    const stepAt1_30 = (1 / 30) * 1000;
+    expect(sampleMediaFrameTimestampsMs(100, 0, 0, 0)).toEqual([0, 1, 2].map((k) => k * stepAt1_30));
+    expect(sampleMediaFrameTimestampsMs(0, 5, 10, 30)).toEqual([]);
+  });
+
+  //#region 🔌jsdom media mocks
+  /** 🎞️ jsdom has no real media decoder — `<video>`'s `duration`/`videoWidth`/`videoHeight` are
+   * read-only getters that never change from a `src` assignment, and `currentTime` is a no-op setter
+   * that never fires `seeked`. This stubs both to the minimum needed for `runTier2VideoFrames`'s
+   * seek-and-capture loop: `currentTime` synchronously (via microtask) fires `seeked`, mirroring how a
+   * real browser resolves a seek asynchronously without needing fake timers in these tests. */
+  function mockVideoElement(durationMs: number, width: number, height: number): HTMLVideoElement {
+    const video = document.createElement("video");
+    Object.defineProperty(video, "duration", { value: durationMs / 1000, configurable: true });
+    Object.defineProperty(video, "videoWidth", { value: width, configurable: true });
+    Object.defineProperty(video, "videoHeight", { value: height, configurable: true });
+    Object.defineProperty(video, "readyState", { value: 1, configurable: true });
+    Object.defineProperty(video, "currentTime", {
+      configurable: true,
+      get() {
+        return 0;
+      },
+      set() {
+        queueMicrotask(() => video.dispatchEvent(new Event("seeked")));
+      },
+    });
+    return video;
+  }
+
+  function mockCanvasCapture(): void {
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({ drawImage: vi.fn() }) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue("data:image/jpeg;base64,ZmFrZQ==");
+  }
+  //#endregion 🔌jsdom media mocks
+
+  it("runTier2VideoFrames (D5): dispatches frameAction once per sampled timestamp, in order, then doneAction exactly once", async () => {
+    mockCanvasCapture();
+    const video = mockVideoElement(200, 64, 48);
+    const calls: { action: string; args: Record<string, unknown> }[] = [];
+    const dispatchOne = vi.fn().mockImplementation(async (action: string, args: Record<string, unknown>) => {
+      calls.push({ action, args });
+    });
+    await runTier2VideoFrames(video, { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 5, maxFrames: 0, maxLongEdgePx: 0, fpsHint: 30, args: { streamId: "s1" } }, "clip.mp4", dispatchOne);
+    const frameCalls = calls.filter((call) => call.action === "frame");
+    const doneCalls = calls.filter((call) => call.action === "done");
+    expect(frameCalls.length).toBeGreaterThan(0);
+    expect(doneCalls).toHaveLength(1);
+    // frame/done ordering: every frame dispatch precedes the single done dispatch.
+    expect(calls.at(-1)!.action).toBe("done");
+    expect(frameCalls.map((call) => call.args.index)).toEqual(frameCalls.map((_, index) => index));
+    expect(frameCalls[0]!.args).toMatchObject({ payload: "data:image/jpeg;base64,ZmFrZQ==", name: "clip.mp4", streamId: "s1" });
+    expect(doneCalls[0]!.args).toMatchObject({ name: "clip.mp4", frameCount: frameCalls.length, sampledCount: frameCalls.length, streamId: "s1" });
+  });
+
+  it("runRequestMediaFrames (D5): Tier 2 failure (video element throws mid-seek) ⇒ dispatches fallbackAction exactly once with raw bytes as a data URL, no frame/done calls", async () => {
+    const dispatchOne = vi.fn().mockResolvedValue(undefined);
+    const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
+    const throwingVideo = mockVideoElement(1000, 16, 16);
+    Object.defineProperty(throwingVideo, "currentTime", {
+      configurable: true,
+      get() {
+        return 0;
+      },
+      set() {
+        throw new Error("decode failed");
+      },
+    });
+    await runRequestMediaFrames(
+      { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 },
+      "video/mp4",
+      payload,
+      dispatchOne,
+      () => throwingVideo,
+    );
+    expect(dispatchOne).toHaveBeenCalledTimes(1);
+    const [action, args] = dispatchOne.mock.calls[0]! as [string, Record<string, unknown>];
+    expect(action).toBe("fallback");
+    expect(args.name).toBe("video");
+    expect(String(args.payload)).toMatch(/^data:video\/mp4;base64,/);
+  });
+
+  it("runRequestMediaFrames (D5): payload bytes in hand ⇒ Tier 2 seek-capture runs, ending in doneAction (no picker needed)", async () => {
+    mockCanvasCapture();
+    const dispatchOne = vi.fn().mockResolvedValue(undefined);
+    const payload = "data:video/mp4;base64," + btoa("not a real mp4 but bytes exist");
+    await runRequestMediaFrames(
+      { frameAction: "frame", doneAction: "done", fallbackAction: "fallback", sampleStride: 1, maxFrames: 2, maxLongEdgePx: 0, fpsHint: 30 },
+      "video/mp4",
+      payload,
+      dispatchOne,
+      () => mockVideoElement(1000, 16, 16),
+    );
+    const actions = dispatchOne.mock.calls.map((call) => call[0] as string);
+    expect(actions.at(-1)).toBe("done");
+    expect(actions.filter((action) => action === "frame").length).toBeGreaterThan(0);
   });
 });

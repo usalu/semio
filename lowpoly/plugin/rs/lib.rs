@@ -492,7 +492,7 @@ fn world_selection_json_for(view: LowpolyView, active_utility: &str, active_mode
     if let Some(object) = value.as_object_mut() {
         object.insert("granularity".into(), json!(runtime.selection.mode));
         object.insert("targets".into(), json!(runtime.selection.targets));
-        object.insert("transformTool".into(), json!(active_utility));
+        object.insert("transformMode".into(), json!(active_utility));
         object.insert(
             "interactionMode".into(),
             json!(if active_mode_id == Some("paint") { "paint" } else { "model" }),
@@ -667,11 +667,11 @@ semio_framework_plugin::app_labels! {
         brush_hardness: &'static str = en: "Brush Hardness", de: "Pinselhaerte";
         // engagement + measures
         snap: &'static str = en: "Snap", de: "Einrasten";
-        smooth: &'static str = en: "Smooth", de: "Glaetten";
+        smooth: &'static str = en: "Smooth", de: "Glätten";
         show_edges: &'static str = en: "Show Edges", de: "Kanten anzeigen";
         selection_kind: &'static str = en: "Selection Kind", de: "Auswahlart";
         mesh: &'static str = en: "Mesh", de: "Netz";
-        face: &'static str = en: "Face", de: "Flaeche";
+        face: &'static str = en: "Face", de: "Fläche";
         edge: &'static str = en: "Edge", de: "Kante";
         vertex: &'static str = en: "Vertex", de: "Eckpunkt";
         selection_method: &'static str = en: "Selection Method", de: "Auswahlmethode";
@@ -700,7 +700,7 @@ fn primitive_catalog_label(kind: &str, fallback_label: &'static str, labels: &Lo
 /// command palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addPrimitive", "Add Primitive", "Primitive hinzufuegen"),
+        ("addPrimitive", "Add Primitive", "Primitive hinzufügen"),
         ("patchObject", "Patch Object", "Objekt aktualisieren"),
         ("extrude", "Extrude", "Extrudieren"),
         ("inset", "Inset", "Einziehen"),
@@ -710,11 +710,11 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
         ("triangulate", "Triangulate", "Triangulieren"),
         ("mirror", "Mirror", "Spiegeln"),
         ("decimate", "Decimate", "Dezimieren"),
-        ("flipFaces", "Flip Faces", "Flaechen umkehren"),
-        ("merge", "Merge", "Zusammenfuehren"),
-        ("dissolve", "Dissolve", "Aufloesen"),
+        ("flipFaces", "Flip Faces", "Flächen umkehren"),
+        ("merge", "Merge", "Zusammenführen"),
+        ("dissolve", "Dissolve", "Auflösen"),
         ("snap", "Snap", "Einrasten"),
-        ("toggleSmooth", "Toggle Smooth", "Glaettung umschalten"),
+        ("toggleSmooth", "Toggle Smooth", "Glättung umschalten"),
         ("unwrapActive", "Unwrap", "Abwickeln"),
         ("markUvSeam", "Mark Seam", "Naht markieren"),
         ("clearSeam", "Clear Seam", "Naht entfernen"),
@@ -722,13 +722,13 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
         ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
         ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
         ("transformEnd", "Transform End", "Transformation beenden"),
-        ("addPaintLayer", "Add Paint Layer", "Malebene hinzufuegen"),
+        ("addPaintLayer", "Add Paint Layer", "Malebene hinzufügen"),
         ("paintStrokeEnd", "Paint Stroke End", "Malstrich beenden"),
-        ("paintFill", "Paint Fill", "Fuellen malen"),
-        ("fillBucket", "Fill Bucket", "Fuelleimer"),
+        ("paintFill", "Paint Fill", "Füllen malen"),
+        ("fillBucket", "Fill Bucket", "Fülleimer"),
         ("setProjectionJson", "Set Projection Json", "Projektions-JSON festlegen"),
         ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
         ("setActiveObject", "Set Active Object", "Aktives Objekt festlegen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("toggleSelectionKind", "Toggle Selection Kind", "Auswahlart umschalten"),
@@ -739,11 +739,11 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
         ("toggleShowEdges", "Toggle Show Edges", "Kantenanzeige umschalten"),
         ("toggleSun", "Toggle Sun", "Sonne umschalten"),
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
         ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
-        ("worldSelect", "World Select", "Welt auswaehlen"),
+        ("worldSelect", "World Select", "Welt auswählen"),
         ("worldHover", "World Hover", "Welt-Hover"),
         ("setHover", "Set Hover", "Hover festlegen"),
         ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
@@ -1159,7 +1159,6 @@ fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed:
 
 fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> Vec<WindowMeasure> {
     let params = &runtime.utility_params;
-    let targets = &runtime.selection.targets;
     vec![
         WindowMeasure::Toggle {
             id: "lowpoly-measure-show-edges".into(),
@@ -1169,29 +1168,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels)
             text: None,
             on_change: lowpoly_action("toggleShowEdges", None),
         },
-        WindowMeasure::Group {
-            id: "lowpoly-measure-selection-kind".into(),
-            label: labels.selection_kind.into(),
-            default_open: Some(true),
-            active_utility_id: None,
-            children: vec![
-                selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
-                selection_kind_toggle("face", "square", labels.face, "face", targets.face),
-                selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
-                selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
-            ],
-        },
         world3d_sun_measures("lowpoly", &runtime.sun, lowpoly_action),
-        WindowMeasure::Select {
-            id: "lowpoly-measure-selection-method".into(),
-            label: Some(labels.selection_method.into()),
-            value: runtime.selection_method.clone(),
-            items: vec![
-                MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.rectangle.into() },
-                MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.lasso.into() },
-            ],
-            on_change: lowpoly_action("setSelectionMethod", None),
-        },
         WindowMeasure::Group {
             id: "lowpoly-measure-snap".into(),
             label: labels.snap.into(),
@@ -1201,9 +1178,37 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels)
                 lowpoly_utility_param_slider("snap", labels.snap_grid, "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
             ],
         },
+        lowpoly_selection_utility_options(runtime, labels),
         lowpoly_paint_params_group("brush", params, labels),
         lowpoly_paint_params_group("eraser", params, labels),
     ]
+}
+
+/// 🎯 Selection kind and method controls for the default transform utility (`move`).
+fn lowpoly_selection_utility_options(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> WindowMeasure {
+    let targets = &runtime.selection.targets;
+    WindowMeasure::Group {
+        id: "lowpoly-utility-options-select".into(),
+        label: labels.selection_kind.into(),
+        default_open: Some(true),
+        active_utility_id: Some(LOWPOLY_TRANSFORM_UTILITY_DEFAULT.into()),
+        children: vec![
+            selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
+            selection_kind_toggle("face", "square", labels.face, "face", targets.face),
+            selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
+            selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
+            WindowMeasure::Select {
+                id: "lowpoly-measure-selection-method".into(),
+                label: Some(labels.selection_method.into()),
+                value: runtime.selection_method.clone(),
+                items: vec![
+                    MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.rectangle.into() },
+                    MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.lasso.into() },
+                ],
+                on_change: lowpoly_action("setSelectionMethod", None),
+            },
+        ],
+    }
 }
 
 /// 🖌️ Utility Options for a stamping paint utility (`brush`/`eraser`) — the live brush size/opacity/hardness
@@ -2147,7 +2152,7 @@ impl DocumentApp for LowpolyPlayApp {
 fn lowpoly_utility(id: &str, label: &str, icon: &str, group: &str) -> UtilityDefinition {
     UtilityDefinition {
         group: Some(group.into()),
-        category: Some(UtilityCategory::Tools),
+        category: Some(UtilityCategory::Utilities),
         ..UtilityDefinition::new(id, label, icon)
     }
 }

@@ -114,8 +114,8 @@ fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(
         is_de,
         &[
-            ("addStep", "Add Step", "Schritt hinzufuegen"),
-            ("addStepAt", "Add Step At", "Schritt bei Position hinzufuegen"),
+            ("addStep", "Add Step", "Schritt hinzufügen"),
+            ("addStepAt", "Add Step At", "Schritt bei Position hinzufügen"),
             ("removeStep", "Remove Step", "Schritt entfernen"),
             ("removeStepAt", "Remove Step At", "Schritt bei Position entfernen"),
             ("moveStep", "Move Step", "Schritt verschieben"),
@@ -123,7 +123,7 @@ fn imperative_action_labels(is_de: bool) -> HashMap<String, String> {
             ("setStepParams", "Set Step Params", "Schrittparameter festlegen"),
             ("setStepParamsAt", "Set Step Params At", "Schrittparameter bei Position festlegen"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("run", "Run", "Ausfuehren"),
+            ("run", "Run", "Ausführen"),
         ],
     )
 }

@@ -64,9 +64,9 @@ pub fn mutual_information(x: &[u32], y: &[u32], method: DiscreteMethod, base: Lo
     let h_y = entropy_discrete(&counts_to_u64(marg_y.raw()), method, LogBase::Nats)?;
 
     let nats = clamp_near_zero(h_x.value + h_y.value - h_xy.value, 1e-9);
-    let mut warnings = h_x.warnings.clone();
-    warnings.extend(h_y.warnings.clone());
-    warnings.extend(h_xy.warnings.clone());
+    let mut warnings = h_x.warnings;
+    warnings.extend(h_y.warnings);
+    warnings.extend(h_xy.warnings);
 
     Ok(Estimate {
         value: base.from_nats(nats),
@@ -166,7 +166,7 @@ pub fn mutual_information_knn(x: &[f64], y: &[f64], cfg: KsgConfig) -> Result<Es
         let neighbors = tree.k_nearest(&query, cfg.k, Metric::Chebyshev, Some(i));
         match cfg.variant {
             KsgVariant::Ksg1 => {
-                let eps = neighbors.last().map(|&(_, d)| d).unwrap_or(0.0);
+                let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
                 let nx = (0..n).filter(|&j| j != i && (x[j] - x[i]).abs() < eps).count();
                 let ny = (0..n).filter(|&j| j != i && (y[j] - y[i]).abs() < eps).count();
                 sum_digamma_nx += digamma(nx as f64 + 1.0);

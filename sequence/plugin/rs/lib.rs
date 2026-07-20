@@ -223,11 +223,11 @@ fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
     localized_label_map(
         is_de,
         &[
-            ("addStep", "Add Step", "Schritt hinzufuegen"),
-            ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufuegen"),
-            ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufuegen"),
+            ("addStep", "Add Step", "Schritt hinzufügen"),
+            ("addStepToSlot", "Add Step To Slot", "Schritt zu Slot hinzufügen"),
+            ("addStepDropped", "Add Step Dropped", "Schritt per Ablegen hinzufügen"),
             ("removeStep", "Remove Step", "Schritt entfernen"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("moveMediaNode", "Move Step", "Schritt verschieben"),
             ("connectMediaPorts", "Connect Steps", "Schritte verbinden"),
             ("disconnectSteps", "Disconnect Steps", "Schritte trennen"),
@@ -237,12 +237,12 @@ fn sequence_action_labels(is_de: bool) -> HashMap<String, String> {
             ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
             ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("selectNode", "Select Node", "Knoten auswählen"),
             ("nodeGraphSelect", "Node Graph Select", "Knotengraph-Auswahl"),
             ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
             ("setOrientation", "Set Orientation", "Ausrichtung festlegen"),
-            ("run", "Run", "Ausfuehren"),
+            ("run", "Run", "Ausführen"),
             ("stop", "Stop", "Stopp"),
         ],
     )
@@ -869,7 +869,7 @@ mod tests {
         assert!(document_json.contains("Ablaufkanten"));
         assert!(!document_json.contains("\"Steps\""));
         let action_labels = app.app_labels(&view_state).action_labels;
-        for (id, label) in [("run", "Ausfuehren"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
+        for (id, label) in [("run", "Ausführen"), ("stop", "Stopp"), ("reorganize", "Neu anordnen")] {
             assert_eq!(action_labels.get(id).map(String::as_str), Some(label), "{id} action label");
         }
     }

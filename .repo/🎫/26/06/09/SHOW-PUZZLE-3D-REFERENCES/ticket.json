@@ -1,0 +1,15 @@
+{
+  "title": "Show Puzzle 3D References",
+  "emoji": "🖼️",
+  "status": "closed",
+  "description": "Add second locked reference for master thesis (abbau-aufbau-masterarbeit-grundriss). Master thesis visible by default, Rathaus Ahlen hidden by default.",
+  "summary": "Declared the infinite reference fixture directory as a Puzzle 3D app asset so the manifest-driven OS dev host serves JPEG and PNG references instead of returning the HTML fallback. Regenerated and validated the plugin registry, verified both image routes and 50 UI styling asset tests, and confirmed in the running React app that Concrete Forest loads the master-thesis texture, renders the floor-plan plane beneath the 3D scene, and reports no browser runtime errors. The broader packaged build was not completed because the existing build path entered the unrelated full plugin/Wasm dependency build; the live asset pipeline and registry contract were verified directly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/1652"
+  },
+  "goal": "🎯puzzle3d🎯puzzle3dplay",
+  "sessions": [
+    "⚪25c9fbe2eccd42a2a895d9f5216e7ff0",
+    "⚪06ae9c1dc7bf495694e853c5565b5bac"
+  ]
+}

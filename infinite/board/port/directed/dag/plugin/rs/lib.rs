@@ -429,22 +429,22 @@ fn dag_play_labels(view_state: &ViewState) -> &'static DagPlayLabels {
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn dag_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addNode", "Add Node", "Knoten hinzufuegen"),
+        ("addNode", "Add Node", "Knoten hinzufügen"),
         ("removeNode", "Remove Node", "Knoten entfernen"),
-        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
         ("nodeGraphEdit", "Node Graph Edit", "Knotengraph bearbeiten"),
-        ("connectMediaPorts", "Connect Ports", "Anschluesse verbinden"),
+        ("connectMediaPorts", "Connect Ports", "Anschlüsse verbinden"),
         ("disconnect", "Disconnect", "Trennen"),
         ("moveMediaNode", "Move Node", "Knoten verschieben"),
         ("renameDagNode", "Rename Node", "Knoten umbenennen"),
         ("reorganize", "Reorganize", "Neu anordnen"),
         ("patchDagNodes", "Patch Nodes", "Knoten aktualisieren"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("selectNode", "Select Node", "Knoten auswaehlen"),
-        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswaehlen"),
+        ("selectNode", "Select Node", "Knoten auswählen"),
+        ("nodeGraphSelect", "Node Graph Select", "Knotengraph auswählen"),
         ("nodeGraphHover", "Node Graph Hover", "Knotengraph-Hover"),
         ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
-        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+        ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
     ];
     ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
@@ -914,6 +914,7 @@ impl DocumentApp for DagPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            group_labels: HashMap::new(),
         }
     }
 }

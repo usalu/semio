@@ -1176,7 +1176,7 @@ pub mod host {
     mod tests {
         use super::*;
         use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph};
-        use crate::registry::{merge_os_program_definition, os_baseline_resource, OsPlatformAppInput, OsPlatformInput};
+        use crate::registry::{merge_os_program_definition, os_baseline_resource, os_in_port, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput};
         use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, ModeDefinition, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
@@ -1524,7 +1524,7 @@ pub mod host {
             host.supervisor.insert("draw".into(), PluginSupervisorState::Quarantined);
             let ui = host.recovery_ui("draw");
             match ui {
-                UiNode::Stack(stack) => assert_eq!(stack.children.len(), 4),
+                UiNode::Stack(stack) => assert_eq!(stack.children.len(), 5, "title + message + restart/disable/showDiagnostics buttons"),
                 other => panic!("expected recovery stack, got {other:?}"),
             }
         }
@@ -1543,6 +1543,42 @@ pub mod host {
                         label: "Draw".into(),
                         document: vec!["semio".into(), "draw".into()],
                         controller_id: "draw-play".into(),
+                        modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), utilities: Vec::new(), layout_id: None, commands: Vec::new() }],
+                        default_mode_id: None,
+                    }],
+                },
+                &resources,
+            )
+            .expect("merge");
+        }
+
+        /// 🧲 `draw` is a pure source app (`os_baseline_resource` gives it zero input ports), so tests
+        /// that need to wire an edge *into* a spawned instance register this minimal sink alongside it.
+        fn seed_sink_program() {
+            let mut resources = HashMap::new();
+            resources.insert(
+                "sink".into(),
+                OsAppResourceSpec {
+                    inputs: vec![os_in_port("2d.drawing", "in", "In", false)],
+                    outputs: Vec::new(),
+                    source_format: "sink.document".into(),
+                    component_kind: "sink".into(),
+                    modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), utilities: Vec::new(), layout_id: None, commands: Vec::new() }],
+                    default_mode_id: None,
+                    parameter_fields: Vec::new(),
+                },
+            );
+            merge_os_program_definition(
+                "sink",
+                &OsPlatformInput {
+                    id: "sink".into(),
+                    name: "Sink".into(),
+                    api_version: "1".into(),
+                    apps: vec![OsPlatformAppInput {
+                        id: "sink".into(),
+                        label: "Sink".into(),
+                        document: vec!["semio".into(), "sink".into()],
+                        controller_id: "sink-play".into(),
                         modes: vec![ModeDefinition { id: "edit".into(), label: "Edit".into(), utilities: Vec::new(), layout_id: None, commands: Vec::new() }],
                         default_mode_id: None,
                     }],
@@ -1591,9 +1627,10 @@ pub mod host {
         #[test]
         fn concurrent_delete_and_wire_reconciles_without_a_dangling_edge() {
             seed_draw_program();
+            seed_sink_program();
             let mut store_a = OsStore::new(create_empty_os_document("studio", "Studio"));
             let node_a_instance = store_a.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 0.0, y: 0.0 }).expect("spawn a");
-            let node_b_instance = store_a.spawn_app_instance("draw", "draw", None, MediaGraphPosition { x: 200.0, y: 0.0 }).expect("spawn b");
+            let node_b_instance = store_a.spawn_app_instance("sink", "sink", None, MediaGraphPosition { x: 200.0, y: 0.0 }).expect("spawn b");
             let mut store_b = OsStore::new(store_a.document());
 
             let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race");

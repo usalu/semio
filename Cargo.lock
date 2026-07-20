@@ -8119,6 +8119,7 @@ dependencies = [
 name = "remodel_document"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -8130,16 +8131,18 @@ dependencies = [
 name = "remodel_engine"
 version = "0.1.0"
 dependencies = [
+ "mathematical_algebra",
+ "mathematical_lie",
  "mathematical_random",
  "remodel_camera",
  "remodel_dense",
- "remodel_document",
  "remodel_feature",
  "remodel_geo",
  "remodel_image",
  "remodel_mesh",
  "remodel_motion",
  "remodel_sfm",
+ "remodel_video",
  "semio-framework-core",
 ]
 

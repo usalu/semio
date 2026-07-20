@@ -226,7 +226,7 @@ pub fn wavelet_entropy(x: &[f64], cfg: WaveletConfig) -> Result<Estimate, Entrop
     let dwt = Dwt::decompose(x, cfg)?;
     let energies = dwt.subband_energies();
     let total = neumaier_sum(energies.iter().copied());
-    if !(total > 1e-300) {
+    if total <= 1e-300 {
         return Err(EntropyError::DegenerateInput { what: "wavelet subband energies sum to ~0" });
     }
     let p: Vec<f64> = energies.iter().map(|&e| (e / total).max(0.0)).collect();

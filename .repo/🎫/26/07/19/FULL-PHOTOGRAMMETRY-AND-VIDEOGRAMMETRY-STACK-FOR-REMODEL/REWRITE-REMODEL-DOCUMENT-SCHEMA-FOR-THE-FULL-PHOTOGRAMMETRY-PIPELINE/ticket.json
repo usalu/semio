@@ -1,0 +1,13 @@
+{
+  "title": "Rewrite Remodel Document Schema for the Full Photogrammetry Pipeline",
+  "emoji": "📐",
+  "status": "open",
+  "description": "Rewrite remodel/rs/lib.rs (crate remodel_document) from the current stub schema (source_video/native_port/single ReconstructionParams/single result mesh) to the full schema-only document backing the now-implemented sibling reconstruction crates (remodel_image, remodel_camera, remodel_feature, remodel_sfm, remodel_dense, remodel_mesh, remodel_motion, remodel_geo, remodel_engine). New RemodelScene: streams (MediaStream), assets (BTreeMap\u003cString,ImageAsset\u003e base64-PNG), calibration (CalibrationState: cameras+rig), params (8 sub-structs: ingest/feature/matching/sfm/dense/mesh/motion/geo), gcps (GroundControlPoint), job (ReconstructionJob with expanded ReconstructionStage), results (ReconstructionResults: sparse/dense/mesh/trajectory/tracks/geo/qc). New PackedF32/PackedU8 newtypes serializing as base64 LE bytes (region 🔖Packed) for big numeric arrays (point clouds, height grids, UVs), replacing plain JSON arrays. Field-granular LWW RemodelOp/RemodelDiff set (SetStreams, SetAsset per-key, SetCalibration, SetGcps, 8x SetXParams, SetJob, SetSparse, SetDense, SetMeshResult, SetTrajectory, SetTracks, SetGeoProducts, SetQc) replacing the old SetSourceVideo/SetParams/SetJob/SetResult — no compat shims, greenfield rewrite. default_remodel_scene() keeps seeding a placeholder box mesh via semio_framework_core::mesh_from_kind(\"box\"). Extend inline #[cfg(test)] mod tests: Packed round-trip + wire-format check, full RemodelScene JSON round-trip with populated results, apply+invert round-trip for SetAsset/SetFeatureParams/SetGcps/SetSparse/SetJob, ReconstructionStage serde stability, default scene placeholder check. Only touches remodel/rs/lib.rs and remodel/rs/Cargo.toml (add base64 = \"0.22.1\" dep, matching remodel/plugin/rs's existing base64 dep). Verify via cargo test -p remodel_document and cargo clippy -p remodel_document --all-targets -- -D warnings, both green. Also run cargo check -p remodel-plugin to record (not fix) the resulting breakage against the new schema for follow-up work.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2164"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪438e13cd770b4b1cb43ec6b83c733978"
+  ]
+}

@@ -766,39 +766,64 @@ pub mod d2 {
         }
     }
 
-    /// 🖌️ Utility Options group for the brush utility — the brush candidate picker (`{nodeKind, targetHandleIndex}`
-    /// rows drained from the host), tagged `active_utility_id: Some("brush")` so [`partition_window_measures`]
-    /// surfaces it in the Utility Options rail only while the brush utility is active. `None` when the host has no
-    /// candidates yet (nothing to place), so the rail stays empty just like the old gated engagement control.
-    fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Option<WindowMeasure> {
-        if envelope.runtime.brush_candidates.is_empty() {
-            return None;
-        }
-        let items: Vec<MeasureSelectItem> = envelope
-            .runtime
-            .brush_candidates
-            .iter()
-            .enumerate()
-            .map(|(index, candidate)| {
-                let node_kind = candidate.get("nodeKind").and_then(|value| value.as_str()).or_else(|| candidate.as_str()).unwrap_or("kind");
-                let id = format!("puzzle2d.brush.candidate.{index}");
-                MeasureSelectItem { id: id.clone(), value: id, label: node_kind.into() }
-            })
-            .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
-        Some(WindowMeasure::Group {
-            id: "puzzle2d-utility-options-brush".into(),
-            label: labels.placement.into(),
-            default_open: Some(true),
-            active_utility_id: Some(PUZZLE2D_UTILITY_BRUSH.into()),
-            children: vec![WindowMeasure::Select {
+    /// 🖌️ Utility Options group for the brush utility — suggestion offset, per-kind distribution trees,
+    /// and (when candidates exist) the placement picker. Tagged `active_utility_id: Some("brush")`.
+    fn puzzle2d_brush_utility_options(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
+        let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
+        let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
+        let mut children = vec![
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
+                label: Some(labels.offset.into()),
+                value: envelope.runtime.suggestion_offset,
+                min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
+                max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
+                step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
+                on_change: puzzle2d_action("setSuggestionOffset", None),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
+                label: format!("{} ({:.0}%)", labels.node_weights, puzzle2d_kind_weight_sum(&envelope.runtime.node_kind_weights, &node_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle2d_kind_weight_measures("node-kind", &node_ids, &envelope.runtime.node_kind_weights, "nodes"),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles"),
+                label: format!("{} ({:.0}%)", labels.handle_weights, puzzle2d_kind_weight_sum(&envelope.runtime.handle_kind_weights, &handle_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle2d_kind_weight_measures("handle-kind", &handle_ids, &envelope.runtime.handle_kind_weights, "handles"),
+            },
+        ];
+        if !envelope.runtime.brush_candidates.is_empty() {
+            let items: Vec<MeasureSelectItem> = envelope
+                .runtime
+                .brush_candidates
+                .iter()
+                .enumerate()
+                .map(|(index, candidate)| {
+                    let node_kind = candidate.get("nodeKind").and_then(|value| value.as_str()).or_else(|| candidate.as_str()).unwrap_or("kind");
+                    let id = format!("puzzle2d.brush.candidate.{index}");
+                    MeasureSelectItem { id: id.clone(), value: id, label: node_kind.into() }
+                })
+                .collect();
+            let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+            children.push(WindowMeasure::Select {
                 id: "puzzle2d-brush-placement".into(),
                 label: Some(labels.placement.into()),
                 value: format!("puzzle2d.brush.candidate.{selected_index}"),
                 items,
                 on_change: puzzle2d_action("engagementControlSelect", None),
-            }],
-        })
+            });
+        }
+        WindowMeasure::Group {
+            id: "puzzle2d-utility-options-brush".into(),
+            label: labels.brush.into(),
+            default_open: Some(true),
+            active_utility_id: Some(PUZZLE2D_UTILITY_BRUSH.into()),
+            children,
+        }
     }
 
     /// 🪣 Utility Options group for the fill utility — the fill-count slider, tagged `active_utility_id: Some("fill")`
@@ -1388,6 +1413,69 @@ pub mod d2 {
         entries.iter().filter_map(|entry| entry.get("id").and_then(|value| value.as_str()).map(str::to_string)).collect()
     }
 
+    fn puzzle2d_uniform_kind_weights(ids: &[String]) -> BTreeMap<String, f64> {
+        if ids.is_empty() {
+            return BTreeMap::new();
+        }
+        let weight = 1.0 / ids.len() as f64;
+        ids.iter().map(|id| (id.clone(), weight)).collect()
+    }
+
+    fn puzzle2d_normalize_kind_weight_group(weights: &BTreeMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> BTreeMap<String, f64> {
+        if kind_ids.is_empty() {
+            return BTreeMap::new();
+        }
+        if kind_ids.len() == 1 {
+            return BTreeMap::from([(kind_ids[0].clone(), 1.0)]);
+        }
+        let new_value = new_value.clamp(0.0, 1.0);
+        let others: Vec<&String> = kind_ids.iter().filter(|id| id.as_str() != changed_id).collect();
+        let remainder = (1.0 - new_value).max(0.0);
+        let other_sum: f64 = others.iter().map(|id| weights.get(*id).copied().unwrap_or(0.0)).sum();
+        let mut next = BTreeMap::new();
+        next.insert(changed_id.to_string(), new_value);
+        if remainder <= f64::EPSILON {
+            for id in others {
+                next.insert((*id).clone(), 0.0);
+            }
+            return next;
+        }
+        if other_sum <= f64::EPSILON {
+            let each = remainder / others.len() as f64;
+            for id in others {
+                next.insert((*id).clone(), each);
+            }
+        } else {
+            for id in others {
+                let old = weights.get(*id).copied().unwrap_or(0.0);
+                next.insert((*id).clone(), old / other_sum * remainder);
+            }
+        }
+        next
+    }
+
+    fn puzzle2d_ensure_catalog_kind_weights(weights: &mut BTreeMap<String, f64>, kind_ids: &[String]) {
+        if kind_ids.is_empty() {
+            return;
+        }
+        if weights.is_empty() || kind_ids.iter().any(|id| !weights.contains_key(id)) {
+            *weights = puzzle2d_uniform_kind_weights(kind_ids);
+            return;
+        }
+        let sum: f64 = kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum();
+        if (sum - 1.0).abs() > 0.001 {
+            for id in kind_ids {
+                if let Some(weight) = weights.get_mut(id) {
+                    *weight /= sum;
+                }
+            }
+        }
+    }
+
+    fn puzzle2d_kind_weight_sum(weights: &BTreeMap<String, f64>, kind_ids: &[String]) -> f64 {
+        kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
+    }
+
     /// 📶 Per-pane LOD select measure: "Automatic" plus every scale tier (minimap…micro), persisted via `setLodModeForPane`.
     fn puzzle2d_lod_measure(pane: &str, current_mode: &str, labels: &Puzzle2dLabels) -> WindowMeasure {
         let mut items = vec![MeasureSelectItem { id: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE2D_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
@@ -1398,7 +1486,7 @@ pub mod d2 {
     fn puzzle2d_kind_weight_measures(prefix: &str, ids: &[String], weights: &BTreeMap<String, f64>, catalog_slice: &str) -> Vec<WindowMeasure> {
         ids.iter()
             .map(|kind_id| {
-                let weight = weights.get(kind_id).copied().unwrap_or(0.0);
+                let weight = weights.get(kind_id).copied().unwrap_or_else(|| if ids.is_empty() { 0.0 } else { 1.0 / ids.len() as f64 });
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-{prefix}-{kind_id}"),
                     label: Some(format!("{kind_id} {:.0}%", weight * 100.0)),
@@ -1412,54 +1500,9 @@ pub mod d2 {
             .collect()
     }
 
-    /// 🎚️ Suggestion offset slider plus node/handle kind-weight sliders, calling `setSuggestionOffset`/`setBrushKindWeights`.
-    fn puzzle2d_suggestion_measures_group(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
-        let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
-        let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
-        WindowMeasure::Group {
-            id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion"),
-            label: labels.suggestion.into(),
-            default_open: Some(false),
-            active_utility_id: None,
-            children: vec![
-                WindowMeasure::Slider {
-                    id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-                    label: Some(labels.offset.into()),
-                    value: envelope.runtime.suggestion_offset,
-                    min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
-                    max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
-                    step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
-                    on_change: puzzle2d_action("setSuggestionOffset", None),
-                },
-                WindowMeasure::Group {
-                    id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-nodes"),
-                    label: labels.node_weights.into(),
-                    default_open: Some(false),
-                    active_utility_id: None,
-                    children: puzzle2d_kind_weight_measures("node-kind", &node_ids, &envelope.runtime.node_kind_weights, "nodes"),
-                },
-                WindowMeasure::Group {
-                    id: format!("{PUZZLE2D_PLAY_CONTROLLER_ID}-suggestion-distribution-handles"),
-                    label: labels.handle_weights.into(),
-                    default_open: Some(false),
-                    active_utility_id: None,
-                    children: puzzle2d_kind_weight_measures("handle-kind", &handle_ids, &envelope.runtime.handle_kind_weights, "handles"),
-                },
-            ],
-        }
-    }
-
     fn puzzle2d_window_measures(pane: &str, envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> Vec<WindowMeasure> {
         let mode = envelope.runtime.lod_mode_by_pane.get(pane).map(String::as_str).unwrap_or(PUZZLE2D_LOD_MODE_AUTOMATIC);
-        let mut measures = vec![
-            puzzle2d_lod_measure(pane, mode, labels),
-            puzzle2d_suggestion_measures_group(envelope, labels),
-            puzzle2d_fill_utility_options(envelope, labels),
-        ];
-        if let Some(brush) = puzzle2d_brush_utility_options(envelope, labels) {
-            measures.push(brush);
-        }
-        measures
+        vec![puzzle2d_lod_measure(pane, mode, labels), puzzle2d_fill_utility_options(envelope, labels), puzzle2d_brush_utility_options(envelope, labels)]
     }
     //#endregion 🔖Measures
 
@@ -1706,6 +1749,10 @@ pub mod d2 {
                     ui_scope = puzzle2d_window_only_scope();
                 }
                 "setBrushKindWeights" => {
+                    let node_ids = puzzle2d_kind_ids(&envelope.fixture, "nodes");
+                    let handle_ids = puzzle2d_kind_ids(&envelope.fixture, "handles");
+                    puzzle2d_ensure_catalog_kind_weights(&mut envelope.runtime.node_kind_weights, &node_ids);
+                    puzzle2d_ensure_catalog_kind_weights(&mut envelope.runtime.handle_kind_weights, &handle_ids);
                     if let Some(weights) = args.and_then(|value| value.get("weights")) {
                         envelope.runtime.node_kind_weights = weights.get("nodeWeights").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                         envelope.runtime.handle_kind_weights = weights.get("handleWeights").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
@@ -1713,9 +1760,9 @@ pub mod d2 {
                         let weight = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(0.0).clamp(0.0, 1.0);
                         let slice = args.and_then(|value| value.get("catalogSlice")).and_then(|value| value.as_str()).unwrap_or("nodes");
                         if slice == "handles" {
-                            envelope.runtime.handle_kind_weights.insert(kind_id.to_string(), weight);
+                            envelope.runtime.handle_kind_weights = puzzle2d_normalize_kind_weight_group(&envelope.runtime.handle_kind_weights, &handle_ids, kind_id, weight);
                         } else {
-                            envelope.runtime.node_kind_weights.insert(kind_id.to_string(), weight);
+                            envelope.runtime.node_kind_weights = puzzle2d_normalize_kind_weight_group(&envelope.runtime.node_kind_weights, &node_ids, kind_id, weight);
                         }
                     }
                     if let Ok(weights_json) = serde_json::to_string(&json!({
@@ -1952,6 +1999,7 @@ pub mod d2 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
+                group_labels: HashMap::new(),
             }
         }
     }
@@ -1962,43 +2010,43 @@ pub mod d2 {
     /// static manifest — mirrors `puzzle3d_action_labels`.
     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
-            ("addNode", "Add Node", "Knoten hinzufuegen"),
+            ("addNode", "Add Node", "Knoten hinzufügen"),
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
             ("forceLayout", "Force Layout", "Kraftbasiertes Layout"),
             ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("selectAll", "Select All", "Alles auswählen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-            ("selectSameKind", "Select Same Kind", "Gleiche Art auswaehlen"),
+            ("selectSameKind", "Select Same Kind", "Gleiche Art auswählen"),
             ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
             ("patchInspectorNodes", "Patch Inspector Nodes", "Inspektorknoten aktualisieren"),
-            ("redrawHandles", "Redraw Handles", "Anschluesse neu zeichnen"),
+            ("redrawHandles", "Redraw Handles", "Anschlüsse neu zeichnen"),
             ("reorganize", "Reorganize", "Neu anordnen"),
             ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
-            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
-            ("brushFillSessionStep", "Brush Fill Session Step", "Pinsel-Fuellsitzung-Schritt"),
-            ("brushCommitSlot", "Brush Commit Slot", "Pinsel-Platz uebernehmen"),
+            ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
+            ("brushFillSessionStep", "Brush Fill Session Step", "Pinsel-Füllsitzung-Schritt"),
+            ("brushCommitSlot", "Brush Commit Slot", "Pinsel-Platz übernehmen"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("documentSelect", "Document Select", "Dokument auswaehlen"),
+            ("documentSelect", "Document Select", "Dokument auswählen"),
             ("engagementInput", "Engagement Input", "Eingabe"),
-            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
             ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
-            ("setLodModeForPane", "Set Lod Mode For Pane", "LOD-Modus fuer Bereich festlegen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
+            ("setLodModeForPane", "Set Lod Mode For Pane", "LOD-Modus für Bereich festlegen"),
             ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
             ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setBrushKindWeights", "Set Brush Kind Weights", "Pinsel-Artgewichte festlegen"),
-            ("setBrushNodeSize", "Set Brush Node Size", "Pinsel-Knotengroesse festlegen"),
+            ("setBrushNodeSize", "Set Brush Node Size", "Pinsel-Knotengröße festlegen"),
             ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
             ("brushCycleCandidate", "Brush Cycle Candidate", "Pinselkandidat wechseln"),
             ("brushSetCandidateIndex", "Brush Set Candidate Index", "Pinselkandidatenindex festlegen"),
-            ("brushOpenSlot", "Brush Open Slot", "Pinsel-Platz oeffnen"),
+            ("brushOpenSlot", "Brush Open Slot", "Pinsel-Platz öffnen"),
             ("brushCancelSlot", "Brush Cancel Slot", "Pinsel-Platz abbrechen"),
-            ("brushFillSessionBegin", "Brush Fill Session Begin", "Pinsel-Fuellsitzung beginnen"),
-            ("brushFillSessionClear", "Brush Fill Session Clear", "Pinsel-Fuellsitzung leeren"),
+            ("brushFillSessionBegin", "Brush Fill Session Begin", "Pinsel-Füllsitzung beginnen"),
+            ("brushFillSessionClear", "Brush Fill Session Clear", "Pinsel-Füllsitzung leeren"),
             ("lodScaleJson", "Lod Scale Json", "LOD-Skalierung-Json"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
@@ -2007,9 +2055,9 @@ pub mod d2 {
     /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle2d_app`.
     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
-            (PUZZLE2D_UTILITY_SELECT, "Select", "Auswaehlen"),
+            (PUZZLE2D_UTILITY_SELECT, "Select", "Auswählen"),
             (PUZZLE2D_UTILITY_BRUSH, "Brush", "Pinsel"),
-            (PUZZLE2D_UTILITY_FILL, "Fill", "Fuellen"),
+            (PUZZLE2D_UTILITY_FILL, "Fill", "Füllen"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
@@ -2115,8 +2163,8 @@ pub mod d2 {
                 // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document op). The
                 // select/brush/fill switcher is rendered by the framework toolbar for the interactive pane.
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "cursor", UtilityCategory::Selection))
-                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "brush", UtilityCategory::Tools))
-                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_FILL, "Fill", "fill", UtilityCategory::Tools))
+                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "brush", UtilityCategory::Utilities))
+                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_FILL, "Fill", "fill", UtilityCategory::Utilities))
                 .window_kind_utilities(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_UTILITY_SELECT.into(), PUZZLE2D_UTILITY_BRUSH.into(), PUZZLE2D_UTILITY_FILL.into()])
                 .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
         );
@@ -2486,7 +2534,7 @@ pub mod d2 {
             // 🖌️ Brush candidate picker becomes a fill-utility-sibling tagged group, present only once the host
             // has candidates to place (empty ⇒ absent, matching the old gated-control behaviour).
             let empty_brush = Puzzle2dScene { fixture: default_empty_fixture(), runtime: Puzzle2dPlayRuntime::default(), active_utility: PUZZLE2D_UTILITY_BRUSH.into() };
-            assert_eq!(group_tag(&puzzle2d_window_measures(PUZZLE2D_PANE_OVERVIEW, &empty_brush, labels), "puzzle2d-utility-options-brush"), None);
+            assert_eq!(group_tag(&puzzle2d_window_measures(PUZZLE2D_PANE_OVERVIEW, &empty_brush, labels), "puzzle2d-utility-options-brush"), Some(Some(PUZZLE2D_UTILITY_BRUSH.into())));
             let mut brush_runtime = Puzzle2dPlayRuntime::default();
             brush_runtime.brush_candidates = vec![json!({ "nodeKind": "node" })];
             let brush_scene = Puzzle2dScene { fixture: default_empty_fixture(), runtime: brush_runtime, active_utility: PUZZLE2D_UTILITY_BRUSH.into() };
@@ -2497,6 +2545,16 @@ pub mod d2 {
 
         /// 🧭 Kind discipline: every View-declared runtime/host action must run through the registry
         /// without tripping the "must not emit operations" guard (proving each is correctly classified).
+        #[test]
+        fn kind_weight_group_normalizes_to_sum_one() {
+            let ids = vec!["a".into(), "b".into(), "c".into()];
+            let initial = puzzle2d_uniform_kind_weights(&ids);
+            let next = puzzle2d_normalize_kind_weight_group(&initial, &ids, "a", 0.5);
+            let sum: f64 = ids.iter().map(|id| next.get(id).copied().unwrap_or(0.0)).sum();
+            assert!((sum - 1.0).abs() < 0.001, "expected normalized weights to sum to 1, got {sum}");
+            assert!((next.get("a").copied().unwrap_or(0.0) - 0.5).abs() < 0.001);
+        }
+
         #[test]
         fn view_actions_emit_no_ops_through_the_registry() {
             let mut app = registry_app();
@@ -2565,7 +2623,7 @@ pub mod d3 {
     const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
     const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
-    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared window utility.
+    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared utility.
     const PUZZLE3D_DEFAULT_UTILITY: &str = "move";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
 
@@ -3433,7 +3491,7 @@ pub mod d3 {
                     "face": false,
                 }),
             );
-            object.insert("transformTool".into(), json!(puzzle3d_transform_handle(&envelope.active_utility)));
+            object.insert("transformMode".into(), json!(puzzle3d_transform_handle(&envelope.active_utility)));
             if let Some(active_id) = runtime.selection.object_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
@@ -4055,6 +4113,7 @@ pub mod d3 {
         window_main: &'static str,
         example_concrete_forest: &'static str,
         fill: &'static str,
+        brush: &'static str,
         mode: &'static str,
         edit_volumes: &'static str,
         voxel: &'static str,
@@ -4077,6 +4136,7 @@ pub mod d3 {
         window_main: "Puzzle 3D",
         example_concrete_forest: "Concrete Forest",
         fill: "Fill",
+        brush: "Brush",
         mode: "Mode",
         edit_volumes: "Edit Volumes",
         voxel: "Voxel",
@@ -4098,6 +4158,7 @@ pub mod d3 {
         window_main: "Puzzle 3D",
         example_concrete_forest: "Concrete Forest",
         fill: "Fuellen",
+        brush: "Pinsel",
         mode: "Modus",
         edit_volumes: "Volumen bearbeiten",
         voxel: "Voxel",
@@ -4796,6 +4857,69 @@ pub mod d3 {
             .unwrap_or_default()
     }
 
+    fn puzzle3d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
+        if ids.is_empty() {
+            return HashMap::new();
+        }
+        let weight = 1.0 / ids.len() as f64;
+        ids.iter().map(|id| (id.clone(), weight)).collect()
+    }
+
+    fn puzzle3d_normalize_kind_weight_group(weights: &HashMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> HashMap<String, f64> {
+        if kind_ids.is_empty() {
+            return HashMap::new();
+        }
+        if kind_ids.len() == 1 {
+            return HashMap::from([(kind_ids[0].clone(), 1.0)]);
+        }
+        let new_value = new_value.clamp(0.0, 1.0);
+        let others: Vec<&String> = kind_ids.iter().filter(|id| id.as_str() != changed_id).collect();
+        let remainder = (1.0 - new_value).max(0.0);
+        let other_sum: f64 = others.iter().map(|id| weights.get(*id).copied().unwrap_or(0.0)).sum();
+        let mut next = HashMap::new();
+        next.insert(changed_id.to_string(), new_value);
+        if remainder <= f64::EPSILON {
+            for id in others {
+                next.insert((*id).clone(), 0.0);
+            }
+            return next;
+        }
+        if other_sum <= f64::EPSILON {
+            let each = remainder / others.len() as f64;
+            for id in others {
+                next.insert((*id).clone(), each);
+            }
+        } else {
+            for id in others {
+                let old = weights.get(*id).copied().unwrap_or(0.0);
+                next.insert((*id).clone(), old / other_sum * remainder);
+            }
+        }
+        next
+    }
+
+    fn puzzle3d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind_ids: &[String]) {
+        if kind_ids.is_empty() {
+            return;
+        }
+        if weights.is_empty() || kind_ids.iter().any(|id| !weights.contains_key(id)) {
+            *weights = puzzle3d_uniform_kind_weights(kind_ids);
+            return;
+        }
+        let sum: f64 = kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum();
+        if (sum - 1.0).abs() > 0.001 {
+            for id in kind_ids {
+                if let Some(weight) = weights.get_mut(id) {
+                    *weight /= sum;
+                }
+            }
+        }
+    }
+
+    fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+        kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
+    }
+
     fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
         WindowMeasure::Group {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
@@ -4835,7 +4959,7 @@ pub mod d3 {
         kind_ids
             .iter()
             .map(|kind_id| {
-                let weight = weights.get(kind_id).copied().unwrap_or(1.0);
+                let weight = weights.get(kind_id).copied().unwrap_or_else(|| if kind_ids.is_empty() { 0.0 } else { 1.0 / kind_ids.len() as f64 });
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-{prefix}-{kind_id}"),
                     label: Some(format!("{kind_id} {:.0}%", weight * 100.0)),
@@ -4849,48 +4973,25 @@ pub mod d3 {
             .collect()
     }
 
-    fn puzzle3d_brush_measures_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> WindowMeasure {
+    fn puzzle3d_brush_distribution_children(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
         let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
-        WindowMeasure::Group {
-            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush"),
-            label: "Brush".into(),
-            default_open: Some(false),
-            active_utility_id: None,
-            children: vec![
-                WindowMeasure::Slider {
-                    id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
-                    label: Some("Overlap budget (m³)".into()),
-                    value: envelope.runtime.overlap_budget,
-                    min: 0.0,
-                    max: 1.0,
-                    step: Some(0.01),
-                    on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
-                },
-                WindowMeasure::Group {
-                    id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution"),
-                    label: "Distribution".into(),
-                    default_open: Some(false),
-                    active_utility_id: None,
-                    children: vec![
-                        WindowMeasure::Group {
-                            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
-                            label: labels.objects.into(),
-                            default_open: Some(false),
-                            active_utility_id: None,
-                            children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
-                        },
-                        WindowMeasure::Group {
-                            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
-                            label: labels.vortices.into(),
-                            default_open: Some(false),
-                            active_utility_id: None,
-                            children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
-                        },
-                    ],
-                },
-            ],
-        }
+        vec![
+            WindowMeasure::Group {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
+                label: format!("{} ({:.0}%)", labels.objects, puzzle3d_kind_weight_sum(&envelope.runtime.object_kind_weights, &object_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
+                label: format!("{} ({:.0}%)", labels.vortices, puzzle3d_kind_weight_sum(&envelope.runtime.vortex_kind_weights, &vortex_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
+            },
+        ]
     }
 
     fn puzzle3d_view_measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
@@ -4978,39 +5079,57 @@ pub mod d3 {
         Some(WindowMeasure::Group { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-voxel"), label: labels.voxel.into(), default_open: Some(true), active_utility_id: Some("fill".into()), children: puzzle3d_voxel_dim_measures(runtime, labels) })
     }
 
-    /// 🖌️ Utility Options group for the Brush utility — the placement candidate picker (`ToggleGroup`→`Select`,
-    /// both "pick one of several string values"; `engagementControlSelect` reads `id`-or-`value` so semantics
-    /// hold). Tagged `Some("brush")`; `None` when there are no candidates to place, matching the old gate.
-    fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Option<WindowMeasure> {
-        let target = puzzle3d_brush_target_vortex(envelope)?;
-        let raw = precompute.brush_candidates(&target);
-        let candidates = parse_brush_candidates_free(&raw);
-        if candidates.is_empty() {
-            return None;
+    /// 🖌️ Utility Options group for the Brush utility — overlap budget, distribution trees, and (when
+    /// candidates exist) the placement picker. Tagged `Some("brush")`.
+    fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
+        let mut children = vec![
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-overlap-budget"),
+                label: Some("Overlap budget (m³)".into()),
+                value: envelope.runtime.overlap_budget,
+                min: 0.0,
+                max: 1.0,
+                step: Some(0.01),
+                on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution"),
+                label: "Distribution".into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle3d_brush_distribution_children(envelope, labels),
+            },
+        ];
+        if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
+            let raw = precompute.brush_candidates(&target);
+            let candidates = parse_brush_candidates_free(&raw);
+            if !candidates.is_empty() {
+                let items: Vec<MeasureSelectItem> = candidates
+                    .iter()
+                    .enumerate()
+                    .map(|(index, candidate)| {
+                        let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
+                        let id = format!("puzzle3d.brush.candidate.{index}");
+                        MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
+                    })
+                    .collect();
+                let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+                children.push(WindowMeasure::Select {
+                    id: "puzzle3d-brush-placement".into(),
+                    label: Some(labels.placement.into()),
+                    value: format!("puzzle3d.brush.candidate.{selected_index}"),
+                    items,
+                    on_change: puzzle3d_action("engagementControlSelect", None),
+                });
+            }
         }
-        let items: Vec<MeasureSelectItem> = candidates
-            .iter()
-            .enumerate()
-            .map(|(index, candidate)| {
-                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
-                let id = format!("puzzle3d.brush.candidate.{index}");
-                MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
-            })
-            .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
-        Some(WindowMeasure::Group {
+        WindowMeasure::Group {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-brush"),
-            label: labels.placement.into(),
+            label: labels.brush.into(),
             default_open: Some(true),
             active_utility_id: Some("brush".into()),
-            children: vec![WindowMeasure::Select {
-                id: "puzzle3d-brush-placement".into(),
-                label: Some(labels.placement.into()),
-                value: format!("puzzle3d.brush.candidate.{selected_index}"),
-                items,
-                on_change: puzzle3d_action("engagementControlSelect", None),
-            }],
-        })
+            children,
+        }
     }
 
     fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
@@ -5018,15 +5137,12 @@ pub mod d3 {
             puzzle3d_view_measure(&envelope.runtime),
             puzzle3d_lod_measures_group(&envelope.runtime),
             puzzle3d_select_measures_group(&envelope.runtime, labels),
-            puzzle3d_brush_measures_group(envelope, labels),
             world3d_sun_measures("puzzle3d", &envelope.runtime.sun, puzzle3d_action),
             puzzle3d_fill_utility_options(envelope, precompute, labels),
+            puzzle3d_brush_utility_options(envelope, precompute, labels),
         ];
         if let Some(voxel) = puzzle3d_voxel_utility_options(&envelope.runtime, labels) {
             measures.push(voxel);
-        }
-        if let Some(brush) = puzzle3d_brush_utility_options(envelope, precompute, labels) {
-            measures.push(brush);
         }
         measures
     }
@@ -5653,11 +5769,15 @@ pub mod d3 {
                 }
                 "setObjectKindWeight" | "setVortexKindWeight" => {
                     let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
-                    let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0);
+                    let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
+                    let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
+                    let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
+                    puzzle3d_ensure_catalog_kind_weights(&mut envelope.runtime.object_kind_weights, &object_ids);
+                    puzzle3d_ensure_catalog_kind_weights(&mut envelope.runtime.vortex_kind_weights, &vortex_ids);
                     if action == "setObjectKindWeight" {
-                        envelope.runtime.object_kind_weights.insert(kind_id.into(), value);
+                        envelope.runtime.object_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.object_kind_weights, &object_ids, kind_id, value);
                     } else {
-                        envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
+                        envelope.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &vortex_ids, kind_id, value);
                     }
                     sync_precompute_session(&mut self.precompute, &envelope);
                 }
@@ -5821,6 +5941,7 @@ pub mod d3 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
+                group_labels: std::collections::HashMap::from([("transform".to_string(), (if is_de { "Transformieren" } else { "Transform" }).to_string())]),
             }
         }
     }
@@ -5834,8 +5955,8 @@ pub mod d3 {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("addObjectKind", "Add Object", "Objekt hinzufuegen"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("addObjectKind", "Add Object", "Objekt hinzufügen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
             ("setProjection", "Set Projection", "Projektion festlegen"),
@@ -5847,32 +5968,32 @@ pub mod d3 {
             ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
             ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
             ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
             ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
             ("createAttraction", "Create Attraction", "Anziehung erstellen"),
-            ("deleteAttraction", "Delete Attraction", "Anziehung loeschen"),
-            ("addTargetVolume", "Add Target Volume", "Zielvolumen hinzufuegen"),
-            ("deleteTargetVolume", "Delete Target Volume", "Zielvolumen loeschen"),
+            ("deleteAttraction", "Delete Attraction", "Anziehung löschen"),
+            ("addTargetVolume", "Add Target Volume", "Zielvolumen hinzufügen"),
+            ("deleteTargetVolume", "Delete Target Volume", "Zielvolumen löschen"),
             ("setTargetVolumeFlag", "Set Target Volume Flag", "Zielvolumenmarkierung festlegen"),
-            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufuegen"),
-            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
+            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufügen"),
+            ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
             ("acceptSuggestion", "Accept Suggestion", "Vorschlag annehmen"),
-            ("fillBuildTick", "Fill Build Tick", "Fuellaufbau-Takt"),
-            ("openAddObjectDialog", "Add Object…", "Objekt hinzufuegen…"),
+            ("fillBuildTick", "Fill Build Tick", "Füllaufbau-Takt"),
+            ("openAddObjectDialog", "Add Object…", "Objekt hinzufügen…"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswaehlen"),
+            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswählen"),
             ("setJackQuery", "Set Jack Query", "Jack-Abfrage festlegen"),
-            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldSelect", "World Select", "Welt auswählen"),
             ("worldHover", "World Hover", "Welt-Hover"),
             ("setHover", "Set Hover", "Hover festlegen"),
             ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
             ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
-            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswaehlen"),
+            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("toggleSun", "Toggle Sun", "Sonne umschalten"),
             ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
             ("setLodAutomatic", "Set Lod Automatic", "LOD automatisch festlegen"),
             ("setLodDepthVariable", "Set Lod Depth Variable", "LOD-Tiefenvariable festlegen"),
             ("setLodShowGrid", "Set Lod Show Grid", "LOD-Raster anzeigen"),
@@ -5880,29 +6001,29 @@ pub mod d3 {
             ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
             ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
             ("setSelectionModeDefault", "Set Selection Mode Default", "Standardauswahlmodus festlegen"),
-            ("setProximityRadius", "Set Proximity Radius", "Naeheradius festlegen"),
-            ("setChunkSize", "Set Chunk Size", "Blockgroesse festlegen"),
-            ("setSelectableKind", "Set Selectable Kind", "Auswaehlbare Art festlegen"),
+            ("setProximityRadius", "Set Proximity Radius", "Näheradius festlegen"),
+            ("setChunkSize", "Set Chunk Size", "Blockgröße festlegen"),
+            ("setSelectableKind", "Set Selectable Kind", "Auswählbare Art festlegen"),
             ("setKindHover", "Set Kind Hover", "Art-Hover festlegen"),
-            ("selectAll", "Select All", "Alles auswaehlen"),
+            ("selectAll", "Select All", "Alles auswählen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-            ("contextMenuAt", "Context Menu At", "Kontextmenue bei"),
+            ("contextMenuAt", "Context Menu At", "Kontextmenü bei"),
             ("engagementInput", "Engagement Input", "Eingabe"),
             ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
             ("setFillEditTargetVolumes", "Set Fill Edit Target Volumes", "Zielvolumen-Bearbeitung festlegen"),
             ("setVoxelDims", "Set Voxel Dims", "Voxel-Abmessungen festlegen"),
-            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Ueberlappungsbudget festlegen"),
+            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"),
             ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
             ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
             ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
-            ("cycleBrushCandidateBack", "Cycle Brush Candidate Back", "Pinselkandidat rueckwaerts wechseln"),
-            ("openVortexSuggestions", "Open Vortex Suggestions", "Vortex-Vorschlaege oeffnen"),
-            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschlaege schliessen"),
+            ("cycleBrushCandidateBack", "Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"),
+            ("openVortexSuggestions", "Open Vortex Suggestions", "Vortex-Vorschläge öffnen"),
+            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschläge schliessen"),
             ("hoverSuggestion", "Hover Suggestion", "Vorschlag hovern"),
-            ("suggestionsTick", "Suggestions Tick", "Vorschlaege-Takt"),
+            ("suggestionsTick", "Suggestions Tick", "Vorschläge-Takt"),
             ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
-            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
@@ -5910,7 +6031,7 @@ pub mod d3 {
     /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle3d_app`.
     fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
-            ("select", "Select", "Auswaehlen"),
+            ("select", "Select", "Auswählen"),
             ("move", "Move", "Verschieben"),
             ("rotate", "Rotate", "Drehen"),
             ("scale", "Scale", "Skalieren"),
@@ -6037,7 +6158,7 @@ pub mod d3 {
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
-                // 🧰 Flat per-window utility set (host-owned `view_state.active_utility_id`); `move` is the default.
+                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `move` is the default.
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
@@ -6475,7 +6596,7 @@ pub mod d3 {
             // 🖌️ Brush utility: with no candidates to place the tagged group is absent (matching the old gate); the
             // engagement HUD is likewise bare. The positive candidate case is exercised through the app below.
             let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".into() };
-            assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-utility-options-brush"), None);
+            assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())));
             let brush_engagement = puzzle3d_engagement(&brush_scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
             // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
@@ -6688,7 +6809,7 @@ pub mod d5 {
     const PUZZLE5D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
 
     const PUZZLE5D_FALLBACK_MESH_KIND: &str = "box";
-    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared window utility.
+    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared utility.
     const PUZZLE5D_DEFAULT_UTILITY: &str = "select";
     const PUZZLE5D_FILL_COUNT_MAX: u32 = 1000;
     const PUZZLE5D_LOD_MODE_AUTOMATIC: &str = "automatic";
@@ -7167,7 +7288,7 @@ pub mod d5 {
         selection.fastener_ids.clear();
     }
 
-    /// 🧭 Whether the engagement HUD should mark an active session for the given window utility.
+    /// 🧭 Whether the engagement HUD should mark an active session for the given utility.
     fn puzzle5d_engagement_session_active(window: &str, active_utility: &str) -> bool {
         match window {
             PUZZLE5D_PLAY_WINDOW_3D => matches!(active_utility, "brush" | "fill" | "worldRelocate"),
@@ -7852,7 +7973,7 @@ pub mod d5 {
             object.insert("granularity".into(), json!("mesh"));
             object.insert("selectionMode".into(), json!("mesh"));
             object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-            object.insert("transformTool".into(), json!(puzzle5d_transform_handle(&envelope.active_utility)));
+            object.insert("transformMode".into(), json!(puzzle5d_transform_handle(&envelope.active_utility)));
             if let Some(active_id) = runtime.selection.part_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
@@ -7984,6 +8105,69 @@ pub mod d5 {
         ids
     }
 
+    fn puzzle5d_uniform_kind_weights(ids: &[String]) -> HashMap<String, f64> {
+        if ids.is_empty() {
+            return HashMap::new();
+        }
+        let weight = 1.0 / ids.len() as f64;
+        ids.iter().map(|id| (id.clone(), weight)).collect()
+    }
+
+    fn puzzle5d_normalize_kind_weight_group(weights: &HashMap<String, f64>, kind_ids: &[String], changed_id: &str, new_value: f64) -> HashMap<String, f64> {
+        if kind_ids.is_empty() {
+            return HashMap::new();
+        }
+        if kind_ids.len() == 1 {
+            return HashMap::from([(kind_ids[0].clone(), 1.0)]);
+        }
+        let new_value = new_value.clamp(0.0, 1.0);
+        let others: Vec<&String> = kind_ids.iter().filter(|id| id.as_str() != changed_id).collect();
+        let remainder = (1.0 - new_value).max(0.0);
+        let other_sum: f64 = others.iter().map(|id| weights.get(*id).copied().unwrap_or(0.0)).sum();
+        let mut next = HashMap::new();
+        next.insert(changed_id.to_string(), new_value);
+        if remainder <= f64::EPSILON {
+            for id in others {
+                next.insert((*id).clone(), 0.0);
+            }
+            return next;
+        }
+        if other_sum <= f64::EPSILON {
+            let each = remainder / others.len() as f64;
+            for id in others {
+                next.insert((*id).clone(), each);
+            }
+        } else {
+            for id in others {
+                let old = weights.get(*id).copied().unwrap_or(0.0);
+                next.insert((*id).clone(), old / other_sum * remainder);
+            }
+        }
+        next
+    }
+
+    fn puzzle5d_ensure_catalog_kind_weights(weights: &mut HashMap<String, f64>, kind_ids: &[String]) {
+        if kind_ids.is_empty() {
+            return;
+        }
+        if weights.is_empty() || kind_ids.iter().any(|id| !weights.contains_key(id)) {
+            *weights = puzzle5d_uniform_kind_weights(kind_ids);
+            return;
+        }
+        let sum: f64 = kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum();
+        if (sum - 1.0).abs() > 0.001 {
+            for id in kind_ids {
+                if let Some(weight) = weights.get_mut(id) {
+                    *weight /= sum;
+                }
+            }
+        }
+    }
+
+    fn puzzle5d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+        kind_ids.iter().map(|id| weights.get(id).copied().unwrap_or(0.0)).sum()
+    }
+
     fn puzzle5d_lod_measure(runtime: &Puzzle5dRuntime, labels: &Puzzle5dLabels) -> WindowMeasure {
         let mut items = vec![MeasureSelectItem { id: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), value: PUZZLE5D_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
         items.extend(puzzle5d_lod_tier_ids().into_iter().map(|tier| MeasureSelectItem { id: tier.clone(), value: tier.clone(), label: tier }));
@@ -7993,7 +8177,7 @@ pub mod d5 {
     fn puzzle5d_kind_weight_measures(prefix: &str, action: &str, ids: &[String], weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
         ids.iter()
             .map(|kind_id| {
-                let weight = weights.get(kind_id).copied().unwrap_or(0.0);
+                let weight = weights.get(kind_id).copied().unwrap_or_else(|| if ids.is_empty() { 0.0 } else { 1.0 / ids.len() as f64 });
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-{prefix}-{kind_id}"),
                     label: Some(format!("{kind_id} {:.0}%", weight * 100.0)),
@@ -8007,58 +8191,25 @@ pub mod d5 {
             .collect()
     }
 
-    fn puzzle5d_suggestion_measures_group(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
+    fn puzzle5d_brush_distribution_children(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
         let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
         let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
-        WindowMeasure::Group {
-            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion"),
-            label: labels.suggestion.into(),
-            default_open: Some(false),
-            active_utility_id: None,
-            children: vec![
-                WindowMeasure::Slider {
-                    id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),
-                    label: Some(labels.offset.into()),
-                    value: envelope.runtime.suggestion_offset,
-                    min: PUZZLE5D_SUGGESTION_OFFSET_MIN,
-                    max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
-                    step: Some(PUZZLE5D_SUGGESTION_OFFSET_STEP),
-                    on_change: puzzle5d_action("setSuggestionOffset", None),
-                },
-                WindowMeasure::Group {
-                    id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
-                    label: labels.part_weights.into(),
-                    default_open: Some(false),
-                    active_utility_id: None,
-                    children: puzzle5d_kind_weight_measures("part-kind", "setObjectKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
-                },
-                WindowMeasure::Group {
-                    id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
-                    label: labels.grip_weights.into(),
-                    default_open: Some(false),
-                    active_utility_id: None,
-                    children: puzzle5d_kind_weight_measures("grip-kind", "setVortexKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
-                },
-            ],
-        }
-    }
-
-    fn puzzle5d_brush_measures_group(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
-        WindowMeasure::Group {
-            id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush"),
-            label: labels.brush.into(),
-            default_open: Some(false),
-            active_utility_id: None,
-            children: vec![WindowMeasure::Slider {
-                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-overlap"),
-                label: Some(labels.overlap.into()),
-                value: envelope.runtime.overlap_budget,
-                min: 0.0,
-                max: 0.2,
-                step: Some(0.005),
-                on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
-            }],
-        }
+        vec![
+            WindowMeasure::Group {
+                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-parts"),
+                label: format!("{} ({:.0}%)", labels.part_weights, puzzle5d_kind_weight_sum(&envelope.runtime.object_kind_weights, &part_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle5d_kind_weight_measures("part-kind", "setObjectKindWeight", &part_ids, &envelope.runtime.object_kind_weights),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-grips"),
+                label: format!("{} ({:.0}%)", labels.grip_weights, puzzle5d_kind_weight_sum(&envelope.runtime.vortex_kind_weights, &grip_ids) * 100.0).into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle5d_kind_weight_measures("grip-kind", "setVortexKindWeight", &grip_ids, &envelope.runtime.vortex_kind_weights),
+            },
+        ]
     }
 
     /// 🪣 Fill-count slider measure — the fill-utility's core parameter, mirrors the retired
@@ -8088,54 +8239,75 @@ pub mod d5 {
         }
     }
 
-    /// 🖌️ Utility Options group for the Brush utility — the placement candidate picker (`ToggleGroup`→`Select`,
-    /// both "pick one of several string values"; `engagementControlSelect` reads `id`-or-`value` so semantics
-    /// hold). Tagged `Some("brush")`; `None` when there are no candidates to place, matching the old gate.
-    fn puzzle5d_brush_utility_options(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Option<WindowMeasure> {
-        let target = puzzle5d_brush_target_grip(envelope)?;
-        let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
-        if candidates.is_empty() {
-            return None;
+    /// 🖌️ Utility Options group for the Brush utility — suggestion offset, overlap budget, distribution
+    /// trees, and (when candidates exist) the placement picker. Tagged `Some("brush")`.
+    fn puzzle5d_brush_utility_options(envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> WindowMeasure {
+        let mut children = vec![
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-suggestion-offset"),
+                label: Some(labels.offset.into()),
+                value: envelope.runtime.suggestion_offset,
+                min: PUZZLE5D_SUGGESTION_OFFSET_MIN,
+                max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
+                step: Some(PUZZLE5D_SUGGESTION_OFFSET_STEP),
+                on_change: puzzle5d_action("setSuggestionOffset", None),
+            },
+            WindowMeasure::Slider {
+                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-overlap"),
+                label: Some(labels.overlap.into()),
+                value: envelope.runtime.overlap_budget,
+                min: 0.0,
+                max: 0.2,
+                step: Some(0.005),
+                on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
+            },
+            WindowMeasure::Group {
+                id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-brush-distribution"),
+                label: labels.suggestion.into(),
+                default_open: Some(false),
+                active_utility_id: None,
+                children: puzzle5d_brush_distribution_children(envelope, labels),
+            },
+        ];
+        if let Some(target) = puzzle5d_brush_target_grip(envelope) {
+            let candidates = parse_brush_candidates_free(&precompute.brush_candidates(&target));
+            if !candidates.is_empty() {
+                let items: Vec<MeasureSelectItem> = candidates
+                    .iter()
+                    .enumerate()
+                    .map(|(index, candidate)| {
+                        let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
+                        let id = format!("puzzle5d.brush.candidate.{index}");
+                        MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
+                    })
+                    .collect();
+                let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
+                children.push(WindowMeasure::Select {
+                    id: "puzzle5d-brush-placement".into(),
+                    label: Some(labels.placement.into()),
+                    value: format!("puzzle5d.brush.candidate.{selected_index}"),
+                    items,
+                    on_change: puzzle5d_action("engagementControlSelect", None),
+                });
+            }
         }
-        let items: Vec<MeasureSelectItem> = candidates
-            .iter()
-            .enumerate()
-            .map(|(index, candidate)| {
-                let label = candidate.get("objectKind").and_then(|value| value.as_str()).or_else(|| candidate.get("objectKindId").and_then(|value| value.as_str())).unwrap_or("kind");
-                let id = format!("puzzle5d.brush.candidate.{index}");
-                MeasureSelectItem { id: id.clone(), value: id, label: label.into() }
-            })
-            .collect();
-        let selected_index = envelope.runtime.brush_candidate_index.min(items.len().saturating_sub(1));
-        Some(WindowMeasure::Group {
+        WindowMeasure::Group {
             id: format!("{PUZZLE5D_PLAY_CONTROLLER_ID}-utility-options-brush"),
-            label: labels.placement.into(),
+            label: labels.brush.into(),
             default_open: Some(true),
             active_utility_id: Some("brush".into()),
-            children: vec![WindowMeasure::Select {
-                id: "puzzle5d-brush-placement".into(),
-                label: Some(labels.placement.into()),
-                value: format!("puzzle5d.brush.candidate.{selected_index}"),
-                items,
-                on_change: puzzle5d_action("engagementControlSelect", None),
-            }],
-        })
+            children,
+        }
     }
 
     fn puzzle5d_window_measures(window: &str, envelope: &Puzzle5dScene, precompute: &Puzzle5dPrecomputeSession, labels: &Puzzle5dLabels) -> Vec<WindowMeasure> {
         let mut measures = if window == PUZZLE5D_PLAY_WINDOW_2D {
-            vec![puzzle5d_lod_measure(&envelope.runtime, labels), puzzle5d_suggestion_measures_group(envelope, labels), puzzle5d_brush_measures_group(envelope, labels)]
+            vec![puzzle5d_lod_measure(&envelope.runtime, labels)]
         } else {
-            vec![
-                puzzle5d_suggestion_measures_group(envelope, labels),
-                puzzle5d_brush_measures_group(envelope, labels),
-                world3d_sun_measures("puzzle5d", &envelope.runtime.sun, puzzle5d_action),
-            ]
+            vec![world3d_sun_measures("puzzle5d", &envelope.runtime.sun, puzzle5d_action)]
         };
         measures.push(puzzle5d_fill_utility_options(envelope, labels));
-        if let Some(brush) = puzzle5d_brush_utility_options(envelope, precompute, labels) {
-            measures.push(brush);
-        }
+        measures.push(puzzle5d_brush_utility_options(envelope, precompute, labels));
         measures
     }
     //#endregion 🔖Measures
@@ -8804,11 +8976,15 @@ pub mod d5 {
                 }
                 "setObjectKindWeight" | "setVortexKindWeight" => {
                     let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
-                    let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0);
+                    let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
+                    let part_ids = puzzle5d_kind_ids(&envelope.document, "parts");
+                    let grip_ids = puzzle5d_kind_ids(&envelope.document, "grips");
+                    puzzle5d_ensure_catalog_kind_weights(&mut envelope.runtime.object_kind_weights, &part_ids);
+                    puzzle5d_ensure_catalog_kind_weights(&mut envelope.runtime.vortex_kind_weights, &grip_ids);
                     if action == "setObjectKindWeight" {
-                        envelope.runtime.object_kind_weights.insert(kind_id.into(), value);
+                        envelope.runtime.object_kind_weights = puzzle5d_normalize_kind_weight_group(&envelope.runtime.object_kind_weights, &part_ids, kind_id, value);
                     } else {
-                        envelope.runtime.vortex_kind_weights.insert(kind_id.into(), value);
+                        envelope.runtime.vortex_kind_weights = puzzle5d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &grip_ids, kind_id, value);
                     }
                     self.drive_precompute(&envelope);
                 }
@@ -9170,6 +9346,7 @@ pub mod d5 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
+                group_labels: HashMap::new(),
             }
         }
     }
@@ -9182,17 +9359,17 @@ pub mod d5 {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("addNode", "Add Node", "Knoten hinzufuegen"),
-            ("addPartKind", "Add Part", "Teil hinzufuegen"),
-            ("addBrushPart", "Add Brush Part", "Pinselteil hinzufuegen"),
-            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufuegen"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("addNode", "Add Node", "Knoten hinzufügen"),
+            ("addPartKind", "Add Part", "Teil hinzufügen"),
+            ("addBrushPart", "Add Brush Part", "Pinselteil hinzufügen"),
+            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufügen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
             ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
             ("zoomToSelection", "Zoom To Selection", "Auf Auswahl zoomen"),
             ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-            ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
-            ("setFillCount", "Set Fill Count", "Fuellanzahl festlegen"),
+            ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
+            ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
             ("patchPart", "Patch Part", "Teil aktualisieren"),
             ("patchGrip", "Patch Grip", "Griff aktualisieren"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
@@ -9204,36 +9381,36 @@ pub mod d5 {
             ("worldRelocate", "Relocate Part", "Teil verlagern"),
             ("applyBoardEvents", "Apply Board Events", "Board-Ereignisse anwenden"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("documentSelect", "Document Select", "Dokument auswaehlen"),
+            ("documentSelect", "Document Select", "Dokument auswählen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-            ("selectAll", "Select All", "Alles auswaehlen"),
-            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswaehlen"),
-            ("selectSameKind", "Select Same Kind (alias)", "Gleiche Art auswaehlen (Alias)"),
+            ("selectAll", "Select All", "Alles auswählen"),
+            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswählen"),
+            ("selectSameKind", "Select Same Kind (alias)", "Gleiche Art auswählen (Alias)"),
             ("toggleSun", "Toggle Sun", "Sonne umschalten"),
             ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
             ("engagementInput", "Engagement Input", "Eingabe"),
             ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswaehlen"),
+            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
             ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
             ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
-            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Ueberlappungsbudget festlegen"),
+            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"),
             ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
             ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
-            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldSelect", "World Select", "Welt auswählen"),
             ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
             ("worldHover", "World Hover", "Welt-Hover"),
             ("setHover", "Set Hover", "Hover festlegen"),
             ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
-            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswaehlen"),
+            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
             ("setSuggestionOffset", "Set Suggestion Offset", "Vorschlagsversatz festlegen"),
             ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
             ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
-            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-            ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
     }
@@ -9241,7 +9418,7 @@ pub mod d5 {
     /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_puzzle5d_app`.
     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
-            ("select", "Select", "Auswaehlen"),
+            ("select", "Select", "Auswählen"),
             ("move", "Move", "Verschieben"),
             ("rotate", "Rotate", "Drehen"),
             ("scale", "Scale", "Skalieren"),
@@ -9350,7 +9527,7 @@ pub mod d5 {
                 .action_args("addBrushObject", vec![
                     ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
                 ])
-                // 🧰 Flat per-window utility set (host-owned `view_state.active_utility_id`); `select` is the default.
+                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `select` is the default.
                 .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
@@ -9558,7 +9735,7 @@ pub mod d5 {
             // gate), and the engagement HUD is likewise bare.
             let brush_scene = Puzzle5dScene { document: default_document(), runtime: Puzzle5dRuntime::default(), active_utility: "brush".into() };
             for window in [PUZZLE5D_PLAY_WINDOW_2D, PUZZLE5D_PLAY_WINDOW_3D] {
-                assert_eq!(group_tag(&puzzle5d_window_measures(window, &brush_scene, &session, labels), "puzzle5d-play-utility-options-brush"), None, "{window} brush Utility Options is absent without candidates");
+                assert_eq!(group_tag(&puzzle5d_window_measures(window, &brush_scene, &session, labels), "puzzle5d-play-utility-options-brush"), Some(Some("brush".into())), "{window} brush Utility Options surfaces even without candidates");
                 let brush_hud = puzzle5d_engagement(&brush_scene, window, labels);
                 assert!(brush_hud.control.is_none() && brush_hud.controls.is_none(), "{window} brush engagement HUD must no longer carry the relocated control");
             }

@@ -79,12 +79,12 @@ app_labels! {
     struct RemodelLabels {
         model: &'static str = en: "Model", de: "Modell";
         set_params: &'static str = en: "Set Params", de: "Parameter festlegen";
-        reset_placeholder_mesh: &'static str = en: "Reset Placeholder Mesh", de: "Platzhalter-Mesh zuruecksetzen";
-        clear_result: &'static str = en: "Clear Result", de: "Ergebnis loeschen";
+        reset_placeholder_mesh: &'static str = en: "Reset Placeholder Mesh", de: "Platzhalter-Mesh zurücksetzen";
+        clear_result: &'static str = en: "Clear Result", de: "Ergebnis löschen";
         import_video: &'static str = en: "Import Video", de: "Video importieren";
         set_selection: &'static str = en: "Set Selection", de: "Auswahl festlegen";
         set_camera: &'static str = en: "Set Camera", de: "Kamera festlegen";
-        select: &'static str = en: "Select", de: "Auswaehlen";
+        select: &'static str = en: "Select", de: "Auswählen";
         sculpt: &'static str = en: "Sculpt", de: "Formen";
         default_example: &'static str = en: "Default", de: "Standard";
         source_video: &'static str = en: "Source video", de: "Quellvideo";
@@ -116,8 +116,8 @@ fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
         is_de,
         &[
             ("setParams", "Set Params", "Parameter festlegen"),
-            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zuruecksetzen"),
-            ("clearResult", "Clear Result", "Ergebnis loeschen"),
+            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"),
+            ("clearResult", "Clear Result", "Ergebnis löschen"),
             ("importVideo", "Import Video", "Video importieren"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
@@ -127,7 +127,7 @@ fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
 
 /// 🗣️ (utility id) -> localized toolbar-button label, for every `.utility(...)` declared in `create_remodel_app`.
 fn remodel_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[("select", "Select", "Auswaehlen"), ("sculpt", "Sculpt", "Formen")])
+    localized_label_map(is_de, &[("select", "Select", "Auswählen"), ("sculpt", "Sculpt", "Formen")])
 }
 //#endregion 🔖CommandLabels
 
@@ -293,7 +293,7 @@ fn create_remodel_app() -> App {
             ])
             // 🧰 Mesh-editing utility group — an exclusive per-window set (active utility is host-owned).
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
             .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "sculpt".into()]),
     )
     .example("default", "Default", &default_example)

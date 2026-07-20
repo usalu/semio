@@ -1750,18 +1750,6 @@ mod tests {
     }
 
     #[test]
-    fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
-        let scm = linear_chain_scm();
-        let mut rng = mathematical_random::Rng::from_seed(2024);
-        let data = scm.simulate(2000, &mut rng).unwrap();
-        let ci = FisherZ::for_table(&data, &[0, 1, 2]).unwrap();
-        let result = pc_stable(&data, &ci, PcOptions { alpha: 0.01, max_cond_size: 2 }).unwrap();
-        let truth = Cpdag::from_dag(&scm.dag);
-        assert_eq!(result.cpdag.directed_edges(), truth.directed_edges());
-        assert_eq!(result.cpdag.undirected_edges(), truth.undirected_edges());
-    }
-
-    #[test]
     fn local_bic_prefers_the_true_parent_set() {
         let scm = linear_chain_scm();
         let mut rng = mathematical_random::Rng::from_seed(99);
@@ -1776,30 +1764,6 @@ mod tests {
         let with_unrelated_covariate = local_bic(&data, 1, &[3]).unwrap();
         assert!(with_true_parent > with_no_parent, "true parent should score higher than no parent");
         assert!(with_true_parent > with_unrelated_covariate, "true parent should score higher than an unrelated covariate");
-    }
-
-    #[test]
-    fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
-        // x -> y with uniform (non-Gaussian) noise.
-        let n = 3000;
-        let mut rng = mathematical_random::Rng::from_seed(55);
-        let x: Vec<f64> = (0..n).map(|_| mathematical_probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + mathematical_probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
-        let table = mathematical_tabular::Table::from_f64_columns(vec!["x".into(), "y".into()], vec![x, y]).unwrap();
-        let result = direct_lingam(&table, 0.05).unwrap();
-        assert_eq!(result.order[0], 0, "x should be recovered as the earlier (more exogenous) variable");
-        assert!(result.dag.parents(1).contains(&0), "y should have x as a parent after pruning");
-    }
-
-    #[test]
-    fn ges_recovers_known_cpdag_from_simulated_chain() {
-        let scm = linear_chain_scm();
-        let mut rng = mathematical_random::Rng::from_seed(4242);
-        let data = scm.simulate(2000, &mut rng).unwrap();
-        let found = ges(&data).unwrap();
-        let truth = Cpdag::from_dag(&scm.dag);
-        assert_eq!(found.directed_edges(), truth.directed_edges());
-        assert_eq!(found.undirected_edges(), truth.undirected_edges());
     }
     // #endregion 🔖DiscoveryTests
 
@@ -1871,16 +1835,6 @@ mod tests {
     }
 
     #[test]
-    fn linear_scm_simulate_then_fit_recovers_coefficients() {
-        let scm = linear_chain_scm();
-        let mut rng = mathematical_random::Rng::from_seed(321);
-        let data = scm.simulate(5000, &mut rng).unwrap();
-        let refit = LinearGaussianScm::fit(&scm.dag, &data).unwrap();
-        assert!((refit.weights.get(1, 0) - 2.0).abs() < 0.1);
-        assert!((refit.weights.get(2, 1) - 1.5).abs() < 0.1);
-    }
-
-    #[test]
     fn what_if_query_level2_vs_level3() {
         let scm = linear_chain_scm();
         let interventional = scm.query(2, &WhatIf::new().do_(0, 2.0)).unwrap();
@@ -1936,15 +1890,6 @@ mod tests {
         assert!((conditional_on_sprinkler[1] - prior_rain[1]).abs() > 1e-9, "merely conditioning on sprinkler=1 (not intervening) should shift P(rain) via the cloudy backdoor path");
     }
 
-    #[test]
-    fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
-        let scm = sprinkler_scm();
-        let mut rng = mathematical_random::Rng::from_seed(17);
-        let data = scm.simulate(20_000, &mut rng).unwrap();
-        let refit = DiscreteScm::fit(&scm.dag, &data, 1.0).unwrap();
-        let cloudy_fit = &refit.cpts[0];
-        assert!((cloudy_fit.probs[1] - 0.5).abs() < 0.05, "recovered P(cloudy=1) should be near 0.5, got {}", cloudy_fit.probs[1]);
-    }
     // #endregion 🔖ScmDiscreteTests
 
     // #region 🔖EstimationTests
@@ -1956,31 +1901,6 @@ mod tests {
         mathematical_tabular::Table::from_f64_columns(vec!["z".into(), "t".into(), "y".into()], vec![z, t, y]).unwrap()
     }
 
-    #[test]
-    fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
-        let true_ate = 1.5;
-        let data = confounded_dataset(true_ate, 4000, 42);
-        let opts = EstimationOptions::default();
-        let naive = naive_difference(&data, 1, 2, &opts).unwrap();
-        let g_formula = g_formula_ate(&data, 1, 2, &[0], &opts).unwrap();
-        let ipw = ipw_ate(&data, 1, 2, &[0], &opts).unwrap();
-        assert!((naive.estimate - true_ate).abs() > 0.3, "naive estimate {} should be visibly biased away from {true_ate}", naive.estimate);
-        assert!((g_formula.estimate - true_ate).abs() < 0.2, "g-formula estimate {} should be close to {true_ate}", g_formula.estimate);
-        // IPW carries more finite-sample variance than g-formula (propensity-weight reweighting
-        // amplifies noise), so it gets a looser tolerance for the same sample size.
-        assert!((ipw.estimate - true_ate).abs() < 0.35, "IPW estimate {} should be close to {true_ate}", ipw.estimate);
-    }
-
-    #[test]
-    fn bootstrap_ci_contains_true_ate() {
-        let true_ate = 1.5;
-        let data = confounded_dataset(true_ate, 5000, 7);
-        let opts = EstimationOptions { bootstrap: Some(BootstrapOptions { replicates: 300, seed: 11, level: 0.95 }) };
-        let g_formula = g_formula_ate(&data, 1, 2, &[0], &opts).unwrap();
-        let (lo, hi) = g_formula.ci.expect("bootstrap CI requested");
-        assert!(lo <= g_formula.estimate && g_formula.estimate <= hi);
-        assert!(lo <= true_ate && true_ate <= hi, "95% CI [{lo}, {hi}] should contain the true ATE {true_ate}");
-    }
     // #endregion 🔖EstimationTests
 
     // #region 🔖ErrorPathTests
@@ -2018,5 +1938,96 @@ mod tests {
         assert!(matches!(result, Err(CausalError::InferenceTooLarge(_, _))), "posterior over a 2^21-entry join should exceed the guard");
     }
     // #endregion 🔖ErrorPathTests
+
+    // #region 🔖QuickTests
+    // 🐢 Tests that simulate/fit at a scale (thousands of rows, hundreds of bootstrap replicates)
+    // needed for statistical power, too slow for the 15s "fundamental" budget — see
+    // `repo/lib/js/index.ts`'s `runCargoTestBudgeted`/`TEST_LEVEL_BUDGET_MS`.
+    mod quick {
+        use super::*;
+
+        #[test]
+        fn pc_stable_recovers_known_cpdag_from_simulated_chain() {
+            let scm = linear_chain_scm();
+            let mut rng = mathematical_random::Rng::from_seed(2024);
+            let data = scm.simulate(2000, &mut rng).unwrap();
+            let ci = FisherZ::for_table(&data, &[0, 1, 2]).unwrap();
+            let result = pc_stable(&data, &ci, PcOptions { alpha: 0.01, max_cond_size: 2 }).unwrap();
+            let truth = Cpdag::from_dag(&scm.dag);
+            assert_eq!(result.cpdag.directed_edges(), truth.directed_edges());
+            assert_eq!(result.cpdag.undirected_edges(), truth.undirected_edges());
+        }
+
+        #[test]
+        fn ges_recovers_known_cpdag_from_simulated_chain() {
+            let scm = linear_chain_scm();
+            let mut rng = mathematical_random::Rng::from_seed(4242);
+            let data = scm.simulate(2000, &mut rng).unwrap();
+            let found = ges(&data).unwrap();
+            let truth = Cpdag::from_dag(&scm.dag);
+            assert_eq!(found.directed_edges(), truth.directed_edges());
+            assert_eq!(found.undirected_edges(), truth.undirected_edges());
+        }
+
+        #[test]
+        fn direct_lingam_recovers_causal_order_on_uniform_noise_sem() {
+            // x -> y with uniform (non-Gaussian) noise.
+            let n = 3000;
+            let mut rng = mathematical_random::Rng::from_seed(55);
+            let x: Vec<f64> = (0..n).map(|_| mathematical_probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
+            let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + mathematical_probability::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
+            let table = mathematical_tabular::Table::from_f64_columns(vec!["x".into(), "y".into()], vec![x, y]).unwrap();
+            let result = direct_lingam(&table, 0.05).unwrap();
+            assert_eq!(result.order[0], 0, "x should be recovered as the earlier (more exogenous) variable");
+            assert!(result.dag.parents(1).contains(&0), "y should have x as a parent after pruning");
+        }
+
+        #[test]
+        fn linear_scm_simulate_then_fit_recovers_coefficients() {
+            let scm = linear_chain_scm();
+            let mut rng = mathematical_random::Rng::from_seed(321);
+            let data = scm.simulate(5000, &mut rng).unwrap();
+            let refit = LinearGaussianScm::fit(&scm.dag, &data).unwrap();
+            assert!((refit.weights.get(1, 0) - 2.0).abs() < 0.1);
+            assert!((refit.weights.get(2, 1) - 1.5).abs() < 0.1);
+        }
+
+        #[test]
+        fn discrete_scm_fit_recovers_cpts_from_simulated_data() {
+            let scm = sprinkler_scm();
+            let mut rng = mathematical_random::Rng::from_seed(17);
+            let data = scm.simulate(20_000, &mut rng).unwrap();
+            let refit = DiscreteScm::fit(&scm.dag, &data, 1.0).unwrap();
+            let cloudy_fit = &refit.cpts[0];
+            assert!((cloudy_fit.probs[1] - 0.5).abs() < 0.05, "recovered P(cloudy=1) should be near 0.5, got {}", cloudy_fit.probs[1]);
+        }
+
+        #[test]
+        fn naive_difference_is_biased_while_adjusted_estimators_recover_true_ate() {
+            let true_ate = 1.5;
+            let data = confounded_dataset(true_ate, 4000, 42);
+            let opts = EstimationOptions::default();
+            let naive = naive_difference(&data, 1, 2, &opts).unwrap();
+            let g_formula = g_formula_ate(&data, 1, 2, &[0], &opts).unwrap();
+            let ipw = ipw_ate(&data, 1, 2, &[0], &opts).unwrap();
+            assert!((naive.estimate - true_ate).abs() > 0.3, "naive estimate {} should be visibly biased away from {true_ate}", naive.estimate);
+            assert!((g_formula.estimate - true_ate).abs() < 0.2, "g-formula estimate {} should be close to {true_ate}", g_formula.estimate);
+            // IPW carries more finite-sample variance than g-formula (propensity-weight reweighting
+            // amplifies noise), so it gets a looser tolerance for the same sample size.
+            assert!((ipw.estimate - true_ate).abs() < 0.35, "IPW estimate {} should be close to {true_ate}", ipw.estimate);
+        }
+
+        #[test]
+        fn bootstrap_ci_contains_true_ate() {
+            let true_ate = 1.5;
+            let data = confounded_dataset(true_ate, 5000, 7);
+            let opts = EstimationOptions { bootstrap: Some(BootstrapOptions { replicates: 300, seed: 11, level: 0.95 }) };
+            let g_formula = g_formula_ate(&data, 1, 2, &[0], &opts).unwrap();
+            let (lo, hi) = g_formula.ci.expect("bootstrap CI requested");
+            assert!(lo <= g_formula.estimate && g_formula.estimate <= hi);
+            assert!(lo <= true_ate && true_ate <= hi, "95% CI [{lo}, {hi}] should contain the true ATE {true_ate}");
+        }
+    }
+    // #endregion 🔖QuickTests
 }
 // #endregion 🔖UnitTests

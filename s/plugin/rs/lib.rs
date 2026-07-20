@@ -300,7 +300,7 @@ pub mod app_home {
     app_labels! {
         /// 🗣️ Complete UI label set for the Home launcher; one field per label makes every locale combination compile-checked.
         struct SHomeLabels {
-            vfs_empty_message: &'static str = en: "No studios yet. Create one from the toolbar.", de: "Noch keine Studios vorhanden. Erstelle eines ueber die Werkzeugleiste.";
+            vfs_empty_message: &'static str = en: "No studios yet. Create one from the toolbar.", de: "Noch keine Studios vorhanden. Erstelle eines über die Werkzeugleiste.";
             window_main: &'static str = en: "Studios", de: "Studios";
         }
     }
@@ -313,11 +313,11 @@ pub mod app_home {
     fn s_home_action_labels(is_de: bool) -> HashMap<String, String> {
         localized_label_map(is_de, &[
             ("createStudio", "Create Studio", "Studio erstellen"),
-            ("bindStudioFile", "Bind Studio File", "Studio-Datei verknuepfen"),
+            ("bindStudioFile", "Bind Studio File", "Studio-Datei verknüpfen"),
             ("importStudio", "Import Studio", "Studio importieren"),
-            ("openStudio", "Open Studio", "Studio oeffnen"),
+            ("openStudio", "Open Studio", "Studio öffnen"),
             ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
-            ("deleteVirtualFileSystemNode", "Delete File System Node", "Dateisystemknoten loeschen"),
+            ("deleteVirtualFileSystemNode", "Delete File System Node", "Dateisystemknoten löschen"),
             ("goHome", "Go Home", "Zur Startseite"),
             ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
         ])
@@ -1162,13 +1162,13 @@ pub mod app_studio {
         struct SStudioLabels {
             apps_section: &'static str = en: "Apps", de: "Apps";
             media_vfs_empty_message: &'static str = en: "No app instances in the media graph.", de: "Keine App-Instanzen im Mediengraphen.";
-            add_parameter: &'static str = en: "Add Parameter", de: "Parameter hinzufuegen";
+            add_parameter: &'static str = en: "Add Parameter", de: "Parameter hinzufügen";
             name: &'static str = en: "Name", de: "Name";
             value: &'static str = en: "Value", de: "Wert";
             min: &'static str = en: "Min", de: "Min";
             max: &'static str = en: "Max", de: "Max";
             step: &'static str = en: "Step", de: "Schritt";
-            add_option: &'static str = en: "Add option", de: "Option hinzufuegen";
+            add_option: &'static str = en: "Add option", de: "Option hinzufügen";
             new_option_placeholder: &'static str = en: "New option", de: "Neue Option";
             remove: &'static str = en: "Remove", de: "Entfernen";
             node_id: &'static str = en: "Node id", de: "Knoten-ID";
@@ -1178,7 +1178,7 @@ pub mod app_studio {
             media_graph_nodes: &'static str = en: "Media graph nodes", de: "Mediengraph-Knoten";
             app_instance: &'static str = en: "App instance", de: "App-Instanz";
             app_instances: &'static str = en: "App instances", de: "App-Instanzen";
-            select_hint: &'static str = en: "Select media graph nodes or app instances in the canvas.", de: "Waehle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.";
+            select_hint: &'static str = en: "Select media graph nodes or app instances in the canvas.", de: "Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus.";
             program_prefix: &'static str = en: "Program", de: "Programm";
             app_prefix: &'static str = en: "App", de: "App";
             instance_id_prefix: &'static str = en: "Instance id", de: "Instanz-ID";
@@ -1193,13 +1193,13 @@ pub mod app_studio {
             parameter_count_suffix: &'static str = en: "parameter(s)", de: "Parameter";
             media_node_count_label: &'static str = en: "media node(s)", de: "Medienknoten";
             app_instance_count_label: &'static str = en: "app instance(s)", de: "App-Instanz(en)";
-            context_open_instance: &'static str = en: "Open instance", de: "Instanz oeffnen";
+            context_open_instance: &'static str = en: "Open instance", de: "Instanz öffnen";
             context_duplicate: &'static str = en: "Duplicate", de: "Duplizieren";
             context_copy: &'static str = en: "Copy", de: "Kopieren";
-            context_paste: &'static str = en: "Paste", de: "Einfuegen";
+            context_paste: &'static str = en: "Paste", de: "Einfügen";
             context_rename_label: &'static str = en: "Rename label…", de: "Bezeichnung umbenennen…";
             context_remove: &'static str = en: "Remove", de: "Entfernen";
-            context_select_all: &'static str = en: "Select all", de: "Alle auswaehlen";
+            context_select_all: &'static str = en: "Select all", de: "Alle auswählen";
             context_clear_selection: &'static str = en: "Clear selection", de: "Auswahl aufheben";
             context_reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
         }
@@ -1214,30 +1214,30 @@ pub mod app_studio {
             // 🔧 Document-mutating operations
             ("setParameter", "Set Parameter", "Parameter festlegen"),
             ("patchParameter", "Patch Parameter", "Parameter aktualisieren"),
-            ("addParameter", "Add Parameter", "Parameter hinzufuegen"),
+            ("addParameter", "Add Parameter", "Parameter hinzufügen"),
             ("removeParameter", "Remove Parameter", "Parameter entfernen"),
             ("spawnApp", "Spawn App", "App erzeugen"),
             ("moveMediaNode", "Move Media Node", "Medienknoten verschieben"),
             ("connectMediaPorts", "Connect Media Ports", "Medien-Ports verbinden"),
             ("disconnectMediaEdge", "Disconnect Media Edge", "Medienverbindung trennen"),
             ("removeAppInstance", "Remove App Instance", "App-Instanz entfernen"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("copyAppInstance", "Copy App Instance", "App-Instanz kopieren"),
             ("duplicateAppInstance", "Duplicate App Instance", "App-Instanz duplizieren"),
-            ("pasteAppInstance", "Paste App Instance", "App-Instanz einfuegen"),
+            ("pasteAppInstance", "Paste App Instance", "App-Instanz einfügen"),
             ("renameAppInstance", "Rename App Instance", "App-Instanz umbenennen"),
             ("patchMediaNodes", "Patch Media Nodes", "Medienknoten aktualisieren"),
             ("patchAppInstances", "Patch App Instances", "App-Instanzen aktualisieren"),
-            ("bindParameterField", "Bind Parameter Field", "Parameterfeld verknuepfen"),
-            ("unbindParameterField", "Unbind Parameter Field", "Parameterfeld loesen"),
+            ("bindParameterField", "Bind Parameter Field", "Parameterfeld verknüpfen"),
+            ("unbindParameterField", "Unbind Parameter Field", "Parameterfeld lösen"),
             ("reorganizeMediaGraph", "Reorganize Media Graph", "Mediengraph neu anordnen"),
-            ("mediaGraphEngagementSubmit", "Media Graph Engagement Submit", "Mediengraph-Eingabe bestaetigen"),
-            ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestaetigen"),
+            ("mediaGraphEngagementSubmit", "Media Graph Engagement Submit", "Mediengraph-Eingabe bestätigen"),
+            ("compiledDagEngagementSubmit", "Compiled DAG Engagement Submit", "Kompilierter-DAG-Eingabe bestätigen"),
             ("nodeGraphEdit", "Edit Media Graph", "Mediengraph bearbeiten"),
             // 👁️ Ephemeral view state
             ("setActivePanelTab", "Set Active Panel Tab", "Aktiven Panel-Tab festlegen"),
-            ("selectInstance", "Select Instance", "Instanz auswaehlen"),
-            ("nodeGraphSelect", "Select Graph Node", "Graphknoten auswaehlen"),
+            ("selectInstance", "Select Instance", "Instanz auswählen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graphknoten auswählen"),
             ("setMediaNodeSelection", "Set Media Node Selection", "Medienknoten-Auswahl festlegen"),
             ("nodeGraphHover", "Hover Graph Node", "Graphknoten hovern"),
             ("textHover", "Text Hover", "Text-Hover"),
@@ -3898,7 +3898,7 @@ pub mod app_studio {
             assert!(parameters_json.contains("Add Parameter"));
             assert!(parameters_json.contains("\"Name\""));
             assert!(parameters_json.contains("\"Remove\""));
-            assert!(!parameters_json.contains("Parameter hinzufuegen"));
+            assert!(!parameters_json.contains("Parameter hinzufügen"));
         }
 
         #[test]
@@ -3909,12 +3909,12 @@ pub mod app_studio {
             let projection = demo_studio_projection();
             let doc = DocumentView { projection: &projection, history: &history };
             let parameters_json = serde_json::to_string(&app.render(S_PLAY_PARAMETERS_BODY_KEY, &doc, &view_state)).unwrap();
-            assert!(parameters_json.contains("Parameter hinzufuegen"));
+            assert!(parameters_json.contains("Parameter hinzufügen"));
             assert!(parameters_json.contains("\"Entfernen\""));
             assert!(!parameters_json.contains("Add Parameter"));
 
             let inspector_json = serde_json::to_string(&app.render(S_PLAY_INSPECTOR_BODY_KEY, &doc, &view_state)).unwrap();
-            assert!(inspector_json.contains("Waehle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
+            assert!(inspector_json.contains("Wähle Mediengraph-Knoten oder App-Instanzen im Arbeitsbereich aus."));
         }
     }
     //#endregion 🧪Tests

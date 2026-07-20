@@ -261,7 +261,7 @@ const composeSketchpadTranslationBundles = {
     },
     "file": {
       "name": "Name",
-      "size": "Groesse",
+      "size": "Größe",
       "created": "Erstellt",
       "updated": "Aktualisiert"
     },
@@ -281,7 +281,7 @@ const composeSketchpadTranslationBundles = {
         },
         "back": {
           "label": {
-            "normal": "Zurueck",
+            "normal": "Zurück",
             "beginner": "Klicken, um zurueckzugehen, halten um Historie zu sehen"
           },
           "manual": "navigation",
@@ -650,7 +650,7 @@ const composeSketchpadTranslationBundles = {
           "right": {
             "label": {
               "normal": "Rechtes Panel umschalten",
-              "beginner": "Das rechte Panel fuer Details und Einstellungen ein- oder ausblenden"
+              "beginner": "Das rechte Panel für Details und Einstellungen ein- oder ausblenden"
             }
           },
           "tools": {
@@ -842,7 +842,7 @@ const composeSketchpadTranslationBundles = {
           "device": {
             "label": {
               "normal": "Geraet",
-              "beginner": "Geraetemodus fuer die Interaktion waehlen"
+              "beginner": "Gerätemodus für die Interaktion wählen"
             },
             "desktop": {
               "label": {
@@ -912,8 +912,8 @@ const composeSketchpadTranslationBundles = {
           "normal": "",
           "beginner": ""
         },
-        "selectVariant": "Variante auswaehlen...",
-        "selectView": "Ansicht auswaehlen...",
+        "selectVariant": "Variante auswählen...",
+        "selectView": "Ansicht auswählen...",
         "search": {
           "label": {
             "normal": "Suche",
@@ -928,14 +928,14 @@ const composeSketchpadTranslationBundles = {
         },
         "selectDesign": {
           "label": {
-            "normal": "Entwurf auswaehlen",
-            "beginner": "Entwurf auswaehlen"
+            "normal": "Entwurf auswählen",
+            "beginner": "Entwurf auswählen"
           }
         },
         "selectType": {
           "label": {
-            "normal": "Typ auswaehlen",
-            "beginner": "Typ auswaehlen"
+            "normal": "Typ auswählen",
+            "beginner": "Typ auswählen"
           }
         },
         "no": {
@@ -1043,7 +1043,7 @@ const composeSketchpadTranslationBundles = {
           "fileInput": {
             "label": {
               "normal": "Kit-Datei waehlen",
-              "beginner": "Eine .zip-Kit-Datei von Ihrem Geraet auswaehlen"
+              "beginner": "Eine .zip-Kit-Datei von Ihrem Gerät auswählen"
             }
           },
           "searchPlaceholder": {
@@ -1179,13 +1179,13 @@ const composeSketchpadTranslationBundles = {
             "appearance": {
               "label": {
                 "normal": "Design",
-                "beginner": "Waehlen Sie das Farbschema fuer die Anwendung"
+                "beginner": "Wählen Sie das Farbschema für die Anwendung"
               }
             },
             "language": {
               "label": {
                 "normal": "Sprache",
-                "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+                "beginner": "Wählen Sie die Sprache für die Anwendungsoberfläche"
               },
               "placeholder": {
                 "label": {
@@ -1215,7 +1215,7 @@ const composeSketchpadTranslationBundles = {
             "layout": {
               "label": {
                 "normal": "Layout",
-                "beginner": "Waehlen Sie das Layout fuer die Kit-Uebersicht"
+                "beginner": "Wählen Sie das Layout für die Kit-Übersicht"
               }
             },
             "diagram": {
@@ -1274,13 +1274,13 @@ const composeSketchpadTranslationBundles = {
               "hover": {
                 "label": {
                   "normal": "Kit hervorheben",
-                  "beginner": "Ueber eine Kit-Zeile fahren, um sie im Diagramm hervorzuheben"
+                  "beginner": "Über eine Kit-Zeile fahren, um sie im Diagramm hervorzuheben"
                 }
               },
               "toggleSort": {
                 "label": {
                   "normal": "Sortierung umschalten",
-                  "beginner": "Sortierrichtung fuer diese Spalte aendern"
+                  "beginner": "Sortierrichtung für diese Spalte ändern"
                 }
               }
             }
@@ -1604,7 +1604,7 @@ const composeSketchpadTranslationBundles = {
             },
             "description": {
               "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
-              "beginner": "Zurueck zur Startseite und ein anderes Kit oeffnen oder ein neues erstellen."
+              "beginner": "Zurück zur Startseite und ein anderes Kit öffnen oder ein neues erstellen."
             }
           },
           "noKitLoaded": {
@@ -1621,8 +1621,8 @@ const composeSketchpadTranslationBundles = {
           },
           "notAvailable": {
             "label": {
-              "normal": "Kit nicht verfuegbar",
-              "beginner": "Kit nicht verfuegbar"
+              "normal": "Kit nicht verfügbar",
+              "beginner": "Kit nicht verfügbar"
             }
           },
           "dropzone": {
@@ -1903,7 +1903,7 @@ const composeSketchpadTranslationBundles = {
             "createFile": {
               "label": {
                 "normal": "Datei erstellen",
-                "beginner": "Klicken, um eine neue Datei zu diesem Kit hinzuzufuegen"
+                "beginner": "Klicken, um eine neue Datei zu diesem Kit hinzuzufügen"
               },
               "manual": "manuals/compose/kit#files",
               "tutorial": "getting-started/intro#files"
@@ -1926,8 +1926,8 @@ const composeSketchpadTranslationBundles = {
             },
             "reset": {
               "label": {
-                "normal": "Zuruecksetzen",
-                "beginner": "Klicken, um das Kit auf den urspruenglichen Zustand zurueckzusetzen"
+                "normal": "Zurücksetzen",
+                "beginner": "Klicken, um das Kit auf den ursprünglichen Zustand zurückzusetzen"
               }
             },
             "showAuthors": {
@@ -1941,7 +1941,7 @@ const composeSketchpadTranslationBundles = {
             "createAuthor": {
               "label": {
                 "normal": "Autor erstellen",
-                "beginner": "Klicken, um einen neuen Autor zu diesem Kit hinzuzufuegen"
+                "beginner": "Klicken, um einen neuen Autor zu diesem Kit hinzuzufügen"
               },
               "manual": "manuals/compose/kit#authors",
               "tutorial": "getting-started/intro#authors"
@@ -2079,7 +2079,7 @@ const composeSketchpadTranslationBundles = {
                   "name": {
                     "label": {
                       "normal": "Kit-Name",
-                      "beginner": "Der Name des Kits. Dies ist die primaere Kennung fuer Ihr Kit."
+                      "beginner": "Der Name des Kits. Dies ist die primäre Kennung für Ihr Kit."
                     },
                     "manual": "kit#metadata",
                     "tutorial": "hello-compose/save-kit"
@@ -2119,7 +2119,7 @@ const composeSketchpadTranslationBundles = {
                   "homepage": {
                     "label": {
                       "normal": "Homepage",
-                      "beginner": "URL zur Homepage oder Dokumentation fuer dieses Kit."
+                      "beginner": "URL zur Homepage oder Dokumentation für dieses Kit."
                     },
                     "manual": "kit#metadata",
                     "tutorial": "hello-compose/save-kit"
@@ -2783,7 +2783,7 @@ const composeSketchpadTranslationBundles = {
                   "name": {
                     "label": {
                       "normal": "Name",
-                      "beginner": "Der Name des Entwurfs. Dies ist die primaere Kennung fuer Ihre Komposition."
+                      "beginner": "Der Name des Entwurfs. Dies ist die primäre Kennung für Ihre Komposition."
                     },
                     "manual": "design#metadata",
                     "tutorial": "hello-compose/model-design"
@@ -2815,7 +2815,7 @@ const composeSketchpadTranslationBundles = {
                   "variant": {
                     "label": {
                       "normal": "Variante",
-                      "beginner": "Eine Variantenkennung fuer verschiedene Versionen oder Konfigurationen dieses Entwurfs."
+                      "beginner": "Eine Variantenkennung für verschiedene Versionen oder Konfigurationen dieses Entwurfs."
                     },
                     "manual": "design#variants",
                     "tutorial": "hello-compose/model-design"
@@ -2831,7 +2831,7 @@ const composeSketchpadTranslationBundles = {
                   "unit": {
                     "label": {
                       "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer alle Abmessungen in diesem Entwurf (z.B. mm, cm, m)."
+                      "beginner": "Die Maßeinheit für alle Abmessungen in diesem Entwurf (z.B. mm, cm, m)."
                     },
                     "manual": "design#metadata",
                     "tutorial": "hello-compose/model-design"
@@ -2876,7 +2876,7 @@ const composeSketchpadTranslationBundles = {
                   "latitude": {
                     "label": {
                       "normal": "Breitengrad",
-                      "beginner": "Die Nord-Sued-Position dieses Entwurfsstandorts in Dezimalgrad."
+                      "beginner": "Die Nord-Süd-Position dieses Entwurfsstandorts in Dezimalgrad."
                     },
                     "manual": "design#location"
                   }
@@ -2896,7 +2896,7 @@ const composeSketchpadTranslationBundles = {
                   "email": {
                     "label": {
                       "normal": "E-Mail",
-                      "beginner": "Kontakt-E-Mail-Adresse fuer diesen Autor."
+                      "beginner": "Kontakt-E-Mail-Adresse für diesen Autor."
                     },
                     "manual": "design#authors"
                   }
@@ -2909,7 +2909,7 @@ const composeSketchpadTranslationBundles = {
                   "name": {
                     "label": {
                       "normal": "Name",
-                      "beginner": "Die eindeutige Kennung fuer dieses Attribut im Kebab-Case-Format (z.B. 'material.type')."
+                      "beginner": "Die eindeutige Kennung für dieses Attribut im Kebab-Case-Format (z.B. 'material.type')."
                     },
                     "manual": "design#attributes"
                   },
@@ -2923,7 +2923,7 @@ const composeSketchpadTranslationBundles = {
                   "unit": {
                     "label": {
                       "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer den Wert dieses Attributs (z.B. mm, kg, °C)."
+                      "beginner": "Die Maßeinheit für den Wert dieses Attributs (z.B. mm, kg, °C)."
                     },
                     "manual": "design#attributes"
                   },
@@ -2955,7 +2955,7 @@ const composeSketchpadTranslationBundles = {
                   "pieceInfo": {
                     "label": {
                       "normal": "Bauteil",
-                      "beginner": "Grundinformationen ueber das Bauteil."
+                      "beginner": "Grundinformationen über das Bauteil."
                     }
                   },
                   "name": {
@@ -3063,7 +3063,7 @@ const composeSketchpadTranslationBundles = {
                   "plane": {
                     "label": {
                       "normal": "Ebene",
-                      "beginner": "Die 3D-Platzierungsebene fuer dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum."
+                      "beginner": "Die 3D-Platzierungsebene für dieses Bauteil. Definiert Position und Ausrichtung im 3D-Raum."
                     },
                     "manual": "design#pieces",
                     "tutorial": "hello-compose/model-design#pieces",
@@ -3531,7 +3531,7 @@ const composeSketchpadTranslationBundles = {
               "rectangular": {
                 "label": {
                   "normal": "Rechteck-Lasso",
-                  "beginner": "Rechteck fuer Lasso-Auswahl ziehen"
+                  "beginner": "Rechteck für Lasso-Auswahl ziehen"
                 }
               },
               "freeform": {
@@ -3724,7 +3724,7 @@ const composeSketchpadTranslationBundles = {
             "language": {
               "label": {
                 "normal": "Sprache",
-                "beginner": "Sprache auswaehlen"
+                "beginner": "Sprache auswählen"
               }
             },
             "device": {
@@ -4063,8 +4063,8 @@ const composeSketchpadTranslationBundles = {
           "parentPlaceholder": {
             "label": {
               "label": {
-                "normal": "Elterntyp auswaehlen...",
-                "beginner": "Elterntyp auswaehlen..."
+                "normal": "Elterntyp auswählen...",
+                "beginner": "Elterntyp auswählen..."
               }
             }
           },
@@ -4077,7 +4077,7 @@ const composeSketchpadTranslationBundles = {
           "models": {
             "label": {
               "normal": "Darstellungen",
-              "beginner": "Verschiedene 3D-Modelle, Bilder und visuelle Darstellungen fuer diesen Typ verwalten."
+              "beginner": "Verschiedene 3D-Modelle, Bilder und visuelle Darstellungen für diesen Typ verwalten."
             },
             "manual": "type#models",
             "tutorial": "hello-compose/model-brick-set#models"
@@ -4107,7 +4107,7 @@ const composeSketchpadTranslationBundles = {
           "connectors": {
             "label": {
               "normal": "Connectors",
-              "beginner": "Verbindungsports fuer diesen Typ verwalten. Connectors definieren, wo und wie Bauteile verbunden werden koennen."
+              "beginner": "Verbindungsports für diesen Typ verwalten. Connectors definieren, wo und wie Bauteile verbunden werden können."
             },
             "manual": "type#connectors",
             "tutorial": "hello-compose/model-brick-set#connectors"
@@ -4141,8 +4141,8 @@ const composeSketchpadTranslationBundles = {
           "connectorNamePlaceholder": {
             "label": {
               "label": {
-                "normal": "Name hinzufuegen",
-                "beginner": "Name hinzufuegen"
+                "normal": "Name hinzufügen",
+                "beginner": "Name hinzufügen"
               }
             }
           },
@@ -4253,7 +4253,7 @@ const composeSketchpadTranslationBundles = {
                   "name": {
                     "label": {
                       "normal": "Name",
-                      "beginner": "Der Name des Typs. Dies ist die primaere Kennung fuer die Komponente."
+                      "beginner": "Der Name des Typs. Dies ist die primäre Kennung für die Komponente."
                     },
                     "manual": "type#metadata",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4277,7 +4277,7 @@ const composeSketchpadTranslationBundles = {
                   "image": {
                     "label": {
                       "normal": "Bild",
-                      "beginner": "URL zu einem Bild, das diesen Typ darstellt. Wird fuer Vorschauen und visuelle Identifikation verwendet."
+                      "beginner": "URL zu einem Bild, das diesen Typ darstellt. Wird für Vorschauen und visuelle Identifikation verwendet."
                     },
                     "manual": "type#metadata",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4285,7 +4285,7 @@ const composeSketchpadTranslationBundles = {
                   "unit": {
                     "label": {
                       "normal": "Einheit",
-                      "beginner": "Die Masseinheit fuer diesen Typ (z.B. mm, m, ft)."
+                      "beginner": "Die Maßeinheit für diesen Typ (z.B. mm, m, ft)."
                     },
                     "manual": "type#metadata",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4357,7 +4357,7 @@ const composeSketchpadTranslationBundles = {
                   "description": {
                     "label": {
                       "normal": "Beschreibung",
-                      "beginner": "Eine Beschreibung dessen, was dieser Connector darstellt und wie er fuer Verbindungen verwendet werden sollte."
+                      "beginner": "Eine Beschreibung dessen, was dieser Connector darstellt und wie er für Verbindungen verwendet werden sollte."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4411,7 +4411,7 @@ const composeSketchpadTranslationBundles = {
                   "name": {
                     "label": {
                       "normal": "Name",
-                      "beginner": "Ein optionaler Name fuer diesen Connector."
+                      "beginner": "Ein optionaler Name für diesen Connector."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4419,7 +4419,7 @@ const composeSketchpadTranslationBundles = {
                   "mandatory": {
                     "label": {
                       "normal": "Pflichtfeld",
-                      "beginner": "Ob dieser Connector fuer eine gueltige Verbindung zwingend erforderlich ist."
+                      "beginner": "Ob dieser Connector für eine gültige Verbindung zwingend erforderlich ist."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4489,7 +4489,7 @@ const composeSketchpadTranslationBundles = {
                   "value": {
                     "label": {
                       "normal": "Wert",
-                      "beginner": "Der Wert des Attributs. Leer lassen fuer boolesche Attribute (Anwesenheit = wahr)."
+                      "beginner": "Der Wert des Attributs. Leer lassen für boolesche Attribute (Anwesenheit = wahr)."
                     },
                     "manual": "type#attributes",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4497,7 +4497,7 @@ const composeSketchpadTranslationBundles = {
                   "definition": {
                     "label": {
                       "normal": "Definition",
-                      "beginner": "Optionale Definition oder Dokumentation fuer dieses Attribut. Kann Text oder eine URL sein."
+                      "beginner": "Optionale Definition oder Dokumentation für dieses Attribut. Kann Text oder eine URL sein."
                     },
                     "manual": "type#attributes",
                     "tutorial": "hello-compose/model-brick-set"
@@ -4731,13 +4731,13 @@ const composeSketchpadTranslationBundles = {
           "key": {
             "label": {
               "normal": "Schluessel",
-              "beginner": "Der eindeutige Bezeichner fuer diese Qualitaet"
+              "beginner": "Der eindeutige Bezeichner für diese Qualität"
             }
           },
           "name": {
             "label": {
               "normal": "Name",
-              "beginner": "Der Anzeigename fuer diese Qualitaet"
+              "beginner": "Der Anzeigename für diese Qualität"
             }
           },
           "kind": {
@@ -4756,7 +4756,7 @@ const composeSketchpadTranslationBundles = {
           "defaultValue": {
             "label": {
               "normal": "Standardwert",
-              "beginner": "Der Standardwert fuer diese Qualitaet"
+              "beginner": "Der Standardwert für diese Qualität"
             }
           },
           "defaultSiUnit": {
@@ -5043,7 +5043,7 @@ const composeSketchpadTranslationBundles = {
         "language": {
           "label": {
             "normal": "Sprache",
-            "beginner": "Waehlen Sie die Sprache fuer die Anwendungsoberflaeche"
+            "beginner": "Wählen Sie die Sprache für die Anwendungsoberfläche"
           },
           "placeholder": {
             "label": {

@@ -697,30 +697,30 @@ semio_framework_plugin::app_labels! {
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addLayer", "Add Layer", "Ebene hinzufuegen"),
+        ("addLayer", "Add Layer", "Ebene hinzufügen"),
         ("combineBoolean", "Combine Boolean", "Boolean kombinieren"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setDocument", "Set Document", "Dokument festlegen"),
-        ("commitDocument", "Commit Document", "Dokument uebernehmen"),
+        ("commitDocument", "Commit Document", "Dokument übernehmen"),
         ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("setCameraZoom", "Set Camera Zoom", "Kamerazoom festlegen"),
         ("setSelectedOpacity", "Set Selected Opacity", "Deckkraft der Auswahl festlegen"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
         ("dropLayerKind", "Drop Layer Kind", "Ebenenart ablegen"),
         ("moveLayer", "Move Layer", "Ebene verschieben"),
-        ("deleteLayer", "Delete Layer", "Ebene loeschen"),
+        ("deleteLayer", "Delete Layer", "Ebene löschen"),
         ("duplicateLayer", "Duplicate Layer", "Ebene duplizieren"),
         ("toggleLayerVisible", "Toggle Layer Visible", "Ebenensichtbarkeit umschalten"),
         ("patchLayer", "Patch Layer", "Ebene aktualisieren"),
         ("patchLayers", "Patch Layers", "Ebenen aktualisieren"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
         ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
         ("canvasDoubleClick", "Canvas Double Click", "Leinwand-Doppelklick"),
-        ("canvasCommitDraft", "Canvas Commit Draft", "Leinwand-Entwurf uebernehmen"),
+        ("canvasCommitDraft", "Canvas Commit Draft", "Leinwand-Entwurf übernehmen"),
         ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen"),
         ("canvasEscape", "Canvas Escape", "Leinwand abbrechen"),
-        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("selectAll", "Select All", "Alles auswählen"),
         ("clearSelection", "Clear Selection", "Auswahl aufheben"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setHover", "Set Hover", "Hover festlegen"),
@@ -1953,14 +1953,14 @@ fn create_draw_app() -> App {
             .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
-            .utility(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Tools))
-            .utility(draw_utility("shapeRect", "Rectangle", "square", "Draw", UtilityCategory::Tools))
-            .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Tools))
-            .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Tools))
-            .utility(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Tools))
-            .utility(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Tools))
-            .utility(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Tools))
-            .utility(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Tools))
+            .utility(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeRect", "Rectangle", "square", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("booleanCombine", "Boolean", "combine", "Combine", UtilityCategory::Utilities))
+            .utility(draw_utility("trace", "Trace", "scan-line", "Combine", UtilityCategory::Utilities))
+            .utility(draw_utility("transformMove", "Pan", "move", "View", UtilityCategory::Utilities))
             .window_kind_utilities(DRAW_PLAY_WINDOW_CANVAS, vec![
                 "selectMarquee".into(), "selectLasso".into(), "selectDirect".into(),
                 "pen".into(), "shapeRect".into(), "shapeEllipse".into(), "shapeLine".into(), "shapePolygon".into(),

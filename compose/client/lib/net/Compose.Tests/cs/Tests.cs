@@ -31,7 +31,7 @@ public class Tests
         var current = new DirectoryInfo(AppContext.BaseDirectory);
         while (current is not null)
         {
-            var fixtures = Path.Combine(current.FullName, "assets", "fixtures");
+            var fixtures = Path.Combine(current.FullName, "compose", "fixture");
             if (Directory.Exists(fixtures) && System.IO.File.Exists(Path.Combine(fixtures, "hash.cases.compose.json")))
                 return fixtures;
             current = current.Parent;
@@ -388,7 +388,7 @@ public class Tests
         public void Metabolism_Json_Memory_Json_Json_Zip_Zip_Json()
         {
 
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var json = Utility.Serialize(kit);
             var deserializedKit = Utility.DeserializeKit(json);
             Assert.Equal(Utility.Serialize(kit), Utility.Serialize(deserializedKit!));
@@ -419,7 +419,7 @@ public class Tests
             [Fact]
             public void Metabolism_Kit_Export_Import_Matches_Json()
             {
-                var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+                var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
                 var tempDir = Path.Combine(Path.GetTempPath(), "compose_folder_test_" + Guid.NewGuid().ToString("N"));
                 Directory.CreateDirectory(tempDir);
                 try
@@ -489,7 +489,7 @@ public class Tests
 
         private void TestFlatten(string designName, string? parentName = null)
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = FindDesign(kit, designName, parentName);
 
             var expectedDesign = kit.Designs.FirstOrDefault(d => d.Name == "Flat" && d.Parent?.Id == design.Id);
@@ -717,7 +717,7 @@ public class Tests
         [Fact]
         public void CachedFlattenReusesValues()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var (_, firstCache) = Kit.FlattenDesignCached(kit, design.Id);
             Assert.True(firstCache.Count > 0);
@@ -738,7 +738,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Change_Forward_Backward_Inverse_Behavior()
         {
-            var kitOriginal = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kitOriginal = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             kitOriginal.Designs = kitOriginal.Designs?.Where(d => d.Parent == null).ToList();
 
             var kitDiff = Tests.LoadAsset<KitDiff>("metabolism.kit.diff.compose.json");
@@ -800,13 +800,14 @@ public class Tests
         public void Heal_Drops_Invalid_Design_Update()
         {
             var asset = Tests.LoadAsset<ValidateKitDiffAsset>("validate-kit-diff.cases.compose.json");
-            var badJson = """{"designs":{"updated":[{"design":{"id":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}""";
+            var badJson = """{"typologies":{"modified":[{"typology":{"id":"typology-default"},"diff":{"designs":{"modified":[{"design":{"id":"99999999-9999-9999-9999-999999999999"},"diff":{"name":"X"}}]}}}]}}""";
             var bad = Utility.Deserialize<KitDiff>(badJson);
             Assert.NotNull(bad);
             var r = ComposeDiff.ValidateKitDiff(asset.TinyKit, bad!, true);
             Assert.NotNull(r.Diff);
             var d = r.Diff!;
-            Assert.True(d.Designs == null || d.Designs.Modified == null || d.Designs.Modified.Count == 0,
+            var topologyUpdate = d.Typologies?.Modified?.FirstOrDefault(m => m.Typology.Id == "typology-default");
+            Assert.True(topologyUpdate == null || topologyUpdate.Diff.Designs == null || topologyUpdate.Diff.Designs.Modified.Count == 0,
                 "heal should drop invalid design update");
         }
     }
@@ -816,7 +817,7 @@ public class Tests
         [Fact]
         public void Metabolism_Kit_Validate_Empty_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var result = ComposeValidator.ValidateKit(kit);
             Assert.Empty(result.Issues);
         }
@@ -871,7 +872,7 @@ public class Tests
         [Fact]
         public void Plain_Descriptions_Do_Not_Create_Emoji_Validation_Issues()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             kit.Description = "Plain kit summary";
             for (var i = 0; i < kit.Types.Count; i++)
                 kit.Types[i].Description = $"Repeated plain description {i % 2}";
@@ -922,7 +923,7 @@ public class Tests
         [Fact]
         public void Design_Pieces_MoveVector_DiffDesign()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = Tests.LoadAsset<Design>("drag/design.compose.json");
             var pieces = Tests.LoadAsset<Design>("drag/pieces.compose.json");
             var vector = Tests.LoadAsset<MoveVector>("move/vector.compose.json");
@@ -960,7 +961,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Delete_Third_Tambour_And_First_Small_Tower_Connection()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var selection = Tests.LoadAsset<Design>("nakagin-capsule-tower.deleted.selection.compose.json");
             var expectedDiff = Tests.LoadAsset<DesignDiff>("nakagin-capsule-tower.deleted.design.diff.compose.json");
@@ -1016,7 +1017,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Copy_Paste_Roundtrip()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var pasteTargetDesign = Tests.LoadAsset<Design>("nakagin-capsule-tower.paste.design.compose.json");
             var selection = Tests.LoadAsset<Selection>("nakagin-capsule-tower.copy.design.selection.compose.json");
@@ -1341,7 +1342,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Glb_Valid_Header()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".glb");
             Assert.NotNull(result);
@@ -1360,7 +1361,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Gltf_Valid_Json()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
@@ -1373,7 +1374,7 @@ public class Tests
         [Fact]
         public void Invalid_Format_Throws()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             Assert.Throws<ArgumentException>(() => Kit.ExportDesignRepresentation(kit, design.Id, ".invalid"));
         }
@@ -1381,7 +1382,7 @@ public class Tests
         [Fact]
         public void Nakagin_Capsule_Tower_Export_Scene_Graph_Report()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Name == "Nakagin Capsule Tower" && d.Parent == null);
             var result = Kit.ExportDesignRepresentation(kit, design.Id, ".gltf");
             Assert.NotNull(result);
@@ -1400,7 +1401,7 @@ public class Tests
         [Fact]
         public void Type_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var type = kit.Types.First();
             var meta = type.ToMeta();
 
@@ -1423,7 +1424,7 @@ public class Tests
         [Fact]
         public void Type_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var type = kit.Types.First();
             var shallow = type.ToShallow();
 
@@ -1451,7 +1452,7 @@ public class Tests
         [Fact]
         public void Design_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var meta = design.ToMeta();
 
@@ -1473,7 +1474,7 @@ public class Tests
         [Fact]
         public void Design_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var design = kit.Designs.First(d => d.Parent == null);
             var shallow = design.ToShallow();
 
@@ -1499,7 +1500,7 @@ public class Tests
         [Fact]
         public void Kit_Meta_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var meta = kit.ToMeta();
 
             Assert.Equal(kit.Id, meta.Id);
@@ -1519,7 +1520,7 @@ public class Tests
         [Fact]
         public void Kit_Shallow_From_Asset()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var shallow = kit.ToShallow();
 
             Assert.Equal(kit.Id, shallow.Id);
@@ -1545,7 +1546,7 @@ public class Tests
         [Fact]
         public void Kit_To_Meta_To_Shallow()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
 
             var meta = kit.ToMeta();
             Assert.NotNull(meta);
@@ -1621,7 +1622,7 @@ public class Tests
         [Fact]
         public void HashKit_Deterministic()
         {
-            var kit = Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+            var kit = Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
             var hash1 = Hashing.HashKit(kit);
             var hash2 = Hashing.HashKit(kit);
             Assert.Equal(hash1, hash2);
@@ -2208,7 +2209,7 @@ public sealed class StoreKitIOTests
     [Fact]
     public void Metabolism_KitToInstallDto_Position_Centers_Are_Uv_Objects()
     {
-        var kit = Compose.Tests.Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+        var kit = Compose.Tests.Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
         var dto = StoreKitIO.KitToInstallProjection(kit);
         static void Walk(JToken? t)
         {
@@ -2232,7 +2233,7 @@ public sealed class StoreKitIOTests
     public void Metabolism_InstallProjection_Roundtrip_When_Store_Present()
     {
         if (!StoreClientTests.StoreBinaryPresent()) return;
-        var kit = Compose.Tests.Tests.LoadAsset<Kit>("stores/metabolism/wip/initialKit/kit.compose.json");
+        var kit = Compose.Tests.Tests.LoadAsset<Kit>("kit/dev/metabolism/wip/initialKit/kit.compose.json");
         var dir = Path.Combine(Path.GetTempPath(), $"compose-metabolism-e2e-{Guid.NewGuid():N}");
         Directory.CreateDirectory(dir);
         try

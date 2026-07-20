@@ -1,0 +1,13 @@
+{
+  "title": "Fix Import Meta Glob Undefined In Cad Vitest Suites",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "cad/* module vitest suites (and cad/runtime) print `[DEBUG] typeof import.meta.glob: undefined` from cad/runtime/js/index.ts, causing shippedModelDefinitionAssets() to fall back to emptyModelDefinitionAssets() and every stat/property/typology lookup to null-deref. Root cause: cad/* package.json files (plus infinite/world/r3f, kernel/3d/brep/js) pin \"vitest\": \"^3.2.4\" while the rest of the monorepo is on \"^4.0.17\"/4.1.7, so bun installs a separate nested vitest@3.2.4 (with its own older vite) for these packages instead of hoisting the shared 4.x. That older vitest/vite combo fails to statically transform import.meta.glob under these packages' multi-root aliased vitest configs. Fix: bump vitest to match the rest of the repo in all affected package.json files, reinstall, verify all affected suites pass, then remove the [DEBUG] console.log lines in cad/runtime/js/index.ts.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2172"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪054955189569426495692748270cf392"
+  ]
+}

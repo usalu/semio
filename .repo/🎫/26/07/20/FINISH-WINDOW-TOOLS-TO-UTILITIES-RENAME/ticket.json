@@ -1,0 +1,13 @@
+{
+  "title": "Finish Window Tools to Utilities Rename",
+  "emoji": "🧰",
+  "status": "open",
+  "description": "Complete the in-progress rename of the per-window \"tools\" palette concept to \"utilities\" across the whole stack. Approved plan at /Users/ueli/.claude/plans/window-tools-should-be-reactive-raccoon.md: shrink window_utility -\u003e utility, rename category literal \"tools\" -\u003e \"utilities\" (Rust UtilityCategory::Utilities), rename generic Toolbar* primitives -\u003e Ribbon* family (GlassTier::Toolbar -\u003e Ribbon too), rename transformTool -\u003e transformMode wire key across React + all plugin crates + infinite/world, rename window utility-bar chrome (WindowToolbarChrome -\u003e UtilityBarChrome, Window.toolbar prop -\u003e utilityBar), rename ui.toolbar.* i18n/id namespace -\u003e ui.ribbon.*/ui.utilities.*, rename renderer ribbon-building functions (buildToolbarRibbonSegments -\u003e buildUtilityRibbonSegments, derive_toolbar_nodes -\u003e derive_utility_nodes), rename panel label keys ui.panel.tools/toolsHistory -\u003e ui.panel.actions/history, delete dead activeTool document field + fixture key, rename lowpoly labels.tool -\u003e labels.utility, and sweep remaining fixture/demo/prose legacy naming. English copy becomes \"Utilities\"; German keeps natural terms (Werkzeuge/Werkzeugparameter/Werkzeugleiste). ARIA role=\"toolbar\" and unrelated tool concepts (tooltips, CNC cutting tools, BRep boolean tool_ids, build tooling) stay untouched.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2171"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪00a4fce18a2b467f9353c0b7a0b91838"
+  ]
+}

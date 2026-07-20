@@ -131,10 +131,13 @@ pub fn approximate_entropy(x: &[f64], cfg: RegularityConfig, base: LogBase) -> R
 // #endregion 🔖ApproximateEntropy
 
 // #region 🔖SharedEmbedding
+/// 🔁 A pair of `(length-m templates, length-(m+1) templates)` over the same shared index range.
+type TemplatePair = (Vec<Vec<f64>>, Vec<Vec<f64>>);
+
 /// 🔁 Embeds at `m + 1` first to fix the valid start-index range, then embeds at `m` and
 /// truncates to that SAME range, so SampEn/FuzzyEn compare the two lengths over identical
 /// windows rather than the (larger) index range `m`-only embedding would otherwise allow.
-fn shared_templates(x: &[f64], m: usize) -> Result<(Vec<Vec<f64>>, Vec<Vec<f64>>), EntropyError> {
+fn shared_templates(x: &[f64], m: usize) -> Result<TemplatePair, EntropyError> {
     let templates_m1 = crate::symbolic::embed(x, m + 1, 1)?;
     let k = templates_m1.len();
     let mut templates_m = crate::symbolic::embed(x, m, 1)?;

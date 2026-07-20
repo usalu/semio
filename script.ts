@@ -1826,6 +1826,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
 //#endregion 🔖PolicyExport
 //#endregion 🔖Policy
 
-if (!(await dispatchPolicyArgv(process.argv.slice(2), import.meta.url))) {
-  await runWorkspaceScriptMain(router);
+if (import.meta.main) {
+  if (!(await dispatchPolicyArgv(process.argv.slice(2), import.meta.url))) {
+    await runWorkspaceScriptMain(router);
+  }
 }

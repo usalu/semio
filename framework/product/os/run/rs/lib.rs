@@ -513,16 +513,20 @@ mod tests {
     /// a fixed structured output per port, so `StudioRunner`'s dirty/clean bookkeeping can be
     /// exercised without a real plugin.
     #[derive(Default)]
+    /// 🧪 Outputs are keyed by app id, not by handle — a real app's export is a function of its
+    /// document/logic, not of the ephemeral instance handle a host happens to mint this call, and a
+    /// node genuinely does get re-instantiated (a fresh handle) on every dirty re-run.
     struct FakeHost {
         documents: HashMap<u32, String>,
-        outputs: HashMap<(u32, String), Media>,
+        handle_app: HashMap<u32, String>,
+        outputs: HashMap<(String, String), Media>,
         next: u32,
         imported: Vec<(u32, String, Media)>,
     }
 
     impl FakeHost {
-        fn set_output(&mut self, node: u32, port: &str, json: &str) {
-            self.outputs.insert((node, port.to_string()), Media { media_type: fake_media_type(), payload: MediaPayload::Structured { schema: "test".into(), json: json.into() } });
+        fn set_output(&mut self, app_id: &str, port: &str, json: &str) {
+            self.outputs.insert((app_id.to_string(), port.to_string()), Media { media_type: fake_media_type(), payload: MediaPayload::Structured { schema: "test".into(), json: json.into() } });
         }
     }
 
@@ -531,8 +535,9 @@ mod tests {
     }
 
     impl MediaNodeHost for FakeHost {
-        fn instantiate(&mut self, _app_id: &str) -> Result<u32, RunError> {
+        fn instantiate(&mut self, app_id: &str) -> Result<u32, RunError> {
             self.next += 1;
+            self.handle_app.insert(self.next, app_id.to_string());
             Ok(self.next)
         }
         fn load_document(&mut self, node: u32, document_json: &str) -> Result<(), RunError> {
@@ -544,7 +549,8 @@ mod tests {
             Ok(())
         }
         fn export_media(&mut self, node: u32, port: &str) -> Result<Media, RunError> {
-            self.outputs.get(&(node, port.to_string())).cloned().ok_or_else(|| RunError::Host("no output".into()))
+            let app_id = self.handle_app.get(&node).cloned().unwrap_or_default();
+            self.outputs.get(&(app_id, port.to_string())).cloned().ok_or_else(|| RunError::Host("no output".into()))
         }
         fn media_fingerprint(&mut self, node: u32, port: &str) -> Result<MediaFingerprint, RunError> {
             self.export_media(node, port).map(|media| MediaFingerprint::of(&media))
@@ -602,7 +608,7 @@ mod tests {
     fn first_run_recomputes_every_node_second_run_is_a_no_op() {
         let (graph, instances) = two_node_graph();
         let mut host = FakeHost::default();
-        host.set_output(2, "out", "\"hello\"");
+        host.set_output("app-a", "out", "\"hello\"");
         let mut runner = StudioRunner::new(host);
         let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();
@@ -621,7 +627,7 @@ mod tests {
     fn editing_upstream_document_dirties_downstream_only_through_the_wire() {
         let (graph, instances) = two_node_graph();
         let mut host = FakeHost::default();
-        host.set_output(2, "out", "\"hello\"");
+        host.set_output("app-a", "out", "\"hello\"");
         let mut runner = StudioRunner::new(host);
         let mut state = RunState::default();
         let mut cache = InMemoryMediaCache::default();

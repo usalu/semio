@@ -129,7 +129,7 @@ export enum Expertise {
   EXPERT = "expert",
 }
 
-export type UtilityCategory = "selection" | "tools" | "history" | "sync";
+export type UtilityCategory = "selection" | "utilities" | "history" | "sync";
 
 export type UtilityLeaf =
   | { readonly id: string; readonly kind: "separator"; readonly order?: number; readonly disabled?: boolean }
@@ -1216,6 +1216,7 @@ export type PluginAppLabelsOverlay = {
   readonly actionArgLabels: Readonly<Record<string, string>>;
   readonly dialogLabels: Readonly<Record<string, string>>;
   readonly introductionLabels: Readonly<Record<string, string>>;
+  readonly groupLabels: Readonly<Record<string, string>>;
 };
 
 export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
@@ -1228,6 +1229,7 @@ export const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   actionArgLabels: {},
   dialogLabels: {},
   introductionLabels: {},
+  groupLabels: {},
 };
 
 /** 🗣️ Rust's `skip_serializing_if` omits empty maps entirely, so a parsed overlay may be missing keys — fill them back in. */
@@ -1242,6 +1244,7 @@ export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> |
     actionArgLabels: raw?.actionArgLabels ?? {},
     dialogLabels: raw?.dialogLabels ?? {},
     introductionLabels: raw?.introductionLabels ?? {},
+    groupLabels: raw?.groupLabels ?? {},
   };
 }
 
@@ -1427,6 +1430,7 @@ export type DerivedUtilitySpec = {
   readonly label: string;
   readonly iconId: string;
   readonly group?: string;
+  readonly groupLabel?: string;
   readonly category?: UtilityCategory;
 };
 
@@ -1461,7 +1465,8 @@ export function deriveUtilityNodes(controllerId: string, utilities: readonly Der
       (collection.children as UtilityNode[]).push(node);
     } else {
       groupIndex.set(utility.group, nodes.length);
-      nodes.push({ id: `group:${utility.group}`, kind: "collection", iconId: utility.iconId, label: utility.group, title: utility.group, category: utility.category, children: [node] });
+      const groupLabel = utility.groupLabel ?? utility.group;
+      nodes.push({ id: `group:${utility.group}`, kind: "collection", iconId: utility.iconId, label: groupLabel, title: groupLabel, category: utility.category, children: [node] });
     }
   }
   return nodes;
@@ -1678,6 +1683,27 @@ export type HostEffect =
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }
   | { readonly iconRenderExport: { readonly items: readonly { readonly filename: string; readonly request: unknown }[] } }
   | { readonly requestFileOpen: { readonly accept: string; readonly readAs?: string; readonly importAction: string; readonly multiple?: boolean } }
+  /** @emoji 🎞️ Asks the shell to decode a video (file picker, or `payload` bytes already in hand)
+   * and re-dispatch `frameAction` once per sampled frame with `{payload: dataUrl(image/jpeg), name,
+   * frameIndex, timestampMs, index, total, width, height, ...args}`, then `doneAction` once with
+   * `{name, durationMs, frameCount, sampledCount, width, height, codec, ...args}`; if the host can't
+   * decode it, `fallbackAction` fires once with `{payload: dataUrl(raw bytes), name, ...args}`. The
+   * numeric hints (`sampleStride`/`maxFrames`/`maxLongEdgePx`/`fpsHint`) are 0 when the caller wants
+   * the host default. */
+  | {
+      readonly requestMediaFrames: {
+        readonly accept: string;
+        readonly frameAction: string;
+        readonly doneAction: string;
+        readonly fallbackAction: string;
+        readonly sampleStride?: number;
+        readonly maxFrames?: number;
+        readonly maxLongEdgePx?: number;
+        readonly fpsHint?: number;
+        readonly payload?: string;
+        readonly args?: unknown;
+      };
+    }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowKindId: string; readonly utilityId: string } }

@@ -566,6 +566,7 @@ mod tests {
 
         let mut h: Storage<Normal, Undirected> = Storage::new();
         h.add_node_with_id(0, attrs_of(&[("color", "blue")]));
+        h.add_node_with_id(1, PropertyBag::new());
         h.add_node_with_id(2, PropertyBag::new());
         h.add_edge_with(0, 1, attrs_of(&[("kind", "h")]));
 

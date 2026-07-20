@@ -13,6 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 remodel_image = { path = "../../image/rs" }
+remodel_video = { path = "../../video/rs" }
 remodel_camera = { path = "../../camera/rs" }
 remodel_feature = { path = "../../feature/rs" }
 remodel_sfm = { path = "../../sfm/rs" }
@@ -20,6 +21,9 @@ remodel_dense = { path = "../../dense/rs" }
 remodel_mesh = { path = "../../mesh/rs" }
 remodel_motion = { path = "../../motion/rs" }
 remodel_geo = { path = "../../geo/rs" }
-remodel_document = { path = "../../rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 mathematical_random = { path = "../../../mathematical/random/rs" }
+
+[dev-dependencies]
+mathematical_lie = { path = "../../../mathematical/lie/rs" }
+mathematical_algebra = { path = "../../../mathematical/algebra/rs" }

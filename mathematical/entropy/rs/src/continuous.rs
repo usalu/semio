@@ -44,7 +44,10 @@ pub enum Kernel {
 impl Kernel {
     fn log_density_contribution(self, scaled_diff: f64) -> f64 {
         match self {
-            Kernel::Gaussian => -0.5 * scaled_diff * scaled_diff,
+            // 📈 Standard normal kernel K(u) = (1/sqrt(2*pi)) * exp(-u^2/2); the additive
+            // -0.5*ln(2*pi) term is the kernel's own normalizing constant and must not be
+            // dropped, or every density (and hence the entropy) is off by a constant factor.
+            Kernel::Gaussian => -0.5 * (2.0 * core::f64::consts::PI).ln() - 0.5 * scaled_diff * scaled_diff,
             Kernel::Epanechnikov => {
                 if scaled_diff.abs() >= 5.0_f64.sqrt() {
                     f64::NEG_INFINITY

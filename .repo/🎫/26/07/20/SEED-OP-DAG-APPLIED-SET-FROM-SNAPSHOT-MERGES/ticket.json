@@ -1,0 +1,13 @@
+{
+  "title": "Seed OpDag Applied Set From Snapshot Merges",
+  "emoji": "🌱",
+  "status": "open",
+  "description": "Found while verifying Wave R1c's new two-peer reconcile test (concurrent_delete_and_wire_reconciles_without_a_dangling_edge, framework/product/os/core/rs/lib.rs): DocumentVcsStore::merge_remote_snapshot (vcs/rs/lib.rs) adopts a peer's edits directly into self.envelope.vcs.edits / self.applied_edit_ids but never informs self.dag (the causal OpDag from framework/core/rs). A later real OpEnvelope whose deps reference one of those snapshot-adopted edit ids therefore fails OpDag::insert's dependency check forever (stuck Pending), since the dag's own applied/envelopes bookkeeping never learned about them. This silently drops any op sent by a peer immediately after a snapshot exchange in a two-store MemoryBackbone-paired scenario - a foundational sync correctness gap, not specific to the media graph. Fix: add a public OpDag::seed_applied(ids) that marks ids as applied without requiring their full OpEnvelope, and call it from both merge_remote_snapshot branches (the empty-envelope fast path and the incremental merge loop) with the ids just adopted.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2169"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪4a98ae7ec91e4717bea5462816d247a3"
+  ]
+}

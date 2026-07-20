@@ -1048,11 +1048,11 @@ semio_framework_plugin::app_labels! {
 /// is how the command palette and Actions rail get a translated label without threading locale through the builder.
 fn note_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("selectAll", "Select All", "Alles auswaehlen"),
+        ("selectAll", "Select All", "Alles auswählen"),
         ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-        ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+        ("deleteSelection", "Delete Selection", "Auswahl löschen"),
         ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
-        ("addBlock", "Add Block", "Block hinzufuegen"),
+        ("addBlock", "Add Block", "Block hinzufügen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("loadRequest", "Import", "Importieren"),
         ("saveDownload", "Export", "Exportieren"),
@@ -1065,12 +1065,12 @@ fn note_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setGridOpacity", "Set Grid Opacity", "Rasterdeckkraft festlegen"),
         ("setSnapEnabled", "Set Snap Enabled", "Einrasten aktivieren"),
         ("toggleSnap", "Toggle Snap", "Einrasten umschalten"),
-        ("setSnapGridSpacing", "Set Snap Grid Spacing", "Rasterabstand fuer Einrasten festlegen"),
+        ("setSnapGridSpacing", "Set Snap Grid Spacing", "Rasterabstand für Einrasten festlegen"),
         ("setPencilWidth", "Set Pencil Width", "Stiftbreite festlegen"),
         ("setEraserRadius", "Set Eraser Radius", "Radiergummi-Radius festlegen"),
         ("dropBlockKind", "Drop Block Kind", "Blockart ablegen"),
         ("moveBlock", "Move Block", "Block verschieben"),
-        ("deleteBlock", "Delete Block", "Block loeschen"),
+        ("deleteBlock", "Delete Block", "Block löschen"),
         ("duplicateBlock", "Duplicate Block", "Block duplizieren"),
         ("patchBlocks", "Patch Blocks", "Bloecke aktualisieren"),
         ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
@@ -1453,33 +1453,46 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                 },
             ],
         },
-        WindowMeasure::Group {
-            id: "note-measures.drawing".into(),
-            label: labels.measure_drawing.into(),
-            default_open: Some(false),
-            active_utility_id: None,
-            children: vec![
-                WindowMeasure::Slider {
-                    id: "note-measures.pencil-width".into(),
-                    label: Some(labels.measure_pencil_width.into()),
-                    value: document.pencil_width.unwrap_or(3.0),
-                    min: 1.0,
-                    max: 24.0,
-                    step: Some(1.0),
-                    on_change: note_action("setPencilWidth", None),
-                },
-                WindowMeasure::Slider {
-                    id: "note-measures.eraser-radius".into(),
-                    label: Some(labels.measure_eraser_radius.into()),
-                    value: document.eraser_radius.unwrap_or(12.0),
-                    min: 4.0,
-                    max: 48.0,
-                    step: Some(1.0),
-                    on_change: note_action("setEraserRadius", None),
-                },
-            ],
-        },
+        note_pencil_utility_options(document, labels),
+        note_eraser_utility_options(document, labels, "eraserStroke"),
+        note_eraser_utility_options(document, labels, "eraserPoint"),
     ]
+}
+
+fn note_pencil_utility_options(document: &NoteDocument, labels: &NotePlayLabels) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: "note-utility-options-pencil".into(),
+        label: labels.measure_pencil_width.into(),
+        default_open: Some(true),
+        active_utility_id: Some("pencil".into()),
+        children: vec![WindowMeasure::Slider {
+            id: "note-measures.pencil-width".into(),
+            label: Some(labels.measure_pencil_width.into()),
+            value: document.pencil_width.unwrap_or(3.0),
+            min: 1.0,
+            max: 24.0,
+            step: Some(1.0),
+            on_change: note_action("setPencilWidth", None),
+        }],
+    }
+}
+
+fn note_eraser_utility_options(document: &NoteDocument, labels: &NotePlayLabels, utility: &str) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: format!("note-utility-options-{utility}"),
+        label: labels.measure_eraser_radius.into(),
+        default_open: Some(true),
+        active_utility_id: Some(utility.into()),
+        children: vec![WindowMeasure::Slider {
+            id: format!("note-measures.eraser-radius-{utility}"),
+            label: Some(labels.measure_eraser_radius.into()),
+            value: document.eraser_radius.unwrap_or(12.0),
+            min: 4.0,
+            max: 48.0,
+            step: Some(1.0),
+            on_change: note_action("setEraserRadius", None),
+        }],
+    }
 }
 
 fn note_navigator_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec<WindowMeasure> {
@@ -2368,14 +2381,14 @@ fn create_note_app() -> App {
             // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
             .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
-            .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Tools))
-            .utility(note_utility("image", "Image", "image", "Block", UtilityCategory::Tools))
-            .utility(note_utility("table", "Table", "table", "Block", UtilityCategory::Tools))
-            .utility(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Tools))
-            .utility(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Tools))
-            .utility(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Tools))
-            .utility(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Tools))
-            .utility(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Tools))
+            .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("image", "Image", "image", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("table", "Table", "table", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("math", "Math", "sigma", "Block", UtilityCategory::Utilities))
+            .utility(note_utility("pencil", "Pencil", "pencil", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("eraserStroke", "Stroke Eraser", "eraser", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("eraserPoint", "Point Eraser", "eraser", "Draw", UtilityCategory::Utilities))
+            .utility(note_utility("pan", "Pan", "hand", "View", UtilityCategory::Utilities))
             .window_kind_utilities(NOTE_PLAY_WINDOW_COMPOSITE, vec![
                 "selectDirect".into(), "selectMarquee".into(),
                 "text".into(), "image".into(), "table".into(), "math".into(),

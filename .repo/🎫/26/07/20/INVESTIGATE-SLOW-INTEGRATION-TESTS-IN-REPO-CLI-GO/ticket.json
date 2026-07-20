@@ -1,0 +1,13 @@
+{
+  "title": "Investigate Slow Integration Tests In Repo CLI Go",
+  "emoji": "🐌",
+  "status": "open",
+  "description": "Investigate why ~70 integration-style tests in repo/client/cli/go/main_test.go run against the real monorepo root (via findTestRepoRoot / GetRootDir()) instead of a t.TempDir() fixture, and are dramatically slower than expected:\n\n1. TestBuildMonorepoTree (calls BuildMonorepoTreeCached in main.go ~line 7342) did not finish within 280s in isolation. Investigate why the disk cache (tree.lock / loadTreeCache ~line 7342-7375) doesn't make repeat calls fast against an unchanged repo, and whether the tree walk (isGitIgnored/StreamFiles, using sabhiram/go-gitignore) is pathologically slow (backtracking regex per path) at 230K files.\n\n2. TestFoldersNonEmpty and TestFilesNonEmpty (GraphQL folders/files queries via getTestExecutor(t) ~line 850) take ~37-38s EACH even though sibling resolvers (bundles/contributors/tickets/policies/statutes) on the same executor return in under 1-2s. Investigate whether folders/files resolvers are missing a cache/index reuse that the other resolvers have (possibly related to the bleve full-text index under github.com/blevesearch/bleve_index_api).\n\n3. TestCodebaseCommand (~line 2014) and TestNormalizeTicketFileInput (~line 1168) show cost/behavior that depends on test execution order because they read a shared package-level rootDir/GetRootDir() without resetting it — a test-isolation smell. Investigate whether this state should be isolated per-test (e.g. t.Cleanup restoring the previous root).\n\nThis is a pure investigation/root-cause task, not an implementation task — do not fix anything, just report findings with file:line references. Findings were surfaced during an unrelated test-level-assignment sweep where these tests were only reassigned to a slower \"TestExhaustive*\" tier as a workaround, not fixed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2170"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repocli",
+  "sessions": [
+    "⚪25b94f80e9474b7886ea1d165ddfefd5"
+  ]
+}

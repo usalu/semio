@@ -40,7 +40,7 @@ impl SpectralConfig {
 }
 
 fn validate_overlap(overlap: f64) -> Result<(), EntropyError> {
-    if !(overlap.is_finite() && overlap >= 0.0 && overlap < 1.0) {
+    if !overlap.is_finite() || !(0.0..1.0).contains(&overlap) {
         return Err(EntropyError::InvalidConfig {
             field: "overlap",
             reason: "must be a finite fraction in [0, 1)",
@@ -131,7 +131,7 @@ pub fn spectral_entropy(x: &[f64], cfg: SpectralConfig) -> Result<Estimate, Entr
     };
 
     let total_power: f64 = selected.iter().sum();
-    if !(total_power > 0.0) {
+    if total_power <= 0.0 {
         return Err(EntropyError::DegenerateInput { what: "power spectrum has zero total power" });
     }
     let p: Vec<f64> = selected.iter().map(|&v| v / total_power).collect();

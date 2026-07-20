@@ -970,6 +970,9 @@ function killTestBudgetTree(pid: number): void {
   }
 }
 
+/** ⏱️Hard ceiling (ms) for a warm-build step preceding a test run — compile time isn't billed against the test-level budget, but a stuck build (e.g. shared cargo target-dir lock contention) must never hang a test invocation forever. Overridable via `SEMIO_BUILD_BUDGET_MS`. */
+export const BUILD_BUDGET_MS = 1_200_000;
+
 /**
  * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
  * Deliberately async: Bun's `spawnSync`/`execFileSync` `detached` option does not put the child in its own
@@ -977,7 +980,7 @@ function killTestBudgetTree(pid: number): void {
  * Callers may fire-and-forget this from a synchronous `void`-returning context — the process stays alive on
  * the pending child/timer handles regardless, and the eventual `process.exit()` below still takes effect.
  */
-export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number } = {}): Promise<void> {
+export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv; budgetMs?: number; onTimeoutHint?: string } = {}): Promise<void> {
   const budgetMs = opts.budgetMs ?? Number(process.env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[activeTestLevel()]);
   const child = spawn(cmd, args, { stdio: "inherit", cwd: opts.cwd, env: opts.env ?? process.env, detached: process.platform !== "win32" });
   let timedOut = false;
@@ -990,21 +993,29 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
     child.on("exit", (exitCode, exitSignal) => resolveExit({ code: exitCode, signal: exitSignal }));
   }).finally(() => clearTimeout(timer));
   if (timedOut) {
-    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms (level "${activeTestLevel()}") — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).`);
+    const hint = opts.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive).";
+    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${hint}`);
     process.exit(1);
   }
   if (signal || code !== 0) process.exit(code ?? 1);
 }
 
 /**
- * 🦀Warm-builds test binaries (un-budgeted) then runs `cargo test` under the active level's budget, appending
- * cumulative `--skip <level>::` filters for every level above it (tests live in `mod quick`/`mod long`/`mod
- * exhaustive` submodules inside `mod tests`; unscoped tests are `fundamental`). Splits `extraArgs` on an existing
- * `--` so callers passing their own libtest args (e.g. `--nocapture`) still compose correctly.
+ * 🦀Warm-builds test binaries — bounded by [[BUILD_BUDGET_MS]], NOT the test-level budget, but never unbounded —
+ * then runs `cargo test` under the active level's budget, appending cumulative `--skip <level>::` filters for every
+ * level above it (tests live in `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped
+ * tests are `fundamental`). Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g.
+ * `--nocapture`) still compose correctly.
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
-  runCmd("cargo", ["build", "--tests", ...packageArgs], { cwd, env });
+  const buildBudgetMs = Number(process.env.SEMIO_BUILD_BUDGET_MS ?? BUILD_BUDGET_MS);
+  await runTestBudgeted("cargo", ["build", "--tests", ...packageArgs], {
+    cwd,
+    env,
+    budgetMs: buildBudgetMs,
+    onTimeoutHint: "The warm build is stuck (likely shared cargo target-dir lock contention from another concurrent session) — investigate before retrying.",
+  });
   const dashIdx = extraArgs.indexOf("--");
   const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
   const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
@@ -1329,7 +1340,7 @@ export function resolveFrameworkOsPlaygroundPlugin(catalog: readonly PlaygroundV
 
 /** @emoji 🧊 Env for `@semio-tech/framework-os-dev:dev` with wgpu renderer and plugin filter. */
 export function frameworkOsPlaygroundDevEnv(catalog: readonly PlaygroundVariant[], plugin: string, extra: NodeJS.ProcessEnv = {}, env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv {
-  const renderer = env.SEMIO_RENDERER ?? "react";
+  const renderer = env.SEMIO_RENDERER ?? "wgpu";
   const defaultPort = frameworkOsPlaygroundDefaultPort(catalog, plugin, renderer);
   const portVal = env.S_OS_PORT || String(defaultPort);
   return devToolingEnv({
@@ -2742,13 +2753,18 @@ function removeGitKrakenTemplateFiles(root: string): void {
   }
 }
 
-/** 🧹Clears GitKraken templates, git draft messages, and micro-commit prepare state. */
-export function clearGitCommitDraftState(root: string): void {
+function resetGitCommitTemplateState(root: string): void {
   const dir = gitDir(root);
   removeGitKrakenTemplateFiles(root);
   const gkCommitTemplate = join(dir, GK_COMMIT_TEMPLATE_FILE);
   writeFileSync(gkCommitTemplate, "");
   git(root, ["config", "--local", "commit.template", gkCommitTemplate]);
+}
+
+/** 🧹Clears GitKraken templates, git draft messages, and micro-commit prepare state. */
+export function clearGitCommitDraftState(root: string): void {
+  const dir = gitDir(root);
+  resetGitCommitTemplateState(root);
   for (const name of GIT_COMMIT_DRAFT_FILES) {
     try {
       writeFileSync(join(dir, name), "");
@@ -2759,8 +2775,10 @@ export function clearGitCommitDraftState(root: string): void {
   removeGitDirPrefixed(root, "compose-micro-commit");
 }
 
+/** 🧹Resets GK/git commit-template state without wiping the active draft message file (COMMIT_EDITMSG/MERGE_MSG/SQUASH_MSG). */
 export function clearMicroCommitTemplatesOnly(root: string): void {
-  clearGitCommitDraftState(root);
+  resetGitCommitTemplateState(root);
+  removeGitDirPrefixed(root, "compose-micro-commit");
 }
 
 function clearStaleTemplatesBeforePrepare(root: string): void {

@@ -910,10 +910,10 @@ fn process3d_measure_label<'a>(measure: &ProcessMeasure, labels: &'a Process3dLa
 /// parameter, so `localized_label_map` over these entries is how the command palette and Actions
 /// rail get a translated label without threading locale through the whole builder chain.
 const PROCESS3D_ACTION_LABEL_ENTRIES: &[(&str, &str, &str)] = &[
-    ("addStep", "Add Step", "Schritt hinzufuegen"),
+    ("addStep", "Add Step", "Schritt hinzufügen"),
     ("setStock", "Set Stock", "Rohteil festlegen"),
     ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-    ("removeSelectedStep", "Remove Selected Step", "Ausgewaehlten Schritt entfernen"),
+    ("removeSelectedStep", "Remove Selected Step", "Ausgewählten Schritt entfernen"),
     ("exportModel", "Export Model", "Modell exportieren"),
     ("loadModelRequest", "Load Model…", "Modell laden…"),
     ("setDocument", "Set Document", "Dokument festlegen"),
@@ -923,13 +923,13 @@ const PROCESS3D_ACTION_LABEL_ENTRIES: &[(&str, &str, &str)] = &[
     ("updateStep", "Update Step", "Schritt aktualisieren"),
     ("setStepEnabled", "Set Step Enabled", "Schrittaktivierung festlegen"),
     ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
-    ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-    ("worldFaceDragEnd", "World Face Drag End", "Welt-Flaechenzug beendet"),
+    ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
+    ("worldFaceDragEnd", "World Face Drag End", "Welt-Flächenzug beendet"),
     ("setCursor", "Set Cursor", "Cursor festlegen"),
     ("stepCursor", "Step Cursor", "Cursor schrittweise bewegen"),
-    ("stepCursorBack", "Step Cursor Back", "Cursor zurueck"),
-    ("stepCursorForward", "Step Cursor Forward", "Cursor vorwaerts"),
-    ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+    ("stepCursorBack", "Step Cursor Back", "Cursor zurück"),
+    ("stepCursorForward", "Step Cursor Forward", "Cursor vorwärts"),
+    ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
     ("engagementInput", "Engagement Input", "Eingabe"),
     ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
     ("setSelection", "Set Selection", "Auswahl festlegen"),
@@ -938,12 +938,12 @@ const PROCESS3D_ACTION_LABEL_ENTRIES: &[(&str, &str, &str)] = &[
     ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
     ("toggleSun", "Toggle Sun", "Sonne umschalten"),
     ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-    ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-    ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+    ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+    ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
 ];
 
 /// 🗣️ (utility id, en, de) for every `.utility(...)` declared in `create_process3d_app`.
-const PROCESS3D_UTILITY_LABEL_ENTRIES: &[(&str, &str, &str)] = &[("select", "Select", "Auswaehlen"), ("cut", "Cut", "Schneiden"), ("drill", "Drill", "Bohren"), ("attach", "Attach", "Anbauen")];
+const PROCESS3D_UTILITY_LABEL_ENTRIES: &[(&str, &str, &str)] = &[("select", "Select", "Auswählen"), ("cut", "Cut", "Schneiden"), ("drill", "Drill", "Bohren"), ("attach", "Attach", "Anbauen")];
 //#endregion 🔖CommandLabels
 
 //#region 🔖Panels
@@ -1624,9 +1624,9 @@ fn create_process3d_app() -> App {
             // host-owned). These four are the window's entire utility set — not a sub-collection — so
             // each carries `group: None` and renders as its own flat toolbar icon.
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("cut", "Cut", "scissors") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Tools), ..UtilityDefinition::new("attach", "Attach", "plus") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", "Cut", "scissors") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("attach", "Attach", "plus") })
             .window_kind_utilities(PROCESS_3D_PLAY_WINDOW_MAIN, vec!["select".into(), "cut".into(), "drill".into(), "attach".into()])
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo")

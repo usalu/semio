@@ -581,21 +581,21 @@ semio_framework_plugin::app_labels! {
         no_issues: &'static str = en: "No issues", de: "Keine Probleme";
         window_blueprint: &'static str = en: "Blueprint", de: "Entwurf";
         window_preview: &'static str = en: "Preview", de: "Vorschau";
-        parent: &'static str = en: "parent", de: "uebergeordnet";
+        parent: &'static str = en: "parent", de: "übergeordnet";
         objects: &'static str = en: "objects", de: "Objekte";
         chars: &'static str = en: "chars", de: "Zeichen";
-        undo: &'static str = en: "Undo", de: "Rueckgaengig";
+        undo: &'static str = en: "Undo", de: "Rückgängig";
         redo: &'static str = en: "Redo", de: "Wiederholen";
-        preflight_out_of_bounds: &'static str = en: "Object {} extends outside page bounds", de: "Objekt {} liegt ausserhalb der Seitengrenzen";
-        preflight_asset_missing: &'static str = en: "Linked asset missing for {}", de: "Verknuepftes Element fehlt fuer {}";
-        preflight_asset_modified: &'static str = en: "Linked asset modified for {}", de: "Verknuepftes Element geaendert fuer {}";
-        preflight_asset_low_resolution: &'static str = en: "Linked asset is low resolution for {}", de: "Verknuepftes Element hat niedrige Aufloesung fuer {}";
+        preflight_out_of_bounds: &'static str = en: "Object {} extends outside page bounds", de: "Objekt {} liegt außerhalb der Seitengrenzen";
+        preflight_asset_missing: &'static str = en: "Linked asset missing for {}", de: "Verknüpftes Element fehlt für {}";
+        preflight_asset_modified: &'static str = en: "Linked asset modified for {}", de: "Verknüpftes Element geändert für {}";
+        preflight_asset_low_resolution: &'static str = en: "Linked asset is low resolution for {}", de: "Verknüpftes Element hat niedrige Auflösung für {}";
         preflight_image_empty_frame: &'static str = en: "Image frame {} has no preview", de: "Bildrahmen {} hat keine Vorschau";
         preflight_text_missing_story: &'static str = en: "Text frame {} has no story", de: "Textrahmen {} hat keinen Textfluss";
-        preflight_text_below_minimum_size: &'static str = en: "Text in {} is below minimum readable size", de: "Text in {} ist kleiner als die Mindestlesbarkeitsgroesse";
-        preflight_font_missing: &'static str = en: "Font {} used by {} is not available", de: "Schriftart {} verwendet von {} ist nicht verfuegbar";
-        preflight_text_overset: &'static str = en: "Text in {} overflows its frame", de: "Text in {} laeuft ueber den Rahmen hinaus";
-        preflight_asset_rgb_in_print: &'static str = en: "Linked asset {} uses RGB in a print document", de: "Verknuepftes Element {} verwendet RGB in einem Druckdokument";
+        preflight_text_below_minimum_size: &'static str = en: "Text in {} is below minimum readable size", de: "Text in {} ist kleiner als die Mindestlesbarkeitsgröße";
+        preflight_font_missing: &'static str = en: "Font {} used by {} is not available", de: "Schriftart {} verwendet von {} ist nicht verfügbar";
+        preflight_text_overset: &'static str = en: "Text in {} overflows its frame", de: "Text in {} läuft über den Rahmen hinaus";
+        preflight_asset_rgb_in_print: &'static str = en: "Linked asset {} uses RGB in a print document", de: "Verknüpftes Element {} verwendet RGB in einem Druckdokument";
     }
 }
 
@@ -630,8 +630,8 @@ fn preflight_msg(template: &str, args: &[&str]) -> String {
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("addFrame", "Add Frame", "Rahmen hinzufuegen"),
-        ("addPage", "Add Page", "Seite hinzufuegen"),
+        ("addFrame", "Add Frame", "Rahmen hinzufügen"),
+        ("addPage", "Add Page", "Seite hinzufügen"),
         ("exportPng", "Export Png", "Png exportieren"),
         ("exportSvg", "Export Svg", "Svg exportieren"),
         ("exportPdf", "Export Pdf", "Pdf exportieren"),
@@ -645,12 +645,12 @@ fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setHover", "Set Hover", "Hover festlegen"),
         ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
         ("engagementInput", "Engagement Input", "Eingabe"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
-        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
+        ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegen"),
         ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
-        ("canvasDragOver", "Canvas Drag Over", "Ziehen ueber Leinwand"),
-        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlaesst Leinwand"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("canvasDragOver", "Canvas Drag Over", "Ziehen über Leinwand"),
+        ("canvasDragLeave", "Canvas Drag Leave", "Ziehen verlässt Leinwand"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
     ];
     localized_label_map(is_de, ENTRIES)
 }

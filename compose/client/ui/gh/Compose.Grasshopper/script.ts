@@ -3,7 +3,7 @@
 import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 const yakWin8 = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 const yakWin7 = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";
@@ -67,7 +67,7 @@ class GenerateScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     if (segments[0] === "push") {
       const packageFile = segments[1] || "compose-2.1.0-any-win.yak";
       execSync(`"${yakWin8}" push --source https://test.yak.rhino3d.com ${packageFile}`, { stdio: "inherit" });
@@ -78,10 +78,10 @@ class TestScript extends BundleScript {
       execSync(`"${yakWin8}" search --source https://test.yak.rhino3d.com --all --prerelease compose`, { stdio: "inherit" });
       return;
     }
+    const { level, rest } = resolveTestLevel(segments);
     const fx = process.platform === "win32" ? "net48" : "net8.0";
-    execFileSync("dotnet", ["test", join(this.root, "Compose.Grasshopper.Tests", "Compose.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx], {
+    await runTestBudgeted("dotnet", ["test", join(this.root, "Compose.Grasshopper.Tests", "Compose.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx, ...dotnetLevelArgs(level), ...rest], {
       cwd: this.root,
-      stdio: "inherit",
     });
   }
 }

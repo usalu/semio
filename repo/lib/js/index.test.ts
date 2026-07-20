@@ -16,7 +16,8 @@ import {
   playgroundEmbedUrl,
   frameworkOsPlaygroundDevEnv,
   resolveFrameworkOsPlaygroundPlugin,
-  FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES,
+  loadFrameworkOsPlaygroundCatalog,
+  playgroundPlayViteDefine,
 } from "./index.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../ui/styling/vite-elements-assets.ts";
 describe("Neo4j graph database registry", () => {
@@ -401,7 +402,7 @@ describe("micro-commit", () => {
       const init = spawnSync("git", ["init"], { cwd: root, encoding: "utf8" });
       expect(init.status).toBe(0);
       installMicroCommitGitHooks(root);
-      const hook = readFileSync(join(root, ".git/hook/post-commit"), "utf8");
+      const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
       expect(hook).toContain("compose_micro_commit_wipe");
       expect(hook).not.toContain("\r");
       expect(existsSync(join(root, ".repo/compose-micro-commit-bun"))).toBe(true);
@@ -511,24 +512,27 @@ describe("playground static sites", () => {
   });
 
   test("resolveFrameworkOsPlaygroundPlugin maps CLI segments to OS plugin ids", () => {
-    expect(resolveFrameworkOsPlaygroundPlugin(["dag"])).toEqual({ plugin: "dag", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(["procedural", "3d", "fixture", "hexagonal-column"])).toEqual({
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["dag"])).toEqual({ plugin: "dag", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["gis", "2d"])).toEqual({ plugin: "gis2d", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["procedural", "3d", "fixture", "hexagonal-column"])).toEqual({
       plugin: "procedural3d",
       rest: ["fixture", "hexagonal-column"],
     });
-    expect(resolveFrameworkOsPlaygroundPlugin(["trinity", "jack"])).toEqual({ plugin: "trinity", rest: [] });
-    expect(resolveFrameworkOsPlaygroundPlugin(["unknown"])).toBeNull();
-    expect(Object.keys(FRAMEWORK_OS_PLAYGROUND_PLUGIN_ALIASES).length).toBeGreaterThan(20);
+    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["trinity", "jack"])).toEqual({ plugin: "trinity-jack", rest: [] });
+    expect(resolveFrameworkOsPlaygroundPlugin(catalog, ["unknown"])).toBeNull();
+    const resolvableSegments = catalog.reduce((sum, row) => sum + 1 + row.aliases.length, 0);
+    expect(resolvableSegments).toBeGreaterThan(20);
   });
 
-  test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and maps legacy play ports", () => {
-    const dagEnv = frameworkOsPlaygroundDevEnv("dag", {}, { DAG_PLAY_PORT: "6017" });
+  test("frameworkOsPlaygroundDevEnv defaults wgpu renderer and resolves catalog dev port", () => {
+    const catalog = loadFrameworkOsPlaygroundCatalog();
+    const dagEnv = frameworkOsPlaygroundDevEnv(catalog, "dag", {}, {});
     expect(dagEnv.SEMIO_RENDERER).toBe("wgpu");
     expect(dagEnv.SEMIO_PLUGIN).toBe("dag");
-    expect(dagEnv.S_OS_PORT).toBe("6017");
+    expect(dagEnv.S_OS_PORT).toBe("6117");
 
-    const cadEnv = frameworkOsPlaygroundDevEnv("cad", {}, { CAD_JS_RENDERER_PLAY_PORT: "6020" });
+    const cadEnv = frameworkOsPlaygroundDevEnv(catalog, "cad", {}, { S_OS_PORT: "6020" });
     expect(cadEnv.SEMIO_RENDERER).toBe("wgpu");
     expect(cadEnv.SEMIO_PLUGIN).toBe("cad");
     expect(cadEnv.S_OS_PORT).toBe("6020");
@@ -576,7 +580,7 @@ describe("package boundary guards", () => {
     const offenders: string[] = [];
     const walk = (dir: string) => {
       for (const entry of require("node:fs").readdirSync(dir, { withFileTypes: true })) {
-        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".repo" || entry.name === "dist") continue;
+        if (entry.name === "node_modules" || entry.name === ".git" || entry.name === ".repo" || entry.name === "dist" || entry.name === "target" || entry.name === ".claude") continue;
         const full = join(dir, entry.name);
         if (entry.isDirectory()) {
           walk(full);

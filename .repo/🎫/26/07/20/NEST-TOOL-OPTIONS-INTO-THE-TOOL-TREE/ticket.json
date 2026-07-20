@@ -1,0 +1,18 @@
+{
+  "title": "Nest Tool Options Into The Tool Tree",
+  "emoji": "🧰",
+  "status": "open",
+  "description": "Nest utility-scoped window measures inside the tool ribbon (not a separate rail), migrate tool-specific options out of general Window Options across playground apps, and make puzzle distribution groups true probability trees whose sliders always sum to 1.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2168"
+  },
+  "goal": "🎯r2603",
+  "plan": {
+    "client": "cursor",
+    "id": "3494ec50",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/tool_options_into_tools_3494ec50.plan.md"
+  },
+  "sessions": [
+    "⚪80cd55ec23364d4e90e096022373965d"
+  ]
+}

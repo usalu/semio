@@ -160,7 +160,7 @@ import {
   UIIntroduction,
   UIDialog,
   introductionWindowActionPaneUnfoldSelector,
-  introductionWindowToolbarUnfoldSelector,
+  introductionUtilityBarUnfoldSelector,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
   fundedByZukunftBauFooterItem,
@@ -234,6 +234,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
   type DragEndEvent,
+  type UiToolbarParentCategory,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
 import {
@@ -1779,6 +1780,504 @@ function requestFileOpen(accept: string, readAs?: string, multiple?: boolean): P
   });
 }
 
+/** 🔁 The one-action-at-a-time callback shared by the `requestFileOpen`/`dispatchAction`/
+ * `requestMediaFrames` `applyHostEffects` branches: dispatches `action` against the emitting plugin
+ * instance and feeds its own `requestedEffects` back through `applyHostEffects` recursively. */
+type EffectDispatchOne = (action: string, args?: Record<string, unknown>) => Promise<void>;
+
+/** 🔁 Builds an {@link EffectDispatchOne} bound to one plugin instance + `applyHostEffects` closure —
+ * extracted so the D3/D2/D5 fan-out loops below are plain functions testable without React/plugin
+ * wiring, while production callers get the exact same `handleAction` + recursive-effects behavior. */
+function makeEffectDispatchOne(
+  pluginEntry: LoadedPluginState,
+  baseSession: ActiveSession,
+  applyEffects: (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope?: UiDirtyScope) => Promise<void>,
+): EffectDispatchOne {
+  return async (action, args) => {
+    const response = await pluginEntry.handle.handleAction(
+      baseSession.instanceId,
+      JSON.stringify({ controllerId: baseSession.app.controllerId, action, args }),
+      baseSession.viewState,
+    );
+    await applyEffects(response.requestedEffects ?? [], baseSession, resolveUiDirtyScope(response.uiScope));
+  };
+}
+
+/** 📤 D3 fan-out: one {@link EffectDispatchOne} call per opened file — single-file behavior (`multiple`
+ * absent/false, exactly one call, plain `{payload, name}`) is byte-for-byte what this loop always did
+ * before `multiple` existed, since it's just a one-entry `opened` array through the same path. */
+export async function dispatchOpenedFiles(
+  opened: readonly { readonly contents: string; readonly name: string }[],
+  importAction: string,
+  multiple: boolean,
+  dispatchOne: EffectDispatchOne,
+): Promise<void> {
+  const total = opened.length;
+  for (let index = 0; index < opened.length; index += 1) {
+    const file = opened[index]!;
+    await dispatchOne(importAction, multiple ? { payload: file.contents, name: file.name, index, total } : { payload: file.contents, name: file.name });
+  }
+}
+
+/** 🔁 D2: schedules `action` onto `dispatchOne` after `delayMs` (0 = next tick) via `schedule` (real
+ * callers pass `setTimeout`; tests pass `vi.useFakeTimers()`-driven `setTimeout` or a synchronous stub). */
+export function scheduleDispatchAction(
+  action: string,
+  args: Record<string, unknown> | undefined,
+  delayMs: number,
+  dispatchOne: EffectDispatchOne,
+  schedule: (fn: () => void, delayMs: number) => void = (fn, ms) => setTimeout(fn, ms),
+): void {
+  schedule(() => {
+    void dispatchOne(action, args);
+  }, delayMs);
+}
+
+//#region RequestMediaFrames
+//#region Bmff
+/** 🧱 One parsed ISO-BMFF box: `[type, payloadStart, payloadEnd)` — enough to recurse into containers
+ * and slice leaf payloads without copying. */
+type BmffBox = { readonly type: string; readonly start: number; readonly end: number };
+
+/** 🧱 Walks sibling boxes in `[start, end)` — handles 64-bit extended sizes (`size===1`) and to-end
+ * boxes (`size===0`); malformed/truncated input just stops early rather than throwing, since MP4
+ * probing here is best-effort — the Tier-2 `<video>` fallback covers anything this can't parse. */
+function walkBmffBoxes(view: DataView, start: number, end: number): BmffBox[] {
+  const boxes: BmffBox[] = [];
+  let offset = start;
+  while (offset + 8 <= end) {
+    const size32 = view.getUint32(offset);
+    const type = String.fromCharCode(view.getUint8(offset + 4), view.getUint8(offset + 5), view.getUint8(offset + 6), view.getUint8(offset + 7));
+    let headerSize = 8;
+    let boxSize = size32;
+    if (size32 === 1) {
+      if (offset + 16 > end) break;
+      boxSize = Number(view.getBigUint64(offset + 8));
+      headerSize = 16;
+    } else if (size32 === 0) {
+      boxSize = end - offset;
+    }
+    if (boxSize < headerSize || offset + boxSize > end) break;
+    boxes.push({ type, start: offset + headerSize, end: offset + boxSize });
+    offset += boxSize;
+  }
+  return boxes;
+}
+
+function findBmffBox(boxes: readonly BmffBox[], type: string): BmffBox | undefined {
+  return boxes.find((box) => box.type === type);
+}
+//#endregion Bmff
+
+//#region Tier1
+type Mp4Sample = { readonly offset: number; readonly size: number; readonly timestampMs: number; readonly isSync: boolean };
+type Mp4Track = {
+  readonly width: number;
+  readonly height: number;
+  readonly codec: "avc1" | "hvc1";
+  readonly description: Uint8Array;
+  readonly samples: readonly Mp4Sample[];
+};
+
+/** 🎞️ Minimal MP4 sample-table extraction — `moov > trak[] > mdia > {mdhd, hdlr, minf > stbl}` for the
+ * first video track (`hdlr`'s handler-type `"vide"`), enough to feed `VideoDecoder`: sample byte ranges
+ * from `stsc` + `stco`/`co64` + `stsz`, decode timestamps from `stts`, sync flags from `stss` (absent
+ * `stss` ⇒ every sample is sync per spec), and the AVC/HEVC decoder config from `stsd`'s `avcC`/`hvcC`.
+ * Returns `null` for anything unrecognized (non-AVC/HEVC, missing boxes, malformed tables) so the
+ * caller falls back to Tier 2 rather than guessing. */
+function probeMp4VideoTrack(bytes: Uint8Array): Mp4Track | null {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const moov = findBmffBox(walkBmffBoxes(view, 0, bytes.byteLength), "moov");
+  if (!moov) return null;
+  for (const trak of walkBmffBoxes(view, moov.start, moov.end).filter((box) => box.type === "trak")) {
+    const mdia = findBmffBox(walkBmffBoxes(view, trak.start, trak.end), "mdia");
+    if (!mdia) continue;
+    const mdiaBoxes = walkBmffBoxes(view, mdia.start, mdia.end);
+    const hdlr = findBmffBox(mdiaBoxes, "hdlr");
+    if (!hdlr || hdlr.end - hdlr.start < 12) continue;
+    const handlerType = String.fromCharCode(view.getUint8(hdlr.start + 8), view.getUint8(hdlr.start + 9), view.getUint8(hdlr.start + 10), view.getUint8(hdlr.start + 11));
+    if (handlerType !== "vide") continue;
+    const mdhd = findBmffBox(mdiaBoxes, "mdhd");
+    const minf = findBmffBox(mdiaBoxes, "minf");
+    if (!mdhd || !minf) continue;
+    const timescale = view.getUint8(mdhd.start) === 1 ? view.getUint32(mdhd.start + 20) : view.getUint32(mdhd.start + 12);
+    if (timescale <= 0) continue;
+    const stbl = findBmffBox(walkBmffBoxes(view, minf.start, minf.end), "stbl");
+    if (!stbl) continue;
+    const track = probeSampleTable(view, walkBmffBoxes(view, stbl.start, stbl.end), timescale);
+    if (track) return track;
+  }
+  return null;
+}
+
+function parseStsd(view: DataView, stsd: BmffBox): { width: number; height: number; codec: "avc1" | "hvc1"; description: Uint8Array } | null {
+  if (view.getUint32(stsd.start + 4) < 1) return null;
+  const entryOffset = stsd.start + 8;
+  const entrySize = view.getUint32(entryOffset);
+  const format = String.fromCharCode(
+    view.getUint8(entryOffset + 4),
+    view.getUint8(entryOffset + 5),
+    view.getUint8(entryOffset + 6),
+    view.getUint8(entryOffset + 7),
+  );
+  if (format !== "avc1" && format !== "hvc1" && format !== "hev1") return null;
+  const codec = format === "avc1" ? "avc1" : "hvc1";
+  const visualEntryStart = entryOffset + 8;
+  const width = view.getUint16(visualEntryStart + 24);
+  const height = view.getUint16(visualEntryStart + 26);
+  const inner = walkBmffBoxes(view, visualEntryStart + 78, entryOffset + entrySize);
+  const config = findBmffBox(inner, codec === "avc1" ? "avcC" : "hvcC");
+  if (!config) return null;
+  return { width, height, codec, description: new Uint8Array(view.buffer.slice(config.start, config.end)) };
+}
+
+function parseStsz(view: DataView, box: BmffBox): number[] {
+  const uniformSize = view.getUint32(box.start + 4);
+  const sampleCount = view.getUint32(box.start + 8);
+  if (uniformSize !== 0) return new Array(sampleCount).fill(uniformSize) as number[];
+  const sizes: number[] = [];
+  for (let i = 0; i < sampleCount; i += 1) sizes.push(view.getUint32(box.start + 12 + i * 4));
+  return sizes;
+}
+
+function parseChunkOffsets(view: DataView, box: BmffBox, is64: boolean): number[] {
+  const count = view.getUint32(box.start + 4);
+  const offsets: number[] = [];
+  for (let i = 0; i < count; i += 1) {
+    offsets.push(is64 ? Number(view.getBigUint64(box.start + 8 + i * 8)) : view.getUint32(box.start + 8 + i * 4));
+  }
+  return offsets;
+}
+
+function parseChunkOfSample(view: DataView, box: BmffBox, sampleCount: number, chunkCount: number): number[] | null {
+  const entryCount = view.getUint32(box.start + 4);
+  const entries: { firstChunk: number; samplesPerChunk: number }[] = [];
+  for (let i = 0; i < entryCount; i += 1) {
+    entries.push({ firstChunk: view.getUint32(box.start + 8 + i * 12), samplesPerChunk: view.getUint32(box.start + 12 + i * 12) });
+  }
+  const chunkOfSample: number[] = [];
+  for (let entryIndex = 0; entryIndex < entries.length; entryIndex += 1) {
+    const entry = entries[entryIndex]!;
+    const nextFirstChunk = entries[entryIndex + 1]?.firstChunk ?? chunkCount + 1;
+    for (let chunk = entry.firstChunk; chunk < nextFirstChunk; chunk += 1) {
+      for (let inChunk = 0; inChunk < entry.samplesPerChunk; inChunk += 1) chunkOfSample.push(chunk);
+    }
+  }
+  return chunkOfSample.length >= sampleCount ? chunkOfSample : null;
+}
+
+function computeSampleOffsets(chunkOfSample: readonly number[], chunkOffsets: readonly number[], sizes: readonly number[]): number[] {
+  const offsets: number[] = [];
+  const cursorByChunk = new Map<number, number>();
+  for (let i = 0; i < sizes.length; i += 1) {
+    const chunk = chunkOfSample[i]!;
+    const base = cursorByChunk.get(chunk) ?? chunkOffsets[chunk - 1] ?? 0;
+    offsets.push(base);
+    cursorByChunk.set(chunk, base + sizes[i]!);
+  }
+  return offsets;
+}
+
+function accumulateTimestampsMs(view: DataView, stts: BmffBox, sampleCount: number, timescale: number): number[] {
+  const entryCount = view.getUint32(stts.start + 4);
+  const timestamps: number[] = [];
+  let ticks = 0;
+  for (let entryIndex = 0; entryIndex < entryCount && timestamps.length < sampleCount; entryIndex += 1) {
+    const count = view.getUint32(stts.start + 8 + entryIndex * 8);
+    const delta = view.getUint32(stts.start + 12 + entryIndex * 8);
+    for (let i = 0; i < count && timestamps.length < sampleCount; i += 1) {
+      timestamps.push((ticks / timescale) * 1000);
+      ticks += delta;
+    }
+  }
+  return timestamps;
+}
+
+function parseSyncSamples(view: DataView, box: BmffBox): Set<number> {
+  const count = view.getUint32(box.start + 4);
+  const sync = new Set<number>();
+  for (let i = 0; i < count; i += 1) sync.add(view.getUint32(box.start + 8 + i * 4));
+  return sync;
+}
+
+function probeSampleTable(view: DataView, stblBoxes: readonly BmffBox[], timescale: number): Mp4Track | null {
+  const stsd = findBmffBox(stblBoxes, "stsd");
+  const stts = findBmffBox(stblBoxes, "stts");
+  const stsc = findBmffBox(stblBoxes, "stsc");
+  const stsz = findBmffBox(stblBoxes, "stsz");
+  const stco = findBmffBox(stblBoxes, "stco") ?? findBmffBox(stblBoxes, "co64");
+  if (!stsd || !stts || !stsc || !stsz || !stco) return null;
+  const entry = parseStsd(view, stsd);
+  if (!entry) return null;
+  const sizes = parseStsz(view, stsz);
+  const offsets = parseChunkOffsets(view, stco, stco.type === "co64");
+  const chunkOfSample = parseChunkOfSample(view, stsc, sizes.length, offsets.length);
+  if (!chunkOfSample) return null;
+  const sampleOffsets = computeSampleOffsets(chunkOfSample, offsets, sizes);
+  const timestampsMs = accumulateTimestampsMs(view, stts, sizes.length, timescale);
+  const stss = findBmffBox(stblBoxes, "stss");
+  const syncSamples = stss ? parseSyncSamples(view, stss) : null;
+  const samples: Mp4Sample[] = sizes.map((size, index) => ({
+    offset: sampleOffsets[index]!,
+    size,
+    timestampMs: timestampsMs[index] ?? 0,
+    isSync: syncSamples ? syncSamples.has(index + 1) : true,
+  }));
+  return { width: entry.width, height: entry.height, codec: entry.codec, description: entry.description, samples };
+}
+
+/** 🌐 Feature-detects the WebCodecs `VideoDecoder`/`EncodedVideoChunk` globals (Tier 1's prerequisite;
+ * absent in most JS test environments and in browsers that only support WebM/VP9 without an AVC path). */
+function webCodecsAvailable(): boolean {
+  const scope = window as unknown as { VideoDecoder?: unknown; EncodedVideoChunk?: unknown };
+  return typeof scope.VideoDecoder === "function" && typeof scope.EncodedVideoChunk === "function";
+}
+
+/** 🔢 Derives a WebCodecs `avc1.PPCCLL` codec string from an `avcC` box's profile/compat/level bytes
+ * (offsets 1/2/3 — version is byte 0). */
+function avcCodecString(description: Uint8Array): string {
+  const hex = (byte: number | undefined) => (byte ?? 0).toString(16).padStart(2, "0");
+  return `avc1.${hex(description[1])}${hex(description[2])}${hex(description[3])}`;
+}
+
+type WebCodecsVideoFrame = { readonly codedWidth: number; readonly codedHeight: number; close: () => void };
+type WebCodecsVideoDecoderCtor = new (init: { output: (frame: WebCodecsVideoFrame) => void; error: (error: unknown) => void }) => {
+  configure: (config: { codec: string; codedWidth: number; codedHeight: number; description: Uint8Array }) => void;
+  decode: (chunk: unknown) => void;
+  flush: () => Promise<void>;
+  close: () => void;
+};
+type WebCodecsEncodedVideoChunkCtor = new (init: { type: "key" | "delta"; timestamp: number; data: Uint8Array }) => unknown;
+
+function jpegDataUrlFromFrame(frame: WebCodecsVideoFrame): { readonly dataUrl: string; readonly width: number; readonly height: number } {
+  const canvas = document.createElement("canvas");
+  canvas.width = frame.codedWidth;
+  canvas.height = frame.codedHeight;
+  canvas.getContext("2d")?.drawImage(frame as unknown as CanvasImageSource, 0, 0);
+  return { dataUrl: canvas.toDataURL("image/jpeg", 0.9), width: frame.codedWidth, height: frame.codedHeight };
+}
+
+/** 🎞️ Decodes exactly the samples needed for one target frame — from its nearest preceding sync sample
+ * through the target — via a fresh `VideoDecoder`, capturing only the last output frame. Simplification:
+ * each target frame re-decodes its GOP prefix from scratch instead of streaming continuously across
+ * targets and demuxing outputs by timestamp; acceptable because sampled ingestion (`sampleStride`/
+ * `maxFrames`) keeps GOP prefixes short between targets, and Tier 2's `<video>` element is always the
+ * correctness fallback if Tier 1 fails or the codec isn't baseline-friendly. */
+async function decodeOneMp4Frame(track: Mp4Track, bytes: Uint8Array, targetIndex: number): Promise<{ dataUrl: string; width: number; height: number } | null> {
+  const scope = window as unknown as { VideoDecoder: WebCodecsVideoDecoderCtor; EncodedVideoChunk: WebCodecsEncodedVideoChunkCtor };
+  let syncIndex = targetIndex;
+  while (syncIndex > 0 && !track.samples[syncIndex]!.isSync) syncIndex -= 1;
+  let captured: { dataUrl: string; width: number; height: number } | null = null;
+  await new Promise<void>((resolve, reject) => {
+    const decoder = new scope.VideoDecoder({
+      output: (frame) => {
+        captured = jpegDataUrlFromFrame(frame);
+        frame.close();
+      },
+      error: reject,
+    });
+    decoder.configure({ codec: avcCodecString(track.description), codedWidth: track.width, codedHeight: track.height, description: track.description });
+    for (let i = syncIndex; i <= targetIndex; i += 1) {
+      const sample = track.samples[i]!;
+      decoder.decode(
+        new scope.EncodedVideoChunk({ type: sample.isSync ? "key" : "delta", timestamp: sample.timestampMs * 1000, data: bytes.subarray(sample.offset, sample.offset + sample.size) }),
+      );
+    }
+    decoder.flush().then(() => {
+      decoder.close();
+      resolve();
+    }, reject);
+  });
+  return captured;
+}
+
+/** 🎞️ Tier 1 orchestration: demuxes `bytes` as MP4/AVC, decodes one frame per sampled timestamp, and
+ * dispatches `frameAction` per frame + `doneAction` once. Returns `false` (no dispatch performed at
+ * all) when the demux can't find a usable AVC video track, so the caller falls through to Tier 2. */
+async function runTier1VideoFrames(bytes: Uint8Array, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne): Promise<boolean> {
+  const track = probeMp4VideoTrack(bytes);
+  if (!track || track.samples.length === 0) return false;
+  const durationMs = track.samples[track.samples.length - 1]!.timestampMs;
+  const timestamps = sampleMediaFrameTimestampsMs(durationMs, effect.sampleStride, effect.maxFrames, effect.fpsHint);
+  let sampledCount = 0;
+  for (let index = 0; index < timestamps.length; index += 1) {
+    const targetMs = timestamps[index]!;
+    let targetSampleIndex = 0;
+    for (let i = 0; i < track.samples.length; i += 1) if (track.samples[i]!.timestampMs <= targetMs) targetSampleIndex = i;
+    const frame = await decodeOneMp4Frame(track, bytes, targetSampleIndex);
+    if (!frame) continue;
+    sampledCount += 1;
+    await dispatchOne(effect.frameAction, {
+      payload: frame.dataUrl,
+      name,
+      frameIndex: index,
+      timestampMs: targetMs,
+      index,
+      total: timestamps.length,
+      width: frame.width,
+      height: frame.height,
+      ...effect.args,
+    });
+  }
+  await dispatchOne(effect.doneAction, {
+    name,
+    durationMs,
+    frameCount: track.samples.length,
+    sampledCount,
+    width: track.width,
+    height: track.height,
+    codec: track.codec,
+    ...effect.args,
+  });
+  return true;
+}
+//#endregion Tier1
+
+//#region Tier2
+/** ⏱️ Tier-2 (`<video>` seek-and-capture) target timestamps, ms — one every `sampleStride /
+ * (fpsHint || 30)` seconds starting at 0, capped at `maxFrames` (0 ⇒ unlimited, bounded only by
+ * `durationMs`). Pure/deterministic so it's unit-testable without any DOM or media APIs. Computes each
+ * timestamp as `k * stepMs` rather than an accumulating `ts += stepMs` loop — repeated float addition
+ * drifts enough over dozens of steps to occasionally land just under an exact multiple of `durationMs`,
+ * sneaking in one extra timestamp; multiplying from the loop index is exact per-step and deterministic. */
+export function sampleMediaFrameTimestampsMs(durationMs: number, sampleStride: number, maxFrames: number, fpsHint: number): number[] {
+  const stride = sampleStride > 0 ? sampleStride : 1;
+  const fps = fpsHint > 0 ? fpsHint : 30;
+  const stepMs = (stride / fps) * 1000;
+  const timestamps: number[] = [];
+  if (durationMs <= 0 || stepMs <= 0) return timestamps;
+  for (let k = 0; ; k += 1) {
+    if (maxFrames > 0 && timestamps.length >= maxFrames) break;
+    const ts = k * stepMs;
+    if (ts >= durationMs) break;
+    timestamps.push(ts);
+  }
+  return timestamps;
+}
+
+function captureCanvasFrame(video: HTMLVideoElement, maxLongEdgePx: number): { readonly dataUrl: string; readonly width: number; readonly height: number } {
+  const sourceWidth = video.videoWidth || 0;
+  const sourceHeight = video.videoHeight || 0;
+  const scale = maxLongEdgePx > 0 ? Math.min(1, maxLongEdgePx / Math.max(sourceWidth, sourceHeight, 1)) : 1;
+  const width = Math.max(1, Math.round(sourceWidth * scale));
+  const height = Math.max(1, Math.round(sourceHeight * scale));
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  canvas.getContext("2d")?.drawImage(video, 0, 0, width, height);
+  return { dataUrl: canvas.toDataURL("image/jpeg", 0.9), width, height };
+}
+
+function waitForVideoEvent(video: HTMLVideoElement, type: string): Promise<void> {
+  return new Promise((resolve) => {
+    const handler = () => {
+      video.removeEventListener(type, handler);
+      resolve();
+    };
+    video.addEventListener(type, handler);
+  });
+}
+
+/** 🎞️ Tier 2 orchestration: waits for `loadedmetadata` (if not already available), seeks `video`
+ * through {@link sampleMediaFrameTimestampsMs}'s schedule, captures each landed frame to a scaled JPEG
+ * data URL, dispatches `frameAction` per frame, then `doneAction` once. Used both as the WebM/no-
+ * WebCodecs fallback and directly by tests (which inject a real `<video>` element with overridden
+ * `duration`/`videoWidth`/`videoHeight`/`readyState` and manually dispatch `loadedmetadata`/`seeked`,
+ * since headless test environments have no real media decoder). */
+export async function runTier2VideoFrames(video: HTMLVideoElement, effect: RequestMediaFramesArgs, name: string, dispatchOne: EffectDispatchOne): Promise<void> {
+  if (video.readyState < 1) await waitForVideoEvent(video, "loadedmetadata");
+  const durationMs = Number.isFinite(video.duration) ? video.duration * 1000 : 0;
+  const width = video.videoWidth || 0;
+  const height = video.videoHeight || 0;
+  const timestamps = sampleMediaFrameTimestampsMs(durationMs, effect.sampleStride, effect.maxFrames, effect.fpsHint);
+  const total = timestamps.length;
+  for (let index = 0; index < total; index += 1) {
+    const timestampMs = timestamps[index]!;
+    video.currentTime = timestampMs / 1000;
+    await waitForVideoEvent(video, "seeked");
+    const frame = captureCanvasFrame(video, effect.maxLongEdgePx);
+    await dispatchOne(effect.frameAction, {
+      payload: frame.dataUrl,
+      name,
+      frameIndex: index,
+      timestampMs,
+      index,
+      total,
+      width: frame.width,
+      height: frame.height,
+      ...effect.args,
+    });
+  }
+  await dispatchOne(effect.doneAction, { name, durationMs, frameCount: total, sampledCount: total, width, height, codec: "unknown", ...effect.args });
+}
+//#endregion Tier2
+
+/** 🎞️ D5 `RequestMediaFrames` fields the two decode tiers need, decoupled from the raw `HostEffect`
+ * union member shape so orchestration functions above take a plain, easily-constructed-in-tests object. */
+export type RequestMediaFramesArgs = {
+  readonly frameAction: string;
+  readonly doneAction: string;
+  readonly fallbackAction: string;
+  readonly sampleStride: number;
+  readonly maxFrames: number;
+  readonly maxLongEdgePx: number;
+  readonly fpsHint: number;
+  readonly args?: Record<string, unknown>;
+};
+
+function bytesFromDataUrl(dataUrl: string): Uint8Array {
+  const binary = atob(dataUrl.slice(dataUrl.indexOf(",") + 1));
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return bytes;
+}
+
+function bytesToDataUrl(bytes: Uint8Array, mime: string): string {
+  let binary = "";
+  for (let i = 0; i < bytes.length; i += 1) binary += String.fromCharCode(bytes[i]!);
+  return `data:${mime};base64,${btoa(binary)}`;
+}
+
+/** 🎞️ D5 top-level: sources video bytes (`payload` data URL, or the native file picker when unset),
+ * tries Tier 1 when WebCodecs is available and the demux finds a usable AVC track, otherwise Tier 2's
+ * `<video>` seek-and-capture; on total failure (can't demux AND Tier 2 also throws, e.g. a corrupt
+ * file) dispatches `fallbackAction` once with the raw original bytes as a data URL. */
+export async function runRequestMediaFrames(
+  effect: RequestMediaFramesArgs,
+  accept: string,
+  payload: string | undefined,
+  dispatchOne: EffectDispatchOne,
+  createVideoElement: () => HTMLVideoElement = () => document.createElement("video"),
+): Promise<void> {
+  let bytes: Uint8Array;
+  let name = "video";
+  if (payload) {
+    bytes = bytesFromDataUrl(payload);
+  } else {
+    const opened = await requestFileOpen(accept || "video/*", "dataUrl", false);
+    if (opened.length === 0) return;
+    bytes = bytesFromDataUrl(opened[0]!.contents);
+    name = opened[0]!.name;
+  }
+  try {
+    if (webCodecsAvailable() && (await runTier1VideoFrames(bytes, effect, name, dispatchOne))) return;
+    const url = URL.createObjectURL(new Blob([bytes], { type: "video/mp4" }));
+    const video = createVideoElement();
+    video.muted = true;
+    video.playsInline = true;
+    video.src = url;
+    try {
+      await runTier2VideoFrames(video, effect, name, dispatchOne);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
+  } catch (error) {
+    console.error("[os-shell] requestMediaFrames: decode failed, falling back to raw bytes", error);
+    await dispatchOne(effect.fallbackAction, { payload: bytesToDataUrl(bytes, "video/mp4"), name, ...effect.args });
+  }
+}
+//#endregion RequestMediaFrames
+
 function isStudioMode(pluginFilter?: string): boolean {
   return pluginFilter !== undefined && resolvePluginHostConfig(pluginFilter) !== undefined;
 }
@@ -2123,9 +2622,25 @@ export function resolveUtilities(app: Pick<AppDefinition, "utilities">, windowKi
   return resolved;
 }
 
-/** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label through the app's locale/terminology overlay. */
+/** 🧰 Chrome-known toolbar-group ids that already have a `ui.toolbar.parent.*` translation key — the fallback tier for plugin-declared utility groups not covered by that plugin's own `groupLabels` overlay. */
+const CHROME_KNOWN_TOOLBAR_PARENT_CATEGORIES = new Set(["history", "hand", "selection", "lasso", "filter", "open", "save", "transfer", "transform", "create", "view", "actions", "settings", "methods", "mode", "targets", "export", "tools", "sync"]);
+
+/** 🧰 Resolves a `UtilityDefinition.group` id's display label: the app's own `groupLabels` overlay first, then the shared `ui.toolbar.parent.*` chrome vocabulary for known category ids, else the raw id. */
+function resolveUtilityGroupLabel(group: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
+  const fallback = CHROME_KNOWN_TOOLBAR_PARENT_CATEGORIES.has(group) ? shellLabel(`ui.toolbar.parent.${group as UiToolbarParentCategory}`) : group;
+  return resolveAppLabel(appLabelsOverlay, "group", group, fallback);
+}
+
+/** 🧰 One `UtilityDefinition` → the lean `DerivedUtilitySpec` consumed by {@link deriveUtilityNodes}, resolving the label (and, for grouped utilities, the group label) through the app's locale/terminology overlay. */
 function utilityDefinitionToSpec(utility: UtilityDefinition, appLabelsOverlay: PluginAppLabelsOverlay): DerivedUtilitySpec {
-  return { id: utility.id, label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, utility.label), iconId: utility.iconId, group: utility.group ?? undefined, category: utility.category ?? "tools" };
+  return {
+    id: utility.id,
+    label: resolveAppLabel(appLabelsOverlay, "utility", utility.id, utility.label),
+    iconId: utility.iconId,
+    group: utility.group ?? undefined,
+    groupLabel: utility.group ? resolveUtilityGroupLabel(utility.group, appLabelsOverlay) : undefined,
+    category: utility.category ?? "utilities",
+  };
 }
 
 /** 🧰 Stamps the owning `windowId` onto every `setActiveUtility` descriptor in a derived toolbar tree so the shell's `onAction` interceptor targets the right window regardless of which window is globally active. */
@@ -2231,10 +2746,11 @@ const EMPTY_APP_LABELS_OVERLAY: PluginAppLabelsOverlay = {
   actionArgLabels: {},
   dialogLabels: {},
   introductionLabels: {},
+  groupLabels: {},
 };
 
-/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
-function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction", id: string, fallback: string): string {
+/** @emoji 🗣️ Resolves a window-kind/panel-tab/mode/action/utility/example/actionArg/dialog/introduction/group id's locale-aware label from the active app's overlay, falling back to the static manifest label. */
+function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "panelTab" | "mode" | "action" | "utility" | "example" | "actionArg" | "dialog" | "introduction" | "group", id: string, fallback: string): string {
   const map =
     kind === "windowKind"
       ? overlay.windowKindLabels
@@ -2252,7 +2768,9 @@ function resolveAppLabel(overlay: PluginAppLabelsOverlay, kind: "windowKind" | "
                   ? overlay.actionArgLabels
                   : kind === "dialog"
                     ? overlay.dialogLabels
-                    : overlay.introductionLabels;
+                    : kind === "introduction"
+                      ? overlay.introductionLabels
+                      : overlay.groupLabels;
   return map[id] ?? fallback;
 }
 
@@ -2470,13 +2988,13 @@ function utilityNodeTreeContainsId(nodes: readonly UtilityNode[], targetId: stri
   return nodes.some((node) => node.id === targetId || (node.kind === "collection" && utilityNodeTreeContainsId(node.children, targetId)));
 }
 
-function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null): ReactNode {
-  if (!utilities?.length) return undefined;
-  const categories = groupUtilityNodesByCategory(utilities, UTILITY_CATEGORIES);
-  if (!categories.length) return undefined;
+function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId: string, onAction: (action: ActionDescriptor) => void, revealUtilityId?: string | null, utilityOptions?: ReactNode): ReactNode {
+  if (!utilities?.length && !utilityOptions) return undefined;
+  const categories = groupUtilityNodesByCategory(utilities ?? [], UTILITY_CATEGORIES);
+  if (!categories.length && !utilityOptions) return undefined;
   const grouped: UtilityNode[] = [];
   for (const node of categories) {
-    if (node.kind === "collection" && (node.category === "tools" || node.category === "selection")) {
+    if (node.kind === "collection" && (node.category === "utilities" || node.category === "selection")) {
       if (node.id === "group:Select" || node.id === "group:selection" || node.label === "Select" || node.text === "Select") {
         grouped.push(...node.children);
       } else {
@@ -2492,7 +3010,7 @@ function utilityBarNode(utilities: readonly UtilityNode[] | undefined, windowId:
       grouped.push(node);
     }
   }
-  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} />;
+  return <UtilityTree id={`ui.toolbar.${windowId}`} utilities={grouped} onAction={onAction} direction="up" revealUtilityId={revealUtilityId} utilityOptions={utilityOptions} />;
 }
 
 //#region 🧰WindowActionPane
@@ -3854,20 +4372,7 @@ export function FrameworkOsShell({
               // 📤 Single-file (multiple absent/false): identical to the pre-multi-select shape, one
               // `handleAction` call with `{payload, name}`. Multi-file: one sequential call per selected
               // file, each extending args with `{index, total}` so the plugin can stage/merge imports.
-              const total = opened.length;
-              for (let index = 0; index < opened.length; index += 1) {
-                const file = opened[index]!;
-                const importResponse = await pluginEntry.handle.handleAction(
-                  baseSession.instanceId,
-                  JSON.stringify({
-                    controllerId: baseSession.app.controllerId,
-                    action: importAction,
-                    args: multiple ? { payload: file.contents, name: file.name, index, total } : { payload: file.contents, name: file.name },
-                  }),
-                  baseSession.viewState,
-                );
-                await applyHostEffects(importResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(importResponse.uiScope));
-              }
+              await dispatchOpenedFiles(opened, importAction, Boolean(multiple), makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
             }
           }
           continue;
@@ -3881,21 +4386,33 @@ export function FrameworkOsShell({
           const { action: dispatchActionId, args: dispatchArgs, delayMs } = effect.dispatchAction;
           const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
           if (pluginEntry) {
-            const entry = pluginEntry;
-            setTimeout(() => {
-              void (async () => {
-                const dispatchResponse = await entry.handle.handleAction(
-                  baseSession.instanceId,
-                  JSON.stringify({
-                    controllerId: baseSession.app.controllerId,
-                    action: dispatchActionId,
-                    args: dispatchArgs as Record<string, unknown> | undefined,
-                  }),
-                  baseSession.viewState,
-                );
-                await applyHostEffects(dispatchResponse.requestedEffects ?? [], baseSession, resolveUiDirtyScope(dispatchResponse.uiScope));
-              })();
-            }, delayMs);
+            scheduleDispatchAction(dispatchActionId, dispatchArgs as Record<string, unknown> | undefined, delayMs, makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects));
+          }
+          continue;
+        }
+        if ("requestMediaFrames" in effect) {
+          // 🎞️ D5: decodes a video (file picker, or `payload` bytes already in hand from a drop zone)
+          // and fans sampled frames + a completion marker out through the same `dispatchOne` path as
+          // every other effect branch — see `runRequestMediaFrames` for the Tier 1 (WebCodecs)/Tier 2
+          // (`<video>` seek-and-capture)/fallback decision tree.
+          const { accept, payload, frameAction, doneAction, fallbackAction, sampleStride, maxFrames, maxLongEdgePx, fpsHint, args } = effect.requestMediaFrames;
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (pluginEntry) {
+            await runRequestMediaFrames(
+              {
+                frameAction,
+                doneAction,
+                fallbackAction,
+                sampleStride: sampleStride ?? 0,
+                maxFrames: maxFrames ?? 0,
+                maxLongEdgePx: maxLongEdgePx ?? 0,
+                fpsHint: fpsHint ?? 0,
+                args: args as Record<string, unknown> | undefined,
+              },
+              accept,
+              payload,
+              makeEffectDispatchOne(pluginEntry, baseSession, applyHostEffects),
+            );
           }
           continue;
         }
@@ -4990,7 +5507,7 @@ export function FrameworkOsShell({
     return null;
   }, [introductionActionId, session]);
   const introductionAnchorFallbackSelectors = useMemo((): readonly string[] => {
-    if (introductionUtilityWindowId) return [introductionWindowToolbarUnfoldSelector(introductionUtilityWindowId)];
+    if (introductionUtilityWindowId) return [introductionUtilityBarUnfoldSelector(introductionUtilityWindowId)];
     if (introductionActionWindowId) return [introductionWindowActionPaneUnfoldSelector(introductionActionWindowId)];
     return [];
   }, [introductionActionWindowId, introductionUtilityWindowId]);
@@ -5353,9 +5870,8 @@ export function FrameworkOsShell({
             fill: true,
             showControls: true,
             measures: chrome?.measures,
-            utilityOptions: chrome?.utilityOptions,
             engagement: chrome?.engagement,
-            toolbar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId) : undefined,
+            utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id, spawnedActions),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
@@ -5372,14 +5888,15 @@ export function FrameworkOsShell({
     const baseWindows = session.app.windowKinds.map((kind) => {
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
+      const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
       return {
         id: kind.id,
         title: appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
-        ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable),
+        measures: chrome.measures,
         engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-        toolbar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId),
+        utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
         actionsFolded: actionsFoldedFor(kind.id, actions),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
@@ -5395,15 +5912,16 @@ export function FrameworkOsShell({
       if (!kind) return [];
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
+      const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
       return [
         {
           id: instance.id,
           title: instance.title,
           fill: true,
           showControls: true,
-          ...windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable),
+          measures: chrome.measures,
           engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
-          toolbar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId),
+          utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
           actionsFolded: actionsFoldedFor(instance.id, actions),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
@@ -6339,6 +6857,8 @@ type UtilityTreeProps = {
    * a collapsed group picker, the picker auto-drills into that group so the leaf actually mounts (see
    * {@link findUtilityGroupPath}). `null`/not-found leaves `activePath` alone. */
   readonly revealUtilityId?: string | null;
+  /** @emoji 🎯 Utility-scoped measure chrome for the active utility — rendered as an extra ribbon row under the tools. */
+  readonly utilityOptions?: ReactNode;
 };
 
 function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly kind: "button" | "toggle" }>): ActionDescriptor | null {
@@ -6362,22 +6882,22 @@ export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
 
 //#region 🗂️UtilityCategoryGrouping
 
-const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "tools", "history", "sync"];
+const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "utilities", "history", "sync"];
 
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
-const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "tools"];
+const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "utilities"];
 
 const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, string>> = {
   selection: "mouse-pointer",
-  tools: "wrench",
+  utilities: "wrench",
   history: "undo",
   sync: "cloud",
 };
 
 function utilityNodeCategory(node: UtilityNode): UtilityCategory {
-  if (node.kind === "separator") return "tools";
+  if (node.kind === "separator") return "utilities";
   if (node.category) return node.category;
-  return "tools";
+  return "utilities";
 }
 
 /**
@@ -6399,7 +6919,7 @@ export function frameworkHistoryUtilityNodes(app: Pick<AppDefinition, "actions" 
     }));
 }
 
-/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `tools` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
+/** @emoji 🗂️ Buckets top-level utility nodes into the given categories (default: all) so activating a category expands the panel with another line, matching {@link buildToolbarRibbonSegments}'s one-active-group-per-level picker. A category with a single already-meaningful collection is used as-is instead of being re-wrapped in a synthetic one, avoiding a redundant picker level with a duplicate-looking label (e.g. a lone "Selection" collection nested under a "Selection" category chip). Separators default to `utilities` (mirrors Rust `UtilityNode::category()`), so dividers between same-category runs survive; dividers that only separated different categories become redundant once those categories are separate picker lines. */
 export function groupUtilityNodesByCategory(nodes: readonly UtilityNode[], categories: readonly UtilityCategory[] = UTILITY_CATEGORY_ORDER): UtilityNode[] {
   const buckets = new Map<UtilityCategory, UtilityNode[]>();
   for (const node of nodes) {
@@ -6447,7 +6967,7 @@ function hasInteractiveUtilityLeaves(items: readonly UtilityLeaf[]): boolean {
 
 type UtilityCollectionNode = Extract<UtilityNode, { readonly kind: "collection" }>;
 
-export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "tools"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
+export type ToolbarRibbonSegment = { readonly kind: "picker"; readonly collections: readonly UtilityCollectionNode[]; readonly depth: number } | { readonly kind: "utilities"; readonly items: readonly UtilityLeaf[]; readonly depth: number };
 
 /** @emoji 🎀 Builds drill-down ribbon segments from a toolbar tree and active collection path; `depth` marks how many collections were drilled into to reach a segment. Collections never auto-activate: a level only recurses when `path[depth]` names one of its enabled collections, so at most one group per level is active and an unresolved level simply shows its picker. */
 export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: readonly string[], depth = 0): ToolbarRibbonSegment[] {
@@ -6457,7 +6977,7 @@ export function buildToolbarRibbonSegments(nodes: readonly UtilityNode[], path: 
   const segments: ToolbarRibbonSegment[] = [];
 
   if (collections.length > 0) segments.push({ kind: "picker", collections, depth });
-  if (hasInteractiveUtilityLeaves(looseLeaves)) segments.push({ kind: "tools", items: looseLeaves, depth });
+  if (hasInteractiveUtilityLeaves(looseLeaves)) segments.push({ kind: "utilities", items: looseLeaves, depth });
   if (collections.length === 0) return segments;
 
   const activeId = path[depth];
@@ -6586,10 +7106,10 @@ function UtilityToolbarItems({ items, onAction }: { readonly items: readonly Uti
 }
 
 function toolbarRibbonSegmentKey(segment: ToolbarRibbonSegment, index: number): string {
-  return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `tools-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
+  return segment.kind === "picker" ? `picker-${segment.depth}-${segment.collections.map((entry) => entry.id).join("-")}` : `utilities-${index}-${segment.items.map((entry) => entry.id).join("-")}`;
 }
 
-export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline", revealUtilityId = null }: UtilityTreeProps): ReactElement | null {
+export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction = "inline", revealUtilityId = null, utilityOptions }: UtilityTreeProps): ReactElement | null {
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
@@ -6604,7 +7124,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
 
   const segments = useMemo(() => buildToolbarRibbonSegments(utilities, activePath), [utilities, activePath]);
 
-  if (!hasInteractiveUtilityNodes(utilities)) return null;
+  if (!hasInteractiveUtilityNodes(utilities) && !utilityOptions) return null;
 
   const renderSegment = (segment: ToolbarRibbonSegment): ReactNode =>
     segment.kind === "picker" ? (
@@ -6658,7 +7178,16 @@ export function UtilityTree({ utilities, onAction, id = "ui.toolbar", direction 
           .sort(([left], [right]) => left - right)
           .map(([depth, content]) => ({ key: `row-${depth}`, content }));
 
-  if (hasActiveSelection && direction !== "inline") {
+  if (utilityOptions && direction !== "inline") {
+    rows.push({
+      key: "row-utility-options",
+      content: (
+        <ToolbarZone>
+          <ToolbarItem>{utilityOptions}</ToolbarItem>
+        </ToolbarZone>
+      ),
+    });
+  } else if (hasActiveSelection && direction !== "inline") {
     rows.push({
       key: "row-selection-options",
       content: (
@@ -8294,7 +8823,7 @@ type WorldSelectionRecord = {
   readonly activeObjectId?: string;
   readonly componentIds?: readonly number[];
   readonly targets?: WorldSelectionTargets;
-  readonly transformTool?: string;
+  readonly transformMode?: string;
   readonly interactionMode?: "model" | "paint";
   readonly gumballTarget?: readonly [number, number, number];
   readonly gumballActive?: boolean;
@@ -8489,6 +9018,17 @@ export function resolveMeshStyle(state: { readonly disabled?: boolean; readonly 
   if (state.highlighted) return "highlighted";
   if (state.hovered) return "hovered";
   return "neutral";
+}
+
+/** 🎨 Resolves live group-selection preview paint: the new selection is active, while only objects exiting the old selection are highlighted. */
+export function resolveMeshSelectionPreviewStyle(instance: Pick<WorldInstanceRecord, "disabled" | "selected" | "highlighted" | "hovered">, previewSelected?: boolean): MeshStyleKind {
+  const selectionExited = previewSelected === false && instance.selected === true;
+  return resolveMeshStyle({
+    disabled: instance.disabled,
+    selected: previewSelected ?? instance.selected,
+    highlighted: selectionExited || instance.highlighted,
+    hovered: instance.hovered,
+  });
 }
 
 /** 🎨 Slim alias over {@link MeshStylePalette} for call sites that only need the four legacy semantic colors (face/edge/vertex component overlays, markers). */
@@ -9082,11 +9622,11 @@ function BrushMeshRegistrar({ url, onRegister }: { readonly url: string; readonl
   return null;
 }
 
-function gumballConfigForTransformTool(tool: string): GumballConfig {
-  if (tool === "rotate") {
+function gumballConfigForTransformMode(mode: string): GumballConfig {
+  if (mode === "rotate") {
     return { moveAxes: false, movePlanes: false, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
   }
-  if (tool === "scale") {
+  if (mode === "scale") {
     return { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: true, scalePlanes: true, scaleUniform: true };
   }
   return { moveAxes: true, movePlanes: true, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false };
@@ -9210,10 +9750,8 @@ function WorldInstanceNode({
   readonly environmentShadowEnabled?: boolean;
 }) {
   const isActiveObject = instance.id === activeObjectId;
-  const effectiveSelected = previewInstanceSelected ?? instance.selected;
-  const previewAddedInstance = previewInstanceSelected === true && !instance.selected;
   const colors = semanticColorsFromPalette(palette);
-  const styleKind = previewAddedInstance ? "highlighted" : resolveMeshStyle({ disabled: instance.disabled, selected: effectiveSelected, highlighted: instance.highlighted, hovered: instance.hovered });
+  const styleKind = resolveMeshSelectionPreviewStyle(instance, previewInstanceSelected);
   const style = palette[styleKind];
   const glbUsesEnvironmentColor = styleKind === "neutral" && environmentMaterial?.color != null;
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
@@ -9505,8 +10043,8 @@ function WorldInstancesLayer({
   const previewComponentIds = mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>();
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
-  const transformTool = selection.transformTool ?? "move";
-  const gumballConfig = useMemo(() => gumballConfigForTransformTool(transformTool), [transformTool]);
+  const transformMode = selection.transformMode ?? "move";
+  const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode), [transformMode]);
   const paintMode = selection.interactionMode === "paint";
 
   const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(marqueeModeFromModifiers(event));
@@ -10701,7 +11239,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleGumballDragEnd = useCallback(
     (_kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      const tool = selection.transformTool === "rotate" ? "rotate" : selection.transformTool === "scale" ? "scale" : "translate";
+      const tool = selection.transformMode === "rotate" ? "rotate" : selection.transformMode === "scale" ? "scale" : "translate";
       const base = selectionArgs();
       if (tool === "translate") {
         dispatch("translateSelection", {
@@ -10734,7 +11272,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       const sz = after.scale[2] / Math.max(before.scale[2], 1e-6);
       dispatch("scaleSelection", { ...base, sx, sy, sz });
     },
-    [dispatch, selection.transformTool, selectionArgs],
+    [dispatch, selection.transformMode, selectionArgs],
   );
 
   const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {

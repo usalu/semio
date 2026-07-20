@@ -27,7 +27,7 @@
     "@types/three": "^0.180.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
-    "vitest": "^3.2.4"
+    "vitest": "^4.0.17"
   },
   "bundleKind": "library"
 }

@@ -224,7 +224,7 @@ impl Symbolizer for DispersionSymbolizer {
 
     fn alphabet_size(&self) -> usize {
         let dims = vec![self.classes; self.dim];
-        checked_state_count(&dims).map(|c| c as usize).unwrap_or(usize::MAX)
+        checked_state_count(&dims).map_or(usize::MAX, |c| c as usize)
     }
 }
 // #endregion 🔖Dispersion
@@ -467,7 +467,7 @@ mod tests {
         let mut rng = crate::numeric::Xorshift64::new(11);
         let x: Vec<f64> = (0..30).map(|_| rng.next_gaussian()).collect();
         let symbols = symbolizer.symbolize(&x).unwrap();
-        assert_eq!(symbols.len(), 30 - (3 - 1) * 1);
+        assert_eq!(symbols.len(), 30 - (3 - 1));
         assert!(symbols.iter().all(|&s| (s as usize) < symbolizer.alphabet_size()));
     }
     // #endregion 🔖DispersionTests

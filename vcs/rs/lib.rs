@@ -1316,20 +1316,27 @@ where
             let backbone_ref = self.envelope.backbone.clone();
             self.envelope = remote;
             self.envelope.backbone = backbone_ref;
+            // 🌱 A snapshot adopts these edits directly (not through `dag.insert`), so the dag never
+            // learns they're satisfied — seed it here or a later envelope whose `deps` point back at
+            // one of these ids would sit `Pending` forever (see `OpDag::seed_applied`).
+            self.dag.seed_applied(applied.iter().cloned());
             self.applied_edit_ids = applied;
             self.redo_edit_ids.clear();
             self.bump();
             return Ok(());
         }
         let existing_edit_ids: HashSet<String> = self.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        let mut newly_merged_ids: Vec<String> = Vec::new();
         for edit in remote.vcs.edits {
             if existing_edit_ids.contains(&edit.id) {
                 continue;
             }
             self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
             self.applied_edit_ids.push(edit.id.clone());
+            newly_merged_ids.push(edit.id.clone());
             self.envelope.vcs.edits.push(edit);
         }
+        self.dag.seed_applied(newly_merged_ids);
         merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id);
         merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id);
         merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id);

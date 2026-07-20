@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /** 🧭 Engine package router: `bun ./script.ts <build|test|dev mcp> [segments…]`. */
-import { execFileSync, execSync, spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, copyFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, pytestLevelArgs } from "../../../../repo/lib/js/index.ts";
 
 class DevMcpScript extends BundleScript {
   run(): void {
@@ -87,7 +87,8 @@ class BuildScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(): void {
+  async run(segments: string[]): Promise<void> {
+    const { level, rest } = resolveTestLevel(segments);
     const env = { ...process.env, UV_PROJECT_ENVIRONMENT: join(this.root, ".venv") };
     const python = process.platform === "win32" ? join(this.root, ".venv", "Scripts", "python.exe") : join(this.root, ".venv", "bin", "python");
     const pythonCommand = existsSync(python) ? python : "python";
@@ -117,16 +118,15 @@ class TestScript extends BundleScript {
     assertSchema(mutationBody.includes("addFixedPieceToDesign(") && mutationBody.includes("dragPieceInDesign("), "Mutation MUST expose flat draft/transaction-scoped kit mutators");
     const subscriptionBody = definitionBody("type Subscription");
     assertSchema(subscriptionBody.includes("commandSucceeded: Command!") && subscriptionBody.includes("operationSucceeded: OperationKind!"), "Subscription MUST expose Rust command/operation streams");
-    execFileSync(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
+    await runTestBudgeted(pythonCommand, ["-c", "from pathlib import Path; from ariadne import gql, make_executable_schema; s=Path('../graphql/schema.graphql').read_text(encoding='utf-8'); make_executable_schema(gql(s))"], {
       cwd: this.root,
       env,
-      stdio: "inherit",
     });
     const openapiSchema = JSON.parse(readFileSync(join(this.root, "..", "openapi", "schema.json"), "utf8"));
     assertSchema(Boolean(openapiSchema.paths?.["/api/graphql"]?.post), "semio OpenAPI schema MUST expose the GraphQL store endpoint");
     assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreRequest), "semio OpenAPI schema MUST define GraphqlStoreRequest");
     assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreResponse), "semio OpenAPI schema MUST define GraphqlStoreResponse");
-    execFileSync(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html"], { cwd: this.root, env, stdio: "inherit" });
+    await runTestBudgeted(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html", ...pytestLevelArgs(level), ...rest], { cwd: this.root, env });
     console.log("✅ Tests complete");
   }
 }

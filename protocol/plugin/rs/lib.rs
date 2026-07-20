@@ -67,10 +67,10 @@ app_labels! {
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
 fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     localized_label_map(is_de, &[
-        ("addStep", "Add Step", "Schritt hinzufuegen"),
+        ("addStep", "Add Step", "Schritt hinzufügen"),
         ("removeStep", "Remove Step", "Schritt entfernen"),
         ("moveStep", "Move Step", "Schritt verschieben"),
-        ("addBlock", "Add Block", "Baustein hinzufuegen"),
+        ("addBlock", "Add Block", "Baustein hinzufügen"),
         ("removeBlock", "Remove Block", "Baustein entfernen"),
         ("moveBlock", "Move Block", "Baustein verschieben"),
         ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),

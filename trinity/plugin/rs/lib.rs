@@ -423,18 +423,18 @@ pub mod app_jack {
             ("nodeGraphViewport", "Set Graph Viewport", "Graph-Ansicht festlegen"),
             ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
             ("reorganize", "Reorganize", "Neu anordnen"),
-            ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausfuehren"),
+            ("runJackQuery", "Run Jack Query", "Jack-Abfrage ausführen"),
             ("submit", "Submit Jack Query", "Jack-Abfrage absenden"),
             ("loadExampleQuery", "Load Example Query", "Beispielabfrage laden"),
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("selectNode", "Select Node", "Knoten auswählen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswählen"),
             ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
             ("textEdit", "Edit Jack Query", "Jack-Abfrage bearbeiten"),
-            ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswaehlen"),
+            ("textSelect", "Select Jack Query Text", "Jack-Abfragetext auswählen"),
             ("textHover", "Hover Jack Query Text", "Jack-Abfragetext hovern"),
-            ("requestCompletions", "Request Completions", "Vervollstaendigungen anfordern"),
+            ("requestCompletions", "Request Completions", "Vervollständigungen anfordern"),
             ("formatDocument", "Format Jack Query", "Jack-Abfrage formatieren"),
             ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
             ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
@@ -1297,7 +1297,7 @@ pub mod app_jack {
             // "Verlauf" (History rail group) label had no per-app surface even before removal — only
             // the `runJackQuery` action label is this app's own to assert on.
             let action_labels = app.app_labels(&view_state).action_labels;
-            assert_eq!(action_labels.get("runJackQuery").map(String::as_str), Some("Jack-Abfrage ausfuehren"));
+            assert_eq!(action_labels.get("runJackQuery").map(String::as_str), Some("Jack-Abfrage ausführen"));
         }
 
         #[test]
@@ -2172,8 +2172,8 @@ pub mod app_rewrite {
     /// and Actions rail get a translated label without threading locale through the whole builder chain.
     fn trinity_rewrite_action_labels(is_de: bool) -> HashMap<String, String> {
         localized_label_map(is_de, &[
-            ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufuegen"),
-            ("resetRule", "Reset Rule", "Regel zuruecksetzen"),
+            ("addRuleClause", "Add Rule Clause", "Regelklausel hinzufügen"),
+            ("resetRule", "Reset Rule", "Regel zurücksetzen"),
             ("setParameter", "Set Parameter", "Parameter festlegen"),
             ("patchTrinityNodes", "Patch Nodes", "Knoten aktualisieren"),
             ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
@@ -2181,11 +2181,11 @@ pub mod app_rewrite {
             ("setLhsJson", "Set LHS Json", "LHS-JSON festlegen"),
             ("setRhsJson", "Set RHS Json", "RHS-JSON festlegen"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
-            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswaehlen"),
+            ("selectNode", "Select Node", "Knoten auswählen"),
+            ("nodeGraphSelect", "Select Graph Node", "Graph-Knoten auswählen"),
             ("nodeGraphHover", "Hover Graph Node", "Graph-Knoten hovern"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-            ("textSelect", "Select Text", "Text auswaehlen"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
+            ("textSelect", "Select Text", "Text auswählen"),
             ("textHover", "Hover Text", "Text hovern"),
             ("recomputeRewrite", "Recompute Rewrite", "Rewrite neu berechnen"),
             ("reorganize", "Reorganize", "Neu anordnen"),
@@ -3084,7 +3084,7 @@ pub mod app_rewrite {
             // "Verlauf" (History rail group) label had no per-app surface even before removal — only
             // the `resetRule` action label is this app's own to assert on.
             let action_labels = app.app_labels(&view_state).action_labels;
-            assert_eq!(action_labels.get("resetRule").map(String::as_str), Some("Regel zuruecksetzen"));
+            assert_eq!(action_labels.get("resetRule").map(String::as_str), Some("Regel zurücksetzen"));
         }
 
         #[test]

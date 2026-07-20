@@ -43,7 +43,7 @@ fn ksg1_generalized(joint: &[f64], total_dim: usize, x_dim: usize, k: usize) -> 
     let mut sum = 0.0_f64;
     for i in 0..n {
         let neighbors = tree.k_nearest(row(i), k, Metric::Chebyshev, Some(i));
-        let eps = neighbors.last().map(|&(_, d)| d).unwrap_or(0.0);
+        let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
         let mut nx = 0usize;
         let mut ny = 0usize;
         for j in 0..n {
@@ -77,7 +77,7 @@ fn ksg_cmi_generalized(joint: &[f64], total_dim: usize, x_dim: usize, y_dim: usi
     let mut sum = 0.0_f64;
     for i in 0..n {
         let neighbors = tree.k_nearest(row(i), k, Metric::Chebyshev, Some(i));
-        let eps = neighbors.last().map(|&(_, d)| d).unwrap_or(0.0);
+        let eps = neighbors.last().map_or(0.0, |&(_, d)| d);
         let mut n_xz = 0usize;
         let mut n_yz = 0usize;
         let mut n_z = 0usize;
@@ -292,9 +292,7 @@ mod tests {
         let n = 4000;
         let source: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();
         let mut target = vec![0.0; n];
-        for i in 1..n {
-            target[i] = source[i - 1];
-        }
+        target[1..n].copy_from_slice(&source[..n - 1]);
         let cfg = TransferConfig::new(1, 1, TeBackend::Discrete { bins: 4 }).unwrap();
         let forward = transfer_entropy(&source, &target, cfg).unwrap();
         let backward = transfer_entropy(&target, &source, cfg).unwrap();

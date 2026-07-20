@@ -95,9 +95,7 @@ pub fn jacobi_eigen_symmetric(a_in: &[f64], n: usize) -> Result<(Vec<f64>, Vec<f
         }
         // 🔢 `d` was already updated incrementally by `-= h` / `+= h` during the sweep above;
         // only the per-sweep accumulator `z` needs resetting for the next sweep.
-        for i in 0..n {
-            z[i] = 0.0;
-        }
+        z.iter_mut().for_each(|zi| *zi = 0.0);
     }
     if !converged {
         return Err(EntropyError::NotConverged { what: "Jacobi eigensolver", iterations: MAX_SWEEPS });
@@ -166,10 +164,13 @@ pub fn log_det(a: &[f64], n: usize) -> Result<f64, EntropyError> {
 // #endregion 🔖Cholesky
 
 // #region 🔖Svd
-/// 🔢 One-sided Jacobi SVD of an `rows x cols` matrix (row-major) with `rows >= cols`. Returns
-/// `(u, singular_values, v)`: `u` is `rows x cols` (row-major, orthonormal columns),
-/// `singular_values` is sorted descending, `v` is `cols x cols` (row-major, orthogonal).
-pub fn svd_jacobi(a: &[f64], rows: usize, cols: usize) -> Result<(Vec<f64>, Vec<f64>, Vec<f64>), EntropyError> {
+/// 🔢 `(u, singular_values, v)` result of [`svd_jacobi`]: `u` is `rows x cols` (row-major,
+/// orthonormal columns), `singular_values` is sorted descending, `v` is `cols x cols` (row-major,
+/// orthogonal).
+pub type SvdResult = (Vec<f64>, Vec<f64>, Vec<f64>);
+
+/// 🔢 One-sided Jacobi SVD of an `rows x cols` matrix (row-major) with `rows >= cols`.
+pub fn svd_jacobi(a: &[f64], rows: usize, cols: usize) -> Result<SvdResult, EntropyError> {
     if rows == 0 || cols == 0 {
         return Err(EntropyError::EmptyInput { what: "matrix" });
     }
@@ -302,7 +303,7 @@ pub fn svd_entropy(data: &[f64], rows: usize, cols: usize, base: LogBase) -> Res
 pub fn von_neumann_entropy(density: &[f64], n: usize, base: LogBase) -> Result<Estimate, EntropyError> {
     base.validate()?;
     let (eigenvalues, _) = jacobi_eigen_symmetric(density, n)?;
-    let max_abs = eigenvalues.iter().cloned().fold(0.0_f64, |acc, v| acc.max(v.abs()));
+    let max_abs = eigenvalues.iter().copied().fold(0.0_f64, |acc, v| acc.max(v.abs()));
     let tol_neg = n as f64 * f64::EPSILON * max_abs;
     let mut warnings = Vec::new();
     let mut clipped = Vec::with_capacity(n);

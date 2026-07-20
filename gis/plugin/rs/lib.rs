@@ -893,11 +893,11 @@ pub mod app_2d {
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setSelectionMode", "Set Selection Mode", "Auswahlmodus festlegen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-            ("selectAll", "Select All", "Alles auswaehlen"),
-            ("deselect", "Deselect", "Abwaehlen"),
+            ("selectAll", "Select All", "Alles auswählen"),
+            ("deselect", "Deselect", "Abwählen"),
             ("focusFeature", "Focus Feature", "Objekt fokussieren"),
-            ("setLayerStrokeScale", "Set Layer Stroke Scale", "Ebenenstrichstaerke festlegen"),
-            ("openSource", "Open Source", "Quelle oeffnen"),
+            ("setLayerStrokeScale", "Set Layer Stroke Scale", "Ebenenstrichstärke festlegen"),
+            ("openSource", "Open Source", "Quelle öffnen"),
         ])
     }
     //#endregion 🔖CommandLabels
@@ -1813,8 +1813,8 @@ pub mod app_3d {
         localized_label_map(is_de, &[
             ("setCamera", "Set Camera", "Kamera festlegen"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("worldSelect", "Select", "Auswaehlen"),
-            ("setExaggeration", "Set Exaggeration", "Ueberhoehung festlegen"),
+            ("worldSelect", "Select", "Auswählen"),
+            ("setExaggeration", "Set Exaggeration", "Überhöhung festlegen"),
         ])
     }
     //#endregion 🔖CommandLabels

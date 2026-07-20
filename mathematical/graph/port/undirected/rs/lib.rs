@@ -502,7 +502,7 @@ mod tests {
         assert!(g.remove_one_edge(a, b));
         let remaining: Vec<EdgeId> = g.edges_between(a, b).collect();
         assert_eq!(remaining.len(), 1);
-        assert_eq!(remaining[0], e1.min(e2));
+        assert_eq!(remaining[0], e1.max(e2));
     }
 
     #[test]

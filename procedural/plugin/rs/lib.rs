@@ -430,7 +430,7 @@ pub mod app_2d {
             window_generations: &'static str = en: "Generations", de: "Generationen";
             window_generate_form: &'static str = en: "Form", de: "Formular";
             window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
-            delete_selection: &'static str = en: "Delete selection", de: "Auswahl loeschen";
+            delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
         }
     }
 
@@ -449,26 +449,26 @@ pub mod app_2d {
             ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
             ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
             ("moveMediaNode", "Move Node", "Knoten verschieben"),
-            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("addWidget", "Add Widget", "Element hinzufügen"),
             ("removeWidget", "Remove Widget", "Element entfernen"),
             ("connectMediaPorts", "Connect Ports", "Ports verbinden"),
             ("reorganize", "Reorganize", "Neu anordnen"),
-            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("addGeneration", "Add Generation", "Generation hinzufügen"),
             ("removeGeneration", "Remove Generation", "Generation entfernen"),
             ("renameGeneration", "Rename Generation", "Generation umbenennen"),
             ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("selectNode", "Select Node", "Knoten auswählen"),
             ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
             ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
             ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
             ("generate", "Generate", "Generieren"),
             ("setEvalOutputs", "Set Eval Outputs", "Auswertungsausgaben festlegen"),
-            ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrueckt"),
+            ("canvasPointerDown", "Canvas Pointer Down", "Canvas-Zeiger gedrückt"),
             ("canvasPointerMove", "Canvas Pointer Move", "Canvas-Zeiger bewegt"),
             ("canvasPointerUp", "Canvas Pointer Up", "Canvas-Zeiger losgelassen"),
             ("canvasWheel", "Canvas Wheel", "Canvas-Mausrad"),
-            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+            ("selectGeneration", "Select Generation", "Generation auswählen"),
         ];
         semio_framework_plugin::localized_label_map(is_de, ENTRIES)
     }
@@ -2011,7 +2011,7 @@ pub mod app_3d {
         ))
         .unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
-            object.insert("transformTool".into(), json!(active_utility));
+            object.insert("transformMode".into(), json!(active_utility));
             object.insert("gumballActive".into(), json!(!runtime.selected_node_ids.is_empty()));
         }
         value.to_string()
@@ -2076,7 +2076,7 @@ pub mod app_3d {
             window_generations: &'static str = en: "Generations", de: "Generationen";
             window_generate_form: &'static str = en: "Form", de: "Formular";
             window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
-            delete_selection: &'static str = en: "Delete selection", de: "Auswahl loeschen";
+            delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
         }
     }
 
@@ -2106,36 +2106,36 @@ pub mod app_3d {
             ("nodeGraphViewport", "Set Viewport", "Ansicht festlegen"),
             ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
             ("nodeGraphEdit", "Edit Graph", "Graph bearbeiten"),
-            ("deleteSelection", "Delete Selection", "Auswahl loeschen"),
+            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
             ("removeWidget", "Remove Widget", "Element entfernen"),
             ("moveMediaNode", "Move Node", "Knoten verschieben"),
-            ("addWidget", "Add Widget", "Element hinzufuegen"),
+            ("addWidget", "Add Widget", "Element hinzufügen"),
             ("patchFlowWidgets", "Patch Flow Widgets", "Flow-Elemente aktualisieren"),
             ("reorganize", "Reorganize", "Neu anordnen"),
             ("translateSelection", "Translate Selection", "Auswahl verschieben"),
             ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
             ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-            ("addGeneration", "Add Generation", "Generation hinzufuegen"),
+            ("addGeneration", "Add Generation", "Generation hinzufügen"),
             ("removeGeneration", "Remove Generation", "Generation entfernen"),
             ("renameGeneration", "Rename Generation", "Generation umbenennen"),
             ("updateGenerationValues", "Update Generation Values", "Generationswerte aktualisieren"),
             ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectNode", "Select Node", "Knoten auswaehlen"),
+            ("selectNode", "Select Node", "Knoten auswählen"),
             ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
             ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
-            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrueckt"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
-            ("worldSelect", "World Select", "Welt auswaehlen"),
+            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
+            ("worldSelect", "World Select", "Welt auswählen"),
             ("worldHover", "World Hover", "Welt-Hover"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setLodMode", "Set Lod Mode", "LOD-Modus festlegen"),
             ("setShowMode", "Set Show Mode", "Anzeigemodus festlegen"),
             ("toggleSun", "Toggle Sun", "Sonne umschalten"),
             ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-            ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+            ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
-            ("selectGeneration", "Select Generation", "Generation auswaehlen"),
+            ("selectGeneration", "Set Generation", "Generation auswählen"),
         ];
         semio_framework_plugin::localized_label_map(is_de, ENTRIES)
     }

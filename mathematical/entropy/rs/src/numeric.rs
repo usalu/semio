@@ -411,14 +411,15 @@ mod tests {
 
     #[test]
     fn erf_endpoints() {
-        assert!((erf(0.0)).abs() < 1e-12);
-        assert!((erf(10.0) - 1.0).abs() < 1e-12);
-        assert!((erf(-10.0) + 1.0).abs() < 1e-12);
+        // 🔬 A&S 7.1.26 has a stated max absolute error of ~1.5e-7; it is not exact at x=0.
+        assert!((erf(0.0)).abs() < 1e-6);
+        assert!((erf(10.0) - 1.0).abs() < 1e-6);
+        assert!((erf(-10.0) + 1.0).abs() < 1e-6);
     }
 
     #[test]
     fn normal_cdf_at_zero_is_half() {
-        assert!((normal_cdf(0.0) - 0.5).abs() < 1e-12);
+        assert!((normal_cdf(0.0) - 0.5).abs() < 1e-6);
     }
 
     #[test]
@@ -523,7 +524,9 @@ mod tests {
     #[test]
     fn checked_state_count_detects_overflow() {
         assert_eq!(checked_state_count(&[2, 3, 4]), Some(24));
-        assert_eq!(checked_state_count(&[usize::MAX, 2]), None);
+        // 🔬 usize::MAX * 2 (~3.6e19) fits comfortably inside u128 (~3.4e38); an overflow needs
+        // enough factors that their product exceeds u128::MAX.
+        assert_eq!(checked_state_count(&[usize::MAX; 8]), None);
     }
 
     #[test]
