@@ -6892,42 +6892,14 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<PluginBridgeEntry>, 
 }
 
 //#region 🏠🧳PluginHostConfig
-/// 🏠🧳 Mirrors `PluginHostConfig`/`resolvePluginHostConfig` in `framework/core/js/index.ts` — declares,
-/// for a plugin filter whose manifest offers a host-style multi-app experience (one app is the
-/// landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
-/// pair), which app ids play which role. Callers resolve controller ids and default panel tabs from the
-/// *loaded manifest*'s own `controller_id`/`panel_tabs` on those apps rather than hardcoding separate
-/// literals. A plugin filter absent here simply boots through the ordinary single-app path.
-pub struct PluginHostConfig {
-    pub plugin_id: &'static str,
-    pub landing_app_id: &'static str,
-    pub host_app_id: &'static str,
-}
+#[path = "../../../plugin/registry/generated/hosts.rs"]
+mod generated_plugin_hosts;
 
-const PLUGIN_HOST_CONFIGS: &[PluginHostConfig] = &[PluginHostConfig {
-    plugin_id: "s",
-    landing_app_id: "home",
-    host_app_id: "studio",
-}];
-
-pub fn resolve_plugin_host_config(plugin_filter: &str) -> Option<&'static PluginHostConfig> {
-    PLUGIN_HOST_CONFIGS.iter().find(|entry| entry.plugin_id == plugin_filter)
-}
+pub use generated_plugin_hosts::{is_studio_mode, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
 //#endregion 🏠🧳PluginHostConfig
 
-pub fn is_studio_mode(plugin_filter: &str) -> bool {
-    resolve_plugin_host_config(plugin_filter).is_some()
-}
-
-pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, plugin_filter: &str) -> Vec<PluginBridgeEntry> {
-    if is_studio_mode(plugin_filter) {
-        entries
-    } else {
-        entries
-            .into_iter()
-            .filter(|entry| entry.plugin_id == plugin_filter)
-            .collect()
-    }
+pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, _plugin_filter: &str) -> Vec<PluginBridgeEntry> {
+    entries
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -6940,7 +6912,7 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
             .filter_map(|entry| entry.file_name().to_str().map(str::to_string))
             .collect()
     } else {
-        vec![plugin_filter.to_string()]
+        vec![resolve_registry_plugin_id(plugin_filter).to_string()]
     };
     let mut entries = Vec::new();
     for plugin_id in plugin_ids {

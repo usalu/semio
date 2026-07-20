@@ -2418,14 +2418,14 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
     return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
   }
-  if (id === "engagement-possibles-toggle" || id === "ui.engagement.suggestions") {
-    return _controlLabelIdResolver("ui.engagement.suggestions");
+  if (id === "search-possibles-toggle" || id === "ui.windowSearch.suggestions") {
+    return _controlLabelIdResolver("ui.windowSearch.suggestions");
   }
   if (id === "engagement-options" || id === "ui.engagement.actions") {
     return _controlLabelIdResolver("ui.engagement.actions");
   }
-  if (id === "engagement-input" || id === "ui.engagement.action") {
-    return _controlLabelIdResolver("ui.engagement.action");
+  if (id === "search-input" || id === "ui.windowSearch.action") {
+    return _controlLabelIdResolver("ui.windowSearch.action");
   }
   if (id.startsWith("playground.panel.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("playground.panel.".length)}`);
@@ -2441,10 +2441,10 @@ export function panelKindFromPanelToggleControlId(id: string): string | undefine
   return undefined;
 }
 
-/** @emoji 🏷️ True for legacy engagement element ids that must not surface as humanized tooltips. */
+/** @emoji 🏷️ True for internal engagement/search chrome element ids that must not surface as humanized tooltips. */
 export function isInternalChromeControlId(id: string | undefined | null): boolean {
   if (!id) return false;
-  return id.startsWith("engagement-") || id.startsWith("engagement.");
+  return id.startsWith("engagement-") || id.startsWith("engagement.") || id.startsWith("search-") || id.startsWith("search.");
 }
 
 /** @emoji 🔤 Turns a control id segment into a short title (e.g. `panelToggle` → `Panel Toggle`). */
@@ -2794,12 +2794,15 @@ export type UiTranslationSchema = {
       readonly demo: UiLabelValue;
     };
     readonly engagement: {
+      readonly actions: UiLabelValue;
+      readonly viewport: UiLabelValue;
+    };
+    readonly windowSearch: {
+      readonly title: UiLabelValue;
       readonly action: UiLabelValue;
       readonly actionActive: UiLabelValue;
-      readonly actions: UiLabelValue;
       readonly suggestions: UiLabelValue;
       readonly noMatches: UiLabelValue;
-      readonly viewport: UiLabelValue;
     };
   };
   readonly settings: {
@@ -3350,6 +3353,26 @@ export const uiChromeTranslationBundles = {
           },
         },
         engagement: {
+          actions: {
+            label: {
+              normal: "Aktionen",
+              beginner: "Schnellaktionen für den aktuellen Schritt",
+            },
+          },
+          viewport: {
+            label: {
+              normal: "Ansicht",
+              beginner: "Ansicht",
+            },
+          },
+        },
+        windowSearch: {
+          title: {
+            label: {
+              normal: "Suche",
+              beginner: "Suche",
+            },
+          },
           action: {
             label: {
               normal: "Aktion",
@@ -3362,12 +3385,6 @@ export const uiChromeTranslationBundles = {
               beginner: "Aktion oder Zahl für den aktuellen Schritt",
             },
           },
-          actions: {
-            label: {
-              normal: "Aktionen",
-              beginner: "Schnellaktionen für den aktuellen Schritt",
-            },
-          },
           suggestions: {
             label: {
               normal: "Vorschläge",
@@ -3378,12 +3395,6 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Keine Treffer",
               beginner: "Keine passenden Aktionen",
-            },
-          },
-          viewport: {
-            label: {
-              normal: "Ansicht",
-              beginner: "Ansicht",
             },
           },
         },
@@ -3899,6 +3910,26 @@ export const uiChromeTranslationBundles = {
           },
         },
         engagement: {
+          actions: {
+            label: {
+              normal: "Actions",
+              beginner: "Quick actions for the current step",
+            },
+          },
+          viewport: {
+            label: {
+              normal: "Viewport",
+              beginner: "Viewport",
+            },
+          },
+        },
+        windowSearch: {
+          title: {
+            label: {
+              normal: "Search",
+              beginner: "Search",
+            },
+          },
           action: {
             label: {
               normal: "Action",
@@ -3911,12 +3942,6 @@ export const uiChromeTranslationBundles = {
               beginner: "Action or number for the current step",
             },
           },
-          actions: {
-            label: {
-              normal: "Actions",
-              beginner: "Quick actions for the current step",
-            },
-          },
           suggestions: {
             label: {
               normal: "Suggestions",
@@ -3927,12 +3952,6 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "No matches",
               beginner: "No matching actions",
-            },
-          },
-          viewport: {
-            label: {
-              normal: "Viewport",
-              beginner: "Viewport",
             },
           },
         },
@@ -4703,14 +4722,15 @@ function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
 }
 
 /** @emoji 🎓 Live-tracks the DOM rect of an introduction step's anchor, re-measuring on element resize
- * and window resize. Retries briefly if the anchor isn't mounted yet (a folded panel/utility bar) instead
- * of failing closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller
- * treats as a `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first
- * mounted selector wins in order — the primary anchor first, then each fallback (e.g. a folded Utilities
- * rail's unfold chip while the utility button is still hidden). Attaching to a fallback keeps polling for
- * a higher-priority selector to mount (e.g. the real utility button appearing once the rail unfolds) and
- * upgrades to it — otherwise the info box would stay pinned to the folded chip's rect while the unfolded
- * content it's meant to point at renders underneath it. */
+ * and window resize. Waits for the anchor to mount (a folded panel/utility bar) instead of failing
+ * closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller treats as a
+ * `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first mounted selector
+ * wins in order — the primary anchor first, then each fallback (e.g. a folded Utilities rail's unfold chip
+ * while the utility button is still hidden). A `MutationObserver` on the document (rather than a polling
+ * timer, which would either stop too early or — if kept alive waiting for an upgrade that may never come,
+ * e.g. in a test fixture that never unfolds the rail — leak forever) re-attempts attachment on every DOM
+ * change, so a fallback attachment upgrades to the real anchor the moment it mounts (e.g. once the rail
+ * unfolds) without ever polling when the DOM is idle. */
 function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = []): IntroductionAnchorResolution {
   const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
 
@@ -4722,46 +4742,39 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
     }
     let element: Element | null = null;
     let activeSelectorIndex = -1;
-    let observer: ResizeObserver | null = null;
-    let retryTimer: ReturnType<typeof setInterval> | null = null;
+    let resizeObserver: ResizeObserver | null = null;
 
     const measure = () => {
       if (element) setResolution({ rect: domRectToIntroductionRect(element.getBoundingClientRect()), viaFallback: activeSelectorIndex > 0 });
     };
-    const attach = (): boolean => {
+    /** Re-attaches to the best (lowest-index) selector currently mounted, never downgrading from what's
+     * already attached — a no-op once the primary (index 0) is attached. */
+    const attach = () => {
       for (let index = 0; index < selectors.length; index += 1) {
-        if (index >= activeSelectorIndex && activeSelectorIndex !== -1) break;
+        if (activeSelectorIndex !== -1 && index >= activeSelectorIndex) break;
         const candidate = document.querySelector(selectors[index]!);
         if (!candidate) continue;
-        observer?.disconnect();
+        resizeObserver?.disconnect();
         element = candidate;
         activeSelectorIndex = index;
         measure();
-        observer = new ResizeObserver(measure);
-        observer.observe(candidate);
-        return true;
+        resizeObserver = new ResizeObserver(measure);
+        resizeObserver.observe(candidate);
+        return;
       }
-      return activeSelectorIndex !== -1;
-    };
-    const attachOrRetry = (): boolean => {
-      const attached = attach();
-      if (!attached) setResolution({ rect: null, viaFallback: false });
-      return attached && activeSelectorIndex === 0;
+      if (activeSelectorIndex === -1) setResolution({ rect: null, viaFallback: false });
     };
 
-    if (!attachOrRetry()) {
-      retryTimer = setInterval(() => {
-        if (attachOrRetry() && retryTimer) {
-          clearInterval(retryTimer);
-          retryTimer = null;
-        }
-      }, 200);
-    }
+    attach();
+    const mutationObserver = new MutationObserver(() => {
+      if (activeSelectorIndex !== 0) attach();
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
-      observer?.disconnect();
-      if (retryTimer) clearInterval(retryTimer);
+      resizeObserver?.disconnect();
+      mutationObserver.disconnect();
       window.removeEventListener("resize", onResize);
       setResolution({ rect: null, viaFallback: false });
     };
@@ -4866,12 +4879,12 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     return () => observer.disconnect();
   }, [stepIndex]);
 
-  const skipLabel = useLabel("ui.introduction.skip");
-  const backLabel = useLabel("ui.introduction.back");
-  const nextLabel = useLabel("ui.introduction.next");
-  const doneLabel = useLabel("ui.introduction.done");
-  const activateToContinueTemplate = useLabel("ui.introduction.activateToContinue");
-  const performToContinueTemplate = useLabel("ui.introduction.performToContinue");
+  const skipLabel = useLabel("introduction.skip");
+  const backLabel = useLabel("introduction.back");
+  const nextLabel = useLabel("introduction.next");
+  const doneLabel = useLabel("introduction.done");
+  const activateToContinueTemplate = useLabel("introduction.activateToContinue");
+  const performToContinueTemplate = useLabel("introduction.performToContinue");
 
   const isLast = stepIndex >= introduction.steps.length - 1;
   const skip = reactHostPort.useCallback(() => onDismiss(false), [onDismiss]);
@@ -6406,6 +6419,15 @@ export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedCla
 /** @emoji 📐 Action input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
 export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
 
+/** @emoji 📐 Outer overlay for the floating window search pane along the top-middle edge, centered between the engagement and measures overlays. */
+export const windowSearchOverlayClass = "pointer-events-none absolute top-0 left-1/2 z-panel flex max-h-full -translate-x-1/2 flex-col items-center p-0";
+
+/** @emoji 📐 Collapsed search chrome hugging the top-middle edge. */
+export const windowSearchOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
+
+/** @emoji 📐 Search input body beside the search chrome toggle: matches the chrome's height for a bare input. */
+export const windowSearchBodyClass = windowEngagementBodyClass;
+
 /** @emoji 📐 Outer overlay for the floating window utility bar along the bottom-left edge. */
 export const utilityBarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
@@ -6443,7 +6465,7 @@ export function readWindowChromeScrollClearancePx(element?: Element | null, root
 export function measureWindowChromeScrollClearancePx(element?: Element | null): number {
   const windowBody = element?.closest('[data-slot="window-body"]');
   if (!windowBody) return 0;
-  const overlays = windowBody.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]');
+  const overlays = windowBody.querySelectorAll('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]');
   const bodyTop = windowBody.getBoundingClientRect().top;
   let maxBottom = bodyTop;
   for (const overlay of overlays) {
@@ -6460,7 +6482,7 @@ export function isWindowContentDeadLineHost(element: Element | null): boolean {
   if (element.closest("[data-window-content-layout=edgeless]")) return false;
   const windowBody = element.closest('[data-slot="window-body"]');
   if (!windowBody) return false;
-  return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-measures-overlay"]') != null;
+  return windowBody.querySelector('[data-slot="window-engagement-overlay"], [data-slot="window-search-overlay"], [data-slot="window-measures-overlay"]') != null;
 }
 
 /** @emoji 🏝️ Resolves the default dead-line scroll offset for chrome-aware window bodies. */
@@ -6520,7 +6542,7 @@ export function useWindowContentDeadLineScroll(scrollerRef: React.RefObject<HTML
     if (!body) return () => el.removeEventListener("scroll", onScroll);
     const ro = new ResizeObserver(applyDefault);
     ro.observe(body);
-    for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
+    for (const slot of ["window-engagement-overlay", "window-search-overlay", "window-measures-overlay"] as const) {
       const overlay = body.querySelector(`[data-slot="${slot}"]`);
       if (overlay) ro.observe(overlay);
     }
@@ -15974,6 +15996,34 @@ const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowI
 
 // #endregion 🪟WindowEngagementChrome
 
+// #region 🪟WindowSearchChrome
+
+interface WindowSearchChromeProps {
+  windowId: string;
+  expanded: boolean;
+  onToggle: () => void;
+}
+
+/** @emoji 🔎 Title bar for the top-middle window search pane: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+const WindowSearchChrome: React.FC<WindowSearchChromeProps> = ({ windowId, expanded, onToggle }) => {
+  const searchLabel = useLabel(UI_WINDOW_SEARCH.title) || WINDOW_SEARCH_USER.title;
+  if (!expanded) {
+    return (
+      <div data-slot="window-search-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-center border-b-0")}>
+        <ActionGroupItem id={`${windowId}-window-search-toggle`} icon="chevron-down" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      </div>
+    );
+  }
+
+  return (
+    <div data-slot="window-search-chrome" data-expanded="true" className={cn(windowMeasuresChromeClass, "justify-center")}>
+      <ActionGroupItem id={`${windowId}-window-search-toggle`} icon="chevron-up" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+    </div>
+  );
+};
+
+// #endregion 🪟WindowSearchChrome
+
 // #region 🪟UtilityBarChrome
 
 interface UtilityBarChromeProps {
@@ -17097,30 +17147,9 @@ export interface EngagementOption {
   onPress?: () => void;
 }
 
-export interface EngagementInput {
-  id?: string;
-  value?: string;
-  placeholder?: string;
-  onChange?: (value: string) => void;
-  onSubmit?: (value: string) => void;
-  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty action. */
-  onRepeatLast?: () => void;
-  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
-  onAbort?: () => void;
-  disabled?: boolean;
-}
-
 export interface EngagementStatus {
   id: string;
   content: React.ReactNode;
-}
-
-/** @emoji 🔎 One autocomplete row for {@link EngagementSpec.possibleEngagements} (interaction, transition, …). */
-export interface EngagementPossible {
-  id: string;
-  label: string;
-  detail?: string;
-  onSelect?: () => void;
 }
 
 /** @emoji 🔘 One discrete option on an engagement {@link EngagementRingControl}. */
@@ -17211,20 +17240,30 @@ export interface EngagementSelectControl {
 /** @emoji 🎛 Optional engagement UI control for the active action step. */
 export type EngagementControl = EngagementSliderControl | EngagementStepperControl | EngagementRingControl | EngagementToggleGroupControl | EngagementSelectControl;
 
-/** @emoji 🏷 i18n keys for window action chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
+/** @emoji 🏷 i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
-  action: "ui.engagement.action",
-  actionActive: "ui.engagement.actionActive",
   actions: "ui.engagement.actions",
-  suggestions: "ui.engagement.suggestions",
-  noMatches: "ui.engagement.noMatches",
 } as const;
 
-/** @emoji 🏷 Default English copy for window action chrome (matches `ui.engagement.*` en bundle). */
+/** @emoji 🏷 Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
+  actionsAria: "Actions",
+} as const;
+
+/** @emoji 🏷 i18n keys for the window search pane (`ui.windowSearch.*` in {@link uiChromeTranslationBundles}; distinct from the `ui.search.*` command palette). */
+export const UI_WINDOW_SEARCH = {
+  title: "ui.windowSearch.title",
+  action: "ui.windowSearch.action",
+  actionActive: "ui.windowSearch.actionActive",
+  suggestions: "ui.windowSearch.suggestions",
+  noMatches: "ui.windowSearch.noMatches",
+} as const;
+
+/** @emoji 🏷 Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle). */
+export const WINDOW_SEARCH_USER = {
+  title: "Search",
   actionPlaceholder: "Action",
   actionPlaceholderActive: "Action or value",
-  actionsAria: "Actions",
   suggestionsAria: "Suggestions",
   noMatches: "No matches",
 } as const;
@@ -17256,7 +17295,31 @@ export function engagementActionTokenEquals(a: string, b: string): boolean {
   return normalizeEngagementActionText(a).toLowerCase() === normalizeEngagementActionText(b).toLowerCase();
 }
 
-function engagementPossibleRankScore(query: string, item: EngagementPossible): number {
+// #region 🔎WindowSearch
+
+/** @emoji ⌨️ One typed action line for a window's {@link SearchSpec}. */
+export interface SearchInput {
+  id?: string;
+  value?: string;
+  placeholder?: string;
+  onChange?: (value: string) => void;
+  onSubmit?: (value: string) => void;
+  /** @emoji 🔁 Restarts the last finalized engagement when Space is pressed with an empty action. */
+  onRepeatLast?: () => void;
+  /** @emoji ⎋ Cancels the active engagement session (Escape), e.g. abort interaction or clear action. */
+  onAbort?: () => void;
+  disabled?: boolean;
+}
+
+/** @emoji 🔎 One autocomplete row for {@link SearchSpec.possibles} (interaction, transition, …). */
+export interface SearchPossible {
+  id: string;
+  label: string;
+  detail?: string;
+  onSelect?: () => void;
+}
+
+function searchPossibleRankScore(query: string, item: SearchPossible): number {
   const ql = normalizeEngagementActionText(query).toLowerCase();
   if (!ql) return -1;
   const label = normalizeEngagementActionText(item.label).toLowerCase();
@@ -17270,43 +17333,43 @@ function engagementPossibleRankScore(query: string, item: EngagementPossible): n
   return -1;
 }
 
-/** @emoji 🎯 Resolves a pointer event target to an element for engagement suggestion hit-testing. */
-function engagementSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
+/** @emoji 🎯 Resolves a pointer event target to an element for search suggestion hit-testing. */
+function searchSuggestionPointerTarget(event: Pick<PointerEvent, "target">): Element | null {
   const target = event.target;
   if (target instanceof Element) return target;
   if (target instanceof Text) return target.parentElement;
   return null;
 }
 
-/** @emoji 🎯 True when a pointer event targets an engagement suggestion action row. */
-export function isEngagementSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
-  return Boolean(engagementSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
+/** @emoji 🎯 True when a pointer event targets a search suggestion action row. */
+export function isSearchSuggestionActionTarget(event: Pick<PointerEvent, "target">): boolean {
+  return Boolean(searchSuggestionPointerTarget(event)?.closest('[cmdk-item], [data-slot="command-item"]'));
 }
 
-/** @emoji 🔎 Filters {@link EngagementPossible} rows by label, detail, and id for the engagement action line. */
-export function filterEngagementPossibles(query: string, items: readonly EngagementPossible[]): EngagementPossible[] {
+/** @emoji 🔎 Filters {@link SearchPossible} rows by label, detail, and id for the window search action line. */
+export function filterSearchPossibles(query: string, items: readonly SearchPossible[]): SearchPossible[] {
   const trimmed = normalizeEngagementActionText(query).toLowerCase();
   if (!trimmed) return [...items];
   return items
-    .map((item) => ({ item, score: engagementPossibleRankScore(query, item) }))
+    .map((item) => ({ item, score: searchPossibleRankScore(query, item) }))
     .filter((row) => row.score >= 0)
     .sort((a, b) => b.score - a.score)
     .map((row) => row.item);
 }
 
-/** @emoji ⌨️ Inline completion segments for one {@link EngagementPossible} using label casing for the matched name prefix. */
-export interface EngagementInlineCompletion {
+/** @emoji ⌨️ Inline completion segments for one {@link SearchPossible} using label casing for the matched name prefix. */
+export interface SearchInlineCompletion {
   readonly prefix: string;
   readonly suffix: string;
 }
 
 /** @emoji ⌨️ Returns PascalCase inline completion when query prefix-matches the possible's name, detail, or id. */
-export function engagementInlineCompletion(query: string, item: EngagementPossible | undefined): EngagementInlineCompletion | null {
+export function searchInlineCompletion(query: string, item: SearchPossible | undefined): SearchInlineCompletion | null {
   if (!query.trim() || !item) return null;
   const q = query;
   const ql = q.toLowerCase();
   const label = normalizeEngagementActionText(item.label);
-  let best: EngagementInlineCompletion | null = null;
+  let best: SearchInlineCompletion | null = null;
   const consider = (matched: boolean) => {
     if (!matched || !label.toLowerCase().startsWith(ql)) return;
     const prefix = label.slice(0, q.length);
@@ -17320,32 +17383,32 @@ export function engagementInlineCompletion(query: string, item: EngagementPossib
   return best;
 }
 
-/** @emoji ⌨️ Inline completion suffix for one {@link EngagementPossible} (longest prefix match on label, detail, or id). */
-export function engagementCompletionSuffix(query: string, item: EngagementPossible | undefined): string {
-  return engagementInlineCompletion(query, item)?.suffix ?? "";
+/** @emoji ⌨️ Inline completion suffix for one {@link SearchPossible} (longest prefix match on label, detail, or id). */
+export function searchCompletionSuffix(query: string, item: SearchPossible | undefined): string {
+  return searchInlineCompletion(query, item)?.suffix ?? "";
 }
 
-/** @emoji ⌨️ First non-empty inline completion across ranked {@link EngagementPossible} matches. */
-export function engagementActiveInlineCompletion(query: string, matches: readonly EngagementPossible[], index: number): EngagementInlineCompletion | null {
+/** @emoji ⌨️ First non-empty inline completion across ranked {@link SearchPossible} matches. */
+export function searchActiveInlineCompletion(query: string, matches: readonly SearchPossible[], index: number): SearchInlineCompletion | null {
   if (!query.trim() || !matches.length) return null;
   const order = [matches[Math.min(index, matches.length - 1)]!, ...matches];
-  const seen = new Set<EngagementPossible>();
+  const seen = new Set<SearchPossible>();
   for (const item of order) {
     if (seen.has(item)) continue;
     seen.add(item);
-    const completion = engagementInlineCompletion(query, item);
+    const completion = searchInlineCompletion(query, item);
     if (completion) return completion;
   }
   return null;
 }
 
-/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link EngagementPossible} matches. */
-export function engagementActiveCompletionSuffix(query: string, matches: readonly EngagementPossible[], index: number): string {
-  return engagementActiveInlineCompletion(query, matches, index)?.suffix ?? "";
+/** @emoji ⌨️ First non-empty inline completion suffix across ranked {@link SearchPossible} matches. */
+export function searchActiveCompletionSuffix(query: string, matches: readonly SearchPossible[], index: number): string {
+  return searchActiveInlineCompletion(query, matches, index)?.suffix ?? "";
 }
 
 /** @emoji 🔎 Renders a possible name with the query prefix emphasized using label casing (e.g. **B**ox). */
-export function engagementHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
+export function searchHighlightedLabel(label: string, query: string, detail?: string): React.ReactNode {
   const displayLabel = normalizeEngagementActionText(label);
   const trimmed = normalizeEngagementActionText(query);
   if (!trimmed) return displayLabel;
@@ -17401,7 +17464,7 @@ export function isUiTypingTarget(t: EventTarget | null): boolean {
   if (t.closest('[data-slot="input-root"], [data-slot="textarea-root"], [data-collapsed="true"], [data-slot="command-input"], [data-slot="select-trigger"], [data-slot="select-content"]')) {
     return true;
   }
-  return Boolean(t.closest('[data-slot="engagement"] input, [data-slot="engagement"] textarea'));
+  return Boolean(t.closest('[data-slot="search"] input, [data-slot="search"] textarea'));
 }
 
 /** @emoji 🚫 Capture-phase listeners: native context menu off everywhere; Tab focus traversal off outside {@link isUiTypingTarget}; form-control browser defaults on focus. */
@@ -17428,47 +17491,47 @@ export function installElementsSurfaceBrowserDefaultSuppression(bindings: Return
   bindings.listen(document, "focusin", onFocusIn as EventListener, true);
 }
 
-/** @emoji ⌨️ True when the event target is already the active window engagement action field. */
-export function isEngagementActionTypingTarget(t: EventTarget | null): boolean {
+/** @emoji ⌨️ True when the event target is already the active window search action field. */
+export function isWindowSearchTypingTarget(t: EventTarget | null): boolean {
   if (!(t instanceof HTMLElement)) return false;
-  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="engagement"][data-active="true"] textarea'));
+  return Boolean(t.closest('[data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] [data-slot="input"], [data-slot="window"][data-active="true"] [data-slot="search"][data-active="true"] textarea'));
 }
 
-/** @emoji ⌨️ True when printable keys should route to the active window engagement action (skip other text fields). */
-export function shouldRouteKeysToWindowEngagement(t: EventTarget | null): boolean {
-  if (isEngagementActionTypingTarget(t)) return false;
-  const engagementField = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+/** @emoji ⌨️ True when printable keys should route to the active window search action (skip other text fields). */
+export function shouldRouteKeysToWindowSearch(t: EventTarget | null): boolean {
+  if (isWindowSearchTypingTarget(t)) return false;
+  const searchField = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
   const active = document.activeElement;
-  if (engagementField && (active === engagementField || engagementField.contains(active))) return false;
-  if (active instanceof HTMLElement && isUiTypingTarget(active) && !active.closest('[data-slot="engagement"]')) return false;
+  if (searchField && (active === searchField || searchField.contains(active))) return false;
+  if (active instanceof HTMLElement && isUiTypingTarget(active) && !active.closest('[data-slot="search"]')) return false;
   if (isUiTypingTarget(t)) return false;
   return true;
 }
 
-/** @emoji ⌨️ Returns the window engagement action input, optionally requiring {@link EngagementProps.active}. */
-export function queryWindowEngagementInput(activeOnly = false): HTMLInputElement | null {
-  const engagementActive = activeOnly ? '[data-active="true"]' : "";
-  return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="engagement"]${engagementActive} [data-slot="input"]`);
+/** @emoji ⌨️ Returns the window search action input, optionally requiring {@link SearchProps.active}. */
+export function queryWindowSearchInput(activeOnly = false): HTMLInputElement | null {
+  const searchActive = activeOnly ? '[data-active="true"]' : "";
+  return document.querySelector<HTMLInputElement>(`[data-slot="window"][data-active="true"] [data-slot="search"]${searchActive} [data-slot="input"]`);
 }
 
-/** @emoji ⌨️ Focuses the action input in the active window engagement overlay, if present. */
-export function focusActiveEngagementInput(): boolean {
+/** @emoji ⌨️ Focuses the action input in the active window search overlay, if present. */
+export function focusActiveSearchInput(): boolean {
   const active = document.activeElement;
   if (active instanceof HTMLElement && active.closest('[data-slot="engagement-control"]')) return false;
-  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
   if (!field || field.disabled) return false;
   field.focus({ preventScroll: true });
   return true;
 }
 
-/** @emoji ✅ True when Space/Enter should pick the active filtered {@link EngagementPossible} instead of submitting the raw draft. */
-export function shouldActivateEngagementPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
+/** @emoji ✅ True when Space/Enter should pick the active filtered {@link SearchPossible} instead of submitting the raw draft. */
+export function shouldActivateSearchPossibleOnConfirm(draft: string, showPossiblesList: boolean, filteredCount: number): boolean {
   if (!filteredCount) return false;
   return showPossiblesList || Boolean(draft.trim());
 }
 
-/** @emoji ␣ Applies Space on an engagement action line (step submit vs repeat-last when idle). */
-export function applyEngagementSpaceAction(input: EngagementInput, draft: string, sessionActive: boolean): boolean {
+/** @emoji ␣ Applies Space on a window search action line (step submit vs repeat-last when idle). */
+export function applySearchSpaceAction(input: SearchInput, draft: string, sessionActive: boolean): boolean {
   if (input.disabled) return false;
   if (!draft.trim()) {
     if (sessionActive) {
@@ -17485,60 +17548,74 @@ export function applyEngagementSpaceAction(input: EngagementInput, draft: string
   return true;
 }
 
-/** @emoji 🔁 Routes Space outside the engagement field: idle empty → {@link EngagementInput.onRepeatLast}; session or typed draft → {@link EngagementInput.onSubmit}. */
-export function routeWindowEngagementSpace(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
-  const input = engagement?.input;
+/** @emoji 🔁 Routes Space outside the search field: idle empty → {@link SearchInput.onRepeatLast}; session or typed draft → {@link SearchInput.onSubmit}. */
+export function routeWindowSearchSpace(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
+  const input = search?.input;
   if (!input || event.defaultPrevented || event.isComposing) return false;
   if (event.key !== " " || event.ctrlKey || event.metaKey || event.altKey) return false;
-  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
-  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  if (!shouldRouteKeysToWindowSearch(event.target)) return false;
+  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
   const draft = normalizeEngagementActionText(input.value ?? field?.value ?? "");
-  return applyEngagementSpaceAction(input, draft, Boolean(engagement?.sessionActive));
+  return applySearchSpaceAction(input, draft, Boolean(search?.sessionActive));
 }
 
-/** @emoji ⌨️ Routes a printable key to the active window engagement action when focus is elsewhere in the window. */
-export function routeWindowEngagementKeydown(engagement: EngagementSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
-  const input = engagement?.input;
+/** @emoji ⌨️ Routes a printable key to the active window search action when focus is elsewhere in the window. */
+export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "defaultPrevented" | "isComposing" | "target">): boolean {
+  const input = search?.input;
   if (!input || input.disabled || event.defaultPrevented || event.isComposing) return false;
-  if (!shouldRouteKeysToWindowEngagement(event.target)) return false;
+  if (!shouldRouteKeysToWindowSearch(event.target)) return false;
   if (event.key === " ") return false;
   const printable = event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey;
   if (!printable) return false;
-  const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+  const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
   const next = normalizeEngagementActionText(`${input.value ?? field?.value ?? ""}${event.key}`);
   input.onChange?.(next);
   return true;
 }
 
-/** @emoji ⎋ Routes Escape to {@link EngagementInput.onAbort} when window engagement chrome is active (skips other typing targets). */
-export function routeWindowEngagementEscape(
-  engagement: EngagementSpec | undefined,
+/** @emoji ⎋ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
+export function routeWindowSearchEscape(
+  search: SearchSpec | undefined,
   event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">,
   zone: { readonly chromeVisible: boolean; readonly actionActive: boolean },
 ): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
-  const onAbort = engagement?.input?.onAbort;
+  const onAbort = search?.input?.onAbort;
   if (!onAbort) return false;
-  if (!engagement?.sessionActive && !zone.chromeVisible && !zone.actionActive) return false;
-  if (isUiTypingTarget(event.target) && !isEngagementActionTypingTarget(event.target)) return false;
+  if (!search?.sessionActive && !zone.chromeVisible && !zone.actionActive) return false;
+  if (isUiTypingTarget(event.target) && !isWindowSearchTypingTarget(event.target)) return false;
   const focused = document.activeElement;
-  if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return false;
+  if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="search"]')) return false;
   onAbort();
   return true;
 }
 
-/** @emoji 💬 Floating window engagement payload with options, input, and status lines. */
+/** @emoji 🔎 Floating top-middle window search payload: typed action input and autocomplete possibles. */
+export interface SearchSpec {
+  /** @emoji 🎯 Ongoing engagement: chrome stays visible; action input accepts step values. */
+  sessionActive?: boolean;
+  input?: SearchInput;
+  possibles?: SearchPossible[];
+}
+
+export interface SearchProps extends SearchSpec {
+  className?: string;
+  /** @emoji 🎯 When true, focuses the action input whenever this search pane belongs to the globally active window. */
+  active?: boolean;
+}
+
+// #endregion 🔎WindowSearch
+
+/** @emoji 💬 Floating window engagement payload with options, status, and controls. */
 export interface EngagementSpec {
-  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions; action input accepts step values. */
+  /** @emoji 🎯 Ongoing engagement: chrome stays visible; {@link options} are step transitions. */
   sessionActive?: boolean;
   options?: EngagementOption[];
-  input?: EngagementInput;
   /** @emoji 🎛 Optional slider, stepper, or ring control for the active step. */
   control?: EngagementControl;
   /** @emoji 🎛 Optional additional controls rendered below the primary control. */
   controls?: readonly EngagementControl[];
   status?: EngagementStatus[];
-  possibleEngagements?: EngagementPossible[];
 }
 
 export interface WindowLayoutWindowNode {
@@ -17579,8 +17656,6 @@ export function createEvenWindowLayout(windowIds: readonly string[]): WindowLayo
 
 export interface EngagementProps extends EngagementSpec {
   className?: string;
-  /** @emoji 🎯 When true, focuses the action input whenever this engagement belongs to the globally active window. */
-  active?: boolean;
 }
 
 function engagementControlLabel(control: EngagementControl): string | undefined {
@@ -17697,21 +17772,20 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   );
 }
 
-/** @emoji 💬 Top-aligned engagement: action input with optional right chevron for possibles; status and option buttons below. */
-const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, input, control, controls, status, possibleEngagements, className = "", active = false }) => {
-  const actionPlaceholderLabel = useLabel(UI_ENGAGEMENT.action);
-  const actionActivePlaceholderLabel = useLabel(UI_ENGAGEMENT.actionActive);
-  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
+// #region 🔎WindowSearch
+
+/** @emoji 🔎 Floating top-middle window search pane: action input with optional right chevron for possibles. */
+const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
+  const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
+  const actionActivePlaceholderLabel = useLabel(UI_WINDOW_SEARCH.actionActive);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const isControlledInput = !!input?.onChange;
   const draft = normalizeEngagementActionText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
-  const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
-  const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
-  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel || ENGAGEMENT_USER.actionPlaceholderActive : actionPlaceholderLabel || ENGAGEMENT_USER.actionPlaceholder);
+  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel || WINDOW_SEARCH_USER.actionPlaceholderActive : actionPlaceholderLabel || WINDOW_SEARCH_USER.actionPlaceholder);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
-  const engagementRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const filteredPossibles = reactHostPort.useMemo(() => filterEngagementPossibles(draft, possibleEngagements ?? []), [draft, possibleEngagements]);
+  const searchRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const filteredPossibles = reactHostPort.useMemo(() => filterSearchPossibles(draft, possibles ?? []), [draft, possibles]);
 
   reactHostPort.useEffect(() => {
     setActivePossibleIndex((index) => (filteredPossibles.length ? Math.min(index, filteredPossibles.length - 1) : 0));
@@ -17719,15 +17793,12 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
 
   reactHostPort.useEffect(() => {
     setPossiblesExpanded(false);
-  }, [possibleEngagements]);
+  }, [possibles]);
 
-  const hasOptions = !!options?.length;
   const hasInput = !!input;
-  const hasControl = !!control || !!controls?.length;
-  const hasStatus = !!status?.length;
-  const hasPossibles = !!possibleEngagements?.length;
+  const hasPossibles = !!possibles?.length;
   const showPossiblesList = hasPossibles && possiblesExpanded && filteredPossibles.length > 0;
-  const inlineCompletion = reactHostPort.useMemo(() => (showPossiblesList ? null : engagementActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)), [activePossibleIndex, draft, filteredPossibles, showPossiblesList]);
+  const inlineCompletion = reactHostPort.useMemo(() => (showPossiblesList ? null : searchActiveInlineCompletion(draft, filteredPossibles, activePossibleIndex)), [activePossibleIndex, draft, filteredPossibles, showPossiblesList]);
 
   const applyDraft = reactHostPort.useCallback(
     (value: string) => {
@@ -17740,7 +17811,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
 
   const pickingPossibleIdRef = reactHostPort.useRef<string | null>(null);
   const selectPossible = reactHostPort.useCallback(
-    (item: EngagementPossible) => {
+    (item: SearchPossible) => {
       if (pickingPossibleIdRef.current === item.id) return;
       pickingPossibleIdRef.current = item.id;
       item.onSelect?.();
@@ -17766,146 +17837,172 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
     wasActiveRef.current = active;
     if (!becameActive || !hasInput || input?.disabled) return;
     const focused = document.activeElement;
-    if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="engagement"]')) return;
-    const field = engagementRef.current?.querySelector<HTMLInputElement>('[data-slot="input"]');
+    if (focused instanceof HTMLElement && isUiTypingTarget(focused) && !focused.closest('[data-slot="search"]')) return;
+    const field = searchRef.current?.querySelector<HTMLInputElement>('[data-slot="input"]');
     field?.focus({ preventScroll: true });
   }, [active, hasInput, input?.disabled, input?.id]);
 
-  if (!hasOptions && !hasInput && !hasControl && !hasStatus) return null;
+  if (!hasInput) return null;
 
   return (
     <LevelProvider level="overlay">
       <div
-        ref={engagementRef}
-        data-slot="engagement"
+        ref={searchRef}
+        data-slot="search"
         data-active={active ? "true" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm", className)}
+      >
+        <Popover
+          open={showPossiblesList}
+          onOpenChange={(open) => {
+            if (!open) setPossiblesExpanded(false);
+          }}
+        >
+          <PopoverAnchor asChild>
+            <div data-slot="search-row" className="flex w-full min-w-0 items-stretch gap-half">
+              <div data-slot="search-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
+                <Input
+                  id={!input!.id || input!.id === "search-input" || isInternalChromeControlId(input!.id) ? UI_WINDOW_SEARCH.action : input!.id}
+                  className="relative z-[1] min-w-0 flex-1 bg-transparent"
+                  value={draft}
+                  tabIndex={active ? 0 : -1}
+                  onChange={(event) => applyDraft(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      if (showPossiblesList) {
+                        event.preventDefault();
+                        setPossiblesExpanded(false);
+                        return;
+                      }
+                      if (input!.onAbort) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        input!.onAbort();
+                      }
+                      return;
+                    }
+                    if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
+                      event.preventDefault();
+                      applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
+                      return;
+                    }
+                    if (event.key === "ArrowDown" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === "ArrowUp" && filteredPossibles.length) {
+                      event.preventDefault();
+                      setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
+                      return;
+                    }
+                    if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
+                      event.preventDefault();
+                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                      applySearchSpaceAction(input!, draft, sessionActive);
+                      return;
+                    }
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      if (shouldActivateSearchPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
+                      input!.onSubmit?.(draft);
+                    }
+                  }}
+                  placeholder={actionPlaceholder}
+                  disabled={input!.disabled}
+                  aria-label={actionPlaceholder}
+                />
+                {inlineCompletion ? (
+                  <div aria-hidden data-slot="search-inline-completion" className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm">
+                    <span className="relative inline-flex min-w-0 truncate">
+                      <span className="truncate text-transparent">{draft}</span>
+                      <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
+                    </span>
+                    <span data-slot="search-inline-suffix" className="truncate text-muted-foreground">
+                      {inlineCompletion.suffix}
+                    </span>
+                  </div>
+                ) : null}
+              </div>
+              {hasPossibles ? (
+                <Action
+                  id={UI_WINDOW_SEARCH.suggestions}
+                  aria-expanded={possiblesExpanded}
+                  aria-label={WINDOW_SEARCH_USER.suggestionsAria}
+                  data-slot="search-possibles-toggle"
+                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
+                  onClick={() => setPossiblesExpanded((open) => !open)}
+                />
+              ) : null}
+            </div>
+          </PopoverAnchor>
+          {hasPossibles ? (
+            <PopoverContent data-slot="search-autocomplete" className="w-[min(100vw-1rem,28rem)] p-0" align="end" onOpenAutoFocus={(event) => event.preventDefault()}>
+              <Command shouldFilter={false}>
+                <CommandList>
+                  {filteredPossibles.length ? (
+                    <CommandGroup>
+                      {filteredPossibles.map((item, index) => (
+                        <CommandItem
+                          key={item.id}
+                          value={item.id}
+                          data-active={index === activePossibleIndex ? "true" : undefined}
+                          className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            selectPossible(item);
+                          }}
+                          onMouseEnter={() => setActivePossibleIndex(index)}
+                          onSelect={() => selectPossible(item)}
+                        >
+                          <span className="truncate">{searchHighlightedLabel(item.label, draft, item.detail)}</span>
+                          {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  ) : (
+                    <CommandEmpty>{WINDOW_SEARCH_USER.noMatches}</CommandEmpty>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          ) : null}
+        </Popover>
+      </div>
+    </LevelProvider>
+  );
+};
+
+export { Search };
+
+// #endregion 🔎WindowSearch
+
+/** @emoji 💬 Top-aligned engagement: status heading, optional control, and option buttons. */
+const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options, control, controls, status, className = "" }) => {
+  const stepOptionsAriaLabel = useLabel(UI_ENGAGEMENT.actions);
+  const primaryStepStatus = sessionActive ? status?.find((row) => row.id === "engagement-step") : undefined;
+  const secondaryStatus = sessionActive ? status?.filter((row) => row.id !== "engagement-step") : status;
+
+  const hasOptions = !!options?.length;
+  const hasControl = !!control || !!controls?.length;
+  const hasStatus = !!status?.length;
+
+  if (!hasOptions && !hasControl && !hasStatus) return null;
+
+  return (
+    <LevelProvider level="overlay">
+      <div
+        data-slot="engagement"
+        data-session-active={sessionActive ? "true" : undefined}
         className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm", className)}
       >
         {primaryStepStatus ? (
           <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
             {primaryStepStatus.content}
           </div>
-        ) : null}
-        {hasInput ? (
-          <Popover
-            open={showPossiblesList}
-            onOpenChange={(open) => {
-              if (!open) setPossiblesExpanded(false);
-            }}
-          >
-            <PopoverAnchor asChild>
-              <div data-slot="engagement-action-row" className="flex w-full min-w-0 items-stretch gap-half">
-                <div data-slot="engagement-action-input" className="relative grid min-w-0 flex-1 [&_[data-slot=input-root]]:col-start-1 [&_[data-slot=input-root]]:row-start-1 [&_[data-slot=input-root]]:min-w-0">
-                  <Input
-                    id={!input!.id || input!.id === "engagement-input" || isInternalChromeControlId(input!.id) ? UI_ENGAGEMENT.action : input!.id}
-                    className="relative z-[1] min-w-0 flex-1 bg-transparent"
-                    value={draft}
-                    tabIndex={active ? 0 : -1}
-                    onChange={(event) => applyDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Escape") {
-                        if (showPossiblesList) {
-                          event.preventDefault();
-                          setPossiblesExpanded(false);
-                          return;
-                        }
-                        if (input!.onAbort) {
-                          event.preventDefault();
-                          event.stopPropagation();
-                          input!.onAbort();
-                        }
-                        return;
-                      }
-                      if (event.key === "Tab" && !showPossiblesList && inlineCompletion) {
-                        event.preventDefault();
-                        applyDraft(inlineCompletion.prefix + inlineCompletion.suffix);
-                        return;
-                      }
-                      if (event.key === "ArrowDown" && filteredPossibles.length) {
-                        event.preventDefault();
-                        setActivePossibleIndex((index) => (index + 1) % filteredPossibles.length);
-                        return;
-                      }
-                      if (event.key === "ArrowUp" && filteredPossibles.length) {
-                        event.preventDefault();
-                        setActivePossibleIndex((index) => (index - 1 + filteredPossibles.length) % filteredPossibles.length);
-                        return;
-                      }
-                      if (event.key === " " && !event.ctrlKey && !event.metaKey && !event.altKey) {
-                        event.preventDefault();
-                        if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                        applyEngagementSpaceAction(input!, draft, sessionActive);
-                        return;
-                      }
-                      if (event.key === "Enter") {
-                        event.preventDefault();
-                        if (shouldActivateEngagementPossibleOnConfirm(draft, showPossiblesList, filteredPossibles.length) && activatePossible()) return;
-                        input!.onSubmit?.(draft);
-                      }
-                    }}
-                    placeholder={actionPlaceholder}
-                    disabled={input!.disabled}
-                    aria-label={actionPlaceholder}
-                  />
-                  {inlineCompletion ? (
-                    <div aria-hidden data-slot="engagement-inline-completion" className="text-foreground pointer-events-none col-start-1 row-start-1 flex h-medium min-w-0 items-center overflow-hidden p-single text-sm md:text-sm">
-                      <span className="relative inline-flex min-w-0 truncate">
-                        <span className="truncate text-transparent">{draft}</span>
-                        <span className="absolute inset-0 truncate font-semibold text-foreground">{inlineCompletion.prefix}</span>
-                      </span>
-                      <span data-slot="engagement-inline-suffix" className="truncate text-muted-foreground">
-                        {inlineCompletion.suffix}
-                      </span>
-                    </div>
-                  ) : null}
-                </div>
-                {hasPossibles ? (
-                  <Action
-                    id={UI_ENGAGEMENT.suggestions}
-                    aria-expanded={possiblesExpanded}
-                    aria-label={ENGAGEMENT_USER.suggestionsAria}
-                    data-slot="engagement-possibles-toggle"
-                    icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
-                    onClick={() => setPossiblesExpanded((open) => !open)}
-                  />
-                ) : null}
-              </div>
-            </PopoverAnchor>
-            {hasPossibles ? (
-              <PopoverContent data-slot="engagement-autocomplete" className="w-[min(100vw-1rem,28rem)] p-0" align="end" onOpenAutoFocus={(event) => event.preventDefault()}>
-                <Command shouldFilter={false}>
-                  <CommandList>
-                    {filteredPossibles.length ? (
-                      <CommandGroup>
-                        {filteredPossibles.map((item, index) => (
-                          <CommandItem
-                            key={item.id}
-                            value={item.id}
-                            data-active={index === activePossibleIndex ? "true" : undefined}
-                            className={cn(index === activePossibleIndex && interactiveActiveFillClass)}
-                            onPointerDown={(event) => {
-                              event.preventDefault();
-                              event.stopPropagation();
-                              selectPossible(item);
-                            }}
-                            onMouseEnter={() => setActivePossibleIndex(index)}
-                            onSelect={() => selectPossible(item)}
-                          >
-                            <span className="truncate">{engagementHighlightedLabel(item.label, draft, item.detail)}</span>
-                            {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
-                          </CommandItem>
-                        ))}
-                      </CommandGroup>
-                    ) : (
-                      <CommandEmpty>{ENGAGEMENT_USER.noMatches}</CommandEmpty>
-                    )}
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            ) : null}
-          </Popover>
         ) : null}
         {control ? <EngagementControlView control={control} /> : null}
         {controls?.map((row) => (
@@ -17982,6 +18079,8 @@ export interface WindowConfig {
   /** @emoji 🎛 Fires when the user or a redirect toggles the Actions rail fold state. */
   onActionsFoldedChange?: (folded: boolean) => void;
   engagement?: EngagementSpec;
+  /** @emoji 🔎 Top-middle floating search pane: typed action input with autocomplete possibles. */
+  search?: SearchSpec;
   active?: boolean;
   onActivate?: () => void;
   /** @emoji 📐 When true, the window body grows to fill its dock pane (canvas hosts). */
@@ -18045,6 +18144,15 @@ export function windowEngagementZoneMaxWidthStyle(measuresReservePx: number, has
   return { width: `min(28rem, calc(100% - ${reservePx}px))` };
 }
 
+/** @emoji 📐 Inline width for the centered search zone: up to 28rem, minus measured side chrome reserved on both edges. */
+export function windowSearchZoneMaxWidthStyle(measuresReservePx: number, hasSideChrome: boolean): React.CSSProperties {
+  if (!hasSideChrome) {
+    return { width: "min(28rem, 100%)" };
+  }
+  const reservePx = measuresReservePx > 0 ? measuresReservePx + 4 : Math.round(14.5 * 16);
+  return { width: `min(28rem, calc(100% - ${reservePx * 2}px))` };
+}
+
 const Window: React.FC<WindowProps> = ({
   id,
   children,
@@ -18068,6 +18176,7 @@ const Window: React.FC<WindowProps> = ({
   actionsFolded: actionsFoldedProp,
   onActionsFoldedChange,
   engagement,
+  search,
   active = false,
   onActivate,
   fill = false,
@@ -18083,6 +18192,7 @@ const Window: React.FC<WindowProps> = ({
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
+  const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
   // 🎛 Controlled-with-default fold state for the bottom-left Utilities rail (default true).
   const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
   const utilityBarFolded = utilityBarFoldedProp ?? utilityBarFoldedInternal;
@@ -18099,7 +18209,7 @@ const Window: React.FC<WindowProps> = ({
   };
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
-  const measuresReservePx = useWindowMeasuresReservePx(!!engagement, measures, windowBodyRef, measuresOverlayRef);
+  const measuresReservePx = useWindowMeasuresReservePx(!!engagement || !!search, measures, windowBodyRef, measuresOverlayRef);
   const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
   const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
@@ -18113,33 +18223,38 @@ const Window: React.FC<WindowProps> = ({
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
   const engagementVisible = active && !measuresExpanded && !!engagement;
   const engagementExpanded = engagementVisible && !engagementFolded;
+  const searchZoneSizeStyle = windowSearchZoneMaxWidthStyle(measuresReservePx, !!measures || !!engagement);
+  const searchVisible = active && !measuresExpanded && !!search;
+  const searchExpanded = searchVisible && !searchFolded;
 
   reactHostPort.useEffect(() => {
     if (!measuresExpanded) return;
     setEngagementFolded(true);
+    setSearchFolded(true);
   }, [measuresExpanded]);
 
   reactHostPort.useEffect(() => {
-    if (!active || !engagement?.input?.onAbort) return;
+    if (!active || !search?.input?.onAbort) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (routeWindowEngagementEscape(engagement, event, { chromeVisible: engagementExpanded, actionActive: engagementExpanded })) {
+      if (routeWindowSearchEscape(search, event, { chromeVisible: searchExpanded, actionActive: searchExpanded })) {
         event.preventDefault();
         event.stopPropagation();
       }
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [active, engagement, engagementExpanded]);
+  }, [active, search, searchExpanded]);
 
   reactHostPort.useEffect(() => {
     if (!active) {
       setEngagementFolded(true);
+      setSearchFolded(true);
     }
   }, [active]);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
-    if (!body || !(engagement || measures)) return;
+    if (!body || !(engagement || search || measures)) return;
     const sync = () => {
       const px = measureWindowChromeScrollClearancePx(body);
       if (px > 0) {
@@ -18153,12 +18268,12 @@ const Window: React.FC<WindowProps> = ({
     sync();
     const ro = new ResizeObserver(sync);
     ro.observe(body);
-    for (const slot of ["window-engagement-overlay", "window-measures-overlay"] as const) {
+    for (const slot of ["window-engagement-overlay", "window-search-overlay", "window-measures-overlay"] as const) {
       const overlay = body.querySelector(`[data-slot="${slot}"]`);
       if (overlay) ro.observe(overlay);
     }
     return () => ro.disconnect();
-  }, [active, engagement, measures, engagementExpanded, measuresFolded, measuresExpanded]);
+  }, [active, engagement, search, measures, engagementExpanded, searchExpanded, measuresFolded, measuresExpanded]);
 
   if (!isVisible) return null;
 
@@ -18261,17 +18376,47 @@ const Window: React.FC<WindowProps> = ({
                     windowId={id}
                     expanded={engagementExpanded}
                     onToggle={() => {
-                      if (engagementExpanded) {
-                        setEngagementFolded(true);
-                        return;
-                      }
-                      setEngagementFolded(false);
-                      if (engagement?.input) queueMicrotask(() => focusActiveEngagementInput());
+                      setEngagementFolded(engagementExpanded);
                     }}
                   />
                   {engagementExpanded ? (
                     <div data-slot="window-engagement-body" className={windowEngagementBodyClass}>
-                      <Engagement {...engagement} active={engagementExpanded} />
+                      <Engagement {...engagement} />
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </GlassTierProvider>
+          ) : null}
+          {search && searchVisible ? (
+            <GlassTierProvider tier="windowOptions">
+              <div
+                data-slot="window-search-overlay"
+                data-expanded={searchExpanded ? "true" : undefined}
+                style={searchExpanded ? searchZoneSizeStyle : undefined}
+                className={cn(windowSearchOverlayClass, !searchExpanded && windowSearchOverlayFoldedClass)}
+              >
+                <div
+                  data-dim
+                  data-slot="window-search-zone"
+                  data-folded={searchExpanded ? undefined : "true"}
+                  className={cn(windowMeasuresStackClass, "flex-row items-start", !searchExpanded && windowMeasuresStackFoldedClass)}
+                >
+                  <WindowSearchChrome
+                    windowId={id}
+                    expanded={searchExpanded}
+                    onToggle={() => {
+                      if (searchExpanded) {
+                        setSearchFolded(true);
+                        return;
+                      }
+                      setSearchFolded(false);
+                      if (search?.input) queueMicrotask(() => focusActiveSearchInput());
+                    }}
+                  />
+                  {searchExpanded ? (
+                    <div data-slot="window-search-body" className={windowSearchBodyClass}>
+                      <Search {...search} active={searchExpanded} />
                     </div>
                   ) : null}
                 </div>
@@ -23453,11 +23598,11 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   reactHostPort.useEffect(() => {
     if (!activeWindowId) return;
-    const engagement = windowsById.get(activeWindowId)?.engagement;
-    if (!engagement?.input) return;
+    const search = windowsById.get(activeWindowId)?.search;
+    if (!search?.input) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (
-        routeWindowEngagementEscape(engagement, event, {
+        routeWindowSearchEscape(search, event, {
           chromeVisible: true,
           actionActive: true,
         })
@@ -23466,15 +23611,15 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         event.stopPropagation();
         return;
       }
-      if (routeWindowEngagementSpace(engagement, event)) {
+      if (routeWindowSearchSpace(search, event)) {
         event.preventDefault();
         event.stopPropagation();
         return;
       }
-      if (!routeWindowEngagementKeydown(engagement, event)) return;
+      if (!routeWindowSearchKeydown(search, event)) return;
       event.preventDefault();
       event.stopPropagation();
-      queueMicrotask(() => focusActiveEngagementInput());
+      queueMicrotask(() => focusActiveSearchInput());
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
@@ -25969,12 +26114,18 @@ if (import.meta.vitest) {
       expect(screen.queryByText("B Body")).toBeNull();
     });
 
-    it("Engagement renders options, input, and status lines", () => {
-      const { container } = render(<Engagement options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]} input={{ placeholder: "Type here" }} status={[{ id: "status-a", content: "Ready" }]} />);
+    it("Engagement renders options and status lines; Search renders the input", () => {
+      const { container } = render(
+        <>
+          <Engagement options={[{ id: "opt-a", label: "Option A", icon: "circle-dot", onPress: () => {} }]} status={[{ id: "status-a", content: "Ready" }]} />
+          <Search input={{ placeholder: "Type here" }} />
+        </>,
+      );
       expect(screen.getByRole("button", { name: "OptionA" })).toBeTruthy();
       expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
       expect(screen.getByText("Ready")).toBeTruthy();
       expect(container.querySelector('[data-slot="engagement"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="search"]')).toBeTruthy();
     });
 
     it("Engagement option buttons size to label text without clipping", () => {
@@ -25986,82 +26137,82 @@ if (import.meta.vitest) {
       expect(item?.className).not.toContain("aspect-square");
     });
 
-    it("Engagement focuses its input when active", async () => {
-      const { rerender } = render(<Engagement active={false} input={{ id: "engagement-input", placeholder: "Action" }} />);
+    it("Search focuses its input when active", async () => {
+      const { rerender } = render(<Search active={false} input={{ id: "search-input", placeholder: "Action" }} />);
       const field = () => screen.getByPlaceholderText("Action") as HTMLInputElement;
       expect(document.activeElement).not.toBe(field());
-      rerender(<Engagement active input={{ id: "engagement-input", placeholder: "Action" }} />);
+      rerender(<Search active input={{ id: "search-input", placeholder: "Action" }} />);
       await waitFor(() => expect(document.activeElement).toBe(field()));
       expect(field().tabIndex).toBe(0);
     });
 
-    it("Engagement input is removed from tab order when inactive", () => {
-      render(<Engagement active={false} input={{ placeholder: "Action" }} />);
+    it("Search input is removed from tab order when inactive", () => {
+      render(<Search active={false} input={{ placeholder: "Action" }} />);
       expect((screen.getByPlaceholderText("Action") as HTMLInputElement).tabIndex).toBe(-1);
     });
 
-    it("filterEngagementPossibles matches label, detail, and id", () => {
+    it("filterSearchPossibles matches label, detail, and id", () => {
       const items = [
         { id: "primitive.box", label: "Box", detail: "b" },
         { id: "primitive.sphere", label: "Sphere", detail: "s" },
       ];
-      expect(filterEngagementPossibles("", items)).toHaveLength(2);
-      expect(filterEngagementPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
+      expect(filterSearchPossibles("", items)).toHaveLength(2);
+      expect(filterSearchPossibles("sph", items).map((row) => row.id)).toEqual(["primitive.sphere"]);
     });
 
-    it("filterEngagementPossibles ranks shorter label prefix matches first", () => {
+    it("filterSearchPossibles ranks shorter label prefix matches first", () => {
       const items = [
         { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e" },
         { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e" },
       ];
-      expect(filterEngagementPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
+      expect(filterSearchPossibles("Extr", items).map((row) => row.id)).toEqual(["surface.extrudeCrv", "feature.extrudeWire"]);
     });
 
-    it("isEngagementSuggestionActionTarget accepts text nodes inside action rows", () => {
+    it("isSearchSuggestionActionTarget accepts text nodes inside action rows", () => {
       const row = document.createElement("div");
       row.setAttribute("data-slot", "command-item");
       const label = document.createTextNode("ExtrudeCrv");
       row.appendChild(label);
       document.body.appendChild(row);
-      expect(isEngagementSuggestionActionTarget({ target: label })).toBe(true);
+      expect(isSearchSuggestionActionTarget({ target: label })).toBe(true);
       row.remove();
     });
 
-    it("engagementInlineCompletion uses label casing for matched name prefix", () => {
+    it("searchInlineCompletion uses label casing for matched name prefix", () => {
       const box = { id: "primitive.box", label: "Box", detail: "b" };
       const sphere = { id: "primitive.sphere", label: "Sphere", detail: "s" };
-      expect(engagementInlineCompletion("b", box)).toEqual({ prefix: "B", suffix: "ox" });
-      expect(engagementInlineCompletion("Sp", sphere)).toEqual({ prefix: "Sp", suffix: "here" });
-      expect(engagementInlineCompletion("sph", sphere)).toEqual({ prefix: "Sph", suffix: "ere" });
-      expect(engagementActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
+      expect(searchInlineCompletion("b", box)).toEqual({ prefix: "B", suffix: "ox" });
+      expect(searchInlineCompletion("Sp", sphere)).toEqual({ prefix: "Sp", suffix: "here" });
+      expect(searchInlineCompletion("sph", sphere)).toEqual({ prefix: "Sph", suffix: "ere" });
+      expect(searchActiveInlineCompletion("Sp", [sphere], 0)).toEqual({ prefix: "Sp", suffix: "here" });
     });
 
-    it("shouldActivateEngagementPossibleOnConfirm accepts typed draft or expanded list", () => {
-      expect(shouldActivateEngagementPossibleOnConfirm("", false, 2)).toBe(false);
-      expect(shouldActivateEngagementPossibleOnConfirm("", true, 2)).toBe(true);
-      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 2)).toBe(true);
-      expect(shouldActivateEngagementPossibleOnConfirm("f", false, 0)).toBe(false);
+    it("shouldActivateSearchPossibleOnConfirm accepts typed draft or expanded list", () => {
+      expect(shouldActivateSearchPossibleOnConfirm("", false, 2)).toBe(false);
+      expect(shouldActivateSearchPossibleOnConfirm("", true, 2)).toBe(true);
+      expect(shouldActivateSearchPossibleOnConfirm("f", false, 2)).toBe(true);
+      expect(shouldActivateSearchPossibleOnConfirm("f", false, 0)).toBe(false);
     });
 
-    it("Engagement Space and Enter activate inline suggestion without opening possibles list", async () => {
+    it("Search Space and Enter activate inline suggestion without opening possibles list", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
       render(
-        <Engagement
+        <Search
           active
-          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
-          possibleEngagements={[
+          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder }}
+          possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
             { id: "puzzle3d.utility.fill", label: "Fill", detail: "f", onSelect: () => selected.push("puzzle3d.utility.fill") },
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.actionPlaceholder);
-      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      const field = screen.getByPlaceholderText(WINDOW_SEARCH_USER.actionPlaceholder);
+      expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "f" } });
-      await waitFor(() => expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ill"));
+      await waitFor(() => expect(document.querySelector('[data-slot="search-inline-suffix"]')?.textContent).toBe("ill"));
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(selected).toEqual(["puzzle3d.utility.fill"]));
       fireEvent.change(field, { target: { value: "Sp" } });
@@ -26070,45 +26221,45 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("Engagement shows inline completion while typing and possibles list only on chevron", async () => {
+    it("Search shows inline completion while typing and possibles list only on chevron", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
       render(
-        <Engagement
+        <Search
           active
-          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
-          possibleEngagements={[
+          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder }}
+          possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(ENGAGEMENT_USER.actionPlaceholder);
-      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      const field = screen.getByPlaceholderText(WINDOW_SEARCH_USER.actionPlaceholder);
+      expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "b" } });
       await waitFor(() => {
-        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("ox");
-        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.querySelector(".font-semibold")?.textContent).toBe("B");
+        expect(document.querySelector('[data-slot="search-inline-suffix"]')?.textContent).toBe("ox");
+        expect(document.querySelector('[data-slot="search-inline-completion"]')?.querySelector(".font-semibold")?.textContent).toBe("B");
       });
       fireEvent.change(field, { target: { value: "Sp" } });
       await waitFor(() => {
-        expect(document.querySelector('[data-slot="engagement-inline-suffix"]')?.textContent).toBe("here");
-        expect(document.querySelector('[data-slot="engagement-inline-completion"]')?.textContent).toContain("Sphere");
+        expect(document.querySelector('[data-slot="search-inline-suffix"]')?.textContent).toBe("here");
+        expect(document.querySelector('[data-slot="search-inline-completion"]')?.textContent).toContain("Sphere");
       });
-      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
-      await waitFor(() => expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeTruthy());
+      expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
+      fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
+      await waitFor(() => expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeTruthy());
       expect(document.querySelector('[data-value="primitive.sphere"]')).toBeTruthy();
       fireEvent.change(field, { target: { value: "sph" } });
       fireEvent.keyDown(field, { key: "Enter" });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere"]));
       fireEvent.change(field, { target: { value: "" } });
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
       fireEvent.keyDown(field, { key: " " });
       await waitFor(() => expect(selected).toEqual(["primitive.sphere", "primitive.box"]));
       fireEvent.change(field, { target: { value: "" } });
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
       const sphereRow = document.querySelector('[data-slot="command-item"][data-value="primitive.sphere"]');
       expect(sphereRow).toBeTruthy();
       fireEvent.click(sphereRow!);
@@ -26116,22 +26267,22 @@ if (import.meta.vitest) {
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("Engagement suggestion click selects the picked row when popover keeps input focus", async () => {
+    it("Search suggestion click selects the picked row when popover keeps input focus", async () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const selected: string[] = [];
       render(
-        <Engagement
+        <Search
           active
-          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder, value: "Extr", onChange: () => {} }}
-          possibleEngagements={[
+          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder, value: "Extr", onChange: () => {} }}
+          possibles={[
             { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
             { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
           ]}
         />,
       );
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
-      const popover = await waitFor(() => document.querySelector('[data-slot="engagement-autocomplete"]')!);
+      fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
+      const popover = await waitFor(() => document.querySelector('[data-slot="search-autocomplete"]')!);
       const crvRow = document.querySelector('[data-slot="command-item"][data-value="surface.extrudeCrv"]')!;
       const crvLabel = crvRow.querySelector("span")?.firstChild;
       expect(crvLabel).toBeTruthy();
@@ -26145,9 +26296,7 @@ if (import.meta.vitest) {
     it("Engagement renders toggleGroup and select controls", () => {
       const { container } = render(
         <Engagement
-          active
           sessionActive
-          input={{ placeholder: ENGAGEMENT_USER.actionPlaceholder }}
           control={{
             kind: "toggleGroup",
             id: "engagement-utility-group",
@@ -26176,28 +26325,28 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-control-kind="select"]')).toBeTruthy();
     });
 
-    it("applyEngagementSpaceAction submits empty draft during sessionActive", () => {
+    it("applySearchSpaceAction submits empty draft during sessionActive", () => {
       const submitted: string[] = [];
       const repeated: string[] = [];
       const input = {
         onSubmit: (value: string) => submitted.push(value),
         onRepeatLast: () => repeated.push("last"),
       };
-      expect(applyEngagementSpaceAction(input, "", true)).toBe(true);
+      expect(applySearchSpaceAction(input, "", true)).toBe(true);
       expect(submitted).toEqual([""]);
       expect(repeated).toEqual([]);
       submitted.length = 0;
-      expect(applyEngagementSpaceAction(input, "", false)).toBe(true);
+      expect(applySearchSpaceAction(input, "", false)).toBe(true);
       expect(repeated).toEqual(["last"]);
       expect(submitted).toEqual([]);
     });
 
-    it("routeWindowEngagementSpace calls onRepeatLast for empty action", () => {
+    it("routeWindowSearchSpace calls onRepeatLast for empty action", () => {
       const repeated: string[] = [];
-      const engagement = { input: { value: "", onRepeatLast: () => repeated.push("last") } };
+      const search = { input: { value: "", onRepeatLast: () => repeated.push("last") } };
       const body = document.createElement("div");
       expect(
-        routeWindowEngagementSpace(engagement, {
+        routeWindowSearchSpace(search, {
           key: " ",
           ctrlKey: false,
           metaKey: false,
@@ -26210,9 +26359,9 @@ if (import.meta.vitest) {
       expect(repeated).toEqual(["last"]);
     });
 
-    it("routeWindowEngagementSpace calls onSubmit for non-empty action", () => {
+    it("routeWindowSearchSpace calls onSubmit for non-empty action", () => {
       const submitted: string[] = [];
-      const engagement = {
+      const search = {
         input: {
           value: "Box",
           onSubmit: (value: string) => submitted.push(value),
@@ -26221,7 +26370,7 @@ if (import.meta.vitest) {
       };
       const body = document.createElement("div");
       expect(
-        routeWindowEngagementSpace(engagement, {
+        routeWindowSearchSpace(search, {
           key: " ",
           ctrlKey: false,
           metaKey: false,
@@ -26234,13 +26383,13 @@ if (import.meta.vitest) {
       expect(submitted).toEqual(["Box"]);
     });
 
-    it("Engagement Space with draft calls onSubmit instead of onRepeatLast", async () => {
+    it("Search Space with draft calls onSubmit instead of onRepeatLast", async () => {
       const submitted: string[] = [];
       const repeated: string[] = [];
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Engagement
+          <Search
             active
             input={{
               value,
@@ -26260,11 +26409,11 @@ if (import.meta.vitest) {
       expect(repeated).toEqual([]);
     });
 
-    it("Engagement Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
+    it("Search Space with empty draft calls onRepeatLast instead of onSubmit", async () => {
       const submitted: string[] = [];
       const repeated: string[] = [];
       render(
-        <Engagement
+        <Search
           active
           input={{
             placeholder: "Action",
@@ -26279,7 +26428,7 @@ if (import.meta.vitest) {
       expect(submitted).toEqual([]);
     });
 
-    it("Mode routes printable keys to the active window engagement", async () => {
+    it("Mode routes printable keys to the active window search", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
@@ -26291,7 +26440,7 @@ if (import.meta.vitest) {
                   id: "engagement-window",
                   title: "Viewport",
                   active: true,
-                  engagement: { input: { id: "engagement-input", value, placeholder: "Action", onChange: setValue } },
+                  search: { input: { id: "search-input", value, placeholder: "Action", onChange: setValue } },
                   children: <div data-testid="window-body">Body</div>,
                 },
               ]}
@@ -26307,7 +26456,7 @@ if (import.meta.vitest) {
         const typedField = screen.getByPlaceholderText("Action") as HTMLInputElement;
         expect(typedField.value).toBe("B");
         expect(typedField.tabIndex).toBe(0);
-        expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
+        expect(document.querySelector('[data-slot="search"]')?.getAttribute("data-active")).toBe("true");
       });
     });
 
@@ -26368,13 +26517,13 @@ if (import.meta.vitest) {
       writer.setAttribute("role", "textbox");
       writer.tabIndex = 0;
       expect(isUiTypingTarget(writer)).toBe(true);
-      expect(shouldRouteKeysToWindowEngagement(writer)).toBe(false);
-      expect(shouldRouteKeysToWindowEngagement(text)).toBe(false);
+      expect(shouldRouteKeysToWindowSearch(writer)).toBe(false);
+      expect(shouldRouteKeysToWindowSearch(text)).toBe(false);
     });
 
     it("Window keeps bodies edgeless and chrome-aware scroll hosts start below the dead line", () => {
       const { container } = render(
-        <Window id="chrome-aware-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div>LOD</div>}>
+        <Window id="chrome-aware-window" active search={{ input: { placeholder: "Action" } }} measures={<div>LOD</div>}>
           <div data-window-content-layout="chrome-aware" className="flex min-h-0 flex-1 flex-col">
             <Scrollable className="h-40">
               <div style={{ height: 240 }}>Line one</div>
@@ -26391,7 +26540,7 @@ if (import.meta.vitest) {
 
     it("Window edgeless bodies do not apply a dead-line scroll offset", () => {
       const { container } = render(
-        <Window id="edgeless-window" active engagement={{ input: { placeholder: "Action" } }}>
+        <Window id="edgeless-window" active search={{ input: { placeholder: "Action" } }}>
           <div data-window-content-layout="edgeless" className="h-40">
             <Scrollable className="h-full">
               <div style={{ height: 240 }}>Canvas</div>
@@ -26405,7 +26554,7 @@ if (import.meta.vitest) {
 
     it("Window dead-line hosts skip offset when content fits", () => {
       const { container } = render(
-        <Window id="fits-window" active engagement={{ input: { placeholder: "Action" } }}>
+        <Window id="fits-window" active search={{ input: { placeholder: "Action" } }}>
           <Scrollable className="h-40">
             <div style={{ height: 40 }}>Short</div>
           </Scrollable>
@@ -26417,11 +26566,11 @@ if (import.meta.vitest) {
       expect(readScrollerContentOverflows(scroller)).toBe(false);
     });
 
-    it("Engagement does not steal focus from another input when it becomes active", async () => {
+    it("Search does not steal focus from another input when it becomes active", async () => {
       const Harness = ({ active }: { active: boolean }) => (
         <>
           <Input id="other-input" placeholder="Other" />
-          <Engagement active={active} input={{ placeholder: "Action" }} />
+          <Search active={active} input={{ placeholder: "Action" }} />
         </>
       );
       const { rerender } = render(<Harness active={false} />);
@@ -26431,41 +26580,41 @@ if (import.meta.vitest) {
       await waitFor(() => expect(document.activeElement).toBe(other));
     });
 
-    it("Engagement Escape calls onAbort when possibles list is closed", () => {
+    it("Search Escape calls onAbort when possibles list is closed", () => {
       const aborted: string[] = [];
-      render(<Engagement active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      render(<Search active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
       const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Engagement Escape closes possibles list before onAbort", () => {
+    it("Search Escape closes possibles list before onAbort", () => {
       const scrollIntoView = Element.prototype.scrollIntoView;
       Element.prototype.scrollIntoView = () => undefined;
       const aborted: string[] = [];
-      render(<Engagement active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibleEngagements={[{ id: "a", label: "A", onSelect: () => {} }]} />);
-      fireEvent.click(document.querySelector('[data-slot="engagement-possibles-toggle"]')!);
+      render(<Search active input={{ placeholder: "Action", onAbort: () => aborted.push("abort") }} possibles={[{ id: "a", label: "A", onSelect: () => {} }]} />);
+      fireEvent.click(document.querySelector('[data-slot="search-possibles-toggle"]')!);
       const field = screen.getByPlaceholderText("Action");
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual([]);
-      expect(document.querySelector('[data-slot="engagement-autocomplete"]')).toBeNull();
+      expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
       fireEvent.keyDown(field, { key: "Escape" });
       expect(aborted).toEqual(["abort"]);
       Element.prototype.scrollIntoView = scrollIntoView;
     });
 
-    it("routeWindowEngagementEscape calls onAbort when sessionActive without visible chrome", () => {
+    it("routeWindowSearchEscape calls onAbort when sessionActive without visible chrome", () => {
       const aborted: string[] = [];
-      const engagement: EngagementSpec = {
+      const search: SearchSpec = {
         sessionActive: true,
         input: { value: "", placeholder: "Brush", onAbort: () => aborted.push("abort") },
       };
-      const handled = routeWindowEngagementEscape(engagement, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, actionActive: false });
+      const handled = routeWindowSearchEscape(search, { key: "Escape", defaultPrevented: false, isComposing: false, target: document.body }, { chromeVisible: false, actionActive: false });
       expect(handled).toBe(true);
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Mode Escape aborts active window engagement", async () => {
+    it("Mode Escape aborts active window search", async () => {
       const aborted: string[] = [];
       const Harness = () => (
         <div className="h-layout-preview-md w-layout-floating-menu-lg">
@@ -26476,7 +26625,7 @@ if (import.meta.vitest) {
                 id: "engagement-window",
                 title: "Viewport",
                 active: true,
-                engagement: {
+                search: {
                   input: { value: "Box", placeholder: "Action", onChange: () => {}, onAbort: () => aborted.push("abort") },
                 },
                 children: <div data-testid="window-body">Body</div>,
@@ -26492,21 +26641,31 @@ if (import.meta.vitest) {
       expect(aborted).toEqual(["abort"]);
     });
 
-    it("Window shows engagement as a folded strip by default, same surface as window options", () => {
+    it("Window shows engagement and search as folded strips by default, same surface as window options", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ sessionActive: true, input: { value: "Box", placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
+        <Window
+          id="engagement-window"
+          active
+          engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }}
+          search={{ sessionActive: true, input: { value: "Box", placeholder: "Action" } }}
+        >
           <div>Body</div>
         </Window>,
       );
-      const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
-      expect(zone).toBeTruthy();
-      expect(zone.className).toContain("ui-glass-window-options");
-      expect(zone.className).toContain("flex-row");
+      const engagementZone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
+      const searchZone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
+      expect(engagementZone).toBeTruthy();
+      expect(engagementZone.className).toContain("ui-glass-window-options");
+      expect(engagementZone.className).toContain("flex-row");
+      expect(searchZone).toBeTruthy();
+      expect(searchZone.className).toContain("ui-glass-window-options");
+      expect(searchZone.className).toContain("flex-row");
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
       fireEvent.click(container.querySelector('[id="engagement-window-window-engagement-toggle"]')!);
-      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       expect(screen.getByText("Idle")).toBeTruthy();
+      fireEvent.click(container.querySelector('[id="engagement-window-window-search-toggle"]')!);
+      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
       const body = container.querySelector('[data-slot="window-engagement-body"]');
       expect(chrome?.nextElementSibling).toBe(body);
@@ -26514,17 +26673,17 @@ if (import.meta.vitest) {
       expect(chrome?.className).toContain("border-b-0");
     });
 
-    it("Window reveals engagement on button click and activates on click", async () => {
+    it("Window reveals search on button click and activates on click", async () => {
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("");
         return (
-          <Window id="engagement-window" active engagement={{ input: { id: "engagement-input", value, placeholder: "Action", onChange: setValue } }}>
+          <Window id="engagement-window" active search={{ input: { id: "search-input", value, placeholder: "Action", onChange: setValue } }}>
             <div data-testid="window-body">Body</div>
           </Window>
         );
       };
       const { container } = render(<Harness />);
-      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="engagement-window-window-search-toggle"]') as HTMLElement;
       expect(toggleBtn).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.click(toggleBtn);
@@ -26534,16 +26693,16 @@ if (import.meta.vitest) {
         return next;
       });
       expect(activeField.tabIndex).toBe(0);
-      expect(document.querySelector('[data-slot="engagement"]')?.getAttribute("data-active")).toBe("true");
+      expect(document.querySelector('[data-slot="search"]')?.getAttribute("data-active")).toBe("true");
       fireEvent.change(activeField, { target: { value: "b" } });
       await waitFor(() => {
         expect(activeField.value).toBe("B");
       });
     });
 
-    it("Engagement onChange PascalCases spaced action without window routing", () => {
+    it("Search onChange PascalCases spaced action without window routing", () => {
       const changed: string[] = [];
-      render(<Engagement input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Action" }} />);
+      render(<Search input={{ value: "", onChange: (next) => changed.push(next), placeholder: "Action" }} />);
       fireEvent.change(screen.getByPlaceholderText("Action"), { target: { value: "set height" } });
       expect(changed).toEqual(["SetHeight"]);
     });
@@ -26568,15 +26727,15 @@ if (import.meta.vitest) {
       expect(engagementActionTokenEquals("box", "sphere")).toBe(false);
     });
 
-    it("Engagement input PascalCases action text and space confirms like enter", async () => {
+    it("Search input PascalCases action text and space confirms like enter", async () => {
       const submitted: string[] = [];
       const Harness = () => {
         const [value, setValue] = reactHostPort.useState("SetHeight");
         return (
-          <Engagement
+          <Search
             active
             input={{
-              id: "engagement-input",
+              id: "search-input",
               value,
               placeholder: "Action",
               onChange: setValue,
@@ -26617,20 +26776,20 @@ if (import.meta.vitest) {
       expect(screen.getByText("Idle")).toBeTruthy();
     });
 
-    it("Window engagement action row spans the sized engagement zone", () => {
+    it("Window search action row spans the sized search zone", () => {
       const { container } = render(
-        <Window id="engagement-window" active engagement={{ input: { placeholder: "Action" } }}>
+        <Window id="engagement-window" active search={{ input: { placeholder: "Action" } }}>
           <div>Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
-      const zone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
-      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      const overlay = container.querySelector('[data-slot="window-search-overlay"]') as HTMLElement;
+      const zone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="engagement-window-window-search-toggle"]') as HTMLElement;
       fireEvent.click(toggleBtn);
       expect(zone.className).toContain("w-full");
       expect(overlay.style.width).toBe("min(28rem, 100%)");
-      const row = container.querySelector('[data-slot="engagement-action-row"]');
-      const inputRoot = container.querySelector('[data-slot="engagement-action-input"] [data-slot="input-root"]');
+      const row = container.querySelector('[data-slot="search-row"]');
+      const inputRoot = container.querySelector('[data-slot="search-input"] [data-slot="input-root"]');
       expect(row?.className).toContain("w-full");
       expect(inputRoot?.className).toContain("w-full");
     });
@@ -26676,18 +26835,18 @@ if (import.meta.vitest) {
       expect(maximizeBtn?.textContent?.trim()).toBe("Unfocus");
     });
 
-    it("Window engagement max width shrinks when measures rail is present", () => {
+    it("Window search max width shrinks when measures rail is present", () => {
       const { container } = render(
-        <Window id="layout-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="layout-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div data-testid="window-body">Body</div>
         </Window>,
       );
-      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]') as HTMLElement;
-      fireEvent.click(container.querySelector('[id="layout-window-window-engagement-toggle"]')!);
+      const overlay = container.querySelector('[data-slot="window-search-overlay"]') as HTMLElement;
+      fireEvent.click(container.querySelector('[id="layout-window-window-search-toggle"]')!);
       expect(overlay.style.width).toContain("calc(100%");
       expect(overlay.style.width).toContain("min(28rem");
-      expect(windowEngagementZoneMaxWidthStyle(200, true).width).toContain("204px");
-      expect(windowEngagementZoneMaxWidthStyle(0, false).width).toBe("min(28rem, 100%)");
+      expect(windowSearchZoneMaxWidthStyle(200, true).width).toContain("408px");
+      expect(windowSearchZoneMaxWidthStyle(0, false).width).toBe("min(28rem, 100%)");
     });
 
     it("Window engagement and measures overlays pass pointer hits through to the canvas body", () => {
@@ -26707,30 +26866,31 @@ if (import.meta.vitest) {
       expect(bodyDown).toHaveBeenCalledTimes(2);
     });
 
-    it("Window hides engagement overlay when measures are fullscreen", () => {
+    it("Window hides search overlay when measures are fullscreen", () => {
       const { container } = render(
-        <Window id="measures-engagement-window" active engagement={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
+        <Window id="measures-engagement-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector('[id="measures-engagement-window-window-engagement-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="measures-engagement-window-window-search-toggle"]')!);
       fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
       expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
-      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeNull();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
-      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
     });
 
-    it("Window hides engagement overlay entirely while inactive", () => {
+    it("Window hides engagement and search overlays entirely while inactive", () => {
       const { container } = render(
-        <Window id="engagement-window" engagement={{ input: { placeholder: "Action" }, status: [{ id: "s", content: "Idle" }] }}>
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }}>
           <div>Body</div>
         </Window>,
       );
       expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeNull();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
     });
@@ -26738,9 +26898,11 @@ if (import.meta.vitest) {
     it("Window panel overlays use the window frame inset without adding a second edge gap", () => {
       expect(windowMeasuresOverlayClass).toContain("p-0");
       expect(windowEngagementOverlayClass).toContain("p-0");
+      expect(windowSearchOverlayClass).toContain("p-0");
       expect(utilityBarOverlayClass).toContain("p-0");
       expect(windowMeasuresOverlayClass).not.toContain("p-single");
       expect(windowEngagementOverlayClass).not.toContain("p-single");
+      expect(windowSearchOverlayClass).not.toContain("p-single");
       expect(utilityBarOverlayClass).not.toContain("p-single");
     });
 
@@ -28762,11 +28924,11 @@ if (treeVitest) {
       expect(humanizeControlSegment("puzzle2dGridSnap")).toBe("Puzzle2d Grid Snap");
     });
 
-    it("maps legacy engagement control ids to ui.engagement i18n keys", () => {
-      expect(isInternalChromeControlId("engagement-possibles-toggle")).toBe(true);
-      expect(resolveControlLabelId("engagement-possibles-toggle")).toBe("ui.engagement.suggestions");
+    it("maps internal engagement/search control ids to their ui.* i18n keys", () => {
+      expect(isInternalChromeControlId("search-possibles-toggle")).toBe(true);
+      expect(resolveControlLabelId("search-possibles-toggle")).toBe("ui.windowSearch.suggestions");
       expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.actions");
-      expect(resolveControlLabelId("engagement-input")).toBe("ui.engagement.action");
+      expect(resolveControlLabelId("search-input")).toBe("ui.windowSearch.action");
     });
 
     it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
@@ -29216,14 +29378,14 @@ if (treeVitest) {
       expect(markup).toContain('id="ui.search.toggle"');
     });
 
-    it("renders engagement suggestions toggle without internal-id humanized labels", () => {
+    it("renders search suggestions toggle without internal-id humanized labels", () => {
       const markup = renderToStaticMarkup(
         <UiChromeCompactProvider compact={false}>
-          <Engagement input={{ placeholder: "Action" }} possibleEngagements={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
+          <Search input={{ placeholder: "Action" }} possibles={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
         </UiChromeCompactProvider>,
       );
-      expect(markup).toContain('id="ui.engagement.suggestions"');
-      expect(markup).not.toMatch(/Engagement Possibles/i);
+      expect(markup).toContain('id="ui.windowSearch.suggestions"');
+      expect(markup).not.toMatch(/Search Possibles/i);
       expect(markup).not.toMatch(/Possibles Toggle/i);
     });
 

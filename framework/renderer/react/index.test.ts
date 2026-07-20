@@ -57,6 +57,7 @@ import {
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
   resolveVortexPointerDownIntent,
+  resolveWorldSelectionMergeMode,
   resolveWorldContextMenuTarget,
   snapWorldPointToGrid,
   worldInstancePickBlocked,
@@ -1406,6 +1407,18 @@ describe("framework renderer hosts", () => {
     expect(resolveVortexPointerDownIntent(false, "mesh")).toBe("click-or-drag");
   });
 
+  it("uses the world surface selection mode instead of a stale shared invertive mode", () => {
+    const previousMode = (globalThis as any).__selectionMode;
+    (globalThis as any).__selectionMode = "invertive";
+    try {
+      expect(resolveWorldSelectionMergeMode("default", {})).toBe("default");
+      expect(resolveWorldSelectionMergeMode("default", { shiftKey: true })).toBe("additive");
+      expect(resolveWorldSelectionMergeMode("invertive", {})).toBe("invertive");
+    } finally {
+      (globalThis as any).__selectionMode = previousMode;
+    }
+  });
+
   it("resolves mesh style by premigration priority: disabled > selected > highlighted > hovered > neutral", () => {
     expect(resolveMeshStyle({})).toBe("neutral");
     expect(resolveMeshStyle({ hovered: true })).toBe("hovered");
@@ -2072,8 +2085,8 @@ describe("spawned window chrome", () => {
     };
     const measures = { [kind.id]: kind.options.measures ?? [] };
     const chrome = spawnedWindowChromeForKind(kind, engagements, measures, undefined, noopAction);
-    expect(chrome.engagement?.input?.value).toBe("Box");
-    expect(chrome.engagement?.possibleEngagements?.[0]?.label).toBe("Box");
+    expect(chrome.search?.input?.value).toBe("Box");
+    expect(chrome.search?.possibles?.[0]?.label).toBe("Box");
     const measuresMarkup = renderToStaticMarkup(chrome.measures as ReactElement);
     expect(measuresMarkup).toContain("Render Mode");
   });

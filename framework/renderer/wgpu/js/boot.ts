@@ -2,10 +2,8 @@
 /** @emoji 🧊 Trunk boot glue — loads wasm plugins and starts the wgpu renderer. */
 // #endregion 🧲Header
 
-import { expandPluginRegistry, parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
-import { PLUGIN_BUILD_TARGETS, PLUGIN_TARGETS } from "../../../plugin/registry/generated/plugins.ts";
-
-declare const DEFAULT_PLUGIN_FILTER: string;
+import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
+import { PLAYGROUND_SESSION } from "../../../product/os/dev/generated/session.ts";
 
 await new Promise<void>((resolve) => {
   if (document.readyState === "loading") {
@@ -237,24 +235,13 @@ function pluginHandleForBridge(handle: PluginModuleHandle) {
   };
 }
 
-const pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-const pluginFilter = pluginFromUrl ?? DEFAULT_PLUGIN_FILTER;
-const studioMode = pluginFilter === "s";
-
-/** @emoji 🧩 `PLUGIN_TARGETS` (pluginId + moduleUrl) joined back onto `PLUGIN_BUILD_TARGETS`'
- * contributes/consumes tags, so `expandPluginRegistry` can resolve the active plugin's contributor
- * modules generically — replaces the previous hardcoded `"${pluginFilter}-module-procedural"`
- * special case (which only ever matched `protocol-module-procedural`; that module now declares the
- * same `protocol.blockKind` tag `protocol/plugin/rs` consumes, so the generic contributes/consumes
- * resolution covers it without any plugin-id string templating). */
-const pluginRegistryMeta = new Map(PLUGIN_BUILD_TARGETS.map((target) => [target.pluginId, target]));
-const pluginRegistryEntries: PluginRegistryEntry[] = PLUGIN_TARGETS.map((target) => ({
-  pluginId: target.pluginId,
-  moduleUrl: target.moduleUrl,
-  contributes: pluginRegistryMeta.get(target.pluginId)?.contributes,
-  consumes: pluginRegistryMeta.get(target.pluginId)?.consumes,
+const pluginTargets: PluginRegistryEntry[] = PLAYGROUND_SESSION.plugins.map((entry) => ({
+  pluginId: entry.pluginId,
+  moduleUrl: entry.moduleUrl,
+  contributes: entry.contributes,
+  consumes: entry.consumes,
 }));
-const pluginTargets = expandPluginRegistry(pluginRegistryEntries, pluginFilter, studioMode);
+const pluginFilter = PLAYGROUND_SESSION.variant;
 
 async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
   try {

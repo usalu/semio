@@ -885,7 +885,7 @@ export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactE
   return (
     <>
       {grids.map((grid, i) => (
-        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[px, py, pz + 0.002]} />
+        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[px, py, pz + 0.001 * (i + 1)]} />
       ))}
     </>
   );

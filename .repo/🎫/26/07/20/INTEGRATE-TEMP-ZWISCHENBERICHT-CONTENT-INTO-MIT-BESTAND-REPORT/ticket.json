@@ -1,0 +1,13 @@
+{
+  "title": "Integrate Temp Zwischenbericht Content Into Mit-Bestand Report",
+  "emoji": "📄",
+  "status": "open",
+  "description": "Integrate everything under temp/ (zwischenbericht.md full rewrite, anhang_interviewauswertung_eike_schling.md, anlage_typologietabelle.md, 4 Bauteilkatalog UI PNGs) into mit-bestand/bericht/zwischenbericht/zwischenbericht.tex and its dark variant: rewrite glossary, Part 1 Ergebnisse, Part 2 Projektstand, Part 4 Ergebnisverwertung; add new appendices (Schling interview, Typologietabelle, Katalog-UI screenshots); extend references.bib; keep Part 3 Mittelverwendung untouched; verify both PDFs build via bun script.ts build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2179"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪f45e697ce5ae4af3b45753b0aebe88a9"
+  ]
+}

@@ -1,3 +1,44 @@
+// ../../plugin/registry/generated/plugins.ts
+var PLUGIN_BUILD_TARGETS = [
+  { pluginId: "animate", cratePath: "animate/plugin/rs", wasmOut: "animate_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "architect", cratePath: "architect/plugin/rs", wasmOut: "architect_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "fem", cratePath: "fem/plugin/rs", wasmOut: "fem_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "norm", cratePath: "norm/plugin/rs", wasmOut: "norm_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
+  { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "protocol", cratePath: "protocol/plugin/rs", wasmOut: "protocol_plugin.wasm", contributes: [], consumes: ["protocol.blockKind"] },
+  { pluginId: "protocol-module-procedural", cratePath: "protocol/module/procedural/rs", wasmOut: "protocol_module_procedural.wasm", contributes: ["protocol.blockKind"], consumes: [] },
+  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "remodel", cratePath: "remodel/plugin/rs", wasmOut: "remodel_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm", contributes: [], consumes: [], host: { landingAppId: "home", hostAppId: "studio" } },
+  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing", cratePath: "sourcing/plugin/rs", wasmOut: "sourcing_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-beams", cratePath: "sourcing/module/beams/rs", wasmOut: "sourcing_module_beams.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-slabs", cratePath: "sourcing/module/slabs/rs", wasmOut: "sourcing_module_slabs.wasm", contributes: [], consumes: [] },
+  { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
+  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
+  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
+];
+var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
+  pluginId: target.pluginId,
+  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
+}));
+
 // ../../core/js/index.ts
 class Store {
   listeners = new Set;
@@ -130,14 +171,6 @@ class DockUiStateStore extends Store {
     else
       this.storage.set(key, JSON.stringify(state));
   }
-}
-function expandPluginRegistry(plugins, primaryPluginId, studioMode = false) {
-  if (studioMode || !primaryPluginId)
-    return plugins;
-  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
-  const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
-  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
-  return [...primaryEntries, ...contributorEntries];
 }
 var EMPTY_INVOCATION_RESPONSE = {
   output: null,
@@ -394,46 +427,49 @@ if (import.meta.vitest) {
   });
 }
 
-// ../../plugin/registry/generated/plugins.ts
-var PLUGIN_BUILD_TARGETS = [
-  { pluginId: "animate", cratePath: "animate/plugin/rs", wasmOut: "animate_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "architect", cratePath: "architect/plugin/rs", wasmOut: "architect_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "cad", cratePath: "cad/plugin/rs", wasmOut: "cad_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "dag", cratePath: "infinite/board/port/directed/dag/plugin/rs", wasmOut: "dag_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "draw", cratePath: "draw/plugin/rs", wasmOut: "draw_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "fem", cratePath: "fem/plugin/rs", wasmOut: "fem_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "flow", cratePath: "flow/plugin/rs", wasmOut: "flow_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "forms", cratePath: "forms/plugin/rs", wasmOut: "forms_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
-  { pluginId: "gis", cratePath: "gis/plugin/rs", wasmOut: "gis_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "imperative", cratePath: "imperative/plugin/rs", wasmOut: "imperative_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "layout", cratePath: "layout/plugin/rs", wasmOut: "layout_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", wasmOut: "lowpoly_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "mathematical", cratePath: "mathematical/plugin/rs", wasmOut: "mathematical_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "norm", cratePath: "norm/plugin/rs", wasmOut: "norm_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "note", cratePath: "note/plugin/rs", wasmOut: "note_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "procedural", cratePath: "procedural/plugin/rs", wasmOut: "procedural_plugin.wasm", contributes: [], consumes: ["forms.questionKind"] },
-  { pluginId: "process", cratePath: "process/plugin/rs", wasmOut: "process_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "protocol", cratePath: "protocol/plugin/rs", wasmOut: "protocol_plugin.wasm", contributes: [], consumes: ["protocol.blockKind"] },
-  { pluginId: "protocol-module-procedural", cratePath: "protocol/module/procedural/rs", wasmOut: "protocol_module_procedural.wasm", contributes: ["protocol.blockKind"], consumes: [] },
-  { pluginId: "puzzle", cratePath: "puzzle/plugin/rs", wasmOut: "puzzle_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "raster", cratePath: "raster/plugin/rs", wasmOut: "raster_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", wasmOut: "reasoning_mindmap_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "remodel", cratePath: "remodel/plugin/rs", wasmOut: "remodel_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "s", cratePath: "s/plugin/rs", wasmOut: "s_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "sequence", cratePath: "sequence/plugin/rs", wasmOut: "sequence_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "shooting", cratePath: "shooting/plugin/rs", wasmOut: "shooting_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing", cratePath: "sourcing/plugin/rs", wasmOut: "sourcing_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-beams", cratePath: "sourcing/module/beams/rs", wasmOut: "sourcing_module_beams.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-slabs", cratePath: "sourcing/module/slabs/rs", wasmOut: "sourcing_module_slabs.wasm", contributes: [], consumes: [] },
-  { pluginId: "sourcing-module-windows", cratePath: "sourcing/module/windows/rs", wasmOut: "sourcing_module_windows.wasm", contributes: [], consumes: [] },
-  { pluginId: "trinity", cratePath: "trinity/plugin/rs", wasmOut: "trinity_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "vcs", cratePath: "vcs/plugin/rs", wasmOut: "vcs_plugin.wasm", contributes: [], consumes: [] },
-  { pluginId: "writer", cratePath: "writer/plugin/rs", wasmOut: "writer_plugin.wasm", contributes: [], consumes: [] }
-];
-var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
-  pluginId: target.pluginId,
-  moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
-}));
+// ../../product/os/dev/generated/session.ts
+var PLAYGROUND_SESSION = {
+  variant: "s",
+  registryPluginId: "s",
+  defaultAppId: undefined,
+  studioMode: true,
+  host: { landingAppId: "home", hostAppId: "studio" },
+  plugins: [
+    { pluginId: "animate", moduleUrl: "/plugin-modules/animate/animate_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "architect", moduleUrl: "/plugin-modules/architect/architect_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "cad", moduleUrl: "/plugin-modules/cad/cad_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "dag", moduleUrl: "/plugin-modules/dag/dag_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "fem", moduleUrl: "/plugin-modules/fem/fem_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "flow", moduleUrl: "/plugin-modules/flow/flow_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "forms", moduleUrl: "/plugin-modules/forms/forms_plugin.js", contributes: [], consumes: ["forms.questionKind"] },
+    { pluginId: "gis", moduleUrl: "/plugin-modules/gis/gis_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "imperative", moduleUrl: "/plugin-modules/imperative/imperative_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "layout", moduleUrl: "/plugin-modules/layout/layout_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "mathematical", moduleUrl: "/plugin-modules/mathematical/mathematical_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "norm", moduleUrl: "/plugin-modules/norm/norm_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "procedural", moduleUrl: "/plugin-modules/procedural/procedural_plugin.js", contributes: [], consumes: ["forms.questionKind"] },
+    { pluginId: "process", moduleUrl: "/plugin-modules/process/process_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "protocol", moduleUrl: "/plugin-modules/protocol/protocol_plugin.js", contributes: [], consumes: ["protocol.blockKind"] },
+    { pluginId: "protocol-module-procedural", moduleUrl: "/plugin-modules/protocol-module-procedural/protocol_module_procedural.js", contributes: ["protocol.blockKind"], consumes: [] },
+    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "raster", moduleUrl: "/plugin-modules/raster/raster_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "reasoning-mindmap", moduleUrl: "/plugin-modules/reasoning-mindmap/reasoning_mindmap_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "remodel", moduleUrl: "/plugin-modules/remodel/remodel_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sequence", moduleUrl: "/plugin-modules/sequence/sequence_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-beams", moduleUrl: "/plugin-modules/sourcing-module-beams/sourcing_module_beams.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-slabs", moduleUrl: "/plugin-modules/sourcing-module-slabs/sourcing_module_slabs.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-windows", moduleUrl: "/plugin-modules/sourcing-module-windows/sourcing_module_windows.js", contributes: [], consumes: [] },
+    { pluginId: "trinity", moduleUrl: "/plugin-modules/trinity/trinity_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "vcs", moduleUrl: "/plugin-modules/vcs/vcs_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "writer", moduleUrl: "/plugin-modules/writer/writer_plugin.js", contributes: [], consumes: [] }
+  ]
+};
 
 // js/boot.ts
 await new Promise((resolve) => {
@@ -620,17 +656,13 @@ function pluginHandleForBridge(handle) {
     windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures))
   };
 }
-var pluginFromUrl = new URLSearchParams(location.search).get("plugin");
-var pluginFilter = pluginFromUrl ?? "puzzle3d";
-var studioMode = pluginFilter === "s";
-var pluginRegistryMeta = new Map(PLUGIN_BUILD_TARGETS.map((target) => [target.pluginId, target]));
-var pluginRegistryEntries = PLUGIN_TARGETS.map((target) => ({
-  pluginId: target.pluginId,
-  moduleUrl: target.moduleUrl,
-  contributes: pluginRegistryMeta.get(target.pluginId)?.contributes,
-  consumes: pluginRegistryMeta.get(target.pluginId)?.consumes
+var pluginTargets = PLAYGROUND_SESSION.plugins.map((entry) => ({
+  pluginId: entry.pluginId,
+  moduleUrl: entry.moduleUrl,
+  contributes: entry.contributes,
+  consumes: entry.consumes
 }));
-var pluginTargets = expandPluginRegistry(pluginRegistryEntries, pluginFilter, studioMode);
+var pluginFilter = PLAYGROUND_SESSION.variant;
 async function pluginModuleAvailable(moduleUrl) {
   try {
     const response = await fetch(moduleUrl, { method: "HEAD" });

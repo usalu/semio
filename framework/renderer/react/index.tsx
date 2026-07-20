@@ -181,6 +181,7 @@ import {
   type PanelTreeUnitDockMove,
   type RibbonDirection,
   type RibbonRow,
+  type SearchSpec,
   type UiChromeLayout,
   type UiChromeTerminologyId,
   type UiLocale,
@@ -2546,6 +2547,17 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onActi
     disabled: option.disabled,
     onPress: option.action ? () => onAction(option.action!) : undefined,
   }));
+  const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
+  const control = windowEngagementControlToSpec(engagement.control, onAction);
+  const controls = engagement.controls?.map((row) => windowEngagementControlToSpec(row, onAction)).filter((row): row is EngagementControl => row !== undefined);
+  const hasContent = (options?.length ?? 0) > 0 || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0;
+  if (!hasContent) return undefined;
+  return { sessionActive: engagement.sessionActive, options, control, controls, status };
+}
+
+/** @emoji 🔎 Builds the top-middle window {@link SearchSpec} from the same Rust engagement payload: typed action input and autocomplete possibles. */
+function windowEngagementToSearchSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): SearchSpec | undefined {
+  if (!engagement) return undefined;
   const input = engagement.input
     ? {
         id: engagement.input.id,
@@ -2558,18 +2570,15 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onActi
         onAbort: engagement.input.onAbort ? () => onAction(engagement.input!.onAbort!) : undefined,
       }
     : undefined;
-  const status = engagement.status?.map((row) => ({ id: row.id, content: row.text }));
-  const possibleEngagements = engagement.possibleEngagements?.map((row) => ({
+  const possibles = engagement.possibleEngagements?.map((row) => ({
     id: row.id,
     label: row.label,
     detail: row.detail,
     onSelect: row.action ? () => onAction(row.action!) : undefined,
   }));
-  const control = windowEngagementControlToSpec(engagement.control, onAction);
-  const controls = engagement.controls?.map((row) => windowEngagementControlToSpec(row, onAction)).filter((row): row is EngagementControl => row !== undefined);
-  const hasContent = (options?.length ?? 0) > 0 || Boolean(input) || Boolean(control) || (controls?.length ?? 0) > 0 || (status?.length ?? 0) > 0 || (possibleEngagements?.length ?? 0) > 0;
+  const hasContent = Boolean(input) || (possibles?.length ?? 0) > 0;
   if (!hasContent) return undefined;
-  return { sessionActive: engagement.sessionActive, options, input, control, controls, status, possibleEngagements };
+  return { sessionActive: engagement.sessionActive, input, possibles };
 }
 
 function panelTabIcon(tabId: string, group: string): React.FC<{ size?: number }> {
@@ -2703,17 +2712,19 @@ export function resolveUtilityNodes(
 }
 //#endregion 🧰UtilityRegistry
 
-/** @emoji 💬 Builds spawned-window engagement, measures, and utility-options chrome for one window kind. */
+/** @emoji 💬 Builds spawned-window engagement, search, measures, and utility-options chrome for one window kind. */
 export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
   engagementsByKind: Readonly<Record<string, WindowEngagement>>,
   measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
   activeUtilityId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
-): { readonly engagement?: EngagementSpec; readonly measures: ReactNode; readonly utilityOptions: ReactNode } {
+): { readonly engagement?: EngagementSpec; readonly search?: SearchSpec; readonly measures: ReactNode; readonly utilityOptions: ReactNode } {
   const { measures, utilityOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, kind.id, onAction);
+  const resolvedEngagement = resolveWindowEngagement(kind, engagementsByKind);
   return {
-    engagement: windowEngagementToSpec(resolveWindowEngagement(kind, engagementsByKind), onAction),
+    engagement: windowEngagementToSpec(resolvedEngagement, onAction),
+    search: windowEngagementToSearchSpec(resolvedEngagement, onAction),
     measures,
     utilityOptions,
   };
@@ -3182,6 +3193,108 @@ export function resolveUtilityActivation(current: string | null | undefined, req
   return requested === "" || (current ?? null) === requested ? null : requested;
 }
 
+/** 🗂️ Category id for one action: declared category, else `"history"` for history actions, else `"actions"` (mirrors the command-palette fallback at {@link resolveCommands}'s sibling `searchItems` builder). */
+export function actionCategoryId(action: Pick<ActionDefinition, "category" | "kind">): string {
+  return action.category ?? (action.kind === "history" ? "history" : "actions");
+}
+
+/** 🗂️ Resolves an action category's display label: the app's own group-label overlay first, then the shared `ui.ribbon.parent.*` chrome vocabulary for known category ids, else the raw id (mirrors {@link resolveUtilityGroupLabel}). */
+function actionCategoryLabel(category: string, appLabelsOverlay: PluginAppLabelsOverlay): string {
+  const fallback = CHROME_KNOWN_RIBBON_PARENT_CATEGORIES.has(category) ? shellLabel(`ui.ribbon.parent.${category as UiRibbonParentCategory}`) : category;
+  return resolveAppLabel(appLabelsOverlay, "group", category, fallback);
+}
+
+/** 🗂️ Ordered, deduped categories from resolved actions (sibling of {@link commandCategories}). */
+export function actionCategories(actions: readonly ActionDefinition[], appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY): { readonly id: string; readonly label: string }[] {
+  const seen = new Set<string>();
+  const categories: { readonly id: string; readonly label: string }[] = [];
+  for (const action of actions) {
+    const id = actionCategoryId(action);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    categories.push({ id, label: actionCategoryLabel(id, appLabelsOverlay) });
+  }
+  return categories;
+}
+
+/**
+ * 🎛 Category sections of one window's Actions rail (Tree twin of {@link buildCommandCategoryTree}):
+ * one section per category, zero-arg actions fire directly, arg-carrying actions toggle a sibling form
+ * section — exactly {@link buildCommandCategoryTree}'s list/form split, localized per category so
+ * multiple categories can render side by side. Only one action (across all categories) is expanded at a
+ * time, per `expandedActionId`.
+ */
+export function buildActionCategoryTree(
+  windowId: string,
+  controllerId: string,
+  actions: readonly ActionDefinition[],
+  expandedActionId: string | null,
+  stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>,
+  disabled: boolean,
+  onExpandedChange: (actionId: string | null) => void,
+  onStageArg: (actionId: string, argId: string, value: unknown) => void,
+  onResetArgs: (actionId: string) => void,
+  onExecute: (descriptor: ActionDescriptor) => void,
+  appLabelsOverlay: PluginAppLabelsOverlay = EMPTY_APP_LABELS_OVERLAY,
+): TreeDataSection[] {
+  const categories = actionCategories(actions, appLabelsOverlay);
+  const expandedAction = expandedActionId ? actions.find((action) => action.id === expandedActionId) : undefined;
+  const sections: TreeDataSection[] = [];
+  for (const category of categories) {
+    const categoryActions = actions.filter((action) => actionCategoryId(action) === category.id);
+    sections.push({
+      id: `action.category.${category.id}`,
+      label: category.label,
+      defaultOpen: true,
+      items: categoryActions.map((action): TreeDataItem => {
+        const icon = action.iconId && action.iconId in ICONS ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
+        if (!actionRequiresStagedForm(action)) {
+          return { id: `action.${action.id}`, label: action.label, icon, onClick: () => onExecute({ controllerId, action: action.id }) };
+        }
+        const expanded = expandedActionId === action.id;
+        return {
+          id: `action.${action.id}`,
+          label: `${action.label}…`,
+          icon: icon ?? <Icon icon={expanded ? "chevron-down" : "chevron-right"} size="small" />,
+          onClick: () => onExpandedChange(expanded ? null : action.id),
+        };
+      }),
+    });
+    if (expandedAction && actionCategoryId(expandedAction) === category.id) {
+      const staged = stagedArgsByKey[actionStageKey(windowId, expandedAction.id)] ?? {};
+      const effective = effectiveActionArgs(expandedAction.args, staged);
+      const missing = missingRequiredArgs(expandedAction.args, effective);
+      sections.push({
+        id: `action.category.${category.id}.form`,
+        items: expandedAction.args.map(
+          (def): TreeDataItem => ({
+            id: `action.${expandedAction.id}.arg.${def.id}`,
+            label: def.label,
+            description: def.description,
+            control: renderStagedArgControl(def, effective[def.id], (value) => onStageArg(expandedAction.id, def.id, value), disabled),
+          }),
+        ),
+        actions: [
+          {
+            id: `${windowId}-action-${expandedAction.id}-execute`,
+            icon: <Icon icon="check" size="small" />,
+            text: shellLabel("ui.common.execute"),
+            disabled: disabled || missing.length > 0,
+            onClick: () => onExecute({ controllerId, action: expandedAction.id, args: effective }),
+          },
+          {
+            id: `${windowId}-action-${expandedAction.id}-reset`,
+            icon: <Icon icon="undo" size="small" />,
+            text: shellLabel("ui.common.reset"),
+            onClick: () => onResetArgs(expandedAction.id),
+          },
+        ],
+      });
+    }
+  }
+  return sections;
+}
+
 /** 🎛 Props for the per-window Action rail body (P1/P2). */
 export type WindowActionPaneProps = {
   readonly windowId: string;
@@ -3194,61 +3307,23 @@ export type WindowActionPaneProps = {
   readonly onStageArg: (actionId: string, argId: string, value: unknown) => void;
   readonly onResetArgs: (actionId: string) => void;
   readonly onExecute: (descriptor: ActionDescriptor) => void;
+  readonly appLabelsOverlay?: PluginAppLabelsOverlay;
 };
 
 /**
- * 🎛 The per-window Actions rail body (P1/P2). Zero-arg actions ARE the execute button; arg-carrying
- * actions expand a locally-buffered staged form — nothing dispatches on edit, effective value is
+ * 🎛 The per-window Actions rail body (P1/P2), grouped into categories like the command panel. Zero-arg
+ * actions fire directly; arg-carrying actions expand a locally-buffered staged form (same inline
+ * property-row controls as utility measures) — nothing dispatches on edit, effective value is
  * `staged ?? default ?? unset`, Execute is enabled only when every required arg has an effective value,
  * fires exactly ONE `ActionDescriptor` with the merged args, and keeps the staged values afterward.
  * When `disabled` (an active utility with `allowsActionsWhileActive === false`), every row renders disabled.
  */
 export function WindowActionPane(props: WindowActionPaneProps): ReactElement {
-  const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute } = props;
+  const { windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay } = props;
+  const sections = buildActionCategoryTree(windowId, controllerId, actions, expandedActionId, stagedArgsByKey, disabled, onExpandedChange, onStageArg, onResetArgs, onExecute, appLabelsOverlay);
   return (
-    <div data-slot="window-action-pane" className="flex min-w-0 flex-col gap-single p-single">
-      {actions.map((action) => {
-        if (!actionRequiresStagedForm(action)) {
-          return (
-            <Button
-              key={action.id}
-              id={`${windowId}-action-${action.id}`}
-              text={action.label}
-              icon={action.iconId && action.iconId in ICONS ? (action.iconId as IconName) : "play"}
-              disabled={disabled}
-              onClick={() => onExecute({ controllerId, action: action.id })}
-            />
-          );
-        }
-        const expanded = expandedActionId === action.id;
-        const staged = stagedArgsByKey[actionStageKey(windowId, action.id)] ?? {};
-        const effective = effectiveActionArgs(action.args, staged);
-        const missing = missingRequiredArgs(action.args, effective);
-        return (
-          <div key={action.id} data-slot="window-action-row" className={cn("flex min-w-0 flex-col rounded-md border", borderElementClass)}>
-            <Button id={`${windowId}-action-${action.id}-disclosure`} text={`${action.label}…`} icon={expanded ? "chevron-down" : "chevron-right"} onClick={() => onExpandedChange(expanded ? null : action.id)} />
-            {expanded ? (
-              <div data-slot="window-action-form" className="flex min-w-0 flex-col gap-single p-single">
-                {action.args.map((def) => (
-                  <Field key={def.id} id={`${windowId}-action-${action.id}-arg-${def.id}`} label={def.label} description={def.description} required={def.required}>
-                    {renderStagedArgControl(def, effective[def.id], (value) => onStageArg(action.id, def.id, value), disabled)}
-                  </Field>
-                ))}
-                <div className="flex items-center gap-single">
-                  <Button
-                    id={`${windowId}-action-${action.id}-execute`}
-                    text={shellLabel("ui.common.execute")}
-                    icon="check"
-                    disabled={disabled || missing.length > 0}
-                    onClick={() => onExecute({ controllerId, action: action.id, args: effectiveActionArgs(action.args, staged) })}
-                  />
-                  <Button id={`${windowId}-action-${action.id}-reset`} text={shellLabel("ui.common.reset")} icon="undo" onClick={() => onResetArgs(action.id)} />
-                </div>
-              </div>
-            ) : null}
-          </div>
-        );
-      })}
+    <div data-slot="window-action-pane" className="flex min-w-0 flex-col">
+      <Tree sections={sections} showLines={false} sortableSections={false} />
     </div>
   );
 }
@@ -3293,6 +3368,7 @@ function windowActionPaneNode(
       onStageArg={(actionId, argId, value) => dispatch({ type: "STAGE_ACTION_ARG", windowId, actionId, argId, value })}
       onResetArgs={(actionId) => dispatch({ type: "RESET_ACTION_ARGS", windowId, actionId })}
       onExecute={onAction}
+      appLabelsOverlay={appLabelsOverlay}
     />
   );
 }
@@ -5917,6 +5993,7 @@ export function FrameworkOsShell({
             showControls: true,
             measures: chrome?.measures,
             engagement: chrome?.engagement,
+            search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
             actionsFolded: actionsFoldedFor(spawned.id, spawnedActions),
@@ -5935,13 +6012,15 @@ export function FrameworkOsShell({
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
       const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, windowEngagementsByKind);
       return {
         id: kind.id,
         title: appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
         measures: chrome.measures,
-        engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
+        engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
+        search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
         actionsFolded: actionsFoldedFor(kind.id, actions),
@@ -5959,6 +6038,7 @@ export function FrameworkOsShell({
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
       const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, windowEngagementsByKind);
       return [
         {
           id: instance.id,
@@ -5966,7 +6046,8 @@ export function FrameworkOsShell({
           fill: true,
           showControls: true,
           measures: chrome.measures,
-          engagement: windowEngagementToSpec(resolveWindowEngagement(kind, windowEngagementsByKind), onActionStable),
+          engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
+          search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
           actionsFolded: actionsFoldedFor(instance.id, actions),
@@ -8861,6 +8942,7 @@ type WorldContextMenuItem = {
 
 type WorldSelectionRecord = {
   readonly method?: SelectionMarqueeMethod;
+  readonly selectionMergeMode?: SelectionMergeMode;
   readonly ids?: readonly string[];
   readonly hoveredId?: string | null;
   readonly referenceSelectedId?: string;
@@ -10093,7 +10175,7 @@ function WorldInstancesLayer({
   const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode), [transformMode]);
   const paintMode = selection.interactionMode === "paint";
 
-  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(marqueeModeFromModifiers(event));
+  const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
 
   const paintFromHit = (objectId: string, mesh: WorldMeshData, event: ThreeEvent<PointerEvent> & { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
     if (!onPaintAt) return;
@@ -10569,6 +10651,21 @@ function instanceMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): st
   return "replace";
 }
 
+/** @emoji 🎯 Resolves a world surface's declared selection mode before falling back to the shared selection toolbar. */
+export function resolveWorldSelectionMergeMode(
+  configuredMode: SelectionMergeMode | undefined,
+  modifiers: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean },
+): SelectionMergeMode {
+  if (configuredMode === undefined) return marqueeModeFromModifiers(modifiers);
+  if (configuredMode !== "default") return configuredMode;
+  const shift = modifiers.shiftKey === true;
+  const ctrl = modifiers.ctrlKey === true || modifiers.metaKey === true;
+  if (shift && ctrl) return "invertive";
+  if (shift) return "additive";
+  if (ctrl) return "subtractive";
+  return "default";
+}
+
 /** @emoji 🖱️ Same as {@link instanceMergeArg} but a bare click (no modifiers) defaults to invertive. */
 function componentMergeArg(mode: ReturnType<typeof marqueeModeFromModifiers>): string {
   if (mode === "additive") return "add";
@@ -10927,7 +11024,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const marqueeStart = marqueePath[0];
   const marqueeEnd = marqueePath[marqueePath.length - 1];
   const marqueeDragActive = marqueeDown && marqueePath.length > 1 && marqueeStart != null && marqueeEnd != null && Math.hypot(marqueeEnd.x - marqueeStart.x, marqueeEnd.y - marqueeStart.y) > MARQUEE_DRAG_THRESHOLD_PX;
-  const marqueeMergeMode = useMemo(() => marqueeModeFromModifiers(marqueeModifiers), [marqueeModifiers]);
+  const marqueeMergeMode = useMemo(() => resolveWorldSelectionMergeMode(selection.selectionMergeMode, marqueeModifiers), [marqueeModifiers, selection.selectionMergeMode]);
   const marqueeCoverage: SelectionMarqueeCoverage = useMemo(() => {
     if (!marqueeDragActive || !marqueeStart || !marqueeEnd) return "full";
     return marqueeCoverageFromGesture({ method, startX: marqueeStart.x, endX: marqueeEnd.x, path: marqueePath });
@@ -11083,7 +11180,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
-      const merge = instanceMergeArg(marqueeModeFromModifiers(event));
+      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
       if (selectionMode === "mesh" || selectionMode === "object") {
         dispatch("worldPick", { granularity: "mesh", id: index, merge });
         return;
@@ -11093,7 +11190,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         merge,
       });
     },
-    [dispatch, selectionMode],
+    [dispatch, selection.selectionMergeMode, selectionMode],
   );
 
   const handleInstancePointerMove = useCallback(
@@ -11131,10 +11228,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleVortexSelect = useCallback(
     (fullId: string, event?: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
-      const merge = event ? instanceMergeArg(marqueeModeFromModifiers(event)) : (globalThis as any).__selectionMode || "default";
+      const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event ?? {}));
       dispatch("worldVortexSelect", { fullId, merge });
     },
-    [dispatch],
+    [dispatch, selection.selectionMergeMode],
   );
 
   const handleConnectDragStart = useCallback((fullId: string, position: readonly [number, number, number]) => {
@@ -11431,9 +11528,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     (event: MouseEvent) => {
       if (wasMarqueeDragRef.current) return;
       if (selection.engagementSessionActive || paintMode) return;
-      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(marqueeModeFromModifiers(event)) });
+      dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event)) });
     },
-    [dispatch, paintMode, selection.engagementSessionActive, selectionMode],
+    [dispatch, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {

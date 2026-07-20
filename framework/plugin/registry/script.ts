@@ -6,6 +6,11 @@ import { dirname, join, relative } from "node:path";
 import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../../repo/lib/js/index.ts";
 
 //#region 🔖PluginRegistryEntry
+export type PluginHostMetadata = {
+  readonly landingAppId: string;
+  readonly hostAppId: string;
+};
+
 export type PluginRegistryEntry = {
   readonly pluginId: string;
   readonly cratePath: string;
@@ -13,6 +18,7 @@ export type PluginRegistryEntry = {
   readonly wasmOut: string;
   readonly contributes: readonly string[];
   readonly consumes: readonly string[];
+  readonly host?: PluginHostMetadata;
 };
 
 function findPluginCargoFiles(root: string): string[] {
@@ -55,7 +61,11 @@ function parsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistr
   const semioBlock = tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[package.metadata.semio]")[0];
   const contributes = semioBlock ? parseTomlStringArray(semioBlock.join("\n"), "contributes") : [];
   const consumes = semioBlock ? parseTomlStringArray(semioBlock.join("\n"), "consumes") : [];
-  return { pluginId: componentPackage, cratePath, packageName, wasmOut, contributes, consumes };
+  const hostBlock = semioBlock?.join("\n").match(/^host\s*=\s*\{([^}]*)\}/m)?.[1];
+  const landingAppId = hostBlock?.match(/landing\s*=\s*"([^"]+)"/)?.[1];
+  const hostAppId = hostBlock?.match(/studio\s*=\s*"([^"]+)"/)?.[1];
+  const host = landingAppId && hostAppId ? { landingAppId, hostAppId } : undefined;
+  return { pluginId: componentPackage, cratePath, packageName, wasmOut, contributes, consumes, ...(host ? { host } : {}) };
 }
 
 //#region 🔖PlaygroundEntry
@@ -232,8 +242,35 @@ export type GeneratePluginRegistryOptions = {
   readonly filterPlaygroundPlugin?: string;
 };
 
-export function isStudioPluginFilter(pluginFilter?: string): boolean {
-  return !pluginFilter || pluginFilter === "s";
+/** @emoji 🎯 Resolves a playground variant/alias or bare plugin id to its wasm registry plugin id. */
+export function resolveRegistryPluginIdForFilter(pluginFilter: string, repoRoot = getWorkspaceRoot()): string {
+  for (const manifestPath of findPluginCargoFiles(repoRoot)) {
+    const text = readFileSync(manifestPath, "utf8");
+    const componentPackage = text.match(/\[package\.metadata\.component\][\s\S]*?^package = "semio:([^"]+)"/m)?.[1];
+    if (!componentPackage) continue;
+    for (const block of tomlBlocksAfterHeader(text.split("\n"), (line) => line === "[[package.metadata.semio.playground]]")) {
+      const body = block.join("\n");
+      const variant = body.match(/^variant\s*=\s*"([^"]+)"/m)?.[1];
+      if (!variant) continue;
+      const aliases = parseTomlStringArray(body, "aliases");
+      if (variant === pluginFilter || aliases.includes(pluginFilter)) return componentPackage;
+    }
+  }
+  return pluginFilter;
+}
+
+function pluginEntryHasHost(pluginId: string, repoRoot: string): boolean {
+  for (const manifestPath of findPluginCargoFiles(repoRoot)) {
+    const entry = tryParsePluginCargo(manifestPath, repoRoot);
+    if (entry?.pluginId === pluginId) return entry.host !== undefined;
+  }
+  return false;
+}
+
+/** @emoji 🏠 True when the filter resolves to a plugin crate that declares `[package.metadata.semio].host`. */
+export function isStudioPluginFilter(pluginFilter?: string, repoRoot = getWorkspaceRoot()): boolean {
+  if (!pluginFilter) return true;
+  return pluginEntryHasHost(resolveRegistryPluginIdForFilter(pluginFilter, repoRoot), repoRoot);
 }
 
 /**
@@ -261,17 +298,11 @@ export function resolveRegistryPluginIdsForFilter(filterPlaygroundPlugin: string
 }
 
 function findPluginCargoPathsForIds(repoRoot: string, pluginIds: readonly string[]): string[] {
-  const paths: string[] = [];
-  for (const pluginId of pluginIds) {
-    const result = spawnSync("rg", ["-l", `package = "semio:${pluginId}"`, "--glob", "**/Cargo.toml", "-g", "!**/target/**", "-g", "!**/node_modules/**", "-g", "!**/framework/plugin/rs/**"], { cwd: repoRoot, encoding: "utf8" });
-    const hit = (result.stdout ?? "").trim().split("\n").filter(Boolean)[0];
-    if (hit) {
-      paths.push(join(repoRoot, hit));
-      continue;
-    }
-    console.warn(`[DEBUG] plugin registry catalog: no crate found for semio:${pluginId}`);
-  }
-  return paths;
+  const idSet = new Set(pluginIds);
+  return findPluginCargoFiles(repoRoot).filter((path) => {
+    const entry = tryParsePluginCargo(path, repoRoot);
+    return entry !== undefined && idSet.has(entry.pluginId);
+  });
 }
 
 function tryParsePluginCargo(manifestPath: string, repoRoot: string): PluginRegistryEntry | undefined {
@@ -296,20 +327,38 @@ export function generatePluginRegistry(repoRoot = getWorkspaceRoot(), options: G
 }
 
 function emitTypeScript(entries: PluginRegistryEntry[]): string {
+  const hostRows = entries
+    .filter((entry) => entry.host)
+    .map((entry) => `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, landingAppId: ${JSON.stringify(entry.host!.landingAppId)}, hostAppId: ${JSON.stringify(entry.host!.hostAppId)} },`)
+    .join("\n");
   const rows = entries
-    .map(
-      (entry) =>
-        `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)} },`,
-    )
+    .map((entry) => {
+      const host = entry.host ? `, host: { landingAppId: ${JSON.stringify(entry.host.landingAppId)}, hostAppId: ${JSON.stringify(entry.host.hostAppId)} }` : "";
+      return `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, cratePath: ${JSON.stringify(entry.cratePath)}, wasmOut: ${JSON.stringify(entry.wasmOut)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)}${host} },`;
+    })
     .join("\n");
   return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
+export type PluginHostMetadata = {
+\treadonly landingAppId: string;
+\treadonly hostAppId: string;
+};
+
+export type PluginHostConfig = PluginHostMetadata & {
+\treadonly pluginId: string;
+};
+
 export type PluginBuildTarget = {
 \treadonly pluginId: string;
 \treadonly cratePath: string;
 \treadonly wasmOut: string;
 \treadonly contributes: readonly string[];
 \treadonly consumes: readonly string[];
+\treadonly host?: PluginHostMetadata;
 };
+
+export const PLUGIN_HOST_CONFIGS: readonly PluginHostConfig[] = [
+${hostRows}
+];
 
 export const PLUGIN_BUILD_TARGETS: readonly PluginBuildTarget[] = [
 ${rows}
@@ -370,6 +419,145 @@ ${rows}
 `;
 }
 
+//#region 🎮PlaygroundSession
+export type PlaygroundSessionPlugin = {
+  readonly pluginId: string;
+  readonly moduleUrl: string;
+  readonly contributes: readonly string[];
+  readonly consumes: readonly string[];
+};
+
+export type PlaygroundSession = {
+  readonly variant: string;
+  readonly registryPluginId: string;
+  readonly defaultAppId?: string;
+  readonly studioMode: boolean;
+  readonly host?: PluginHostMetadata;
+  readonly plugins: readonly PlaygroundSessionPlugin[];
+};
+
+/** @emoji 🎮 Builds the pre-expanded plugin list and host metadata for one playground launch. */
+export function buildPlaygroundSession(variant: string, repoRoot = getWorkspaceRoot()): PlaygroundSession {
+  const studioMode = isStudioPluginFilter(variant, repoRoot);
+  const registryPluginId = resolveRegistryPluginIdForFilter(variant, repoRoot);
+  const playgrounds = generatePlaygroundRegistry(repoRoot);
+  const playground = playgrounds.find((entry) => entry.variant === variant || entry.aliases.includes(variant));
+  const entries = generatePluginRegistry(repoRoot, studioMode ? {} : { filterPlaygroundPlugin: registryPluginId });
+  const host = entries.find((entry) => entry.pluginId === registryPluginId)?.host;
+  return {
+    variant,
+    registryPluginId,
+    defaultAppId: playground?.app,
+    studioMode,
+    ...(host ? { host } : {}),
+    plugins: entries.map((entry) => ({
+      pluginId: entry.pluginId,
+      moduleUrl: `/plugin-modules/${entry.pluginId}/${entry.wasmOut.replace(/\.wasm$/, ".js")}`,
+      contributes: entry.contributes,
+      consumes: entry.consumes,
+    })),
+  };
+}
+
+function emitSessionTypeScript(session: PlaygroundSession): string {
+  const host = session.host ? `{ landingAppId: ${JSON.stringify(session.host.landingAppId)}, hostAppId: ${JSON.stringify(session.host.hostAppId)} }` : "undefined";
+  const defaultAppId = session.defaultAppId !== undefined ? JSON.stringify(session.defaultAppId) : "undefined";
+  const pluginRows = session.plugins
+    .map(
+      (entry) =>
+        `\t{ pluginId: ${JSON.stringify(entry.pluginId)}, moduleUrl: ${JSON.stringify(entry.moduleUrl)}, contributes: ${JSON.stringify(entry.contributes)}, consumes: ${JSON.stringify(entry.consumes)} },`,
+    )
+    .join("\n");
+  return `/** @generated by framework/plugin/registry/script.ts — do not edit. */
+export type PlaygroundSessionPlugin = {
+\treadonly pluginId: string;
+\treadonly moduleUrl: string;
+\treadonly contributes: readonly string[];
+\treadonly consumes: readonly string[];
+};
+
+export type PlaygroundSession = {
+\treadonly variant: string;
+\treadonly registryPluginId: string;
+\treadonly defaultAppId?: string;
+\treadonly studioMode: boolean;
+\treadonly host?: { readonly landingAppId: string; readonly hostAppId: string };
+\treadonly plugins: readonly PlaygroundSessionPlugin[];
+};
+
+export const PLAYGROUND_SESSION: PlaygroundSession = {
+\tvariant: ${JSON.stringify(session.variant)},
+\tregistryPluginId: ${JSON.stringify(session.registryPluginId)},
+\tdefaultAppId: ${defaultAppId},
+\tstudioMode: ${session.studioMode},
+\thost: ${host},
+\tplugins: [
+${pluginRows}
+\t],
+};
+`;
+}
+
+function emitRustHosts(entries: PluginRegistryEntry[], playgrounds: PlaygroundEntry[]): string {
+  const hostRows = entries
+    .filter((entry) => entry.host)
+    .map(
+      (entry) =>
+        `    PluginHostConfig { plugin_id: ${JSON.stringify(entry.pluginId)}, landing_app_id: ${JSON.stringify(entry.host!.landingAppId)}, host_app_id: ${JSON.stringify(entry.host!.hostAppId)} },`,
+    )
+    .join("\n");
+  const variantRows = playgrounds
+    .map((entry) => `    (${JSON.stringify(entry.variant)}, ${JSON.stringify(entry.pluginId)}),`)
+  .join("\n");
+  const aliasRows = playgrounds
+    .flatMap((entry) => entry.aliases.map((alias) => `    (${JSON.stringify(alias)}, ${JSON.stringify(entry.pluginId)}),`))
+    .join("\n");
+  return `// @generated by framework/plugin/registry/script.ts — do not edit.
+
+pub struct PluginHostConfig {
+    pub plugin_id: &'static str,
+    pub landing_app_id: &'static str,
+    pub host_app_id: &'static str,
+}
+
+pub const PLUGIN_HOST_CONFIGS: &[PluginHostConfig] = &[
+${hostRows}
+];
+
+const PLAYGROUND_VARIANT_REGISTRY_IDS: &[(&str, &str)] = &[
+${variantRows}
+${aliasRows}
+];
+
+pub fn resolve_registry_plugin_id(plugin_filter: &str) -> &str {
+    for (variant, plugin_id) in PLAYGROUND_VARIANT_REGISTRY_IDS {
+        if *variant == plugin_filter {
+            return plugin_id;
+        }
+    }
+    plugin_filter
+}
+
+pub fn resolve_plugin_host_config(plugin_filter: &str) -> Option<&'static PluginHostConfig> {
+    let registry_id = resolve_registry_plugin_id(plugin_filter);
+    PLUGIN_HOST_CONFIGS.iter().find(|entry| entry.plugin_id == registry_id)
+}
+
+pub fn is_studio_mode(plugin_filter: &str) -> bool {
+    resolve_plugin_host_config(plugin_filter).is_some()
+}
+`;
+}
+
+/** @emoji 💾 Writes the per-launch playground session artifact consumed by os/dev and wgpu boot. */
+export function writePlaygroundSession(variant: string, outPath: string, repoRoot = getWorkspaceRoot()): PlaygroundSession {
+  const session = buildPlaygroundSession(variant, repoRoot);
+  mkdirSync(dirname(outPath), { recursive: true });
+  writeFileSync(outPath, emitSessionTypeScript(session));
+  return session;
+}
+//#endregion 🎮PlaygroundSession
+
 /** @emoji 🚦 Cross-checks the flattened playground catalog for global uniqueness and multi-app crate discipline; returns human-readable violations. */
 function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
   const errors: string[] = [];
@@ -418,6 +606,7 @@ class GenerateScript extends BundleScript {
     writeFileSync(join(outDir, "plugins.ts"), emitTypeScript(entries));
     writeFileSync(join(outDir, "playgrounds.json"), `${JSON.stringify(playgrounds, null, 2)}\n`);
     writeFileSync(join(outDir, "playgrounds.ts"), emitPlaygroundsTypeScript(playgrounds));
+    writeFileSync(join(outDir, "hosts.rs"), emitRustHosts(entries, playgrounds));
     console.log(`plugin registry catalog refreshed (${entries.length} plugin crates, ${playgrounds.length} playgrounds) -> ${outDir}`);
   }
 }
@@ -434,6 +623,7 @@ class CheckScript extends BundleScript {
       "plugins.ts": emitTypeScript(entries),
       "playgrounds.json": `${JSON.stringify(playgrounds, null, 2)}\n`,
       "playgrounds.ts": emitPlaygroundsTypeScript(playgrounds),
+      "hosts.rs": emitRustHosts(entries, playgrounds),
     };
     const stale = Object.entries(expected)
       .filter(([name, content]) => !existsSync(join(outDir, name)) || readFileSync(join(outDir, name), "utf8") !== content)

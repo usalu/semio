@@ -12,7 +12,6 @@ import {
   cn,
   CanvasPickMenu,
   editorShellRootClass,
-  ENGAGEMENT_USER,
   floatingFieldSurfaceClass,
   floatingMenuItemClass,
   floatingMenuSurfaceClass,
@@ -20,13 +19,13 @@ import {
   floatingTagClass,
   floatingTagOffClass,
   floatingTagOnClass,
-  focusActiveEngagementInput,
+  focusActiveSearchInput,
   humanizeEngagementStepId,
   Input,
   isUiTypingTarget,
   marqueeCoverageFromGesture,
   normalizeEngagementActionText,
-  queryWindowEngagementInput,
+  queryWindowSearchInput,
   reactHostPort,
   sceneHostPort,
   Select,
@@ -38,12 +37,14 @@ import {
   sortCanvasPickTargetsGeneralFirst,
   UnifiedGumball,
   gumballPointerConsumesCanvasEventRef,
+  WINDOW_SEARCH_USER,
   type CanvasPickRequest,
   type CanvasPickTarget,
   type EngagementControl,
   type EngagementSpec,
   type GumballConfig,
   type GumballPose,
+  type SearchSpec,
   type ThreeEvent,
 } from "@semio-tech/ui-react";
 import { canvasPickTargetKey } from "@semio-tech/framework-core";
@@ -4414,6 +4415,8 @@ export interface InteractionReplHostCallbacks {
   readonly onSnapshotChange?: (snapshot: InteractionSnapshot) => void;
   /** @emoji 💬 Publishes the window engagement spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} engagement slot. */
   readonly onEngagementChange?: (engagement: EngagementSpec | null) => void;
+  /** @emoji 🔎 Publishes the window search spec (or `null`) whenever the interaction state changes; the host renders it in the {@link Window} search slot. */
+  readonly onSearchChange?: (search: SearchSpec | null) => void;
   readonly onEscape?: () => void;
   /** @emoji 🗑️ Delete/Backspace when deletable selection exists; return true when handled. */
   readonly onDeleteSelection?: () => boolean;
@@ -4428,7 +4431,7 @@ export interface InteractionReplLayoutProps {
   readonly rootStyle?: CSSProperties;
   readonly asideStyle?: CSSProperties;
   readonly showAside?: boolean;
-  /** @emoji 💬 Builds the window {@link EngagementSpec} (interaction options/input/status) and publishes it via {@link InteractionReplHostCallbacks.onEngagementChange}. */
+  /** @emoji 💬 Builds the window {@link EngagementSpec} (interaction options/status/control) and {@link SearchSpec} (action input/possibles), published via {@link InteractionReplHostCallbacks.onEngagementChange} and {@link InteractionReplHostCallbacks.onSearchChange}. */
   readonly showEngagement?: boolean;
   /** @emoji 📐 Size the REPL to its host instead of the viewport (`100vh`); stacks aside under the canvas. */
   readonly fillHost?: boolean;
@@ -4631,7 +4634,7 @@ export function replUserFacingSuggestionDetail(detail: string): string | undefin
   return undefined;
 }
 
-/** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, idle exposes an action input to start one, plus state/selection/response status. */
+/** @emoji 💬 Builds the compact window {@link EngagementSpec}: an active session lists its transitions as options, plus state/selection/response status. */
 export function buildInteractionReplEngagement(inputs: InteractionReplEngagementInputs): EngagementSpec | null {
   if (!inputs.showEngagement) return null;
   const options = inputs.boundInteractionSession
@@ -4655,19 +4658,31 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
       content: inputs.lastResponseOk ? "OK" : `Error${inputs.lastResponseErrorCount > 0 ? ` (${inputs.lastResponseErrorCount})` : ""}`,
     });
   }
+  if (options.length === 0 && !inputs.control && status.length === 0) return null;
+  return {
+    sessionActive: inputs.boundInteractionSession,
+    options: options.length ? options : undefined,
+    control: inputs.control,
+    status: status.length ? status : undefined,
+  };
+}
+
+/** @emoji 🔎 Builds the top-middle window {@link SearchSpec}: idle exposes an action input to start an interaction, an active session accepts step values; both offer autocomplete possibles. */
+export function buildInteractionReplSearch(inputs: InteractionReplEngagementInputs): SearchSpec | null {
+  if (!inputs.showEngagement) return null;
   const input =
     inputs.boundInteractionSession || inputs.interactions.length > 0 || inputs.onRepeatLast
       ? {
-          id: "engagement-input",
+          id: "search-input",
           value: inputs.cmdLine,
-          placeholder: inputs.boundInteractionSession ? ENGAGEMENT_USER.actionPlaceholderActive : ENGAGEMENT_USER.actionPlaceholder,
+          placeholder: inputs.boundInteractionSession ? WINDOW_SEARCH_USER.actionPlaceholderActive : WINDOW_SEARCH_USER.actionPlaceholder,
           onChange: inputs.onInputChange,
           onSubmit: inputs.onInputSubmit,
           onRepeatLast: inputs.onRepeatLast,
           onAbort: inputs.onAbort,
         }
       : undefined;
-  const possibleEngagements = inputs.boundInteractionSession
+  const possibles = inputs.boundInteractionSession
     ? inputs.transitions.map((row) => ({
         id: `engagement-possible-transition-${row.eventKind}-${row.key}`,
         label: normalizeEngagementActionText(`${row.key} ${row.label}`),
@@ -4679,14 +4694,11 @@ export function buildInteractionReplEngagement(inputs: InteractionReplEngagement
         detail: replUserFacingSuggestionDetail(interaction.key),
         onSelect: () => inputs.onStartInteraction(interaction.id),
       }));
-  if (options.length === 0 && !input && !inputs.control && status.length === 0 && possibleEngagements.length === 0) return null;
+  if (!input && possibles.length === 0) return null;
   return {
     sessionActive: inputs.boundInteractionSession,
-    options: options.length ? options : undefined,
     input,
-    control: inputs.control,
-    status: status.length ? status : undefined,
-    possibleEngagements: possibleEngagements.length ? possibleEngagements : undefined,
+    possibles: possibles.length ? possibles : undefined,
   };
 }
 
@@ -4764,6 +4776,7 @@ export function InteractionRepl({
   showAside = true,
   showEngagement = false,
   onEngagementChange,
+  onSearchChange,
   fillHost = false,
   captureGlobalKeys = true,
   asideHost = null,
@@ -5661,27 +5674,26 @@ export function InteractionRepl({
     });
   }, [applyEngagementNumericValue, boundInteractionSession, commitEngagementNumericValue, rt, showEngagement, snapshot.state, spec]);
 
-  const engagementSpec = reactHostPort.useMemo<EngagementSpec | null>(
-    () =>
-      buildInteractionReplEngagement({
-        showEngagement,
-        boundInteractionSession,
-        interactionId,
-        state: snapshot.state,
-        lastResponseOk: snapshot.lastResponse ? snapshot.lastResponse.ok : null,
-        lastResponseErrorCount: snapshot.lastResponse?.errors?.length ?? 0,
-        selectionCount: displayedSelectionTargets.length,
-        cmdLine,
-        control: engagementControl,
-        transitions: transitionRows,
-        interactions: scopedInteractions,
-        onTransition: runTransitionRow,
-        onStartInteraction: (id: string) => onInteractionId(id),
-        onInputChange: (value: string) => setCmdLine(replNormalizeActionText(value, engagementActionMode)),
-        onInputSubmit: () => submitEngagementLine(),
-        onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
-        onAbort: handleEscapeKey,
-      }),
+  const replEngagementInputs = reactHostPort.useMemo<InteractionReplEngagementInputs>(
+    () => ({
+      showEngagement,
+      boundInteractionSession,
+      interactionId,
+      state: snapshot.state,
+      lastResponseOk: snapshot.lastResponse ? snapshot.lastResponse.ok : null,
+      lastResponseErrorCount: snapshot.lastResponse?.errors?.length ?? 0,
+      selectionCount: displayedSelectionTargets.length,
+      cmdLine,
+      control: engagementControl,
+      transitions: transitionRows,
+      interactions: scopedInteractions,
+      onTransition: runTransitionRow,
+      onStartInteraction: (id: string) => onInteractionId(id),
+      onInputChange: (value: string) => setCmdLine(replNormalizeActionText(value, engagementActionMode)),
+      onInputSubmit: () => submitEngagementLine(),
+      onRepeatLast: lastFinalizedInteractionId ? repeatLastFinalizedInteraction : undefined,
+      onAbort: handleEscapeKey,
+    }),
     [
       showEngagement,
       engagementActionMode,
@@ -5703,11 +5715,20 @@ export function InteractionRepl({
     ],
   );
 
+  const engagementSpec = reactHostPort.useMemo<EngagementSpec | null>(() => buildInteractionReplEngagement(replEngagementInputs), [replEngagementInputs]);
+  const searchSpec = reactHostPort.useMemo<SearchSpec | null>(() => buildInteractionReplSearch(replEngagementInputs), [replEngagementInputs]);
+
   reactHostPort.useEffect(() => {
     onEngagementChange?.(engagementSpec);
   }, [engagementSpec, onEngagementChange]);
 
   reactHostPort.useEffect(() => () => onEngagementChange?.(null), [onEngagementChange]);
+
+  reactHostPort.useEffect(() => {
+    onSearchChange?.(searchSpec);
+  }, [searchSpec, onSearchChange]);
+
+  reactHostPort.useEffect(() => () => onSearchChange?.(null), [onSearchChange]);
 
   reactHostPort.useEffect(() => {
     const state = snapshot.state;
@@ -5726,13 +5747,13 @@ export function InteractionRepl({
   }, [cmdLine, snapshot.state, spec, rt, setCmdLine]);
 
   const focusReplActionInput = reactHostPort.useCallback(() => {
-    if (!showAside && showEngagement && focusActiveEngagementInput()) return;
+    if (!showAside && showEngagement && focusActiveSearchInput()) return;
     cmdRef.current?.focus({ preventScroll: true });
   }, [showAside, showEngagement]);
 
   const replActionInputElement = reactHostPort.useCallback((): HTMLInputElement | null => {
     if (!showAside && showEngagement) {
-      return queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+      return queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
     }
     return cmdRef.current;
   }, [showAside, showEngagement]);
@@ -5838,7 +5859,7 @@ export function InteractionRepl({
         return;
       }
       if (!showAside && showEngagement && e.key === "Tab" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        const field = queryWindowEngagementInput(true) ?? queryWindowEngagementInput(false);
+        const field = queryWindowSearchInput(true) ?? queryWindowSearchInput(false);
         if (field && t !== field) {
           e.preventDefault();
           e.stopPropagation();
@@ -6021,8 +6042,8 @@ export function InteractionRepl({
                 if (interactionMenuOpen) setInteractionMenuOpen(true);
               }}
               onKeyDown={onInputKeyDown}
-              placeholder={ENGAGEMENT_USER.actionPlaceholder}
-              aria-label={ENGAGEMENT_USER.actionPlaceholder}
+              placeholder={WINDOW_SEARCH_USER.actionPlaceholder}
+              aria-label={WINDOW_SEARCH_USER.actionPlaceholder}
               className="col-start-1 row-start-1 border-0 bg-transparent pr-large shadow-none focus-visible:ring-0"
             />
             <Button
@@ -6035,7 +6056,7 @@ export function InteractionRepl({
                 setInteractionMenuOpen((open) => !open);
                 cmdRef.current?.focus();
               }}
-              aria-label={ENGAGEMENT_USER.suggestionsAria}
+              aria-label={WINDOW_SEARCH_USER.suggestionsAria}
             >
               v
             </Button>
@@ -6061,7 +6082,7 @@ export function InteractionRepl({
                     </button>
                   ))
                 ) : (
-                  <div className="text-muted-foreground px-single py-half text-xs">{ENGAGEMENT_USER.noMatches}</div>
+                  <div className="text-muted-foreground px-single py-half text-xs">{WINDOW_SEARCH_USER.noMatches}</div>
                 )}
               </div>
             ) : null}

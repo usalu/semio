@@ -17,6 +17,7 @@ import {
 } from "../../../repo/lib/js/index.ts";
 import { startAssetServer } from "../../../ui/styling/vite-elements-assets.ts";
 import type { PlaygroundAssetSpec } from "../../plugin/registry/generated/playgrounds.ts";
+import { writePlaygroundSession } from "../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const wasmTarget = "wasm32-unknown-unknown";
@@ -84,8 +85,10 @@ function resolveNativeAppArgs(catalog: ReturnType<typeof loadFrameworkOsPlaygrou
 function buildBootScript(bundleRoot: string): void {
   const bootTs = join(bundleRoot, "js/boot.ts");
   const bootJs = join(bundleRoot, "js/boot.js");
-  const pluginFilter = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
-  const build = spawnSync("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm", "--define", `DEFAULT_PLUGIN_FILTER=${JSON.stringify(pluginFilter)}`], { cwd: bundleRoot, stdio: "inherit" });
+  const variant = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+  const sessionPath = join(repoRoot, "framework/product/os/dev/generated/session.ts");
+  writePlaygroundSession(variant, sessionPath, repoRoot);
+  const build = spawnSync("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot, stdio: "inherit" });
   if (build.status !== 0) throw new Error("boot.js build failed");
 }
 

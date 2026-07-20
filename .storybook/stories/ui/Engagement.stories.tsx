@@ -2,7 +2,7 @@
 // .storybook/story/elements/ui/Engagement.stories.tsx
 // #endregion 🧲Header
 
-import { Engagement, Window } from "@semio-tech/ui-react";
+import { Engagement, Search, Window } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 import * as React from "react";
 import { expect, within } from "storybook/test";
@@ -18,6 +18,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+export const SearchStandalone: Story = {
+  render: () => <Search input={{ placeholder: "Ask or action…", onSubmit: () => {} }} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    expect(canvas.getByPlaceholderText("Ask or action…")).toBeTruthy();
+  },
+};
+
 export const Standalone: Story = {
   render: () => (
     <Engagement
@@ -25,7 +33,6 @@ export const Standalone: Story = {
         { id: "snap", label: "Snap", pressed: true, onPress: () => {} },
         { id: "grid", label: "Grid", onPress: () => {} },
       ]}
-      input={{ placeholder: "Ask or action…", onSubmit: () => {} }}
       status={[
         { id: "ready", content: "Ready" },
         { id: "selection", content: "3 selected" },
@@ -34,7 +41,6 @@ export const Standalone: Story = {
   ),
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    expect(canvas.getByPlaceholderText("Ask or action…")).toBeTruthy();
     expect(canvas.getByText("Ready")).toBeTruthy();
   },
 };
@@ -43,7 +49,6 @@ export const WithControl: Story = {
   render: () => (
     <Engagement
       sessionActive
-      input={{ placeholder: "Height", value: "3" }}
       status={[{ id: "engagement-step", content: "Step: Height" }]}
       control={{
         kind: "stepper",
@@ -72,8 +77,10 @@ export const InWindow: Story = {
         active
         engagement={{
           options: [{ id: "tool-a", label: "Tool A", onPress: () => {} }],
-          input: { placeholder: "Type an action" },
           status: [{ id: "status", content: "Idle" }],
+        }}
+        search={{
+          input: { placeholder: "Type an action" },
         }}
       >
         <div className="flex h-full items-center justify-center bg-panel">Window body</div>

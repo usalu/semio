@@ -12,6 +12,7 @@ package = "semio:s"
 
 [package.metadata.semio]
 capabilities = ["localBackboneStorage"]
+host = { landing = "home", studio = "studio" }
 
 [[package.metadata.semio.playground]]
 variant = "s"

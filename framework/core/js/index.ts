@@ -4,6 +4,8 @@
 // #endregion 🧲Header
 
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../plugin/registry/generated/playgrounds.ts";
+import { PLUGIN_HOST_CONFIGS } from "../../plugin/registry/generated/plugins.ts";
+import { buildPlaygroundSession, isStudioPluginFilter } from "../../plugin/registry/script.ts";
 
 // #region 🧬GeneratedMirror
 /** 🧬 Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -2220,8 +2222,6 @@ export type PluginHostConfig = {
   readonly hostAppId: string;
 };
 
-const PLUGIN_HOST_CONFIGS: readonly PluginHostConfig[] = [{ pluginId: "s", landingAppId: "home", hostAppId: "studio" }];
-
 /** 🎯 Resolves a playground filter/alias to its plugin's host config, or `undefined` when that plugin doesn't offer a host-style multi-app experience. */
 export function resolvePluginHostConfig(playgroundPluginId: string): PluginHostConfig | undefined {
   const registryId = resolvePluginRegistryId(playgroundPluginId);
@@ -2385,6 +2385,37 @@ if (import.meta.vitest) {
       expect(storage.get("semio.os.dock.ui")).not.toBeNull();
       expect(storage.get("semio.os.dockUi")).not.toBeNull();
       expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
+    });
+  });
+
+  describe("PlaygroundResolution", () => {
+    it("resolves host config from generated plugin metadata", () => {
+      expect(resolvePluginHostConfig("s")).toEqual({ pluginId: "s", landingAppId: "home", hostAppId: "studio" });
+      expect(resolvePluginHostConfig("puzzle3d")).toBeUndefined();
+    });
+
+    it("resolves playground aliases to registry plugin ids", () => {
+      expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
+      expect(resolvePluginRegistryId("3d")).toBe("puzzle");
+    });
+
+    it("marks host plugins as studio filters from metadata", () => {
+      expect(isStudioPluginFilter("s")).toBe(true);
+      expect(isStudioPluginFilter("puzzle3d")).toBe(false);
+    });
+
+    it("builds a filtered session with contributors for protocol", () => {
+      const session = buildPlaygroundSession("protocol");
+      expect(session.registryPluginId).toBe("protocol");
+      expect(session.studioMode).toBe(false);
+      expect(session.plugins.map((entry) => entry.pluginId).sort()).toEqual(["protocol", "protocol-module-procedural"]);
+    });
+
+    it("builds a studio session with host metadata and full plugin fleet", () => {
+      const session = buildPlaygroundSession("s");
+      expect(session.studioMode).toBe(true);
+      expect(session.host).toEqual({ landingAppId: "home", hostAppId: "studio" });
+      expect(session.plugins.length).toBeGreaterThan(10);
     });
   });
 }

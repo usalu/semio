@@ -13,7 +13,7 @@
 \antragstellendeinstitution{%
   Leibniz Universität Hannover\\
   Fakultät für Architektur und Landschaft\\
-  Institut für Enwerfen und Konstruieren\\
+  Institut für Entwerfen und Konstruieren\\
   Abteilung Nachhaltige Gebäudesysteme\\
   Institutsleitung: Prof. Dr.-Ing. Philipp Geyer\\
   Projektleitung: Ueli Saluz\\
@@ -28,8 +28,8 @@
   Bearbeitung: Kinan Sarakbi
 }
 \aktenzeichen{10.08.18.7-25.06}
-\berichtszeitraum{01.01.-10.07.2026}
-\foerderzeitraum{11.2025-05.2027}
+\berichtszeitraum{01.01.2026-10.07.2026}
+\foerderzeitraum{03.11.2025-02.05.2027}
 \footerauthors{Ueli Saluz, Kinan Sarakbi}
 \footerlogos{asset/logo/luh.png, asset/logo/udk.png}
 \makeatletter
@@ -57,25 +57,26 @@
 \cs_set:Npn \semio_glossary_header_definition: { Verwendung im Bericht }
 \ExplSyntaxOff
 
-\GlossaryDefine{Entwurfsfähigkeit}{Fähigkeit eines wiederverwendeten Bauteils, in frühen Entwurfsphasen gesucht, verglichen, bewertet und einer möglichen Rolle in einer Variante zugeordnet zu werden.}
-\GlossaryDefine{Bauteil}{Konkretes physisches Element aus einem Bestand, z.\,B. Stütze, Träger, Platte oder Zuschnittfragment.}
-\GlossaryDefine{Baukomponente}{Übergeordneter Begriff für einzelne Bauteile, Bauteilgruppen oder Pakete, sofern sie für den Entwurf relevant sind.}
-\GlossaryDefine{Bestandsquelle}{Quelle wiederverwendbarer Baukomponenten, z.\,B. Bauteilbörse, Rückbauinventar, Materialkataster, Projektkatalog oder direkte Bestandsaufnahme.}
-\GlossaryDefine{Bauteilbörse}{Plattform oder Organisation, die wiederverwendbare Baukomponenten sichtbar macht, vermittelt, verkauft oder dokumentiert.}
-\GlossaryDefine{Ebene A / Ebene B}{Ebene A bezeichnet beschaffungsorientierte Angebotsdaten, etwa Standort, Preis oder Verfügbarkeit. Ebene B bezeichnet qualifizierte, planungsrelevante Bauteildaten für Entwurf, Vorbewertung und Nachweisführung.}
-\GlossaryDefine{Planungsrelevanter Bauteildatensatz}{Strukturierter Datensatz mit Geometrie, Material, Zustand, Herkunft, Verfügbarkeit, möglicher Entwurfsrolle, Bewertungsannahmen und Informationszustand.}
-\GlossaryDefine{Qualifizierung}{Überführung unvollständiger oder beschaffungsorientierter Bestandsdaten in planungsrelevante Informationen.}
-\GlossaryDefine{Datenreifegrad}{Einschätzung, wie belastbar einzelne Informationen zu einer Baukomponente sind.}
-\GlossaryDefine{Informations- und Nachweiszustände}{Vier Zustände zur Kennzeichnung einzelner Angaben: vorhanden, abgeleitet, angenommen und offen.}
-\GlossaryDefine{Entwurfsrolle}{Mögliche Funktion eines Bauteils im neuen Entwurf, z.\,B. als Träger, Stütze, Platte, Wandscheibe oder Zuschnittfragment.}
-\GlossaryDefine{Typologiefamilie}{Ordnungskategorie für Baukomponenten nach Rolle und Informationsbedarf, z.\,B. Linien-, Flächen-, Rahmen-, Stütz- oder Zuschnittfragmente.}
-\GlossaryDefine{Digitales Bauteilobjekt}{Digitale, entwurfsfähige Repräsentation einer realen Baukomponente mit Geometrie, Parametern, Rollen, Anschlussinformationen und Bewertungsannahmen.}
-\GlossaryDefine{Generator}{Parametrischer Mechanismus, der aus qualifizierten Eingaben ein digitales Bauteilobjekt erzeugt.}
-\GlossaryDefine{Bauteilportal}{Eingangs- und Qualifizierungsebene des Systems. Hier werden Baukomponenten erfasst, importiert, ergänzt und strukturiert.}
-\GlossaryDefine{Bauteilkatalog}{Such-, Sicht- und Auswahlebene des Systems. Hier werden qualifizierte Baukomponenten auffindbar, filterbar und vergleichbar gemacht.}
-\GlossaryDefine{Aggregator}{Technische Bezeichnung für den Playground innerhalb des semio-basierten Entwurfswerkzeugs.}
-\GlossaryDefine{Wizard}{Geführte Eingabeoberfläche zur schrittweisen Erfassung und Qualifizierung von Bauteildaten.}
-\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall, an dem die entwickelte digitale Kette geprüft wird.}
+\GlossaryDefine{Baukomponente}{Physisches Element oder zusammengehörige Gruppe von Elementen, die im Entwurf als Einheit betrachtet und verwendet wird.}
+\GlossaryDefine{Entwurfsrolle}{Mögliche Funktion einer Baukomponente im neuen Entwurf. Sie kann von ihrer ursprünglichen Funktion abweichen.}
+\GlossaryDefine{Bestandsquelle}{Quelle wiederverwendbarer Baukomponenten, etwa eine Bauteilbörse, ein Rückbauinventar oder eine direkte Bestandsaufnahme.}
+\GlossaryDefine{Bauteilbörse}{Organisation, physischer Lagerort oder digitaler Angebotskanal, über den wiederverwendbare Baukomponenten dokumentiert, vermittelt oder verkauft werden.}
+\GlossaryDefine{Qualifizierung}{Strukturierte Erfassung, Prüfung und nachvollziehbare Ergänzung verfügbarer Bauteilinformationen.}
+\GlossaryDefine{Typologiefamilie}{Projektinterne Ordnung von Baukomponenten nach ihrer geometrisch-konstruktiven Organisation: lineare und flächige Elemente, Knoten- und Übergangselemente sowie Rahmen- und Systemelemente.}
+\GlossaryDefine{Nachweiszustände}{Systematische Kennzeichnung des Bearbeitungs- und Belegstands einzelner Angaben. Sie macht sichtbar, ob Informationen vorhanden, abgeleitet, angenommen oder offen sind.}
+\GlossaryDefine{Performancebeurteilung / Vorbewertung}{Frühe, vereinfachte Einschätzung ausgewählter Eigenschaften oder Auswirkungen einer Entwurfsvariante auf Grundlage der verfügbaren Informationen.}
+\GlossaryDefine{Bauteilobjekt}{Strukturierte digitale Repräsentation einer Baukomponente, die mehrere geometrische Darstellungen sowie die zugehörigen fachlichen und beschreibenden Informationen in einem gemeinsamen Modell bündelt.}
+\GlossaryDefine{Generator}{Parametrischer Mechanismus, der aus erfassten Angaben zu einer Baukomponente ein digitales Bauteilobjekt mit den benötigten geometrischen Repräsentationen erzeugt.}
+\GlossaryDefine{Plattform / Gesamtsystem}{Umfasst die Einspeiseplattform mit Bauteilportal und Wizard sowie das Entwurfswerkzeug mit Bauteilkatalog, Entwurfsumgebung und Konfigurator.}
+\GlossaryDefine{Bauteilportal}{Einspeiseplattform zur Erfassung, Übernahme und Qualifizierung von Bestandsdaten zu Baukomponenten als Grundlage für die Erzeugung digitaler Bauteilobjekte.}
+\GlossaryDefine{Wizard}{Geführte Eingabeoberfläche im Bauteilportal zur schrittweisen Erfassung und Qualifizierung unvollständiger oder unstrukturierter Bauteildaten.}
+\GlossaryDefine{Bauteilkatalog}{Bereich des Entwurfswerkzeugs zur Übersicht, Suche und Auswahl von Baukomponenten und den dazugehörigen Informationen.}
+\GlossaryDefine{Entwurfsumgebung}{Bereich des Entwurfswerkzeugs, in dem Baukomponenten angeordnet, kombiniert und zu Entwurfsvarianten weiterentwickelt werden.}
+\GlossaryDefine{Konfigurator}{Bereich des Entwurfswerkzeugs für den Austausch mit Bauteilbörsen, etwa für Anfragen, Reservierungen, Statusänderungen und die Übermittlung projektspezifischer Angaben.}
+\GlossaryDefine{semio}{Quelloffenes Toolkit zur Beschreibung, Verknüpfung und räumlichen Anordnung digitaler Repräsentationen modularer Baukomponenten sowie technische Grundlage des Entwurfswerkzeugs.}
+\GlossaryDefine{Human-Interface-Design / User Experience}{Human-Interface-Design bezeichnet die Gestaltung der Interaktion zwischen Nutzenden und digitaler Arbeitsumgebung; User Experience deren Wahrnehmung und Einbindung in den Arbeitsablauf.}
+\GlossaryDefine{Entwurfsgrammatik}{Projektbezogenes Regelwerk für die Bildung, Veränderung und Prüfung von Entwurfsvarianten.}
+\GlossaryDefine{Test-Case}{Realer oder realitätsnaher Anwendungsfall für die Entwicklung und schrittweise Prüfung der digitalen Kette.}
 
 \AbbreviationDefine{AP}{Arbeitspaket}{Ein klar abgegrenzter Teilbereich des Projekts mit eigenen Zielen und Aufgaben, in den das Gesamtprojekt zur besseren Steuerung unterteilt ist.}
 \AbbreviationDefine{KI}{Künstliche Intelligenz}{Oberbegriff für Computerprogramme, die Aufgaben lösen, für die normalerweise menschliches Denken nötig ist, etwa Sprache verstehen oder Muster erkennen.}
@@ -85,12 +86,21 @@
 \AbbreviationDefine{NGS}{Nachhaltige Gebäudesysteme}{Die an diesem Projekt beteiligte Abteilung der Leibniz Universität Hannover (LUH).}
 \AbbreviationDefine{KET}{Konstruktives Entwerfen und Tragwerksplanung}{Die an diesem Projekt beteiligte Abteilung der Universität der Künste Berlin (UdK).}
 \AbbreviationDefine{BBSR}{Bundesinstitut für Bau-, Stadt- und Raumforschung}{Die Bundesbehörde, die dieses Forschungsvorhaben fördert.}
+\AbbreviationDefine{LUH}{Leibniz Universität Hannover}{Verbundkoordinierende Hochschule dieses Forschungsvorhabens.}
+\AbbreviationDefine{UdK}{Universität der Künste Berlin}{Kooperationspartnerin dieses Forschungsvorhabens.}
 
 \begin{document}
 
 \makecoverpages
 
 \maketableofcontents
+
+\makefundingacknowledgement
+
+\section*{Bezugsgrundlagen}
+\begin{Blockquote}
+Verbindliche Bezugsgrundlagen: Zuwendungsbescheid vom 22.10.2025, bewilligter Zuwendungsantrag einschließlich Arbeits-, Zeit- und Finanzierungsplan sowie Anlage~8 „Berichtswesen“. Projektinterne Ist-Stand-Aussagen sind vor Einreichung durch die jeweils genannten Anlagen, Repositoriumsstände oder Testnachweise zu belegen.
+\end{Blockquote}
 
 \makeworkpackages{%
   \SemioTableThree{%

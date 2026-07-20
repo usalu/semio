@@ -23,10 +23,11 @@ import {
   resolveTestLevel,
 } from "../../../../repo/lib/js/index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
-import { generatePluginRegistry, isStudioPluginFilter, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
+import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
+const playgroundSessionPath = join(repoRoot, "framework/product/os/dev/generated/session.ts");
 
 const PLUGIN_WASM_TARGET = "wasm32-wasip2";
 
@@ -938,20 +939,18 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 
 async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "framework/plugin/registry/script.ts");
-  const args = ["generate"];
-  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  if (filterPluginId) args.push(filterPluginId);
-  const generate = spawnSync("bun", [registryScript, ...args], { cwd: repoRoot, stdio: "inherit" });
+  const generate = spawnSync("bun", [registryScript, "generate"], { cwd: repoRoot, stdio: "inherit" });
   if (generate.status !== 0) throw new Error("plugin registry generation failed");
+  const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
+  writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
 }
 
 function resolvePluginBuildTargets(entries: readonly PluginRegistryEntry[], filterPlugin?: string): readonly PluginRegistryEntry[] {
-  const resolvedPluginId = filterPlugin ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
-  const targets = resolvedPluginId ? entries.filter((target) => target.pluginId === resolvedPluginId) : entries;
-  if (filterPlugin && targets.length === 0) {
-    throw new Error(`no plugin build targets for filter ${JSON.stringify(filterPlugin)} (resolved plugin id: ${resolvedPluginId ?? "none"})`);
+  if (!filterPlugin || isStudioPluginFilter(filterPlugin)) return entries;
+  if (entries.length === 0) {
+    throw new Error(`no plugin build targets for filter ${JSON.stringify(filterPlugin)}`);
   }
-  return targets;
+  return entries;
 }
 
 async function buildPlugins(filterPlugin?: string): Promise<void> {
@@ -1291,7 +1290,7 @@ async function activateStudioE2eMediaGraphWindow(page: import("playwright").Page
 
 async function expandStudioE2eMediaGraphEngagement(page: import("playwright").Page): Promise<void> {
   await activateStudioE2eMediaGraphWindow(page);
-  await page.evaluate(() => document.getElementById("s-media-graph-window-engagement-toggle")?.click());
+  await page.evaluate(() => document.getElementById("s-media-graph-window-search-toggle")?.click());
   await page.waitForSelector("#s-media-catalogue-hint", { timeout: 10_000 });
 }
 

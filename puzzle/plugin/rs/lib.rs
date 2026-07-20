@@ -3480,6 +3480,7 @@ pub mod d3 {
         let runtime = &envelope.runtime;
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &runtime.selection.object_ids, runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
         if let Some(object) = value.as_object_mut() {
+            object.insert("selectionMergeMode".into(), json!(runtime.selection_mode_default));
             object.insert("granularity".into(), json!("mesh"));
             object.insert("selectionMode".into(), json!("mesh"));
             object.insert(
@@ -4930,6 +4931,8 @@ pub mod d3 {
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-grid"), icon_id: "layout-grid".into(), label: Some("Grid".into()), pressed: runtime.lod_show_grid, text: None, on_change: puzzle3d_action("setLodShowGrid", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some("Grid Snap".into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-factor"), label: Some(format!("Grid {:.1}", runtime.grid_factor)), value: runtime.grid_factor, min: 0.5, max: 50.0, step: Some(0.5), on_change: puzzle3d_action("setGridFactor", None) },
                 WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
@@ -6378,12 +6381,22 @@ pub mod d3 {
         }
 
         //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
-        fn first_vortex_full_id(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> String {
+        fn vortex_full_ids(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> Vec<String> {
             let projection = app.projection().expect("projection");
-            let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).expect("seed object");
-            let object_id = object.get("id").and_then(Value::as_str).expect("object id");
-            let vortex_id = object.get("vortices").and_then(Value::as_array).and_then(|vortices| vortices.first()).and_then(|vortex| vortex.get("id")).and_then(Value::as_str).expect("vortex id");
-            puzzle3d_vortex_full_id(object_id, vortex_id)
+            let mut ids = Vec::new();
+            for object in projection.get("objects").and_then(Value::as_array).into_iter().flatten() {
+                let object_id = object.get("id").and_then(Value::as_str).unwrap_or_default();
+                for vortex in object.get("vortices").and_then(Value::as_array).into_iter().flatten() {
+                    if let Some(vortex_id) = vortex.get("id").and_then(Value::as_str) {
+                        ids.push(puzzle3d_vortex_full_id(object_id, vortex_id));
+                    }
+                }
+            }
+            ids
+        }
+
+        fn first_vortex_full_id(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> String {
+            vortex_full_ids(app).into_iter().next().expect("seed vortex")
         }
 
         fn render_composite(app: &mut VcsDocumentApp<Puzzle3dPlayApp>) -> Value {
@@ -6727,6 +6740,41 @@ pub mod d3 {
             assert_eq!(selection.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
             let vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
             assert!(vortices.iter().any(|entry| entry.get("fullId").and_then(Value::as_str) == Some(vortex.as_str()) && entry.get("selected").and_then(Value::as_bool) == Some(true)));
+        }
+
+        #[test]
+        fn world_vortex_click_replaces_until_invertive_mode_is_selected() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortices = vortex_full_ids(&app);
+            assert!(vortices.len() >= 2, "fixture must expose two vortices");
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[0] })), &ViewState::default(), &testkit::meta("local")).expect("select first vortex");
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[1] })), &ViewState::default(), &testkit::meta("local")).expect("replace with second vortex");
+            let selective = render_composite(&mut app);
+            let selected: Vec<String> = selective
+                .pointer("/world3d/vorticesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .unwrap_or_default()
+                .iter()
+                .filter(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true))
+                .filter_map(|entry| entry.get("fullId").and_then(Value::as_str).map(str::to_string))
+                .collect();
+            assert_eq!(selected, vec![vortices[1].clone()]);
+            assert_eq!(selection_of(&selective).get("selectionMergeMode").and_then(Value::as_str), Some("default"));
+
+            app.handle_action("setSelectionModeDefault", Some(&json!({ "mode": "invertive" })), &ViewState::default(), &testkit::meta("local")).expect("enable invertive mode");
+            app.handle_action("worldVortexSelect", Some(&json!({ "fullId": vortices[0] })), &ViewState::default(), &testkit::meta("local")).expect("toggle first vortex into selection");
+            let invertive = render_composite(&mut app);
+            let selected_count = invertive
+                .pointer("/world3d/vorticesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .unwrap_or_default()
+                .iter()
+                .filter(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true))
+                .count();
+            assert_eq!(selected_count, 2);
+            assert_eq!(selection_of(&invertive).get("selectionMergeMode").and_then(Value::as_str), Some("invertive"));
         }
 
         #[test]
