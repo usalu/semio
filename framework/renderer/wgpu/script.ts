@@ -8,9 +8,12 @@ import {
   ScriptRouter,
   SEMIO_ASSET_SERVER_PORT,
   SEMIO_ASSET_BASE_URL_ENV,
+  buildBudgetMs,
   getWorkspaceRoot,
   resolveTestLevel,
   runBundleScriptMain,
+  runCmd,
+  runCmdStatus,
   runVitest,
   frameworkOsPlaygroundDefaultPort,
   loadFrameworkOsPlaygroundCatalog,
@@ -35,14 +38,14 @@ function trunkEnv(): NodeJS.ProcessEnv {
 function ensureWasmTarget(): void {
   const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
   if (!probe.stdout?.includes(wasmTarget)) {
-    spawnSync("rustup", ["target", "add", wasmTarget], { stdio: "inherit" });
+    runCmd("rustup", ["target", "add", wasmTarget]);
   }
 }
 
 function ensureTrunk(): void {
   const probe = spawnSync("trunk", ["--version"], { encoding: "utf8" });
   if (probe.status !== 0) {
-    spawnSync("cargo", ["install", "trunk", "--locked"], { stdio: "inherit" });
+    runCmd("cargo", ["install", "trunk", "--locked"], { budgetMs: buildBudgetMs() });
   }
 }
 
@@ -88,8 +91,7 @@ function buildBootScript(bundleRoot: string): void {
   const variant = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
   const sessionPath = join(repoRoot, "framework/product/os/dev/generated/session.ts");
   writePlaygroundSession(variant, sessionPath, repoRoot);
-  const build = spawnSync("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot, stdio: "inherit" });
-  if (build.status !== 0) throw new Error("boot.js build failed");
+  if (runCmdStatus("bun", ["build", bootTs, "--outfile", bootJs, "--target", "browser", "--format", "esm"], { cwd: bundleRoot }) !== 0) throw new Error("boot.js build failed");
 }
 
 class TrunkBuildScript extends BundleScript {
@@ -101,8 +103,7 @@ class TrunkBuildScript extends BundleScript {
     const release = segments.includes("--release") || segments.includes("--dist");
     const args = ["build", "--config", "Trunk.toml"];
     if (release) args.push("--release");
-    const build = spawnSync("trunk", args, { cwd: this.root, stdio: "inherit", env: trunkEnv() });
-    if (build.status !== 0) throw new Error("trunk build failed for wgpu renderer");
+    if (runCmdStatus("trunk", args, { cwd: this.root, env: trunkEnv(), budgetMs: buildBudgetMs() }) !== 0) throw new Error("trunk build failed for wgpu renderer");
     syncStableRendererArtifacts();
     console.log(`[DEBUG] trunk built wgpu renderer -> ${outDir}`);
   }
@@ -120,17 +121,18 @@ class TrunkServeScript extends BundleScript {
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
-    const serve = spawnSync("trunk", args, { cwd: this.root, stdio: "inherit", env: trunkEnv() });
-    if (serve.status !== 0) throw new Error("trunk serve failed for wgpu renderer");
+    if (runCmdStatus("trunk", args, { cwd: this.root, env: trunkEnv(), budgetMs: null }) !== 0) throw new Error("trunk serve failed for wgpu renderer"); // dev server — runs until stopped
   }
 }
 
 class NativeBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    const renderer = spawnSync("cargo", ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin"], { cwd: repoRoot, stdio: "inherit" });
-    if (renderer.status !== 0) throw new Error("native wgpu renderer build failed");
+    if (runCmdStatus("cargo", ["build", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+      throw new Error("native wgpu renderer build failed");
+    }
     const osDevScript = join(repoRoot, "framework/product/os/dev/script.ts");
+    // Recurses into os/dev's own `plugin` build loop, whose per-plugin `cargo build` calls are individually budgeted.
     const plugin = spawnSync("bun", [osDevScript, "plugin", filterPlugin], {
       cwd: join(repoRoot, "framework/product/os/dev"),
       stdio: "inherit",
@@ -155,12 +157,10 @@ class NativeRunScript extends BundleScript {
     }
     const catalog = loadFrameworkOsPlaygroundCatalog();
     const appArgs = resolveNativeAppArgs(catalog, filterPlugin);
-    const run = spawnSync("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], {
-      cwd: repoRoot,
-      stdio: "inherit",
-      env: nativeEnv,
-    });
-    if (run.status !== 0) throw new Error("native wgpu renderer run failed");
+    // Interactive native app window — runs until the user closes it.
+    if (runCmdStatus("cargo", ["run", "-p", crateName, "--bin", "semio-wgpu-native", "--release", "--features", "native-bin", "--", "--plugin", filterPlugin, ...appArgs], { cwd: repoRoot, env: nativeEnv, budgetMs: null }) !== 0) {
+      throw new Error("native wgpu renderer run failed");
+    }
   }
 }
 

@@ -6,6 +6,7 @@ import { spawn, spawnSync } from "node:child_process";
 import {
   Script,
   ScriptRouter,
+  buildBudgetMs,
   devToolingEnv,
   dispatchPolicyArgv,
   dispatchSubcommand,
@@ -51,6 +52,7 @@ function runFrameworkOsPlaygroundDev(plugin: string, rest: string[] = []): void 
   runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:dev", ...rest], {
     cwd: WORKSPACE_ROOT,
     env: frameworkOsPlaygroundDevEnv(loadFrameworkOsPlaygroundCatalog(), plugin),
+    budgetMs: null, // dev server — runs until stopped
   });
 }
 
@@ -331,7 +333,7 @@ export class DevScript extends Script {
       this.runMcp(segments.slice(1));
       return;
     }
-    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@semio-tech/compose-desktop:dev"], { cwd: this.root, budgetMs: null }); // dev server — runs until stopped
   }
 
   private parseStorybookSegments(segments: string[]): { scope: string; args: string[] } {
@@ -386,6 +388,7 @@ export class DevScript extends Script {
         WATCHPACK_POLLING: process.env.WATCHPACK_POLLING ?? "true",
         CHOKIDAR_USEPOLLING: process.env.CHOKIDAR_USEPOLLING ?? "true",
       },
+      budgetMs: null, // dev server — runs until stopped
     });
   }
 
@@ -428,7 +431,7 @@ export class DevScript extends Script {
   private runMcp(segments: string[]): void {
     const a = segments[0];
     if (a === "engine") {
-      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root });
+      runCmd("bun", [join(this.root, "compose", "client", "bin", "engine", "script.ts"), "dev", "mcp"], { cwd: this.root, budgetMs: null }); // mcp server — runs until stopped
       return;
     }
     if (a === "neo4j") {
@@ -504,6 +507,7 @@ export class NxScript extends Script {
     runCmd("node", [join(this.root, "node_modules", "nx", "bin", "nx.js"), ...segments], {
       cwd: this.root,
       env: devToolingEnv(),
+      budgetMs: null, // opaque nx passthrough — target may itself be a dev server; leaves are individually budgeted
     });
   }
 }
@@ -549,11 +553,13 @@ export class GenerateScript extends Script {
 //#region 🔖LintScript
 export class LintScript extends Script {
   run(segments: string[]): void {
+    // nx orchestrators: exempt — total wall time spans every project and legitimately exceeds any single
+    // command's budget; each leaf project's own build/test/lint commands are individually budgeted.
     if (segments[0] === "repo") {
-      runCmd("bun", ["nx", "run-many", "-t", "lint", "-p", "@repo/*"], { cwd: this.root });
+      runCmd("bun", ["nx", "run-many", "-t", "lint", "-p", "@repo/*"], { cwd: this.root, budgetMs: null });
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root });
+    runCmd("bun", ["nx", "run-many", "-t", "lint", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
     runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
   }
 }
@@ -565,7 +571,7 @@ export class VerifyScript extends Script {
   async run(segments: string[]): Promise<void> {
     await this.runGate();
     if (segments[0] === "gate") return;
-    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root });
+    runCmd("bun", ["nx", "run-many", "-t", "test", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null }); // nx orchestrator — leaves individually budgeted
   }
 
   private async runGate(): Promise<void> {
@@ -576,11 +582,12 @@ export class VerifyScript extends Script {
     console.log("[verify] dependency-cruiser boundaries…");
     runCmd("bunx", ["dependency-cruiser@16", "compose", "framework", "flow", "layout", "puzzle", "ui", "draw", "note", "sequence", "s", "--config", ".dependency-cruiser.cjs", "--output-type", "err"], { cwd: this.root, shell: true });
     console.log("[verify] generated catalog freshness…");
-    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root });
+    // nx orchestrators: exempt — leaves individually budgeted.
+    runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:check"], { cwd: this.root, budgetMs: null });
     console.log("[verify] region/host-contract script lints…");
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root });
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root });
-    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, budgetMs: null });
     console.log("[verify] gate passed.");
   }
 }
@@ -619,9 +626,10 @@ export class TestScript extends Script {
       await this.runRepoGoTest("./repo/client/cli/go", level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
-    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root });
-    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root });
-    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root });
+    // nx orchestrators: exempt — leaves individually budgeted.
+    runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root, budgetMs: null });
+    runCmd("bun", ["nx", "run-many", "-t", testTargetForLevel(level), "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
       await this.runStorybookPlaywright();
     }
@@ -671,7 +679,7 @@ export class TestScript extends Script {
     const preferred = Number(process.env.STORYBOOK_PORT ?? 6010);
     const storybookPort = String(await this.pickStorybookStaticPort(preferred, 50));
     const baseUrl = `http://127.0.0.1:${storybookPort}/`;
-    runCmd("bun", [join(this.root, "script.ts"), "build", "storybook"], { cwd: this.root });
+    runCmd("bun", [join(this.root, "script.ts"), "build", "storybook"], { cwd: this.root, budgetMs: null }); // recurses into nx build orchestrators — leaves individually budgeted
     const server = spawn("bun", [join(this.root, "script.ts"), "dev", "storybook-static"], {
       cwd: this.root,
       stdio: "inherit",
@@ -711,9 +719,10 @@ export class BuildScript extends Script {
       "repo-vscode": "@semio-tech/repo-vscode:build-vsix",
     };
 
+    // nx orchestrators: exempt — leaves individually budgeted.
     if (!slice) {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root });
-      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "--all", "--exclude", "workspace"], { cwd: this.root, budgetMs: null });
+      runCmd("bun", ["nx", "run", "workspace:build-storybook"], { cwd: this.root, budgetMs: null });
       return;
     }
     if (slice === "storybook") {
@@ -721,7 +730,7 @@ export class BuildScript extends Script {
       return;
     }
     if (slice === "sites") {
-      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root });
+      runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-sketchpad-play", "@semio-tech/compose-sketchpad-docs"], { cwd: this.root, budgetMs: null });
       return;
     }
     const target = single[slice];
@@ -729,7 +738,7 @@ export class BuildScript extends Script {
       console.error(`[build] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root });
+    runCmd("bun", ["nx", "run", target], { cwd: this.root, budgetMs: null });
   }
 }
 //#endregion 🔖BuildScript
@@ -795,15 +804,15 @@ export class CppScript extends Script {
   private runConfigure(preset: string): void {
     this.runSetup();
     this.purgeStaleCmakeCache(preset);
-    runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv() });
+    runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
   }
 
   private runBuild(preset: string): void {
-    runCmd(this.resolveTool("cmake"), ["--build", "--preset", preset], { cwd: this.root, env: this.cppEnv() });
+    runCmd(this.resolveTool("cmake"), ["--build", "--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
   }
 
   private runTest(preset: string): void {
-    runCmd(this.resolveTool("ctest"), ["--preset", preset], { cwd: this.root, env: this.cppEnv() });
+    runCmd(this.resolveTool("ctest"), ["--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
   }
 
   private ensureTool(command: string, uvTool: string): void {
@@ -836,13 +845,13 @@ export class CppScript extends Script {
     const vcpkgExe = join(vcpkgRoot, process.platform === "win32" ? "vcpkg.exe" : "vcpkg");
     if (!existsSync(vcpkgRoot)) {
       mkdirSync(join(this.root, ".repo", "cache"), { recursive: true });
-      runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root });
+      runCmd("git", ["clone", "--depth", "1", "https://github.com/microsoft/vcpkg.git", vcpkgRoot], { cwd: this.root, budgetMs: buildBudgetMs() });
     }
     if (!existsSync(vcpkgExe)) {
       if (process.platform === "win32") {
-        runCmd("cmd.exe", ["/c", join(vcpkgRoot, "bootstrap-vcpkg.bat"), "-disableMetrics"], { cwd: vcpkgRoot });
+        runCmd("cmd.exe", ["/c", join(vcpkgRoot, "bootstrap-vcpkg.bat"), "-disableMetrics"], { cwd: vcpkgRoot, budgetMs: buildBudgetMs() });
       } else {
-        runCmd("bash", [join(vcpkgRoot, "bootstrap-vcpkg.sh"), "-disableMetrics"], { cwd: vcpkgRoot });
+        runCmd("bash", [join(vcpkgRoot, "bootstrap-vcpkg.sh"), "-disableMetrics"], { cwd: vcpkgRoot, budgetMs: buildBudgetMs() });
       }
     }
   }
@@ -904,7 +913,7 @@ export class PublishScript extends Script {
       console.error(`[publish] unknown slice ${JSON.stringify(slice)}`);
       process.exit(1);
     }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root });
+    runCmd("bun", ["nx", "run", target], { cwd: this.root, budgetMs: null }); // nx orchestrator — leaves individually budgeted
   }
 }
 //#endregion 🔖PublishScript
@@ -985,7 +994,8 @@ export class OsScript extends Script {
         console.error("[os.run] usage: bun ./script.ts os run <bundle>.studio [--node <id>] [--watch] [--dry]");
         process.exit(1);
       }
-      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root });
+      const watch = rest.includes("--watch");
+      runCmd("cargo", ["run", "--release", "-p", "semio-framework-os-run", "--", ...rest], { cwd: this.root, budgetMs: watch ? null : buildBudgetMs() }); // --watch runs indefinitely by design
       return;
     }
     console.error(`[os] unknown subcommand ${JSON.stringify(sub)}`);

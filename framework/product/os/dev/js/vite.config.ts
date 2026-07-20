@@ -35,6 +35,12 @@ function engineNpmPackage(cratePath: string): string {
 
 const registryEngineOptimizeDepsExclude = [...new Set(PLAYGROUND_BUILD_TARGETS.flatMap((target) => target.engines))].map(engineNpmPackage);
 
+/** @emoji 🗄️ Isolates dependency-optimizer state for concurrent playground variants and renderers. */
+const playgroundCacheDir = path.join(repoRoot, "node_modules/.vite-os-dev", `${plugin}-${renderer}`);
+
+/** @emoji 🚫 Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
+const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
+
 /** @emoji 🗂️ The active playground's declared asset needs — every playground's assets when unfiltered
  * (the "s" studio hub can open any app, so it needs every app's dev-time asset routes available), else
  * just the resolved variant's own `assets` row. */
@@ -43,6 +49,7 @@ const resolvedPlaygroundAssets = isStudioPluginFilter(plugin) ? PLAYGROUND_BUILD
 
 export default defineConfig({
   root: playDir,
+  cacheDir: playgroundCacheDir,
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   resolve: {
@@ -76,8 +83,9 @@ export default defineConfig({
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),
   ],
   optimizeDeps: {
+    entries: [path.join(playDir, "index.html")],
     include: ["react-reconciler", "react-reconciler/constants", "three", "@react-three/fiber", "fuse.js"],
-    exclude: [...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
+    exclude: [...nodeOnlyOptimizeDepsExclude, ...(renderer === "wgpu" ? ["@semio-tech/framework-renderer-react"] : []), ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE, ...registryEngineOptimizeDepsExclude],
   },
   define: {
     "import.meta.env.VITE_SEMIO_PLUGIN": JSON.stringify(process.env.SEMIO_PLUGIN ?? "s"),

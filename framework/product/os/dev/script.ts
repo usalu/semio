@@ -7,6 +7,8 @@ import { fileURLToPath } from "node:url";
 import {
   BundleScript,
   ScriptRouter,
+  buildBudgetMs,
+  budgetTimeoutHint,
   describeDevPortOccupant,
   devServerUrl,
   getWorkspaceRoot,
@@ -16,6 +18,8 @@ import {
   stopTrunkDevPort,
   wgpuDevPlayUrl,
   runBundleScriptMain,
+  runCmd,
+  runCmdStatus,
   runVitest,
   runViteBunxDev,
   frameworkOsPlaygroundDefaultPort,
@@ -754,7 +758,7 @@ export async function createPluginApi() {
 function ensureWasmTarget(): void {
   const probe = spawnSync("rustup", ["target", "list", "--installed"], { encoding: "utf8" });
   if (!probe.stdout?.includes(PLUGIN_WASM_TARGET)) {
-    spawnSync("rustup", ["target", "add", PLUGIN_WASM_TARGET], { stdio: "inherit" });
+    runCmd("rustup", ["target", "add", PLUGIN_WASM_TARGET]);
   }
 }
 
@@ -796,8 +800,9 @@ function rewriteExistingPluginShimImports(): void {
 }
 
 function transpilePluginComponent(artifact: string, outDir: string, componentBase: string): void {
-  const transpile = spawnSync("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"], { cwd: repoRoot, stdio: "inherit" });
-  if (transpile.status !== 0) throw new Error(`jco transpile failed for ${artifact}`);
+  if (runCmdStatus("bunx", ["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/host=./host-shim.js"], { cwd: repoRoot }) !== 0) {
+    throw new Error(`jco transpile failed for ${artifact}`);
+  }
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`));
 }
 
@@ -918,8 +923,9 @@ async function readPackageName(cratePath: string): Promise<string> {
 
 async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
   const packageName = await readPackageName(target.cratePath);
-  const build = spawnSync("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--release"], { cwd: repoRoot, stdio: "inherit" });
-  if (build.status !== 0) throw new Error(`plugin build failed: ${target.pluginId}`);
+  if (runCmdStatus("cargo", ["build", "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
+    throw new Error(`plugin build failed: ${target.pluginId}`);
+  }
   const artifact = join(repoRoot, "target", PLUGIN_WASM_TARGET, "release", `${packageName.replace(/-/g, "_")}.wasm`);
   const outDir = join(pluginOutRoot, target.pluginId);
   mkdirSync(outDir, { recursive: true });
@@ -939,8 +945,7 @@ async function buildPlugin(target: PluginRegistryEntry): Promise<void> {
 
 async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
   const registryScript = join(repoRoot, "framework/plugin/registry/script.ts");
-  const generate = spawnSync("bun", [registryScript, "generate"], { cwd: repoRoot, stdio: "inherit" });
-  if (generate.status !== 0) throw new Error("plugin registry generation failed");
+  if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
   const variant = filterPlugin ?? process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
   writePlaygroundSession(variant, playgroundSessionPath, repoRoot);
 }
@@ -1020,17 +1025,17 @@ function engineWasmScriptPath(cratePath: string): string {
  * replaces the previous hardcoded `if (pluginId === "flow" | "gis2d" | "gis3d" | "raster" | "puzzle2d")` branches. */
 async function buildEngineWasm(variant: string, renderer: string): Promise<void> {
   if (renderer !== "react" || process.env.SKIP_ENGINE_BUILD === "1") return;
+  // Each recurses into a crate's own `wasm` script (wasm-pack/cargo build under the hood) — budgeted at
+  // the build class rather than the generic command default since those inner builds can legitimately
+  // approach [[buildBudgetMs]] themselves.
   const graphScript = join(repoRoot, "framework/surface/node-graph/rs/script.ts");
-  const graphBuild = spawnSync("bun", [graphScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-  if (graphBuild.status !== 0) throw new Error("framework-surface-node-graph wasm build failed");
+  if (runCmdStatus("bun", [graphScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-surface-node-graph wasm build failed");
   const editorScript = join(repoRoot, "framework/editor/rs/script.ts");
-  const editorBuild = spawnSync("bun", [editorScript, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-  if (editorBuild.status !== 0) throw new Error("framework-editor wasm build failed");
+  if (runCmdStatus("bun", [editorScript, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("framework-editor wasm build failed");
   const row = playgroundCatalog.find((entry) => entry.variant === variant);
   for (const engineCratePath of row?.engines ?? []) {
     const script = engineWasmScriptPath(engineCratePath);
-    const build = spawnSync("bun", [script, "wasm"], { cwd: repoRoot, stdio: "inherit" });
-    if (build.status !== 0) throw new Error(`${engineCratePath} wasm build failed`);
+    if (runCmdStatus("bun", [script, "wasm"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${engineCratePath} wasm build failed`);
   }
 }
 
@@ -1070,17 +1075,17 @@ class DevScript extends BundleScript {
         }
       }
       const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
-      const serve = spawnSync("bun", [wgpuScript, "serve"], {
+      const serveStatus = runCmdStatus("bun", [wgpuScript, "serve"], {
         cwd: join(repoRoot, "framework/renderer/wgpu"),
-        stdio: "inherit",
         env: {
           ...process.env,
           SEMIO_PLUGIN: plugin,
           SEMIO_RENDERER: renderer,
           S_OS_PORT: String(port),
         },
+        budgetMs: null, // dev server — runs until stopped
       });
-      if (serve.status !== 0 && !probeWgpuDevPort(host, port)) {
+      if (serveStatus !== 0 && !probeWgpuDevPort(host, port)) {
         throw new Error("wgpu trunk serve failed");
       }
       console.log(`[dev] wgpu trunk serving at ${playUrl}`);
@@ -1113,15 +1118,13 @@ class BuildScript extends BundleScript {
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     if (renderer === "wgpu" && process.env.SKIP_WGPU_BUILD !== "1") {
       const wgpuScript = join(repoRoot, "framework/renderer/wgpu/script.ts");
-      const wgpuBuild = spawnSync("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, stdio: "inherit" });
-      if (wgpuBuild.status !== 0) throw new Error("wgpu trunk build failed");
+      if (runCmdStatus("bun", [wgpuScript, "wasm", "--release"], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error("wgpu trunk build failed");
       return;
     }
     await buildEngineWasm(plugin, renderer);
     const resolvedFilter = resolvePlaygroundFilter(plugin);
-    spawnSync("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], {
+    runCmdStatus("bun", ["run", "vite", "build", "--config", "vite.config.ts", ...viteSegments], {
       cwd: this.root,
-      stdio: "inherit",
       env: {
         ...process.env,
         SEMIO_PLUGIN: plugin,
@@ -1152,11 +1155,18 @@ function walkRustSources(dir: string, out: string[]): void {
 
 class PluginCapabilityLintScript extends BundleScript {
   async run(): Promise<void> {
+    // Captures stdout (`encoding`), so it can't use inherit-stdio runCmd/runCmdStatus — budgeted inline instead.
+    const metadataBudgetMs = buildBudgetMs();
     const metadataResult = spawnSync("cargo", ["metadata", "--format-version", "1"], {
       cwd: repoRoot,
       encoding: "utf8",
       maxBuffer: 64 * 1024 * 1024,
+      timeout: metadataBudgetMs,
+      killSignal: "SIGKILL",
     });
+    if (metadataResult.error && (metadataResult.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
+      throw new Error(`[budget] cargo metadata exceeded ${metadataBudgetMs}ms — killed. ${budgetTimeoutHint("cargo")}`);
+    }
     if (metadataResult.status !== 0) {
       throw new Error(metadataResult.stderr || "cargo metadata failed");
     }
@@ -1428,14 +1438,9 @@ class VerifyScript extends BundleScript {
     }
     for (const target of generatePluginRegistry(repoRoot)) {
       const packageName = await readPackageName(target.cratePath);
-      const pluginTests = spawnSync("cargo", ["test", "-p", packageName], { cwd: repoRoot, stdio: "inherit" });
-      if (pluginTests.status !== 0) throw new Error(`${packageName} tests failed`);
+      if (runCmdStatus("cargo", ["test", "-p", packageName], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) throw new Error(`${packageName} tests failed`);
     }
-    const rendererTests = spawnSync("bunx", ["vitest", "run"], {
-      cwd: join(repoRoot, "framework/renderer/react"),
-      stdio: "inherit",
-    });
-    if (rendererTests.status !== 0) throw new Error("framework-renderer-react tests failed");
+    if (runCmdStatus("bunx", ["vitest", "run"], { cwd: join(repoRoot, "framework/renderer/react") }) !== 0) throw new Error("framework-renderer-react tests failed");
     await runStudioE2eVerify(studioUrl, timeoutMs);
     await new PluginCapabilityLintScript(this.root).run([]);
     console.log(`[DEBUG] s studio verify passed (${studioUrl})`);

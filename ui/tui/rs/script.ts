@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji ⚙️ Runs `cargo test`/`cargo check --target wasm32-unknown-unknown` for the `ui_tui` crate. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargoTestBudgeted, runCmd, buildBudgetMs } from "../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -11,8 +11,8 @@ class TestScript extends BundleScript {
 
 class CheckWasmScript extends BundleScript {
   run(): void {
-    runCmd("cargo", ["check", "-p", "ui_tui", "--target", "wasm32-unknown-unknown"], { cwd: import.meta.dir });
-    runCmd("cargo", ["check", "-p", "ui_tui", "--target", "wasm32-unknown-unknown", "--features", "bindgen"], { cwd: import.meta.dir });
+    runCmd("cargo", ["check", "-p", "ui_tui", "--target", "wasm32-unknown-unknown"], { cwd: import.meta.dir, budgetMs: buildBudgetMs() });
+    runCmd("cargo", ["check", "-p", "ui_tui", "--target", "wasm32-unknown-unknown", "--features", "bindgen"], { cwd: import.meta.dir, budgetMs: buildBudgetMs() });
   }
 }
 

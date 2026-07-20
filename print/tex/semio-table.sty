@@ -163,13 +163,9 @@
 
 \newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.78\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.10\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
 
-\newcommand{\semio@table@colspec@reference@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.66\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
-
 \newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
 
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.78\linewidth-\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{}}
-
-\newcommand{\semio@table@colspec@reference}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.66\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
 \newcommand{\semio@table@colspec@glossary}{@{}T{\dimexpr0.22\linewidth-\tabcolsep\relax}T{\dimexpr0.56\linewidth-\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{}}
 
@@ -250,13 +246,6 @@
     {\semio@register@header@key}
     {\semio@register@header@title}
     {\semio@register@header@page}%
-}
-
-\newcommand{\semio@references@table@header@long@repeat}{%
-  \semio@table@long@header@continuation@three
-    {\semio@register@header@number}
-    {\semio@register@header@reference}
-    {\semio@register@header@year}%
 }
 
 \newcommand{\semio@termlist@table@header}[1]{%
@@ -368,14 +357,6 @@
 
 \newcommand{\SemioTableRegister}[1]{%
   \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{\semio@register@table@header@long@repeat}{#1}{3}%
-}
-
-\newcommand{\SemioTableReferenceRow}[3]{%
-  \SemioTableRow{\cellcolor{semio-chrome-canvas}#1 & \cellcolor{semio-chrome-canvas}#2 & \cellcolor{semio-chrome-canvas}#3}%
-}
-
-\newcommand{\SemioTableReference}[1]{%
-  \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@reference@long}{\semio@references@table@header}{\semio@references@table@header@long@repeat}{#1}{3}%
 }
 
 %region GenericLongTable
@@ -614,11 +595,7 @@
       \ifx\semio@table@spec\semio@table@spec@nrp
         \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@register}%
       \else
-        \ifx\semio@table@spec\semio@table@spec@nry
-          \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@reference}%
-        \else
-          \begin{tabular}{@{}#1@{}}%
-        \fi
+        \begin{tabular}{@{}#1@{}}%
       \fi
     \fi
   \fi
@@ -627,7 +604,6 @@
 \def\semio@table@spec@ll{ll}
 \def\semio@table@spec@lll{lll}
 \def\semio@table@spec@nrp{nrp}
-\def\semio@table@spec@nry{nry}
 
 \newcommand{\SemioTableEnd}{%
   \end{tabular}%

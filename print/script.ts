@@ -666,6 +666,12 @@ class TestScript extends BundleScript {
     assert.throws(() => resolveTemplates(["not-a-template"]));
     //#endregion
 
+    //#region Blockquote window layout
+    const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
+    assert.match(windowSource, /semio~window~blockquote\/\.style=\{\s*top=0pt,/);
+    assert.match(windowSource, /\{ semioblockquote \} \{ \\tl_put_right:Nn \\l_semio_window_style_tl \{ , semio~window~blockquote \} \}/);
+    //#endregion
+
     console.log("print: unit tests passed");
   }
 

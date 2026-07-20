@@ -1,7 +1,6 @@
 #!/usr/bin/env bun
 /** 🦀 `@semio-tech/framework-core` task router: `bun ./script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runVitest, resolveTestLevel } from "../../repo/lib/js/index.ts";
-import { spawnSync } from "node:child_process";
+import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoLint, runCargoTestBudgeted, runCmdStatus, runVitest, resolveTestLevel } from "../../repo/lib/js/index.ts";
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -35,14 +34,14 @@ function generatedManifestPath(root: string): string {
 
 /** 🧬 Runs the ts-rs export test with the `typegen` feature enabled, populating `bindings/*.ts`. */
 function runTypegenExportTest(root: string): void {
-  const result = spawnSync("cargo", ["test", "--features", "typegen", TYPEGEN_TEST_FILTER], {
+  const status = runCmdStatus("cargo", ["test", "--features", "typegen", TYPEGEN_TEST_FILTER], {
     cwd: join(root, "rs"),
-    stdio: "inherit",
     env: process.env,
+    budgetMs: buildBudgetMs(),
   });
-  if (result.status !== 0) {
+  if (status !== 0) {
     console.error("framework-core typegen: `cargo test --features typegen` failed — see output above.");
-    process.exit(result.status ?? 1);
+    process.exit(status);
   }
 }
 

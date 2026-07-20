@@ -875,17 +875,7 @@ export function findRepoRoot(start: string): string {
 }
 //#endregion 🔖Router
 
-//#region 🔖Process
-/** 🏃Runs a subprocess with inherited stdio; throws on non-zero exit. */
-export function runCmd(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  execFileSync(cmd, args, {
-    stdio: "inherit",
-    cwd: opts.cwd,
-    env: opts.env ?? process.env,
-  });
-}
-
-//#region ⏱️TestBudget
+//#region ⏱️Budget
 /** ⏱️Ordered test levels — every test belongs to exactly one; running level L runs all levels ≤ L, budgeted at L's limit. */
 export const TEST_LEVELS = ["fundamental", "quick", "long", "exhaustive"] as const;
 export type TestLevel = (typeof TEST_LEVELS)[number];
@@ -958,7 +948,7 @@ export function dotnetLevelArgs(level: TestLevel = activeTestLevel()): string[] 
  * direct child, leaking forked worker pools (e.g. vitest's `workers/forks.js`) that keep burning CPU indefinitely.
  * Requires the child to have been spawned with `detached: true` on POSIX so `pid` is its own process-group leader.
  */
-function killTestBudgetTree(pid: number): void {
+function killBudgetTree(pid: number): void {
   if (process.platform === "win32") {
     spawnSync("taskkill", ["/pid", String(pid), "/T", "/F"], { stdio: "ignore" });
     return;
@@ -970,8 +960,34 @@ function killTestBudgetTree(pid: number): void {
   }
 }
 
-/** ⏱️Hard ceiling (ms) for a warm-build step preceding a test run — compile time isn't billed against the test-level budget, but a stuck build (e.g. shared cargo target-dir lock contention) must never hang a test invocation forever. Overridable via `SEMIO_BUILD_BUDGET_MS`. */
+/** ⏱️Hard ceiling (ms) for a warm-build step preceding a test run, and for any other cargo build/clippy/check/wasm invocation — compile time isn't billed against the test-level budget, but a stuck build (e.g. shared cargo target-dir lock contention) must never hang a command forever. Overridable via `SEMIO_BUILD_BUDGET_MS`. */
 export const BUILD_BUDGET_MS = 1_200_000;
+
+/** ⏱️Resolves the active build-class budget: `SEMIO_BUILD_BUDGET_MS` env override, else [[BUILD_BUDGET_MS]]. */
+export function buildBudgetMs(): number {
+  return Number(process.env.SEMIO_BUILD_BUDGET_MS ?? BUILD_BUDGET_MS);
+}
+
+/** ⏱️Default hard wall-clock budget (ms) for a generic spawned command — the [[runCmd]]/[[runCmdStatus]] default for anything that isn't a `cargo` invocation. Overridable via `SEMIO_CMD_BUDGET_MS`. */
+export const CMD_BUDGET_MS = 600_000;
+
+/** ⏱️Resolves the active generic-command budget: `SEMIO_CMD_BUDGET_MS` env override, else [[CMD_BUDGET_MS]]. */
+export function cmdBudgetMs(): number {
+  return Number(process.env.SEMIO_CMD_BUDGET_MS ?? CMD_BUDGET_MS);
+}
+
+/** ⏱️The default budget class for `cmd`: `cargo` invocations (build/clippy/check/install) default to the longer [[buildBudgetMs]] since compiles routinely exceed the generic command budget; everything else defaults to [[cmdBudgetMs]]. */
+function defaultBudgetMs(cmd: string): number {
+  return cmd === "cargo" ? buildBudgetMs() : cmdBudgetMs();
+}
+
+/** ⏱️Timeout hint for a budget-exceeded message; `cargo` commands default to the shared target-dir lock-contention hint (by far the most common real cause), everything else to a generic budget-tuning hint. An explicit `override` always wins. */
+export function budgetTimeoutHint(cmd: string, override?: string): string {
+  if (override) return override;
+  return cmd === "cargo"
+    ? "Likely shared cargo target-dir lock contention from another concurrent session — investigate before retrying."
+    : "Trim it, or raise its budget (`budgetMs`, `SEMIO_CMD_BUDGET_MS`, `SEMIO_BUILD_BUDGET_MS`).";
+}
 
 /**
  * ⏱️Runs a command under a hard wall-clock budget; SIGKILLs the whole process tree and fails loudly past it.
@@ -986,7 +1002,7 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
   let timedOut = false;
   const timer = setTimeout(() => {
     timedOut = true;
-    if (child.pid) killTestBudgetTree(child.pid);
+    if (child.pid) killBudgetTree(child.pid);
   }, budgetMs);
   const { code, signal } = await new Promise<{ code: number | null; signal: NodeJS.Signals | null }>((resolveExit, rejectExit) => {
     child.on("error", rejectExit);
@@ -994,14 +1010,14 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
   }).finally(() => clearTimeout(timer));
   if (timedOut) {
     const hint = opts.onTimeoutHint ?? "Trim it, or assign it to a higher level (quick/long/exhaustive).";
-    console.error(`[test-budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${hint}`);
+    console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${hint}`);
     process.exit(1);
   }
   if (signal || code !== 0) process.exit(code ?? 1);
 }
 
 /**
- * 🦀Warm-builds test binaries — bounded by [[BUILD_BUDGET_MS]], NOT the test-level budget, but never unbounded —
+ * 🦀Warm-builds test binaries — bounded by [[buildBudgetMs]], NOT the test-level budget, but never unbounded —
  * then runs `cargo test` under the active level's budget, appending cumulative `--skip <level>::` filters for every
  * level above it (tests live in `mod quick`/`mod long`/`mod exhaustive` submodules inside `mod tests`; unscoped
  * tests are `fundamental`). Splits `extraArgs` on an existing `--` so callers passing their own libtest args (e.g.
@@ -1009,12 +1025,11 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
-  const buildBudgetMs = Number(process.env.SEMIO_BUILD_BUDGET_MS ?? BUILD_BUDGET_MS);
   await runTestBudgeted("cargo", ["build", "--tests", ...packageArgs], {
     cwd,
     env,
-    budgetMs: buildBudgetMs,
-    onTimeoutHint: "The warm build is stuck (likely shared cargo target-dir lock contention from another concurrent session) — investigate before retrying.",
+    budgetMs: buildBudgetMs(),
+    onTimeoutHint: budgetTimeoutHint("cargo"),
   });
   const dashIdx = extraArgs.indexOf("--");
   const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
@@ -1023,7 +1038,61 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
   const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
   await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
 }
-//#endregion ⏱️TestBudget
+
+export interface RunCmdOpts {
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  /** ⏱️Wall-clock budget (ms). `null` exempts the command entirely — ONLY for dev servers, interactive
+   *  apps, and orchestrators whose own children are individually budgeted. Default: [[defaultBudgetMs]]. */
+  budgetMs?: number | null;
+  onTimeoutHint?: string;
+}
+
+/** ⏱️Shared `spawnSync` core for [[runCmd]]/[[runCmdStatus]]: throws on spawn error, budget timeout, or signal kill (printing `[budget]` first on timeout); otherwise returns the exit status. */
+function runCmdInternal(cmd: string, args: string[], opts: RunCmdOpts): number {
+  const budgetMs = opts.budgetMs === null ? undefined : (opts.budgetMs ?? defaultBudgetMs(cmd));
+  const result = spawnSync(cmd, args, {
+    stdio: "inherit",
+    cwd: opts.cwd,
+    env: opts.env ?? process.env,
+    timeout: budgetMs,
+    killSignal: "SIGKILL",
+  });
+  if (result.error) {
+    if ((result.error as NodeJS.ErrnoException).code === "ETIMEDOUT") {
+      console.error(`[budget] ${cmd} ${args.join(" ")} exceeded ${budgetMs}ms — killed. ${budgetTimeoutHint(cmd, opts.onTimeoutHint)}`);
+    }
+    throw result.error;
+  }
+  if (result.signal) throw new Error(`${cmd} ${args.join(" ")} killed by signal ${result.signal}`);
+  return result.status ?? 1;
+}
+
+/**
+ * 🏃Runs a subprocess with inherited stdio under a hard wall-clock budget (default [[defaultBudgetMs]],
+ * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+ * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+ */
+export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+  const status = runCmdInternal(cmd, args, opts);
+  if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+}
+
+/** 🏃Like [[runCmd]] but returns the exit status instead of throwing on non-zero exit — for call sites
+ *  that branch on it. Budget exceed still prints `[budget]` and throws (never silently returns a status). */
+export function runCmdStatus(cmd: string, args: string[], opts: RunCmdOpts = {}): number {
+  return runCmdInternal(cmd, args, opts);
+}
+
+/** 🏃Like [[runCmd]] but ignores failures — including a budget kill, which is the desired never-hang behavior for optional commands. */
+export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+  try {
+    runCmd(cmd, args, opts);
+  } catch {
+    /* optional */
+  }
+}
+//#endregion ⏱️Budget
 
 //#region 🧹CargoLint
 /**
@@ -1035,18 +1104,9 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
  */
 export function runCargoLint(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): void {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
-  runCmd("cargo", ["clippy", ...packageArgs, "--all-targets", ...extraArgs, "--", "-D", "warnings"], { cwd, env });
+  runCmd("cargo", ["clippy", ...packageArgs, "--all-targets", ...extraArgs, "--", "-D", "warnings"], { cwd, env, budgetMs: buildBudgetMs() });
 }
 //#endregion 🧹CargoLint
-
-/** 🏃Like `runCmd` but ignores failures. */
-export function tryRun(cmd: string, args: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}): void {
-  try {
-    runCmd(cmd, args, opts);
-  } catch {
-    /* optional */
-  }
-}
 
 /** 🧰Dev tooling env without IDE-injected node options. */
 export function devToolingEnv(extra: NodeJS.ProcessEnv = {}): NodeJS.ProcessEnv {
@@ -1685,7 +1745,7 @@ export function runWasmPackWebBuild(opts: {
   const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
   console.log(`[${logPrefix}] ${buildLabel} --release --target web --out-dir pkg --no-pack`);
   const t0 = Date.now();
-  let res: ReturnType<typeof spawnSync>;
+  let status: number;
   if (threads) {
     const repoRoot = getWorkspaceRoot();
     const crateName = readFileSync(join(rsDir, "Cargo.toml"), "utf8").match(/^name\s*=\s*"([^"]+)"/m)?.[1];
@@ -1695,20 +1755,20 @@ export function runWasmPackWebBuild(opts: {
     }
     const cargoWasm = join(repoRoot, "target/wasm32-unknown-unknown/release", `${crateName.replace(/-/g, "_")}.wasm`);
     const threadedCargoArgs = ["build", "--release", "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...cargoFeatures.flatMap((feature) => ["--features", feature])];
-    res = spawnSync("cargo", threadedCargoArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
-    if (res.status !== 0) {
+    status = runCmdStatus("cargo", threadedCargoArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
+    if (status !== 0) {
       console.error(`[${logPrefix}] cargo threaded build failed`);
-      process.exit(res.status ?? 1);
+      process.exit(status);
     }
     if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-    res = spawnSync(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
+    status = runCmdStatus(resolveWasmBindgenBin(), [cargoWasm, "--out-dir", "pkg", "--typescript", "--target", "web", "--out-name", wasmBaseName], { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   } else {
     const wasmPackArgs = ["x", "wasm-pack", "build", "--release", "--target", "web", "--out-dir", "pkg", "--no-pack", ...cargoFeatures.flatMap((feature) => ["--", "--features", feature])];
-    res = spawnSync("bun", wasmPackArgs, { cwd: rsDir, stdio: "inherit", env: { ...process.env } });
+    status = runCmdStatus("bun", wasmPackArgs, { cwd: rsDir, env: { ...process.env }, budgetMs: buildBudgetMs() });
   }
-  if (res.status !== 0) {
+  if (status !== 0) {
     console.error(`[${logPrefix}] wasm build failed`);
-    process.exit(res.status ?? 1);
+    process.exit(status);
   }
   console.log(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
 
@@ -1778,6 +1838,7 @@ const LANG_EMOJI: Record<string, string> = {
   SQL: "🛢️",
   HTML: "🌐",
   Markdown: "📝",
+  TeX: "📐",
   JSON: "🧾",
   YAML: "📋",
   TOML: "⚙️",
@@ -1890,6 +1951,12 @@ export function classifyPathForMetrics(path: string): string {
     case ".mdc":
     case ".svx":
       return "Markdown";
+    case ".tex":
+    case ".sty":
+    case ".cls":
+    case ".ltx":
+    case ".bib":
+      return "TeX";
     case ".json":
     case ".jsonc":
       return "JSON";
@@ -1980,7 +2047,7 @@ function gitDir(root: string): string {
   return dir.startsWith("/") ? dir : join(repoRoot, dir);
 }
 
-const ULOC_CACHE_VERSION = 3;
+const ULOC_CACHE_VERSION = 4;
 
 type UlocCacheFile = {
   version: number;

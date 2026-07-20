@@ -68,3 +68,4 @@
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
 \RequirePackage{hyperref}
+\hypersetup{colorlinks,linkcolor=semio-primary,citecolor=semio-primary,urlcolor=semio-primary,filecolor=semio-primary}

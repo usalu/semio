@@ -3248,15 +3248,17 @@ export function buildActionCategoryTree(
       defaultOpen: true,
       items: categoryActions.map((action): TreeDataItem => {
         const icon = action.iconId && action.iconId in ICONS ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
+        const rowClassName = disabled ? "pointer-events-none opacity-50" : undefined;
         if (!actionRequiresStagedForm(action)) {
-          return { id: `action.${action.id}`, label: action.label, icon, onClick: () => onExecute({ controllerId, action: action.id }) };
+          return { id: `action.${action.id}`, label: action.label, icon, className: rowClassName, onClick: () => !disabled && onExecute({ controllerId, action: action.id }) };
         }
         const expanded = expandedActionId === action.id;
         return {
           id: `action.${action.id}`,
           label: `${action.label}…`,
           icon: icon ?? <Icon icon={expanded ? "chevron-down" : "chevron-right"} size="small" />,
-          onClick: () => onExpandedChange(expanded ? null : action.id),
+          className: rowClassName,
+          onClick: () => !disabled && onExpandedChange(expanded ? null : action.id),
         };
       }),
     });
@@ -3266,6 +3268,7 @@ export function buildActionCategoryTree(
       const missing = missingRequiredArgs(expandedAction.args, effective);
       sections.push({
         id: `action.category.${category.id}.form`,
+        defaultOpen: true,
         items: expandedAction.args.map(
           (def): TreeDataItem => ({
             id: `action.${expandedAction.id}.arg.${def.id}`,
@@ -3286,6 +3289,7 @@ export function buildActionCategoryTree(
             id: `${windowId}-action-${expandedAction.id}-reset`,
             icon: <Icon icon="undo" size="small" />,
             text: shellLabel("ui.common.reset"),
+            disabled,
             onClick: () => onResetArgs(expandedAction.id),
           },
         ],
@@ -5879,7 +5883,7 @@ export function FrameworkOsShell({
       items.push({
         id: `action.${action.id}`,
         // ✍️ Arg-carrying actions never fire from the palette (P3): the "…" entry activates the hosting
-        // window, unfolds its Actions rail, and expands this action's staged form instead of dispatching.
+        // window, unfolds its top-left Actions pane, and expands this action's staged form instead of dispatching.
         label: argCarrying ? `${resolvedActionLabel}…` : resolvedActionLabel,
         description: action.keys ?? keysByActionId.get(action.id),
         category: action.category ?? (action.kind === "history" ? shellLabel("ui.ribbon.parent.history") : shellLabel("ui.ribbon.parent.actions")),

@@ -2618,10 +2618,19 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     return match as HTMLButtonElement;
   };
 
+  // 🌳 Action rows render as Tree items (`role="treeitem"`), not `<button>`s — only the Execute/Reset
+  // form actions render as real buttons. Row clicks (fire a zero-arg action, toggle an arg-carrying one)
+  // go through this helper instead of `buttonByText`.
+  const rowByText = (container: HTMLElement, text: string): HTMLElement => {
+    const match = [...container.querySelectorAll('[role="treeitem"]')].find((row) => row.querySelector('[data-slot="tree-label"]')?.textContent?.trim() === text);
+    if (!match) throw new Error(`tree row "${text}" not found`);
+    return match as HTMLElement;
+  };
+
   it("stages both args locally, dispatches nothing until Execute, then fires exactly one merged descriptor and keeps staged values", () => {
     const onExecute = vi.fn();
     const { container } = render(createElement(Harness, { actions: [twoArgAction], onExecute }));
-    fireEvent.click(buttonByText(container, "Extrude…"));
+    fireEvent.click(rowByText(container, "Extrude…"));
     const inputs = container.querySelectorAll('input[type="number"]');
     expect(inputs).toHaveLength(2);
     fireEvent.change(inputs[0]!, { target: { value: "3" } });
@@ -2639,7 +2648,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   it("gates Execute on required args, but a default-satisfied required arg counts without staging", () => {
     const onExecute = vi.fn();
     const required = render(createElement(Harness, { actions: [twoArgAction], onExecute }));
-    fireEvent.click(buttonByText(required.container, "Extrude…"));
+    fireEvent.click(rowByText(required.container, "Extrude…"));
     expect(buttonByText(required.container, "Execute").disabled).toBe(true);
     const inputs = required.container.querySelectorAll('input[type="number"]');
     fireEvent.change(inputs[0]!, { target: { value: "3" } });
@@ -2649,7 +2658,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     cleanup();
 
     const defaulted = render(createElement(Harness, { actions: [defaultedAction], onExecute }));
-    fireEvent.click(buttonByText(defaulted.container, "Bevel…"));
+    fireEvent.click(rowByText(defaulted.container, "Bevel…"));
     expect(buttonByText(defaulted.container, "Execute").disabled).toBe(false);
     fireEvent.click(buttonByText(defaulted.container, "Execute"));
     expect(onExecute).toHaveBeenLastCalledWith({ controllerId: "c", action: "bevel", args: { radius: 2 } });
@@ -2658,7 +2667,7 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   it("Reset restores defaults while keeping the form expanded", () => {
     const onExecute = vi.fn();
     const { container } = render(createElement(Harness, { actions: [defaultedAction], onExecute }));
-    fireEvent.click(buttonByText(container, "Bevel…"));
+    fireEvent.click(rowByText(container, "Bevel…"));
     const input = () => container.querySelector('input[type="number"]') as HTMLInputElement;
     expect(input().value).toBe("2");
     fireEvent.change(input(), { target: { value: "9" } });
@@ -2669,10 +2678,10 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
     expect([...container.querySelectorAll("button")].some((b) => b.textContent?.includes("Execute"))).toBe(true);
   });
 
-  it("a zero-arg action row is the execute button and fires immediately with no args object", () => {
+  it("a zero-arg action row fires immediately with no args object", () => {
     const onExecute = vi.fn();
     const { container } = render(createElement(Harness, { actions: [zeroArgAction], onExecute }));
-    fireEvent.click(buttonByText(container, "Flatten"));
+    fireEvent.click(rowByText(container, "Flatten"));
     expect(onExecute).toHaveBeenCalledTimes(1);
     expect(onExecute).toHaveBeenCalledWith({ controllerId: "c", action: "flatten" });
   });
@@ -2680,9 +2689,25 @@ describe("window action panel — staging and single dispatch (P1/P2)", () => {
   it("renders every row disabled when an active utility gates actions", () => {
     const onExecute = vi.fn();
     const { container } = render(createElement(Harness, { actions: [zeroArgAction], onExecute, disabled: true }));
-    fireEvent.click(buttonByText(container, "Flatten"));
+    fireEvent.click(rowByText(container, "Flatten"));
     expect(onExecute).not.toHaveBeenCalled();
-    expect(buttonByText(container, "Flatten").disabled).toBe(true);
+  });
+
+  it("groups actions into category sections like the command panel", () => {
+    const createAction: ActionDefinition = { id: "box", label: "Box", kind: "operation", inPalette: true, category: "create", args: [] };
+    const transformAction: ActionDefinition = { id: "move", label: "Move", kind: "operation", inPalette: true, category: "transform", args: [] };
+    const historyAction: ActionDefinition = { id: "undo", label: "Undo", kind: "history", inPalette: true, args: [] };
+    const uncategorizedAction: ActionDefinition = { id: "flatten2", label: "Flatten2", kind: "operation", inPalette: true, args: [] };
+    const { container } = render(createElement(Harness, { actions: [createAction, transformAction, historyAction, uncategorizedAction], onExecute: vi.fn() }));
+    const textOf = (text: string) => [...container.querySelectorAll("*")].some((el) => el.textContent?.trim() === text && el.children.length === 0);
+    expect(textOf("Create")).toBe(true);
+    expect(textOf("Transform")).toBe(true);
+    expect(textOf("History")).toBe(true);
+    expect(textOf("Actions")).toBe(true);
+    expect(rowByText(container, "Box")).toBeTruthy();
+    expect(rowByText(container, "Move")).toBeTruthy();
+    expect(rowByText(container, "Undo")).toBeTruthy();
+    expect(rowByText(container, "Flatten2")).toBeTruthy();
   });
 });
 

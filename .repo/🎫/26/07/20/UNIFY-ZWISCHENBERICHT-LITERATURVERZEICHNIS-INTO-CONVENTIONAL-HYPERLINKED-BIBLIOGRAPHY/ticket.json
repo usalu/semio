@@ -1,0 +1,13 @@
+{
+  "title": "Unify Zwischenbericht Literaturverzeichnis into Conventional Hyperlinked Bibliography",
+  "emoji": "🔗",
+  "status": "open",
+  "description": "Replace the mit-bestand Zwischenbericht's bespoke Literaturverzeichnis table (custom key-harvest + private counter in print/tex/semio-window.sty, disconnected from biblatex's own cite anchors) with a conventional \\printbibliography-driven numbered bibliography. Add accent-colored hyperref link styling (semio-primary) for citations/urls/internal refs. Fully clean up references.bib: strip author-duplicating title prefixes, add derivable years, add urldate to all @online entries, convert the one doi.org URL into a proper doi field. Remove now-dead reference-table macros in semio-table.sty and semio-core.sty. Keep zwischenbericht.tex and zwischenbericht-dark.tex line-identical (no changes expected there, \\SemioReferences macro name stays). Verify both light/dark PDFs build clean via Tectonic (bunx nx run print:build) with no undefined citation warnings, and that in-text [n] citations now hyperlink to the visible bibliography entries.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2184"
+  },
+  "goal": "🎯r2602🎯updateddocs",
+  "sessions": [
+    "⚪57de00e72a3c45d09871a257ad275bfd"
+  ]
+}

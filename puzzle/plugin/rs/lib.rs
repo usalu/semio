@@ -6571,13 +6571,13 @@ pub mod d3 {
         }
 
         #[test]
-        fn fill_count_measure_shows_building_progress_while_precompute_incomplete() {
+        fn fill_count_measure_shows_planning_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
             let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
             sync_precompute_session(&mut session, &scene);
             session.precompute_step(1);
             match puzzle3d_fill_count_measure(&scene, &session, &PUZZLE3D_LABELS_NATIVE_EN) {
-                WindowMeasure::Slider { label: Some(label), .. } => assert!(label.contains("building"), "expected a building-progress label, got {label:?}"),
+                WindowMeasure::Slider { label: Some(label), .. } => assert!(label.contains("planning"), "expected a planning-progress label, got {label:?}"),
                 other => panic!("expected a slider measure, got {other:?}"),
             }
         }

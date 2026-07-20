@@ -30,6 +30,7 @@
       "name": "mit-bestand-aggregator-react-dev",
       "runtimeExecutable": "bun",
       "runtimeArgs": ["run", "dev:mit-bestand:aggregator"],
+      "env": { "SEMIO_RENDERER": "react" },
       "port": 6023
     },
     {

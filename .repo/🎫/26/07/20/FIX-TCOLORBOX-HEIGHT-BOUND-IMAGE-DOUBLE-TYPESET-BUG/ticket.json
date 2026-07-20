@@ -1,0 +1,13 @@
+{
+  "title": "Fix Tcolorbox Height-Bound Image Double-Typeset Bug",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Root-cause and fix the pre-existing tcolorbox double-typeset/double-paint bug in print/tex/semio-window.sty documented in tickets 26/07/20/INTEGRATE-TEMP-ZWISCHENBERICHT-CONTENT-INTO-MIT-BESTAND-REPORT and 26/07/17/FIX-IMAGE-COVER-ANCHOR-MECHANISM: a height-bound image inside a Figure/Photo/WindowItem (image-fit=contain or cover) either double-renders (ghost/duplicate copy bleeding past crop edge) or produces large constant Overfull \\hbox warnings (observed at a fixed 414.84218pt regardless of image size/aspect ratio), whenever a savebox-measured graphic is typeset inside this package's tcolorbox body (enhanced+breakable+nobeforeafter). Reproduces both for standalone height-bound Figure (not in a WindowItem) and WindowItem-wrapped Photo with generous heights. Rebuild print/template/report/report.content.tex's existing Photo/Image/WindowArrangement demo section standalone to check whether it currently reproduces too (confirming pre-existing regression, not appendix-specific), then find the actual tcolorbox/enhanced-box interaction causing the double body typeset (likely related to `breakable` needing a trial-measurement pass when `height=` is set) and fix it at the root in semio-window.sty so Figure/Photo/WindowItem can use proper chrome-styled images at full report size without the workaround of bypassing to plain \\includegraphics.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2182"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪15e82b9fc3504ef286dbac383b4b321e"
+  ]
+}

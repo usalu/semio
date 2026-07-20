@@ -1,0 +1,14 @@
+{
+  "title": "Add TeX to Uloc",
+  "emoji": "📊",
+  "status": "closed",
+  "description": "Add TeX as a language bucket in the repo uloc metrics classifier (classifyPathForMetrics / LANG_EMOJI), covering .tex and related TeX ecosystem extensions so mit-bestand and print TeX sources are counted in micro-commit and bundle uloc.",
+  "summary": "Added TeX as a uloc language bucket so `.tex`, `.sty`, `.cls`, `.ltx`, and `.bib` count toward micro-commit and bundle metrics (📐). Bumped uloc cache version to 4 so existing caches invalidate.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2180"
+  },
+  "goal": "🎯aioptimizedrepo🎯repoclient🎯repobinary🎯repomechanisms🎯repocommitmechanism",
+  "sessions": [
+    "⚪ab37dfe3c17b4d0d9779a5d97b95a838"
+  ]
+}

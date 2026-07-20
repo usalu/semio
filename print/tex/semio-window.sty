@@ -1265,43 +1265,9 @@
 % via itemclip) image narrower than its window may still visibly
 % double-render until this is fixed. See ticket 26/07/17/FIX-IMAGE-COVER-ANCHOR-MECHANISM.
 \newsavebox{\semio@image@cover@box}
+\newsavebox{\semio@image@cover@measure@box}
 \cs_new_protected:Npn \semio_image_typeset_cover:n #1 {
-  \sbox{\semio@image@cover@box}{\includegraphics[height=\l_semio_image_target_h_dim]{#1}}
-  \dim_compare:nNnTF { \wd \semio@image@cover@box } > { \l_semio_image_target_w_dim } {
-    \dim_set:Nn \l_semio_image_cover_excess_dim {
-      \dim_eval:n { \wd \semio@image@cover@box - \l_semio_image_target_w_dim }
-    }
-    % 🎯 Horizontal crop: keeps the left edge when halign=left, the right
-    % edge when halign=right, else centers — matches CSS object-position.
-    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
-      { \semio@window@halign } { left } { right }
-    \dim_set:Nn \l_semio_image_cover_offset_neg_dim { - \l_semio_image_cover_offset_dim }
-    \leavevmode
-    \begin{tikzpicture}[baseline=0pt]
-      \path[clip] (0,0) rectangle (\dim_use:N \l_semio_image_target_w_dim, \dim_use:N \l_semio_image_target_h_dim);
-      \pgftext[left,top,x=\dim_use:N \l_semio_image_cover_offset_neg_dim,y=\dim_use:N \l_semio_image_target_h_dim]{\usebox{\semio@image@cover@box}}
-    \end{tikzpicture}
-  } {
-    \sbox{\semio@image@cover@box}{\includegraphics[width=\l_semio_image_target_w_dim]{#1}}
-    \dim_set:Nn \l_semio_image_cover_excess_dim {
-      \dim_eval:n {
-        \dimexpr \ht \semio@image@cover@box + \dp \semio@image@cover@box \relax
-        - \l_semio_image_target_h_dim
-      }
-    }
-    % 🎯 Vertical crop: keeps the top edge when valign=top, the bottom edge
-    % when valign=bottom, else centers — matches CSS object-position.
-    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
-      { \semio@window@valign } { bottom } { top }
-    \dim_set:Nn \l_semio_image_cover_ypos_dim {
-      \dim_eval:n { \l_semio_image_target_h_dim + \l_semio_image_cover_offset_dim }
-    }
-    \leavevmode
-    \begin{tikzpicture}[baseline=0pt]
-      \path[clip] (0,0) rectangle (\dim_use:N \l_semio_image_target_w_dim, \dim_use:N \l_semio_image_target_h_dim);
-      \pgftext[left,top,x=0pt,y=\dim_use:N \l_semio_image_cover_ypos_dim]{\usebox{\semio@image@cover@box}}
-    \end{tikzpicture}
-  }
+  \leavevmode\includegraphics[width=\l_semio_image_target_w_dim,height=\l_semio_image_target_h_dim]{#1}%
 }
 
 \cs_new_protected:Npn \semio_image_default_width_resolve: {
@@ -1784,84 +1750,23 @@
 }
 
 %region References
-\ExplSyntaxOn
-\seq_new:N \g_semio_references_keys_seq
-\box_new:N \g_semio_references_url_box
-
-\cs_new_protected:Npn \semio_references_keys_clear: {
-  \seq_clear:N \g_semio_references_keys_seq
-}
-
-\cs_new_protected:Npn \semio_references_key_collect: {
-  \seq_gput_right:Nx \g_semio_references_keys_seq { \thefield{entrykey} }
-}
-
-\cs_new_protected:Npn \semio_references_row_handler:n #1 {
-  \stepcounter{semio@reference@nr}
-  \exp_args:Nnx \semio_references_row_append:nn {#1} { \arabic{semio@reference@nr} }
-}
-
-\cs_new_protected:Npn \semio_references_row_append:nn #1#2 {
-  \hbox_set:Nn \g_semio_references_url_box { \citeurl{#1} }
-  \bool_if:nTF { \dim_compare_p:n { \box_wd:N \g_semio_references_url_box > 0pt } }
-    {
-      \gappto\semio@references@rows {
-        \SemioTableReferenceRow{#2}{\citeauthor{#1}, \citefield{#1}{title}\\{\footnotesize\citeurl{#1}}}{\citeyear{#1}}
-      }
-    }
-    {
-      \gappto\semio@references@rows {
-        \SemioTableReferenceRow{#2}{\citeauthor{#1}, \citefield{#1}{title}}{\citeyear{#1}}
-      }
-    }
-}
-
-\cs_new_protected:Npn \semio_references_rows_build: {
-  \renewcommand{\semio@references@rows}{}
-  \setcounter{semio@reference@nr}{0}
-  \seq_map_inline:Nn \g_semio_references_keys_seq {
-    \semio_references_row_handler:n { ##1 }
-  }
-}
-
-\cs_new_protected:Npn \semio_references_render: {
-  \semio_references_keys_clear:
-  \printbibliography[env=semioreferences,heading=none]
-  \seq_if_empty:NTF \g_semio_references_keys_seq { } {
-    \semio_references_rows_build:
-    \semio@register@window@open{\SemioReferencesTitle}
-    \semio@references@table@render
-    \semio@register@window@close
-  }
-}
-
-\cs_new_eq:NN \semio@references@render \semio_references_render:
-\cs_new_eq:NN \semio@references@collect \semio_references_key_collect:
-\ExplSyntaxOff
-
-\newcounter{semio@reference@nr}
-\newcommand{\semio@references@rows}{}
-
-\newcommand{\semio@references@table@header}{%
-  \semio@references@table@header@long@repeat
-}
-
 \defbibenvironment{semioreferences}
-  {\begin{quote}}
-  {\end{quote}}
-  {}
-
-\AtEveryBibitem{%
-  \semio@references@collect
-  \finentry
-}
-
-\newcommand{\semio@references@table@render}{%
-  \SemioTableReference{\semio@references@rows}%
-}
+  {\list
+     {\printtext[labelnumberwidth]{\printfield{labelprefix}\printfield{labelnumber}}}
+     {\setlength{\labelwidth}{\labelnumberwidth}%
+      \setlength{\leftmargin}{\labelwidth}%
+      \setlength{\labelsep}{\biblabelsep}%
+      \addtolength{\leftmargin}{\labelsep}%
+      \setlength{\itemsep}{\bibitemsep}%
+      \setlength{\parsep}{\bibparsep}}%
+      \renewcommand*{\makelabel}[1]{\hss##1}}
+  {\endlist}
+  {\item}
 
 \newcommand{\SemioReferences}{%
-  \semio@references@render
+  \semio@register@window@open{\SemioReferencesTitle}%
+  \printbibliography[env=semioreferences,heading=none]%
+  \semio@register@window@close
 }
 %endregion References
 

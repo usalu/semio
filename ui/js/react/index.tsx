@@ -4708,9 +4708,9 @@ export function introductionUtilityBarUnfoldSelector(windowId: string): string {
   return `[id="${windowId}-utility-bar-unfold"]`;
 }
 
-/** @emoji 🎛 CSS selector for a window's folded Actions-rail unfold chip — used when an action anchor is still hidden inside the folded action pane. */
+/** @emoji 🎛 CSS selector for a window's folded top-left Actions toggle — used when an action anchor is still hidden inside the folded merged engagement/actions pane. */
 export function introductionWindowActionPaneUnfoldSelector(windowId: string): string {
-  return `[id="${windowId}-window-action-pane-unfold"]`;
+  return `[id="${windowId}-window-engagement-toggle"]`;
 }
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
@@ -4743,6 +4743,12 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
     let element: Element | null = null;
     let activeSelectorIndex = -1;
     let resizeObserver: ResizeObserver | null = null;
+    // 🐢 The mutation observer below fires on every DOM change anywhere on the page — including ones
+    // completely unrelated to this anchor (a live 3D viewport, other components' updates). Without this
+    // guard, every one of those unrelated mutations would call `setResolution` with a fresh `{ rect:
+    // null }` object while unresolved, and since object identity always differs, React would re-render
+    // this component on every single page-wide DOM mutation for as long as the anchor stays unresolved.
+    let reportedUnresolved = false;
 
     const measure = () => {
       if (element) setResolution({ rect: domRectToIntroductionRect(element.getBoundingClientRect()), viaFallback: activeSelectorIndex > 0 });
@@ -4757,12 +4763,16 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
         resizeObserver?.disconnect();
         element = candidate;
         activeSelectorIndex = index;
+        reportedUnresolved = false;
         measure();
         resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(candidate);
         return;
       }
-      if (activeSelectorIndex === -1) setResolution({ rect: null, viaFallback: false });
+      if (activeSelectorIndex === -1 && !reportedUnresolved) {
+        reportedUnresolved = true;
+        setResolution({ rect: null, viaFallback: false });
+      }
     };
 
     attach();
@@ -6416,8 +6426,8 @@ export const windowEngagementOverlayClass = "pointer-events-none absolute top-0 
 /** @emoji 📐 Collapsed action chrome hugging the top-left corner. */
 export const windowEngagementOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
 
-/** @emoji 📐 Action input body beside the engagement chrome toggle: matches the chrome's height for a bare input, grows only when Engagement renders extra rows. */
-export const windowEngagementBodyClass = "flex min-h-medium min-w-0 flex-auto flex-col justify-center gap-half overflow-hidden px-single";
+/** @emoji 📐 Merged top-left Actions body beside the engagement chrome toggle: the active engagement's status/control (when present) stacked above the categorized ad-hoc actions tree; scrolls once content exceeds the window body. */
+export const windowEngagementBodyClass = "flex min-h-medium min-w-0 max-h-full flex-auto flex-col gap-half overflow-y-auto px-single";
 
 /** @emoji 📐 Outer overlay for the floating window search pane along the top-middle edge, centered between the engagement and measures overlays. */
 export const windowSearchOverlayClass = "pointer-events-none absolute top-0 left-1/2 z-panel flex max-h-full -translate-x-1/2 flex-col items-center p-0";
@@ -6433,15 +6443,6 @@ export const utilityBarOverlayClass = "pointer-events-none absolute bottom-0 lef
 
 /** @emoji 📐 Horizontal utility row beside the utility bar chrome toggle: fixed to the chrome's height, never taller. */
 export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
-
-/** @emoji 📐 Outer overlay for the floating window Actions rail along the bottom-right edge (the free corner). */
-export const windowActionPaneOverlayClass = "pointer-events-none absolute bottom-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
-
-/** @emoji 📐 Collapsed Actions-rail chrome hugging the bottom-right corner. */
-export const windowActionPaneOverlayFoldedClass = windowMeasuresOverlayFoldedClass;
-
-/** @emoji 📐 Scrollable body for the window Actions rail beside its chrome toggle. */
-export const windowActionPaneBodyClass = "flex min-h-0 min-w-0 max-h-full flex-auto flex-col overflow-y-auto";
 
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
@@ -15976,9 +15977,9 @@ interface WindowEngagementChromeProps {
   onToggle: () => void;
 }
 
-/** @emoji ⌨️ Title bar for the window action rail: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+/** @emoji ⌨️ Title bar for the merged top-left Actions pane (active engagement plus the categorized ad-hoc actions tree): single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
-  const actionLabel = useLabel("ui.common.action");
+  const actionLabel = useLabel("ui.common.actions");
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
@@ -16053,36 +16054,6 @@ const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, d
 };
 
 // #endregion 🪟UtilityBarChrome
-
-// #region 🪟WindowActionPaneChrome
-
-interface WindowActionPaneChromeProps {
-  windowId: string;
-  folded: boolean;
-  disabled?: boolean;
-  onFold: () => void;
-  onUnfold: () => void;
-}
-
-/** @emoji 🎛 Title bar for the bottom-right window Actions rail: single fold/unfold toggle, mirror of {@link UtilityBarChrome} but right-anchored (chevrons point toward the free corner). Always rendered so every window with actions carries the rail. */
-const WindowActionPaneChrome: React.FC<WindowActionPaneChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
-  const actionsLabel = useLabel("ui.common.actions");
-  if (folded) {
-    return (
-      <div data-slot="window-action-pane-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-start border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-action-pane-unfold`} icon="chevron-left" text={actionsLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
-      </div>
-    );
-  }
-
-  return (
-    <div data-slot="window-action-pane-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-action-pane-fold`} icon="chevron-right" text={actionsLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
-    </div>
-  );
-};
-
-// #endregion 🪟WindowActionPaneChrome
 
 // #region ↔️WindowMeasuresResize
 
@@ -18072,12 +18043,13 @@ export interface WindowConfig {
   onUtilityBarFoldedChange?: (folded: boolean) => void;
   /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the utility bar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
   utilityOptions?: React.ReactNode;
-  /** @emoji 🎛 Bottom-right (free-corner) Actions rail body; folds to a chip by default. */
+  /** @emoji 🎛 Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
   actionPane?: React.ReactNode;
-  /** @emoji 🎛 Controlled fold state for the Actions rail (default true); externally settable so the palette/keybinding redirect can force-unfold. */
+  /** @emoji 🎛 Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
   actionsFolded?: boolean;
-  /** @emoji 🎛 Fires when the user or a redirect toggles the Actions rail fold state. */
+  /** @emoji 🎛 Fires when the user or a redirect toggles the Actions pane fold state. */
   onActionsFoldedChange?: (folded: boolean) => void;
+  /** @emoji 💬 Active engagement content (options/status/control) rendered above {@link actionPane} inside the same top-left Actions pane. */
   engagement?: EngagementSpec;
   /** @emoji 🔎 Top-middle floating search pane: typed action input with autocomplete possibles. */
   search?: SearchSpec;
@@ -18191,7 +18163,6 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
-  const [engagementFolded, setEngagementFolded] = reactHostPort.useState(true);
   const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
   // 🎛 Controlled-with-default fold state for the bottom-left Utilities rail (default true).
   const [utilityBarFoldedInternal, setUtilityBarFoldedInternal] = reactHostPort.useState(true);
@@ -18200,7 +18171,8 @@ const Window: React.FC<WindowProps> = ({
     onUtilityBarFoldedChange?.(folded);
     if (utilityBarFoldedProp === undefined) setUtilityBarFoldedInternal(folded);
   };
-  // 🎛 Controlled-with-default fold state for the bottom-right Actions rail (default true).
+  // 🎛 Controlled-with-default fold state for the merged top-left Actions pane (default true) —
+  // shared by the active engagement and the categorized ad-hoc actions tree, one toggle for both.
   const [actionsFoldedInternal, setActionsFoldedInternal] = reactHostPort.useState(true);
   const actionsFolded = actionsFoldedProp ?? actionsFoldedInternal;
   const setActionsFolded = (folded: boolean) => {
@@ -18209,7 +18181,7 @@ const Window: React.FC<WindowProps> = ({
   };
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
-  const measuresReservePx = useWindowMeasuresReservePx(!!engagement || !!search, measures, windowBodyRef, measuresOverlayRef);
+  const measuresReservePx = useWindowMeasuresReservePx(!!engagement || !!search || !!actionPane, measures, windowBodyRef, measuresOverlayRef);
   const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
   const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
@@ -18221,17 +18193,17 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const engagementVisible = active && !measuresExpanded && !!engagement;
-  const engagementExpanded = engagementVisible && !engagementFolded;
-  const searchZoneSizeStyle = windowSearchZoneMaxWidthStyle(measuresReservePx, !!measures || !!engagement);
+  const engagementVisible = active && !measuresExpanded && !!(engagement || actionPane);
+  const engagementExpanded = engagementVisible && !actionsFolded;
+  const searchZoneSizeStyle = windowSearchZoneMaxWidthStyle(measuresReservePx, !!measures || !!engagement || !!actionPane);
   const searchVisible = active && !measuresExpanded && !!search;
   const searchExpanded = searchVisible && !searchFolded;
 
   reactHostPort.useEffect(() => {
     if (!measuresExpanded) return;
-    setEngagementFolded(true);
+    setActionsFolded(true);
     setSearchFolded(true);
-  }, [measuresExpanded]);
+  }, [measuresExpanded, onActionsFoldedChange, actionsFoldedProp]);
 
   reactHostPort.useEffect(() => {
     if (!active || !search?.input?.onAbort) return;
@@ -18245,16 +18217,31 @@ const Window: React.FC<WindowProps> = ({
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [active, search, searchExpanded]);
 
+  // 🔎 Typing anywhere in an active window with a folded search pane unfolds it, mirroring a spotlight
+  // search, so the document-level routing that applies the keystroke (see Mode) has a mounted field to
+  // land in. Purely additive — it only flips the fold flag, never touches the value/dispatch itself.
+  reactHostPort.useEffect(() => {
+    if (!active || !search?.input || searchExpanded) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.isComposing) return;
+      if (event.key.length !== 1 || event.key === " " || event.ctrlKey || event.metaKey || event.altKey) return;
+      if (!shouldRouteKeysToWindowSearch(event.target)) return;
+      setSearchFolded(false);
+    };
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [active, search, searchExpanded]);
+
   reactHostPort.useEffect(() => {
     if (!active) {
-      setEngagementFolded(true);
+      setActionsFolded(true);
       setSearchFolded(true);
     }
-  }, [active]);
+  }, [active, onActionsFoldedChange, actionsFoldedProp]);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
-    if (!body || !(engagement || search || measures)) return;
+    if (!body || !(engagement || search || measures || actionPane)) return;
     const sync = () => {
       const px = measureWindowChromeScrollClearancePx(body);
       if (px > 0) {
@@ -18273,7 +18260,7 @@ const Window: React.FC<WindowProps> = ({
       if (overlay) ro.observe(overlay);
     }
     return () => ro.disconnect();
-  }, [active, engagement, search, measures, engagementExpanded, searchExpanded, measuresFolded, measuresExpanded]);
+  }, [active, engagement, search, measures, actionPane, engagementExpanded, searchExpanded, measuresFolded, measuresExpanded]);
 
   if (!isVisible) return null;
 
@@ -18357,7 +18344,7 @@ const Window: React.FC<WindowProps> = ({
               </div>
             </GlassTierProvider>
           ) : null}
-          {engagement && engagementVisible ? (
+          {engagementVisible ? (
             <GlassTierProvider tier="windowOptions">
               <div
                 data-slot="window-engagement-overlay"
@@ -18372,16 +18359,11 @@ const Window: React.FC<WindowProps> = ({
                   data-folded={engagementExpanded ? undefined : "true"}
                   className={cn(windowMeasuresStackClass, "flex-row items-start", !engagementExpanded && windowMeasuresStackFoldedClass)}
                 >
-                  <WindowEngagementChrome
-                    windowId={id}
-                    expanded={engagementExpanded}
-                    onToggle={() => {
-                      setEngagementFolded(engagementExpanded);
-                    }}
-                  />
+                  <WindowEngagementChrome windowId={id} expanded={engagementExpanded} onToggle={() => setActionsFolded(engagementExpanded)} />
                   {engagementExpanded ? (
                     <div data-slot="window-engagement-body" className={windowEngagementBodyClass}>
-                      <Engagement {...engagement} />
+                      {engagement ? <Engagement {...engagement} /> : null}
+                      {actionPane}
                     </div>
                   ) : null}
                 </div>
@@ -18431,20 +18413,6 @@ const Window: React.FC<WindowProps> = ({
                   {!utilityBarFolded && utilityBar ? (
                     <div data-slot="utility-bar-body" className={utilityBarBodyClass}>
                       {utilityBar}
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            </GlassTierProvider>
-          ) : null}
-          {!measuresExpanded && actionPane ? (
-            <GlassTierProvider tier="windowOptions">
-              <div data-slot="window-action-pane-overlay" data-folded={actionsFolded ? "true" : undefined} className={cn(windowActionPaneOverlayClass, actionsFolded && windowActionPaneOverlayFoldedClass)}>
-                <div data-dim data-slot="window-action-pane" data-folded={actionsFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, actionsFolded ? "flex-row items-end w-fit" : "flex-col items-stretch")}>
-                  <WindowActionPaneChrome windowId={id} folded={actionsFolded} onFold={() => setActionsFolded(true)} onUnfold={() => setActionsFolded(false)} />
-                  {!actionsFolded ? (
-                    <div data-slot="window-action-pane-body" className={windowActionPaneBodyClass}>
-                      {actionPane}
                     </div>
                   ) : null}
                 </div>
@@ -24265,7 +24233,7 @@ if (import.meta.vitest) {
 
     it("maps folded window chrome toggles for utility/action fallbacks", () => {
       expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-utility-bar-unfold"]');
-      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-action-pane-unfold"]');
+      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-engagement-toggle"]');
     });
   });
 
@@ -26636,6 +26604,7 @@ if (import.meta.vitest) {
         </div>
       );
       const { container } = render(<Harness />);
+      fireEvent.click(container.querySelector('[id="engagement-window-window-search-toggle"]')!);
       await waitFor(() => expect(screen.getByPlaceholderText("Action")).toBeTruthy());
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
@@ -26671,6 +26640,43 @@ if (import.meta.vitest) {
       expect(chrome?.nextElementSibling).toBe(body);
       expect(chrome?.className).toContain("border-r");
       expect(chrome?.className).toContain("border-b-0");
+    });
+
+    it("Window merges the ad-hoc actionPane into the top-left Actions pane below the active engagement, sharing one toggle", () => {
+      const { container } = render(
+        <Window
+          id="merged-window"
+          active
+          engagement={{ status: [{ id: "s", content: "Idle" }] }}
+          actionPane={<div data-testid="adhoc-actions">Extrude…</div>}
+        >
+          <div>Body</div>
+        </Window>,
+      );
+      expect(container.querySelector('[data-slot="window-action-pane-overlay"]')).toBeNull();
+      expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
+      const toggle = container.querySelector('[id="merged-window-window-engagement-toggle"]') as HTMLElement;
+      expect(toggle).toBeTruthy();
+      fireEvent.click(toggle);
+      expect(screen.getByText("Idle")).toBeTruthy();
+      const actions = screen.getByTestId("adhoc-actions");
+      expect(actions).toBeTruthy();
+      const body = container.querySelector('[data-slot="window-engagement-body"]');
+      expect(body?.contains(actions)).toBe(true);
+      fireEvent.click(toggle);
+      expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
+    });
+
+    it("Window shows the merged Actions pane for an actionPane-only window with no active engagement", () => {
+      const { container } = render(
+        <Window id="actions-only-window" active actionPane={<div data-testid="adhoc-actions">Flatten</div>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
+      expect(overlay).toBeTruthy();
+      fireEvent.click(container.querySelector('[id="actions-only-window-window-engagement-toggle"]')!);
+      expect(screen.getByTestId("adhoc-actions")).toBeTruthy();
     });
 
     it("Window reveals search on button click and activates on click", async () => {

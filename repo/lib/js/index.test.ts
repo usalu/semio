@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { NEO4J_GRAPH_DATABASE_NAMES, getAllNeo4jGraphExportSpecs, joinNeo4jGraphDatabaseName, parseExtraNeo4jGraphDatabaseNamesFromEnv, partitionNeo4jGraphCliArgv } from "../../../script.ts";
-import { BundleScript, ScriptRouter, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort, wgpuDevPlayUrl } from "./index.ts";
+import { BundleScript, ScriptRouter, budgetTimeoutHint, canReuseDevPort, describeDevPortOccupant, devServerUrl, dispatchSubcommand, findRepoRoot, isDevPortInUse, resolveDevPort, runCmd, runCmdStatus, wgpuDevPlayUrl } from "./index.ts";
 import { defineLint, type FileLinter } from "./index.ts";
 import { dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, isAdapterBoundaryFile, parseTsImportSpecs } from "./index.ts";
 import {
@@ -363,6 +363,16 @@ describe("micro-commit", () => {
     const { countUnifiedLocForFile } = await import("./index.ts");
     expect(countUnifiedLocForFile("x.rs", "// c\nfn main() {}\n")).toBe(3);
     expect(countUnifiedLocForFile("x.json", '{"k":1}')).toBe(1);
+  });
+
+  test("classifyPathForMetrics maps TeX ecosystem extensions", async () => {
+    const { classifyPathForMetrics, langMetricsEmoji } = await import("./index.ts");
+    expect(classifyPathForMetrics("mit-bestand/bericht/zwischenbericht/zwischenbericht.tex")).toBe("TeX");
+    expect(classifyPathForMetrics("print/semio.sty")).toBe("TeX");
+    expect(classifyPathForMetrics("print/semio.cls")).toBe("TeX");
+    expect(classifyPathForMetrics("report/references.bib")).toBe("TeX");
+    expect(classifyPathForMetrics("doc/sample.ltx")).toBe("TeX");
+    expect(langMetricsEmoji("TeX")).toBe("📐");
   });
 
   test("uncoveredStagedAreas flags missing cursor-plans and product coverage", async () => {
@@ -925,5 +935,49 @@ describe("commit", () => {
     const history = new Set(["🗺️copied line from an old micro-commit"]);
     expect(bulletMatchesCommitHistory("🗺️copied line from an old micro-commit", history)).toBe(true);
     expect(bulletMatchesCommitHistory("🗺️fresh summary written from git diff", history)).toBe(false);
+  });
+});
+
+describe("command budgets", () => {
+  const indexPath = join(import.meta.dir, "index.ts");
+
+  /** ⏱️Runs `runCmd` in a fresh subprocess (its budget-exceeded path calls `process.exit`, which would kill the test runner in-process) against a child that sleeps far longer than its budget. */
+  function spawnBudgetedSleep(budgetMs: number, envOverride?: Record<string, string>): ReturnType<typeof spawnSync> {
+    const script = `const { runCmd } = await import(${JSON.stringify(indexPath)}); runCmd(${JSON.stringify(process.execPath)}, ["-e", "await Bun.sleep(10000)"], ${budgetMs === -1 ? "{}" : `{ budgetMs: ${budgetMs} }`});`;
+    return spawnSync(process.execPath, ["-e", script], { encoding: "utf8", env: { ...process.env, ...envOverride } });
+  }
+
+  test("kills a command that exceeds its explicit budget", () => {
+    const start = Date.now();
+    const result = spawnBudgetedSleep(250);
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("[budget]");
+    expect(Date.now() - start).toBeLessThan(5000);
+  });
+
+  test("SEMIO_CMD_BUDGET_MS env override kills a command with no explicit budget", () => {
+    const result = spawnBudgetedSleep(-1, { SEMIO_CMD_BUDGET_MS: "250" });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain("[budget]");
+  });
+
+  test("budgetMs: null exempts a command from any timeout", () => {
+    expect(() => runCmd(process.execPath, ["-e", "1"], { budgetMs: null })).not.toThrow();
+  });
+
+  test("runCmdStatus returns the exit status instead of throwing", () => {
+    expect(runCmdStatus(process.execPath, ["-e", "process.exit(3)"])).toBe(3);
+  });
+
+  test("budgetTimeoutHint defaults cargo to the target-dir lock-contention hint", () => {
+    expect(budgetTimeoutHint("cargo")).toContain("target-dir lock contention");
+  });
+
+  test("budgetTimeoutHint honors an explicit override", () => {
+    expect(budgetTimeoutHint("git", "custom hint")).toBe("custom hint");
+  });
+
+  test("budgetTimeoutHint gives non-cargo commands a generic hint", () => {
+    expect(budgetTimeoutHint("git")).not.toContain("target-dir lock contention");
   });
 });

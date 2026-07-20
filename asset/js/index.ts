@@ -13,7 +13,6 @@
 
 import metabolismShallowKit from "../../compose/fixture/metabolism.shallow.kit.compose.json";
 import { createIconComponent } from "@semio-tech/ui-react";
-import { fixtureItemsOf } from "../../repo/lib/js/index.ts";
 
 const MetabolismKitData = { wip: { initialKit: metabolismShallowKit } };
 
@@ -111,6 +110,11 @@ export type { IconName } from "@semio-tech/ui-asset";
 //#endregion 🔖Icons
 
 //#region 🔖KitBootstrapHelpers
+/** @emoji 📎 Reads a materialized `{ hash, items }` collection without importing Node-only repository tooling into browser bundles. */
+function __fixtureItemsOf<T = Record<string, unknown>>(node: unknown): readonly T[] {
+  return node && typeof node === "object" && Array.isArray((node as { items?: unknown }).items) ? (node as { items: T[] }).items : [];
+}
+
 /** @emoji 🧾 Resolves the materialized kit payload from `wip.initialKit`. */
 function __metabolismKitInner(): Record<string, unknown> {
   const root = MetabolismKitData as { wip?: { initialKit?: Record<string, unknown> } };
@@ -120,16 +124,16 @@ function __metabolismKitInner(): Record<string, unknown> {
 
 /** @emoji 🏛️ Flattens kinds from root `types` or nested `typologies[].types`. */
 function __kitTypesFromInner(inner: Record<string, unknown>): readonly unknown[] {
-  const rootTypes = fixtureItemsOf(inner["types"]);
+  const rootTypes = __fixtureItemsOf(inner["types"]);
   if (rootTypes.length > 0) return rootTypes;
-  return fixtureItemsOf(inner["typologies"]).flatMap((topo) => fixtureItemsOf((topo as { types?: unknown }).types));
+  return __fixtureItemsOf(inner["typologies"]).flatMap((topo) => __fixtureItemsOf((topo as { types?: unknown }).types));
 }
 
 /** @emoji 🏛️ Flattens designs from root `designs` or nested `typologies[].designs`. */
 function __kitDesignsFromInner(inner: Record<string, unknown>): readonly unknown[] {
-  const rootDesigns = fixtureItemsOf(inner["designs"]);
+  const rootDesigns = __fixtureItemsOf(inner["designs"]);
   if (rootDesigns.length > 0) return rootDesigns;
-  return fixtureItemsOf(inner["typologies"]).flatMap((topo) => fixtureItemsOf((topo as { designs?: unknown }).designs));
+  return __fixtureItemsOf(inner["typologies"]).flatMap((topo) => __fixtureItemsOf((topo as { designs?: unknown }).designs));
 }
 //#endregion 🔖KitBootstrapHelpers
 export { MetabolismKitData as MetabolismKit };
@@ -145,39 +149,39 @@ export const MetabolismKitDesigns = __kitDesignsFromInner(__metabolismKitInner()
 /**
  * Metabolism kit typologies array
  **/
-export const MetabolismKitTypologies = fixtureItemsOf(__metabolismKitInner()["typologies"]);
+export const MetabolismKitTypologies = __fixtureItemsOf(__metabolismKitInner()["typologies"]);
 /**
  * Metabolism kit families array
  **/
-export const MetabolismKitFamilies = fixtureItemsOf(__metabolismKitInner()["families"]);
+export const MetabolismKitFamilies = __fixtureItemsOf(__metabolismKitInner()["families"]);
 /**
  * Metabolism kit qualities array
  **/
-export const MetabolismKitQualities = fixtureItemsOf(__metabolismKitInner()["qualities"]);
+export const MetabolismKitQualities = __fixtureItemsOf(__metabolismKitInner()["qualities"]);
 /**
  * Metabolism kit files array
  **/
-export const MetabolismKitFiles = fixtureItemsOf(__metabolismKitInner()["files"]);
+export const MetabolismKitFiles = __fixtureItemsOf(__metabolismKitInner()["files"]);
 /**
  * Metabolism kit folders array
  **/
-export const MetabolismKitFolders = fixtureItemsOf(__metabolismKitInner()["folders"]);
+export const MetabolismKitFolders = __fixtureItemsOf(__metabolismKitInner()["folders"]);
 /**
  * Metabolism kit authors array
  **/
-export const MetabolismKitAuthors = fixtureItemsOf(__metabolismKitInner()["authors"]);
+export const MetabolismKitAuthors = __fixtureItemsOf(__metabolismKitInner()["authors"]);
 /**
  * Metabolism kit tags array
  **/
-export const MetabolismKitTags = fixtureItemsOf(__metabolismKitInner()["tags"]);
+export const MetabolismKitTags = __fixtureItemsOf(__metabolismKitInner()["tags"]);
 /**
  * Metabolism kit concepts array
  **/
-export const MetabolismKitConcepts = fixtureItemsOf(__metabolismKitInner()["concepts"]);
+export const MetabolismKitConcepts = __fixtureItemsOf(__metabolismKitInner()["concepts"]);
 /**
  * Metabolism kit attributes array
  **/
-export const MetabolismKitAttributes = fixtureItemsOf(__metabolismKitInner()["attributes"]);
+export const MetabolismKitAttributes = __fixtureItemsOf(__metabolismKitInner()["attributes"]);
 /**
  * Metabolism kit Nakagin Capsule Tower designs subset
  **/
