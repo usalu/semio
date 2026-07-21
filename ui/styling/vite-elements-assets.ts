@@ -443,7 +443,7 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
   const placeholderMesh = resolve(repoRoot, spec.placeholder);
   const placeholderBasename = placeholderMesh.split(/[\\/]/).pop()!;
   const destName = spec.route.replace(/^\//, "");
-  let viteRoot = process.cwd();
+  let outDir = resolve(process.cwd(), "dist");
   return [
     {
       name: `mesh-collection-serve${spec.route}`,
@@ -460,11 +460,11 @@ export function meshCollectionVitePlugin(repoRoot: string, spec: Extract<Playgro
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        viteRoot = config.root;
+        outDir = resolve(config.root, config.build.outDir);
       },
       closeBundle() {
-        const dest = resolve(viteRoot, "dist", destName);
-        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        const dest = resolve(outDir, destName);
+        mkdirSync(outDir, { recursive: true });
         copyMeshCollectionGlbs(meshRoots, dest);
         if (existsSync(placeholderMesh)) {
           cpSync(placeholderMesh, resolve(dest, placeholderBasename));
@@ -572,7 +572,7 @@ function createFaviconMiddleware(content: FaviconContent): Connect.NextHandleFun
 /** @emoji 🔖 Vite: serve and copy the given favicon content at `/favicon.svg` and `/favicon.ico`. */
 function faviconVitePlugins(content: FaviconContent): Plugin[] {
   const serveFavicon = createFaviconMiddleware(content);
-  let viteRoot = process.cwd();
+  let outDir = resolve(process.cwd(), "dist");
   return [
     {
       name: "semio-favicon-serve",
@@ -589,10 +589,10 @@ function faviconVitePlugins(content: FaviconContent): Plugin[] {
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        viteRoot = config.root;
+        outDir = resolve(config.root, config.build.outDir);
       },
       closeBundle() {
-        const dist = resolve(viteRoot, "dist");
+        const dist = outDir;
         mkdirSync(dist, { recursive: true });
         if (content.svgMarkup) {
           writeFileSync(resolve(dist, "favicon.svg"), content.svgMarkup);
@@ -743,7 +743,7 @@ export function statusSurfaceHtml(spec: { readonly kind: "empty" | "error" | "lo
 
 /** @emoji 🌐 Vite: serve and copy `ui/asset` at `/asset/*` for palette fonts and cursors. */
 export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
-  let viteRoot = process.cwd();
+  let outDir = resolve(process.cwd(), "dist");
   const serveAssets = createUiAssetsMiddleware(assetsRoot);
   return [
     {
@@ -761,14 +761,14 @@ export function uiAssetsVitePlugin(assetsRoot: string): Plugin[] {
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        viteRoot = config.root;
+        outDir = resolve(config.root, config.build.outDir);
       },
       closeBundle() {
         if (!existsSync(assetsRoot)) {
           return;
         }
-        const dest = resolve(viteRoot, "dist", "asset");
-        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        const dest = resolve(outDir, "asset");
+        mkdirSync(outDir, { recursive: true });
         cpSync(assetsRoot, dest, { recursive: true });
       },
     },
@@ -1212,7 +1212,7 @@ function createTileProxyMiddleware(route: string, cacheRoot: string, upstream: s
 export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>, mode: GisMapTileServeMode = "fetch"): Plugin[] {
   const cacheRoot = resolve(repoRoot, ".repo-cache", spec.cache);
   const serveTiles = createTileProxyMiddleware(spec.route, cacheRoot, spec.upstream, mode);
-  let viteRoot = process.cwd();
+  let outDir = resolve(process.cwd(), "dist");
   const plugins: Plugin[] = [
     {
       name: `tile-proxy-serve${spec.route}`,
@@ -1231,10 +1231,10 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        viteRoot = config.root;
+        outDir = resolve(config.root, config.build.outDir);
       },
       closeBundle() {
-        const dist = resolve(viteRoot, "dist");
+        const dist = outDir;
         mkdirSync(dist, { recursive: true });
         if (existsSync(cacheRoot)) {
           cpSync(cacheRoot, resolve(dist, spec.route.replace(/^\//, "")), { recursive: true });
@@ -1362,7 +1362,7 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
     createReadStream(filePath).pipe(res);
   };
   const destName = spec.route.replace(/^\//, "");
-  let viteRoot = process.cwd();
+  let outDir = resolve(process.cwd(), "dist");
   return [
     {
       name: `static-dir-serve${spec.route}`,
@@ -1379,14 +1379,16 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
       apply: "build",
       enforce: "pre",
       configResolved(config) {
-        viteRoot = config.root;
+        // 🖼️ `config.build.outDir` is root-relative unless already absolute — `resolve` handles both, so a
+        // brand's custom `outDir` (see `ShellBrand.distDir`) is honored instead of assuming `<root>/dist`.
+        outDir = resolve(config.root, config.build.outDir);
       },
       closeBundle() {
         if (!existsSync(fixtureRoot)) {
           return;
         }
-        const dest = resolve(viteRoot, "dist", destName);
-        mkdirSync(resolve(viteRoot, "dist"), { recursive: true });
+        const dest = resolve(outDir, destName);
+        mkdirSync(outDir, { recursive: true });
         cpSync(fixtureRoot, dest, { recursive: true });
       },
     },

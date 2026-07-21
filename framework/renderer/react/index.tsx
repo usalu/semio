@@ -4,6 +4,8 @@
 
 export type { ActionDescriptor, UiComponentSceneNode, UiNode } from "@semio-tech/framework-core";
 
+import { aProjectOfLuhUdkFooterItem, fundedByZukunftBauFooterItem } from "../../../mit-bestand/aggregator/footer.tsx";
+
 import React, {
   lazy,
   memo,
@@ -168,8 +170,6 @@ import {
   introductionUtilityBarUnfoldSelector,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
-  aProjectOfLuhUdkFooterItem,
-  fundedByZukunftBauFooterItem,
   navbarFillItem,
   type ElementsSurfaceAppearance,
   type ElementsSurfaceDevice,
@@ -7349,6 +7349,32 @@ export function reconcileUtilityPath(nodes: readonly UtilityNode[], path: readon
   return reconciled;
 }
 
+/** @emoji 🎛 Id of the pressed utility leaf in a derived utility tree, if any. */
+export function findPressedUtilityLeafId(nodes: readonly UtilityNode[]): string | undefined {
+  for (const node of nodes) {
+    if (node.kind === "collection") {
+      const nested = findPressedUtilityLeafId(node.children);
+      if (nested) return nested;
+    } else if (node.kind === "toggle" && node.pressed) {
+      return node.id;
+    }
+  }
+  return undefined;
+}
+
+/** @emoji 🧰 First `setActiveUtility` descriptor in a utility tree — used to deactivate when a collection that owns the pressed leaf is collapsed. */
+function findSetActiveUtilityDescriptor(nodes: readonly UtilityNode[]): ActionDescriptor | undefined {
+  for (const node of nodes) {
+    if (node.kind === "collection") {
+      const nested = findSetActiveUtilityDescriptor(node.children);
+      if (nested) return nested;
+    } else if (node.kind === "toggle" && "onChange" in node && node.onChange.action === SET_ACTIVE_UTILITY_ACTION_ID) {
+      return node.onChange;
+    }
+  }
+  return undefined;
+}
+
 /** @emoji 🎓 Finds the group-id path (in {@link reconcileUtilityPath} shape) leading down to a utility leaf,
  * so a folded picker can drill straight to it. Returns `[]` when the id is a top-level (ungrouped) node,
  * `null` when the tree has no node with that id at all. */
@@ -7464,9 +7490,11 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
   }, [utilities]);
 
   useEffect(() => {
-    if (!revealUtilityId) return;
-    const path = findUtilityGroupPath(utilities, revealUtilityId);
-    if (path) setActivePath((previousPath) => (previousPath.length === path.length && previousPath.every((entry, index) => entry === path[index]) ? previousPath : path));
+    const pressedId = revealUtilityId ?? findPressedUtilityLeafId(utilities);
+    if (!pressedId) return;
+    const path = findUtilityGroupPath(utilities, pressedId);
+    if (!path) return;
+    setActivePath((previousPath) => (previousPath.length === path.length && previousPath.every((entry, index) => entry === path[index]) ? previousPath : path));
   }, [revealUtilityId, utilities]);
 
   const segments = useMemo(() => buildUtilityRibbonSegments(utilities, activePath), [utilities, activePath]);
@@ -7480,7 +7508,17 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
           kind="single"
           value={activePath[segment.depth] ?? ""}
           onValueChange={(value) => {
-            setActivePath(value ? reconcileUtilityPath(utilities, [...activePath.slice(0, segment.depth), value]) : activePath.slice(0, segment.depth));
+            if (!value) {
+              const pressedId = findPressedUtilityLeafId(utilities);
+              const pressedPath = pressedId ? findUtilityGroupPath(utilities, pressedId) : null;
+              if (pressedPath && pressedPath.length > segment.depth) {
+                const template = findSetActiveUtilityDescriptor(utilities);
+                if (template) onAction({ ...template, args: { ...(template.args as object | undefined), utilityId: "" } });
+              }
+              setActivePath(activePath.slice(0, segment.depth));
+              return;
+            }
+            setActivePath(reconcileUtilityPath(utilities, [...activePath.slice(0, segment.depth), value]));
           }}
           items={segment.collections.map((entry) => ({
             value: entry.id,
@@ -10036,6 +10074,11 @@ function BrushMeshRegistrar({ url, onRegister }: { readonly url: string; readonl
   return null;
 }
 
+/** 🎛 True when `mode` is an explicit transform-gumball utility (`move`/`rotate`/`scale`) — never treat a missing/unknown mode as move. */
+export function isWorldTransformGumballMode(mode: string | undefined): boolean {
+  return mode === "move" || mode === "rotate" || mode === "scale";
+}
+
 function gumballConfigForTransformMode(mode: string): GumballConfig {
   if (mode === "rotate") {
     return { moveAxes: false, movePlanes: false, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
@@ -10481,9 +10524,11 @@ function WorldInstancesLayer({
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
   const selectedIds = useMemo(() => new Set(selection.ids ?? []), [selection.ids]);
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
-  const transformMode = selection.transformMode ?? "move";
-  const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode), [transformMode]);
+  const transformMode = selection.transformMode;
+  const transformGumballMode = isWorldTransformGumballMode(transformMode);
+  const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode ?? "move"), [transformMode]);
   const paintMode = selection.interactionMode === "paint";
+  const gumballVisible = Boolean(selection.gumballActive) && transformGumballMode && !paintMode;
 
   const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
 
@@ -10562,7 +10607,7 @@ function WorldInstancesLayer({
           );
         })}
       </group>
-      <SceneGumball target={selection.gumballTarget} config={gumballConfig} active={Boolean(selection.gumballActive) && !paintMode} onDraggingChanged={onGumballDraggingChanged} onDragEnd={onGumballDragEnd} />
+      <SceneGumball target={selection.gumballTarget} config={gumballConfig} active={gumballVisible} onDraggingChanged={onGumballDraggingChanged} onDragEnd={onGumballDragEnd} />
     </WorldLayerStack>
   );
 }

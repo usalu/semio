@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
+import { playgroundAssetVitePlugins, playgroundSceneHostResolveAliases, resolveGisMapTileServeMode, semioBrandHtmlVitePlugins, staticDirVitePlugin, uiAssetsVitePlugin } from "../../../../../ui/styling/vite-elements-assets.ts";
 import { PLAYGROUND_BUILD_TARGETS } from "../../../../plugin/registry/generated/playgrounds.ts";
 import { isStudioPluginFilter } from "../../../../plugin/registry/script.ts";
 import { resolveShellBrandById } from "../brand/index.ts";
@@ -52,6 +52,9 @@ export default defineConfig({
   cacheDir: playgroundCacheDir,
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
+  // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `mit-bestand/aggregator/dist`) keeps its build output
+  // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
+  build: brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : undefined,
   resolve: {
     alias: [
       ...playgroundSceneHostResolveAliases(repoRoot),
@@ -78,6 +81,9 @@ export default defineConfig({
     semioBackboneVitePlugin(),
     semioBlobVitePlugin(),
     ...uiAssetsVitePlugin(uiAssetsRoot),
+    // 🏷️ A brand's own static assets (e.g. the Aggregator's funding/partner logos) mount at `/<assetsDir>`
+    // alongside the shared `ui/asset` mount above.
+    ...(brand?.assetsDir ? staticDirVitePlugin(repoRoot, { kind: "static-dir", route: `/${brand.assetsDir}`, root: brand.assetsDir }) : []),
     ...semioBrandHtmlVitePlugins(repoRoot, brand),
     ...playgroundAssetVitePlugins(repoRoot, resolvedPlaygroundAssets, resolveGisMapTileServeMode(process.env.GIS_MAP_TILE_SERVE_MODE)),
     ...(renderer === "wgpu" ? [tailwindcss()] : [react(), tailwindcss()]),

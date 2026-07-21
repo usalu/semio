@@ -3021,18 +3021,19 @@ pub mod d3 {
         }
     }
 
-    /// 🎚️ The gumball handle the world engine draws, derived from the flat active utility (non-transform utilities fall back to `move`).
-    fn puzzle3d_transform_handle(active_utility: &str) -> &str {
+    /// 🎚️ The gumball handle the world engine draws when a transform utility is active.
+    fn puzzle3d_transform_handle(active_utility: &str) -> Option<&'static str> {
         match active_utility {
-            "rotate" => "rotate",
-            "scale" => "scale",
-            _ => "move",
+            "move" => Some("move"),
+            "rotate" => Some("rotate"),
+            "scale" => Some("scale"),
+            _ => None,
         }
     }
 
     /// 🧭 Whether the active utility is a transform gumball mode.
     fn puzzle3d_transform_utility_active(active_utility: &str) -> bool {
-        matches!(active_utility, "move" | "rotate" | "scale")
+        puzzle3d_transform_handle(active_utility).is_some()
     }
 
     /// 🕹️ Whether the world gumball should render for the current selection and utility.
@@ -3565,7 +3566,9 @@ pub mod d3 {
                     "face": false,
                 }),
             );
-            object.insert("transformMode".into(), json!(puzzle3d_transform_handle(&envelope.active_utility)));
+            if let Some(transform_mode) = puzzle3d_transform_handle(&envelope.active_utility) {
+                object.insert("transformMode".into(), json!(transform_mode));
+            }
             if let Some(active_id) = runtime.selection.object_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }
@@ -6398,7 +6401,7 @@ pub mod d3 {
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
-                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `move` is the default.
+                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — transform gumball requires move/rotate/scale explicitly.
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
@@ -7249,18 +7252,23 @@ pub mod d3 {
             app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
             let idle_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap());
             assert_eq!(idle_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "selection alone must not show the gumball");
+            assert!(idle_selection.get("transformMode").is_none(), "non-transform utility must not emit transformMode");
             let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
             let move_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &move_view).expect("render")).unwrap());
             assert_eq!(move_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            assert_eq!(move_selection.get("transformMode").and_then(Value::as_str), Some("move"));
             let rotate_view = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
             let rotate_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &rotate_view).expect("render")).unwrap());
             assert_eq!(rotate_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            assert_eq!(rotate_selection.get("transformMode").and_then(Value::as_str), Some("rotate"));
             let scale_view = ViewState { active_utility_id: Some("scale".into()), ..ViewState::default() };
             let scale_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &scale_view).expect("render")).unwrap());
             assert_eq!(scale_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            assert_eq!(scale_selection.get("transformMode").and_then(Value::as_str), Some("scale"));
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let brush_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render")).unwrap());
             assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
+            assert!(brush_selection.get("transformMode").is_none());
         }
 
         #[test]
@@ -7777,18 +7785,19 @@ pub mod d5 {
         }
     }
 
-    /// 🎚️ The gumball handle the world engine draws, derived from the flat active utility (non-transform utilities fall back to `move`).
-    fn puzzle5d_transform_handle(active_utility: &str) -> &str {
+    /// 🎚️ The gumball handle the world engine draws when a transform utility is active.
+    fn puzzle5d_transform_handle(active_utility: &str) -> Option<&'static str> {
         match active_utility {
-            "rotate" => "rotate",
-            "scale" => "scale",
-            _ => "move",
+            "move" => Some("move"),
+            "rotate" => Some("rotate"),
+            "scale" => Some("scale"),
+            _ => None,
         }
     }
 
     /// 🧭 Whether the active utility is a transform gumball mode.
     fn puzzle5d_transform_utility_active(active_utility: &str) -> bool {
-        matches!(active_utility, "move" | "rotate" | "scale")
+        puzzle5d_transform_handle(active_utility).is_some()
     }
 
     /// 🕹️ Whether the world gumball should render for the current selection and utility.
@@ -8512,7 +8521,9 @@ pub mod d5 {
             object.insert("granularity".into(), json!("mesh"));
             object.insert("selectionMode".into(), json!("mesh"));
             object.insert("targets".into(), json!({ "mesh": true, "vertex": false, "edge": false, "face": false }));
-            object.insert("transformMode".into(), json!(puzzle5d_transform_handle(&envelope.active_utility)));
+            if let Some(transform_mode) = puzzle5d_transform_handle(&envelope.active_utility) {
+                object.insert("transformMode".into(), json!(transform_mode));
+            }
             if let Some(active_id) = runtime.selection.part_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
             }

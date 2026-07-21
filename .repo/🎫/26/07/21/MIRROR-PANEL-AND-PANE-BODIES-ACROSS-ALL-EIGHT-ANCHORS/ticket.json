@@ -1,0 +1,13 @@
+{
+  "title": "Mirror Panel and Pane Bodies Across All Eight Anchors",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Generalize Panel and Pane so every one of the 8 anchors (top-left, top-middle, top-right, right-middle, bottom-right, bottom-middle, bottom-left, left-middle) works correctly: (1) full mirror — body content follows the anchor's flow (dir=rtl on right anchors) so tree indentation, guide lines, chevrons, and icon/label order all mirror correctly instead of being pinned to LTR; (2) growth audit — verify/fix that panels and panes grow away from their anchor (hug content, clamp to region, scroll internally) from every anchor.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2206"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e0046f6d240344039c8fe6abd65e36d1"
+  ]
+}

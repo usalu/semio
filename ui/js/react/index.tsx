@@ -819,7 +819,7 @@ export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDism
     if (!request) return;
     const onPointerDown = (event: PointerEvent) => {
       const menu = menuRef.current;
-      if (menu?.contains(event.target as Node)) return;
+      if (menu?.contains(event.target as globalThis.Node)) return;
       onDismiss();
     };
     const onKeyDown = (event: KeyboardEvent) => {
@@ -1315,7 +1315,7 @@ function coerceIconSource(source: IconSource): Icon {
 }
 
 /** @emoji 🎛 Renders a control icon or a visible missing-icon placeholder. */
-export function renderControlIcon(icon: ControlIcon | undefined, size: number | IconSizeToken = "small"): React.ReactNode {
+export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
   if (icon === undefined || icon === null || icon === false) {
     return <span data-missing-icon className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
   }
@@ -1633,13 +1633,13 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
   if (!icon) {
     return null;
   }
-  return <Icon icon={icon} size="small" className="shrink-0" />;
+  return <Icon icon={icon as IconSource} size="small" className="shrink-0" />;
 }
 
 /**
  * 🧩 Recursively renders {@link ContextMenuItem} rows for Radix dropdown menu surfaces (right-click host).
  **/
-export function renderContextMenuItems(items: ContextMenuItem[] | undefined, onClose?: () => void): React.ReactNode {
+export function renderContextMenuItems(items: readonly ContextMenuItem[] | undefined, onClose?: () => void): React.ReactNode {
   if (!items?.length) {
     return null;
   }
@@ -1756,7 +1756,7 @@ function renderContextMenuTrigger(point: { x: number; y: number } | null): React
 }
 
 export interface ContextMenuProps {
-  items?: ContextMenuItem[];
+  items?: readonly ContextMenuItem[];
   children: React.ReactNode;
 }
 
@@ -1788,7 +1788,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
     return host;
   }
   return (
-    <DropdownMenuPrimitive.Root modal={false} onOpenChange={setOpen} open={open}>
+    <DropdownMenuPrimitive.Root dir={flow.inline === "rtl" ? "rtl" : undefined} modal={false} onOpenChange={setOpen} open={open}>
       {host}
       {renderContextMenuTrigger(point)}
       <DropdownMenuPrimitive.Portal>
@@ -1796,7 +1796,6 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
           align="start"
           avoidCollisions={false}
           className={contextMenuContentClassName}
-          dir={flow.inline === "rtl" ? "rtl" : undefined}
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
           sideOffset={0}
@@ -4813,7 +4812,7 @@ function useGhostController(): GhostController {
   controllerRef.current = { active, begin, end, commands, activeInteraction };
 
   reactHostPort.useEffect(() => {
-    const pendingRef: { current: { readonly x: number; readonly y: number; readonly target: EventTarget } | null } = { current: null };
+    const pendingRef: { current: { readonly x: number; readonly y: number; readonly target: EventTarget | null } | null } = { current: null };
     const beganViaPointerDragRef = { current: false };
     const bindings = createDOMEventBinding();
     const capture = true;
@@ -5746,6 +5745,12 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
     style[vertical] = "var(--spacing-single)";
   }
   return style;
+}
+
+/** @emoji 🧭 Chevron {@link IconName} that points toward where a fold's content is — the opposite state's chevron, mirrored for {@link FlowInline} `"rtl"`. `pointsOut` is `true` when the fold is collapsed (chevron points toward the hidden content) and `false` when expanded (chevron points back at the fold). */
+export function flowChevronIconName(inline: FlowInline, pointsOut: boolean): IconName {
+  const right = inline === "rtl" ? pointsOut : !pointsOut;
+  return right ? "chevron-right" : "chevron-left";
 }
 // #endregion 🧭Flow Context
 
@@ -7035,7 +7040,7 @@ export const windowMeasureControlClass = "w-full min-w-0 max-w-full";
 export const windowMeasureGroupHeaderClass = "pointer-events-auto flex h-small w-full min-w-0 shrink-0 cursor-pointer select-none items-center gap-tiny rounded-sm px-tiny py-0 text-element hover:bg-hover-interactive-fill hover:text-emphasized";
 
 /** @emoji 🌳 Indented children under a measure group (minimal chrome). */
-export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-l pl-tiny ml-tiny pb-0 pt-0";
+export const windowMeasureGroupChildrenClass = "pointer-events-none flex w-full min-w-0 flex-col gap-0 border-s ps-tiny ms-tiny pb-0 pt-0";
 
 /** @emoji 🌳 Nested measure leaf without an outer tile border (indent only). */
 export const windowMeasureTileNestedClass = "pointer-events-auto select-none w-full min-w-0 shrink-0 px-0 py-0";
@@ -7914,7 +7919,7 @@ export function Label({ id, rowId, label, labelElementId, className, children, l
       className={cn(detailPanelPropertyRowClassName, !isTree && "w-full", className)}
     >
       {propertyLabelElement}
-      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingLeft: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
+      <div ref={propertyControlRef} data-slot="property-control" className={detailPanelPropertyControlClassName} style={propertyRowStacked ? { paddingInlineStart: `calc(${sizeVar("layoutLabel")} + ${sizeVar("spacingDouble")})` } : undefined}>
         <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
       </div>
     </div>
@@ -8714,7 +8719,7 @@ export const Field: React.FC<FieldProps> = ({ id, label, description, required, 
       <div className="flex items-baseline gap-single min-w-0">
         <label htmlFor={id} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
           {label}
-          {required ? <span className="text-destructive ml-half">*</span> : null}
+          {required ? <span className="text-destructive ms-half">*</span> : null}
         </label>
       </div>
       {description ? (
@@ -9239,13 +9244,13 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
             <CommandGroup>
               {allowClear && value && (
                 <CommandItem value="" onSelect={() => handleSelect("")}>
-                  <div className="mr-2 size-tiny" />
+                  <div className="me-2 size-tiny" />
                   <span className="text-muted-foreground italic">{clearSelectionLabel}</span>
                 </CommandItem>
               )}
               {options.map((option) => (
                 <CommandItem key={option.value} value={option.value} onSelect={() => handleSelect(option.value)}>
-                  <CheckIcon className={cn("mr-2 size-small", value === option.value ? "opacity-100" : "opacity-0")} />
+                  <CheckIcon className={cn("me-2 size-small", value === option.value ? "opacity-100" : "opacity-0")} />
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -9613,7 +9618,13 @@ interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onCh
 function Input({ className, type, lazy, value: externalValue, onChange, onLazyChange, interactionId, id, placeholderId, placeholder, showLabel, mixed, ...props }: InputProps) {
   const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
-  const [localValue, setLocalValue] = reactHostPort.useState(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
+  const scalarInputValue = (value: string | number | readonly string[] | undefined): string | number => {
+    if (typeof value === "number") return value;
+    if (typeof value === "string") return value;
+    if (Array.isArray(value)) return (value as readonly string[]).join(", ");
+    return "";
+  };
+  const [localValue, setLocalValue] = reactHostPort.useState(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const inputRef = reactHostPort.useRef<HTMLInputElement>(null);
@@ -9626,7 +9637,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
 
   reactHostPort.useEffect(() => {
-    if (!isEditing) setLocalValue(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
+    if (!isEditing) setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
   }, [externalValue, isEditing, type]);
 
   reactHostPort.useEffect(() => {
@@ -9681,7 +9692,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
       } else if (e.key === "Escape") {
         if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
         setIsEditing(false);
-        setLocalValue(type === "number" ? formatNumber(externalValue ?? "") : externalValue?.toString() || "");
+        setLocalValue(type === "number" ? formatNumber(scalarInputValue(externalValue)) : scalarInputValue(externalValue).toString() || "");
         transaction?.abort?.();
         (e.target as HTMLInputElement).blur();
       }
@@ -9689,9 +9700,9 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
     props.onKeyDown?.(e);
   };
 
-  const inputValue = lazy ? localValue : externalValue;
+  const inputValue = lazy ? localValue : scalarInputValue(externalValue);
 
-  const inputDisplayValue = type === "number" && !isFocused ? formatNumber(inputValue ?? "") : inputValue?.toString() || "";
+  const inputDisplayValue = type === "number" && !isFocused ? formatNumber(inputValue) : inputValue.toString() || "";
   const showCollapsedDisplay = !!showLabel && !isFocused && isCollapsibleInputType(type);
   const allowStackedOverflow = isStackedOverflowInputType(type);
 
@@ -9913,14 +9924,14 @@ function SelectItem({ className, children, id, ...props }: React.ComponentProps<
       data-slot="select-item"
       id={id}
       className={cn(
-        "focus:text-emphasized [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pr-medium pl-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
+        "focus:text-emphasized [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full items-center gap-single rounded-sm py-single pe-medium ps-single text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-single",
         "cursor-selectable",
         menuListItemClassName,
         className,
       )}
       {...props}
     >
-      <span className="absolute right-2 flex size-tiny.5 items-center justify-center">
+      <span className="absolute end-2 flex size-tiny.5 items-center justify-center">
         <SelectPrimitive.ItemIndicator>
           <CheckIconAlt className="size-tiny" />
         </SelectPrimitive.ItemIndicator>
@@ -10410,7 +10421,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(-step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepDown}
-        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-r hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-e hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <RemoveIcon className="size-tiny" />
       </button>
@@ -10482,7 +10493,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
         onTouchStart={handleMouseDown(step)}
         onTouchEnd={handleMouseUp}
         disabled={!canStepUp}
-        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-l hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
+        className={cn("flex h-medium w-medium shrink-0 cursor-pointer items-center justify-center border-s hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus-visible:bg-muted", borderClass)}
       >
         <AddIcon className="size-tiny" />
       </button>
@@ -11981,95 +11992,6 @@ export function ShellBrandLogo({ svg, className, style }: { svg: string; classNa
 }
 //#endregion 🏷️ShellBrandLogo
 
-//#region 🏛️ZukunftBauLogo
-/** @emoji 🏛️ Zukunft Bau wordmark, used to credit the BBSR research funding programme in app chrome. @see https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506 */
-export function ZukunftBauLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <svg viewBox="0 0 336 59.185" className={className} style={style} xmlns="http://www.w3.org/2000/svg">
-      <g transform="translate(71.508 -4.507)">
-        <path
-          fill="#040506"
-          d="M261.44,48.865v5.58l-5.622-5.759H255.5V59.1h2.2V53.49l5.649,5.774h.305v-10.4Zm-14.577,8.253V48.865h-2.2V59.1h5.8V57.118Zm-11.989,0v-2.34h4.043V52.825h-4.043v-1.98h4.251v-1.98H232.7V59.1h6.577V57.118ZM228.189,59.1,224.3,53.7l3.864-4.832h-2.7l-3.35,4.486V48.865h-2.2V59.1h2.2V54.168l3.3,4.929Zm-17.18.208a5.393,5.393,0,0,0,2.256-.484,4.624,4.624,0,0,0,1.787-1.426L213.6,55.982a3.672,3.672,0,0,1-1.143.914,3.177,3.177,0,0,1-2.88-.083,2.7,2.7,0,0,1-1.051-1.122,3.671,3.671,0,0,1-.38-1.717,3.543,3.543,0,0,1,.395-1.729,2.641,2.641,0,0,1,1.093-1.095,3.269,3.269,0,0,1,1.571-.374,2.974,2.974,0,0,1,2.339,1.038l1.441-1.537a4.917,4.917,0,0,0-3.891-1.62,5.386,5.386,0,0,0-2.645.657,4.886,4.886,0,0,0-1.889,1.863,5.466,5.466,0,0,0-.7,2.8,5.627,5.627,0,0,0,.672,2.776,4.8,4.8,0,0,0,1.847,1.884,5.214,5.214,0,0,0,2.631.671m-12.5-.208h2.2V48.865h-2.2Zm-6.893-10.232-1.841,5.677-2.34-5.677h-.3L184.8,54.542l-1.855-5.677h-2.437l3.959,10.4h.291l2.479-5.94,2.464,5.94h.305l4-10.4ZM171.666,59.1h2.2V50.845h2.852v-1.98h-7.906v1.98h2.852ZM161.576,48.865v5.58l-5.622-5.759h-.318V59.1h2.2V53.49l5.649,5.774h.3v-10.4Zm-15.727,8.253v-2.34h4.043V52.825h-4.043v-1.98h4.25v-1.98h-6.423V59.1h6.576V57.118Zm-18.519-8.253v5.58l-5.621-5.759h-.318V59.1h2.2V53.49l5.648,5.774h.305v-10.4ZM111.6,57.118v-2.34h4.042V52.825H111.6v-1.98h4.25v-1.98H109.43V59.1h6.576V57.118ZM101.47,48.865v3.919H97.58V48.865h-2.2V59.1h2.2V54.763h3.891V59.1h2.2V48.865ZM86.478,59.3a5.4,5.4,0,0,0,2.256-.484,4.621,4.621,0,0,0,1.785-1.426l-1.453-1.413a3.672,3.672,0,0,1-1.143.914,3.177,3.177,0,0,1-2.88-.083,2.7,2.7,0,0,1-1.053-1.122,3.684,3.684,0,0,1-.38-1.717,3.543,3.543,0,0,1,.395-1.729A2.654,2.654,0,0,1,85.1,51.15a3.276,3.276,0,0,1,1.572-.374,2.976,2.976,0,0,1,2.339,1.038l1.441-1.537a4.918,4.918,0,0,0-3.891-1.62,5.38,5.38,0,0,0-2.645.657,4.9,4.9,0,0,0-1.891,1.863,5.476,5.476,0,0,0-.7,2.8A5.626,5.626,0,0,0,82,56.75a4.809,4.809,0,0,0,1.849,1.884,5.214,5.214,0,0,0,2.631.671m-13.6,0a4.8,4.8,0,0,0,2.022-.4,3.086,3.086,0,0,0,1.35-1.149,3.172,3.172,0,0,0,.478-1.746,2.593,2.593,0,0,0-.471-1.64,2.74,2.74,0,0,0-1.121-.872,12.7,12.7,0,0,0-1.675-.533q-.652-.167-1.018-.292a1.677,1.677,0,0,1-.6-.339.706.706,0,0,1-.235-.546.962.962,0,0,1,.416-.817,2.016,2.016,0,0,1,1.205-.3,2.994,2.994,0,0,1,1.2.228,3.658,3.658,0,0,1,1.01.672l1.233-1.593a4.609,4.609,0,0,0-1.481-.962,5.135,5.135,0,0,0-1.966-.353,4.727,4.727,0,0,0-2.022.408,3.186,3.186,0,0,0-1.35,1.135,2.943,2.943,0,0,0-.478,1.654,2.764,2.764,0,0,0,.471,1.7,2.686,2.686,0,0,0,1.121.892,11.669,11.669,0,0,0,1.675.52c.434.112.774.208,1.018.292a1.624,1.624,0,0,1,.6.346.758.758,0,0,1,.235.58.945.945,0,0,1-.416.81,2.005,2.005,0,0,1-1.177.3,3.455,3.455,0,0,1-1.391-.284,4.477,4.477,0,0,1-1.308-.907l-1.288,1.621a6.469,6.469,0,0,0,1.709,1.148,5.343,5.343,0,0,0,2.25.43M59.026,53.587V50.8h1.343a2.367,2.367,0,0,1,1.426.346,1.222,1.222,0,0,1,.457,1.038,1.17,1.17,0,0,1-.519,1.066,3.161,3.161,0,0,1-1.655.333Zm5.732,5.51-2.852-4.029a3.426,3.426,0,0,0,1.938-1,2.835,2.835,0,0,0,.679-1.98,2.876,2.876,0,0,0-1.045-2.409,4.609,4.609,0,0,0-2.9-.817H56.825V59.1h2.2V54.362L62.142,59.1Zm-18.5-1.93a3.081,3.081,0,0,1-1.46-.36A2.747,2.747,0,0,1,43.7,55.727a3.39,3.39,0,0,1-.422-1.745,3.544,3.544,0,0,1,.422-1.808A2.707,2.707,0,0,1,44.8,51.1a3.132,3.132,0,0,1,1.468-.353,3.258,3.258,0,0,1,1.488.353,2.788,2.788,0,0,1,1.142,1.087,3.424,3.424,0,0,1,.443,1.8,3.27,3.27,0,0,1-.443,1.745,2.859,2.859,0,0,1-1.149,1.079,3.213,3.213,0,0,1-1.481.36m0,2.132a5.663,5.663,0,0,0,2.561-.615,5.048,5.048,0,0,0,2.008-1.821,5.214,5.214,0,0,0,.776-2.88,5.281,5.281,0,0,0-.783-2.929,5.019,5.019,0,0,0-2.014-1.82,5.674,5.674,0,0,0-2.547-.61,5.608,5.608,0,0,0-2.527.6,4.893,4.893,0,0,0-1.98,1.821,5.393,5.393,0,0,0-.768,2.935,5.247,5.247,0,0,0,.768,2.88,5.035,5.035,0,0,0,1.98,1.821,5.508,5.508,0,0,0,2.527.615m-9.856-8.453v-1.98H30.4V59.1h2.2V54.943h3.614V52.991H32.6V50.845Zm-22.355-1.98v5.58L8.432,48.686H8.113V59.1h2.2V53.49l5.648,5.774h.305v-10.4Zm-16.82,4.722V50.8h1.343A2.367,2.367,0,0,1,0,51.15a1.222,1.222,0,0,1,.457,1.038A1.17,1.17,0,0,1-.06,53.254a3.161,3.161,0,0,1-1.655.333ZM2.965,59.1.112,55.068a3.426,3.426,0,0,0,1.938-1,2.835,2.835,0,0,0,.679-1.98,2.875,2.875,0,0,0-1.045-2.409,4.611,4.611,0,0,0-2.9-.817H-4.969V59.1h2.2V54.362L.348,59.1Zm-17.72-1.979v-2.34h4.042V52.825h-4.042v-1.98H-10.5v-1.98h-6.424V59.1h6.577V57.118Zm-13.359,0h-.624V50.845h.624a4.43,4.43,0,0,1,2.768.727,2.729,2.729,0,0,1,.928,2.292,3.307,3.307,0,0,1-.45,1.778,2.818,2.818,0,0,1-1.28,1.1,4.749,4.749,0,0,1-1.966.375m-.028-8.253h-2.769V59.1h2.769a7.6,7.6,0,0,0,3.177-.616,4.668,4.668,0,0,0,2.083-1.793,5.224,5.224,0,0,0,.734-2.824,5.018,5.018,0,0,0-.692-2.687,4.417,4.417,0,0,0-2.035-1.717,8.041,8.041,0,0,0-3.267-.6m-13.651,4.722V50.8h1.343a2.363,2.363,0,0,1,1.426.346,1.222,1.222,0,0,1,.457,1.038,1.17,1.17,0,0,1-.519,1.066,3.156,3.156,0,0,1-1.655.333Zm5.732,5.51-2.852-4.029a3.426,3.426,0,0,0,1.938-1,2.835,2.835,0,0,0,.679-1.98,2.872,2.872,0,0,0-1.045-2.409,4.609,4.609,0,0,0-2.9-.817h-3.752V59.1h2.2V54.362l3.116,4.735Zm-17.107-11a1.011,1.011,0,0,0,.768-.3,1.1,1.1,0,0,0,.283-.8,1.118,1.118,0,0,0-.132-.546,1.007,1.007,0,0,0-.374-.388,1.038,1.038,0,0,0-.546-.146,1.074,1.074,0,0,0-.554.146.984.984,0,0,0-.381.395,1.142,1.142,0,0,0-.132.54,1.081,1.081,0,0,0,.3.789,1.024,1.024,0,0,0,.768.3m-2.672,0a1.028,1.028,0,0,0,.768-.3,1.085,1.085,0,0,0,.3-.789,1.142,1.142,0,0,0-.132-.54.984.984,0,0,0-.381-.395,1.073,1.073,0,0,0-.553-.146,1.081,1.081,0,0,0-.555.146.982.982,0,0,0-.38.395,1.142,1.142,0,0,0-.132.54,1.085,1.085,0,0,0,.3.789,1.028,1.028,0,0,0,.769.3m1.284,9.091a3.081,3.081,0,0,1-1.46-.36,2.754,2.754,0,0,1-1.108-1.079A3.392,3.392,0,0,1-57.546,54a3.543,3.543,0,0,1,.422-1.807,2.707,2.707,0,0,1,1.1-1.079,3.133,3.133,0,0,1,1.468-.354,3.259,3.259,0,0,1,1.488.354A2.8,2.8,0,0,1-51.925,52.2a3.422,3.422,0,0,1,.443,1.8,3.271,3.271,0,0,1-.443,1.746,2.866,2.866,0,0,1-1.149,1.079,3.21,3.21,0,0,1-1.481.36m0,2.133a5.664,5.664,0,0,0,2.561-.616,5.028,5.028,0,0,0,2.008-1.822A5.2,5.2,0,0,0-49.211,54a5.277,5.277,0,0,0-.783-2.928,5.022,5.022,0,0,0-2.014-1.821,5.687,5.687,0,0,0-2.547-.609,5.611,5.611,0,0,0-2.527.6,4.893,4.893,0,0,0-1.98,1.821A5.389,5.389,0,0,0-59.831,54a5.242,5.242,0,0,0,.768,2.88,5.029,5.029,0,0,0,1.98,1.822,5.513,5.513,0,0,0,2.527.616m-9.856-8.474v-1.98H-70.42V59.1h2.2V54.943H-64.6V52.991h-3.614V50.845Z"
-          transform="translate(0.115 4.372)"
-        />
-        <path
-          fill="#ffe500"
-          d="M248.343,42.562c-.174.006-.344.024-.52.025h.5Zm-29.119-7.327H205.34v7.351h13.884ZM180.88,27.691H170.1v6.64H180.88a3.341,3.341,0,0,0,3.064-4.622,3.286,3.286,0,0,0-3.064-2.018m-164.86,14.9L5.532,25.7v16.89Zm-34.43-13a7,7,0,0,0,.516-2.681V4.509h-13.22V26.9a6.977,6.977,0,0,0,.517,2.681,7.086,7.086,0,0,0,1.417,2.2,6.669,6.669,0,0,0,2.109,1.488,6.342,6.342,0,0,0,5.132,0,6.682,6.682,0,0,0,2.111-1.489,7.106,7.106,0,0,0,1.417-2.2M-39.8,4.509h-2.891L-58.549,34.331h15.594v8.256h18.43a15,15,0,0,1-5.947-1.2,15.485,15.485,0,0,1-4.856-3.269A15.478,15.478,0,0,1-38.6,33.261a14.994,14.994,0,0,1-1.2-5.968ZM38.686,41.386a15.276,15.276,0,0,1-8.126-8.126,15.008,15.008,0,0,1-1.2-5.968V4.509H-9.182V27.293a15.008,15.008,0,0,1-1.2,5.968,15.375,15.375,0,0,1-3.284,4.857,15.661,15.661,0,0,1-4.868,3.269,15,15,0,0,1-5.947,1.2H-3.2V4.509H5.532V20L16.382,4.509H26.666L12.858,22.492,26.665,42.587H44.633a15,15,0,0,1-5.947-1.2m12.063-11.8a7,7,0,0,0,.516-2.681V4.509H38.045V26.9a7.005,7.005,0,0,0,.516,2.681,7.109,7.109,0,0,0,1.418,2.2,6.669,6.669,0,0,0,2.109,1.488,6.342,6.342,0,0,0,5.132,0,6.677,6.677,0,0,0,2.109-1.489,7.069,7.069,0,0,0,1.418-2.2m-6.074,13H65.653V4.509H59.976V27.293a14.989,14.989,0,0,1-1.2,5.968,15.375,15.375,0,0,1-3.284,4.857,15.636,15.636,0,0,1-4.868,3.269,15.007,15.007,0,0,1-5.948,1.2m42.987,0L73.913,19.115V42.587ZM74.262,4.509l13.75,23.5V4.509ZM96.271,42.587h6.119V4.509H96.271Zm14.475,0H130.67V12.767H110.746v6.665h11.082v8.259H110.746Zm28.351,0H161.84V4.509H150.171v8.258H139.1Zm43.083-29.565a3.314,3.314,0,0,0-1.3-.255H170.1v6.665H180.88a3.255,3.255,0,0,0,3.062-2.03,3.392,3.392,0,0,0,.256-1.316,3.281,3.281,0,0,0-2.019-3.065m24.131-7.311a14.992,14.992,0,0,1,5.954-1.2H180.895a11.193,11.193,0,0,1,4.486.917,11.756,11.756,0,0,1,6.159,6.159,11.211,11.211,0,0,1,.917,4.5,8.8,8.8,0,0,1-.3,2.233,10.81,10.81,0,0,1-.837,2.187,9.536,9.536,0,0,1-1.3,1.926,7.658,7.658,0,0,1-1.18,1.1,6.465,6.465,0,0,1,1.208,1.1,9.909,9.909,0,0,1,1.3,1.937,10.241,10.241,0,0,1,.826,2.207,9.377,9.377,0,0,1,.283,2.239,11.211,11.211,0,0,1-.917,4.5,11.746,11.746,0,0,1-6.159,6.159,11.187,11.187,0,0,1-4.48.917h16.084V19.83a14.985,14.985,0,0,1,1.2-5.968,15.641,15.641,0,0,1,3.269-4.868,15.358,15.358,0,0,1,4.856-3.284m8.663,8.036a6.933,6.933,0,0,0-9.092,3.714,6.808,6.808,0,0,0-.544,2.7v6.731h13.885V20.163a6.835,6.835,0,0,0-.544-2.7,6.944,6.944,0,0,0-3.7-3.714m26.859,27.639a15.266,15.266,0,0,1-8.126-8.126,14.989,14.989,0,0,1-1.2-5.968V4.509H212.3a15,15,0,0,1,5.952,1.2,15.368,15.368,0,0,1,8.151,8.151,14.994,14.994,0,0,1,1.2,5.968V42.587h20.178a14.99,14.99,0,0,1-5.947-1.2M254.413,26.9V4.509H241.192V26.9a7.006,7.006,0,0,0,.517,2.681,7.092,7.092,0,0,0,1.417,2.2,6.669,6.669,0,0,0,2.111,1.488,6.338,6.338,0,0,0,5.132,0,6.652,6.652,0,0,0,2.108-1.488,7.063,7.063,0,0,0,1.418-2.2,6.985,6.985,0,0,0,.517-2.681"
-          transform="translate(1.368 0)"
-        />
-        <path fill="#040506" d="M7.572,22.492,21.382,4.509H11.1L.247,20V4.509H-8.484V42.588H.247V25.7L10.737,42.588H21.382Z" transform="translate(6.654 0)" />
-        <path fill="#040506" d="M123.735,12.767H134.8V4.508H87.023V42.587h8.356v-14.9H106.46V19.432H95.379V12.767H115.3V42.587h8.427Z" transform="translate(16.737 0)" />
-        <path
-          fill="#040506"
-          d="M235.331,27.292V4.508H226.62V26.9a7,7,0,0,1-.516,2.681,7.086,7.086,0,0,1-1.42,2.2,6.673,6.673,0,0,1-2.108,1.489,6.347,6.347,0,0,1-5.132,0,6.686,6.686,0,0,1-2.111-1.488,7.088,7.088,0,0,1-1.416-2.2A6.966,6.966,0,0,1,213.4,26.9V4.508h-8.685V27.292a14.989,14.989,0,0,0,1.2,5.968,15.266,15.266,0,0,0,8.126,8.126,15.419,15.419,0,0,0,11.936,0,15.647,15.647,0,0,0,4.869-3.269,15.341,15.341,0,0,0,3.282-4.857,15,15,0,0,0,1.2-5.968"
-          transform="translate(29.161 0)"
-        />
-        <path
-          fill="#040506"
-          d="M180.938,20.162a6.835,6.835,0,0,1,.544-2.7,6.936,6.936,0,0,1,12.8,0,6.839,6.839,0,0,1,.544,2.7v6.732H180.938ZM203.2,42.587V19.83a14.98,14.98,0,0,0-1.2-5.969,15.368,15.368,0,0,0-8.151-8.151,15.419,15.419,0,0,0-11.936,0,15.387,15.387,0,0,0-4.857,3.284,15.654,15.654,0,0,0-3.269,4.868,15.01,15.01,0,0,0-1.2,5.969V42.587h8.354V35.235h13.885v7.352Z"
-          transform="translate(25.769 0)"
-        />
-        <path
-          fill="#040506"
-          d="M163.154,31.009a3.289,3.289,0,0,1-.962,2.357,3.308,3.308,0,0,1-2.357.964H149.054V27.69h10.782a3.287,3.287,0,0,1,3.319,3.319m0-14.923A3.411,3.411,0,0,1,162.9,17.4a3.273,3.273,0,0,1-3.064,2.03H149.054V12.766h10.782a3.287,3.287,0,0,1,3.319,3.32m4.64,7.445a7.715,7.715,0,0,0,1.181-1.1,9.535,9.535,0,0,0,1.3-1.926,10.876,10.876,0,0,0,.837-2.187,8.844,8.844,0,0,0,.3-2.233,11.2,11.2,0,0,0-.917-4.5,11.763,11.763,0,0,0-6.159-6.16,11.212,11.212,0,0,0-4.5-.918H140.8v38.08h19.039a11.178,11.178,0,0,0,4.5-.918,11.756,11.756,0,0,0,6.159-6.159,11.211,11.211,0,0,0,.917-4.5,9.339,9.339,0,0,0-.284-2.24,10.139,10.139,0,0,0-.826-2.206,9.82,9.82,0,0,0-1.3-1.936,6.4,6.4,0,0,0-1.208-1.1"
-          transform="translate(22.414)"
-        />
-        <path fill="#040506" d="M75.8,42.587H84.41V4.508H76.152v23.5L62.4,4.508H53.794V42.587h8.259V19.115Z" transform="translate(13.228 0)" />
-        <path
-          fill="#040506"
-          d="M51.582,27.292V4.508H42.871V26.9a7,7,0,0,1-.516,2.681,7.076,7.076,0,0,1-1.418,2.2,6.66,6.66,0,0,1-2.109,1.489,6.347,6.347,0,0,1-5.132,0,6.672,6.672,0,0,1-2.109-1.489,7.1,7.1,0,0,1-1.418-2.2A7.005,7.005,0,0,1,29.65,26.9V4.508H20.964V27.292a15,15,0,0,0,1.2,5.968,15.276,15.276,0,0,0,8.126,8.126,15.422,15.422,0,0,0,11.937,0A15.649,15.649,0,0,0,47.1,38.116,15.362,15.362,0,0,0,50.38,33.26a14.985,14.985,0,0,0,1.2-5.968"
-          transform="translate(9.763 0)"
-        />
-        <path fill="#040506" d="M-57.181,34.33-41.321,4.508h-29.92v8.259H-55.6L-71.508,42.587h29.922V34.33Z" transform="translate(0 0)" />
-        <path
-          fill="#040506"
-          d="M-10.971,27.292V4.508h-8.712V26.9a7.017,7.017,0,0,1-.515,2.681,7.076,7.076,0,0,1-1.418,2.2,6.672,6.672,0,0,1-2.109,1.489,6.347,6.347,0,0,1-5.132,0,6.672,6.672,0,0,1-2.109-1.489,7.076,7.076,0,0,1-1.418-2.2A7,7,0,0,1-32.9,26.9V4.508H-41.59V27.292a14.99,14.99,0,0,0,1.2,5.968,15.5,15.5,0,0,0,3.269,4.857,15.478,15.478,0,0,0,4.857,3.269,15,15,0,0,0,5.968,1.2,15,15,0,0,0,5.968-1.2,15.66,15.66,0,0,0,4.869-3.269,15.359,15.359,0,0,0,3.282-4.857,14.986,14.986,0,0,0,1.2-5.968"
-          transform="translate(3.159 0)"
-        />
-      </g>
-    </svg>
-  );
-}
-//#endregion 🏛️ZukunftBauLogo
-
-//#region 🏛️LuhLogo
-/** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.iek.uni-hannover.de/ngs/team */
-export const LUH_LOGO_URL = "/asset/logo/luh.png";
-/** @emoji 🏛️ Dark-appearance LUH wordmark. */
-export const LUH_LOGO_DARK_URL = "/asset/logo/luh-dark.png";
-/** @emoji 🏛️ LUH NGS team page. */
-export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
-
-/** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `ui/asset/logo`. */
-export function LuhLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
-      <img src={LUH_LOGO_URL} alt="Leibniz Universität Hannover" className="h-full w-auto dark:hidden" />
-      <img src={LUH_LOGO_DARK_URL} alt="Leibniz Universität Hannover" className="hidden h-full w-auto dark:block" />
-    </span>
-  );
-}
-//#endregion 🏛️LuhLogo
-
-//#region 🏛️UdkLogo
-/** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/ */
-export const UDK_LOGO_URL = "/asset/logo/udk.png";
-/** @emoji 🏛️ Dark-appearance UdK wordmark. */
-export const UDK_LOGO_DARK_URL = "/asset/logo/udk-dark.png";
-/** @emoji 🏛️ UdK KET team page. */
-export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/";
-
-/** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `ui/asset/logo`. */
-export function UdkLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
-  return (
-    <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
-      <img src={UDK_LOGO_URL} alt="Universität der Künste Berlin" className="h-full w-auto dark:hidden" />
-      <img src={UDK_LOGO_DARK_URL} alt="Universität der Künste Berlin" className="hidden h-full w-auto dark:block" />
-    </span>
-  );
-}
-//#endregion 🏛️UdkLogo
-
 /** @emoji ↔️ Flex grow class that pushes trailing navbar chrome to the right edge. */
 export const navbarFillClassName = "flex-1 min-w-0";
 
@@ -12077,75 +11999,6 @@ export const navbarFillClassName = "flex-1 min-w-0";
 export function navbarFillItem(key = "navbarFill"): NavbarItem {
   return { key, className: navbarFillClassName, content: null };
 }
-
-//#region 🏛️FundedByZukunftBauFooterItem
-/** @emoji 🏛️ Footer credit for the Zukunft Bau (BBSR) research funding programme, linking out to the funded project page. */
-export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506";
-
-/**
- * @emoji 🏛️ A plain (non-margined) footer item — the caller sits it between the bottom-middle command palette and
- * the bottom-right corner toggle by bracketing it with two {@link navbarFillItem} spacers, so it never claims the
- * exact corner pixel a floating corner `Panel` also anchors to. `relative z-40` matches `panel-tabs`' z-index so it
- * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
- * chrome rather than page content; the click opens the funded project page in a new tab.
- **/
-/** @emoji 📱 On mobile the credit shrinks to just its logo — the "Funded by"/"Ein Projekt von" text has no room. */
-export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "en", iconOnly = false): NavbarItem {
-  return {
-    key,
-    className: "relative z-40",
-    content: (
-      <button
-        type="button"
-        onClick={() => window.open(ZUKUNFT_BAU_PROJECT_URL, "_blank", "noopener,noreferrer")}
-        className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
-      >
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Gefördert durch" : "Funded by"}</span>}
-        <ZukunftBauLogo className="h-tiny w-auto shrink-0" />
-      </button>
-    ),
-  };
-}
-//#endregion 🏛️FundedByZukunftBauFooterItem
-
-//#region 🏛️AProjectOfLuhUdkFooterItem
-/**
- * @emoji 🏛️ Left-side footer partner credit mirroring {@link fundedByZukunftBauFooterItem} on the right —
- * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the partner team page;
- * `relative z-40` matches panel-tab chrome so the credit stays visible above anchored panels.
- **/
-/** @emoji 📱 On mobile the credit shrinks to just its logos — the "Ein Projekt von"/"und" text has no room. */
-export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de", iconOnly = false): NavbarItem {
-  return {
-    key,
-    className: "relative z-40",
-    content: (
-      <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground">
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>}
-        <a
-          href={LUH_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
-          aria-label="Leibniz Universität Hannover"
-        >
-          <LuhLogo className="h-tiny" />
-        </a>
-        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "und" : "and"}</span>}
-        <a
-          href={UDK_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
-          aria-label="Universität der Künste Berlin"
-        >
-          <UdkLogo className="h-tiny" />
-        </a>
-      </div>
-    ),
-  };
-}
-//#endregion 🏛️AProjectOfLuhUdkFooterItem
 
 /** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
 export const NAVBAR_NO_EXAMPLE_ID = "__none__";
@@ -12499,7 +12352,7 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-2 rounded-md border p-2", locked && "pointer-events-none opacity-60")} data-slot="icon-selector">
-      <Select disabled={locked} onValueChange={onModeSelect} value={activeMode}>
+      <Select id={`${id}.mode.select`} disabled={locked} onValueChange={onModeSelect} value={activeMode}>
         <SelectTrigger className="h-8 w-full min-w-0 px-2 text-xs whitespace-normal" id={`${id}.mode`}>
           <SelectValue />
         </SelectTrigger>
@@ -12689,10 +12542,11 @@ const TreeContext = reactHostPort.createContext<{ level: number; isLastAtLevel: 
   direction: "down",
 });
 
-/** @emoji 🧭 Fold-affordance chevron for a tree group row — points toward where the content actually is: down/right when it unfolds downward, up/left when it unfolds upward. */
-function treeFoldChevronIcon(direction: TreeDirection, open: boolean): React.ComponentType<{ className?: string }> {
-  if (direction === "up") return open ? ChevronUpIcon : ChevronLeftIcon;
-  return open ? ChevronDownIcon : ChevronRightIcon;
+/** @emoji 🧭 Fold-affordance chevron for a tree group row — points toward where the content actually is: along the block axis when open (down, or up when {@link direction} is `"up"`), along the {@link FlowInline}-mirrored inline axis when closed (right in ltr/down or rtl/up, left in ltr/up or rtl/down). */
+function treeFoldChevronIcon(direction: TreeDirection, inline: FlowInline, open: boolean): React.ComponentType<{ className?: string }> {
+  if (open) return direction === "up" ? ChevronUpIcon : ChevronDownIcon;
+  const towardStart = direction === "up";
+  return towardStart === (inline === "rtl") ? ChevronRightIcon : ChevronLeftIcon;
 }
 const TreeRowAlignmentContext = reactHostPort.createContext(false);
 // True when children are rendered inside the value column of a Label property row.
@@ -13054,7 +12908,7 @@ export type TreeSelectionMode = "single" | "multiple";
 
 export interface TreeDataActivationContext {
   path: string[];
-  selectedIds: string[];
+  selectedIds: readonly string[];
   sectionId: string;
 }
 
@@ -13310,8 +13164,8 @@ export function catalogueTreeDragController(mime: string = CATALOGUE_DRAG_MIME):
 
 interface TreeSelectionComputationArgs {
   selectionMode: TreeSelectionMode;
-  selectedIds: string[];
-  orderedIds: string[];
+  selectedIds: readonly string[];
+  orderedIds: readonly string[];
   targetId: string;
   anchorId?: string;
   additiveKey: boolean;
@@ -13323,7 +13177,7 @@ interface TreeSelectionComputationResult {
   anchorId?: string;
 }
 
-const normalizeTreeSelectedIds = (selectedIds: string[], selectionMode: TreeSelectionMode): string[] => {
+const normalizeTreeSelectedIds = (selectedIds: readonly string[], selectionMode: TreeSelectionMode): string[] => {
   const uniqueIds = Array.from(new Set(selectedIds.filter(Boolean)));
   return selectionMode === "single" ? uniqueIds.slice(0, 1) : uniqueIds;
 };
@@ -13824,6 +13678,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   dragInitiation,
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
+  const { inline } = useFlow();
   const suppressLocalizedLabel = label == null || label === "";
   const resolvedLabel = suppressLocalizedLabel ? undefined : label;
   const idLabel = useIdLabel(id);
@@ -13919,7 +13774,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     );
   }
 
-  const SectionFoldChevron = treeFoldChevronIcon(direction, open);
+  const SectionFoldChevron = treeFoldChevronIcon(direction, inline, open);
   const sectionTrigger = (
     <CollapsibleTrigger asChild>
       <div
@@ -14023,7 +13878,8 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   onDoubleClick,
   layoutKind = "default",
 }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
+  const { inline } = useFlow();
   const localizedLabel = useIdLabel(id);
   const displayLabel = label ?? localizedLabel;
   const itemKey = id ?? displayLabel ?? id;
@@ -14041,6 +13897,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
   const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted), isDropReady && dropZoneReadyFillClass);
+  const GroupFoldChevron = treeFoldChevronIcon(direction, inline, open);
 
   if (hasChildren && displayLabel) {
     if (layoutKind === "property") {
@@ -14080,7 +13937,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                     setOpen(!open);
                   }}
                 >
-                  {open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
+                  <GroupFoldChevron className="size-small flex-shrink-0" />
                 </button>
               }
               contentClassName="min-w-0"
@@ -14154,7 +14011,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   setOpen(!open);
                 }}
               >
-                {open ? <ChevronDownIcon className="size-small flex-shrink-0" /> : <ChevronRightIcon className="size-small flex-shrink-0" />}
+                <GroupFoldChevron className="size-small flex-shrink-0" />
               </button>
             }
             contentClassName="min-w-0"
@@ -14372,6 +14229,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   }
 
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
+  const { inline } = useFlow();
   const itemKey = id ?? resolvedLabel ?? sortableId ?? "tree-item";
   const itemId = getTreeItemStateId(String(itemKey));
   const treeOpenState = useTreeOpenState(itemId, defaultOpen);
@@ -14456,7 +14314,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           onPointerCancel={onPointerCancel}
         >
           {(() => {
-            const PropertyFoldChevron = treeFoldChevronIcon(direction, open);
+            const PropertyFoldChevron = treeFoldChevronIcon(direction, inline, open);
             const propertyHeader = (
               <TreeAlignedRow
                 level={level}
@@ -14546,7 +14404,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     return (
       <TreeItemRowContextMenu items={contextMenu}>
         {(() => {
-          const DefaultFoldChevron = treeFoldChevronIcon(direction, open);
+          const DefaultFoldChevron = treeFoldChevronIcon(direction, inline, open);
           const defaultHeader = (
             <div
               data-dim
@@ -14628,7 +14486,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                           onBranchChange?.(activeBranchIndex - 1);
                         }}
                       >
-                        <ChevronLeftIcon className="size-tiny text-muted-foreground" />
+                        {inline === "rtl" ? <ChevronRightIcon className="size-tiny text-muted-foreground" /> : <ChevronLeftIcon className="size-tiny text-muted-foreground" />}
                       </button>
                       <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
                         {activeBranchIndex + 1}/{branchCount}
@@ -14643,7 +14501,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                           onBranchChange?.(activeBranchIndex + 1);
                         }}
                       >
-                        <ChevronRightIcon className="size-tiny text-muted-foreground" />
+                        {inline === "rtl" ? <ChevronLeftIcon className="size-tiny text-muted-foreground" /> : <ChevronRightIcon className="size-tiny text-muted-foreground" />}
                       </button>
                     </div>
                   )}
@@ -14685,7 +14543,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-dim
         data-slot="tree-item-row"
         data-hover-scope
-        data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
+        data-tree-row-kind="leaf"
         data-draggable={draggable ? "true" : undefined}
         role="treeitem"
         id={id}
@@ -14725,7 +14583,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                     onBranchChange?.(activeBranchIndex - 1);
                   }}
                 >
-                  <ChevronLeftIcon className="size-tiny text-muted-foreground" />
+                  {inline === "rtl" ? <ChevronRightIcon className="size-tiny text-muted-foreground" /> : <ChevronLeftIcon className="size-tiny text-muted-foreground" />}
                 </button>
                 <span data-slot="tree-branch-indicator" className="text-2xs text-muted-foreground tabular-nums select-none">
                   {activeBranchIndex + 1}/{branchCount}
@@ -14740,7 +14598,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                     onBranchChange?.(activeBranchIndex + 1);
                   }}
                 >
-                  <ChevronRightIcon className="size-tiny text-muted-foreground" />
+                  {inline === "rtl" ? <ChevronLeftIcon className="size-tiny text-muted-foreground" /> : <ChevronRightIcon className="size-tiny text-muted-foreground" />}
                 </button>
               </div>
             )}
@@ -15504,7 +15362,7 @@ export const Tree = (({
     (event: React.DragEvent<HTMLDivElement>, item: TreeDataItem, section: TreeDataSection) => {
       event.stopPropagation();
       const currentSelectedIds = selectionStoreRef.current.getSelectedIds();
-      const nextDraggedIds = currentSelectedIds.includes(item.id) ? currentSelectedIds : [item.id];
+      const nextDraggedIds = currentSelectedIds.includes(item.id) ? [...currentSelectedIds] : [item.id];
       const sourceItems = nextDraggedIds.map((id) => itemMap[id]).filter(Boolean);
       setDraggedIds(nextDraggedIds);
       event.dataTransfer.effectAllowed = "move";
@@ -15945,7 +15803,7 @@ const FileTreeItem: React.FC<FileTreeItemProps> = ({ node, currentPath, onNaviga
 
   const sharedProps = {
     className: itemClasses,
-    style: { paddingLeft: `${detailPanelIndentPx(level, indentMultiplier) + 12}px` },
+    style: { paddingInlineStart: `${detailPanelIndentPx(level, indentMultiplier) + 12}px` },
     onClick: handleClick,
   };
 
@@ -16182,10 +16040,12 @@ interface ControlTreeFolderRowProps {
   onToggleFolder?: (path: string, collapsed: boolean) => void;
 }
 const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, classNames, children, defaultOpen, onToggleFolder }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
+  const { inline } = useFlow();
   const itemId = `control-tree-folder-${node.path}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
+  const FolderChevron = treeFoldChevronIcon(direction, inline, open);
   return (
     <>
       <ControlTreeRow
@@ -16210,7 +16070,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
                     onToggleFolder?.(node.path, !nextOpen);
                   }}
                 >
-                  {open ? <ChevronDownIcon className={cn("size-small flex-shrink-0", classNames?.folderChevron)} /> : <ChevronRightIcon className={cn("size-small flex-shrink-0", classNames?.folderChevron)} />}
+                  <FolderChevron className={cn("size-small flex-shrink-0", classNames?.folderChevron)} />
                 </button>
               ) : undefined
             }
@@ -16370,11 +16230,12 @@ export interface WindowMeasureTreeGroupProps {
 /** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
 export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const { block } = useFlow();
+  const { block, inline } = useFlow();
   const itemId = `window-measure-group-${id}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
-  const toggleIcon = open ? (block === "up" ? <ChevronUpIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronDownIcon className="size-tiny flex-shrink-0 text-muted-foreground" />) : block === "up" ? <ChevronLeftIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-tiny flex-shrink-0 text-muted-foreground" />;
+  const ToggleChevron = treeFoldChevronIcon(block, inline, open);
+  const toggleIcon = <ToggleChevron className="size-tiny flex-shrink-0 text-muted-foreground" />;
   const row = (
     <WindowMeasureTreeRow
       left={
@@ -16884,7 +16745,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
     <div className="flex items-center justify-between border-t pt-4 mt-8">
       {prev ? (
         <Button id="ui.docs.navigation.previous" onClick={() => navigate(`/${prev.path}`)} className="flex items-center gap-single" icon="chevron-left">
-          <div className="text-left">
+          <div className="text-start">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.previous")}</div>
             <div className="font-medium">{prev.title}</div>
           </div>
@@ -16894,7 +16755,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
       )}
       {next ? (
         <Button id="ui.docs.navigation.next" onClick={() => navigate(`/${next.path}`)} className="flex items-center gap-single" icon="chevron-right">
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-xs text-muted-foreground">{t("pageNavigation.next")}</div>
             <div className="font-medium">{next.title}</div>
           </div>
@@ -16946,8 +16807,8 @@ export function staticTreePanelDefinition(config: TreePanelConfig): TreePanelDef
 }
 
 function resolveTreePanelSource(tree: TreePanelSource): TreePanelConfig {
-  if (typeof (tree as TreePanelDefinition).resolveTree === "function") {
-    return (tree as TreePanelDefinition).resolveTree();
+  if ("resolveTree" in tree) {
+    return tree.resolveTree();
   }
   return tree;
 }
@@ -17339,11 +17200,9 @@ const Panel: React.FC<PanelProps> = ({
           {visible ? (
             <>
               <Scrollable className="relative z-10 flex-1 min-h-0">
-                {/* 🌲 Panel body content never mirrors — trees, labels, and their controls always read left-to-right regardless of which anchor hosts them; only the chrome (tab bar, resize handles, panel position) follows the anchor's flow. */}
-                <div data-slot="panel-content" dir="ltr" className="flex min-h-0 flex-1 flex-col">
-                  <FlowProvider inline="ltr">
-                    {activeTabTrees && activeNode ? <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
-                  </FlowProvider>
+                {/* 🌲 Panel body content follows the anchor's flow — trees, labels, and their controls mirror on right anchors, same as the chrome (tab bar, resize handles, panel position). */}
+                <div data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
+                  {activeTabTrees && activeNode ? <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
                 </div>
               </Scrollable>
               {onSizeChange
@@ -17557,7 +17416,7 @@ export const Pane: React.FC<PaneProps> = ({
       className={cn(
         "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-hidden",
         flow.block === "up" ? "flex-col-reverse" : "flex-col",
-        horizontal === "left" ? "items-start" : horizontal === "right" ? "items-end" : "items-center",
+        horizontal === "middle" ? "items-center" : "items-start",
         !effectiveFolded && "w-fit",
         className,
       )}
@@ -17577,15 +17436,15 @@ export const Pane: React.FC<PaneProps> = ({
           ) : null}
           <ActionGroupItem
             id={`${id}-pane-fold`}
-            icon={effectiveFolded ? "chevron-left" : "chevron-right"}
+            icon={flowChevronIconName(flow.inline, effectiveFolded)}
             text={label ?? id}
             className={windowRailChromeLabelActionClass}
             onClick={mobile ? undefined : onFoldToggle}
           />
         </div>
         {!effectiveFolded ? (
-          <div data-slot="pane-body" dir="ltr" className="relative min-h-0 flex-1 overflow-y-auto">
-            <FlowProvider inline="ltr">{children}</FlowProvider>
+          <div data-slot="pane-body" className="relative min-h-0 flex-1 overflow-y-auto">
+            {children}
           </div>
         ) : null}
         {resizable && !mobile && !effectiveFolded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
@@ -18046,7 +17905,7 @@ export const uiFormControlBrowserDefaultProps = {
   spellCheck: false,
   "data-1p-ignore": true,
   "data-lpignore": "true",
-} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck" | "data-1p-ignore" | "data-lpignore">;
+} as const satisfies Pick<React.InputHTMLAttributes<HTMLInputElement>, "autoComplete" | "autoCorrect" | "autoCapitalize" | "spellCheck"> & { readonly "data-1p-ignore": boolean; readonly "data-lpignore": string };
 
 /** @emoji 🚫 Applies {@link uiFormControlBrowserDefaultProps} to a live form control (idempotent). */
 export function applyUiFormControlBrowserDefaults(element: HTMLInputElement | HTMLTextAreaElement): void {
@@ -18292,7 +18151,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
       <div data-slot="engagement-control" data-control-kind="slider" className="flex min-w-0 flex-col gap-half px-half">
         {label ? <span className="text-element text-xs">{label}</span> : null}
         <Slider
-          id={control.id}
+          id={control.id ?? "engagement-control.slider"}
           value={[control.value]}
           min={control.min}
           max={control.max}
@@ -18315,7 +18174,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
       <div data-slot="engagement-control" data-control-kind="stepper" className="flex min-w-0 flex-col gap-half px-half">
         {label ? <span className="text-element text-xs">{label}</span> : null}
         <Stepper
-          id={control.id}
+          id={control.id ?? "engagement-control.stepper"}
           value={control.value}
           min={control.min}
           max={control.max}
@@ -18355,7 +18214,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
     return (
       <div data-slot="engagement-control" data-control-kind="select" className="flex min-w-0 flex-col gap-half px-half">
         {label ? <span className="text-element text-xs">{label}</span> : null}
-        <Select value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
+        <Select id={control.id ?? "engagement-control.select"} value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
           <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={control.placeholder ?? selectLabel} />
           </SelectTrigger>
@@ -18380,7 +18239,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
   return (
     <div data-slot="engagement-control" data-control-kind="ring" className="flex min-w-0 flex-col items-center gap-half px-half">
       {label ? <span className="text-element text-xs">{label}</span> : null}
-      <Ring id={control.id} orbs={orbs} onOrbSelect={(orbId) => control.onSelect?.(orbId)} />
+      <Ring id={control.id ?? "engagement-control.ring"} orbs={orbs} onOrbSelect={(orbId) => control.onSelect?.(orbId)} />
     </div>
   );
 }
@@ -18389,6 +18248,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
 
 /** @emoji 🔎 Floating top-middle window search pane: action input with optional right chevron for possibles. */
 const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
+  const { inline } = useFlow();
   const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
   const actionActivePlaceholderLabel = useLabel(UI_WINDOW_SEARCH.actionActive);
   const suggestionsAriaLabel = useLabel(UI_WINDOW_SEARCH.suggestions);
@@ -18547,7 +18407,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                   aria-expanded={possiblesExpanded}
                   aria-label={suggestionsAriaLabel}
                   data-slot="search-possibles-toggle"
-                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
+                  icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : inline === "rtl" ? <ChevronLeftIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
                   onClick={() => setPossiblesExpanded((open) => !open)}
                 />
               ) : null}
@@ -18574,7 +18434,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                           onSelect={() => selectPossible(item)}
                         >
                           <span className="truncate">{searchHighlightedLabel(item.label, draft, item.detail)}</span>
-                          {item.detail ? <span className="ml-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
+                          {item.detail ? <span className="ms-auto truncate text-xs text-muted-foreground">{item.detail}</span> : null}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -18642,7 +18502,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
           >
             <ButtonGroup id={UI_ENGAGEMENT.actions}>
               {options!.map((option) => {
-                const actionLabel = normalizeEngagementActionText(option.label);
+                const actionLabel = normalizeEngagementActionText(option.label ?? "");
                 const optionControlId = isInternalChromeControlId(option.id) ? undefined : option.id;
                 return (
                   <ButtonGroupItem key={option.id} id={optionControlId} aria-label={actionLabel} icon={option.icon} text={actionLabel} className={cn(option.pressed && interactiveActiveFillClass)} onClick={option.onPress} disabled={option.disabled} />
@@ -21978,11 +21838,11 @@ export interface TableColumn<T = unknown> {
  * Interface for hierarchical row data with parent/child relations.
  **/
 export interface HierarchicalRowData {
-  id: string;
-  level?: number;
-  parentId?: string;
-  hasChildren?: boolean;
-  isExpanded?: boolean;
+  readonly id: string;
+  readonly level?: number;
+  readonly parentId?: string | null;
+  readonly hasChildren?: boolean;
+  readonly isExpanded?: boolean;
 }
 
 /**
@@ -22257,7 +22117,7 @@ const Table = <T,>({
           <thead className={`${headerBgClass} ${borderNormalBottomClass} ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
-                <th key={column.id} className={`text-left p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
+                <th key={column.id} className={`text-start p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
                   {column.header}
                 </th>
               ))}
@@ -22371,7 +22231,7 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
       <thead className={cn("bg-window sticky top-0 z-panel", borderNormalBottomClass)}>
         <tr className="h-large">
           {columns.map((column) => (
-            <th key={column.id} className={`text-left p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
+            <th key={column.id} className={`text-start p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
               {column.header}
             </th>
           ))}
@@ -23080,7 +22940,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
         header: nameLabel,
         width: "32%",
         accessor: (row) => (
-          <div className="flex min-w-0 items-center gap-single" style={{ paddingLeft: (row.level ?? 0) * 14 }}>
+          <div className="flex min-w-0 items-center gap-single" style={{ paddingInlineStart: (row.level ?? 0) * 14 }}>
             {row.hasChildren ? (
               <button
                 type="button"
@@ -23709,7 +23569,7 @@ interface ModeStackDropTargets {
 
 function listModeDockTabElements(tabBarElement: HTMLElement | null): HTMLElement[] {
   if (!tabBarElement) return [];
-  return [...tabBarElement.querySelectorAll('[data-slot="mode-dock-tab"]')].filter((tab) => tab.getAttribute("data-drag-source") !== "true");
+  return [...tabBarElement.querySelectorAll<HTMLElement>('[data-slot="mode-dock-tab"]')].filter((tab) => tab.getAttribute("data-drag-source") !== "true");
 }
 
 function computeTabInsertIndex(pointerX: number, tabBarElement: HTMLElement | null): number {
@@ -24172,7 +24032,7 @@ interface ModeRenderParentAxis {
   panelIndex: number;
 }
 
-function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: ModeRenderContext, parentAxis?: ModeRenderParentAxis): React.ReactNode {
+function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, path: ModeLayoutPath, ctx: ModeRenderContext, parentAxis?: ModeRenderParentAxis): React.ReactNode {
   if (node.kind === "stack") {
     return <ModeDockStack key={path || "root-stack"} stackPath={path} node={node} windowsById={ctx.windowsById} activeWindowId={ctx.activeWindowId} />;
   }
@@ -24187,7 +24047,7 @@ function renderModeDockNode(node: WindowLayoutNode, path: ModeLayoutPath, ctx: M
     }
     panels.push(
       <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
-        {renderModeDockNode(child as WindowLayoutNode, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
+        {renderModeDockNode(child, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
       </ResizablePanel>,
     );
   });
@@ -24695,7 +24555,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
         <ModeDockStack stackPath={maximizedStackPath!} node={maximizedStack} windowsById={windowsById} activeWindowId={activeWindowId} />
       </ModeDockContext.Provider>
     ) : (
-      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout, "", renderContext)}</ModeDockContext.Provider>
+      <ModeDockContext.Provider value={dockContext}>{renderModeDockNode(dockOutLayout as WindowLayoutAxisNode | WindowLayoutStackNode, "", renderContext)}</ModeDockContext.Provider>
     ));
 
   return (
@@ -26011,27 +25871,42 @@ if (import.meta.vitest) {
       ).toContain("rtl/down");
     });
 
-    it("Panel sets dir=rtl only for right corners", () => {
+    it("Panel sets dir=rtl only for right anchors (corners and right-middle), never for left or middle anchors", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
-      const { container: leftContainer } = render(<Panel anchor="top-left" visible tabs={tabs} />);
-      expect(leftContainer.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBeNull();
-      const { container: rightContainer } = render(<Panel anchor="top-right" visible tabs={tabs} />);
-      expect(rightContainer.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
+      const dirOf = (anchor: Anchor) => render(<Panel anchor={anchor} visible tabs={tabs} />).container.querySelector('[data-slot="panel"]')?.getAttribute("dir");
+      expect(dirOf("top-left")).toBeNull();
+      expect(dirOf("bottom-left")).toBeNull();
+      expect(dirOf("left-middle")).toBeNull();
+      expect(dirOf("top-middle")).toBeNull();
+      expect(dirOf("bottom-middle")).toBeNull();
+      expect(dirOf("top-right")).toBe("rtl");
+      expect(dirOf("bottom-right")).toBe("rtl");
+      expect(dirOf("right-middle")).toBe("rtl");
     });
 
-    it("Panel content (trees, labels, controls) never mirrors — only the chrome follows the corner's flow", () => {
+    it("Panel body follows the corner's flow — trees, labels, and their controls mirror same as the chrome", () => {
       const StubIcon = (): null => null;
+      const FlowProbe: React.FC = () => {
+        const flow = useFlow();
+        return <span data-testid="flow-probe">{flow.inline}</span>;
+      };
       const tabs: PanelTabNode[] = [
         singleTreeLeaf({
           id: "tab-a",
           icon: StubIcon,
           name: "Tab A",
-          tree: { sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row" }] }] },
+          tree: { sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row", control: <FlowProbe /> }] }] },
         }),
       ];
-      const { container } = render(<Panel anchor="top-right" visible tabs={tabs} />);
-      expect(container.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBe("ltr");
+      const { container: leftContainer } = render(<Panel anchor="top-left" visible tabs={tabs} />);
+      expect(leftContainer.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBeNull();
+      expect(leftContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("ltr");
+
+      const { container: rightContainer } = render(<Panel anchor="top-right" visible tabs={tabs} />);
+      expect(rightContainer.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
+      expect(rightContainer.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBeNull();
+      expect(rightContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("rtl");
     });
 
     it("Panel derives its tab bar's stacking direction from the corner's flow block axis", () => {
@@ -28248,6 +28123,45 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
       expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
     });
+
+    it("mirrors dir=rtl and the fold chevron for right anchors, while the body carries no dir override", () => {
+      const { container: leftContainer } = render(
+        <PaneHost>
+          <Pane id="left-pane" anchor="top-left" label="Left">
+            <div data-testid="left-pane-content">Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(leftContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBeNull();
+      expect(leftContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
+      expect(leftContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
+      expect(leftContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
+      expect(leftContainer.querySelector('[data-icon="chevron-right"]')).toBeTruthy();
+
+      const { container: rightContainer } = render(
+        <PaneHost>
+          <Pane id="right-pane" anchor="top-right" label="Right">
+            <div data-testid="right-pane-content">Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(rightContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBe("rtl");
+      expect(rightContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
+      expect(rightContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
+      expect(rightContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
+      expect(rightContainer.querySelector('[data-icon="chevron-left"]')).toBeTruthy();
+    });
+
+    it("centers a middle anchor with items-center instead of items-start", () => {
+      const { container } = render(
+        <PaneHost>
+          <Pane id="middle-pane" anchor="top-middle" label="Middle">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(container.querySelector('[data-slot="pane"]')?.className).toContain("items-center");
+    });
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {
@@ -28261,17 +28175,17 @@ if (import.meta.vitest) {
 
   describe("ShellSearchDialog", () => {
     it("renders without crashing given minimal props", () => {
-      const { container } = render(<ShellSearchDialog open query="" onQueryChange={() => undefined} results={[{ id: "a", label: "Alpha" }]} onPick={() => undefined} onClose={() => undefined} />);
-      expect(container.querySelector('[data-slot="command-input"]')).not.toBeNull();
-      expect(container.textContent).toContain("Alpha");
+      render(<ShellSearchDialog open query="" onQueryChange={() => undefined} results={[{ id: "a", label: "Alpha" }]} onPick={() => undefined} onClose={() => undefined} />);
+      expect(document.body.querySelector('[data-slot="command-input"]')).not.toBeNull();
+      expect(document.body.textContent).toContain("Alpha");
     });
   });
 
   describe("ShellFindDialog", () => {
     it("renders without crashing given minimal props", () => {
-      const { container } = render(<ShellFindDialog open query="" onQueryChange={() => undefined} results={[{ id: "b", label: "Bravo" }]} onPick={() => undefined} onClose={() => undefined} />);
-      expect(container.querySelector('[data-slot="command-input"]')).not.toBeNull();
-      expect(container.textContent).toContain("Bravo");
+      render(<ShellFindDialog open query="" onQueryChange={() => undefined} results={[{ id: "b", label: "Bravo" }]} onPick={() => undefined} onClose={() => undefined} />);
+      expect(document.body.querySelector('[data-slot="command-input"]')).not.toBeNull();
+      expect(document.body.textContent).toContain("Bravo");
     });
   });
 }
@@ -28390,6 +28304,24 @@ if (treeVitest) {
       expect(getTreeSiblingGapPx("property", "property")).toBe(treeCompactSiblingGapPx);
       expect(getTreeSiblingGapPx("group", "group")).toBe(treeCompactSiblingGapPx);
       expect(getTreeSiblingGapPx("content", "group")).toBe(treeCompactSiblingGapPx);
+    });
+
+    it("treeFoldChevronIcon mirrors the closed-state chevron for rtl and keeps the open-state chevron on the block axis", () => {
+      expect(treeFoldChevronIcon("down", "ltr", false)).toBe(ChevronRightIcon);
+      expect(treeFoldChevronIcon("down", "rtl", false)).toBe(ChevronLeftIcon);
+      expect(treeFoldChevronIcon("up", "ltr", false)).toBe(ChevronLeftIcon);
+      expect(treeFoldChevronIcon("up", "rtl", false)).toBe(ChevronRightIcon);
+      expect(treeFoldChevronIcon("down", "ltr", true)).toBe(ChevronDownIcon);
+      expect(treeFoldChevronIcon("down", "rtl", true)).toBe(ChevronDownIcon);
+      expect(treeFoldChevronIcon("up", "ltr", true)).toBe(ChevronUpIcon);
+      expect(treeFoldChevronIcon("up", "rtl", true)).toBe(ChevronUpIcon);
+    });
+
+    it("flowChevronIconName mirrors a fold affordance's chevron for rtl", () => {
+      expect(flowChevronIconName("ltr", true)).toBe("chevron-left");
+      expect(flowChevronIconName("ltr", false)).toBe("chevron-right");
+      expect(flowChevronIconName("rtl", true)).toBe("chevron-right");
+      expect(flowChevronIconName("rtl", false)).toBe("chevron-left");
     });
 
     it("normalizes selected ids for single and multiple selection", () => {
@@ -29130,6 +29062,25 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-item-content" data-tree-owner-kind="group" data-tree-owner-expanded="true" class="relative flex min-w-0 flex-col"');
     });
 
+    it("keeps tree gutter/guide geometry identical under an rtl FlowProvider — logical insets, not a direction-conditional physical side", () => {
+      const build = () => (
+        <TreeContext.Provider value={{ level: 1, isLastAtLevel: [false], showLines: true, isTree: true, indentMultiplier: 1 }}>
+          <TreeItem id="rtl-check">
+            <TreeContent>
+              <span>Content</span>
+            </TreeContent>
+          </TreeItem>
+        </TreeContext.Provider>
+      );
+      const ltrMarkup = renderToStaticMarkup(build());
+      const rtlMarkup = renderToStaticMarkup(<FlowProvider inline="rtl">{build()}</FlowProvider>);
+      expect(ltrMarkup).toBe(rtlMarkup);
+      expect(rtlMarkup).toContain('data-slot="tree-gutter"');
+      expect(rtlMarkup).toContain("inset-inline-start:");
+      expect(rtlMarkup).not.toContain("left:");
+      expect(rtlMarkup).not.toContain("right:");
+    });
+
     it("renders sortable drag handles without bordered action chrome", () => {
       const markup = renderToStaticMarkup(
         <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
@@ -29768,7 +29719,7 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
           <WindowMeasureTreeLeaf label="LOD">
-            <Select defaultValue="automatic">
+            <Select id="lod-mode.select" defaultValue="automatic">
               <SelectTrigger id="lod-mode">
                 <SelectValue />
               </SelectTrigger>
@@ -30034,7 +29985,7 @@ if (treeVitest) {
     it("renders select items with hover feedback", async () => {
       const { render } = await import("@testing-library/react");
       render(
-        <Select open defaultValue="fast">
+        <Select id="compute-mode.select" open defaultValue="fast">
           <SelectTrigger id="compute-mode">
             <SelectValue />
           </SelectTrigger>
@@ -30050,7 +30001,7 @@ if (treeVitest) {
     it("renders select menus with popover surface tokens", async () => {
       const { render } = await import("@testing-library/react");
       render(
-        <Select open defaultValue="fast">
+        <Select id="compute-mode.select" open defaultValue="fast">
           <SelectTrigger id="compute-mode">
             <SelectValue />
           </SelectTrigger>
@@ -30109,32 +30060,6 @@ if (treeVitest) {
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
       expect(footerMarkup).toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
-      const fundedByMarkup = renderToStaticMarkup(<Footer items={[navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem(), navbarFillItem("fillRight")]} />);
-      expect(fundedByMarkup).toContain("<button");
-      expect(fundedByMarkup).toContain("Funded by");
-      expect(fundedByMarkup).toContain("z-40");
-      expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
-      const fundedByDeMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem("fundedByDe", "de")]} />);
-      expect(fundedByDeMarkup).toContain("Gefördert durch");
-      const projectOfMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem()]} />);
-      expect(projectOfMarkup).toContain("Ein Projekt von");
-      expect(projectOfMarkup).toContain("und");
-      expect(projectOfMarkup).toContain(LUH_LOGO_URL);
-      expect(projectOfMarkup).toContain(UDK_LOGO_URL);
-      expect(projectOfMarkup).toContain(LUH_URL);
-      expect(projectOfMarkup).toContain(UDK_URL);
-      expect(projectOfMarkup).toContain("z-40");
-      const projectOfEnMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem("projectOfEn", "en")]} />);
-      expect(projectOfEnMarkup).toContain("A project of");
-      expect(projectOfEnMarkup).toContain("and");
-      // 📱 iconOnly (mobile) drops the surrounding text but keeps both logos and their links.
-      const fundedByIconOnlyMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)]} />);
-      expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
-      const projectOfIconOnlyMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)]} />);
-      expect(projectOfIconOnlyMarkup).not.toContain("Ein Projekt von");
-      expect(projectOfIconOnlyMarkup).not.toContain(">und<");
-      expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
-      expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
@@ -30578,6 +30503,27 @@ if (treeVitest) {
       fireEvent.pointerDown(cornerHandle, { clientX: 100 });
       fireEvent.pointerMove(cornerHandle, { clientX: 150 });
       expect(onSizeChange).toHaveBeenCalledWith(350);
+    });
+
+    it("edge-middle panels (left-middle, right-middle) grow from a single inner handle, clamp to the region, and mirror dir on the right", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+
+      const { container: leftContainer } = render(<Panel anchor="left-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+      const leftRoot = leftContainer.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(leftRoot.getAttribute("dir")).toBeNull();
+      expect(leftRoot.style.top).toBe("50%");
+      expect(leftRoot.style.transform).toBe("translateY(-50%)");
+      expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+      expect(leftContainer.querySelectorAll(".cursor-ew-resize").length).toBe(1);
+      expect((leftContainer.querySelector(".cursor-ew-resize") as HTMLElement).className).toContain("right-0");
+
+      const { container: rightContainer } = render(<Panel anchor="right-middle" visible tabs={tabs} onSizeChange={() => {}} />);
+      const rightRoot = rightContainer.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(rightRoot.getAttribute("dir")).toBe("rtl");
+      expect(rightRoot.style.top).toBe("50%");
+      expect(rightContainer.querySelectorAll(".cursor-ew-resize").length).toBe(1);
+      expect((rightContainer.querySelector(".cursor-ew-resize") as HTMLElement).className).toContain("left-0");
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {

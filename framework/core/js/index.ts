@@ -1278,6 +1278,12 @@ export function uiInspectorGroupsToTree(groups: readonly UiInspectorFieldGroup[]
   );
 }
 
+const UI_CONTROL_NODE_TYPES = new Set(["input", "select", "toggle", "button", "keyValue", "slider", "numberStepper", "ring", "iconSelect"]);
+
+function isUiControlNode(node: UiNode): node is UiControlNode {
+  return UI_CONTROL_NODE_TYPES.has(node.type);
+}
+
 export function uiDeclarativeSectionsToTree(sections: readonly UiSectionNode[]): UiTreeNode {
   const treeSections: UiTreeSectionNode[] = sections.map((section) => ({
     id: section.id,
@@ -1295,7 +1301,7 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
   if (node.type === "text") return { id: `${fallbackId}.text`, label: node.value };
   if (node.type === "field") {
     if (node.child.type === "text") return { id: node.id, label: node.label, description: node.child.value };
-    return { id: node.id, label: node.label, control: node.child };
+    return { id: node.id, label: node.label, control: isUiControlNode(node.child) ? node.child : undefined };
   }
   if (node.type === "button") return { id: node.id ?? fallbackId, label: node.label, control: node };
   if (node.type === "group") {
@@ -1387,6 +1393,10 @@ export type ShellBrand = {
   readonly replayIntroductionOnLoad?: boolean;
   /** 🧊 When true, the shell never reads or writes device-local shell state (dock, panes, named layouts, chrome prefs, introduction seen) — every refresh boots from brand locks/defaults only. */
   readonly ephemeral?: boolean;
+  /** 🗂️ Repo-root-relative directory of this brand's own static assets (logos, etc.) — the dev/build server mounts it as a static route at `/<assetsDir>` alongside the shared `ui/asset` mount. */
+  readonly assetsDir?: string;
+  /** 📦 Repo-root-relative directory this brand's build output lands in instead of the shared playground `dist/` — keeps a brand's specialization (including its build artifact) self-contained. */
+  readonly distDir?: string;
 };
 //#endregion 🏷️ShellBrand
 

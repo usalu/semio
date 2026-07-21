@@ -1,14 +1,19 @@
 # Notes
 
-## Root cause
+## Why it was still visible
 
-Puzzle 3D treated an unset host `active_utility_id` as `move` (`PUZZLE3D_DEFAULT_UTILITY`). The shell starts with no utility pressed and Escape clears the active utility to null, but the plugin fell back to `move`, so `gumballActive` stayed true whenever objects were selected.
+1. Plugin defaulted unset `active_utility_id` to `move` (fixed earlier) — WASM needed rebuild.
+2. Collapsing the Transform utility collection left `move`/`rotate`/`scale` pressed while the ribbon looked idle — gumball stayed on.
+3. Renderer treated missing `transformMode` as `move`, so a stale/partial selection blob could still light the gumball.
 
 ## Fix
 
-Set `PUZZLE3D_DEFAULT_UTILITY` to `""`. Existing `puzzle3d_gumball_active` already requires `move|rotate|scale`, so selection alone no longer shows the gumball.
+- Puzzle: no default transform utility; emit `transformMode` only for `move`/`rotate`/`scale`.
+- Framework `UtilityTree`: keep path synced to the pressed leaf; collapsing a collection that owns the pressed leaf deactivates the utility.
+- Framework `WorldInstancesLayer`: `isWorldTransformGumballMode` — gumball requires `gumballActive` **and** an explicit transform mode.
 
-## Verification
+## Verify
 
-- `cargo test -p puzzle-plugin --lib gumball_active_only_for_transform` — pass
-- `cargo test -p puzzle-plugin --lib main_window_utilities_lead_with_move` — pass
+- Hard-refresh Aggregator / Puzzle 3D after WASM rebuild.
+- Select an object with no utility pressed → no gumball.
+- Press Move → gumball appears; Escape or collapse Transform → gumball gone.

@@ -18,7 +18,16 @@ import {
   type UiNode,
 } from "@semio-tech/framework-core";
 import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../product/os/dev/brand/index.ts";
-import { SelectionMarquee, ZUKUNFT_BAU_PROJECT_URL } from "@semio-tech/ui-react";
+import { Footer, navbarFillItem, SelectionMarquee } from "@semio-tech/ui-react";
+import {
+  aProjectOfLuhUdkFooterItem,
+  fundedByZukunftBauFooterItem,
+  LUH_LOGO_URL,
+  LUH_URL,
+  UDK_LOGO_URL,
+  UDK_URL,
+  ZUKUNFT_BAU_PROJECT_URL,
+} from "../../../mit-bestand/aggregator/footer.tsx";
 import {
   Canvas2dHost,
   worldToScreenLogical,
@@ -97,6 +106,7 @@ import {
   parseStudioShellPath,
   preserveJsonIdentity,
   reconcileUtilityPath,
+  findPressedUtilityLeafId,
   resolveUtilityNodes,
   resolveUtilities,
   frameworkHistoryUtilityNodes,
@@ -104,6 +114,7 @@ import {
   actionRequiresStagedForm,
   resolveKeybindingIntent,
   resolveUtilityActivation,
+  isWorldTransformGumballMode,
   WindowActionPane,
   resolveCommands,
   commandCategories,
@@ -2901,6 +2912,32 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(resolveUtilityActivation(undefined, "")).toBeNull();
   });
 
+  it("findPressedUtilityLeafId walks nested collections", () => {
+    expect(
+      findPressedUtilityLeafId([
+        {
+          id: "group:transform",
+          kind: "collection",
+          iconId: "move",
+          children: [
+            { id: "move", kind: "toggle", iconId: "move", pressed: false, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "move" } } },
+            { id: "rotate", kind: "toggle", iconId: "rotate-cw", pressed: true, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "rotate" } } },
+          ],
+        },
+      ]),
+    ).toBe("rotate");
+    expect(findPressedUtilityLeafId([{ id: "brush", kind: "toggle", iconId: "brush", pressed: false, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "brush" } } }])).toBeUndefined();
+  });
+
+  it("isWorldTransformGumballMode requires an explicit move/rotate/scale mode", () => {
+    expect(isWorldTransformGumballMode("move")).toBe(true);
+    expect(isWorldTransformGumballMode("rotate")).toBe(true);
+    expect(isWorldTransformGumballMode("scale")).toBe(true);
+    expect(isWorldTransformGumballMode(undefined)).toBe(false);
+    expect(isWorldTransformGumballMode("brush")).toBe(false);
+    expect(isWorldTransformGumballMode("")).toBe(false);
+  });
+
   it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryUtilityNodes derives History buttons", () => {
     const actionsApp = {
       controllerId: "draw",
@@ -3080,12 +3117,43 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
     for (const logo of funding.logos!) {
-      expect(logo.src).toMatch(/^\/asset\/logo\//);
-      expect(logo.darkSrc).toMatch(/^\/asset\/logo\//);
+      expect(logo.src).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
+      expect(logo.darkSrc).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
       expect(logo.alt).toBeTruthy();
     }
     const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
     expect(zukunftBauLogo).toBeDefined();
+  });
+
+  it("mit-bestand/aggregator footer credits render the funding/partner logos, links, and locale text", () => {
+    const fundedByMarkup = renderToStaticMarkup(createElement(Footer, { items: [navbarFillItem("fillLeft"), fundedByZukunftBauFooterItem(), navbarFillItem("fillRight")] }));
+    expect(fundedByMarkup).toContain("<button");
+    expect(fundedByMarkup).toContain("Funded by");
+    expect(fundedByMarkup).toContain("z-40");
+    expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
+    const fundedByDeMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByDe", "de")] }));
+    expect(fundedByDeMarkup).toContain("Gefördert durch");
+    const projectOfMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem()] }));
+    expect(projectOfMarkup).toContain("Ein Projekt von");
+    expect(projectOfMarkup).toContain("und");
+    expect(projectOfMarkup).toContain(LUH_LOGO_URL);
+    expect(projectOfMarkup).toContain(UDK_LOGO_URL);
+    expect(projectOfMarkup).toContain(LUH_URL);
+    expect(projectOfMarkup).toContain(UDK_URL);
+    expect(projectOfMarkup).toContain("z-40");
+    const projectOfEnMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfEn", "en")] }));
+    expect(projectOfEnMarkup).toContain("A project of");
+    expect(projectOfEnMarkup).toContain("and");
+    // 📱 iconOnly (mobile) drops the surrounding text but keeps both logos and their links.
+    const fundedByIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)] }));
+    expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
+    const projectOfIconOnlyMarkup = renderToStaticMarkup(createElement(Footer, { items: [aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)] }));
+    expect(projectOfIconOnlyMarkup).not.toContain("Ein Projekt von");
+    expect(projectOfIconOnlyMarkup).not.toContain(">und<");
+    expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
+    expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
+    expect(LUH_LOGO_URL).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
+    expect(UDK_LOGO_URL).toMatch(/^\/mit-bestand\/aggregator\/asset\/logo\//);
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {

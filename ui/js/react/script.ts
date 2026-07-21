@@ -1,5 +1,13 @@
 #!/usr/bin/env bun
 /** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy|check-ui-primitives|check-chrome-i18n> [args…]`. */
+
+// 🏃 `bun-types` isn't installed in this workspace; `import.meta.dir` (Bun's own runtime global) needs an ambient
+// declaration rather than an `as any` cast at each call site.
+declare global {
+  interface ImportMeta {
+    readonly dir: string;
+  }
+}
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { BundleLinter } from "../../../repo/lib/js/index.ts";

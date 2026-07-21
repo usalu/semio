@@ -2,7 +2,7 @@
 /** @emoji 🏷️ "Entwerfen mit Bestand Aggregator" brand — German, reuse-terminology, theme-locked standalone puzzle3d. */
 // #endregion 🧲Header
 
-import type { ShellBrand } from "../../../../core/js/index.ts";
+import type { ShellBrand } from "../../framework/core/js/index.ts";
 
 //#region 🏷️EntwerfenMitBestandBrand
 /** @emoji ✒️ Semio emblem. */
@@ -17,6 +17,8 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
   defaults: { exampleId: "concrete-forest" },
   ephemeral: true,
   replayIntroductionOnLoad: true,
+  assetsDir: "mit-bestand/aggregator/asset",
+  distDir: "mit-bestand/aggregator/dist",
   introduction: {
     title: "Willkommen beim Aggregator",
     steps: [
@@ -49,9 +51,9 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "center",
         advance: { kind: "next" },
         logos: [
-          { src: "/asset/logo/bmwsb.png", darkSrc: "/asset/logo/bmwsb-dark.png", alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
-          { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
-          { src: "/asset/logo/zukunft-bau.png", darkSrc: "/asset/logo/zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
+          { src: "/mit-bestand/aggregator/asset/logo/bmwsb.png", darkSrc: "/mit-bestand/aggregator/asset/logo/bmwsb-dark.png", alt: "Bundesministerium für Wohnen, Stadtentwicklung und Bauwesen", href: "https://www.bmwsb.bund.de" },
+          { src: "/mit-bestand/aggregator/asset/logo/bbsr.png", darkSrc: "/mit-bestand/aggregator/asset/logo/bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
+          { src: "/mit-bestand/aggregator/asset/logo/zukunft-bau.png", darkSrc: "/mit-bestand/aggregator/asset/logo/zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
         ],
       },
       {
