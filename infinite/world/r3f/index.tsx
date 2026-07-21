@@ -67,11 +67,6 @@ export interface LodMeshEntry {
   readonly url: string;
 }
 
-export interface LodGridLayer {
-  readonly stepWorld: number;
-  readonly opacity: number;
-}
-
 /** @emoji 📐 Orbit view projection mode for display templates. */
 export type OrbitCameraProjection = "orthographic" | "perspective";
 
@@ -110,12 +105,15 @@ export interface WorldEntityRenderMode {
   readonly showSelectedOutline: boolean;
 }
 
-/** @emoji 👁️ Whether an entity participates in canvas pick, hover, and edit interactions. */
+/** @emoji 👁️ Whether an entity participates in canvas pick, hover, and edit interactions.
+ * Locked entities must not absorb raycasts — a click is equivalent to clicking the background
+ * (deselect / pass-through to whatever is behind). */
 export function worldEntitySelectable(flags: WorldEntityFlags | undefined): boolean {
   return flags?.hidden !== true && flags?.locked !== true;
 }
 
-/** @emoji 🔎 Whether an entity can be selected for inspection (details panel) while locked. */
+/** @emoji 🔎 Whether an entity can appear in details/tree selection while locked.
+ * Canvas pointer picking still uses {@link worldEntitySelectable} so locked clicks deselect like background. */
 export function worldEntityInspectable(flags: WorldEntityFlags | undefined): boolean {
   return flags?.hidden !== true;
 }
@@ -228,14 +226,6 @@ export function floatingOriginRebase(worldCad: Vec3, anchorCad: Vec3): Vec3 {
   return [worldCad[0] - anchorCad[0], worldCad[1] - anchorCad[1], worldCad[2] - anchorCad[2]];
 }
 
-/** @emoji 📐 CAD anchor for grid layers: orbit pan XY, datum Z from {@link gridPlacementAnchorCad}. */
-export function gridPlacementAnchorCad(controlsTargetThree: Vector3 | null | undefined, datum: Vec3 = [0, 0, 0]): Vec3 {
-  if (!controlsTargetThree) {
-    return datum;
-  }
-  const orbitCad = threeVec3ToCad(controlsTargetThree);
-  return [orbitCad[0], orbitCad[1], datum[2]];
-}
 // #endregion 🧭Precision
 
 // #region Collision
@@ -706,14 +696,36 @@ export const DEFAULT_LOD_GRID_FACTOR = 10;
 export const WORLD_LOD_SLIDER_MIN = 0;
 export const WORLD_LOD_SLIDER_MAX = 1000;
 export const WORLD_LOD_EPSILON = 0.01;
-export const LOD_GRID_MAJOR_QUANTUM = 10;
-export const LOD_GRID_MEDIUM_QUANTUM = 2.5;
-export const LOD_GRID_SMALL_QUANTUM = 0.5;
-export const LOD_GRID_MICRO_QUANTUM = 0.1;
-export const WORLD_LOD_GRID_MAX_LOD = 1000;
-export const WORLD_LOD_GRID_MEDIUM_MAX_LOD = 50;
-export const WORLD_LOD_GRID_SMALL_MAX_LOD = 10;
-export const WORLD_LOD_GRID_MICRO_MAX_LOD = 2;
+export const WORLD_LOD_GRID_STEP_RATIO = 0.05;
+export const WORLD_LOD_GRID_MIN_DIVISIONS = 512;
+export const WORLD_LOD_GRID_FRUSTUM_OVERSCAN = 1.125;
+export const WORLD_LOD_GRID_PLANE_EPSILON = 1e-6;
+
+const WORLD_LOD_GRID_FRUSTUM_CORNERS = [
+  [-1, -1, -1],
+  [1, -1, -1],
+  [1, 1, -1],
+  [-1, 1, -1],
+  [-1, -1, 1],
+  [1, -1, 1],
+  [1, 1, 1],
+  [-1, 1, 1],
+] as const;
+
+const WORLD_LOD_GRID_FRUSTUM_EDGES = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 0],
+  [4, 5],
+  [5, 6],
+  [6, 7],
+  [7, 4],
+  [0, 4],
+  [1, 5],
+  [2, 6],
+  [3, 7],
+] as const;
 
 /** @emoji 📶 Maps orbit camera distance to scene LOD (`distance / reference`). */
 export function lodFromCameraDistance(distance: number, reference: number): number {
@@ -771,37 +783,78 @@ export function sliderValueFromLod(lod: number, range: { readonly min: number; r
   return Math.round(WORLD_LOD_SLIDER_MIN + t * (WORLD_LOD_SLIDER_MAX - WORLD_LOD_SLIDER_MIN));
 }
 
-/** @emoji 📐 Fixed LOD grid band steps in world units. */
-export function lodGridBandStepsWorld(gridFactor: number): readonly [number, number, number, number] {
-  const f = gridFactor;
-  return [LOD_GRID_MAJOR_QUANTUM * f, LOD_GRID_MEDIUM_QUANTUM * f, LOD_GRID_SMALL_QUANTUM * f, LOD_GRID_MICRO_QUANTUM * f];
-}
-
-const LOD_GRID_LAYER_OPACITY = [1, 0.72, 0.48, 0.32] as const;
-
-/** @emoji 📐 Progressive LOD grid layers (finer bands as LOD decreases). */
-export function lodProgressiveGridLayers(lod: number, gridFactor: number): readonly LodGridLayer[] {
-  if (!Number.isFinite(lod) || lod <= 0 || lod > WORLD_LOD_GRID_MAX_LOD) return [];
-  const [large, medium, small, micro] = lodGridBandStepsWorld(gridFactor);
-  const layers: LodGridLayer[] = [{ stepWorld: large, opacity: LOD_GRID_LAYER_OPACITY[0] }];
-  if (lod <= WORLD_LOD_GRID_MEDIUM_MAX_LOD) layers.push({ stepWorld: medium, opacity: LOD_GRID_LAYER_OPACITY[1] });
-  if (lod <= WORLD_LOD_GRID_SMALL_MAX_LOD) layers.push({ stepWorld: small, opacity: LOD_GRID_LAYER_OPACITY[2] });
-  if (lod <= WORLD_LOD_GRID_MICRO_MAX_LOD) layers.push({ stepWorld: micro, opacity: LOD_GRID_LAYER_OPACITY[3] });
-  return layers;
-}
-
-/** @emoji 🔑 Stable identity for progressive grid topology (ignores continuous camera LOD drift). */
-export function lodProgressiveGridLayerKey(lod: number, gridFactor: number): string {
-  const layers = lodProgressiveGridLayers(lod, gridFactor);
-  if (!layers.length) return "";
-  return layers.map((layer) => layer.stepWorld).join("|");
-}
-
-/** @emoji 📐 Finest visible LOD grid step in world units. */
+/** @emoji 📐 Unbounded, screen-stable LOD grid step using regular 1–2.5–5 quanta. */
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
-  const layers = lodProgressiveGridLayers(lod, gridFactor);
-  if (!layers.length) return null;
-  return layers[layers.length - 1]!.stepWorld;
+  if (!Number.isFinite(lod) || lod <= 0 || !Number.isFinite(gridFactor) || gridFactor <= 0) return null;
+  const target = lod * gridFactor * WORLD_LOD_GRID_STEP_RATIO;
+  const magnitude = 10 ** Math.floor(Math.log10(target));
+  const normalized = target / magnitude;
+  const quantum = normalized <= 1 ? 1 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
+  return quantum * magnitude;
+}
+
+export interface WorldGridPlaneBounds {
+  readonly minX: number;
+  readonly maxX: number;
+  readonly minY: number;
+  readonly maxY: number;
+}
+
+export interface WorldGridLayout {
+  readonly stepWorld: number;
+  readonly size: number;
+  readonly divisions: number;
+  readonly position: Vec3;
+}
+
+/** @emoji 📐 Finds the exact camera-frustum footprint on a horizontal world plane. */
+export function cameraFrustumPlaneBounds(camera: Camera, planeZ: number): WorldGridPlaneBounds | null {
+  camera.updateMatrixWorld();
+  const corners = WORLD_LOD_GRID_FRUSTUM_CORNERS.map(([x, y, z]) => new Vector3(x, y, z).unproject(camera));
+  const intersections: Vector3[] = [];
+  for (const [startIndex, endIndex] of WORLD_LOD_GRID_FRUSTUM_EDGES) {
+    const start = corners[startIndex]!;
+    const end = corners[endIndex]!;
+    const startDistance = start.z - planeZ;
+    const endDistance = end.z - planeZ;
+    if (Math.abs(startDistance) <= WORLD_LOD_GRID_PLANE_EPSILON) intersections.push(start);
+    if (Math.abs(endDistance) <= WORLD_LOD_GRID_PLANE_EPSILON) intersections.push(end);
+    if (startDistance * endDistance < 0) intersections.push(start.clone().lerp(end, startDistance / (startDistance - endDistance)));
+  }
+  if (!intersections.length) return null;
+  let minX = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  for (const point of intersections) {
+    minX = Math.min(minX, point.x);
+    maxX = Math.max(maxX, point.x);
+    minY = Math.min(minY, point.y);
+    maxY = Math.max(maxY, point.y);
+  }
+  return { minX, maxX, minY, maxY };
+}
+
+/** @emoji 📏 One exact-spacing grid geometry sized to the current frustum; coarser bands are never stacked. */
+export function lodGridGeometrySpec(lod: number, gridFactor: number, minimumSize = 0): { readonly stepWorld: number; readonly size: number; readonly divisions: number } | null {
+  const stepWorld = lodGridStepWorld(lod, gridFactor);
+  if (stepWorld == null || !Number.isFinite(stepWorld) || stepWorld <= 0) return null;
+  const minimumDivisions = Math.max(WORLD_LOD_GRID_MIN_DIVISIONS, Math.ceil((minimumSize * WORLD_LOD_GRID_FRUSTUM_OVERSCAN) / stepWorld));
+  const divisions = 2 ** Math.ceil(Math.log2(minimumDivisions));
+  return { stepWorld, size: stepWorld * divisions, divisions };
+}
+
+/** @emoji 📏 Builds one world-aligned grid layout that fully covers the visible grid-plane frustum. */
+export function cameraLodGridLayout(camera: Camera, lod: number, gridFactor: number, datum: Vec3 = DEFAULT_GRID_PLANE_ANCHOR_CAD): WorldGridLayout | null {
+  const stepWorld = lodGridStepWorld(lod, gridFactor);
+  if (stepWorld == null) return null;
+  const bounds = cameraFrustumPlaneBounds(camera, datum[2]);
+  if (!bounds) return null;
+  const centerX = Math.round(((bounds.minX + bounds.maxX) * 0.5) / stepWorld) * stepWorld;
+  const centerY = Math.round(((bounds.minY + bounds.maxY) * 0.5) / stepWorld) * stepWorld;
+  const minimumSize = 2 * Math.max(centerX - bounds.minX, bounds.maxX - centerX, centerY - bounds.minY, bounds.maxY - centerY);
+  const geometry = lodGridGeometrySpec(lod, gridFactor, minimumSize);
+  return geometry ? { ...geometry, position: [centerX, centerY, datum[2] + 0.001] } : null;
 }
 
 export interface LodContextValue {
@@ -849,46 +902,41 @@ function applyLodGridLayerStyle(grid: GridHelper, opacity: number): void {
   });
 }
 
-/** @emoji 📐 Progressive multi-band world grid at the placement anchor. */
+/** @emoji 📐 Single regular world grid at the placement anchor. */
 export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   const lod = useLod();
+  const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
-  const controls = useThree((s) => s.controls as { target?: Vector3 } | null);
-  const anchor = controls?.target;
-  const gridLayerKey = reactHostPort.useMemo(() => lodProgressiveGridLayerKey(lod.lod, lod.gridFactor), [lod.lod, lod.gridFactor]);
-  const layers = reactHostPort.useMemo(() => lodProgressiveGridLayers(lod.lod, lod.gridFactor), [gridLayerKey, lod.gridFactor]);
+  const datum = props.gridDatum ?? DEFAULT_GRID_PLANE_ANCHOR_CAD;
+  const [layout, setLayout] = reactHostPort.useState<WorldGridLayout | null>(() => cameraLodGridLayout(camera, lod.lod, lod.gridFactor, datum));
+  useFrame(() => {
+    const next = cameraLodGridLayout(camera, lod.lod, lod.gridFactor, datum);
+    setLayout((previous) => {
+      if (!previous || !next) return previous === next ? previous : next;
+      return previous.stepWorld === next.stepWorld && previous.divisions === next.divisions && previous.position[0] === next.position[0] && previous.position[1] === next.position[1] && previous.position[2] === next.position[2] ? previous : next;
+    });
+  });
   const [gridColor, setGridColor] = reactHostPort.useState<number>(() => resolveThreeColor(themeColorVar("element"), "gray"));
   useCanvasAppearanceSync(reactHostPort.useCallback(() => setGridColor(resolveThreeColor(themeColorVar("element"), "gray")), []));
-  const grids = reactHostPort.useMemo(() => {
-    const size = 12_000;
-    return layers.map(({ stepWorld, opacity }) => {
-      const divs = Math.min(512, Math.max(2, Math.round(size / stepWorld)));
-      const grid = new GridHelper(size, divs, gridColor, gridColor);
-      grid.rotation.x = Math.PI / 2;
-      applyLodGridLayerStyle(grid, opacity);
-      return grid;
-    });
-  }, [layers, gridColor]);
+  const grid = reactHostPort.useMemo(() => {
+    if (!layout) return null;
+    const next = new GridHelper(layout.size, layout.divisions, gridColor, gridColor);
+    next.rotation.x = Math.PI / 2;
+    applyLodGridLayerStyle(next, 1);
+    return next;
+  }, [layout?.stepWorld, layout?.divisions, gridColor]);
   reactHostPort.useEffect(
     () => () => {
-      for (const grid of grids) grid.dispose();
+      grid?.dispose();
     },
-    [grids],
+    [grid],
   );
   reactHostPort.useLayoutEffect(() => {
-    if (!grids.length) return;
+    if (!grid) return;
     invalidate();
-  }, [grids, invalidate]);
-  if (!grids.length) return null;
-  const placementCad = gridPlacementAnchorCad(anchor ?? null, props.gridDatum ?? DEFAULT_GRID_PLANE_ANCHOR_CAD);
-  const [px, py, pz] = placementCad;
-  return (
-    <>
-      {grids.map((grid, i) => (
-        <primitive key={`${layers[i]?.stepWorld ?? i}`} object={grid} position={[px, py, pz + 0.001 * (i + 1)]} />
-      ))}
-    </>
-  );
+  }, [grid, invalidate]);
+  if (!grid || !layout) return null;
+  return <primitive object={grid} position={layout.position} />;
 }
 
 function LodFrameRunner(props: {
@@ -920,8 +968,7 @@ function LodFrameRunner(props: {
     runtime.distanceReference = props.distanceReference;
     runtime.camera = cam;
     const gridStep = lodGridStepWorld(sceneLod, props.gridFactor);
-    const gridLayerKey = lodProgressiveGridLayerKey(sceneLod, props.gridFactor);
-    const sig = `${gridLayerKey}|${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
+    const sig = `${props.depthVariableLod ? 1 : 0}|${gridStep ?? "x"}|${props.gridFactor}|${props.gridSnapEnabled}`;
     if (ctxSig.current !== sig) {
       ctxSig.current = sig;
       props.onLod({ sceneLod, depthVariable: props.depthVariableLod, gridStepWorld: gridStep });
@@ -2373,15 +2420,15 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
   const [pointerHovered, setPointerHovered] = reactHostPort.useState(false);
   const [media, setMedia] = reactHostPort.useState<{ readonly width: number; readonly height: number; readonly texture: import("three").Texture } | null>(null);
   const selectable = worldEntitySelectable(props.reference);
-  const pickable = worldEntityInspectable(props.reference);
-  const interactionHovered = pickable && (props.hovered || pointerHovered);
+  const inspectable = worldEntityInspectable(props.reference);
+  const interactionHovered = selectable && (props.hovered || pointerHovered);
   const renderMode = {
     ...worldEntityRenderMode(props.reference, {
       hovered: interactionHovered,
       selected: props.selected,
-      revealed: props.revealed || (pickable && pointerHovered),
+      revealed: props.revealed || (selectable && pointerHovered),
     }),
-    showSelectedOutline: props.selected && pickable,
+    showSelectedOutline: props.selected && inspectable,
   };
   reactHostPort.useEffect(() => {
     let cancelled = false;
@@ -2438,27 +2485,27 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
         ) : null}
         <mesh
           renderOrder={-10}
-          raycast={pickable ? undefined : worldRaycastNone}
+          raycast={selectable ? undefined : worldRaycastNone}
           onPointerDown={(event) => {
-            if (!pickable || event.button !== 0) {
+            if (!selectable || event.button !== 0) {
               return;
             }
             event.stopPropagation();
             props.onSelect?.(props.reference.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
           }}
           onPointerOver={(event) => {
-            event.stopPropagation();
-            if (!pickable) {
+            if (!selectable) {
               return;
             }
+            event.stopPropagation();
             setPointerHovered(true);
             props.onHover?.(props.reference.id);
           }}
           onPointerOut={(event) => {
-            event.stopPropagation();
-            if (!pickable) {
+            if (!selectable) {
               return;
             }
+            event.stopPropagation();
             setPointerHovered(false);
             props.onHover?.(null);
           }}
@@ -2682,17 +2729,21 @@ const WorldVolumeBoxItem = reactHostPort.memo(function WorldVolumeBoxItem(props:
           props.onSelect?.(props.volume.id, { shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
         }}
         onPointerOver={(event) => {
-          event.stopPropagation();
-          if (selectable) {
-            props.onHover?.(props.volume.id);
+          if (!selectable) {
+            return;
           }
+          event.stopPropagation();
+          props.onHover?.(props.volume.id);
         }}
         onPointerOut={(event) => {
+          if (!selectable) {
+            return;
+          }
           event.stopPropagation();
           props.onHover?.(null);
         }}
       >
-        <mesh raycast={props.interactive === false ? worldRaycastNone : undefined}>
+        <mesh raycast={selectable ? undefined : worldRaycastNone}>
           <boxGeometry args={[1, 1, 1]} />
           <meshStandardMaterial color={color} transparent opacity={opacity} depthWrite={false} side={DoubleSide} />
         </mesh>
@@ -2896,24 +2947,60 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("lodProgressiveGridLayers", () => {
-    it("adds finer bands as lod decreases", () => {
-      expect(lodProgressiveGridLayers(5000, 10)).toEqual([]);
-      expect(lodProgressiveGridLayers(500, 10).map((l) => l.stepWorld)).toEqual([100]);
-      expect(lodProgressiveGridLayers(50, 10).map((l) => l.stepWorld)).toEqual([100, 25]);
-      expect(lodProgressiveGridLayers(2, 10).map((l) => l.stepWorld)).toEqual([100, 25, 5, 1]);
+  describe("lodGridStepWorld", () => {
+    it("keeps adapting through regular spacing quanta without a maximum LOD cutoff", () => {
+      expect(lodGridStepWorld(2, 10)).toBe(1);
+      expect(lodGridStepWorld(10, 10)).toBe(5);
+      expect(lodGridStepWorld(50, 10)).toBe(25);
+      expect(lodGridStepWorld(500, 10)).toBe(250);
+      expect(lodGridStepWorld(5_000, 10)).toBe(2_500);
+      expect(lodGridStepWorld(Number.POSITIVE_INFINITY, 10)).toBeNull();
     });
   });
 
-  describe("lodProgressiveGridLayerKey", () => {
-    it("is stable across continuous lod drift inside one band", () => {
-      const keyA = lodProgressiveGridLayerKey(50, 10);
-      const keyB = lodProgressiveGridLayerKey(49.2, 10);
-      const keyC = lodProgressiveGridLayerKey(11.4, 10);
-      expect(keyA).toBe("100|25");
-      expect(keyB).toBe(keyA);
-      expect(keyC).toBe(keyA);
-      expect(lodProgressiveGridLayerKey(9.8, 10)).toBe("100|25|5");
+  describe("lodGridGeometrySpec", () => {
+    it("builds one regular grid whose rendered interval exactly matches the selected step", () => {
+      const geometry = lodGridGeometrySpec(2, 10);
+      expect(geometry).toEqual({ stepWorld: 1, size: 512, divisions: 512 });
+      expect(geometry!.size / geometry!.divisions).toBe(geometry!.stepWorld);
+      expect(lodGridGeometrySpec(2, 10, 900)).toEqual({ stepWorld: 1, size: 1024, divisions: 1024 });
+      expect(lodGridGeometrySpec(5_000, 10)).toEqual({ stepWorld: 2_500, size: 1_280_000, divisions: 512 });
+    });
+  });
+
+  describe("cameraLodGridLayout", () => {
+    it("grows with camera distance and covers the complete ground-plane frustum", () => {
+      const camera = new ThreePerspectiveCamera(45, 16 / 9, 0.1, 10_000);
+      camera.up.set(0, 0, 1);
+      camera.position.set(0, -100, 100);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+      const near = cameraLodGridLayout(camera, 2, 10)!;
+      camera.position.set(0, -2_000, 2_000);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+      const far = cameraLodGridLayout(camera, 2, 10)!;
+      const bounds = cameraFrustumPlaneBounds(camera, 0)!;
+      const halfSize = far.size * 0.5;
+      expect(far.size).toBeGreaterThan(near.size);
+      expect(bounds.minX).toBeGreaterThanOrEqual(far.position[0] - halfSize);
+      expect(bounds.maxX).toBeLessThanOrEqual(far.position[0] + halfSize);
+      expect(bounds.minY).toBeGreaterThanOrEqual(far.position[1] - halfSize);
+      expect(bounds.maxY).toBeLessThanOrEqual(far.position[1] + halfSize);
+      expect(far.size / far.divisions).toBe(far.stepWorld);
+    });
+
+    it("adapts to orthographic zoom without changing the world spacing", () => {
+      const camera = new ThreeOrthographicCamera(-200, 200, 100, -100, 0.1, 1_000);
+      camera.position.set(0, 0, 100);
+      camera.lookAt(0, 0, 0);
+      camera.updateProjectionMatrix();
+      const near = cameraLodGridLayout(camera, 2, 10)!;
+      camera.zoom = 0.25;
+      camera.updateProjectionMatrix();
+      const far = cameraLodGridLayout(camera, 2, 10)!;
+      expect(far.size).toBeGreaterThan(near.size);
+      expect(far.stepWorld).toBe(near.stepWorld);
     });
   });
 
@@ -3040,6 +3127,11 @@ if (import.meta.vitest) {
       expect(worldEntitySelectable(undefined)).toBe(true);
       expect(worldEntitySelectable({ hidden: true })).toBe(false);
       expect(worldEntitySelectable({ locked: true })).toBe(false);
+    });
+
+    it("excludes locked entities from canvas pick so a click equals background", () => {
+      expect(worldEntitySelectable({ locked: true })).toBe(false);
+      expect(worldEntityInspectable({ locked: true })).toBe(true);
     });
 
     it("treats hidden entities as non-inspectable and locked entities as inspectable", () => {

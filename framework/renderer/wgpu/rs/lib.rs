@@ -5985,11 +5985,6 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             text: toggle.text.clone(),
             on_change: Some(toggle.on_change.clone()),
         },
-        UiNode::Vec3(vec3) => WidgetNode::Vec3 {
-            id: vec3.id.clone(),
-            value: vec3.value,
-            on_change: Some(vec3.on_change.clone()),
-        },
         UiNode::KeyValue(kv) => WidgetNode::KeyValue {
             entries: kv.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
         },
@@ -6041,6 +6036,12 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             default_open: section.default_open.unwrap_or(true),
             children: section.children.iter().map(ui_node_to_widget).collect(),
         },
+        UiNode::Group(group) => WidgetNode::Section {
+            id: group.id.clone(),
+            label: Some(group.label.clone()),
+            default_open: group.default_open.unwrap_or(true),
+            children: group.children.iter().map(ui_node_to_widget).collect(),
+        },
         UiNode::Tree(tree) => WidgetNode::Tree {
             sections: tree.sections.iter().map(tree_section_to_widget).collect(),
             selected_ids: tree.selected_ids.clone().unwrap_or_default(),
@@ -6090,11 +6091,6 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
             icon_id: n.icon_id.clone(),
             pressed: n.pressed,
             text: n.text.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Vec3(n) => ControlNode::Vec3 {
-            id: n.id.clone(),
-            value: n.value,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::KeyValue(n) => ControlNode::KeyValue {
@@ -6210,11 +6206,6 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
             icon_id: n.icon_id.clone(),
             pressed: n.pressed,
             text: n.text.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Vec3(n) => WidgetNode::Vec3 {
-            id: n.id.clone(),
-            value: n.value,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::KeyValue(n) => WidgetNode::KeyValue {
@@ -17951,25 +17942,6 @@ impl ShellState {
         if self.commit_staged_input(&id, &input.text_buffer) {
             input.blur_input();
             return Ok(());
-        }
-        if let Some((vec3_id, axis)) = id.rsplit_once('.') {
-            if let Ok(axis_index) = axis.parse::<usize>() {
-                if axis_index < 3 {
-                    if let Some(meta) = self.widget_maps.vec3_metas.get(vec3_id).cloned() {
-                        let parsed = input.text_buffer.parse::<f64>().unwrap_or(0.0);
-                        let mut value = meta.value;
-                        value[axis_index] = parsed;
-                        self.dispatch_action(ActionDescriptor {
-                            controller_id: meta.on_change.controller_id,
-                            action: meta.on_change.action,
-                            args: Some(serde_json::json!({ "value": value })),
-                        })
-                        .await?;
-                        input.blur_input();
-                        return Ok(());
-                    }
-                }
-            }
         }
         if id.ends_with(".input") {
             let base = id.trim_end_matches(".input");

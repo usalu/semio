@@ -45,6 +45,7 @@ import type {
   IntroductionEmphasis as GeneratedIntroductionEmphasis,
   IntroductionPlacement as GeneratedIntroductionPlacement,
   IntroductionAdvance as GeneratedIntroductionAdvance,
+  IntroductionLogo as GeneratedIntroductionLogo,
   DialogDefinition as GeneratedDialogDefinition,
 } from "./generated/manifest.ts";
 // #endregion 🧬GeneratedMirror
@@ -259,7 +260,7 @@ export type UiTreeNode = {
   readonly dropAction?: ActionDescriptor;
 };
 
-export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiVec3Node | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
+export type UiControlNode = UiInputNode | UiSelectNode | UiToggleNode | UiButtonNode | UiKeyValueNode | UiSliderNode | UiNumberStepperNode | UiRingNode | UiIconSelectNode;
 
 export type UiInputNode = {
   readonly type: "input";
@@ -298,11 +299,18 @@ export type UiToggleNode = {
   readonly onChange: ActionDescriptor;
 };
 
-export type UiVec3Node = {
-  readonly type: "vec3";
+/** @emoji 🌿 A nestable labeled container of {@link UiNode} children — the declarative-tree mechanism
+ * for subtrees like `Origin > X/Y/Z`: {@link uiDeclarativeChildToTreeItem} expands a `Group` into a
+ * {@link UiTreeItemNode} whose `items` are its recursively-converted children, so depth composes to
+ * any level (`Plane > Origin > X/Y/Z`). Unlike {@link UiSectionNode} (top-level tree sections only,
+ * see `assertNoNestedTreeSections`), a `Group` may itself appear as another `Group`'s or
+ * {@link UiFieldNode}'s child. */
+export type UiGroupNode = {
+  readonly type: "group";
   readonly id: string;
-  readonly value: readonly [number, number, number] | null;
-  readonly onChange: ActionDescriptor;
+  readonly label: string;
+  readonly defaultOpen?: boolean;
+  readonly children: readonly UiNode[];
 };
 
 export type UiKeyValueEntry = {
@@ -428,13 +436,13 @@ export type UiNode =
   | UiInputNode
   | UiSelectNode
   | UiToggleNode
-  | UiVec3Node
   | UiKeyValueNode
   | UiSliderNode
   | UiNumberStepperNode
   | UiRingNode
   | UiIconSelectNode
   | UiFieldNode
+  | UiGroupNode
   | UiTreeNode
   | UiImageNode
   | UiComponentSceneNode
@@ -1109,9 +1117,59 @@ export function uiInspectorMixedSlider(values: readonly number[]): { readonly va
   return uiInspectorMixedNumber(values);
 }
 
-export function uiInspectorMixedVec3(values: readonly (readonly [number, number, number])[]): { readonly value: readonly [number, number, number] | null; readonly uniform: boolean } {
-  const uniform = uiInspectorAllEqual(values.map((row) => JSON.stringify(row)));
-  return { value: uniform && values[0] ? values[0] : null, uniform };
+/** @emoji 🔢 Builds an editable number-stepper field row, computing the mixed/uniform display from
+ * `values` via {@link uiInspectorMixedNumber}. `action` is merged into both `onAbsolute` (typed
+ * entry, dispatched with `{value}`) and `onDelta` (nudge buttons, `{delta}`) — the patch handler
+ * branches on whichever key the dispatched action actually carries. */
+export function uiInspectorStepperField(id: string, label: string, values: readonly number[], step: number, action: ActionDescriptor): UiFieldNode {
+  const mixed = uiInspectorMixedNumber(values);
+  return {
+    type: "field",
+    id,
+    label,
+    child: { type: "numberStepper", id, value: mixed.value, step, uniform: mixed.uniform, onAbsolute: action, onDelta: action },
+  };
+}
+
+/** @emoji 🔘 Builds an editable boolean toggle field row, computing the mixed/uniform display from
+ * `values` via {@link uiInspectorMixedToggle}. */
+export function uiInspectorToggleField(id: string, label: string, iconId: string, values: readonly boolean[], action: ActionDescriptor): UiFieldNode {
+  const mixed = uiInspectorMixedToggle(values);
+  return {
+    type: "field",
+    id,
+    label,
+    child: { type: "toggle", id, iconId, pressed: mixed.pressed, onChange: action },
+  };
+}
+
+/** @emoji 📐 Builds a nested `Origin`-style group: a parent tree item labeled `label` containing
+ * three {@link uiInspectorStepperField} children (`X`/`Y`/`Z`), each computing its own per-axis
+ * mixed state independently — a multi-selection that agrees on X but not Y shows only Y as "Mixed".
+ * `axisAction(axis)` builds the per-axis {@link ActionDescriptor}; callers typically merge
+ * `{field: "<id>.x"}` etc. into its `args` so the patch handler can dot-path into the right
+ * component with `value` (absolute) or `delta` (relative, offset-preserving across multi-select). */
+export function uiInspectorVec3Group(
+  id: string,
+  label: string,
+  values: readonly (readonly [number, number, number])[],
+  step: number,
+  axisAction: (axis: "x" | "y" | "z") => ActionDescriptor,
+): UiGroupNode {
+  const xs = values.map((v) => v[0]);
+  const ys = values.map((v) => v[1]);
+  const zs = values.map((v) => v[2]);
+  return {
+    type: "group",
+    id,
+    label,
+    defaultOpen: true,
+    children: [
+      uiInspectorStepperField(`${id}.x`, "X", xs, step, axisAction("x")),
+      uiInspectorStepperField(`${id}.y`, "Y", ys, step, axisAction("y")),
+      uiInspectorStepperField(`${id}.z`, "Z", zs, step, axisAction("z")),
+    ],
+  };
 }
 
 export function uiInspectorGroupsToTree(groups: readonly UiInspectorFieldGroup[]): UiTreeNode {
@@ -1148,7 +1206,15 @@ function uiDeclarativeChildToTreeItem(node: UiNode, fallbackId: string): UiTreeI
     return { id: node.id, label: node.label, control: node.child };
   }
   if (node.type === "button") return { id: node.id ?? fallbackId, label: node.label, control: node };
-  if (node.type === "input" || node.type === "select" || node.type === "toggle" || node.type === "vec3" || node.type === "keyValue" || node.type === "slider" || node.type === "numberStepper" || node.type === "ring" || node.type === "iconSelect") {
+  if (node.type === "group") {
+    return {
+      id: node.id,
+      label: node.label,
+      defaultOpen: node.defaultOpen,
+      items: node.children.map((child, index) => uiDeclarativeChildToTreeItem(child, `${node.id}.${index}`)),
+    };
+  }
+  if (node.type === "input" || node.type === "select" || node.type === "toggle" || node.type === "keyValue" || node.type === "slider" || node.type === "numberStepper" || node.type === "ring" || node.type === "iconSelect") {
     return { id: "id" in node ? String(node.id) : fallbackId, label: "", control: node };
   }
   if (node.type === "separator") return { id: `${fallbackId}.sep`, label: "—" };
@@ -1184,6 +1250,7 @@ export type IntroductionAnchor = GeneratedIntroductionAnchor;
 export type IntroductionEmphasis = GeneratedIntroductionEmphasis;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
 export type IntroductionAdvance = GeneratedIntroductionAdvance;
+export type IntroductionLogo = GeneratedIntroductionLogo;
 
 /** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type DialogDefinition = GeneratedDialogDefinition;
@@ -1212,6 +1279,8 @@ export type ShellBrand = {
   readonly locks?: ShellBrandLocks;
   readonly defaults?: ShellBrandDefaults;
   readonly introduction?: IntroductionDefinition;
+  /** 🎓 When true, auto-starts the brand introduction on every window load and never persists a device-local "seen" flag. */
+  readonly replayIntroductionOnLoad?: boolean;
 };
 //#endregion 🏷️ShellBrand
 

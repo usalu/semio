@@ -1230,13 +1230,56 @@ impl Puzzle3dEngine {
         }
     }
 
+    /// 🪣 True when `fixture` is the fill plan's base plus zero-or-more applied fill objects — i.e. the
+    /// live document after `setFillCount`, which must NOT rebuild the precompute session or the slider
+    /// loses its ability to remove/replan those objects.
+    fn is_fill_applied_projection(fixture: &Fixture, fill: &FillBuilder) -> bool {
+        let plan_objects: std::collections::HashSet<&str> = fill.appended_objects.iter().map(|object| object.id.as_str()).collect();
+        let plan_attractions: std::collections::HashSet<&str> = fill.appended_attractions.iter().map(|attraction| attraction.id.as_str()).collect();
+        let base_objects: std::collections::HashSet<&str> = fill.base.objects.iter().map(|object| object.id.as_str()).collect();
+        let base_attractions: std::collections::HashSet<&str> = fill.base.attractions.iter().map(|attraction| attraction.id.as_str()).collect();
+        let base_volumes: std::collections::HashSet<&str> = fill.base.target_volumes.iter().map(|volume| volume.id.as_str()).collect();
+        let incoming_objects: std::collections::HashSet<&str> = fixture.objects.iter().map(|object| object.id.as_str()).filter(|id| !plan_objects.contains(id)).collect();
+        let incoming_attractions: std::collections::HashSet<&str> = fixture.attractions.iter().map(|attraction| attraction.id.as_str()).filter(|id| !plan_attractions.contains(id)).collect();
+        let incoming_volumes: std::collections::HashSet<&str> = fixture.target_volumes.iter().map(|volume| volume.id.as_str()).collect();
+        incoming_objects == base_objects && incoming_attractions == base_attractions && incoming_volumes == base_volumes
+    }
+
+    fn strip_fill_plan_from_fixture(fixture: &mut Fixture, fill: &FillBuilder) {
+        let plan_objects: std::collections::HashSet<&str> = fill.appended_objects.iter().map(|object| object.id.as_str()).collect();
+        let plan_attractions: std::collections::HashSet<&str> = fill.appended_attractions.iter().map(|attraction| attraction.id.as_str()).collect();
+        fixture.objects.retain(|object| !plan_objects.contains(object.id.as_str()));
+        fixture.attractions.retain(|attraction| !plan_attractions.contains(attraction.id.as_str()));
+    }
+
     fn set_scene(&mut self, json: &str) -> Result<(), Puzzle3dError> {
-        if self.scene_json.as_deref() == Some(json) {
+        let mut scene: SceneConfig = serde_json::from_str(json)?;
+        // 🪣 After the fill slider materializes objects into the document, every incidental action
+        // (hover, pick, mesh register sync, …) re-feeds that applied projection here. Treating it as a
+        // brand-new scene used to `rebuild_queue()` and bake the filled objects into `fill.base`, after
+        // which the slider could neither remove them nor replan a fresh tail.
+        if self.fill.as_ref().is_some_and(|fill| Self::is_fill_applied_projection(&scene.fixture, fill)) {
+            if let Some(fill) = &self.fill {
+                Self::strip_fill_plan_from_fixture(&mut scene.fixture, fill);
+            }
+            let normalized = serde_json::to_string(&scene)?;
+            if let Some(current) = &mut self.scene {
+                current.overlap_budget = scene.overlap_budget;
+                current.seed = scene.seed;
+                current.weights = scene.weights;
+                current.kind_catalogs = scene.kind_catalogs;
+                current.kind_compatibility = scene.kind_compatibility;
+                current.host_rules = scene.host_rules;
+            }
+            self.scene_json = Some(normalized);
             return Ok(());
         }
-        let scene: SceneConfig = serde_json::from_str(json)?;
+        let normalized = serde_json::to_string(&scene)?;
+        if self.scene_json.as_deref() == Some(normalized.as_str()) {
+            return Ok(());
+        }
         self.scene = Some(scene);
-        self.scene_json = Some(json.to_string());
+        self.scene_json = Some(normalized);
         self.rebuild_queue();
         Ok(())
     }
@@ -1937,6 +1980,57 @@ mod tests {
 
         let fixture = engine.apply_fill_count(0).expect("zero fill count");
         assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero must remove every generated object");
+    }
+
+    #[test]
+    fn set_scene_with_applied_fill_projection_preserves_slider_session() {
+        let object =
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+        let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
+        let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        fill.applied_count = 3;
+        fill.sequence = (0..3).map(payload).collect();
+        fill.appended_objects = (0..3).map(|index| object(&format!("p{index}"))).collect();
+        fill.appended_attractions = (0..3).map(attraction).collect();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+        fill.stalled = true;
+
+        let mut engine = Puzzle3dEngine::new();
+        let base_scene = SceneConfig {
+            fixture: base.clone(),
+            kind_catalogs: Some(catalogs),
+            kind_compatibility: vec![],
+            overlap_budget: 0.0,
+            seed: 7,
+            host_rules: BrushHostRules::default(),
+            weights: BrushKindWeights::default(),
+        };
+        let base_json = serde_json::to_string(&base_scene).unwrap();
+        engine.set_scene(&base_json).expect("seed base scene");
+        // 🪣 Replace the fresh FillBuilder from rebuild_queue with the already-applied session under test.
+        engine.fill = Some(fill);
+
+        let mut applied_scene = base_scene.clone();
+        applied_scene.fixture.objects.extend((0..3).map(|index| object(&format!("p{index}"))));
+        applied_scene.fixture.attractions.extend((0..3).map(attraction));
+        // 🪪 Pose drift on the base object (attraction rederive) must not count as a new scene.
+        applied_scene.fixture.objects[0].origin = [1.0, 2.0, 3.0];
+        let applied_json = serde_json::to_string(&applied_scene).unwrap();
+        engine.set_scene(&applied_json).expect("re-syncing the applied fill projection must succeed");
+
+        let fill = engine.fill.as_ref().expect("fill session must survive the applied-projection re-sync");
+        assert_eq!(fill.applied_count, 3, "applied fill count must survive incidental set_scene syncs");
+        assert_eq!(fill.sequence.len(), 3, "planned fill sequence must survive incidental set_scene syncs");
+        assert_eq!(fill.base.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"]);
+
+        let reduced = engine.apply_fill_count(1).expect("decreasing after sync");
+        assert_eq!(reduced.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"], "slider must still be able to remove fill objects after a document re-sync");
+        let cleared = engine.apply_fill_count(0).expect("clear after sync");
+        assert_eq!(cleared.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"]);
     }
 
     /// 🪪 Regression: registering a mesh must invalidate any cached brush candidates computed against a

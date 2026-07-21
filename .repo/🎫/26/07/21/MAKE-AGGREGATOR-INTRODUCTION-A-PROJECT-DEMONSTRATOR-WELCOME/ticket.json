@@ -1,0 +1,13 @@
+{
+  "title": "Make Aggregator Introduction a Project Demonstrator Welcome",
+  "emoji": "🎓",
+  "status": "open",
+  "description": "Rework the Entwerfen mit Bestand Aggregator's introduction tour so it opens with a proper welcome to the research project demonstrator, states clearly that this is an early prototype with incomplete/placeholder features, and acknowledges the three funding institutions (BMWSB, BBSR, Zukunft Bau) with the same logos used in the Zwischenbericht — before continuing into the existing app-tour steps (viewport, move-utility, catalogue, add-object). Requires extending the Rust IntroductionStepDefinition contract with an optional logos field (typegen'd to TS), rendering logos + multi-paragraph bodies in UIIntroduction (ui/js/react/index.tsx), copying the funding PNG assets into ui/asset/logo/, and rewriting framework/product/os/dev/brand/entwerfen-mit-bestand.brand.ts's introduction steps.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2192"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5acea848d5aa424c92a05103d82bec4a"
+  ]
+}

@@ -4348,26 +4348,30 @@ export function useActionHotkey(
 }
 
 /** @emoji ⌨️ Chords for toggling each panel's fold/unfold state. */
-export const PANEL_TOGGLE_HOTKEYS: Record<PanelAnchor, string> = {
+export const PANEL_TOGGLE_HOTKEYS: Record<Anchor, string> = {
   "top-left": "ctrl+b,meta+b",
   "top-middle": "ctrl+m,meta+m",
   "top-right": "ctrl+shift+b,meta+shift+b",
-  "bottom-left": "ctrl+alt+b,meta+alt+b",
-  "bottom-middle": "ctrl+alt+m,meta+alt+m",
+  "right-middle": "ctrl+shift+m,meta+shift+m",
   "bottom-right": "ctrl+alt+shift+b,meta+alt+shift+b",
+  "bottom-middle": "ctrl+alt+m,meta+alt+m",
+  "bottom-left": "ctrl+alt+b,meta+alt+b",
+  "left-middle": "ctrl+alt+shift+m,meta+alt+shift+m",
 };
 
 /**
- * ⌨️ Binds {@link PANEL_TOGGLE_HOTKEYS} for all six anchors when a handler is provided.
+ * ⌨️ Binds {@link PANEL_TOGGLE_HOTKEYS} for all eight anchors when a handler is provided.
  **/
-export function usePanelChromeHotkeys(options: { readonly onToggle?: (anchor: PanelAnchor) => void }): void {
+export function usePanelChromeHotkeys(options: { readonly onToggle?: (anchor: Anchor) => void }): void {
   const { onToggle } = options;
   useHotkeys(PANEL_TOGGLE_HOTKEYS["top-left"], () => onToggle?.("top-left"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
   useHotkeys(PANEL_TOGGLE_HOTKEYS["top-middle"], () => onToggle?.("top-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
   useHotkeys(PANEL_TOGGLE_HOTKEYS["top-right"], () => onToggle?.("top-right"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
-  useHotkeys(PANEL_TOGGLE_HOTKEYS["bottom-left"], () => onToggle?.("bottom-left"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
-  useHotkeys(PANEL_TOGGLE_HOTKEYS["bottom-middle"], () => onToggle?.("bottom-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(PANEL_TOGGLE_HOTKEYS["right-middle"], () => onToggle?.("right-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
   useHotkeys(PANEL_TOGGLE_HOTKEYS["bottom-right"], () => onToggle?.("bottom-right"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(PANEL_TOGGLE_HOTKEYS["bottom-middle"], () => onToggle?.("bottom-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(PANEL_TOGGLE_HOTKEYS["bottom-left"], () => onToggle?.("bottom-left"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
+  useHotkeys(PANEL_TOGGLE_HOTKEYS["left-middle"], () => onToggle?.("left-middle"), { preventDefault: true, enabled: onToggle != null }, [onToggle]);
 }
 
 /**
@@ -4936,7 +4940,28 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             {stepIndex + 1} / {introduction.steps.length}
           </span>
         </div>
-        <p className="mb-double text-xs text-muted-foreground">{step.body}</p>
+        <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
+        {step.logos && step.logos.length > 0 && (
+          <div className="mb-double flex flex-wrap items-center gap-double">
+            {step.logos.map((logo, index) => {
+              const image = (
+                <>
+                  <img src={logo.src} alt={logo.alt} className={cn("h-8 w-auto object-contain", logo.darkSrc && "dark:hidden")} />
+                  {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-8 w-auto object-contain dark:block" />}
+                </>
+              );
+              return logo.href ? (
+                <a key={index} href={logo.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center transition-opacity hover:opacity-80">
+                  {image}
+                </a>
+              ) : (
+                <span key={index} className="inline-flex items-center">
+                  {image}
+                </span>
+              );
+            })}
+          </div>
+        )}
         <div className="flex items-center justify-between gap-single">
           <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel ?? "Skip"} onClick={skip} />
           <div className="flex items-center gap-single">
@@ -5271,22 +5296,33 @@ export function reconcileActivePath<T extends { readonly id: string }>(nodes: re
   return reconciled;
 }
 
-/** @emoji 🧭 Six anchors a panel can grow from: the display's four corners, plus a top/bottom middle anchored to the navbar/footer center. */
-export const PANEL_ANCHORS = ["top-left", "top-middle", "top-right", "bottom-left", "bottom-middle", "bottom-right"] as const;
+/** @emoji 🧭 Eight anchors a panel or pane can grow from: the display's four corners, plus the four edge middles (top/bottom/left/right) — no center anchor, since floating chrome must never fully occlude the canvas. */
+export const ANCHORS = ["top-left", "top-middle", "top-right", "right-middle", "bottom-right", "bottom-middle", "bottom-left", "left-middle"] as const;
 
-/** @emoji 🧭 One of the six anchors a panel can grow from. */
-export type PanelAnchor = (typeof PANEL_ANCHORS)[number];
+/** @emoji 🧭 One of the eight anchors a panel or pane can grow from. */
+export type Anchor = (typeof ANCHORS)[number];
 
-/** @emoji 🧭 `"top"`/`"bottom"` half of a {@link PanelAnchor}. */
-export function anchorVertical(anchor: PanelAnchor): "top" | "bottom" {
-  return anchor.startsWith("top") ? "top" : "bottom";
+/** @emoji 🧭 `"top"`/`"middle"`/`"bottom"` row of an {@link Anchor} — `left-middle`/`right-middle` sit in the middle row. */
+export function anchorVertical(anchor: Anchor): "top" | "middle" | "bottom" {
+  if (anchor.startsWith("top")) return "top";
+  if (anchor.startsWith("bottom")) return "bottom";
+  return "middle";
 }
 
-/** @emoji 🧭 `"left"`/`"middle"`/`"right"` half of a {@link PanelAnchor}. */
-export function anchorHorizontal(anchor: PanelAnchor): "left" | "middle" | "right" {
-  if (anchor.endsWith("left")) return "left";
-  if (anchor.endsWith("right")) return "right";
-  return "middle";
+/** @emoji 🧭 `"left"`/`"middle"`/`"right"` column of an {@link Anchor} — `top-middle`/`bottom-middle` sit in the middle column. */
+export function anchorHorizontal(anchor: Anchor): "left" | "middle" | "right" {
+  switch (anchor) {
+    case "top-left":
+    case "bottom-left":
+    case "left-middle":
+      return "left";
+    case "top-right":
+    case "bottom-right":
+    case "right-middle":
+      return "right";
+    default:
+      return "middle";
+  }
 }
 
 // #region 🧭Flow Context
@@ -5322,9 +5358,29 @@ export function useFlow(): Flow {
   return reactHostPort.useContext(FlowContext);
 }
 
-/** @emoji 🧭 The mirrored {@link Flow} a {@link Panel} grows into — right anchors flip inline, bottom anchors flip block; middle anchors never mirror. */
-export function flowFromAnchor(anchor: PanelAnchor): Flow {
+/** @emoji 🧭 The mirrored {@link Flow} a {@link Panel} or {@link Pane} grows into — right anchors flip inline, bottom anchors flip block; middle anchors (row or column) never mirror. */
+export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
+}
+
+/** @emoji 🧭 Edge insets for an {@link Anchor} plus a max-height clamp to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
+export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
+  const horizontal = anchorHorizontal(anchor);
+  const vertical = anchorVertical(anchor);
+  const style: React.CSSProperties = { maxHeight: "calc(100% - (var(--spacing-single) * 2))" };
+  if (horizontal === "middle") {
+    style.left = "50%";
+    style.transform = "translateX(-50%)";
+  } else {
+    style[horizontal] = "var(--spacing-single)";
+  }
+  if (vertical === "middle") {
+    style.top = "50%";
+    style.transform = style.transform ? `${style.transform} translateY(-50%)` : "translateY(-50%)";
+  } else {
+    style[vertical] = "var(--spacing-single)";
+  }
+  return style;
 }
 // #endregion 🧭Flow Context
 
@@ -5508,9 +5564,9 @@ export function usePanelTabSelection({ tabs, visible, onVisibleChange, activeTab
   return { resolvedPath, memory, handlePathChange };
 }
 
-/** @emoji 🗄️ Full arrangement of tabs across all six anchors — the pure, draggable dock model. */
+/** @emoji 🗄️ Full arrangement of tabs across all eight anchors — the pure, draggable dock model. */
 export interface PanelDock {
-  readonly anchors: Record<PanelAnchor, readonly PanelTabNode[]>;
+  readonly anchors: Record<Anchor, readonly PanelTabNode[]>;
 }
 
 function panelTabNodeToSkeleton(node: PanelTabNode): DockTabSkeleton {
@@ -5520,9 +5576,9 @@ function panelTabNodeToSkeleton(node: PanelTabNode): DockTabSkeleton {
 
 /** @emoji 🗄️ Reduces a full {@link PanelDock} to the id-only {@link DockSkeleton} persisted across sessions. */
 export function dockSkeletonOf(dock: PanelDock): DockSkeleton {
-  const anchors = {} as Record<PanelAnchor, readonly DockTabSkeleton[]>;
-  for (const anchor of PANEL_ANCHORS) anchors[anchor] = dock.anchors[anchor].map(panelTabNodeToSkeleton);
-  return { version: 2, anchors };
+  const anchors = {} as Record<Anchor, readonly DockTabSkeleton[]>;
+  for (const anchor of ANCHORS) anchors[anchor] = dock.anchors[anchor].map(panelTabNodeToSkeleton);
+  return { version: 3, anchors };
 }
 
 function dockTabSkeletonsEqual(a: DockTabSkeleton, b: DockTabSkeleton): boolean {
@@ -5539,7 +5595,7 @@ function dockTabSkeletonsEqual(a: DockTabSkeleton, b: DockTabSkeleton): boolean 
 export function dockSkeletonsEqual(a: DockSkeleton | null, b: DockSkeleton | null): boolean {
   if (a === b) return true;
   if (!a || !b) return false;
-  return PANEL_ANCHORS.every((anchor) => {
+  return ANCHORS.every((anchor) => {
     const aTabs = a.anchors[anchor] ?? [];
     const bTabs = b.anchors[anchor] ?? [];
     return aTabs.length === bTabs.length && aTabs.every((tab, index) => dockTabSkeletonsEqual(tab, bTabs[index]!));
@@ -5555,7 +5611,7 @@ function indexPanelDockById(dock: PanelDock): { readonly nodes: Map<string, Pane
     if (node.kind === "branch") node.children.forEach(visit);
     else node.trees.forEach((unit) => units.set(unit.id, unit));
   };
-  for (const anchor of PANEL_ANCHORS) dock.anchors[anchor].forEach(visit);
+  for (const anchor of ANCHORS) dock.anchors[anchor].forEach(visit);
   return { nodes, units };
 }
 
@@ -5589,7 +5645,7 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
   // moved to an anchor processed later must not be reclaimed by its old branch's "append missing" pass.
   const mentionedTabIds = new Set<string>();
   const mentionedUnitIds = new Set<string>();
-  for (const anchor of PANEL_ANCHORS) collectDockSkeletonMentions(skeleton.anchors[anchor] ?? [], nodes, mentionedTabIds, mentionedUnitIds);
+  for (const anchor of ANCHORS) collectDockSkeletonMentions(skeleton.anchors[anchor] ?? [], nodes, mentionedTabIds, mentionedUnitIds);
   const resolvedTabIds = new Set<string>(); // guards only against the same id appearing twice in the skeleton
 
   const resolveNode = (entry: DockTabSkeleton): PanelTabNode | null => {
@@ -5613,8 +5669,8 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
     return unchanged ? defaultNode : { ...defaultNode, trees: mergedUnits };
   };
 
-  const anchors = {} as Record<PanelAnchor, readonly PanelTabNode[]>;
-  for (const anchor of PANEL_ANCHORS) {
+  const anchors = {} as Record<Anchor, readonly PanelTabNode[]>;
+  for (const anchor of ANCHORS) {
     const explicit = (skeleton.anchors[anchor] ?? []).map(resolveNode).filter((node): node is PanelTabNode => node !== null);
     const defaultTabs = defaultDock.anchors[anchor];
     const appended = defaultTabs.filter((tab) => !defaultSubtreeMentioned(tab, mentionedTabIds));
@@ -5633,7 +5689,7 @@ const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent sh
 interface PanelTabRowProps {
   readonly variant: PanelTabBarVariant;
   /** @emoji 🧲 Present only for {@link Panel} rows — enables drag-and-drop wiring via {@link usePanelDockContext}. */
-  readonly anchor?: PanelAnchor;
+  readonly anchor?: Anchor;
   readonly parentPath?: readonly string[];
   readonly tabs: readonly PanelTabNode[];
   readonly activeId?: string;
@@ -5749,7 +5805,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
 export interface PanelTabBarProps {
   readonly variant: PanelTabBarVariant;
   /** @emoji 🧲 Present only when hosted by a {@link Panel} under a {@link PanelDockProvider}. */
-  readonly anchor?: PanelAnchor;
+  readonly anchor?: Anchor;
   readonly tabs: readonly PanelTabNode[];
   readonly activePath: readonly string[];
   readonly onActivePathChange: (path: readonly string[]) => void;
@@ -5800,7 +5856,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs,
 };
 
 // #region 🧲PanelDock
-// Composable drag-and-drop: tabs dock between all six anchors (pointer-capture drag, mirrors 🧭ModeDockDrag);
+// Composable drag-and-drop: tabs dock between all eight anchors (pointer-capture drag, mirrors 🧭ModeDockDrag);
 // tree units dock between leaf tabs (native HTML5 drag-and-drop, mirrors the window-template palette-drag session).
 
 //#region 🔀Transforms
@@ -5812,8 +5868,8 @@ export function isPanelTabInSubtree(node: PanelTabNode, id: string): boolean {
 }
 
 /** @emoji 🔀 Locates a tab anywhere in `dock`, returning its home anchor and the node itself. */
-export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: PanelAnchor; readonly node: PanelTabNode } | null {
-  for (const anchor of PANEL_ANCHORS) {
+export function findPanelTabInDock(dock: PanelDock, id: string): { readonly anchor: Anchor; readonly node: PanelTabNode } | null {
+  for (const anchor of ANCHORS) {
     const path = findPanelTabPath(dock.anchors[anchor], id);
     if (!path) continue;
     const node = findPanelTabNode(dock.anchors[anchor], path);
@@ -5880,12 +5936,12 @@ function appendPanelTabAsChild(tabs: readonly PanelTabNode[], parentId: string, 
 }
 
 /** @emoji 🎯 Where a dragged tab lands: `"insert"` places it among `parentPath`'s children at `index` (root when `parentPath` is empty); `"child"` appends it as the last child of the branch tab `parentId` (leaf targets never promote to branches in v1). */
-export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: PanelAnchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: PanelAnchor; readonly parentId: string };
+export type PanelTabDockTarget = { readonly kind: "insert"; readonly anchor: Anchor; readonly parentPath: readonly string[]; readonly index: number } | { readonly kind: "child"; readonly anchor: Anchor; readonly parentId: string };
 
 /** @emoji 🎯 A completed tab drag: move `tabId` (found via {@link findPanelTabInDock}, not `fromAnchor` alone) to `target`. */
 export interface PanelTabDockMove {
   readonly tabId: string;
-  readonly fromAnchor: PanelAnchor;
+  readonly fromAnchor: Anchor;
   readonly target: PanelTabDockTarget;
 }
 
@@ -5906,7 +5962,7 @@ export function moveTabInDock(dock: PanelDock, move: PanelTabDockMove): PanelDoc
   const { tabs: sourceTabs, removed } = removePanelTabFromSiblings(dock.anchors[fromAnchor], move.tabId);
   if (!removed) return dock;
 
-  const anchors: Record<PanelAnchor, readonly PanelTabNode[]> = { ...dock.anchors, [fromAnchor]: sourceTabs };
+  const anchors: Record<Anchor, readonly PanelTabNode[]> = { ...dock.anchors, [fromAnchor]: sourceTabs };
   anchors[target.anchor] = target.kind === "child" ? appendPanelTabAsChild(anchors[target.anchor], target.parentId, removed) : insertPanelTabAtPath(anchors[target.anchor], target.parentPath, removed, target.index);
   return { anchors };
 }
@@ -5929,7 +5985,7 @@ function replacePanelTabInDock(dock: PanelDock, id: string, nextNode: PanelTabNo
 
 /** @emoji 🎯 Where a dragged tree unit lands: `tabId`'s (a leaf's) unit list, at `index`. */
 export interface PanelTreeUnitDockTarget {
-  readonly anchor: PanelAnchor;
+  readonly anchor: Anchor;
   readonly tabId: string;
   readonly index: number;
 }
@@ -5977,7 +6033,7 @@ function normalizePanelTreeUnitOrder(units: readonly PanelTreeUnit[]): readonly 
 
 /** @emoji 🎯 A registered {@link PanelTabRow} drop surface — v1's drop surfaces are the base row of every anchor plus the rows along each anchor's current active path (branches not on the active path aren't visible, so aren't registered). */
 export interface PanelTabRowDropTarget {
-  readonly anchor: PanelAnchor;
+  readonly anchor: Anchor;
   readonly parentPath: readonly string[];
   readonly rowElement: HTMLElement;
 }
@@ -6086,7 +6142,7 @@ export function usePanelTreeUnitDragActive(): boolean {
 //#region 🎛️Provider
 
 interface PanelDockDragState {
-  readonly anchor: PanelAnchor;
+  readonly anchor: Anchor;
   readonly tabId: string;
   readonly pointerId: number;
   readonly label: string;
@@ -6095,7 +6151,7 @@ interface PanelDockDragState {
 }
 
 interface PanelDockPendingDrag {
-  readonly anchor: PanelAnchor;
+  readonly anchor: Anchor;
   readonly tabId: string;
   readonly pointerId: number;
   readonly label: string;
@@ -6108,8 +6164,8 @@ export interface PanelDockContextValue {
   readonly dragTabId: string | null;
   readonly draggedSubtreeIds: ReadonlySet<string> | null;
   readonly dropTarget: PanelTabDockTarget | null;
-  readonly startTabDrag: (anchor: PanelAnchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
-  readonly registerTabRowDropTarget: (anchor: PanelAnchor, parentPath: readonly string[], element: HTMLElement | null) => void;
+  readonly startTabDrag: (anchor: Anchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => void;
+  readonly registerTabRowDropTarget: (anchor: Anchor, parentPath: readonly string[], element: HTMLElement | null) => void;
   readonly onTreeUnitDockDrop: (move: PanelTreeUnitDockMove) => void;
 }
 
@@ -6140,7 +6196,7 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
   const dockRef = reactHostPort.useRef(dock);
   dockRef.current = dock;
 
-  const registerTabRowDropTarget = reactHostPort.useCallback((anchor: PanelAnchor, parentPath: readonly string[], element: HTMLElement | null) => {
+  const registerTabRowDropTarget = reactHostPort.useCallback((anchor: Anchor, parentPath: readonly string[], element: HTMLElement | null) => {
     const key = `${anchor}:${parentPath.join("/")}`;
     if (!element) {
       rowsRef.current.delete(key);
@@ -6155,7 +6211,7 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
     setDropTarget(zone);
   }, []);
 
-  const startTabDrag = reactHostPort.useCallback((anchor: PanelAnchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => {
+  const startTabDrag = reactHostPort.useCallback((anchor: Anchor, tabId: string, label: string, event: React.PointerEvent<HTMLElement>) => {
     if (event.button !== 0) return;
     setPendingDrag({ anchor, tabId, pointerId: event.pointerId, label, startX: event.clientX, startY: event.clientY });
   }, []);
@@ -6238,7 +6294,7 @@ export const PanelDockProvider: React.FC<PanelDockProviderProps> = ({ dock, onTa
 
 /** @emoji 🎛️ Props for {@link PanelChromeTabBar}: the anchor's own tab-selection state (see {@link usePanelTabSelection}) plus which anchor it drives. */
 export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
-  readonly anchor: PanelAnchor;
+  readonly anchor: Anchor;
   readonly className?: string;
 }
 
@@ -6975,7 +7031,7 @@ export interface LayoutProps {
   navbar?: React.ReactNode;
   footer?: React.ReactNode;
   /** @emoji 🧭 Per-anchor panel config — panels float over the navbar/footer/canvas, keyed by which anchor they grow from. */
-  panels?: Partial<Record<PanelAnchor, Omit<PanelProps, "anchor">>>;
+  panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
   mobilePanel?: MobilePanelProps;
   canvas: React.ReactNode;
   mobile?: boolean;
@@ -7001,7 +7057,7 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, ca
               <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
             </div>
           </div>
-          {PANEL_ANCHORS.map((anchor) => {
+          {ANCHORS.map((anchor) => {
             const panelProps = panels?.[anchor];
             return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
           })}
@@ -11591,12 +11647,12 @@ export function ZukunftBauLogo({ className, style }: { className?: string; style
 //#endregion 🏛️ZukunftBauLogo
 
 //#region 🏛️LuhLogo
-/** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.uni-hannover.de/ */
+/** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.iek.uni-hannover.de/ngs/team */
 export const LUH_LOGO_URL = "/asset/logo/luh.png";
 /** @emoji 🏛️ Dark-appearance LUH wordmark. */
 export const LUH_LOGO_DARK_URL = "/asset/logo/luh-dark.png";
-/** @emoji 🏛️ LUH university home page. */
-export const LUH_URL = "https://www.uni-hannover.de/";
+/** @emoji 🏛️ LUH NGS team page. */
+export const LUH_URL = "https://www.iek.uni-hannover.de/ngs/team";
 
 /** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `ui/asset/logo`. */
 export function LuhLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -11610,12 +11666,12 @@ export function LuhLogo({ className, style }: { className?: string; style?: Reac
 //#endregion 🏛️LuhLogo
 
 //#region 🏛️UdkLogo
-/** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/ */
+/** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/ */
 export const UDK_LOGO_URL = "/asset/logo/udk.png";
 /** @emoji 🏛️ Dark-appearance UdK wordmark. */
 export const UDK_LOGO_DARK_URL = "/asset/logo/udk-dark.png";
-/** @emoji 🏛️ UdK Berlin university home page. */
-export const UDK_URL = "https://www.udk-berlin.de/";
+/** @emoji 🏛️ UdK KET team page. */
+export const UDK_URL = "https://www.udk-berlin.de/studium/architektur/fachgebiete/konstruktives-entwerfen-und-tragwerksplanung/team-2025-2026/";
 
 /** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `ui/asset/logo`. */
 export function UdkLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
@@ -11668,7 +11724,7 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale:
 //#region 🏛️AProjectOfLuhUdkFooterItem
 /**
  * @emoji 🏛️ Left-side footer partner credit mirroring {@link fundedByZukunftBauFooterItem} on the right —
- * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the university home page;
+ * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the partner team page;
  * `relative z-40` matches panel-tab chrome so the credit stays visible above anchored panels.
  **/
 export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de"): NavbarItem {
@@ -16546,7 +16602,7 @@ export function useNativeDragAndDrop<TElement extends HTMLElement = HTMLDivEleme
  * Props interface for the Panel component.
  **/
 export interface PanelProps {
-  anchor: PanelAnchor;
+  anchor: Anchor;
   visible?: boolean;
   /** @emoji 🎛 Fired when the panel's own tab button group opens or folds it (see {@link Panel}). */
   onVisibleChange?: (visible: boolean) => void;
@@ -16583,7 +16639,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   treeOpenStates,
   onTreeOpenStateChange,
 }: {
-  readonly anchor?: PanelAnchor;
+  readonly anchor?: Anchor;
   readonly tabId: string;
   readonly units: readonly PanelTreeUnit[];
   /** @emoji 🌱 Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
@@ -16687,7 +16743,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
  * as the anchor's root {@link PanelTabRow} — the two never coexist: the root row only mounts once `tabs.length > 0`,
  * and this zone only mounts while it's `0`.
  **/
-function PanelEmptyDockZone({ anchor }: { readonly anchor: PanelAnchor }) {
+function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
   const dock = usePanelDockContext();
   const setRef = reactHostPort.useCallback(
     (element: HTMLDivElement | null) => {
@@ -16807,11 +16863,9 @@ const Panel: React.FC<PanelProps> = ({
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
-  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a middle panel is centered (`translateX(-50%)`) and grows both ways, resizable from either edge.
+  // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
   const positionStyle = {
-    ...(horizontal === "middle" ? { left: "50%", transform: "translateX(-50%)" } : { [horizontal]: "var(--spacing-single)" }),
-    [anchorVertical(anchor)]: "var(--spacing-single)",
-    maxHeight: "calc(100% - (var(--spacing-single) * 2))",
+    ...anchorPositionStyle(anchor),
     width: visible ? `${size}px` : undefined,
     zIndex,
   };
@@ -24377,6 +24431,41 @@ if (import.meta.vitest) {
       expect(box?.querySelector("p")?.className).toContain("text-muted-foreground");
       expect(box?.querySelector("p")?.className).not.toMatch(/(?:^|\s)text-muted(?:\s|$)/);
     });
+
+    it("renders step logos, wrapping only those with an href, and swaps light/dark srcs", () => {
+      const { container } = render(
+        <UIIntroduction
+          introduction={{
+            title: "Welcome",
+            steps: [
+              {
+                id: "funding",
+                title: "Funding",
+                body: "Funded by",
+                anchor: { kind: "screen" },
+                emphasis: "none",
+                placement: "center",
+                advance: { kind: "next" },
+                logos: [
+                  { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
+                  { src: "/asset/logo/zukunft-bau.png", alt: "Zukunft Bau" },
+                ],
+              },
+            ],
+          }}
+          stepIndex={0}
+          onStepIndexChange={vi.fn()}
+          onDismiss={vi.fn()}
+        />,
+      );
+      const box = container.querySelector('[data-slot="introduction-info-box"]');
+      const links = box?.querySelectorAll("a[href]");
+      expect(links).toHaveLength(1);
+      expect(links?.[0].getAttribute("href")).toBe("https://www.bbsr.bund.de");
+      const images = box?.querySelectorAll("img");
+      expect(images).toHaveLength(3);
+      expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/asset/logo/bbsr.png", "/asset/logo/bbsr-dark.png", "/asset/logo/zukunft-bau.png"]);
+    });
   });
 
   describe("introductionVeilBands", () => {
@@ -25063,9 +25152,11 @@ if (import.meta.vitest) {
           "top-left": [],
           "top-middle": [],
           "top-right": [],
-          "bottom-left": [],
-          "bottom-middle": [],
+          "right-middle": [],
           "bottom-right": [],
+          "bottom-middle": [],
+          "bottom-left": [],
+          "left-middle": [],
         },
       };
       const tabs: PanelTabNode[] = [
@@ -25222,7 +25313,7 @@ if (import.meta.vitest) {
     });
 
     it("computeTabDockDropZone inverts the insert-index fraction test for mirrored (right) anchors, but not for a middle anchor", () => {
-      const makeRow = (anchor: PanelAnchor, buttonRects: readonly { left: number; right: number }[]): PanelTabRowDropTarget => {
+      const makeRow = (anchor: Anchor, buttonRects: readonly { left: number; right: number }[]): PanelTabRowDropTarget => {
         const rowElement = document.createElement("div");
         rowElement.getBoundingClientRect = () => ({ left: 0, right: 200, top: 0, bottom: 20, width: 200, height: 20 }) as DOMRect;
         buttonRects.forEach((rect, index) => {
@@ -29153,21 +29244,25 @@ if (treeVitest) {
           ],
           "top-middle": [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })],
           "top-right": [],
-          "bottom-left": [],
-          "bottom-middle": [],
+          "right-middle": [],
           "bottom-right": [singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } })],
+          "bottom-middle": [],
+          "bottom-left": [],
+          "left-middle": [],
         },
       };
       const skeleton = dockSkeletonOf(dock);
       expect(skeleton).toEqual({
-        version: 2,
+        version: 3,
         anchors: {
           "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
           "top-middle": [{ id: "search", trees: ["search.tree"] }],
           "top-right": [],
-          "bottom-left": [],
-          "bottom-middle": [],
+          "right-middle": [],
           "bottom-right": [{ id: "settings", trees: ["settings.tree"] }],
+          "bottom-middle": [],
+          "bottom-left": [],
+          "left-middle": [],
         },
       });
       expect(dockSkeletonsEqual(skeleton, dockSkeletonOf(dock))).toBe(true);
@@ -29181,7 +29276,9 @@ if (treeVitest) {
       const catalogueLeaf = singleTreeLeaf({ id: "catalogue", icon: StubIcon, name: "Catalogue", tree: { sections: [] } });
       const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf, catalogueLeaf] };
       const settingsLeaf = singleTreeLeaf({ id: "settings", icon: StubIcon, name: "Settings", tree: { sections: [] } });
-      const defaultDock: PanelDock = { anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [settingsLeaf] } };
+      const defaultDock: PanelDock = {
+        anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [settingsLeaf], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
 
       // Untouched anchor/branch: identical arrangement reuses every object by reference.
       const untouchedSkeleton = dockSkeletonOf(defaultDock);
@@ -29192,17 +29289,19 @@ if (treeVitest) {
       // Moving `catalogue` to bottom-right (ahead of settings): dropped from workbench's children (appended-back
       // logic doesn't apply since it's explicitly listed elsewhere), workbench still reuses `documentLeaf` by reference.
       const moved: DockSkeleton = {
-        version: 2,
+        version: 3,
         anchors: {
           "top-left": [{ id: "workbench", children: [{ id: "document", trees: ["document.tree"] }] }],
           "top-middle": [],
           "top-right": [],
-          "bottom-left": [],
-          "bottom-middle": [],
+          "right-middle": [],
           "bottom-right": [
             { id: "catalogue", trees: ["catalogue.tree"] },
             { id: "settings", trees: ["settings.tree"] },
           ],
+          "bottom-middle": [],
+          "bottom-left": [],
+          "left-middle": [],
         },
       };
       const afterMove = applyDockSkeleton(defaultDock, moved);
@@ -29214,8 +29313,8 @@ if (treeVitest) {
 
       // Unknown id in the persisted skeleton is dropped; a default tab the skeleton never mentions is appended.
       const withUnknown: DockSkeleton = {
-        version: 2,
-        anchors: { "top-left": [{ id: "ghost-tab" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] },
+        version: 3,
+        anchors: { "top-left": [{ id: "ghost-tab" }], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
       };
       const afterUnknown = applyDockSkeleton(defaultDock, withUnknown);
       expect(afterUnknown.anchors["top-left"].map((tab) => tab.id)).toEqual(["workbench"]);
@@ -29224,8 +29323,8 @@ if (treeVitest) {
 
       // Kind mismatch: skeleton claims the leaf `settings` has branch `children` — ignored, falls back to the default leaf shape.
       const kindMismatch: DockSkeleton = {
-        version: 2,
-        anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [{ id: "settings", children: [{ id: "document" }] }] },
+        version: 3,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [{ id: "settings", children: [{ id: "document" }] }], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
       };
       const afterMismatch = applyDockSkeleton(defaultDock, kindMismatch);
       expect(afterMismatch.anchors["bottom-right"][0]).toBe(settingsLeaf);
@@ -29236,17 +29335,21 @@ if (treeVitest) {
       const StubIcon = (): null => null;
       const documentLeaf = singleTreeLeaf({ id: "document", icon: StubIcon, name: "Document", tree: { sections: [] } });
       const workbenchBranch: PanelTabNode = { kind: "branch", id: "workbench", icon: StubIcon, name: "Workbench", children: [documentLeaf] };
-      const defaultDock: PanelDock = { anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } };
+      const defaultDock: PanelDock = {
+        anchors: { "top-left": [workbenchBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
       // `document` moved out to bottom-right; `workbench` explicitly persisted with an empty children list.
       const emptiedWorkbench: DockSkeleton = {
-        version: 2,
+        version: 3,
         anchors: {
           "top-left": [{ id: "workbench", children: [] }],
           "top-middle": [],
           "top-right": [],
-          "bottom-left": [],
-          "bottom-middle": [],
+          "right-middle": [],
           "bottom-right": [{ id: "document", trees: ["document.tree"] }],
+          "bottom-middle": [],
+          "bottom-left": [],
+          "left-middle": [],
         },
       };
       const result = applyDockSkeleton(defaultDock, emptiedWorkbench);
@@ -29271,7 +29374,9 @@ if (treeVitest) {
       const b = singleTreeLeaf({ id: "b", icon: StubIcon, name: "B", tree: { sections: [] } });
       const c = singleTreeLeaf({ id: "c", icon: StubIcon, name: "C", tree: { sections: [] } });
       const branch: PanelTabNode = { kind: "branch", id: "branch", icon: StubIcon, name: "Branch", children: [] };
-      const dock: PanelDock = { anchors: { "top-left": [a, b], "top-middle": [], "top-right": [branch], "bottom-left": [], "bottom-middle": [], "bottom-right": [c] } };
+      const dock: PanelDock = {
+        anchors: { "top-left": [a, b], "top-middle": [], "top-right": [branch], "right-middle": [], "bottom-right": [c], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
 
       // Same-row reorder: move `b` before `a` (removal-first — index 0 in the post-removal row). Both items'
       // `order` is reassigned to match their new position, so neither keeps its exact object reference here.
@@ -29305,7 +29410,9 @@ if (treeVitest) {
       const onlyChild = singleTreeLeaf({ id: "only-child", icon: StubIcon, name: "Only Child", tree: { sections: [] } });
       const innerBranch: PanelTabNode = { kind: "branch", id: "inner", icon: StubIcon, name: "Inner", children: [onlyChild] };
       const outerBranch: PanelTabNode = { kind: "branch", id: "outer", icon: StubIcon, name: "Outer", children: [innerBranch] };
-      const dock: PanelDock = { anchors: { "top-left": [outerBranch], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } };
+      const dock: PanelDock = {
+        anchors: { "top-left": [outerBranch], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
       const result = moveTabInDock(dock, { tabId: "only-child", fromAnchor: "top-left", target: { kind: "insert", anchor: "top-right", parentPath: [], index: 0 } });
       // Both `inner` (emptied) and `outer` (left with no children once `inner` is pruned) disappear from top-left.
       expect(result.anchors["top-left"]).toEqual([]);
@@ -29336,7 +29443,9 @@ if (treeVitest) {
         ],
       };
       const tabB: PanelTabNode = { kind: "leaf", id: "tab-b", icon: StubIcon, name: "Tab B", trees: [{ id: "unit-3", tree: { sections: [] } }] };
-      const dock: PanelDock = { anchors: { "top-left": [tabA, tabB], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } };
+      const dock: PanelDock = {
+        anchors: { "top-left": [tabA, tabB], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      };
 
       const reordered = moveTreeUnitInDock(dock, { unitId: "unit-2", fromTabId: "tab-a", target: { anchor: "top-left", tabId: "tab-a", index: 0 } });
       const reorderedTabA = reordered.anchors["top-left"][0];

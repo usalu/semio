@@ -352,7 +352,6 @@ import {
   type UiTextNode,
   type UiToggleNode,
   type UiTreeItemAction,
-  type UiVec3Node,
   type GraphTimelineScene,
   type VirtualFileSystemScene,
   type WindowEngagement,
@@ -590,34 +589,6 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       );
     case "toggle":
       return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
-    case "vec3": {
-      const tuple = control.value;
-      const mixed = tuple == null || !Array.isArray(tuple) || tuple.length < 3;
-      const axes = ["x", "y", "z"] as const;
-      return (
-        <div className="grid grid-cols-3 gap-single">
-          {axes.map((axis, index) => (
-            <Input
-              key={`${control.id}.${axis}`}
-              id={`${control.id}.${axis}`}
-              type="number"
-              className="h-medium w-full min-w-0"
-              value={mixed ? "" : String(tuple[index] ?? 0)}
-              placeholder={mixed ? "—" : axis}
-              disabled={mixed}
-              onChange={(event) => {
-                if (mixed) return;
-                const parsed = Number(event.target.value);
-                if (!Number.isFinite(parsed)) return;
-                const next: [number, number, number] = [tuple[0] ?? 0, tuple[1] ?? 0, tuple[2] ?? 0];
-                next[index] = parsed;
-                dispatchUiAction(onAction, control.onChange, { value: next });
-              }}
-            />
-          ))}
-        </div>
-      );
-    }
     case "keyValue":
       return (
         <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs">
@@ -979,8 +950,6 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
       return renderUiControl(node, context.onAction);
     case "toggle":
       return renderUiControl(node, context.onAction);
-    case "vec3":
-      return renderUiControl(node, context.onAction);
     case "keyValue":
       return renderUiControl(node, context.onAction);
     case "slider":
@@ -998,6 +967,14 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
         </Field>
       );
     case "section":
+      return (
+        <Section id={node.id} title={node.label}>
+          {node.children.map((child, index) => (
+            <div key={uiNodeKey(child, index)}>{interpretUiNode(child, context)}</div>
+          ))}
+        </Section>
+      );
+    case "group":
       return (
         <Section id={node.id} title={node.label}>
           {node.children.map((child, index) => (
@@ -1182,6 +1159,16 @@ export type FrameworkOsDefaults = {
 /** 🎛️ Resolves boot defaults: an env-provided default wins over the brand's. */
 export function resolveShellDefaults(brand: ShellBrand | undefined, defaults: FrameworkOsDefaults | undefined): FrameworkOsDefaults {
   return { exampleId: defaults?.exampleId ?? brand?.defaults?.exampleId };
+}
+
+/** 🎓 Whether a brand's introduction should auto-start on every window load, ignoring any device-local seen flag. */
+export function shouldReplayIntroductionOnLoad(brand: ShellBrand | undefined): boolean {
+  return brand?.replayIntroductionOnLoad === true;
+}
+
+/** 🎓 Whether completing or dismissing an introduction should persist a device-local seen flag for this brand. */
+export function shouldPersistIntroductionSeen(brand: ShellBrand | undefined): boolean {
+  return !shouldReplayIntroductionOnLoad(brand);
 }
 
 /** 🎛️ Stable empty-defaults reference so an omitted `defaults` prop never busts memo dependency arrays. */
@@ -4010,19 +3997,21 @@ export function FrameworkOsShell({
 
   // 🎓 A brand-owned introduction fully replaces the app's own (already localized, rendered verbatim);
   // its first-run-seen flag is brand-scoped so the branded tour plays even on a device that saw the
-  // unbranded one.
+  // unbranded one. Brands with `replayIntroductionOnLoad` skip persistence and auto-start every load.
   const activeIntroduction = brand?.introduction ?? session?.app.introduction;
   const introductionSeenKey = session ? (brand ? `${brand.id}:${session.app.id}` : session.app.id) : "";
+  const replayIntroductionOnLoad = shouldReplayIntroductionOnLoad(brand);
+  const persistIntroductionSeen = shouldPersistIntroductionSeen(brand);
   const activeIntroductionRef = useRef(activeIntroduction);
   activeIntroductionRef.current = activeIntroduction;
 
-  // 🎓 Auto-starts an app's introduction the first time it launches on this device; replaying stays
-  // available afterward via the shell-owned Introduce App command.
+  // 🎓 Auto-starts an app's introduction the first time it launches on this device (or every load when
+  // the brand opts in); replaying stays available afterward via the shell-owned Introduce App command.
   useEffect(() => {
     if (!session || !activeIntroduction) return;
-    if (readStoredIntroductionSeen(introductionSeenKey)) return;
+    if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, activeIntroduction, introductionSeenKey]);
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad]);
 
   // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
   // active window without re-creating those callbacks on every utility switch.
@@ -4797,7 +4786,7 @@ export function FrameworkOsShell({
         if (stepIndex == null || !introduction) return;
         if (stepIndex >= introduction.steps.length - 1) {
           dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-          writeStoredIntroductionSeen(introductionSeenKey);
+          if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
         } else {
           dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
         }
@@ -4942,6 +4931,7 @@ export function FrameworkOsShell({
       landingControllerId,
       hostCatalogueTabId,
       introductionSeenKey,
+      persistIntroductionSeen,
     ],
   );
 
@@ -6300,7 +6290,7 @@ export function FrameworkOsShell({
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
               dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-              writeStoredIntroductionSeen(introductionSeenKey);
+              if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
             }}
           />
         )}
@@ -9945,6 +9935,8 @@ function WorldInstanceNode({
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
   const glbEmissive = glbUsesEnvironmentColor && environmentMaterial?.emissive ? environmentMaterial.emissive : style.meshColor;
   const glbEmissiveIntensity = glbUsesEnvironmentColor && environmentMaterial?.emissive ? (environmentMaterial.emissiveIntensity ?? 1) : style.emissiveIntensity;
+  const instancePickEnabled = pickEnabled && !instance.disabled;
+  const lockedClickClears = instance.disabled === true;
   const hoveredFaceId = hoveredComponent?.mode === "face" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredVertexId = hoveredComponent?.mode === "vertex" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
   const hoveredEdgeId = hoveredComponent?.mode === "edge" && hoveredComponent.objectId === instance.id ? hoveredComponent.id : undefined;
@@ -9993,7 +9985,12 @@ function WorldInstanceNode({
                 paintFromHit(instance.id, meshData, event);
                 return;
               }
-              if (!pickEnabled) return;
+              if (lockedClickClears) {
+                event.stopPropagation();
+                onInstancePointerDown(instance.id, index, event);
+                return;
+              }
+              if (!instancePickEnabled) return;
               event.stopPropagation();
               if (targets.face && event.faceIndex != null && meshData.faceIds?.[event.faceIndex] != null) {
                 onWorldPick({
@@ -10010,7 +10007,7 @@ function WorldInstanceNode({
                 if ((event.buttons & 1) !== 0) paintFromHit(instance.id, meshData, event);
                 return;
               }
-              if (!pickEnabled) return;
+              if (!instancePickEnabled) return;
               event.stopPropagation();
               if (targets.face && event.faceIndex != null && meshData.faceIds?.[event.faceIndex] != null) {
                 onComponentHover({
@@ -10036,7 +10033,12 @@ function WorldInstanceNode({
             <lineSegments
               geometry={edgeGeometry}
               onClick={(event) => {
-                if (!pickEnabled || !meshData?.edgeIds?.length) return;
+                if (lockedClickClears) {
+                  event.stopPropagation();
+                  onInstancePointerDown(instance.id, index, event);
+                  return;
+                }
+                if (!instancePickEnabled || !meshData?.edgeIds?.length) return;
                 event.stopPropagation();
                 const edgeIndex = Math.floor((event.index ?? 0) / 2);
                 const edgeId = meshData.edgeIds[edgeIndex];
@@ -10044,7 +10046,7 @@ function WorldInstanceNode({
                 onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
               }}
               onPointerMove={(event) => {
-                if (!pickEnabled || !meshData?.edgeIds?.length) return;
+                if (!instancePickEnabled || !meshData?.edgeIds?.length) return;
                 event.stopPropagation();
                 const edgeIndex = Math.floor((event.index ?? 0) / 2);
                 const edgeId = meshData.edgeIds[edgeIndex];
@@ -10060,7 +10062,12 @@ function WorldInstanceNode({
             <points
               geometry={vertexPick.geometry}
               onClick={(event) => {
-                if (!pickEnabled) return;
+                if (lockedClickClears) {
+                  event.stopPropagation();
+                  onInstancePointerDown(instance.id, index, event);
+                  return;
+                }
+                if (!instancePickEnabled) return;
                 event.stopPropagation();
                 const idx = event.index ?? 0;
                 const vertexId = vertexPick.vertexIds[idx];
@@ -10068,7 +10075,7 @@ function WorldInstanceNode({
                 onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event) });
               }}
               onPointerMove={(event) => {
-                if (!pickEnabled) return;
+                if (!instancePickEnabled) return;
                 event.stopPropagation();
                 const idx = event.index ?? 0;
                 const vertexId = vertexPick.vertexIds[idx];
@@ -10129,10 +10136,12 @@ function WorldInstanceNode({
       ) : meshRecord?.url ? (
         <group
           onPointerDown={(event) => {
+            if (!instancePickEnabled && !lockedClickClears) return;
             event.stopPropagation();
             onInstancePointerDown(instance.id, index, event);
           }}
           onPointerMove={(event) => {
+            if (!instancePickEnabled) return;
             event.stopPropagation();
             onInstancePointerMove(instance.id);
           }}
@@ -10154,6 +10163,7 @@ function WorldInstanceNode({
       ) : (
         <mesh
           onPointerDown={(event) => {
+            if (!instancePickEnabled && !lockedClickClears) return;
             event.stopPropagation();
             onInstancePointerDown(instance.id, index, event);
           }}
@@ -11168,12 +11178,21 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleReferenceSelect = useCallback(
     (id: string) => {
+      const reference = references.find((entry) => entry.id === id);
+      if (reference?.locked) {
+        dispatch("worldPick", {
+          granularity: selectionMode,
+          id: null,
+          merge: "replace",
+        });
+        return;
+      }
       dispatch("setReferenceSelection", {
         pane: paneSuffixFromSurfaceId(node.surfaceId),
         referenceId: id,
       });
     },
-    [dispatch, node.surfaceId],
+    [dispatch, node.surfaceId, references, selectionMode],
   );
 
   const handleReferenceHover = useCallback(
@@ -11298,6 +11317,11 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const handleInstancePointerDown = useCallback(
     (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => {
       const merge = instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
+      const record = instances.find((entry) => entry.id === id);
+      if (record?.disabled) {
+        dispatch("worldPick", { granularity: selectionMode, id: null, merge });
+        return;
+      }
       if (selectionMode === "mesh" || selectionMode === "object") {
         dispatch("worldPick", { granularity: "mesh", id: index, merge });
         return;
@@ -11307,7 +11331,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         merge,
       });
     },
-    [dispatch, selection.selectionMergeMode, selectionMode],
+    [dispatch, instances, selection.selectionMergeMode, selectionMode],
   );
 
   const handleInstancePointerMove = useCallback(

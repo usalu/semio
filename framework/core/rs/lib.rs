@@ -3441,6 +3441,9 @@ pub struct IntroductionStepDefinition {
     pub placement: IntroductionPlacement,
     #[serde(default)]
     pub advance: IntroductionAdvance,
+    /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
+    #[serde(default)]
+    pub logos: Vec<IntroductionLogo>,
 }
 
 impl IntroductionStepDefinition {
@@ -3453,6 +3456,7 @@ impl IntroductionStepDefinition {
             emphasis: IntroductionEmphasis::default(),
             placement: IntroductionPlacement::default(),
             advance: IntroductionAdvance::default(),
+            logos: Vec::new(),
         }
     }
 
@@ -3473,6 +3477,26 @@ impl IntroductionStepDefinition {
         self.advance = advance;
         self
     }
+
+    /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
+    pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
+        self.logos = logos;
+        self
+    }
+}
+
+/// @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
+/// URL pair (no DOM/CSS types), optionally linking out when clicked.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IntroductionLogo {
+    pub src: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub dark_src: Option<String>,
+    pub alt: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub href: Option<String>,
 }
 
 /// @emoji 🎯 Renderer-agnostic reference to the UI element an `IntroductionStepDefinition` points at —
@@ -5570,6 +5594,7 @@ mod app_document_tests {
         crate::ui::IntroductionEmphasis::export().unwrap();
         crate::ui::IntroductionPlacement::export().unwrap();
         crate::ui::IntroductionAdvance::export().unwrap();
+        crate::ui::IntroductionLogo::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ProgramDefinition::export().unwrap();

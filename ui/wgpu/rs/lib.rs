@@ -1384,12 +1384,20 @@ pub struct UiToggleNode {
     pub on_change: ActionDescriptor,
 }
 
+/** @emoji 🌿 A nestable labeled container of `UiNode` children — the declarative-tree mechanism for
+ * subtrees like `Origin > X/Y/Z`: `ui_declarative_child_to_tree_item` expands a `Group` into a
+ * `UiTreeItemNode` whose `items` are its recursively-converted children, so depth composes to any
+ * level (`Plane > Origin > X/Y/Z`). Unlike `UiSectionNode` (top-level tree sections only, see
+ * `assertNoNestedTreeSections` on the TS side), a `Group` may itself appear as another `Group`'s or
+ * `UiFieldNode`'s child. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct UiVec3Node {
+pub struct UiGroupNode {
     pub id: String,
-    pub value: Option<[f64; 3]>,
-    pub on_change: ActionDescriptor,
+    pub label: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub default_open: Option<bool>,
+    pub children: Vec<UiNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1456,7 +1464,6 @@ pub enum UiControlNode {
     Input(UiInputNode),
     Select(UiSelectNode),
     Toggle(UiToggleNode),
-    Vec3(UiVec3Node),
     Button(UiButtonNode),
     KeyValue(UiKeyValueNode),
     Slider(UiSliderNode),
@@ -1671,23 +1678,6 @@ pub fn ui_inspector_mixed_slider(values: &[f64]) -> UiInspectorMixedNumber {
     ui_inspector_mixed_number(values)
 }
 
-pub struct UiInspectorMixedVec3 {
-    pub value: Option<[f64; 3]>,
-    pub uniform: bool,
-}
-
-pub fn ui_inspector_mixed_vec3(values: &[[f64; 3]]) -> UiInspectorMixedVec3 {
-    let serialized: Vec<String> = values
-        .iter()
-        .map(|row| serde_json::to_string(row).unwrap_or_default())
-        .collect();
-    let uniform = ui_inspector_all_equal(&serialized);
-    UiInspectorMixedVec3 {
-        value: if uniform { values.first().copied() } else { None },
-        uniform,
-    }
-}
-
 pub fn ui_inspector_readonly_field(
     id: impl Into<String>,
     label: impl Into<String>,
@@ -1716,6 +1706,92 @@ pub fn ui_inspector_readonly_field(
         description: None,
         required: None,
         error: None,
+    })
+}
+
+/** @emoji 🔢 Builds an editable number-stepper field row, computing the mixed/uniform display from
+ * `values` via {@link ui_inspector_mixed_number}. `action` is cloned into both `onAbsolute` (typed
+ * entry, dispatched with `{value}` merged into `args`) and `onDelta` (nudge buttons, `{delta}`) —
+ * callers' patch handlers branch on whichever key the dispatched action actually carries. */
+pub fn ui_inspector_stepper_field(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    values: &[f64],
+    step: f64,
+    action: ActionDescriptor,
+) -> UiNode {
+    let id = id.into();
+    let mixed = ui_inspector_mixed_number(values);
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+            id,
+            value: mixed.value,
+            step,
+            uniform: mixed.uniform,
+            on_absolute: action.clone(),
+            on_delta: action,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+/** @emoji 🔘 Builds an editable boolean toggle field row, computing the mixed/uniform display from
+ * `values` via {@link ui_inspector_mixed_toggle}. */
+pub fn ui_inspector_toggle_field(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    icon_id: impl Into<String>,
+    values: &[bool],
+    action: ActionDescriptor,
+) -> UiNode {
+    let id = id.into();
+    let mixed = ui_inspector_mixed_toggle(values);
+    UiNode::Field(UiFieldNode {
+        id: id.clone(),
+        label: label.into(),
+        child: Box::new(UiNode::Toggle(UiToggleNode {
+            id,
+            icon_id: icon_id.into(),
+            pressed: mixed.pressed,
+            text: None,
+            on_change: action,
+        })),
+        description: None,
+        required: None,
+        error: None,
+    })
+}
+
+/** @emoji 📐 Builds a nested `Origin`-style group: a parent tree item labeled `label` containing
+ * three {@link ui_inspector_stepper_field} children (`X`/`Y`/`Z`), each computing its own per-axis
+ * mixed state independently — a multi-selection that agrees on X but not Y shows only Y as "Mixed".
+ * `axis_action(axis)` builds the per-axis `ActionDescriptor`; callers typically merge
+ * `{"field": "<id>.x"}` etc. into its `args` so the patch handler can dot-path into the right
+ * component with `value` (absolute) or `delta` (relative, offset-preserving across multi-select). */
+pub fn ui_inspector_vec3_group(
+    id: impl Into<String>,
+    label: impl Into<String>,
+    values: &[[f64; 3]],
+    step: f64,
+    axis_action: impl Fn(&str) -> ActionDescriptor,
+) -> UiNode {
+    let id = id.into();
+    let xs: Vec<f64> = values.iter().map(|v| v[0]).collect();
+    let ys: Vec<f64> = values.iter().map(|v| v[1]).collect();
+    let zs: Vec<f64> = values.iter().map(|v| v[2]).collect();
+    UiNode::Group(UiGroupNode {
+        id: id.clone(),
+        label: label.into(),
+        default_open: Some(true),
+        children: vec![
+            ui_inspector_stepper_field(format!("{id}.x"), "X", &xs, step, axis_action("x")),
+            ui_inspector_stepper_field(format!("{id}.y"), "Y", &ys, step, axis_action("y")),
+            ui_inspector_stepper_field(format!("{id}.z"), "Z", &zs, step, axis_action("z")),
+        ],
     })
 }
 
@@ -1865,7 +1941,31 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
         UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())),
         UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())),
         UiNode::Toggle(toggle) => tree_control_item(toggle.id.clone(), UiControlNode::Toggle(toggle.clone())),
-        UiNode::Vec3(vec3) => tree_control_item(vec3.id.clone(), UiControlNode::Vec3(vec3.clone())),
+        UiNode::Group(group) => UiTreeItemNode {
+            id: group.id.clone(),
+            label: group.label.clone(),
+            description: None,
+            icon_id: None,
+            selected: None,
+            loading: None,
+            default_open: group.default_open,
+            action: None,
+            hover_action: None,
+            unhover_action: None,
+            actions: None,
+            draggable: None,
+            drag_data: None,
+            items: Some(
+                group
+                    .children
+                    .iter()
+                    .enumerate()
+                    .map(|(index, child)| ui_declarative_child_to_tree_item(child, format!("{}.{}", group.id, index)))
+                    .collect(),
+            ),
+            control: None,
+            is_hidden: None,
+        },
         UiNode::KeyValue(key_value) => tree_control_item(fallback_id, UiControlNode::KeyValue(key_value.clone())),
         UiNode::Slider(slider) => tree_control_item(slider.id.clone(), UiControlNode::Slider(slider.clone())),
         UiNode::NumberStepper(stepper) => {
@@ -2701,7 +2801,6 @@ pub enum UiNode {
     Input(UiInputNode),
     Select(UiSelectNode),
     Toggle(UiToggleNode),
-    Vec3(UiVec3Node),
     KeyValue(UiKeyValueNode),
     Slider(UiSliderNode),
     NumberStepper(UiNumberStepperNode),
@@ -2709,6 +2808,7 @@ pub enum UiNode {
     IconSelect(UiIconSelectNode),
     Field(UiFieldNode),
     Section(UiSectionNode),
+    Group(UiGroupNode),
     Tree(UiTreeNode),
     Image(UiImageNode),
     ComponentScene(UiComponentSceneNode),
@@ -2859,7 +2959,6 @@ pub fn ui_node_to_control(node: &UiNode) -> Option<UiControlNode> {
         UiNode::Input(input) => Some(UiControlNode::Input(input.clone())),
         UiNode::Select(select) => Some(UiControlNode::Select(select.clone())),
         UiNode::Toggle(toggle) => Some(UiControlNode::Toggle(toggle.clone())),
-        UiNode::Vec3(vec3) => Some(UiControlNode::Vec3(vec3.clone())),
         UiNode::Button(button) => Some(UiControlNode::Button(button.clone())),
         UiNode::KeyValue(key_value) => Some(UiControlNode::KeyValue(key_value.clone())),
         UiNode::Slider(slider) => Some(UiControlNode::Slider(slider.clone())),
@@ -2876,7 +2975,6 @@ pub fn ui_control_to_node(control: UiControlNode) -> UiNode {
         UiControlNode::Input(input) => UiNode::Input(input),
         UiControlNode::Select(select) => UiNode::Select(select),
         UiControlNode::Toggle(toggle) => UiNode::Toggle(toggle),
-        UiControlNode::Vec3(vec3) => UiNode::Vec3(vec3),
         UiControlNode::Button(button) => UiNode::Button(button),
         UiControlNode::KeyValue(key_value) => UiNode::KeyValue(key_value),
         UiControlNode::Slider(slider) => UiNode::Slider(slider),
@@ -3554,10 +3652,15 @@ mod ui_node_wire_format_tests {
                     text: None,
                     on_change: act("toggle"),
                 }),
-                UiNode::Vec3(UiVec3Node {
-                    id: "vec1".into(),
-                    value: Some([1.0, 2.0, 3.0]),
-                    on_change: act("vecChange"),
+                UiNode::Group(UiGroupNode {
+                    id: "grp1".into(),
+                    label: "Group".into(),
+                    default_open: Some(true),
+                    children: vec![UiNode::Text(UiTextNode {
+                        value: "child".into(),
+                        emphasize: None,
+                        data_attributes: None,
+                    })],
                 }),
                 UiNode::KeyValue(UiKeyValueNode {
                     entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
@@ -3683,7 +3786,7 @@ mod ui_node_wire_format_tests {
         })
     }
 
-    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"}},{\"type\":\"vec3\",\"id\":\"vec1\",\"value\":[1.0,2.0,3.0],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"vecChange\"}},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
     #[test]
     fn ui_node_tree_serializes_to_golden_json() {
@@ -4407,7 +4510,6 @@ fn variant_discriminant(node: &UiNode) -> u32 {
         UiNode::Input(_) => 4,
         UiNode::Select(_) => 5,
         UiNode::Toggle(_) => 6,
-        UiNode::Vec3(_) => 7,
         UiNode::KeyValue(_) => 8,
         UiNode::Slider(_) => 9,
         UiNode::NumberStepper(_) => 10,
@@ -4419,6 +4521,7 @@ fn variant_discriminant(node: &UiNode) -> u32 {
         UiNode::Image(_) => 16,
         UiNode::ComponentScene(_) => 17,
         UiNode::ExternalSlot(_) => 18,
+        UiNode::Group(_) => 19,
     }
 }
 
@@ -4429,13 +4532,13 @@ fn explicit_id(node: &UiNode) -> Option<&str> {
         UiNode::Input(n) => Some(n.id.as_str()),
         UiNode::Select(n) => Some(n.id.as_str()),
         UiNode::Toggle(n) => Some(n.id.as_str()),
-        UiNode::Vec3(n) => Some(n.id.as_str()),
         UiNode::Slider(n) => Some(n.id.as_str()),
         UiNode::NumberStepper(n) => Some(n.id.as_str()),
         UiNode::Ring(n) => Some(n.id.as_str()),
         UiNode::IconSelect(n) => Some(n.id.as_str()),
         UiNode::Field(n) => Some(n.id.as_str()),
         UiNode::Section(n) => Some(n.id.as_str()),
+        UiNode::Group(n) => Some(n.id.as_str()),
         UiNode::Image(n) => Some(n.id.as_str()),
         UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
         UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),
@@ -4458,6 +4561,7 @@ fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
     match node {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Section(n) => n.children.iter().map(Cow::Borrowed).collect(),
+        UiNode::Group(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Field(n) => vec![Cow::Borrowed(n.child.as_ref())],
         UiNode::Select(select) => select.items.iter().map(|item| Cow::Owned(select_item_row(select, item))).collect(),
         UiNode::Tree(tree_node) => tree_node.sections.iter().map(|section| Cow::Owned(tree_section_row(tree_node, section))).collect(),
@@ -11665,10 +11769,10 @@ pub mod paint {
 use crate::arena::NodeId;
 use crate::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
 use crate::component::ui::{
-    UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode,
+    UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode,
     UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode,
     UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode,
-    UiToggleNode, UiTreeItemNode, UiTreeNode, UiVec3Node, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
@@ -11877,7 +11981,6 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
         UiNode::Input(input) => paint_input(input, bounds, flags, theme, atlas, draw),
         UiNode::Select(select) => paint_select(select, bounds, flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
         UiNode::Toggle(toggle) => paint_toggle(toggle, bounds, flags, theme, atlas, icons, draw),
-        UiNode::Vec3(vec3) => paint_vec3(vec3, bounds, theme, atlas, draw),
         UiNode::KeyValue(kv) => paint_key_value(kv, bounds, theme, atlas, draw),
         UiNode::Slider(slider) => paint_slider(slider, bounds, theme, atlas, draw),
         UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, theme, atlas, draw),
@@ -11893,6 +11996,10 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
             if section.loading.unwrap_or(false) {
                 paint_loading_border(draw, bounds, theme.border_normal, theme);
             }
+        }
+        UiNode::Group(group) => {
+            paint_group(group, bounds, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
         }
         UiNode::Tree(tree_node) => paint_tree_widget(tree_node, bounds, theme, atlas, icons, draw),
         UiNode::Image(image) => paint_image(image, bounds, theme, atlas, draw),
@@ -12072,28 +12179,6 @@ fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &The
     }
 }
 
-/// 🎯 `UiVec3Node.value: None` means "mixed" (the selection's X/Y/Z values disagree), not "zero" —
-/// `framework/renderer/react/ui-interpreter.tsx`'s vec3 case is the ground truth here (`widgets`'
-/// own `render_vec3` has the same `unwrap_or([0.0; 3])` bug this ports the fix for, so it's not a
-/// widgets port): `mixed = tuple == null`, each axis input then gets `value=""`, `placeholder="—"`,
-/// `disabled=true`. Ported as: em-dash text in `theme.text_muted` instead of an editable-looking
-/// "0.000", plus a dimmed border to read as non-interactive.
-fn paint_vec3(node: &UiVec3Node, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
-    let mixed = node.value.is_none();
-    let values = node.value.unwrap_or([0.0, 0.0, 0.0]);
-    let gap = theme.gap_standard;
-    let seg_w = (bounds.w - gap * 2.0) / 3.0;
-    let border = if mixed { theme.border_normal.with_alpha(theme.border_normal.a * 0.5) } else { theme.border_normal };
-    for (index, value) in values.iter().enumerate() {
-        let x = bounds.x + index as f32 * (seg_w + gap);
-        let row = Rect::new(x, bounds.y, seg_w, bounds.h);
-        push_control_border(draw, row, theme, border, theme.input_bg);
-        let text = if mixed { "—".to_string() } else { format!("{value:.3}") };
-        let color = if mixed { theme.text_muted } else { theme.text };
-        draw_text_on(draw, atlas, &text, row.x + 8.0, row.y + (row.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, color);
-    }
-}
-
 fn paint_key_value(node: &UiKeyValueNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let label_w = node
         .entries
@@ -12230,6 +12315,18 @@ fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut 
         push_icon(draw, icons, chevron, bounds.x, bounds.y + (PANEL_HEADER - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
     }
     draw_text_on(draw, atlas, label, bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
+}
+
+/** @emoji 🌿 Same header chrome as {@link paint_section} (chevron + label), for a `Group`'s always-
+ * present `label` — used when a nested subtree (e.g. `Origin`) is painted directly in the native
+ * retained tree rather than pre-expanded into `UiTreeItemNode.items`. */
+fn paint_group(node: &UiGroupNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let collapsed = !node.default_open.unwrap_or(true);
+    let chevron = if collapsed { "chevron-right" } else { "chevron-down" };
+    if let Some(icons) = icons {
+        push_icon(draw, icons, chevron, bounds.x, bounds.y + (PANEL_HEADER - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
+    }
+    draw_text_on(draw, atlas, &node.label, bounds.x + TREE_TOGGLE_WIDTH + theme.gap_standard, bounds.y + (PANEL_HEADER + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, theme.text);
 }
 
 fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
@@ -12381,7 +12478,6 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
         UiControlNode::Input(node) => paint_input(node, bounds, flags, theme, atlas, draw),
         UiControlNode::Select(node) => paint_select(node, bounds, flags, false, None, theme, atlas, icons, draw),
         UiControlNode::Toggle(node) => paint_toggle(node, bounds, flags, theme, atlas, icons, draw),
-        UiControlNode::Vec3(node) => paint_vec3(node, bounds, theme, atlas, draw),
         UiControlNode::KeyValue(node) => paint_key_value(node, bounds, theme, atlas, draw),
         UiControlNode::Slider(node) => paint_slider(node, bounds, theme, atlas, draw),
         UiControlNode::NumberStepper(node) => paint_number_stepper(node, bounds, theme, atlas, draw),
@@ -12425,7 +12521,7 @@ mod tests {
     use crate::component::layout::ActionDescriptor;
     use crate::component::ui::{
         UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode,
-        UiStackNode, UiTreeItemAction, UiTreeSectionNode, UiVec3Node,
+        UiStackNode, UiTreeItemAction, UiTreeSectionNode,
     };
     use crate::draw::{KIND_GLYPH, KIND_LOADING_BORDER};
     use crate::flex::LayoutEngine;
@@ -12609,27 +12705,6 @@ mod tests {
 
         let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
         assert!(has_loading_border, "a loading tree should emit a KIND_LOADING_BORDER instance");
-    }
-
-    fn vec3(id: &str, value: Option<[f64; 3]>) -> UiNode {
-        UiNode::Vec3(UiVec3Node { id: id.into(), value, on_change: action() })
-    }
-
-    #[test]
-    fn painting_a_mixed_vec3_shows_fewer_glyphs_than_a_zeroed_one() {
-        let (mut zero_tree, zero_root, theme, mut zero_atlas) = setup(&vec3("v", Some([0.0, 0.0, 0.0])));
-        let mut zero_draw = DrawList::default();
-        paint_tree(&mut zero_tree, zero_root, &theme, &mut zero_atlas, None, &mut zero_draw);
-
-        let (mut mixed_tree, mixed_root, theme2, mut mixed_atlas) = setup(&vec3("v", None));
-        let mut mixed_draw = DrawList::default();
-        paint_tree(&mut mixed_tree, mixed_root, &theme2, &mut mixed_atlas, None, &mut mixed_draw);
-
-        let zero_total: usize = zero_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-        let mixed_total: usize = mixed_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
-        // "0.000" (5 glyphs) per axis vs "—" (1 glyph) per axis; the 3 axis boxes' own border/bg
-        // instances are identical either way, so this delta is entirely the mixed-state dash fix.
-        assert!(mixed_total < zero_total, "a mixed (None) vec3 should paint the em-dash placeholder, not editable-looking zeros: {mixed_total} !< {zero_total}");
     }
 
     fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
@@ -15538,7 +15613,7 @@ mod tests {
         UiExternalSlotNode, UiFieldNode, UiIconSelectNode, UiImageNode, UiInputNode,
         UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode,
         UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode,
-        UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, UiVec3Node,
+        UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
     use crate::events::PointerButton;
     use crate::geometry::Rect;
@@ -15665,7 +15740,6 @@ mod tests {
                 on_change: Some(select.on_change.clone()),
             },
             UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.pressed, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
-            UiNode::Vec3(vec3) => WidgetNode::Vec3 { id: vec3.id.clone(), value: vec3.value, on_change: Some(vec3.on_change.clone()) },
             UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, on_change: Some(slider.on_change.clone()) },
             UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
@@ -15683,6 +15757,7 @@ mod tests {
                 None => WidgetNode::Section { id: field.id.clone(), label: Some(field.label.clone()), default_open: true, children: vec![to_widget_node(&field.child)] },
             },
             UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
+            UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
             UiNode::Tree(tree) => WidgetNode::Tree {
                 sections: tree.sections.iter().map(tree_section_to_widget).collect(),
                 selected_ids: tree.selected_ids.clone().unwrap_or_default(),
@@ -15712,7 +15787,6 @@ mod tests {
                 on_change: Some(n.on_change.clone()),
             },
             UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
-            UiControlNode::Vec3(n) => ControlNode::Vec3 { id: n.id.clone(), value: n.value, on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => ControlNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
@@ -15736,7 +15810,6 @@ mod tests {
                 on_change: Some(n.on_change.clone()),
             },
             UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
-            UiControlNode::Vec3(n) => WidgetNode::Vec3 { id: n.id.clone(), value: n.value, on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => WidgetNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
@@ -15900,11 +15973,6 @@ mod tests {
     #[test]
     fn golden_toggle() {
         assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), pressed: true, text: Some("On".into()), on_change: action() })));
-    }
-
-    #[test]
-    fn golden_vec3() {
-        assert_equivalent("Vec3", &leaf(UiNode::Vec3(UiVec3Node { id: "v3".into(), value: Some([1.0, 2.0, 3.0]), on_change: action() })));
     }
 
     #[test]
@@ -16128,12 +16196,6 @@ pub struct RingMeta<E> {
     pub radius: f32,
 }
 
-#[derive(Clone, Debug)]
-pub struct Vec3Meta<E> {
-    pub on_change: E,
-    pub value: [f64; 3],
-}
-
 pub struct WidgetInteractionMaps<E> {
     pub input_metas: HashMap<String, InputMeta<E>>,
     pub select_metas: HashMap<String, E>,
@@ -16141,7 +16203,6 @@ pub struct WidgetInteractionMaps<E> {
     pub slider_metas: HashMap<String, SliderMeta<E>>,
     pub stepper_metas: HashMap<String, StepperMeta<E>>,
     pub ring_metas: HashMap<String, RingMeta<E>>,
-    pub vec3_metas: HashMap<String, Vec3Meta<E>>,
     pub slider_live_values: HashMap<String, f64>,
     pub ring_live_values: HashMap<String, f64>,
     pub tree_hover_commands: HashMap<String, E>,
@@ -16158,7 +16219,6 @@ impl<E> Default for WidgetInteractionMaps<E> {
             slider_metas: HashMap::new(),
             stepper_metas: HashMap::new(),
             ring_metas: HashMap::new(),
-            vec3_metas: HashMap::new(),
             slider_live_values: HashMap::new(),
             ring_live_values: HashMap::new(),
             tree_hover_commands: HashMap::new(),
@@ -16176,7 +16236,6 @@ impl<E> WidgetInteractionMaps<E> {
         self.slider_metas.clear();
         self.stepper_metas.clear();
         self.ring_metas.clear();
-        self.vec3_metas.clear();
         self.slider_live_values.clear();
         self.ring_live_values.clear();
         self.tree_hover_commands.clear();
@@ -16266,7 +16325,6 @@ pub enum ControlNode<E> {
         on_change: Option<E>,
     },
     Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
-    Vec3 { id: String, value: Option<[f64; 3]>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
     Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
     NumberStepper {
@@ -16308,7 +16366,6 @@ pub enum WidgetNode<E> {
         on_change: Option<E>,
     },
     Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
-    Vec3 { id: String, value: Option<[f64; 3]>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
     Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
     NumberStepper {
@@ -16378,7 +16435,6 @@ pub fn measure_widget<E>(atlas: &mut FontAtlas, theme: &Theme, node: &WidgetNode
         WidgetNode::Button { .. } | WidgetNode::Input { .. } | WidgetNode::Select { .. }
         | WidgetNode::Toggle { .. } | WidgetNode::Slider { .. } | WidgetNode::NumberStepper { .. }
         | WidgetNode::IconSelect { .. } => (theme.control_height, theme.control_height),
-        WidgetNode::Vec3 { .. } => (theme.control_height, theme.control_height * 3.0 + theme.gap_standard * 2.0),
         WidgetNode::KeyValue { entries } => {
             let label_w = entries
                 .iter()
@@ -16415,7 +16471,6 @@ fn measure_control<E>(atlas: &mut FontAtlas, theme: &Theme, control: &ControlNod
         ControlNode::Button { .. } | ControlNode::Input { .. } | ControlNode::Select { .. }
         | ControlNode::Toggle { .. } | ControlNode::Slider { .. } | ControlNode::NumberStepper { .. }
         | ControlNode::IconSelect { .. } => (theme.control_height, theme.control_height),
-        ControlNode::Vec3 { .. } => (theme.control_height, theme.control_height * 3.0 + theme.gap_standard * 2.0),
         ControlNode::KeyValue { entries } => {
             let label_w = entries
                 .iter()
@@ -16477,7 +16532,6 @@ pub fn render_widget<E: Clone>(
             register_toggle_meta(ctx, id, *pressed, on_change.clone());
             render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
-        WidgetNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         WidgetNode::Slider { id, value, min, max, step, on_change } => {
             render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
@@ -16573,7 +16627,6 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
             register_toggle_meta(ctx, id, *pressed, on_change.clone());
             render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
-        ControlNode::Vec3 { id, value, on_change } => render_vec3(id, *value, on_change.clone(), bounds, ctx),
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         ControlNode::Slider { id, value, min, max, step, on_change } => {
             render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
@@ -16835,24 +16888,6 @@ fn render_toggle<E: Clone>(
         drag_axis: None,
         drag_data: None,
     });
-}
-
-fn render_vec3<E: Clone>(id: &str, value: Option<[f64; 3]>, on_change: Option<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
-    let values = value.unwrap_or([0.0, 0.0, 0.0]);
-    if let (Some(maps), Some(on_change)) = (ctx.interaction_maps.as_deref_mut(), on_change) {
-        maps.vec3_metas.insert(id.to_string(), Vec3Meta { on_change, value: values });
-    }
-    let gap = ctx.theme.gap_standard;
-    let seg_w = (bounds.w - gap * 2.0) / 3.0;
-    let labels = ["X", "Y", "Z"];
-    for (index, axis) in labels.iter().enumerate() {
-        let x = bounds.x + index as f32 * (seg_w + gap);
-        let row = Rect::new(x, bounds.y, seg_w, bounds.h);
-        let input_id = format!("{id}.{index}");
-        let text = format!("{:.3}", values[index]);
-        register_input_meta(ctx, &input_id, &text, None, None);
-        render_input(&input_id, &text, Some(axis), row, ctx);
-    }
 }
 
 fn render_key_value<E>(entries: &[KeyValueEntry], bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
@@ -17903,6 +17938,6 @@ pub use chrome::{
 pub use widgets::{
     draw_icon, draw_text, draw_text_overlay, draw_text_wrapped, measure_widget, render_scroll_region, render_widget,
     wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta, StepperMeta,
-    TreeItem, TreeItemAction, TreeSection, Vec3Meta, WidgetContext, WidgetInteractionMaps, WidgetNode,
+    TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
 };
 // #endregion re-exports

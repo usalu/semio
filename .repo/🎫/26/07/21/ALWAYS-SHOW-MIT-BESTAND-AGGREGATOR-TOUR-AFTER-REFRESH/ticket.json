@@ -1,0 +1,14 @@
+{
+  "title": "Always Show Mit Bestand Aggregator Tour After Refresh",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "The Entwerfen mit Bestand Aggregator should always show its introduction tour after the window is refreshed. Currently the first-run-seen flag is persisted in localStorage so the tour only auto-starts once per device. Make the Aggregator brand always replay the tour on every load/refresh (clean long-term brand-level policy, not a one-off hack).",
+  "summary": "Aggregator brand now replays its introduction on every window load. Added ShellBrand.replayIntroductionOnLoad; enabled it on entwerfen-mit-bestand; shell skips reading/writing the device-local seen flag for that policy. Unit tests and a Playwright refresh check confirmed the tour still appears when ui.introduction.seen.* is already set.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2190"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪76e1690d6f544384984f569afd65886e"
+  ]
+}

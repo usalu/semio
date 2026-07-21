@@ -17,7 +17,8 @@ import {
   type UtilityNode,
   type UiNode,
 } from "@semio-tech/framework-core";
-import { SelectionMarquee } from "@semio-tech/ui-react";
+import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../product/os/dev/brand/index.ts";
+import { SelectionMarquee, ZUKUNFT_BAU_PROJECT_URL } from "@semio-tech/ui-react";
 import {
   Canvas2dHost,
   worldToScreenLogical,
@@ -114,6 +115,8 @@ import {
   mergeShellLockSources,
   resolveShellDefaults,
   resolveShellLocks,
+  shouldPersistIntroductionSeen,
+  shouldReplayIntroductionOnLoad,
   type ResolvedCommand,
   shellReducer,
   sortUtilityNodes,
@@ -2962,6 +2965,31 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(state.layout.activeExampleId).toBe("concrete-forest");
     const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" } });
     expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
+  });
+
+  it("shouldReplayIntroductionOnLoad opts a brand into replaying its tour after every window refresh", () => {
+    expect(shouldReplayIntroductionOnLoad(undefined)).toBe(false);
+    expect(shouldReplayIntroductionOnLoad({ id: "plain", windowTitle: "Plain" })).toBe(false);
+    expect(shouldReplayIntroductionOnLoad({ id: "plain", windowTitle: "Plain", replayIntroductionOnLoad: false })).toBe(false);
+    expect(shouldReplayIntroductionOnLoad({ id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(true);
+    expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
+    expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
+    expect(ENTWERFEN_MIT_BESTAND_BRAND.replayIntroductionOnLoad).toBe(true);
+  });
+
+  it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
+    const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "move-utility", "catalogue", "add-object"]);
+
+    const funding = steps.find((step) => step.id === "funding")!;
+    expect(funding.logos).toHaveLength(3);
+    for (const logo of funding.logos!) {
+      expect(logo.src).toMatch(/^\/asset\/logo\//);
+      expect(logo.darkSrc).toMatch(/^\/asset\/logo\//);
+      expect(logo.alt).toBeTruthy();
+    }
+    const zukunftBauLogo = funding.logos!.find((logo) => logo.href === ZUKUNFT_BAU_PROJECT_URL);
+    expect(zukunftBauLogo).toBeDefined();
   });
 
   it("buildOsCommands omits only the commands for locked prefs", () => {

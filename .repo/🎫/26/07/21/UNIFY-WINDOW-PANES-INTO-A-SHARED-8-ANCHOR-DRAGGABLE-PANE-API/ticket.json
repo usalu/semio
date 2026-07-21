@@ -1,0 +1,13 @@
+{
+  "title": "Unify Window Panes Into A Shared 8-Anchor Draggable Pane API",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Window panes (measures, engagement/actions, search, utility bar, controls) are inconsistent in sizing, positioning, and UI element usage across apps. Build one shared Pane API/mechanism (extending the existing 6-anchor Panel dock to 8 anchors: 4 corners + 4 edge middles), whole-pane draggable between any anchor, with a clearance model so opposite-anchored panes never overlap. Migrate the shell Window's 5 bespoke overlay slots plus cad's bespoke asides and infinite's hardcoded floating chrome onto it. Concretely fixes: puzzle 3d's Werkzeug/Füllen options tree overlapping the top ribbons (bottom-anchored tree had no clearance/scroll bound) — the tree must grow upward to just below the top panes, show everything, and scroll internally beyond that.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2194"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪539b33f535bd42e98516834fdb4c0b7f"
+  ]
+}

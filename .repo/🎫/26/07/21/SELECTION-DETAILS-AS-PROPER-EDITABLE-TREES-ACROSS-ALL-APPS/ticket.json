@@ -1,0 +1,13 @@
+{
+  "title": "Selection Details As Proper Editable Trees Across All Apps",
+  "emoji": "🌳",
+  "status": "open",
+  "description": "All selection details panels should be proper trees. For all apps. All information associated with the selected elements should be shown and editable with UI elements. Example: puzzle 3d objects — Origin \u003e X \u003cStepper\u003e, Y \u003cStepper\u003e, Z \u003cStepper\u003e. Implementation follows the approved plan: introduce a nestable declarative UiGroupNode (replacing UiVec3Node), shared Rust/TS inspector helpers for stepper fields and vec3 groups, per-axis dot-path patch semantics with absolute/delta support, then apply across puzzle 3d (reference implementation), puzzle 2d, compose sketchpad, and sweep remaining apps.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2191"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪f54c9688c8df4673b9bc5572be4da321"
+  ]
+}
