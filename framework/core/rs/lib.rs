@@ -1149,7 +1149,6 @@ pub enum MediaPayload {
 /// 🔑 A cheap identity for one port's current output, independent of serializing the full payload — the unit the `StudioRunner` compares to decide whether a downstream node actually needs to see a new value.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
 pub struct MediaFingerprint(pub String);
 
 impl MediaFingerprint {
@@ -3529,11 +3528,10 @@ pub enum IntroductionAnchor {
 pub enum IntroductionEmphasis {
     /// 🌫️ No cutout — the anchor stays veiled (used with `IntroductionAnchor::Screen`).
     None,
-    /// 🕳️ The anchor is cut out of the veil, shown normally and interactive.
+    /// 🕳️ The anchor is cut out of the veil, shown normally and interactive, and pulses the
+    /// introduced border ([[data-introduced]]) itself.
     #[default]
     Cutout,
-    /// ✨ Cutout plus an animated ring around the anchor.
-    Highlight,
 }
 
 /// @emoji 📍 Where the info box is placed relative to its anchor.
@@ -3797,8 +3795,8 @@ pub enum PanelGroup {
 
 impl PanelGroup {
     /// 🧭 The dock anchor this group defaults to. Groups only ever map to the four corner anchors —
-    /// the two middle anchors (`top-middle`/`bottom-middle`) start empty and are user-populated via
-    /// drag-and-drop or a dock skeleton override, never via a `PanelGroup`.
+    /// the four edge-middle anchors (`top-middle`/`right-middle`/`bottom-middle`/`left-middle`) start
+    /// empty and are user-populated via drag-and-drop or a dock skeleton override, never via a `PanelGroup`.
     pub fn anchor(&self) -> &'static str {
         match self {
             PanelGroup::Workbench => "top-left",

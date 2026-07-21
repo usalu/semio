@@ -1,8 +1,9 @@
 {
   "title": "Locked 3D Click Deselects Like Background",
   "emoji": "🔓",
-  "status": "open",
+  "status": "closed",
   "description": "Bug in 3D: when an item is locked and it is clicked it should be equivalent to clicking background. e.g. when in puzzle 3d clicking on a locked reference it should deselect everything.",
+  "summary": "Locked 3D entities no longer absorb canvas picks. Shared world layer uses selectable (not inspectable) for reference/volume raycasts so locked clicks pass through like background and fire deselect. Puzzle objects emit disabled when locked; instance picks and worldPick treat locked hits as clear-selection. Covered by worldEntityFlags vitest + world_pick_locked_object_clears_like_background.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2193"
   },

@@ -2556,6 +2556,8 @@ mod tests {
                     min: 1.0,
                     max: 10.0,
                     step: Some(1.0),
+                    ready: None,
+                    loading: None,
                     on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setSize".into(), args: None },
                 }],
             },
@@ -5994,6 +5996,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             min: slider.min,
             max: slider.max,
             step: slider.step,
+            ready: None,
             on_change: Some(slider.on_change.clone()),
         },
         UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
@@ -6102,6 +6105,7 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
             min: n.min,
             max: n.max,
             step: n.step,
+            ready: None,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => ControlNode::NumberStepper {
@@ -6217,6 +6221,7 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
             min: n.min,
             max: n.max,
             step: n.step,
+            ready: None,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper {
@@ -6883,7 +6888,7 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<PluginBridgeEntry>, 
 }
 
 //#region 🏠🧳PluginHostConfig
-#[path = "../../../plugin/registry/generated/hosts.rs"]
+#[path = "../../../../plugin/registry/generated/hosts.rs"]
 mod generated_plugin_hosts;
 
 pub use generated_plugin_hosts::{is_studio_mode, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
@@ -14899,33 +14904,38 @@ async fn resolve_external_slots_in_tree(
 
 //#region ShellLifecycle
 //#region 🧭PanelAnchorModel
-/// 🧭 The framework's generic 6-anchor panel positioning model — mirrors `PanelGroup::anchor()`
-/// (`framework/core/rs/lib.rs`) and React's `PanelAnchor`/`PANEL_ANCHORS` (`ui/js/react/index.tsx:5164`).
+/// 🧭 The framework's generic 8-anchor panel positioning model — mirrors `PanelGroup::anchor()`
+/// (`framework/core/rs/lib.rs`) and React's `Anchor`/`ANCHORS` (`ui/js/react/index.tsx`).
 /// This shell only ever surfaces the four corners today: `left_panel_open`/`right_panel_open` gate
 /// visibility and `active_left_kind`/`active_right_kind` pick which of the two candidates occupies that
 /// side, exactly the same Workbench/Display and Details/Settings corner split `PanelGroup::anchor()`
 /// already declares. Re-homing that onto named anchors here gives future code (drag re-anchoring,
 /// middle-anchor content) one generic surface to target instead of the scattered `group_side` left/right
-/// fold. `TopMiddle`/`BottomMiddle` are real anchors with nothing assigned to them yet — matches upstream,
-/// where `PanelGroup` never maps to a middle anchor either.
+/// fold. The four edge-middle anchors (`TopMiddle`/`BottomMiddle`/`LeftMiddle`/`RightMiddle`) are real
+/// anchors with nothing assigned to them yet — matches upstream, where `PanelGroup` never maps to a
+/// middle anchor either.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PanelAnchor {
     TopLeft,
     TopMiddle,
     TopRight,
-    BottomLeft,
-    BottomMiddle,
+    RightMiddle,
     BottomRight,
+    BottomMiddle,
+    BottomLeft,
+    LeftMiddle,
 }
 
 impl PanelAnchor {
-    pub const ALL: [PanelAnchor; 6] = [
+    pub const ALL: [PanelAnchor; 8] = [
         PanelAnchor::TopLeft,
         PanelAnchor::TopMiddle,
         PanelAnchor::TopRight,
-        PanelAnchor::BottomLeft,
-        PanelAnchor::BottomMiddle,
+        PanelAnchor::RightMiddle,
         PanelAnchor::BottomRight,
+        PanelAnchor::BottomMiddle,
+        PanelAnchor::BottomLeft,
+        PanelAnchor::LeftMiddle,
     ];
 
     pub fn as_str(&self) -> &'static str {
@@ -14933,9 +14943,11 @@ impl PanelAnchor {
             PanelAnchor::TopLeft => "top-left",
             PanelAnchor::TopMiddle => "top-middle",
             PanelAnchor::TopRight => "top-right",
-            PanelAnchor::BottomLeft => "bottom-left",
-            PanelAnchor::BottomMiddle => "bottom-middle",
+            PanelAnchor::RightMiddle => "right-middle",
             PanelAnchor::BottomRight => "bottom-right",
+            PanelAnchor::BottomMiddle => "bottom-middle",
+            PanelAnchor::BottomLeft => "bottom-left",
+            PanelAnchor::LeftMiddle => "left-middle",
         }
     }
 
@@ -15774,7 +15786,7 @@ impl ShellState {
 
     //#region 🧭PanelAnchorAccessors
     /// 🧭 Projects the current left/right toggle state onto the named anchor it corresponds to (see
-    /// `🧭PanelAnchorModel` above). `TopMiddle`/`BottomMiddle` are always empty — nothing assigns there yet.
+    /// `🧭PanelAnchorModel` above). The four edge-middle anchors are always empty — nothing assigns there yet.
     pub fn panel_anchor_snapshot(&self, anchor: PanelAnchor) -> PanelAnchorSnapshot {
         match anchor {
             PanelAnchor::TopLeft => PanelAnchorSnapshot {
@@ -15797,7 +15809,7 @@ impl ShellState {
                 size: self.right_panel_width,
                 active_tab: (self.active_right_kind == RightPanelKind::Settings).then(|| "settings".to_string()),
             },
-            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle => PanelAnchorSnapshot::default(),
+            PanelAnchor::TopMiddle | PanelAnchor::BottomMiddle | PanelAnchor::LeftMiddle | PanelAnchor::RightMiddle => PanelAnchorSnapshot::default(),
         }
     }
 
@@ -15892,14 +15904,16 @@ mod panel_anchor_model_tests {
             (PanelAnchor::TopLeft, "top-left"),
             (PanelAnchor::TopMiddle, "top-middle"),
             (PanelAnchor::TopRight, "top-right"),
-            (PanelAnchor::BottomLeft, "bottom-left"),
-            (PanelAnchor::BottomMiddle, "bottom-middle"),
+            (PanelAnchor::RightMiddle, "right-middle"),
             (PanelAnchor::BottomRight, "bottom-right"),
+            (PanelAnchor::BottomMiddle, "bottom-middle"),
+            (PanelAnchor::BottomLeft, "bottom-left"),
+            (PanelAnchor::LeftMiddle, "left-middle"),
         ];
         for (anchor, id) in expected {
             assert_eq!(anchor.as_str(), id);
         }
-        assert_eq!(PanelAnchor::ALL.len(), 6);
+        assert_eq!(PanelAnchor::ALL.len(), 8);
     }
 
     #[test]
@@ -15936,6 +15950,8 @@ mod panel_anchor_model_tests {
         state.right_panel_open = true;
         assert_eq!(state.panel_anchor_snapshot(PanelAnchor::TopMiddle), PanelAnchorSnapshot::default());
         assert_eq!(state.panel_anchor_snapshot(PanelAnchor::BottomMiddle), PanelAnchorSnapshot::default());
+        assert_eq!(state.panel_anchor_snapshot(PanelAnchor::LeftMiddle), PanelAnchorSnapshot::default());
+        assert_eq!(state.panel_anchor_snapshot(PanelAnchor::RightMiddle), PanelAnchorSnapshot::default());
     }
 
     #[test]
@@ -22959,6 +22975,8 @@ impl ShellState {
                 min,
                 max,
                 step,
+                ready,
+                loading: _,
                 on_change,
             } => {
                 if let Some(label) = label {
@@ -22970,6 +22988,7 @@ impl ShellState {
                     min: *min,
                     max: *max,
                     step: step.unwrap_or(0.01),
+                    ready: *ready,
                     on_change: Some(on_change.clone()),
                 };
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
@@ -23306,6 +23325,7 @@ impl ShellState {
                     min: *min,
                     max: *max,
                     step: step.unwrap_or(0.01),
+                    ready: None,
                     on_change: on_change.clone(),
                 }
             }

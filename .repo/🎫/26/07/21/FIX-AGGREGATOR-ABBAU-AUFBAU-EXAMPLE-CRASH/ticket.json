@@ -1,0 +1,16 @@
+{
+  "title": "Fix Aggregator Abbau Aufbau Example Crash",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "The Entwerfen mit Bestand Aggregator should always show its introduction tour after the window is refreshed. Currently the first-run-seen flag is persisted in localStorage so the tour only auto-starts once per device. Make the Aggregator brand always replay the tour on every load/refresh (clean long-term brand-level policy, not a one-off hack).",
+  "summary": "Fixed Chrome error-code-5 crashes when loading/selecting Abbau Aufbau. The LOD world grid grew GridHelper divisions without a cap; grazing camera frustums requested millions of cells and OOM-killed the tab. Capped divisions at 2048 and coarsen stepWorld for huge footprints instead. Unit tests cover the clamp and grazing camera; Aggregator select/reload stayed alive in Playwright.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2190"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪76e1690d6f544384984f569afd65886e",
+    "⚪0e0c11e9454e4367bfb2979bf1556721",
+    "⚪677403eb1ce841b3b54c9d96b59e3342"
+  ]
+}

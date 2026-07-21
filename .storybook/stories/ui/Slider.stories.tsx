@@ -49,4 +49,19 @@ export const Default: Story = {
   },
 };
 
+export const ReadyExtent: Story = {
+  args: {
+    ...defaultArgs,
+    id: "slider-ready",
+    value: [70] as number[],
+    min: 0,
+    max: 150,
+    ready: 110,
+  },
+  render: (args) => {
+    const [value, setValue] = useState(args.value);
+    return <Slider {...args} value={value} onValueChange={setValue} />;
+  },
+};
+
 // #endregion 🏩Slider

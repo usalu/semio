@@ -25,6 +25,7 @@ import {
   isUiTypingTarget,
   marqueeCoverageFromGesture,
   normalizeEngagementActionText,
+  Pane,
   queryWindowSearchInput,
   reactHostPort,
   sceneHostPort,
@@ -37,7 +38,9 @@ import {
   sortCanvasPickTargetsGeneralFirst,
   UnifiedGumball,
   gumballPointerConsumesCanvasEventRef,
+  usePaneSlot,
   WINDOW_SEARCH_USER,
+  type Anchor,
   type CanvasPickRequest,
   type CanvasPickTarget,
   type EngagementControl,
@@ -4700,6 +4703,16 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
     input,
     possibles: possibles.length ? possibles : undefined,
   };
+}
+
+/** @emoji 🔀 Portals the world's orthographic/perspective switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane, instead of the fixed corner it used to be hardcoded to. */
+function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
+  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
+  return usePaneSlot(
+    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label="Projection">
+      <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
+    </Pane>,
+  );
 }
 
 /** @emoji 🪩 Full spatial REPL: canvas, interaction palette, history controls, last response. */

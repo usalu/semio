@@ -29,6 +29,7 @@ const Canvas = sceneHostPort.fiber.canvas;
 const useFrame = sceneHostPort.fiber.useFrame;
 const useThree = sceneHostPort.fiber.useThree;
 const GizmoHelper = sceneHostPort.drei.GizmoHelper;
+const Grid = sceneHostPort.drei.Grid;
 const OrthographicCamera = sceneHostPort.drei.OrthographicCamera;
 const PerspectiveCamera = sceneHostPort.drei.PerspectiveCamera;
 const {
@@ -39,21 +40,27 @@ const {
   Color,
   DoubleSide,
   EdgesGeometry,
-  GridHelper,
   Group,
   LineBasicMaterial,
   LineSegments,
+  LinearFilter,
   Matrix4,
   Mesh,
   MeshBasicMaterial,
   MOUSE,
+  NearestFilter,
   Object3D,
   OrthographicCamera: ThreeOrthographicCamera,
   PerspectiveCamera: ThreePerspectiveCamera,
   PlaneGeometry,
   Quaternion,
   Ray,
+  RGBAFormat,
+  Scene,
+  ShaderMaterial,
+  Vector2,
   Vector3,
+  WebGLRenderTarget,
 } = sceneHostPort.three;
 type Camera = import("three").Camera;
 // #endregion 🔌Adapters
@@ -76,6 +83,8 @@ export interface WorldCameraState {
   readonly zoom: number;
   readonly up?: Vec3;
   readonly projection?: OrbitCameraProjection;
+  /** @emoji 📐 Full classical-projection taxonomy spec (Parallel/Perspective families); see {@link WorldProjectionSpec}. */
+  readonly projectionSpec?: WorldProjectionSpec;
 }
 
 export type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
@@ -696,36 +705,12 @@ export const DEFAULT_LOD_GRID_FACTOR = 10;
 export const WORLD_LOD_SLIDER_MIN = 0;
 export const WORLD_LOD_SLIDER_MAX = 1000;
 export const WORLD_LOD_EPSILON = 0.01;
-export const WORLD_LOD_GRID_STEP_RATIO = 0.05;
-export const WORLD_LOD_GRID_MIN_DIVISIONS = 512;
-export const WORLD_LOD_GRID_FRUSTUM_OVERSCAN = 1.125;
-export const WORLD_LOD_GRID_PLANE_EPSILON = 1e-6;
-
-const WORLD_LOD_GRID_FRUSTUM_CORNERS = [
-  [-1, -1, -1],
-  [1, -1, -1],
-  [1, 1, -1],
-  [-1, 1, -1],
-  [-1, -1, 1],
-  [1, -1, 1],
-  [1, 1, 1],
-  [-1, 1, 1],
-] as const;
-
-const WORLD_LOD_GRID_FRUSTUM_EDGES = [
-  [0, 1],
-  [1, 2],
-  [2, 3],
-  [3, 0],
-  [4, 5],
-  [5, 6],
-  [6, 7],
-  [7, 4],
-  [0, 4],
-  [1, 5],
-  [2, 6],
-  [3, 7],
-] as const;
+export const WORLD_LOD_GRID_BASE_LOD = 2;
+export const WORLD_LOD_GRID_MIN_FADE_CELLS = 24;
+export const WORLD_LOD_GRID_FADE_HEIGHT_FACTOR = 32;
+export const WORLD_LOD_GRID_FADE_STRENGTH = 1.5;
+export const WORLD_ORBIT_CAMERA_MIN_FAR = 524_288;
+export const WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR = 1024;
 
 /** @emoji 📶 Maps orbit camera distance to scene LOD (`distance / reference`). */
 export function lodFromCameraDistance(distance: number, reference: number): number {
@@ -783,78 +768,28 @@ export function sliderValueFromLod(lod: number, range: { readonly min: number; r
   return Math.round(WORLD_LOD_SLIDER_MIN + t * (WORLD_LOD_SLIDER_MAX - WORLD_LOD_SLIDER_MIN));
 }
 
-/** @emoji 📐 Unbounded, screen-stable LOD grid step using regular 1–2.5–5 quanta. */
+/** @emoji 📐 Sparse, unbounded LOD grid step using the configured spacing and regular 1–2.5–5 multipliers. */
 export function lodGridStepWorld(lod: number, gridFactor: number): number | null {
   if (!Number.isFinite(lod) || lod <= 0 || !Number.isFinite(gridFactor) || gridFactor <= 0) return null;
-  const target = lod * gridFactor * WORLD_LOD_GRID_STEP_RATIO;
-  const magnitude = 10 ** Math.floor(Math.log10(target));
-  const normalized = target / magnitude;
+  const targetMultiplier = Math.max(1, lod / WORLD_LOD_GRID_BASE_LOD);
+  const magnitude = 10 ** Math.floor(Math.log10(targetMultiplier));
+  const normalized = targetMultiplier / magnitude;
   const quantum = normalized <= 1 ? 1 : normalized <= 2.5 ? 2.5 : normalized <= 5 ? 5 : 10;
-  return quantum * magnitude;
+  return gridFactor * quantum * magnitude;
 }
 
-export interface WorldGridPlaneBounds {
-  readonly minX: number;
-  readonly maxX: number;
-  readonly minY: number;
-  readonly maxY: number;
+/** @emoji 🌫️ Stable world-space fade radius for the procedural grid before camera clipping becomes visible. */
+export function cameraGridFadeDistance(camera: Camera, planeZ: number, stepWorld: number): number {
+  const height = Math.abs(camera.position.z - planeZ);
+  const target = Math.max(stepWorld * WORLD_LOD_GRID_MIN_FADE_CELLS, height * WORLD_LOD_GRID_FADE_HEIGHT_FACTOR);
+  const cells = 2 ** Math.ceil(Math.log2(target / stepWorld));
+  return Math.min(stepWorld * cells, camera.far * 0.25);
 }
 
-export interface WorldGridLayout {
-  readonly stepWorld: number;
-  readonly size: number;
-  readonly divisions: number;
-  readonly position: Vec3;
-}
-
-/** @emoji 📐 Finds the exact camera-frustum footprint on a horizontal world plane. */
-export function cameraFrustumPlaneBounds(camera: Camera, planeZ: number): WorldGridPlaneBounds | null {
-  camera.updateMatrixWorld();
-  const corners = WORLD_LOD_GRID_FRUSTUM_CORNERS.map(([x, y, z]) => new Vector3(x, y, z).unproject(camera));
-  const intersections: Vector3[] = [];
-  for (const [startIndex, endIndex] of WORLD_LOD_GRID_FRUSTUM_EDGES) {
-    const start = corners[startIndex]!;
-    const end = corners[endIndex]!;
-    const startDistance = start.z - planeZ;
-    const endDistance = end.z - planeZ;
-    if (Math.abs(startDistance) <= WORLD_LOD_GRID_PLANE_EPSILON) intersections.push(start);
-    if (Math.abs(endDistance) <= WORLD_LOD_GRID_PLANE_EPSILON) intersections.push(end);
-    if (startDistance * endDistance < 0) intersections.push(start.clone().lerp(end, startDistance / (startDistance - endDistance)));
-  }
-  if (!intersections.length) return null;
-  let minX = Number.POSITIVE_INFINITY;
-  let maxX = Number.NEGATIVE_INFINITY;
-  let minY = Number.POSITIVE_INFINITY;
-  let maxY = Number.NEGATIVE_INFINITY;
-  for (const point of intersections) {
-    minX = Math.min(minX, point.x);
-    maxX = Math.max(maxX, point.x);
-    minY = Math.min(minY, point.y);
-    maxY = Math.max(maxY, point.y);
-  }
-  return { minX, maxX, minY, maxY };
-}
-
-/** @emoji 📏 One exact-spacing grid geometry sized to the current frustum; coarser bands are never stacked. */
-export function lodGridGeometrySpec(lod: number, gridFactor: number, minimumSize = 0): { readonly stepWorld: number; readonly size: number; readonly divisions: number } | null {
-  const stepWorld = lodGridStepWorld(lod, gridFactor);
-  if (stepWorld == null || !Number.isFinite(stepWorld) || stepWorld <= 0) return null;
-  const minimumDivisions = Math.max(WORLD_LOD_GRID_MIN_DIVISIONS, Math.ceil((minimumSize * WORLD_LOD_GRID_FRUSTUM_OVERSCAN) / stepWorld));
-  const divisions = 2 ** Math.ceil(Math.log2(minimumDivisions));
-  return { stepWorld, size: stepWorld * divisions, divisions };
-}
-
-/** @emoji 📏 Builds one world-aligned grid layout that fully covers the visible grid-plane frustum. */
-export function cameraLodGridLayout(camera: Camera, lod: number, gridFactor: number, datum: Vec3 = DEFAULT_GRID_PLANE_ANCHOR_CAD): WorldGridLayout | null {
-  const stepWorld = lodGridStepWorld(lod, gridFactor);
-  if (stepWorld == null) return null;
-  const bounds = cameraFrustumPlaneBounds(camera, datum[2]);
-  if (!bounds) return null;
-  const centerX = Math.round(((bounds.minX + bounds.maxX) * 0.5) / stepWorld) * stepWorld;
-  const centerY = Math.round(((bounds.minY + bounds.maxY) * 0.5) / stepWorld) * stepWorld;
-  const minimumSize = 2 * Math.max(centerX - bounds.minX, bounds.maxX - centerX, centerY - bounds.minY, bounds.maxY - centerY);
-  const geometry = lodGridGeometrySpec(lod, gridFactor, minimumSize);
-  return geometry ? { ...geometry, position: [centerX, centerY, datum[2] + 0.001] } : null;
+/** @emoji 📷 Quantized far clipping distance that follows arbitrarily large orbit distances. */
+export function adaptiveOrbitCameraFar(distance: number): number {
+  const target = Math.max(WORLD_ORBIT_CAMERA_MIN_FAR, Math.max(0, distance) * WORLD_ORBIT_CAMERA_FAR_DISTANCE_FACTOR);
+  return 2 ** Math.ceil(Math.log2(target));
 }
 
 export interface LodContextValue {
@@ -885,58 +820,54 @@ interface LodRuntimeCells {
 
 const worldRaycastNone: Object3D["raycast"] = () => undefined;
 
-function applyLodGridLayerStyle(grid: GridHelper, opacity: number): void {
-  const materials = Array.isArray(grid.material) ? grid.material : [grid.material];
-  for (const raw of materials) {
-    const mat = raw as LineBasicMaterial;
-    mat.transparent = true;
-    mat.opacity = opacity;
-    mat.depthTest = true;
-    mat.depthWrite = false;
-  }
-  grid.renderOrder = -5;
-  grid.frustumCulled = false;
-  grid.raycast = worldRaycastNone;
-  grid.traverse((child) => {
-    child.raycast = worldRaycastNone;
-  });
-}
-
-/** @emoji 📐 Single regular world grid at the placement anchor. */
+/** @emoji 📐 Sparse procedural world grid that follows the camera and fades without a finite edge. */
 export function WorldLodGridHelper(props: { readonly gridDatum?: Vec3 }): ReactElement | null {
   const lod = useLod();
   const camera = useThree((s) => s.camera);
   const invalidate = useThree((s) => s.invalidate);
   const datum = props.gridDatum ?? DEFAULT_GRID_PLANE_ANCHOR_CAD;
-  const [layout, setLayout] = reactHostPort.useState<WorldGridLayout | null>(() => cameraLodGridLayout(camera, lod.lod, lod.gridFactor, datum));
+  const stepWorld = lodGridStepWorld(lod.lod, lod.gridFactor);
+  const [fadeDistance, setFadeDistance] = reactHostPort.useState(() => (stepWorld == null ? 1 : cameraGridFadeDistance(camera, datum[2], stepWorld)));
+  const gridRef = reactHostPort.useRef<Mesh | null>(null);
   useFrame(() => {
-    const next = cameraLodGridLayout(camera, lod.lod, lod.gridFactor, datum);
-    setLayout((previous) => {
-      if (!previous || !next) return previous === next ? previous : next;
-      return previous.stepWorld === next.stepWorld && previous.divisions === next.divisions && previous.position[0] === next.position[0] && previous.position[1] === next.position[1] && previous.position[2] === next.position[2] ? previous : next;
-    });
+    if (stepWorld == null) return;
+    const next = cameraGridFadeDistance(camera, datum[2], stepWorld);
+    setFadeDistance((previous) => (previous === next ? previous : next));
   });
   const [gridColor, setGridColor] = reactHostPort.useState<number>(() => resolveThreeColor(themeColorVar("element"), "gray"));
   useCanvasAppearanceSync(reactHostPort.useCallback(() => setGridColor(resolveThreeColor(themeColorVar("element"), "gray")), []));
-  const grid = reactHostPort.useMemo(() => {
-    if (!layout) return null;
-    const next = new GridHelper(layout.size, layout.divisions, gridColor, gridColor);
-    next.rotation.x = Math.PI / 2;
-    applyLodGridLayerStyle(next, 1);
-    return next;
-  }, [layout?.stepWorld, layout?.divisions, gridColor]);
-  reactHostPort.useEffect(
-    () => () => {
-      grid?.dispose();
-    },
-    [grid],
-  );
   reactHostPort.useLayoutEffect(() => {
+    const grid = gridRef.current;
     if (!grid) return;
+    const materials = Array.isArray(grid.material) ? grid.material : [grid.material];
+    for (const material of materials) {
+      material.depthTest = true;
+      material.depthWrite = false;
+    }
+    grid.renderOrder = -5;
+    grid.raycast = worldRaycastNone;
     invalidate();
-  }, [grid, invalidate]);
-  if (!grid || !layout) return null;
-  return <primitive object={grid} position={layout.position} />;
+  }, [gridColor, invalidate]);
+  if (stepWorld == null) return null;
+  return (
+    <Grid
+      ref={gridRef}
+      args={[2, 2]}
+      position={[0, 0, datum[2] + 0.001]}
+      rotation={[Math.PI / 2, 0, 0]}
+      cellSize={stepWorld}
+      cellThickness={0.6}
+      cellColor={gridColor}
+      sectionSize={stepWorld}
+      sectionThickness={0}
+      sectionColor={gridColor}
+      fadeDistance={fadeDistance}
+      fadeStrength={WORLD_LOD_GRID_FADE_STRENGTH}
+      followCamera
+      infiniteGrid
+      side={DoubleSide}
+    />
+  );
 }
 
 function LodFrameRunner(props: {
@@ -959,6 +890,14 @@ function LodFrameRunner(props: {
   useFrame(() => {
     const tgt = controls?.target ?? tmpT.set(0, 0, 0);
     const dist = cam.position.distanceTo(tgt);
+    if (cam instanceof ThreePerspectiveCamera || cam instanceof ThreeOrthographicCamera) {
+      const far = adaptiveOrbitCameraFar(dist);
+      if (cam.far !== far) {
+        cam.far = far;
+        cam.updateProjectionMatrix();
+        invalidate();
+      }
+    }
     const autoLod = lodFromCameraDistance(dist, props.distanceReference);
     const sceneLod = props.automaticLod ? autoLod : props.depthVariableLod ? autoLod : props.manualLod;
     props.lodRef.current = sceneLod;
@@ -1557,9 +1496,11 @@ export interface WorldOrbitProjectionSwitchProps {
   readonly className?: string;
 }
 
-/** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports. */
+/** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports — a pure chrome surface with no
+ * position of its own; callers place it (typically inside a {@link Pane} via {@link usePaneSlot}, so it's draggable
+ * to any anchor like every other window pane). */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
-  const shellClass = props.className ?? cn("pointer-events-auto absolute bottom-[4.75rem] right-3 z-10 flex text-2xs font-medium", floatingRibbonSurfaceClass);
+  const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
   const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
   return (
     <div className={shellClass} data-world-projection-switch>
@@ -1775,9 +1716,9 @@ export function WorldOrbitCameraViewRig(props: { readonly state: WorldCameraStat
   return (
     <>
       {projection === "orthographic" ? (
-        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={500_000} zoom={props.state.zoom} />
+        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
       ) : (
-        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={500_000} fov={props.perspectiveFov ?? 50} zoom={props.state.zoom} />
+        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={props.perspectiveFov ?? 50} zoom={props.state.zoom} />
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={props.seedKey} />
     </>
@@ -1818,6 +1759,399 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
   return null;
 }
 // #endregion 📷OrbitCameraView
+
+// #region 📐WorldProjection
+/** @emoji 📐 Parallel vs. perspective camera family a {@link WorldProjectionSpec} belongs to. */
+export type WorldProjectionFamily = "parallel" | "perspective";
+
+export type WorldOrthographicViewId = "plan" | "top" | "bottom" | "front" | "back" | "left" | "right";
+export type WorldAxonometricVariant = "isometric" | "dimetric" | "trimetric";
+export type WorldAxonometricQuadrant = "ne" | "nw" | "se" | "sw";
+export type WorldObliqueVariant = "cabinet" | "cavalier" | "military";
+export type WorldCurvilinearMapping = "fisheye" | "panini";
+
+/** @emoji 📐 Full classical projection taxonomy: Parallel (Orthographic/Axonometric/Oblique) and
+ * Perspective (1/2/3-Point/Curvilinear) — see https://en.wikipedia.org/wiki/Axonometric_projection
+ * and https://en.wikipedia.org/wiki/Oblique_projection for the family math this taxonomy encodes. */
+export type WorldProjectionSpec =
+  | { readonly kind: "orthographic"; readonly view: WorldOrthographicViewId }
+  | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number; readonly quadrant: WorldAxonometricQuadrant }
+  | { readonly kind: "oblique"; readonly variant: WorldObliqueVariant; readonly angle: number; readonly depthScale: number }
+  | { readonly kind: "onePoint"; readonly axis: "x" | "y" | "z"; readonly fov: number }
+  | { readonly kind: "twoPoint"; readonly fov: number; readonly verticalShift: number }
+  | { readonly kind: "threePoint"; readonly fov: number }
+  | { readonly kind: "curvilinear"; readonly fov: number; readonly strength: number; readonly mapping: WorldCurvilinearMapping };
+
+export type WorldProjectionKind = WorldProjectionSpec["kind"];
+
+/** @emoji 📡 Command name products handle to apply a {@link WorldProjectionSpec}. */
+export const WORLD_PROJECTION_COMMAND = "setProjection";
+
+/** @emoji 📐 Parallel family = orthographic camera (Orthographic/Axonometric/Oblique); everything else is perspective. */
+export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): WorldProjectionFamily {
+  if (!spec) {
+    return "perspective";
+  }
+  return spec.kind === "orthographic" || spec.kind === "axonometric" || spec.kind === "oblique" ? "parallel" : "perspective";
+}
+
+/** @emoji 📐 Baseline parameters for a freshly-selected projection kind. */
+export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProjectionSpec {
+  switch (kind) {
+    case "orthographic":
+      return { kind, view: "top" };
+    case "axonometric":
+      return { kind, variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" };
+    case "oblique":
+      return { kind, variant: "cavalier", angle: 45, depthScale: 1 };
+    case "onePoint":
+      return { kind, axis: "y", fov: 50 };
+    case "twoPoint":
+      return { kind, fov: 50, verticalShift: 0 };
+    case "curvilinear":
+      return { kind, fov: 120, strength: 1, mapping: "fisheye" };
+    default:
+      return { kind: "threePoint", fov: 50 };
+  }
+}
+
+const WORLD_PROJECTION_DEFAULT_DISTANCE = 600;
+
+/** @emoji 📷 Computes a Z-up camera pose for the full projection taxonomy — the axonometric branch derives
+ * elevation/azimuth from the two projected-axis angles (`elevation = asin(sqrt(tan a * tan b))`,
+ * `azimuth = atan(sqrt(tan a / tan b))`; 30/30 yields the classic 35.264°/45° isometric direction). */
+export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: { readonly target: Vec3; readonly distance?: number; readonly zoom?: number }): WorldCameraState {
+  const distance = options.distance ?? WORLD_PROJECTION_DEFAULT_DISTANCE;
+  const target = options.target;
+  const family = worldProjectionFamily(spec);
+  const zoom = family === "parallel" ? (options.zoom !== undefined && options.zoom !== 1 ? options.zoom : 50) : (options.zoom ?? 1);
+  const at = (dir: Vec3, up: Vec3): WorldCameraState => ({
+    position: [target[0] + dir[0] * distance, target[1] + dir[1] * distance, target[2] + dir[2] * distance],
+    target,
+    up,
+    zoom,
+    projection: family === "parallel" ? "orthographic" : "perspective",
+    projectionSpec: spec,
+  });
+  switch (spec.kind) {
+    case "orthographic":
+      switch (spec.view) {
+        case "bottom":
+          return at([0, 0, -1], [0, -1, 0]);
+        case "front":
+          return at([0, -1, 0], [0, 0, 1]);
+        case "back":
+          return at([0, 1, 0], [0, 0, 1]);
+        case "left":
+          return at([-1, 0, 0], [0, 0, 1]);
+        case "right":
+          return at([1, 0, 0], [0, 0, 1]);
+        default: // "plan" | "top"
+          return at([0, 0, 1], [0, 1, 0]);
+      }
+    case "axonometric": {
+      const angleA = (spec.variant === "isometric" ? 30 : spec.angleA) * (Math.PI / 180);
+      const angleB = (spec.variant === "isometric" ? 30 : spec.variant === "dimetric" ? spec.angleA : spec.angleB) * (Math.PI / 180);
+      const elevation = Math.asin(Math.sqrt(Math.tan(angleA) * Math.tan(angleB)));
+      const azimuth = Math.atan(Math.sqrt(Math.tan(angleA) / Math.tan(angleB)));
+      const signX = spec.quadrant === "nw" || spec.quadrant === "sw" ? -1 : 1;
+      const signY = spec.quadrant === "se" || spec.quadrant === "sw" ? -1 : 1;
+      const dir: Vec3 = [signX * Math.cos(elevation) * Math.sin(azimuth), signY * Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation)];
+      return at(dir, [0, 0, 1]);
+    }
+    case "oblique":
+      if (spec.variant === "military") {
+        const rotation = spec.angle * (Math.PI / 180);
+        return at([0, 0, 1], [Math.sin(rotation), Math.cos(rotation), 0]);
+      }
+      return at([0, -1, 0], [0, 0, 1]);
+    case "onePoint":
+      switch (spec.axis) {
+        case "x":
+          return at([-1, 0, 0], [0, 0, 1]);
+        case "z":
+          return at([0, 0, 1], [0, 1, 0]);
+        default:
+          return at([0, -1, 0], [0, 0, 1]);
+      }
+    case "twoPoint":
+      return at([Math.SQRT1_2, -Math.SQRT1_2, 0], [0, 0, 1]);
+    default: // "threePoint" | "curvilinear"
+      return at(vec3Normalize([0.75, -0.75, 0.55]), [0, 0, 1]);
+  }
+}
+
+/** @emoji 🔒 Orbit-interaction constraints implied by a projection — drafting-locked kinds (`plan`, oblique)
+ * and axis-locked one-point perspective disable rotation; two-point keeps the horizon level. */
+export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | undefined): { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number } {
+  if (!spec) {
+    return { rotate: true };
+  }
+  if ((spec.kind === "orthographic" && spec.view === "plan") || spec.kind === "oblique" || spec.kind === "onePoint") {
+    return { rotate: false };
+  }
+  if (spec.kind === "twoPoint") {
+    return { rotate: true, minPolar: Math.PI / 2, maxPolar: Math.PI / 2 };
+  }
+  return { rotate: true };
+}
+
+/** @emoji 📷 Applies a projection kind/variant switch, keeping the current pose when the caller supplies one
+ * (pure parameter tweaks like angle/depth/fov never move the camera — only the matrix driver re-shears). */
+export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
+  const family = worldProjectionFamily(spec);
+  return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom !== 1 ? state.zoom : 50) : state.zoom };
+}
+
+/** @emoji 📷 Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
+export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void }): ReactElement {
+  const family = worldProjectionFamily(props.spec);
+  const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
+  const cameraKey = `${props.spec.kind}:${props.seedKey}`;
+  const fov = props.spec.kind === "onePoint" || props.spec.kind === "twoPoint" || props.spec.kind === "threePoint" ? props.spec.fov : props.spec.kind === "curvilinear" ? Math.min(props.spec.fov, 160) : 50;
+  return (
+    <>
+      {family === "parallel" ? (
+        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
+      ) : (
+        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={fov} zoom={props.state.zoom} />
+      )}
+      <WorldOrbitCameraViewRigSeed state={props.state} seedKey={`${cameraKey}`} />
+      {props.spec.kind === "oblique" || props.spec.kind === "twoPoint" ? <WorldProjectionMatrixDriver spec={props.spec} /> : null}
+      {props.spec.kind === "curvilinear" ? <WorldCurvilinearPass spec={props.spec} /> : null}
+    </>
+  );
+}
+
+/** @emoji 📷 Applies a projection preset when `seedKey` changes (owned-camera canvases) — mirrors {@link WorldOrbitCameraViewApplier}. */
+export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSpec; readonly seedKey: string | number }): ReactElement {
+  const { camera } = useThree();
+  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const targetScratch = reactHostPort.useMemo(() => new Vector3(), []);
+  const state = reactHostPort.useMemo(() => {
+    const target = controls?.target ?? targetScratch.set(0, 0, 0);
+    const targetCad = threeVec3ToCad(target);
+    const distance = camera ? Math.hypot(camera.position.x - target.x, camera.position.y - target.y, camera.position.z - target.z) || WORLD_PROJECTION_DEFAULT_DISTANCE : WORLD_PROJECTION_DEFAULT_DISTANCE;
+    return computeWorldProjectionPose(props.spec, { target: targetCad, distance });
+  }, [camera, controls, props.seedKey, props.spec, targetScratch]);
+  return <WorldProjectionRig spec={props.spec} state={state} seedKey={props.seedKey} />;
+}
+
+/** @emoji 🪞 Post-multiplies the oblique receding-axis shear or two-point vertical lens-shift onto the active
+ * camera's projection matrix every frame (after recomputing the pristine matrix, so resize/zoom never compounds
+ * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse. */
+function WorldProjectionMatrixDriver(props: { readonly spec: Extract<WorldProjectionSpec, { kind: "oblique" | "twoPoint" }> }): null {
+  const { camera, invalidate } = useThree();
+  useFrame(() => {
+    camera.updateProjectionMatrix();
+    if (props.spec.kind === "oblique" && camera instanceof ThreeOrthographicCamera) {
+      const angle = props.spec.angle * (Math.PI / 180);
+      const l = props.spec.variant === "military" ? 1 : props.spec.depthScale;
+      const alpha = props.spec.variant === "military" ? Math.PI / 2 : angle;
+      const shear = new Matrix4().identity();
+      shear.elements[8] = -l * Math.cos(alpha);
+      shear.elements[9] = -l * Math.sin(alpha);
+      camera.projectionMatrix.multiply(shear);
+    } else if (props.spec.kind === "twoPoint" && camera instanceof ThreePerspectiveCamera) {
+      camera.projectionMatrix.elements[9] += props.spec.verticalShift;
+    }
+    camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
+    invalidate();
+  }, 1);
+  return null;
+}
+
+/** @emoji 🐟 Remaps a pointer NDC coordinate through the inverse curvilinear radius mapping so raycasting against
+ * the exact (undistorted) capture-space render stays pixel-accurate under fisheye/panini distortion. */
+export function worldCurvilinearUnproject(ndc: readonly [number, number], spec: Extract<WorldProjectionSpec, { kind: "curvilinear" }>, aspect = 1): readonly [number, number] {
+  const halfFov = (Math.min(spec.fov, 160) * (Math.PI / 180)) / 2;
+  const scaled: [number, number] = [ndc[0] * aspect, ndc[1]];
+  const r = Math.hypot(scaled[0], scaled[1]);
+  if (r < 1e-6) {
+    return ndc;
+  }
+  const theta = r * halfFov;
+  const rectilinearR = Math.tan(theta) / Math.tan(halfFov);
+  const sourceR = rectilinearR / Math.max(spec.strength, 1e-3);
+  const scale = sourceR / r;
+  return [(scaled[0] * scale) / aspect, scaled[1] * scale];
+}
+
+const WORLD_CURVILINEAR_VERTEX_SHADER = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = vec4(position.xy, 0.0, 1.0);
+  }
+`;
+
+const WORLD_CURVILINEAR_FRAGMENT_SHADER = `
+  uniform sampler2D tCapture;
+  uniform float uFov;
+  uniform float uStrength;
+  uniform float uAspect;
+  uniform float uMapping; // 0 = fisheye, 1 = panini
+  varying vec2 vUv;
+  void main() {
+    vec2 ndc = vUv * 2.0 - 1.0;
+    vec2 scaled = vec2(ndc.x * uAspect, ndc.y);
+    float halfFov = uFov * 0.5;
+    float r = length(scaled);
+    vec2 sourceNdc = ndc;
+    if (r > 1e-5) {
+      float theta = r * halfFov;
+      float rectR = tan(theta) / tan(halfFov);
+      float sourceR = mix(r, rectR, uStrength);
+      float scale = sourceR / r;
+      sourceNdc = vec2((scaled.x * scale) / uAspect, scaled.y * scale);
+    }
+    vec2 sourceUv = sourceNdc * 0.5 + 0.5;
+    if (sourceUv.x < 0.0 || sourceUv.x > 1.0 || sourceUv.y < 0.0 || sourceUv.y > 1.0) {
+      gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      return;
+    }
+    gl_FragColor = texture2D(tCapture, sourceUv);
+  }
+`;
+
+/** @emoji 🐟 Wide-FOV planar capture (capped at 160°, exact and material-agnostic below full 180°) remapped through
+ * a fullscreen fisheye/panini shader — chosen over a 6-face cubemap unwrap because it needs one extra render target
+ * instead of six, works with every material, and the taxonomy never promises >=180° coverage. */
+function WorldCurvilinearPass(props: { readonly spec: Extract<WorldProjectionSpec, { kind: "curvilinear" }> }): null {
+  const { gl, camera, scene, size, invalidate } = useThree();
+  const targetRef = reactHostPort.useRef<InstanceType<typeof WebGLRenderTarget> | null>(null);
+  const quadRef = reactHostPort.useRef<{ readonly scene: InstanceType<typeof Scene>; readonly camera: InstanceType<typeof ThreeOrthographicCamera>; readonly material: InstanceType<typeof ShaderMaterial> } | null>(null);
+
+  useFrame(() => {
+    if (!(camera instanceof ThreePerspectiveCamera)) {
+      return;
+    }
+    const width = Math.max(1, Math.floor(size.width));
+    const height = Math.max(1, Math.floor(size.height));
+    if (!targetRef.current || targetRef.current.width !== width || targetRef.current.height !== height) {
+      targetRef.current?.dispose();
+      targetRef.current = new WebGLRenderTarget(width, height, { minFilter: LinearFilter, magFilter: NearestFilter, format: RGBAFormat });
+    }
+    if (!quadRef.current) {
+      const material = new ShaderMaterial({
+        vertexShader: WORLD_CURVILINEAR_VERTEX_SHADER,
+        fragmentShader: WORLD_CURVILINEAR_FRAGMENT_SHADER,
+        uniforms: { tCapture: { value: targetRef.current.texture }, uFov: { value: 1 }, uStrength: { value: 1 }, uAspect: { value: 1 }, uMapping: { value: 0 } },
+        depthTest: false,
+        depthWrite: false,
+      });
+      const quadScene = new Scene();
+      quadScene.add(new Mesh(new PlaneGeometry(2, 2), material));
+      const quadCamera = new ThreeOrthographicCamera(-1, 1, 1, -1, 0, 1);
+      quadRef.current = { scene: quadScene, camera: quadCamera, material };
+    }
+    const target = targetRef.current;
+    const { material } = quadRef.current;
+    material.uniforms.tCapture.value = target.texture;
+    material.uniforms.uFov.value = Math.min(props.spec.fov, 160) * (Math.PI / 180);
+    material.uniforms.uStrength.value = props.spec.strength;
+    material.uniforms.uAspect.value = width / height;
+    material.uniforms.uMapping.value = props.spec.mapping === "panini" ? 1 : 0;
+
+    gl.setRenderTarget(target);
+    gl.render(scene, camera);
+    gl.setRenderTarget(null);
+    gl.render(quadRef.current.scene, quadRef.current.camera);
+    invalidate();
+  }, 1);
+
+  reactHostPort.useEffect(() => {
+    return () => {
+      targetRef.current?.dispose();
+      quadRef.current?.material.dispose();
+    };
+  }, []);
+  return null;
+}
+
+export interface WorldProjectionTemplateDescriptor {
+  readonly id: string;
+  readonly label: string;
+  readonly controllerId: string;
+  readonly command: string;
+  readonly args: { readonly spec: WorldProjectionSpec };
+  readonly children?: readonly WorldProjectionTemplateDescriptor[];
+}
+
+export interface CreateWorldProjectionTemplatesConfig {
+  readonly controllerId: string;
+  readonly command?: string;
+}
+
+function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
+  return { id, label, controllerId, command, args: { spec } };
+}
+
+function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
+  return { id, label, controllerId, command, args: { spec }, children };
+}
+
+/** @emoji 🪟 Builds the exact requested taxonomy tree for the display-panel drag palette:
+ * `Parallel > Orthographic (Plan/Top/Bottom/Front/Back/Left/Right) | Axonometric (Isometric/Dimetric/Trimetric) | Oblique (Cabinet/Cavalier/Military)`
+ * and `Perspective > 1-Point/2-Point/3-Point/Curvilinear`. */
+export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
+  const { controllerId } = config;
+  const command = config.command ?? WORLD_PROJECTION_COMMAND;
+  const leaf = (id: string, label: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, spec);
+  const branch = (id: string, label: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, spec, children);
+
+  const orthographicViews: readonly [WorldOrthographicViewId, string][] = [
+    ["plan", "Plan"],
+    ["top", "Top"],
+    ["bottom", "Bottom"],
+    ["front", "Front"],
+    ["back", "Back"],
+    ["left", "Left"],
+    ["right", "Right"],
+  ];
+  const orthographic = branch(
+    "orthographic",
+    "Orthographic",
+    { kind: "orthographic", view: "top" },
+    orthographicViews.map(([view, label]) => leaf(`orthographic-${view}`, label, { kind: "orthographic", view })),
+  );
+
+  const axonometricVariants: readonly [WorldAxonometricVariant, string][] = [
+    ["isometric", "Isometric"],
+    ["dimetric", "Dimetric"],
+    ["trimetric", "Trimetric"],
+  ];
+  const axonometric = branch(
+    "axonometric",
+    "Axonometric",
+    { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" },
+    axonometricVariants.map(([variant, label]) => leaf(`axonometric-${variant}`, label, { kind: "axonometric", variant, angleA: variant === "trimetric" ? 12 : 15, angleB: variant === "trimetric" ? 42 : variant === "isometric" ? 30 : 15, quadrant: "ne" })),
+  );
+
+  const obliqueVariants: readonly [WorldObliqueVariant, string][] = [
+    ["cabinet", "Cabinet"],
+    ["cavalier", "Cavalier"],
+    ["military", "Military"],
+  ];
+  const oblique = branch(
+    "oblique",
+    "Oblique",
+    { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 },
+    obliqueVariants.map(([variant, label]) => leaf(`oblique-${variant}`, label, { kind: "oblique", variant, angle: 45, depthScale: variant === "cabinet" ? 0.5 : 1 })),
+  );
+
+  const parallel = branch("parallel", "Parallel", { kind: "orthographic", view: "top" }, [orthographic, axonometric, oblique]);
+
+  const perspective = branch("perspective", "Perspective", { kind: "threePoint", fov: 50 }, [
+    leaf("one-point", "1-Point", { kind: "onePoint", axis: "y", fov: 50 }),
+    leaf("two-point", "2-Point", { kind: "twoPoint", fov: 50, verticalShift: 0 }),
+    leaf("three-point", "3-Point", { kind: "threePoint", fov: 50 }),
+    leaf("curvilinear", "Curvilinear", { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }),
+  ]);
+
+  return [parallel, perspective];
+}
+// #endregion 📐WorldProjection
 
 // #region 🖱️OrbitMouseBindings
 /** @emoji 🖱️ Orbit-controls instance with mutable mouse button map. */
@@ -2948,73 +3282,34 @@ if (import.meta.vitest) {
   });
 
   describe("lodGridStepWorld", () => {
-    it("keeps adapting through regular spacing quanta without a maximum LOD cutoff", () => {
-      expect(lodGridStepWorld(2, 10)).toBe(1);
-      expect(lodGridStepWorld(10, 10)).toBe(5);
-      expect(lodGridStepWorld(50, 10)).toBe(25);
-      expect(lodGridStepWorld(500, 10)).toBe(250);
-      expect(lodGridStepWorld(5_000, 10)).toBe(2_500);
+    it("keeps the configured spacing at close range and stays sparse at every larger LOD", () => {
+      expect(lodGridStepWorld(1, 7.5)).toBe(7.5);
+      expect(lodGridStepWorld(2, 10)).toBe(10);
+      expect(lodGridStepWorld(10, 10)).toBe(50);
+      expect(lodGridStepWorld(50, 10)).toBe(250);
+      expect(lodGridStepWorld(500, 10)).toBe(2_500);
+      expect(lodGridStepWorld(5_000, 10)).toBe(25_000);
       expect(lodGridStepWorld(Number.POSITIVE_INFINITY, 10)).toBeNull();
     });
   });
 
-  describe("lodGridGeometrySpec", () => {
-    it("builds one regular grid whose rendered interval exactly matches the selected step", () => {
-      const geometry = lodGridGeometrySpec(2, 10);
-      expect(geometry).toEqual({ stepWorld: 1, size: 512, divisions: 512 });
-      expect(geometry!.size / geometry!.divisions).toBe(geometry!.stepWorld);
-      expect(lodGridGeometrySpec(2, 10, 900)).toEqual({ stepWorld: 1, size: 1024, divisions: 1024 });
-      expect(lodGridGeometrySpec(5_000, 10)).toEqual({ stepWorld: 2_500, size: 1_280_000, divisions: 512 });
-    });
-  });
-
-  describe("cameraLodGridLayout", () => {
-    it("grows with camera distance and covers the complete ground-plane frustum", () => {
-      const camera = new ThreePerspectiveCamera(45, 16 / 9, 0.1, 10_000);
-      camera.up.set(0, 0, 1);
+  describe("cameraGridFadeDistance", () => {
+    it("grows with camera Z while fading fully before the far clipping plane", () => {
+      const camera = new ThreePerspectiveCamera(45, 16 / 9, 0.1, 500_000);
       camera.position.set(0, -100, 100);
-      camera.lookAt(0, 0, 0);
-      camera.updateProjectionMatrix();
-      const near = cameraLodGridLayout(camera, 2, 10)!;
-      camera.position.set(0, -2_000, 2_000);
-      camera.lookAt(0, 0, 0);
-      camera.updateProjectionMatrix();
-      const far = cameraLodGridLayout(camera, 2, 10)!;
-      const bounds = cameraFrustumPlaneBounds(camera, 0)!;
-      const halfSize = far.size * 0.5;
-      expect(far.size).toBeGreaterThan(near.size);
-      expect(bounds.minX).toBeGreaterThanOrEqual(far.position[0] - halfSize);
-      expect(bounds.maxX).toBeLessThanOrEqual(far.position[0] + halfSize);
-      expect(bounds.minY).toBeGreaterThanOrEqual(far.position[1] - halfSize);
-      expect(bounds.maxY).toBeLessThanOrEqual(far.position[1] + halfSize);
-      expect(far.size / far.divisions).toBe(far.stepWorld);
-    });
-
-    it("adapts to orthographic zoom without changing the world spacing", () => {
-      const camera = new ThreeOrthographicCamera(-200, 200, 100, -100, 0.1, 1_000);
-      camera.position.set(0, 0, 100);
-      camera.lookAt(0, 0, 0);
-      camera.updateProjectionMatrix();
-      const near = cameraLodGridLayout(camera, 2, 10)!;
-      camera.zoom = 0.25;
-      camera.updateProjectionMatrix();
-      const far = cameraLodGridLayout(camera, 2, 10)!;
-      expect(far.size).toBeGreaterThan(near.size);
-      expect(far.stepWorld).toBe(near.stepWorld);
+      const near = cameraGridFadeDistance(camera, 0, 10);
+      camera.position.z = 2_000;
+      const far = cameraGridFadeDistance(camera, 0, 10);
+      expect(far).toBeGreaterThan(near);
+      expect(far).toBeLessThanOrEqual(camera.far * 0.25);
     });
   });
 
-  describe("applyLodGridLayerStyle", () => {
-    it("disables raycasting on grid helpers", () => {
-      const grid = new GridHelper(100, 10);
-      applyLodGridLayerStyle(grid, 0.5);
-      expect(grid.raycast).toBe(worldRaycastNone);
-      let childCount = 0;
-      grid.traverse((child) => {
-        childCount += 1;
-        expect(child.raycast).toBe(worldRaycastNone);
-      });
-      expect(childCount).toBeGreaterThan(0);
+  describe("adaptiveOrbitCameraFar", () => {
+    it("keeps the far plane ahead of extreme orbit zoom in stable power-of-two bands", () => {
+      expect(adaptiveOrbitCameraFar(100)).toBe(524_288);
+      expect(adaptiveOrbitCameraFar(2_000)).toBe(2_097_152);
+      expect(adaptiveOrbitCameraFar(20_000)).toBe(33_554_432);
     });
   });
 

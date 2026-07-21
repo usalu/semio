@@ -364,6 +364,15 @@ pub enum WindowMeasure {
         max: f64,
         #[cfg_attr(feature = "typegen", ts(optional))]
         step: Option<f64>,
+        /// 🎚 Absolute value on the fixed `[min, max]` range that is already preloaded/ready.
+        /// Renderers keep `max` stable and draw a highlight from the knob to this extent.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        ready: Option<f64>,
+        /// 🌀 When true, the measure tree leaf shows a loading ring while preload continues.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        loading: Option<bool>,
         #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
@@ -779,6 +788,8 @@ mod layout_wire_format_tests {
                 min: 0.0,
                 max: 2.0,
                 step: Some(0.5),
+                ready: None,
+                loading: None,
                 on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
             },
             WindowMeasure::Toggle {
@@ -842,6 +853,8 @@ mod layout_wire_format_tests {
                 min: 0.0,
                 max: 2.0,
                 step: None,
+                ready: None,
+                loading: None,
                 on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
             },
         ];
@@ -15741,7 +15754,7 @@ mod tests {
             },
             UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.pressed, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
             UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
-            UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, on_change: Some(slider.on_change.clone()) },
+            UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, ready: None, on_change: Some(slider.on_change.clone()) },
             UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
                 id: stepper.id.clone(),
                 value: stepper.value,
@@ -15788,7 +15801,7 @@ mod tests {
             },
             UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
-            UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, on_change: Some(n.on_change.clone()) },
+            UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => ControlNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
             UiControlNode::Ring(n) => ControlNode::Ring { id: n.id.clone(), t: n.t, disabled: n.disabled.unwrap_or(false), on_change: Some(n.on_change.clone()) },
             UiControlNode::IconSelect(n) => ControlNode::IconSelect { id: n.id.clone(), value: n.value.clone(), uniform: n.uniform, classifier_kind: n.classifier_kind.clone(), on_change: Some(n.on_change.clone()) },
@@ -15811,7 +15824,7 @@ mod tests {
             },
             UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
-            UiControlNode::Slider(n) => WidgetNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, on_change: Some(n.on_change.clone()) },
+            UiControlNode::Slider(n) => WidgetNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
             UiControlNode::Ring(n) => WidgetNode::Ring { id: n.id.clone(), t: n.t, disabled: n.disabled.unwrap_or(false), on_change: Some(n.on_change.clone()) },
             UiControlNode::IconSelect(n) => WidgetNode::IconSelect { id: n.id.clone(), value: n.value.clone(), uniform: n.uniform, classifier_kind: n.classifier_kind.clone(), on_change: Some(n.on_change.clone()) },
@@ -16326,7 +16339,7 @@ pub enum ControlNode<E> {
     },
     Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
-    Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
+    Slider { id: String, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, on_change: Option<E> },
     NumberStepper {
         id: String,
         value: f64,
@@ -16367,7 +16380,7 @@ pub enum WidgetNode<E> {
     },
     Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
-    Slider { id: String, value: f64, min: f64, max: f64, step: f64, on_change: Option<E> },
+    Slider { id: String, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, on_change: Option<E> },
     NumberStepper {
         id: String,
         value: f64,
@@ -16533,8 +16546,8 @@ pub fn render_widget<E: Clone>(
             render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
-        WidgetNode::Slider { id, value, min, max, step, on_change } => {
-            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
+        WidgetNode::Slider { id, value, min, max, step, ready, on_change } => {
+            render_slider(id, *value, *min, *max, *step, *ready, on_change.clone(), bounds, ctx);
         }
         WidgetNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
             render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);
@@ -16628,8 +16641,8 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
             render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
-        ControlNode::Slider { id, value, min, max, step, on_change } => {
-            render_slider(id, *value, *min, *max, *step, on_change.clone(), bounds, ctx);
+        ControlNode::Slider { id, value, min, max, step, ready, on_change } => {
+            render_slider(id, *value, *min, *max, *step, *ready, on_change.clone(), bounds, ctx);
         }
         ControlNode::NumberStepper { id, value, step, uniform, on_absolute, on_delta } => {
             render_number_stepper(id, *value, *step, *uniform, on_absolute.clone(), on_delta.clone(), bounds, ctx);
@@ -16925,6 +16938,7 @@ fn render_slider<E: Clone>(
     min: f64,
     max: f64,
     step: f64,
+    ready: Option<f64>,
     on_change: Option<E>,
     bounds: Rect,
     ctx: &mut WidgetContext<'_, E>,
@@ -16937,7 +16951,8 @@ fn render_slider<E: Clone>(
         let dx = ctx.input.drag.current_x - ctx.input.drag.start_x;
         t = (t as f32 + dx / bounds.w.max(1.0)).clamp(0.0, 1.0) as f64;
     }
-    let live = quantize_step(min + t * range, step, min).clamp(min, max);
+    let selectable_max = ready.map(|extent| extent.clamp(min, max)).unwrap_or(max);
+    let live = quantize_step(min + t * range, step, min).clamp(min, selectable_max);
     if let Some(maps) = ctx.interaction_maps.as_deref_mut() {
         if let Some(on_change) = on_change {
             maps.slider_metas.insert(
@@ -16945,7 +16960,7 @@ fn render_slider<E: Clone>(
                 SliderMeta {
                     on_change,
                     min,
-                    max,
+                    max: selectable_max,
                     step,
                     value,
                     bounds_x: bounds.x,
@@ -16955,7 +16970,16 @@ fn render_slider<E: Clone>(
         }
         maps.slider_live_values.insert(id.to_string(), live);
     }
-    let knob_x = bounds.x + bounds.w * ((live - min) / range).clamp(0.0, 1.0) as f32;
+    let value_t = ((live - min) / range).clamp(0.0, 1.0) as f32;
+    if let Some(ready_extent) = ready {
+        let ready_t = ((ready_extent.clamp(min, max) - min) / range).clamp(0.0, 1.0) as f32;
+        if ready_t > value_t {
+            let ready_x = bounds.x + bounds.w * value_t;
+            let ready_w = bounds.w * (ready_t - value_t);
+            ctx.draw.push_rounded([ready_x, track_y - 2.0, ready_w, 4.0], Rgba::new(0.03433981, 0.63759687, 0.52099557, 1.0), 2.0);
+        }
+    }
+    let knob_x = bounds.x + bounds.w * value_t;
     ctx.draw.push_rounded([knob_x - 6.0, track_y - 6.0, 12.0, 12.0], ctx.theme.accent, 6.0);
     ctx.input.register_hit(HitTarget {
         rect: bounds,

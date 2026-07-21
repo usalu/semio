@@ -1,0 +1,13 @@
+{
+  "title": "Introduced State Styling for UI Elements and Introduction Border Migration",
+  "emoji": "✨",
+  "status": "open",
+  "description": "Add a universal \"introduced\" styling state to UI elements: a pulsating border-thickness ring (not a spinning conic ring) in the highlight/primary color, triggered via a global `[data-introduced=\"true\"]` attribute. Migrate the introduction (tour) system off its separate floating overlay ring div (ui/js/react/index.tsx ~4933-4935) so an introduced step is just a glass-veil cutout, and the anchored UI element itself displays the introduced styling by having the anchor DOM element stamped with data-introduced. Merge the IntroductionEmphasis enum: remove the \"Highlight\" variant entirely (greenfield, no back-compat) so only \"None\" and \"Cutout\" remain, with \"Cutout\" always implying the anchor pulses. The step's title/body text stays in the existing floating glass info box - only the ring migrates onto the element. Touches: ui/styling/js/ui.css (new keyframes + [data-introduced] rule), ui/js/react/index.tsx (hook stamping logic, emphasis handling, remove overlay div, extend in-file tests), framework/core/rs/lib.rs (remove Highlight variant), framework/core/js/generated/manifest.ts (regenerated via typegen), puzzle/plugin/rs/lib.rs (drop .emphasis(Highlight) calls), framework/product/os/dev/brand/entwerfen-mit-bestand.brand.ts (emphasis: \"highlight\" -\u003e \"cutout\").",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2196"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪5ade14696a2842f79660c1848cbc285d"
+  ]
+}

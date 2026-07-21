@@ -4735,7 +4735,10 @@ function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
  * e.g. in a test fixture that never unfolds the rail — leak forever) re-attempts attachment on every DOM
  * change, so a fallback attachment upgrades to the real anchor the moment it mounts (e.g. once the rail
  * unfolds) without ever polling when the DOM is idle. */
-function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = []): IntroductionAnchorResolution {
+/** @emoji 🎓 When `introduce` is set, stamps the resolved anchor element with `data-introduced="true"`
+ * (pulsing the introduced border, see `ui/styling/js/ui.css`) for as long as it stays attached, moving
+ * the stamp if a better-ranked selector mounts and clearing it on step change/unmount. */
+function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = [], introduce = false): IntroductionAnchorResolution {
   const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
 
   reactHostPort.useEffect(() => {
@@ -4765,9 +4768,11 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
         const candidate = document.querySelector(selectors[index]!);
         if (!candidate) continue;
         resizeObserver?.disconnect();
+        if (introduce) element?.removeAttribute("data-introduced");
         element = candidate;
         activeSelectorIndex = index;
         reportedUnresolved = false;
+        if (introduce) candidate.setAttribute("data-introduced", "true");
         measure();
         resizeObserver = new ResizeObserver(measure);
         resizeObserver.observe(candidate);
@@ -4787,12 +4792,13 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
+      if (introduce) element?.removeAttribute("data-introduced");
       resizeObserver?.disconnect();
       mutationObserver.disconnect();
       window.removeEventListener("resize", onResize);
       setResolution({ rect: null, viaFallback: false });
     };
-  }, [selector, fallbackSelectors]);
+  }, [selector, fallbackSelectors, introduce]);
 
   return resolution;
 }
@@ -4867,12 +4873,13 @@ export type UIIntroductionProps = {
 };
 
 /** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
- * anchor is cut out of it (optionally with a pulsing highlight ring), and an info box explains it —
- * renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
+ * anchor is cut out of it and — for `emphasis: "cutout"` — pulses the introduced border itself, and an
+ * info box explains it — renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition`
+ * contract. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss, anchorFallbackSelectors = [] }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const selector = step ? introductionAnchorSelector(step.anchor) : null;
-  const { rect: anchorRect, viaFallback } = useIntroductionAnchorRect(selector, anchorFallbackSelectors);
+  const { rect: anchorRect, viaFallback } = useIntroductionAnchorRect(selector, anchorFallbackSelectors, step ? step.emphasis !== "none" : false);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -4916,7 +4923,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   if (!step) return null;
 
   const advance: IntroductionAdvance = step.advance;
-  const emphasis: IntroductionEmphasis = anchorRect ? (viaFallback ? "highlight" : step.emphasis) : "none";
+  const emphasis: IntroductionEmphasis = anchorRect ? (viaFallback ? "cutout" : step.emphasis) : "none";
   const cutout = emphasis === "none" ? null : anchorRect;
   const bands = introductionVeilBands(viewport, cutout);
   const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
@@ -4930,9 +4937,6 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       {bands.map((band, index) => (
         <div key={index} className={cn("ui-glass-veil z-tutorial fixed", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} style={{ top: band.top, left: band.left, width: band.width, height: band.height }} />
       ))}
-      {emphasis === "highlight" && cutout && (
-        <div className="pointer-events-none fixed z-tutorial rounded border-2 border-primary animate-pulse" style={{ top: cutout.top - 4, left: cutout.left - 4, width: cutout.width + 8, height: cutout.height + 8 }} />
-      )}
       <div ref={boxRef} data-slot="introduction-info-box" className={GLASS_OVERLAY_BOX_CLASS} style={{ top: boxPosition.top, left: boxPosition.left }}>
         <div className="mb-single flex items-center justify-between gap-double">
           <h3 className="text-sm font-medium">{step.title}</h3>
@@ -4946,8 +4950,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             {step.logos.map((logo, index) => {
               const image = (
                 <>
-                  <img src={logo.src} alt={logo.alt} className={cn("h-8 w-auto object-contain", logo.darkSrc && "dark:hidden")} />
-                  {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-8 w-auto object-contain dark:block" />}
+                  <img src={logo.src} alt={logo.alt} className={cn("h-16 w-auto object-contain", logo.darkSrc && "dark:hidden")} />
+                  {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-16 w-auto object-contain dark:block" />}
                 </>
               );
               return logo.href ? (
@@ -5141,6 +5145,9 @@ export const formControlFocusBorderClass = cn("outline-none", interactiveControl
 
 /** @emoji 🎚 Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
 export const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
+
+/** @emoji 🎚 Slider ready extent — secondary highlight from the knob to the preloaded/ready value on a fixed range. */
+export const sliderReadyClassName = cn("bg-[var(--accent-secondary)] pointer-events-none absolute data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full");
 
 /** @emoji 🎚 Slider thumb — element border at rest; hover fill; primary fill when dragging/focused. */
 export const sliderThumbClassName = cn(
@@ -6497,8 +6504,8 @@ export const windowSearchBodyClass = windowEngagementBodyClass;
 /** @emoji 📐 Outer overlay for the floating window utility bar along the bottom-left edge. */
 export const utilityBarOverlayClass = "pointer-events-none absolute bottom-0 left-0 z-panel flex max-h-full flex-col items-start p-0";
 
-/** @emoji 📐 Horizontal utility row beside the utility bar chrome toggle: fixed to the chrome's height, never taller. */
-export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto px-single";
+/** @emoji 📐 Utility row beside the utility bar chrome toggle — a single utility keeps the chrome's height, but the active utility's options tree (stacked above it) can grow taller; its inline `maxHeight` (see {@link useWindowUtilityBarMaxHeightPx}) caps it just below the top-anchored chrome and this scrolls the overflow instead of painting past that line. */
+export const utilityBarBodyClass = "flex min-h-medium min-w-0 flex-auto items-center gap-single overflow-x-auto overflow-y-auto px-single";
 
 /** @emoji 📐 CSS variable for invisible top clearance below floating window chrome. */
 export const windowChromeScrollClearanceVar = "--window-chrome-scroll-clearance";
@@ -9603,6 +9610,7 @@ function Slider({
   value,
   min = 0,
   max = 100,
+  ready,
   showLabel,
   onValueChange,
   onPointerDown,
@@ -9614,6 +9622,8 @@ function Slider({
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
+    /** @emoji 🎚 Absolute value along the fixed `[min, max]` range that is already preloaded/ready; drawn as a highlight to the right of the knob. */
+    ready?: number;
     showLabel?: boolean;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
@@ -9639,6 +9649,11 @@ function Slider({
   const _values = draftValues ?? externalValues;
 
   const displayValue = _values[0] ?? min;
+  const selectableMax = ready == null ? max : Math.min(max, Math.max(min, ready));
+  const span = max - min;
+  const readyExtent = ready == null || span <= 0 ? null : Math.min(max, Math.max(min, ready));
+  const readyStartPct = span <= 0 ? 0 : ((displayValue - min) / span) * 100;
+  const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : ((readyExtent - displayValue) / span) * 100;
 
   const findNearestSnapValue = reactHostPort.useCallback(
     (val: number): number => {
@@ -9659,11 +9674,12 @@ function Slider({
 
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
-      const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      const nextValues = ready == null ? snapped : snapped.map((entry) => Math.min(entry, selectableMax));
       setDraftValues(nextValues);
       onValueChange?.(nextValues);
     },
-    [snapValues, findNearestSnapValue, onValueChange],
+    [snapValues, findNearestSnapValue, onValueChange, ready, selectableMax],
   );
 
   const handleValueClick = () => {
@@ -9676,7 +9692,7 @@ function Slider({
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       const newValue = parseFloat(editValue);
-      if (!isNaN(newValue) && newValue >= min && newValue <= max) {
+      if (!isNaN(newValue) && newValue >= min && newValue <= selectableMax) {
         handleValueChange([newValue]);
       }
       setIsEditing(false);
@@ -9787,6 +9803,7 @@ function Slider({
         className={cn("bg-muted relative grow overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
       >
         <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
+        {readyWidthPct > 0 ? <div data-slot="slider-ready" data-orientation="horizontal" className={sliderReadyClassName} style={{ left: `${readyStartPct}%`, width: `${readyWidthPct}%` }} /> : null}
       </SliderPrimitive.Track>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb data-slot="slider-thumb" data-dragging={isDragging ? "true" : undefined} key={index} className={sliderThumbClassName} />
@@ -9809,7 +9826,7 @@ function Slider({
             onBlur={handleEditBlur}
             className="w-large min-w-large border-0 px-0 text-end text-xs"
             min={min}
-            max={max}
+            max={selectableMax}
             autoFocus
             id={id}
           />
@@ -15926,13 +15943,15 @@ const windowMeasureTreeRowClassName = "group hover:bg-hover-interactive-fill sel
 interface WindowMeasureTreeRowProps {
   left: React.ReactNode;
   right?: React.ReactNode;
+  loading?: boolean;
 }
 
-const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right }) => (
+const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right, loading = false }) => (
   <div
     data-dim
     data-slot="window-measure-tree-row"
-    className={cn("grid min-w-0 w-full items-center gap-double", windowMeasureTreeRowClassName)}
+    data-loading={loading ? "true" : undefined}
+    className={cn("grid min-w-0 w-full items-center gap-double", windowMeasureTreeRowClassName, loadingBorderStateClass(loading))}
     style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.windowMeasureValueColumnUiSpacing)}` }}
   >
     <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
@@ -16019,10 +16038,11 @@ export interface WindowMeasureTreeLeafProps {
   label?: string;
   children: React.ReactNode;
   fullWidth?: boolean;
+  loading?: boolean;
 }
 
 /** @emoji 🌳 Measure control leaf aligned like a tree row (label + value or full-width control). */
-export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false }) => {
+export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false, loading = false }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   const labelNode = label ? (
     <span data-slot="tree-label" className={cn("truncate select-none", windowMeasureTreeLeafLabelClass)} style={treeItemLabelStyle}>
@@ -16032,6 +16052,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
   if (fullWidth) {
     return (
       <WindowMeasureTreeRow
+        loading={loading}
         left={
           <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="min-w-0 w-full">
             <div data-slot="window-measure-tree-leaf-body" className="min-w-0 w-full">
@@ -16044,6 +16065,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
   }
   return (
     <WindowMeasureTreeRow
+      loading={loading}
       left={
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
           {labelNode}
@@ -16499,7 +16521,7 @@ export { PageNavigation };
 // #region 📷Panel Components
 
 // #region 🧭Panel
-// Collapsible panel growing from one of the display's six anchors (four corners plus a top/bottom middle), with tabbed content.
+// Collapsible panel growing from one of the display's eight anchors (four corners plus four edge middles), with tabbed content.
 // Consumers MUST provide PanelTabNode entries (see {@link PanelTabNode} in #region 🩻Ribbon Components).
 
 export interface TreePanelConfig {
@@ -16957,6 +16979,216 @@ export { Panel };
 
 // #endregion 🧭Panel
 
+// #region 🪟Pane
+// Window-level floating chrome (measures, engagement, search, utility bar, and any app-contributed floating
+// control) — anchored and draggable across the same eight anchors a Panel docks to (see 🧭Panel above), so panels
+// and panes share one positioning mechanism end to end. Naming follows the repo convention (see ticket
+// `26/07/15/RENAME-WINDOW-PANELS-TO-PANES-AND-CORNER-PANELS-TO-PANELS`): "panel" is the shell-edge dock, "pane" is
+// chrome floating inside one window.
+
+/** @emoji 🧭 Nearest anchor to a pointer position within a host's bounding rect — a 3×3 zone grid over the box.
+ * There is no center anchor, so the dead-center zone resolves to whichever edge-middle the pointer has drifted
+ * closer to (compares distance from the vertical vs. horizontal midline). */
+export function nearestAnchor(pointerX: number, pointerY: number, hostRect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): Anchor {
+  const x = hostRect.width > 0 ? (pointerX - hostRect.left) / hostRect.width : 0.5;
+  const y = hostRect.height > 0 ? (pointerY - hostRect.top) / hostRect.height : 0.5;
+  const col: "left" | "middle" | "right" = x < 1 / 3 ? "left" : x > 2 / 3 ? "right" : "middle";
+  const row: "top" | "middle" | "bottom" = y < 1 / 3 ? "top" : y > 2 / 3 ? "bottom" : "middle";
+  if (row !== "middle" && col !== "middle") return `${row}-${col}` as Anchor;
+  if (row !== "middle") return `${row}-middle` as Anchor;
+  if (col !== "middle") return `${col}-middle` as Anchor;
+  const distanceFromVerticalMidline = Math.abs(x - 0.5);
+  const distanceFromHorizontalMidline = Math.abs(y - 0.5);
+  if (distanceFromVerticalMidline >= distanceFromHorizontalMidline) return x < 0.5 ? "left-middle" : "right-middle";
+  return y < 0.5 ? "top-middle" : "bottom-middle";
+}
+
+interface PaneHostContextValue {
+  /** @emoji 🎯 Imperative bounds source for drag math (read on demand, well after mount — never during another component's render). */
+  readonly containerRef: React.RefObject<HTMLDivElement | null>;
+  /** @emoji 🌱 Reactive mirror of the same node, `null` until mount — {@link usePaneSlot} portals need a render-time value, and a ref's `.current` isn't populated yet during the same pass a child first renders alongside its ref owner. */
+  readonly container: HTMLDivElement | null;
+}
+
+const PaneHostContext = reactHostPort.createContext<PaneHostContextValue | undefined>(undefined);
+
+/** @emoji 🪟 The nearest {@link PaneHost}, or `undefined` outside one — {@link Pane} drag-to-reanchor and {@link usePaneSlot} both need it. */
+function usePaneHostContext(): PaneHostContextValue | undefined {
+  return reactHostPort.useContext(PaneHostContext);
+}
+
+/**
+ * PaneHostProps holds the data fields for a PaneHostProps record.
+ **/
+export interface PaneHostProps {
+  readonly className?: string;
+  readonly children?: React.ReactNode;
+}
+
+/** @emoji 🪟 Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
+ * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
+ * space to drag between and one DOM parent to measure drag drops against. */
+export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
+  const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [container, setContainer] = reactHostPort.useState<HTMLDivElement | null>(null);
+  const setRef = reactHostPort.useCallback((element: HTMLDivElement | null) => {
+    containerRef.current = element;
+    setContainer(element);
+  }, []);
+  const contextValue = reactHostPort.useMemo((): PaneHostContextValue => ({ containerRef, container }), [container]);
+  return (
+    <PaneHostContext.Provider value={contextValue}>
+      <div ref={setRef} data-slot="pane-host" className={cn("pointer-events-none absolute inset-0", className)}>
+        {children}
+      </div>
+    </PaneHostContext.Provider>
+  );
+};
+
+/** @emoji 🪟 Portals `pane` into the nearest {@link PaneHost} — lets a component deep inside a window's canvas
+ * (e.g. a per-tool floating control) contribute a draggable pane without threading it through the window's props.
+ * Renders nothing outside a `PaneHost`. */
+export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null {
+  const host = usePaneHostContext();
+  return host?.container ? (createPortal(pane, host.container) as React.ReactPortal) : null;
+}
+
+/** @emoji ↔️ Pane resize handle on its inner (canvas-facing) edge — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. */
+function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange }: { readonly side: "left" | "right"; readonly size: number; readonly minSize: number; readonly maxSize: number; readonly onSizeChange: (size: number) => void }) {
+  const startRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
+  const pointerProps = usePointerDrag<HTMLDivElement>({
+    onStart: (event) => {
+      event.preventDefault();
+      startRef.current = { pointerX: event.clientX, size };
+    },
+    onMove: (event) => {
+      const start = startRef.current;
+      if (!start) return;
+      const next = start.size + (side === "right" ? 1 : -1) * (event.clientX - start.pointerX);
+      if (next >= minSize && next <= maxSize) onSizeChange(next);
+    },
+    onEnd: () => {
+      startRef.current = null;
+    },
+    onCancel: () => {
+      startRef.current = null;
+    },
+  });
+  return <div data-slot="pane-resize-handle" className={`absolute top-0 bottom-0 z-20 ${side === "left" ? "left-0" : "right-0"} w-single cursor-ew-resize`} {...pointerProps} />;
+}
+
+/**
+ * Props interface for the Pane component.
+ **/
+export interface PaneProps {
+  readonly id: string;
+  readonly anchor: Anchor;
+  /** @emoji 🧭 Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (no drag handle rendered). */
+  readonly onAnchorChange?: (anchor: Anchor) => void;
+  readonly folded?: boolean;
+  readonly onFoldToggle?: () => void;
+  readonly label?: string;
+  readonly size?: number;
+  readonly onSizeChange?: (size: number) => void;
+  readonly minSize?: number;
+  readonly maxSize?: number;
+  readonly resizable?: boolean;
+  /** @emoji 🗂 Stacking order among panes sharing one anchor — lower first, in this anchor's flow direction. */
+  readonly order?: number;
+  readonly zIndex?: 10 | 20 | 30 | 40;
+  readonly className?: string;
+  readonly children?: React.ReactNode;
+}
+
+const PANE_DEFAULT_MIN_SIZE = 200;
+const PANE_DEFAULT_MAX_SIZE = 600;
+
+/** @emoji 🪟 One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
+ * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable on its inner edge,
+ * and (given `onAnchorChange`) draggable by its handle to any of the eight anchors via {@link nearestAnchor} —
+ * dropped anywhere inside the enclosing {@link PaneHost}, not just on the target slot, since the box is the only
+ * drop target there is. */
+export const Pane: React.FC<PaneProps> = ({
+  id,
+  anchor,
+  onAnchorChange,
+  folded = false,
+  onFoldToggle,
+  label,
+  size,
+  onSizeChange,
+  minSize = PANE_DEFAULT_MIN_SIZE,
+  maxSize = PANE_DEFAULT_MAX_SIZE,
+  resizable = false,
+  order = 0,
+  zIndex = 20,
+  className = "",
+  children,
+}) => {
+  const host = usePaneHostContext();
+  const flow = flowFromAnchor(anchor);
+  const horizontal = anchorHorizontal(anchor);
+  const [dragging, setDragging] = reactHostPort.useState(false);
+  const lastAnchorRef = reactHostPort.useRef(anchor);
+  lastAnchorRef.current = anchor;
+
+  const dragPointerProps = usePointerDrag<HTMLSpanElement>({
+    onStart: () => setDragging(true),
+    onMove: (event) => {
+      const hostRect = host?.containerRef.current?.getBoundingClientRect();
+      if (!hostRect) return;
+      const next = nearestAnchor(event.clientX, event.clientY, hostRect);
+      if (next !== lastAnchorRef.current) {
+        lastAnchorRef.current = next;
+        onAnchorChange?.(next);
+      }
+    },
+    onEnd: () => setDragging(false),
+    onCancel: () => setDragging(false),
+  });
+
+  const positionStyle: React.CSSProperties = { ...anchorPositionStyle(anchor), order, zIndex, width: !folded && size ? `${size}px` : undefined };
+  const resizeSide: "left" | "right" = horizontal === "right" ? "left" : "right";
+
+  return (
+    <div
+      data-slot="pane"
+      data-anchor={anchor}
+      data-dragging={dragging ? "true" : undefined}
+      className={cn(
+        "pointer-events-auto absolute flex min-w-0 max-w-full box-border overflow-hidden",
+        flow.block === "up" ? "flex-col-reverse" : "flex-col",
+        horizontal === "left" ? "items-start" : horizontal === "right" ? "items-end" : "items-center",
+        !folded && "w-fit",
+        className,
+      )}
+      style={positionStyle}
+    >
+      <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+      <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, folded && "justify-end border-b-0")}>
+        {onAnchorChange ? (
+          <span
+            data-slot="pane-drag-handle"
+            className="inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing mx-half"
+            {...dragPointerProps}
+          >
+            <GripVerticalIcon size={12} />
+          </span>
+        ) : null}
+        <ActionGroupItem id={`${id}-pane-fold`} icon={folded ? "chevron-left" : "chevron-right"} text={label ?? id} className={windowRailChromeLabelActionClass} onClick={onFoldToggle} />
+      </div>
+      {!folded ? (
+        <div data-slot="pane-body" className="relative min-h-0 flex-1 overflow-y-auto">
+          {children}
+        </div>
+      ) : null}
+      {resizable && !folded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
+    </div>
+  );
+};
+
+// #endregion 🪟Pane
+
 // #region 💧MobilePanel
 // Full-width tabbed panel for mobile layouts. Not resizable. All tabs in one panel.
 
@@ -17268,6 +17500,8 @@ export interface EngagementSliderControl {
   value: number;
   min: number;
   max: number;
+  /** @emoji 🎚 Absolute preloaded/ready extent on the fixed `[min, max]` range. */
+  ready?: number;
   step?: number;
   unit?: string;
   disabled?: boolean;
@@ -17785,6 +18019,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
           value={[control.value]}
           min={control.min}
           max={control.max}
+          ready={control.ready}
           step={control.step}
           disabled={control.disabled}
           onValueChange={(values) => {
@@ -18171,8 +18406,6 @@ export interface WindowConfig {
   utilityBarFolded?: boolean;
   /** @emoji 🎛 Fires when the user or a redirect toggles the Utilities rail fold state. */
   onUtilityBarFoldedChange?: (folded: boolean) => void;
-  /** @emoji 🎯 Utility Options rail body — utility-scoped measure controls, stacked directly above the utility bar (bottom-left) since they belong to the active utility. Rendered only when non-empty; reserves no space when absent. */
-  utilityOptions?: React.ReactNode;
   /** @emoji 🎛 Categorized ad-hoc actions tree, merged into the top-left Actions pane below the active {@link engagement} (when present); folds to a chip by default. */
   actionPane?: React.ReactNode;
   /** @emoji 🎛 Controlled fold state for the merged top-left Actions pane (default true); externally settable so the palette/keybinding redirect can force-unfold. */
@@ -18235,6 +18468,40 @@ function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode,
     return () => observer.disconnect();
   }, [bodyRef, enabled, hasMeasures, measuresOverlayRef]);
   return measuresReservePx;
+}
+
+/**
+ * @emoji 📐 Live px cap for the bottom-left utility bar's content so a tall active-utility options tree (e.g. a
+ * fill tool's Werkzeug tree) grows upward only up to just below the top-anchored chrome (engagement/search/measures)
+ * instead of overlapping it — re-measured whenever the window body or any top overlay resizes. A CSS percentage
+ * (`max-h-full`) can't do this: it only resolves against an ancestor with an explicitly *specified* height, and the
+ * overlay wrapper here only ever has a `max-height`, never a `height` — so the percentage silently fails to resolve
+ * and the tree paints past its box uncapped (see {@link measureWindowChromeScrollClearancePx}, which already solves
+ * the exact same problem for content scroll-padding — this reuses it as a hard cap instead).
+ **/
+function useWindowUtilityBarMaxHeightPx(enabled: boolean, bodyRef: React.RefObject<HTMLDivElement | null>): number {
+  const [maxHeightPx, setMaxHeightPx] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    const body = bodyRef.current;
+    if (!enabled || !body) {
+      setMaxHeightPx(0);
+      return;
+    }
+    const update = () => {
+      const topClearancePx = measureWindowChromeScrollClearancePx(body);
+      const available = Math.max(0, Math.floor(body.getBoundingClientRect().height) - topClearancePx - uiSpacingPx(1));
+      setMaxHeightPx((prev) => (prev === available ? prev : available));
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(body);
+    for (const slot of ["window-engagement-overlay", "window-search-overlay", "window-measures-overlay"] as const) {
+      const overlay = body.querySelector(`[data-slot="${slot}"]`);
+      if (overlay) observer.observe(overlay);
+    }
+    return () => observer.disconnect();
+  }, [bodyRef, enabled]);
+  return maxHeightPx;
 }
 
 /** @emoji 📐 Inline width for engagement zone: up to 28rem, minus measured options rail when present. */
@@ -18312,6 +18579,7 @@ const Window: React.FC<WindowProps> = ({
   const [measuresWidthPx, setMeasuresWidthPx] = reactHostPort.useState(windowMeasuresDefaultWidthPx);
   const [measuresResizeLeftActive, setMeasuresResizeLeftActive] = reactHostPort.useState(false);
   const measuresReservePx = useWindowMeasuresReservePx(!!engagement || !!search || !!actionPane, measures, windowBodyRef, measuresOverlayRef);
+  const utilityBarMaxHeightPx = useWindowUtilityBarMaxHeightPx(!utilityBarFolded && !!utilityBar, windowBodyRef);
   const measuresUnfolded = !!measures && !measuresFolded && !measuresExpanded;
   const readMeasuresMaxWidthPx = reactHostPort.useCallback(() => {
     const body = windowBodyRef.current;
@@ -18422,6 +18690,8 @@ const Window: React.FC<WindowProps> = ({
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+          {/* 🪟 Mount point for app-contributed floating panes (see usePaneSlot) — e.g. a per-tool control deep inside the window's canvas. Empty (and inert) until something portals into it. */}
+          <PaneHost />
           {measures ? (
             <GlassTierProvider tier="windowOptions">
               <div
@@ -18541,7 +18811,7 @@ const Window: React.FC<WindowProps> = ({
                 <div data-dim data-slot="utility-bar" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
                   <UtilityBarChrome windowId={id} folded={utilityBarFolded} disabled={!utilityBar} onFold={() => setUtilityBarFolded(true)} onUnfold={() => setUtilityBarFolded(false)} />
                   {!utilityBarFolded && utilityBar ? (
-                    <div data-slot="utility-bar-body" className={utilityBarBodyClass}>
+                    <div data-slot="utility-bar-body" className={utilityBarBodyClass} style={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}>
                       {utilityBar}
                     </div>
                   ) : null}
@@ -24397,13 +24667,80 @@ if (import.meta.vitest) {
         </div>,
       );
       await waitFor(() => {
-        expect(container.querySelector(".animate-pulse")).toBeTruthy();
+        expect(container.querySelector('[id="puzzle3d-main-utility-bar-unfold"]')?.getAttribute("data-introduced")).toBe("true");
       });
-      expect(container.querySelector(".animate-pulse")?.className).toContain("border-primary");
+      expect(container.querySelector(".animate-pulse")).toBeNull();
     });
   });
 
   describe("UIIntroduction appearance", () => {
+    it("stamps a cutout anchor as introduced and clears it on step change", async () => {
+      const steps: IntroductionStepDefinition[] = [
+        { id: "footer", title: "Footer", body: "This is the footer.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" } },
+        { id: "welcome", title: "Welcome", body: "No anchor.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" } },
+      ];
+      const Harness: React.FC = () => {
+        const [stepIndex, setStepIndex] = reactHostPort.useState(0);
+        return (
+          <div>
+            <footer data-slot="footer" />
+            <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={stepIndex} onStepIndexChange={setStepIndex} onDismiss={vi.fn()} />
+          </div>
+        );
+      };
+      const { container } = render(<Harness />);
+      const footer = container.querySelector('[data-slot="footer"]')!;
+      await waitFor(() => {
+        expect(footer.getAttribute("data-introduced")).toBe("true");
+      });
+      fireEvent.click(screen.getByRole("button", { name: /next/i }));
+      await waitFor(() => {
+        expect(footer.getAttribute("data-introduced")).toBeNull();
+      });
+    });
+
+    it("unmount clears an introduced stamp", async () => {
+      const { container, unmount } = render(
+        <div>
+          <footer data-slot="footer" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [{ id: "footer", title: "Footer", body: "Cutout.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" } }],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      const footer = container.querySelector('[data-slot="footer"]')!;
+      await waitFor(() => {
+        expect(footer.getAttribute("data-introduced")).toBe("true");
+      });
+      unmount();
+      expect(footer.getAttribute("data-introduced")).toBeNull();
+    });
+
+    it("a `none` emphasis step never stamps its anchor", () => {
+      const { container } = render(
+        <div>
+          <footer data-slot="footer" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", anchor: { kind: "footer" }, emphasis: "none", placement: "auto", advance: { kind: "next" } }],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      const footer = container.querySelector('[data-slot="footer"]')!;
+      expect(footer.getAttribute("data-introduced")).toBeNull();
+    });
+
     it("uses adaptive foreground tokens for primary and secondary text", () => {
       const { container } = render(
         <UIIntroduction
@@ -27251,6 +27588,164 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeNull();
     });
 
+    it("Window utility bar body caps its height below the top-left Actions chrome and scrolls the overflow, instead of overlapping it (regression guard for a tall active-utility options tree, e.g. puzzle 3D's Füllen tree)", () => {
+      const originalRect = HTMLElement.prototype.getBoundingClientRect;
+      HTMLElement.prototype.getBoundingClientRect = function (this: HTMLElement) {
+        if (this.getAttribute("data-slot") === "window-body") return { top: 0, bottom: 400, height: 400, left: 0, right: 800, width: 800, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+        if (this.getAttribute("data-slot") === "window-engagement-overlay") return { top: 0, bottom: 120, height: 120, left: 0, right: 200, width: 200, x: 0, y: 0, toJSON: () => ({}) } as DOMRect;
+        return originalRect.call(this);
+      };
+      try {
+        const { container } = render(
+          <Window id="utility-bar-clearance-window" active actionPane={<div data-testid="adhoc-actions">Füllen</div>} utilityBar={<button type="button">Utility</button>}>
+            <div>Body</div>
+          </Window>,
+        );
+        fireEvent.click(container.querySelector('[id="utility-bar-clearance-window-window-engagement-toggle"]')!);
+        fireEvent.click(container.querySelector('[id="utility-bar-clearance-window-utility-bar-unfold"]')!);
+        const body = container.querySelector('[data-slot="utility-bar-body"]') as HTMLElement;
+        expect(body.className).toContain("overflow-y-auto");
+        expect(Number.parseFloat(body.style.maxHeight)).toBe(400 - 120 - uiSpacingPx(1));
+      } finally {
+        HTMLElement.prototype.getBoundingClientRect = originalRect;
+      }
+    });
+
+    describe("Pane", () => {
+    it("nearestAnchor resolves each of the eight zones, incl. the dead-center zone by distance from the nearer midline", () => {
+      const hostRect = { left: 0, top: 0, width: 300, height: 300 };
+      expect(nearestAnchor(10, 10, hostRect)).toBe("top-left");
+      expect(nearestAnchor(150, 10, hostRect)).toBe("top-middle");
+      expect(nearestAnchor(290, 10, hostRect)).toBe("top-right");
+      expect(nearestAnchor(10, 150, hostRect)).toBe("left-middle");
+      expect(nearestAnchor(290, 150, hostRect)).toBe("right-middle");
+      expect(nearestAnchor(10, 290, hostRect)).toBe("bottom-left");
+      expect(nearestAnchor(150, 290, hostRect)).toBe("bottom-middle");
+      expect(nearestAnchor(290, 290, hostRect)).toBe("bottom-right");
+      // Dead center, nudged slightly toward the vertical midline (closer horizontally than vertically) -> the nearer side-middle.
+      expect(nearestAnchor(160, 155, hostRect)).toBe("right-middle");
+      // Dead center, nudged slightly toward the horizontal midline -> the nearer top/bottom-middle.
+      expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
+    });
+
+    it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
+      const { container, rerender } = render(
+        <PaneHost>
+          <Pane id="test-pane" anchor="top-right" label="Test">
+            <div data-testid="pane-content">Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
+      expect(pane.getAttribute("data-anchor")).toBe("top-right");
+      expect(pane.style.right).toBe("var(--spacing-single)");
+      expect(pane.style.top).toBe("var(--spacing-single)");
+      expect(screen.getByTestId("pane-content")).toBeTruthy();
+      rerender(
+        <PaneHost>
+          <Pane id="test-pane" anchor="top-right" label="Test" folded>
+            <div data-testid="pane-content">Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(screen.queryByTestId("pane-content")).toBeNull();
+    });
+
+    it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
+      let anchor: Anchor = "top-left";
+      const onAnchorChange = vi.fn((next: Anchor) => {
+        anchor = next;
+      });
+      const { container, rerender } = render(
+        <PaneHost>
+          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} label="Drag">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      const handle = container.querySelector('[data-slot="pane-drag-handle"]') as HTMLElement;
+      fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+      expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+      rerender(
+        <PaneHost>
+          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} label="Drag">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
+    });
+
+    it("Pane without onAnchorChange renders no drag handle (fixed pane)", () => {
+      const { container } = render(
+        <PaneHost>
+          <Pane id="fixed-pane" anchor="bottom-left" label="Fixed">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(container.querySelector('[data-slot="pane-drag-handle"]')).toBeNull();
+    });
+
+    it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {
+      let size = 300;
+      const onSizeChange = vi.fn((next: number) => {
+        size = next;
+      });
+      const { container, rerender } = render(
+        <PaneHost>
+          <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      const handle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
+      expect(handle.className).toContain("right-0");
+      fireEvent.pointerDown(handle, { pointerId: 2, clientX: 100, clientY: 0 });
+      fireEvent.pointerMove(handle, { pointerId: 2, clientX: 150, clientY: 0 });
+      expect(onSizeChange).toHaveBeenCalledWith(350);
+      rerender(
+        <PaneHost>
+          <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("style")).toContain("350px");
+    });
+
+    it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
+      function DeepChild() {
+        return usePaneSlot(
+          <Pane id="slotted-pane" anchor="bottom-right" label="Slotted">
+            <div data-testid="slotted-content">Slotted</div>
+          </Pane>,
+        );
+      }
+      const { container: withHost } = render(
+        <PaneHost>
+          <DeepChild />
+        </PaneHost>,
+      );
+      expect(withHost.querySelector('[data-slot="pane"][data-anchor="bottom-right"]')).toBeTruthy();
+      expect(screen.getByTestId("slotted-content")).toBeTruthy();
+
+      function OrphanDeepChild() {
+        return usePaneSlot(
+          <Pane id="orphan-pane" anchor="top-left">
+            {null}
+          </Pane>,
+        );
+      }
+      const { container: withoutHost } = render(<OrphanDeepChild />);
+      expect(withoutHost.querySelector('[data-slot="pane"]')).toBeNull();
+    });
+    });
+
     it("createEvenWindowLayout builds a row of stacks", () => {
       const layout = createEvenWindowLayout(["a", "b"]);
       expect(layout.kind).toBe("row");
@@ -28006,6 +28501,17 @@ if (treeVitest) {
       expect(markup).toContain("group-hover:bg-emphasized");
       expect(markup).toContain('data-slot="slider-value"');
       expect(markup).toContain("text-element");
+      expect(markup).not.toContain('data-slot="slider-ready"');
+    });
+
+    it("renders a ready extent highlight to the right of the knob on a fixed range", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.ready" value={[20]} min={0} max={100} ready={55} />);
+
+      expect(markup).toContain('data-slot="slider-ready"');
+      expect(markup).toContain("bg-[var(--accent-secondary)]");
+      expect(markup).not.toContain('data-slot="slider-ready" class="bg-emphasized');
+      expect(markup).toMatch(/left:\s*20%/);
+      expect(markup).toMatch(/width:\s*35%/);
     });
 
     it("renders shared field roots that stretch within the property value column", () => {

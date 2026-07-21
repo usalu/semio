@@ -4429,9 +4429,10 @@ pub mod world3d_host {
 //! 🌐 Shared world-3d scene payload builders for plugin apps.
 
 use semio_framework_core::{mesh_from_kind, mesh_to_glb, mesh_to_obj, MeshData};
-use ui_wgpu::{ActionDescriptor, WindowMeasure, World3dScene, world3d_camera_json, world3d_default_selection_json};
+use ui_wgpu::{ActionDescriptor, MeasureSelectItem, WindowMeasure, World3dScene, world3d_camera_json, world3d_default_selection_json};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::f64::consts::PI;
 
 //#region 🌞 WorldSunConfig
 /** 🌞 Plugin-owned directional-light state for a `world-3d` scene; off by default so meshes render flat until a dev opts in via the window-options Sun toggle. */
@@ -4479,6 +4480,8 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 min: 0.0,
                 max: 360.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
                 on_change: action("setSunAzimuth", None),
             },
             WindowMeasure::Slider {
@@ -4488,6 +4491,8 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 min: 0.0,
                 max: 90.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
                 on_change: action("setSunElevation", None),
             },
             WindowMeasure::Slider {
@@ -4497,6 +4502,8 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 min: 0.0,
                 max: 4.0,
                 step: Some(0.05),
+                ready: None,
+                loading: None,
                 on_change: action("setSunIntensity", None),
             },
         ],
@@ -4532,6 +4539,326 @@ pub fn apply_world3d_sun_action(sun: &mut WorldSunConfig, action_id: &str, args:
     }
 }
 //#endregion 🌞 WorldSunConfig
+
+//#region 📐 WorldProjection
+/** 📐 Plugin-owned projection state for a `world-3d` scene camera — the full classical taxonomy
+ * (Parallel: Orthographic/Axonometric/Oblique, Perspective: 1/2/3-Point/Curvilinear). Flat so
+ * switching `kind` and back restores whatever a dev last dialed in on the other kinds. See
+ * https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct WorldProjectionConfig {
+    pub kind: String,
+    pub orthographic_view: String,
+    pub axonometric_variant: String,
+    pub axonometric_angle_a: f64,
+    pub axonometric_angle_b: f64,
+    pub axonometric_quadrant: String,
+    pub oblique_variant: String,
+    pub oblique_angle: f64,
+    pub oblique_depth: f64,
+    pub one_point_axis: String,
+    pub fov: f64,
+    pub two_point_shift: f64,
+    pub curvilinear_fov: f64,
+    pub curvilinear_strength: f64,
+    pub curvilinear_mapping: String,
+}
+
+impl Default for WorldProjectionConfig {
+    fn default() -> Self {
+        Self {
+            kind: "threePoint".into(),
+            orthographic_view: "top".into(),
+            axonometric_variant: "isometric".into(),
+            axonometric_angle_a: 15.0,
+            axonometric_angle_b: 12.0,
+            axonometric_quadrant: "ne".into(),
+            oblique_variant: "cavalier".into(),
+            oblique_angle: 45.0,
+            oblique_depth: 1.0,
+            one_point_axis: "y".into(),
+            fov: 50.0,
+            two_point_shift: 0.0,
+            curvilinear_fov: 120.0,
+            curvilinear_strength: 1.0,
+            curvilinear_mapping: "fisheye".into(),
+        }
+    }
+}
+
+/** 📐 Serializes only the active kind's fields — the `WorldProjectionSpec` shape the JS world layer parses. */
+pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
+    match p.kind.as_str() {
+        "orthographic" => json!({ "kind": "orthographic", "view": p.orthographic_view }),
+        "axonometric" => {
+            let (angle_a, angle_b) = match p.axonometric_variant.as_str() {
+                "isometric" => (30.0, 30.0),
+                "dimetric" => (p.axonometric_angle_a, p.axonometric_angle_a),
+                _ => (p.axonometric_angle_a, p.axonometric_angle_b),
+            };
+            json!({ "kind": "axonometric", "variant": p.axonometric_variant, "angleA": angle_a, "angleB": angle_b, "quadrant": p.axonometric_quadrant })
+        }
+        "oblique" => json!({ "kind": "oblique", "variant": p.oblique_variant, "angle": p.oblique_angle, "depthScale": p.oblique_depth }),
+        "onePoint" => json!({ "kind": "onePoint", "axis": p.one_point_axis, "fov": p.fov }),
+        "twoPoint" => json!({ "kind": "twoPoint", "fov": p.fov, "verticalShift": p.two_point_shift }),
+        "curvilinear" => json!({ "kind": "curvilinear", "fov": p.curvilinear_fov, "strength": p.curvilinear_strength, "mapping": p.curvilinear_mapping }),
+        _ => json!({ "kind": "threePoint", "fov": p.fov }),
+    }
+}
+
+/** 📐 `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object — replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */
+pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: Option<[f64; 3]>, zoom: f64, p: &WorldProjectionConfig) -> String {
+    let mut value = json!({
+        "position": position,
+        "target": target,
+        "zoom": zoom,
+        "projection": world3d_projection_spec_json(p),
+    });
+    if let Some(object) = value.as_object_mut() {
+        if let Some(up) = up {
+            object.insert("up".into(), json!(up));
+        }
+    }
+    value.to_string()
+}
+
+/** 📐 Whether `kind` is a parallel-family (orthographic camera) projection vs. a perspective one. */
+fn world3d_projection_kind_is_parallel(kind: &str) -> bool {
+    matches!(kind, "orthographic" | "axonometric" | "oblique")
+}
+
+/** 📐 Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` — mirrors
+ * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */
+pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
+    let [tx, ty, tz] = target;
+    match p.kind.as_str() {
+        "orthographic" => match p.orthographic_view.as_str() {
+            "bottom" => ([tx, ty, tz - distance], [0.0, 1.0, 0.0]),
+            "front" => ([tx, ty - distance, tz], [0.0, 0.0, 1.0]),
+            "back" => ([tx, ty + distance, tz], [0.0, 0.0, 1.0]),
+            "left" => ([tx - distance, ty, tz], [0.0, 0.0, 1.0]),
+            "right" => ([tx + distance, ty, tz], [0.0, 0.0, 1.0]),
+            _ => ([tx, ty, tz + distance], [0.0, 1.0, 0.0]), // "plan" | "top"
+        },
+        "axonometric" => {
+            let spec = world3d_projection_spec_json(p);
+            let angle_a = spec.get("angleA").and_then(Value::as_f64).unwrap_or(30.0).to_radians();
+            let angle_b = spec.get("angleB").and_then(Value::as_f64).unwrap_or(30.0).to_radians();
+            let elevation = (angle_a.tan() * angle_b.tan()).sqrt().asin();
+            let azimuth = (angle_a.tan() / angle_b.tan()).sqrt().atan();
+            let (sx, sy) = match p.axonometric_quadrant.as_str() {
+                "nw" => (-1.0, 1.0),
+                "se" => (1.0, -1.0),
+                "sw" => (-1.0, -1.0),
+                _ => (1.0, 1.0),
+            };
+            let dir = [sx * elevation.cos() * azimuth.sin(), sy * elevation.cos() * azimuth.cos(), elevation.sin()];
+            ([tx + dir[0] * distance, ty + dir[1] * distance, tz + dir[2] * distance], [0.0, 0.0, 1.0])
+        }
+        "oblique" => {
+            if p.oblique_variant == "military" {
+                let angle = p.oblique_angle.to_radians();
+                ([tx, ty, tz + distance], [angle.sin(), angle.cos(), 0.0])
+            } else {
+                ([tx, ty - distance, tz], [0.0, 0.0, 1.0])
+            }
+        }
+        "onePoint" => match p.one_point_axis.as_str() {
+            "x" => ([tx - distance, ty, tz], [0.0, 0.0, 1.0]),
+            "z" => ([tx, ty, tz + distance], [0.0, 1.0, 0.0]),
+            _ => ([tx, ty - distance, tz], [0.0, 0.0, 1.0]),
+        },
+        "twoPoint" => {
+            let azimuth = PI / 4.0;
+            ([tx + azimuth.sin() * distance, ty - azimuth.cos() * distance, tz], [0.0, 0.0, 1.0])
+        }
+        _ => ([tx + distance * 0.6, ty - distance * 0.6, tz + distance * 0.45], [0.0, 0.0, 1.0]),
+    }
+}
+
+/** 📐 Shared "Projection" window-measures tree: Parallel > Orthographic/Axonometric/Oblique, Perspective > 1/2/3-Point/Curvilinear —
+ * every leaf targets `action`, parameter sliders gated to the kind/variant they apply to (see `puzzle3d_fill_utility_options` for the sibling gating pattern). */
+pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
+    let select = |id: String, value: String, items: Vec<(&str, &str)>, field: &str| WindowMeasure::Select {
+        id,
+        label: None,
+        value,
+        items: items.into_iter().map(|(v, label)| MeasureSelectItem { id: v.into(), value: v.into(), label: label.into() }).collect(),
+        on_change: action("setProjection", Some(json!({ "field": field }))),
+    };
+    let slider = |id: String, label: &str, value: f64, min: f64, max: f64, step: f64, param: &str| WindowMeasure::Slider {
+        id,
+        label: Some(label.into()),
+        value,
+        min,
+        max,
+        step: Some(step),
+        ready: None,
+        loading: None,
+        on_change: action("setProjectionParam", Some(json!({ "param": param }))),
+    };
+
+    let orthographic_view = if p.kind == "orthographic" { p.orthographic_view.clone() } else { String::new() };
+    let orthographic = WindowMeasure::Group {
+        id: format!("{id_prefix}-projection-orthographic"),
+        label: "Orthographic".into(),
+        default_open: Some(true),
+        active_utility_id: None,
+        children: vec![select(
+            format!("{id_prefix}-projection-orthographic-view"),
+            orthographic_view,
+            vec![("plan", "Plan"), ("top", "Top"), ("bottom", "Bottom"), ("front", "Front"), ("back", "Back"), ("left", "Left"), ("right", "Right")],
+            "orthographicView",
+        )],
+    };
+
+    let mut axo_children = vec![
+        select(
+            format!("{id_prefix}-projection-axonometric-variant"),
+            if p.kind == "axonometric" { p.axonometric_variant.clone() } else { String::new() },
+            vec![("isometric", "Isometric"), ("dimetric", "Dimetric"), ("trimetric", "Trimetric")],
+            "axonometricVariant",
+        ),
+        select(
+            format!("{id_prefix}-projection-axonometric-quadrant"),
+            if p.kind == "axonometric" { p.axonometric_quadrant.clone() } else { String::new() },
+            vec![("ne", "NE"), ("nw", "NW"), ("se", "SE"), ("sw", "SW")],
+            "axonometricQuadrant",
+        ),
+    ];
+    if p.kind == "axonometric" && p.axonometric_variant != "isometric" {
+        axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-a"), "Angle", p.axonometric_angle_a, 5.0, if p.axonometric_variant == "dimetric" { 60.0 } else { 75.0 }, 0.5, "axonometricAngleA"));
+    }
+    if p.kind == "axonometric" && p.axonometric_variant == "trimetric" {
+        axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
+    }
+    let axonometric = WindowMeasure::Group { id: format!("{id_prefix}-projection-axonometric"), label: "Axonometric".into(), default_open: Some(false), active_utility_id: None, children: axo_children };
+
+    let mut oblique_children = vec![select(
+        format!("{id_prefix}-projection-oblique-variant"),
+        if p.kind == "oblique" { p.oblique_variant.clone() } else { String::new() },
+        vec![("cabinet", "Cabinet"), ("cavalier", "Cavalier"), ("military", "Military")],
+        "obliqueVariant",
+    )];
+    if p.kind == "oblique" {
+        oblique_children.push(slider(format!("{id_prefix}-projection-oblique-angle"), "Angle", p.oblique_angle, 5.0, 90.0, 1.0, "obliqueAngle"));
+        if p.oblique_variant != "military" {
+            oblique_children.push(slider(format!("{id_prefix}-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
+        }
+    }
+    let oblique = WindowMeasure::Group { id: format!("{id_prefix}-projection-oblique"), label: "Oblique".into(), default_open: Some(false), active_utility_id: None, children: oblique_children };
+
+    let parallel = WindowMeasure::Group {
+        id: format!("{id_prefix}-projection-parallel"),
+        label: "Parallel".into(),
+        default_open: Some(true),
+        active_utility_id: None,
+        children: vec![orthographic, axonometric, oblique],
+    };
+
+    let perspective_kind_value = match p.kind.as_str() {
+        "onePoint" => "onePoint",
+        "twoPoint" => "twoPoint",
+        "curvilinear" => "curvilinear",
+        "threePoint" => "threePoint",
+        _ => "",
+    };
+    let mut perspective_children = vec![select(
+        format!("{id_prefix}-projection-perspective-kind"),
+        perspective_kind_value.into(),
+        vec![("onePoint", "1-Point"), ("twoPoint", "2-Point"), ("threePoint", "3-Point"), ("curvilinear", "Curvilinear")],
+        "perspectiveKind",
+    )];
+    match p.kind.as_str() {
+        "onePoint" => {
+            perspective_children.push(select(format!("{id_prefix}-projection-one-point-axis"), p.one_point_axis.clone(), vec![("y", "Front (Y)"), ("x", "Side (X)"), ("z", "Down (Z)")], "onePointAxis"));
+            perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+        }
+        "twoPoint" => {
+            perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+            perspective_children.push(slider(format!("{id_prefix}-projection-two-point-shift"), "Vertical Shift", p.two_point_shift, -1.0, 1.0, 0.01, "twoPointShift"));
+        }
+        "threePoint" => {
+            perspective_children.push(slider(format!("{id_prefix}-projection-fov"), "Field of View", p.fov, 15.0, 120.0, 1.0, "fov"));
+        }
+        "curvilinear" => {
+            perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-fov"), "Field of View", p.curvilinear_fov, 60.0, 160.0, 1.0, "curvilinearFov"));
+            perspective_children.push(slider(format!("{id_prefix}-projection-curvilinear-strength"), "Strength", p.curvilinear_strength, 0.0, 1.0, 0.01, "curvilinearStrength"));
+            perspective_children.push(select(format!("{id_prefix}-projection-curvilinear-mapping"), p.curvilinear_mapping.clone(), vec![("fisheye", "Fisheye"), ("panini", "Panini")], "curvilinearMapping"));
+        }
+        _ => {}
+    }
+    let perspective = WindowMeasure::Group { id: format!("{id_prefix}-projection-perspective"), label: "Perspective".into(), default_open: Some(true), active_utility_id: None, children: perspective_children };
+
+    WindowMeasure::Group { id: format!("{id_prefix}-projection"), label: "Projection".into(), default_open: Some(false), active_utility_id: None, children: vec![parallel, perspective] }
+}
+
+/** 📐 Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
+pub fn apply_world3d_projection_action(p: &mut WorldProjectionConfig, action_id: &str, args: Option<&Value>) -> bool {
+    let field = args.and_then(|v| v.get("field")).and_then(Value::as_str);
+    let value_str = args.and_then(|v| v.get("value")).and_then(Value::as_str);
+    let value_f64 = args.and_then(|v| v.get("value")).and_then(Value::as_f64);
+    let param = args.and_then(|v| v.get("param")).and_then(Value::as_str);
+    match action_id {
+        "setProjection" => {
+            match (field, value_str) {
+                (Some("orthographicView"), Some(value)) => {
+                    p.kind = "orthographic".into();
+                    p.orthographic_view = value.into();
+                }
+                (Some("axonometricVariant"), Some(value)) => {
+                    p.kind = "axonometric".into();
+                    p.axonometric_variant = value.into();
+                }
+                (Some("axonometricQuadrant"), Some(value)) => {
+                    p.kind = "axonometric".into();
+                    p.axonometric_quadrant = value.into();
+                }
+                (Some("obliqueVariant"), Some(value)) => {
+                    p.kind = "oblique".into();
+                    p.oblique_variant = value.into();
+                }
+                (Some("perspectiveKind"), Some(value)) => {
+                    p.kind = value.into();
+                }
+                (Some("onePointAxis"), Some(value)) => {
+                    p.one_point_axis = value.into();
+                }
+                (Some("curvilinearMapping"), Some(value)) => {
+                    p.curvilinear_mapping = value.into();
+                }
+                _ => return false,
+            }
+            true
+        }
+        "setProjectionParam" => {
+            let (Some(param), Some(value)) = (param, value_f64) else { return false };
+            match param {
+                "axonometricAngleA" => p.axonometric_angle_a = value,
+                "axonometricAngleB" => p.axonometric_angle_b = value,
+                "obliqueAngle" => p.oblique_angle = value,
+                "obliqueDepth" => p.oblique_depth = value,
+                "fov" => p.fov = value,
+                "twoPointShift" => p.two_point_shift = value,
+                "curvilinearFov" => p.curvilinear_fov = value,
+                "curvilinearStrength" => p.curvilinear_strength = value,
+                _ => return false,
+            }
+            true
+        }
+        _ => false,
+    }
+}
+
+/** 📐 Whether a `setProjection`/`setProjectionParam` action requires a pose recompute (kind/view/variant changes) vs. a pure in-place parameter tweak that keeps the current pose (oblique shear / two-point shift / fov / curvilinear re-shade live). */
+pub fn world3d_projection_action_moves_pose(action_id: &str, args: Option<&Value>) -> bool {
+    if action_id != "setProjection" {
+        return false;
+    }
+    matches!(args.and_then(|v| v.get("field")).and_then(Value::as_str), Some("orthographicView") | Some("axonometricVariant") | Some("axonometricQuadrant") | Some("obliqueVariant") | Some("perspectiveKind"))
+}
+//#endregion 📐 WorldProjection
 
 pub fn mesh_kind_from_json(mesh_json: &str) -> String {
     serde_json::from_str::<Value>(mesh_json)
@@ -4762,6 +5089,53 @@ mod tests {
             merge_world_selection_ids(&["a".into(), "b".into(), "c".into()], &["b".into()], "subtractive"),
             vec!["a".to_string(), "c".to_string()]
         );
+    }
+
+    #[test]
+    fn isometric_pose_matches_the_classic_35_264_45_direction() {
+        let mut p = WorldProjectionConfig { kind: "axonometric".into(), axonometric_variant: "isometric".into(), ..WorldProjectionConfig::default() };
+        p.axonometric_quadrant = "ne".into();
+        let (position, up) = world3d_projection_pose(&p, [0.0, 0.0, 0.0], 10.0);
+        assert!((position[2] / 10.0 - 35.264_f64.to_radians().sin()).abs() < 1e-3);
+        assert_eq!(up, [0.0, 0.0, 1.0]);
+        let azimuth = (position[0] / position[1]).atan();
+        assert!((azimuth.to_degrees() - 45.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn projection_spec_json_projects_only_active_kind_fields() {
+        let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
+        let spec = world3d_projection_spec_json(&p);
+        assert_eq!(spec.get("kind").and_then(Value::as_str), Some("oblique"));
+        assert_eq!(spec.get("depthScale").and_then(Value::as_f64), Some(0.5));
+        assert!(spec.get("axonometricVariant").is_none());
+    }
+
+    #[test]
+    fn apply_action_switches_kind_and_leaves_other_kinds_untouched_for_later_recall() {
+        let mut p = WorldProjectionConfig::default();
+        p.axonometric_angle_a = 22.0;
+        assert!(apply_world3d_projection_action(&mut p, "setProjection", Some(&json!({ "field": "obliqueVariant", "value": "military" }))));
+        assert_eq!(p.kind, "oblique");
+        assert_eq!(p.oblique_variant, "military");
+        assert_eq!(p.axonometric_angle_a, 22.0);
+        assert!(apply_world3d_projection_action(&mut p, "setProjectionParam", Some(&json!({ "param": "obliqueAngle", "value": 30.0 }))));
+        assert_eq!(p.oblique_angle, 30.0);
+        assert!(!world3d_projection_action_moves_pose("setProjectionParam", Some(&json!({ "param": "obliqueAngle" }))));
+        assert!(world3d_projection_action_moves_pose("setProjection", Some(&json!({ "field": "obliqueVariant" }))));
+    }
+
+    #[test]
+    fn projection_measures_tree_matches_the_requested_taxonomy() {
+        let p = WorldProjectionConfig::default();
+        let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args });
+        let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
+        assert_eq!(families.len(), 2);
+        let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
+        assert_eq!(parallel_label, "Parallel");
+        assert_eq!(parallel_children.len(), 3);
+        let WindowMeasure::Group { label: perspective_label, .. } = &families[1] else { panic!("expected perspective group") };
+        assert_eq!(perspective_label, "Perspective");
     }
 }
 // #endregion world3d_host

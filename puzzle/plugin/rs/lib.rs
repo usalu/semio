@@ -779,6 +779,8 @@ pub mod d2 {
                 min: PUZZLE2D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
+                ready: None,
+                loading: None,
                 on_change: puzzle2d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Group {
@@ -841,6 +843,8 @@ pub mod d2 {
                 min: 0.0,
                 max: PUZZLE2D_FILL_COUNT_MAX as f64,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
                 on_change: puzzle2d_action("setFillCount", None),
             }],
         }
@@ -1516,6 +1520,8 @@ pub mod d2 {
                     min: 0.0,
                     max: 1.0,
                     step: Some(0.01),
+                    ready: None,
+                    loading: None,
                     on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
                 }
             })
@@ -2622,7 +2628,7 @@ pub mod d3 {
         ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
         SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
-        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionEmphasis, IntroductionStepDefinition,
+        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -5131,7 +5137,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), on_change: puzzle3d_action("setLodManual", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
     }
@@ -5145,7 +5151,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible"), icon_id: "layout-grid".into(), label: Some("Visible".into()), pressed: runtime.grid_visible, text: None, on_change: puzzle3d_action("setGridVisible", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some("Snap".into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("Spacing {:.1}", runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), on_change: puzzle3d_action("setGridSpacing", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("Spacing {:.1}", runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, on_change: puzzle3d_action("setGridSpacing", None) },
             ],
         }
     }
@@ -5182,6 +5188,8 @@ pub mod d3 {
                     min: 0.0,
                     max: 1.0,
                     step: Some(0.01),
+                    ready: None,
+                    loading: None,
                     on_change: puzzle3d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
@@ -5240,18 +5248,23 @@ pub mod d3 {
 
     /// 🪣 Fill-count slider measure — the fill-utility's core parameter, mirrors the retired
     /// `puzzle3d_fill_count_control` (`setFillCount` reads `count`-or-`value`, so a slider's `{value}` payload
-    /// preserves the action semantics). Live build progress is folded into the label exactly as before.
+    /// preserves the action semantics). The label stays fixed; preload progress is the ready extent + loading ring.
+    /// The slider range stays fixed at [`PUZZLE3D_FILL_COUNT_MAX`]; `ready` tracks how far planning has preloaded.
     fn puzzle3d_fill_count_measure(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
         let progress: Value = serde_json::from_str(&precompute.fill_progress()).unwrap_or(Value::Null);
         let done = progress.get("done").and_then(Value::as_bool).unwrap_or(true);
         let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
-        let fill_label = labels.fill;
-        let label = if done {
-            format!("{fill_label} {} of {}", envelope.runtime.fill_count.min(available_count), available_count)
-        } else {
-            format!("{fill_label} {} of {} (planning)", envelope.runtime.fill_count.min(available_count), available_count)
-        };
-        WindowMeasure::Slider { id: "puzzle3d-fill-count".into(), label: Some(label), value: envelope.runtime.fill_count.min(available_count) as f64, min: 0.0, max: available_count as f64, step: Some(1.0), on_change: puzzle3d_action("setFillCount", None) }
+        WindowMeasure::Slider {
+            id: "puzzle3d-fill-count".into(),
+            label: Some(labels.fill.into()),
+            value: envelope.runtime.fill_count.min(available_count) as f64,
+            min: 0.0,
+            max: PUZZLE3D_FILL_COUNT_MAX as f64,
+            step: Some(1.0),
+            ready: Some(available_count as f64),
+            loading: if done { None } else { Some(true) },
+            on_change: puzzle3d_action("setFillCount", None),
+        }
     }
 
     /// 🧊 Fill/edit-volumes mode picker measure — replaces the retired `puzzle3d_voxel_mode_toggle`. A
@@ -5282,6 +5295,8 @@ pub mod d3 {
             min: 1.0,
             max: 64.0,
             step: Some(1.0),
+            ready: None,
+            loading: None,
             on_change: puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis }))),
         };
         vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]
@@ -5319,6 +5334,8 @@ pub mod d3 {
                 min: 0.0,
                 max: 1.0,
                 step: Some(0.01),
+                ready: None,
+                loading: None,
                 on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
             },
             WindowMeasure::Group {
@@ -6435,15 +6452,13 @@ pub mod d3 {
                             "The Viewport",
                             "This is your 3D scene — orbit, pan, and zoom to look around.",
                             IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into()),
-                        )
-                        .emphasis(IntroductionEmphasis::Highlight),
+                        ),
                         IntroductionStepDefinition::new(
                             "move-utility",
                             "Move Objects",
                             "Activate the Move utility to reposition objects in the scene.",
                             IntroductionAnchor::Utility("move".into()),
                         )
-                        .emphasis(IntroductionEmphasis::Highlight)
                         .advance_on(IntroductionAdvance::Utility("move".into())),
                         IntroductionStepDefinition::new(
                             "catalogue",
@@ -6616,6 +6631,80 @@ pub mod d3 {
         }
 
         #[test]
+        fn selected_object_inspector_nests_origin_into_x_y_z_steppers() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let object_id = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            app.handle_action("worldSelect", Some(&json!({ "ids": [object_id], "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("worldSelect");
+            let node = app.render(PUZZLE3D_PLAY_BODY_INSPECTOR, None, &ViewState::default()).expect("render");
+            let json = serde_json::to_value(&node).unwrap();
+            let origin_item = json
+                .get("sections")
+                .and_then(|value| value.as_array())
+                .and_then(|sections| sections.first())
+                .and_then(|section| section.get("items"))
+                .and_then(|value| value.as_array())
+                .and_then(|items| items.iter().find(|item| item.get("id").and_then(|value| value.as_str()) == Some("puzzle3d-play-inspector.object.origin")))
+                .expect("Origin tree item");
+            let axis_ids: Vec<String> = origin_item
+                .get("items")
+                .and_then(|value| value.as_array())
+                .expect("Origin has nested axis items")
+                .iter()
+                .map(|item| item.get("control").and_then(|control| control.get("id")).and_then(|value| value.as_str()).unwrap_or_default().to_string())
+                .collect();
+            assert_eq!(axis_ids, vec!["puzzle3d-play-inspector.object.origin.x", "puzzle3d-play-inspector.object.origin.y", "puzzle3d-play-inspector.object.origin.z"]);
+            for item in origin_item.get("items").and_then(|value| value.as_array()).unwrap() {
+                assert_eq!(item.get("control").and_then(|control| control.get("type")).and_then(|value| value.as_str()), Some("numberStepper"));
+            }
+        }
+
+        #[test]
+        fn patch_inspector_origin_axis_sets_absolute_value_and_preserves_other_axes() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let object_id = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            let before_y = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.get(1)).and_then(|value| value.as_f64()).expect("origin.y");
+            app.handle_action(
+                "patchInspector",
+                Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin.x", "value": 42.5 })),
+                &ViewState::default(),
+                &testkit::meta("local"),
+            )
+            .expect("patchInspector");
+            let projection = app.projection().expect("projection");
+            let objects = projection.get("objects").and_then(|value| value.as_array()).expect("objects");
+            let object = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(object_id.as_str())).expect("patched object");
+            let origin = object.get("origin").and_then(|value| value.as_array()).expect("origin");
+            assert_eq!(origin[0].as_f64(), Some(42.5), "origin.x should be set to the absolute value");
+            assert_eq!(origin[1].as_f64(), Some(before_y), "origin.y should be untouched by an origin.x edit");
+        }
+
+        #[test]
+        fn patch_inspector_origin_axis_delta_offsets_each_selected_object_from_its_own_current_value() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let id_a = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [10.0, 0.0, 0.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
+            let id_b = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("added object id").to_string();
+            assert_ne!(id_a, id_b, "the added object must be distinct from the first fixture object");
+            let objects = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+            let x_a_before = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_a.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
+            let x_b_before = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_b.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
+            assert_ne!(x_a_before, x_b_before, "the two objects must start at different x values for this test to prove per-object offset preservation");
+            app.handle_action(
+                "patchInspector",
+                Some(&json!({ "entity": "object", "ids": [id_a.clone(), id_b.clone()], "field": "origin.x", "delta": 3.0 })),
+                &ViewState::default(),
+                &testkit::meta("local"),
+            )
+            .expect("patchInspector");
+            let projection = app.projection().expect("projection");
+            let objects = projection.get("objects").and_then(|value| value.as_array()).expect("objects");
+            let x_a_after = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_a.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
+            let x_b_after = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_b.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
+            assert_eq!(x_a_after, x_a_before + 3.0, "a delta edit adds to each object's own current x");
+            assert_eq!(x_b_after, x_b_before + 3.0, "a delta edit preserves each object's own starting offset");
+        }
+
+        #[test]
         fn app_definition_has_the_main_world_window() {
             let app = create_puzzle3d_app();
             assert!(app.definition.window_kinds.iter().any(|window| window.id == PUZZLE3D_PLAY_WINDOW_MAIN));
@@ -6679,6 +6768,14 @@ pub mod d3 {
             measures.iter().find_map(|measure| match measure {
                 WindowMeasure::Slider { id, max, .. } if id == slider_id => Some(*max),
                 WindowMeasure::Group { children, .. } => find_measure_slider_max(children, slider_id),
+                _ => None,
+            })
+        }
+
+        fn find_measure_slider_ready(measures: &[WindowMeasure], slider_id: &str) -> Option<f64> {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Slider { id, ready, .. } if id == slider_id => *ready,
+                WindowMeasure::Group { children, .. } => find_measure_slider_ready(children, slider_id),
                 _ => None,
             })
         }
@@ -6861,8 +6958,9 @@ pub mod d3 {
                 None => panic!("expected a fill-count slider in the fill Utility Options"),
             }
             assert_eq!(object_count(&app), object_count_before, "background planning must not append generated objects below the slider count");
-            let available_count = find_measure_slider_max(window_measures, "puzzle3d-fill-count").expect("expected a fill-count slider range") as usize;
-            assert!(available_count > 0, "the fill slider range must expose collision-free compatible placements");
+            assert_eq!(find_measure_slider_max(window_measures, "puzzle3d-fill-count"), Some(PUZZLE3D_FILL_COUNT_MAX as f64), "fill slider range stays fixed at the fill count max");
+            let available_count = find_measure_slider_ready(window_measures, "puzzle3d-fill-count").expect("expected a fill-count slider ready extent") as usize;
+            assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
             app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("setFillCount");
             assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
             // 🪪 Incidental actions re-sync the applied document into the precompute session. That used to
@@ -6907,7 +7005,13 @@ pub mod d3 {
             sync_precompute_session(&mut session, &scene);
             session.precompute_step(1);
             match puzzle3d_fill_count_measure(&scene, &session, &PUZZLE3D_LABELS_NATIVE_EN) {
-                WindowMeasure::Slider { label: Some(label), .. } => assert!(label.contains("planning"), "expected a planning-progress label, got {label:?}"),
+                WindowMeasure::Slider { label: Some(label), max, ready, loading, .. } => {
+                    assert_eq!(label, PUZZLE3D_LABELS_NATIVE_EN.fill, "fill label stays fixed while planning");
+                    assert_eq!(max, PUZZLE3D_FILL_COUNT_MAX as f64, "fill slider max stays fixed while planning");
+                    let ready = ready.expect("planning must expose a ready extent");
+                    assert!(ready >= 0.0 && ready <= max, "ready extent must lie on the fixed range");
+                    assert_eq!(loading, Some(true), "planning must mark the measure tree leaf as loading");
+                }
                 other => panic!("expected a slider measure, got {other:?}"),
             }
         }
@@ -8635,6 +8739,8 @@ pub mod d5 {
                     min: 0.0,
                     max: 1.0,
                     step: Some(0.01),
+                    ready: None,
+                    loading: None,
                     on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
@@ -8673,6 +8779,8 @@ pub mod d5 {
             min: 0.0,
             max: PUZZLE5D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
+            ready: None,
+            loading: None,
             on_change: puzzle5d_action("setFillCount", None),
         }
     }
@@ -8700,6 +8808,8 @@ pub mod d5 {
                 min: PUZZLE5D_SUGGESTION_OFFSET_MIN,
                 max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE5D_SUGGESTION_OFFSET_STEP),
+                ready: None,
+                loading: None,
                 on_change: puzzle5d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Slider {
@@ -8709,6 +8819,8 @@ pub mod d5 {
                 min: 0.0,
                 max: 0.2,
                 step: Some(0.005),
+                ready: None,
+                loading: None,
                 on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
             },
             WindowMeasure::Group {

@@ -125,7 +125,7 @@ function readDockSkeleton(storage, key) {
     return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || parsed.version !== 2 || !parsed.anchors || typeof parsed.anchors !== "object")
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 3 || !parsed.anchors || typeof parsed.anchors !== "object")
       return null;
     return parsed;
   } catch {
@@ -182,7 +182,7 @@ function readDockUiState(storage, key) {
     return null;
   try {
     const parsed = JSON.parse(raw);
-    if (!parsed || typeof parsed !== "object" || parsed.version !== 2 || !parsed.anchors || typeof parsed.anchors !== "object")
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 3 || !parsed.anchors || typeof parsed.anchors !== "object")
       return null;
     return parsed;
   } catch {
@@ -226,6 +226,75 @@ class DockUiStateStore extends Store {
     else
       this.storage.set(key, JSON.stringify(state));
   }
+}
+function windowPaneUiOsStorageKey() {
+  return "semio.os.paneUi";
+}
+function windowPaneUiAppStorageKey(appId) {
+  return `semio.os.paneUi.${appId}`;
+}
+function readWindowPaneUiState(storage, key) {
+  const raw = storage.get(key);
+  if (!raw)
+    return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object" || parsed.version !== 1 || !parsed.windows || typeof parsed.windows !== "object")
+      return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+class WindowPaneStateStore extends Store {
+  storage;
+  appId;
+  constructor(storage, appId) {
+    super();
+    this.storage = storage;
+    this.appId = appId;
+  }
+  getSnapshot() {
+    if (this.appId) {
+      const app = readWindowPaneUiState(this.storage, windowPaneUiAppStorageKey(this.appId));
+      if (app)
+        return app;
+    }
+    return readWindowPaneUiState(this.storage, windowPaneUiOsStorageKey());
+  }
+  save(state) {
+    this.writeOrRemove(this.appId ? windowPaneUiAppStorageKey(this.appId) : windowPaneUiOsStorageKey(), state);
+    this.notify();
+  }
+  saveOs(state) {
+    this.writeOrRemove(windowPaneUiOsStorageKey(), state);
+    this.notify();
+  }
+  reset() {
+    this.storage.remove(windowPaneUiOsStorageKey());
+    if (this.appId)
+      this.storage.remove(windowPaneUiAppStorageKey(this.appId));
+    this.notify();
+  }
+  writeOrRemove(key, state) {
+    if (state === null)
+      this.storage.remove(key);
+    else
+      this.storage.set(key, JSON.stringify(state));
+  }
+}
+function createMemoryStoragePort() {
+  const map = new Map;
+  return {
+    get: (key) => map.get(key) ?? null,
+    set: (key, value) => {
+      map.set(key, value);
+    },
+    remove: (key) => {
+      map.delete(key);
+    }
+  };
 }
 var EMPTY_INVOCATION_RESPONSE = {
   output: null,
@@ -353,23 +422,11 @@ function resolvePluginHostConfig(playgroundPluginId) {
   return PLUGIN_HOST_CONFIGS.find((entry) => entry.pluginId === registryId);
 }
 if (import.meta.vitest) {
-  let createMemoryStoragePort = function() {
-    const map = new Map;
-    return {
-      get: (key) => map.get(key) ?? null,
-      set: (key, value) => {
-        map.set(key, value);
-      },
-      remove: (key) => {
-        map.delete(key);
-      }
-    };
-  };
   const { describe, expect, it } = import.meta.vitest;
   describe("DockLayoutStore", () => {
     const emptySkeleton = () => ({
-      version: 2,
-      anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] }
+      version: 3,
+      anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] }
     });
     it("returns null when nothing persisted", () => {
       const store = new DockLayoutStore(createMemoryStoragePort());
@@ -423,9 +480,15 @@ if (import.meta.vitest) {
       const store = new DockLayoutStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
+    it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dock", JSON.stringify({ version: 2, anchors: { "top-left": [{ id: "a" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } }));
+      const store = new DockLayoutStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
   });
   describe("DockUiStateStore", () => {
-    const emptyUiState = () => ({ version: 2, anchors: {} });
+    const emptyUiState = () => ({ version: 3, anchors: {} });
     it("returns null when nothing persisted", () => {
       const store = new DockUiStateStore(createMemoryStoragePort());
       expect(store.getSnapshot()).toBeNull();
@@ -478,16 +541,77 @@ if (import.meta.vitest) {
       const store = new DockUiStateStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
+    it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", JSON.stringify({ version: 2, anchors: { "top-left": { visible: true, size: 320 } } }));
+      const store = new DockUiStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
     it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
       const storage = createMemoryStoragePort();
       new DockLayoutStore(storage, "ui").save({
-        version: 2,
-        anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] }
+        version: 3,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] }
       });
       new DockUiStateStore(storage).saveOs(emptyUiState());
       expect(storage.get("semio.os.dock.ui")).not.toBeNull();
       expect(storage.get("semio.os.dockUi")).not.toBeNull();
       expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
+    });
+  });
+  describe("WindowPaneStateStore", () => {
+    const emptyPaneState = () => ({ version: 1, windows: {} });
+    it("returns null when nothing persisted", () => {
+      const store = new WindowPaneStateStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      const osState = emptyPaneState();
+      const appState = { version: 1, windows: { "puzzle3d.play": { utilities: { anchor: "bottom-left", folded: false, size: 280 } } } };
+      store.saveOs(osState);
+      store.save(appState);
+      expect(store.getSnapshot()).toEqual(appState);
+    });
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      const osState = { version: 1, windows: { "puzzle3d.play": { measures: { anchor: "top-right", size: 320 } } } };
+      store.saveOs(osState);
+      expect(store.getSnapshot()).toEqual(osState);
+    });
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      store.save(emptyPaneState());
+      expect(storage.get("semio.os.paneUi.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      store.saveOs(emptyPaneState());
+      store.save(emptyPaneState());
+      store.reset();
+      expect(storage.get("semio.os.paneUi")).toBeNull();
+      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.paneUi", "{not json");
+      const store = new WindowPaneStateStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+    it("discards a foreign-version blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.paneUi", JSON.stringify({ version: 2, windows: {} }));
+      const store = new WindowPaneStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
     });
   });
   describe("PlaygroundResolution", () => {
@@ -504,7 +628,7 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "aggregator",
+  variant: "puzzle3d",
   registryPluginId: "puzzle",
   defaultAppId: "puzzle3d-play",
   studioMode: false,

@@ -907,6 +907,9 @@ export class NamedLayoutStore extends Store<readonly NamedLayout[]> {
   }
 }
 
+/** 🧭 The eight anchor ids, mirroring `Anchor` in `ui/js/react/index.tsx` (kept inline/private here to stay dependency-free of that package) — shared by every persisted anchor-keyed shape below so they can't drift apart from one another. */
+type PersistedAnchor = "top-left" | "top-middle" | "top-right" | "right-middle" | "bottom-right" | "bottom-middle" | "bottom-left" | "left-middle";
+
 //#region DockLayoutStore
 /** 🐳 One tab (leaf or branch) in a persisted dock panel-arrangement tree; leaves carry `trees`, branches carry `children`. */
 export interface DockTabSkeleton {
@@ -915,10 +918,10 @@ export interface DockTabSkeleton {
   trees?: readonly string[];
 }
 
-/** 🐳 The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `PanelAnchor` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
+/** 🐳 The full persisted dock arrangement, one tab tree per anchor — anchor ids mirror `Anchor` in `ui/js/react/index.tsx` (kept inline here to stay dependency-free of that package). */
 export interface DockSkeleton {
-  version: 2;
-  anchors: Record<"top-left" | "top-middle" | "top-right" | "bottom-left" | "bottom-middle" | "bottom-right", readonly DockTabSkeleton[]>;
+  version: 3;
+  anchors: Record<PersistedAnchor, readonly DockTabSkeleton[]>;
 }
 
 function dockOsStorageKey(): string {
@@ -935,7 +938,7 @@ function readDockSkeleton(storage: StoragePort, key: string): DockSkeleton | nul
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 2 || !(parsed as DockSkeleton).anchors || typeof (parsed as DockSkeleton).anchors !== "object") return null;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockSkeleton).version !== 3 || !(parsed as DockSkeleton).anchors || typeof (parsed as DockSkeleton).anchors !== "object") return null;
     return parsed as DockSkeleton;
   } catch {
     return null;
@@ -990,10 +993,10 @@ export interface DockUiPanelState {
   path?: readonly string[];
 }
 
-/** 🌱 The full persisted dock UI state: per-anchor visibility/size/active-path, per-branch drill-down memory, and tree section/group expansion. Anchor ids mirror `PanelAnchor` (kept inline here to stay dependency-free of the `ui` package, same convention as {@link DockSkeleton}). */
+/** 🌱 The full persisted dock UI state: per-anchor visibility/size/active-path, per-branch drill-down memory, and tree section/group expansion. Anchor ids mirror `Anchor` (kept inline here to stay dependency-free of the `ui` package, same convention as {@link DockSkeleton}). */
 export interface DockUiState {
-  version: 2;
-  anchors: Partial<Record<"top-left" | "top-middle" | "top-right" | "bottom-left" | "bottom-middle" | "bottom-right", DockUiPanelState>>;
+  version: 3;
+  anchors: Partial<Record<PersistedAnchor, DockUiPanelState>>;
   pathMemory?: Readonly<Record<string, string>>;
   treeOpen?: Readonly<Record<string, boolean>>;
 }
@@ -1012,7 +1015,7 @@ function readDockUiState(storage: StoragePort, key: string): DockUiState | null 
   if (!raw) return null;
   try {
     const parsed = JSON.parse(raw) as unknown;
-    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 2 || !(parsed as DockUiState).anchors || typeof (parsed as DockUiState).anchors !== "object") return null;
+    if (!parsed || typeof parsed !== "object" || (parsed as DockUiState).version !== 3 || !(parsed as DockUiState).anchors || typeof (parsed as DockUiState).anchors !== "object") return null;
     return parsed as DockUiState;
   } catch {
     return null;
@@ -1059,6 +1062,81 @@ export class DockUiStateStore extends Store<DockUiState | null> {
 }
 //#endregion DockUiStateStore
 
+//#region WindowPaneStateStore
+/** 🪟 Persisted state for one window-level pane (a {@link DockUiPanelState} sibling, but keyed per window kind rather than globally) — only the fields that differ from the shell's computed defaults are ever stored. */
+export interface WindowPaneState {
+  anchor?: PersistedAnchor;
+  folded?: boolean;
+  size?: number;
+}
+
+/** 🪟 The full persisted window-pane arrangement: per-window-kind, per-pane anchor/fold/size — the pane-level analog of {@link DockUiState}, since panes float inside a window rather than docking to the shell's own edges. */
+export interface WindowPaneUiState {
+  version: 1;
+  windows: Record<string, Record<string, WindowPaneState>>;
+}
+
+function windowPaneUiOsStorageKey(): string {
+  return "semio.os.paneUi";
+}
+
+function windowPaneUiAppStorageKey(appId: string): string {
+  return `semio.os.paneUi.${appId}`;
+}
+
+/** 🧪 Defensive read: corrupt or foreign JSON at `key` resolves to `null` rather than throwing. */
+function readWindowPaneUiState(storage: StoragePort, key: string): WindowPaneUiState | null {
+  const raw = storage.get(key);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw) as unknown;
+    if (!parsed || typeof parsed !== "object" || (parsed as WindowPaneUiState).version !== 1 || !(parsed as WindowPaneUiState).windows || typeof (parsed as WindowPaneUiState).windows !== "object") return null;
+    return parsed as WindowPaneUiState;
+  } catch {
+    return null;
+  }
+}
+
+/** 🪟 Persists window-pane anchor/fold/size across an "os" layer (global default across all apps) and an optional per-app layer that wins when present — `save(null)`/`saveOs(null)` remove rather than persist a JSON `"null"`. */
+export class WindowPaneStateStore extends Store<WindowPaneUiState | null> {
+  constructor(
+    private readonly storage: StoragePort,
+    private readonly appId?: string,
+  ) {
+    super();
+  }
+
+  getSnapshot(): WindowPaneUiState | null {
+    if (this.appId) {
+      const app = readWindowPaneUiState(this.storage, windowPaneUiAppStorageKey(this.appId));
+      if (app) return app;
+    }
+    return readWindowPaneUiState(this.storage, windowPaneUiOsStorageKey());
+  }
+
+  save(state: WindowPaneUiState | null): void {
+    this.writeOrRemove(this.appId ? windowPaneUiAppStorageKey(this.appId) : windowPaneUiOsStorageKey(), state);
+    this.notify();
+  }
+
+  saveOs(state: WindowPaneUiState | null): void {
+    this.writeOrRemove(windowPaneUiOsStorageKey(), state);
+    this.notify();
+  }
+
+  reset(): void {
+    this.storage.remove(windowPaneUiOsStorageKey());
+    if (this.appId) this.storage.remove(windowPaneUiAppStorageKey(this.appId));
+    this.notify();
+  }
+
+  private writeOrRemove(key: string, state: WindowPaneUiState | null): void {
+    if (state === null) this.storage.remove(key);
+    else this.storage.set(key, JSON.stringify(state));
+  }
+}
+//#endregion WindowPaneStateStore
+
 export function createBrowserStoragePort(): StoragePort {
   return {
     get: (key) => {
@@ -1081,6 +1159,20 @@ export function createBrowserStoragePort(): StoragePort {
       } catch {
         /* ignore */
       }
+    },
+  };
+}
+
+/** 🧠 In-memory {@link StoragePort} — used by ephemeral branded shells so nothing survives a window refresh. */
+export function createMemoryStoragePort(): StoragePort {
+  const map = new Map<string, string>();
+  return {
+    get: (key) => map.get(key) ?? null,
+    set: (key, value) => {
+      map.set(key, value);
+    },
+    remove: (key) => {
+      map.delete(key);
     },
   };
 }
@@ -1281,6 +1373,8 @@ export type ShellBrand = {
   readonly introduction?: IntroductionDefinition;
   /** 🎓 When true, auto-starts the brand introduction on every window load and never persists a device-local "seen" flag. */
   readonly replayIntroductionOnLoad?: boolean;
+  /** 🧊 When true, the shell never reads or writes device-local shell state (dock, panes, named layouts, chrome prefs, introduction seen) — every refresh boots from brand locks/defaults only. */
+  readonly ephemeral?: boolean;
 };
 //#endregion 🏷️ShellBrand
 
@@ -2302,23 +2396,10 @@ export function resolvePluginHostConfig(playgroundPluginId: string): PluginHostC
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
 
-  function createMemoryStoragePort(): StoragePort {
-    const map = new Map<string, string>();
-    return {
-      get: (key) => map.get(key) ?? null,
-      set: (key, value) => {
-        map.set(key, value);
-      },
-      remove: (key) => {
-        map.delete(key);
-      },
-    };
-  }
-
   describe("DockLayoutStore", () => {
     const emptySkeleton = (): DockSkeleton => ({
-      version: 2,
-      anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] },
+      version: 3,
+      anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
     });
 
     it("returns null when nothing persisted", () => {
@@ -2379,10 +2460,20 @@ if (import.meta.vitest) {
       const store = new DockLayoutStore(storage);
       expect(store.getSnapshot()).toBeNull();
     });
+
+    it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
+      const storage = createMemoryStoragePort();
+      storage.set(
+        "semio.os.dock",
+        JSON.stringify({ version: 2, anchors: { "top-left": [{ id: "a" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } }),
+      );
+      const store = new DockLayoutStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
   });
 
   describe("DockUiStateStore", () => {
-    const emptyUiState = (): DockUiState => ({ version: 2, anchors: {} });
+    const emptyUiState = (): DockUiState => ({ version: 3, anchors: {} });
 
     it("returns null when nothing persisted", () => {
       const store = new DockUiStateStore(createMemoryStoragePort());
@@ -2443,16 +2534,86 @@ if (import.meta.vitest) {
       expect(store.getSnapshot()).toBeNull();
     });
 
+    it("discards a stale version-2 (six-anchor) blob instead of migrating it to eight anchors", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.dockUi", JSON.stringify({ version: 2, anchors: { "top-left": { visible: true, size: 320 } } }));
+      const store = new DockUiStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
+    });
+
     it('uses a distinct key from DockLayoutStore for an app literally named "ui"', () => {
       const storage = createMemoryStoragePort();
       new DockLayoutStore(storage, "ui").save({
-        version: 2,
-        anchors: { "top-left": [], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] },
+        version: 3,
+        anchors: { "top-left": [], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
       });
       new DockUiStateStore(storage).saveOs(emptyUiState());
       expect(storage.get("semio.os.dock.ui")).not.toBeNull();
       expect(storage.get("semio.os.dockUi")).not.toBeNull();
       expect(storage.get("semio.os.dock.ui")).not.toEqual(storage.get("semio.os.dockUi"));
+    });
+  });
+
+  describe("WindowPaneStateStore", () => {
+    const emptyPaneState = (): WindowPaneUiState => ({ version: 1, windows: {} });
+
+    it("returns null when nothing persisted", () => {
+      const store = new WindowPaneStateStore(createMemoryStoragePort());
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("app layer wins over os layer when both are set", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      const osState = emptyPaneState();
+      const appState: WindowPaneUiState = { version: 1, windows: { "puzzle3d.play": { utilities: { anchor: "bottom-left", folded: false, size: 280 } } } };
+      store.saveOs(osState);
+      store.save(appState);
+      expect(store.getSnapshot()).toEqual(appState);
+    });
+
+    it("falls back to os layer when app layer absent", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      const osState: WindowPaneUiState = { version: 1, windows: { "puzzle3d.play": { measures: { anchor: "top-right", size: 320 } } } };
+      store.saveOs(osState);
+      expect(store.getSnapshot()).toEqual(osState);
+    });
+
+    it("save(null) removes the app-layer key", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      store.save(emptyPaneState());
+      expect(storage.get("semio.os.paneUi.my-app")).not.toBeNull();
+      store.save(null);
+      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("reset() clears both layers", () => {
+      const storage = createMemoryStoragePort();
+      const store = new WindowPaneStateStore(storage, "my-app");
+      store.saveOs(emptyPaneState());
+      store.save(emptyPaneState());
+      store.reset();
+      expect(storage.get("semio.os.paneUi")).toBeNull();
+      expect(storage.get("semio.os.paneUi.my-app")).toBeNull();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("returns null on corrupt JSON rather than throwing", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.paneUi", "{not json");
+      const store = new WindowPaneStateStore(storage);
+      expect(() => store.getSnapshot()).not.toThrow();
+      expect(store.getSnapshot()).toBeNull();
+    });
+
+    it("discards a foreign-version blob instead of migrating it", () => {
+      const storage = createMemoryStoragePort();
+      storage.set("semio.os.paneUi", JSON.stringify({ version: 2, windows: {} }));
+      const store = new WindowPaneStateStore(storage);
+      expect(store.getSnapshot()).toBeNull();
     });
   });
 

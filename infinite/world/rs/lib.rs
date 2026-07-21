@@ -1818,8 +1818,10 @@ fn apply_runtime_draw_flags(state: &mut World3dState) {
             let mesh_selected = granularity == "mesh" && object_index_map.get(&instance.id).is_some_and(|object_index| component_ids.contains(&object_index.to_string()));
             let local_hovered = if component_mode { false } else { local_hover_id.as_deref() == Some(instance.id.as_str()) || hovered_component_object_id.as_deref() == Some(instance.id.as_str()) };
             let local_selected = selected_ids.contains(&instance.id) || mesh_selected;
-            instance.hovered = instance.hovered || local_hovered;
-            instance.selected = instance.selected || local_selected;
+            // 🎨 Selection/hover flags must follow the live selection snapshot — OR-ing with the
+            // instancesJson bits left deselected meshes painted selected until a later hover rebuild.
+            instance.hovered = local_hovered;
+            instance.selected = local_selected;
         }
     }
 }
@@ -3269,6 +3271,21 @@ mod tests {
         state.draws.push(SceneDraw3d { mesh_key: "mesh-1".into(), mesh_version: 0, instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] });
         apply_runtime_draw_flags(&mut state);
         assert!(!state.draws[0].instances[0].hovered);
+    }
+
+    #[test]
+    fn runtime_draw_flags_clear_stale_instance_selected_when_selection_is_empty() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.selected_ids.clear();
+        state.local_hover_id = None;
+        state.draws.push(SceneDraw3d {
+            mesh_key: "mesh-1".into(),
+            mesh_version: 0,
+            instances: vec![Instance3d { id: "obj-1".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: true, hovered: true }],
+        });
+        apply_runtime_draw_flags(&mut state);
+        assert!(!state.draws[0].instances[0].selected, "empty selection must clear a stale instancesJson selected bit");
+        assert!(!state.draws[0].instances[0].hovered, "empty hover must clear a stale instancesJson hovered bit");
     }
 
     #[test]

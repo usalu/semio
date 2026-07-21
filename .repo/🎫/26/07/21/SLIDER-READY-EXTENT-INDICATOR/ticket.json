@@ -1,0 +1,15 @@
+{
+  "title": "Slider Ready Extent Indicator",
+  "emoji": "🎚",
+  "status": "closed",
+  "description": "UI sliders can show preloaded content (e.g. puzzle 3d fill slider is dynamically extended). Instead of adjusting the range as content becomes ready, keep min/max fixed and show a highlighted line to the right of the knob until the ready extent. Wire through WindowMeasure::Slider.ready and the React Slider (and wgpu slider render path). Update puzzle 3d fill-count measure to use fixed max FILL_COUNT_MAX and ready=available_count.",
+  "summary": "Follow-up: ready preload segment now uses accent-secondary (highlighted) instead of emphasized. Fill slider label stays fixed; WindowMeasure::Slider.loading drives the measure tree-leaf loading ring while planning continues.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2195"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪07b96bf9d1cf41c7b7d28df5f9b43f9c",
+    "⚪2f5f505ff6514d07a9820e5756bc7cde"
+  ]
+}

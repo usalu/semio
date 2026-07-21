@@ -59,6 +59,7 @@ import {
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
   resolveVortexPointerDownIntent,
+  worldMeshMaterialRevision,
   worldVortexMaterialRevision,
   resolveWorldSelectionMergeMode,
   resolveWorldContextMenuTarget,
@@ -117,6 +118,8 @@ import {
   resolveShellLocks,
   shouldPersistIntroductionSeen,
   shouldReplayIntroductionOnLoad,
+  isEphemeralShellBrand,
+  clearDurableShellStorage,
   type ResolvedCommand,
   shellReducer,
   sortUtilityNodes,
@@ -285,7 +288,10 @@ describe("shell store reducer", () => {
     const state = baseState();
     const rearranged = shellReducer(state, {
       type: "SET_DOCK_OVERRIDE",
-      value: { version: 2, anchors: { "top-left": [{ id: "moved" }], "top-middle": [], "top-right": [], "bottom-left": [], "bottom-middle": [], "bottom-right": [] } },
+      value: {
+        version: 3,
+        anchors: { "top-left": [{ id: "moved" }], "top-middle": [], "top-right": [], "right-middle": [], "bottom-right": [], "bottom-middle": [], "bottom-left": [], "left-middle": [] },
+      },
     });
     const withPath = shellReducer(rearranged, { type: "SET_PANEL_PATH", anchor: "top-left", value: ["moved"] });
     const withVisible = shellReducer(withPath, { type: "SET_PANEL_VISIBLE", anchor: "top-left", value: true });
@@ -303,7 +309,7 @@ describe("shell store reducer", () => {
 
   it("HYDRATE_DOCK_UI restores a persisted size for the top-middle anchor", () => {
     const state = baseState();
-    const hydrated = shellReducer(state, { type: "HYDRATE_DOCK_UI", value: { version: 2, anchors: { "top-middle": { visible: true, size: 420 } } } });
+    const hydrated = shellReducer(state, { type: "HYDRATE_DOCK_UI", value: { version: 3, anchors: { "top-middle": { visible: true, size: 420 } } } });
     expect(hydrated.layout.panels["top-middle"].visible).toBe(true);
     expect(hydrated.layout.panels["top-middle"].size).toBe(420);
     expect(hydrated.layout.panels["top-left"]).toEqual(state.layout.panels["top-left"]);
@@ -785,6 +791,38 @@ describe("declarative forms parity", () => {
       ),
     );
     expect(markup).toContain('data-mixed="true"');
+  });
+
+  it("renders a group node as a labeled section nesting its child controls (Origin > X/Y/Z steppers)", () => {
+    const markup = renderToStaticMarkup(
+      interpretUiNode(
+        {
+          type: "group",
+          id: "puzzle3d-play-inspector.object.origin",
+          label: "Origin",
+          defaultOpen: true,
+          children: [
+            {
+              type: "field",
+              id: "puzzle3d-play-inspector.object.origin.x",
+              label: "X",
+              child: { type: "numberStepper", id: "puzzle3d-play-inspector.object.origin.x", value: 1, step: 0.1, uniform: true, onAbsolute: { controllerId: "puzzle3d-play", action: "patchInspector" }, onDelta: { controllerId: "puzzle3d-play", action: "patchInspector" } },
+            },
+            {
+              type: "field",
+              id: "puzzle3d-play-inspector.object.origin.y",
+              label: "Y",
+              child: { type: "numberStepper", id: "puzzle3d-play-inspector.object.origin.y", value: 2, step: 0.1, uniform: true, onAbsolute: { controllerId: "puzzle3d-play", action: "patchInspector" }, onDelta: { controllerId: "puzzle3d-play", action: "patchInspector" } },
+            },
+          ],
+        },
+        { onAction: noopAction },
+      ),
+    );
+    expect(markup).toContain(">Origin</h2>");
+    expect(markup).toContain(">X</label>");
+    expect(markup).toContain(">Y</label>");
+    expect(markup).toContain('data-slot="stepper-group"');
   });
 
   it("tokenizes stack node gap/padding instead of hardcoded rem inline styles, and keeps separators off raw border-border", () => {
@@ -1472,6 +1510,13 @@ describe("framework renderer hosts", () => {
     expect(worldVortexMaterialRevision()).toBe("neutral");
     expect(worldVortexMaterialRevision(false, true)).toBe("hovered");
     expect(worldVortexMaterialRevision(true, true)).toBe("selected");
+  });
+
+  it("revisions world mesh materials when style kind changes so deselection clears selected paint", () => {
+    expect(worldMeshMaterialRevision("selected")).toBe("selected");
+    expect(worldMeshMaterialRevision("neutral")).toBe("neutral");
+    expect(worldMeshMaterialRevision("hovered")).toBe("hovered");
+    expect(worldMeshMaterialRevision(resolveMeshStyle({ selected: false, hovered: false }))).toBe("neutral");
   });
 
   it("uses the world surface selection mode instead of a stale shared invertive mode", () => {
@@ -2975,6 +3020,37 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(shouldPersistIntroductionSeen({ id: "plain", windowTitle: "Plain" })).toBe(true);
     expect(shouldPersistIntroductionSeen({ id: "entwerfen-mit-bestand", windowTitle: "Entwerfen mit Bestand · Aggregator", replayIntroductionOnLoad: true })).toBe(false);
     expect(ENTWERFEN_MIT_BESTAND_BRAND.replayIntroductionOnLoad).toBe(true);
+  });
+
+  it("isEphemeralShellBrand skips durable shell state so a refresh boots from brand defaults only", () => {
+    expect(isEphemeralShellBrand(undefined)).toBe(false);
+    expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain" })).toBe(false);
+    expect(isEphemeralShellBrand({ id: "plain", windowTitle: "Plain", ephemeral: true })).toBe(true);
+    expect(isEphemeralShellBrand(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(true);
+    expect(shouldReplayIntroductionOnLoad(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(true);
+    expect(shouldPersistIntroductionSeen(ENTWERFEN_MIT_BESTAND_BRAND)).toBe(false);
+    const ephemeralState = initialShellState({
+      plugins: [],
+      locks: { locale: "de", terminology: "reuse", themeId: "semio" },
+      defaults: { exampleId: "concrete-forest" },
+      ephemeral: true,
+    });
+    expect(ephemeralState.layout.activeExampleId).toBe("concrete-forest");
+    expect(ephemeralState.uiPrefs.uiLocale).toBe("de");
+    expect(ephemeralState.uiPrefs.uiTerminology).toBe("reuse");
+    expect(ephemeralState.uiPrefs.uiThemeId).toBe("semio");
+    expect(ephemeralState.uiPrefs.uiAppearance).toBe("system");
+    expect(ephemeralState.uiPrefs.uiLayout).toBe("desktop");
+    expect(ephemeralState.uiPrefs.uiCustomThemes).toEqual({});
+    expect(ephemeralState.layout.dockOverride).toBeNull();
+    expect(ephemeralState.layout.shellLayout).toBeNull();
+    localStorage.setItem("ui.chrome.appearance", "dark");
+    localStorage.setItem("semio.os.dock", "{}");
+    localStorage.setItem("ui.introduction.seen.entwerfen-mit-bestand:puzzle3d-play", "true");
+    clearDurableShellStorage();
+    expect(localStorage.getItem("ui.chrome.appearance")).toBeNull();
+    expect(localStorage.getItem("semio.os.dock")).toBeNull();
+    expect(localStorage.getItem("ui.introduction.seen.entwerfen-mit-bestand:puzzle3d-play")).toBeNull();
   });
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {

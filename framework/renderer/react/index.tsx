@@ -89,7 +89,8 @@ import {
   moveTreeUnitInDock,
   Navbar,
   NavbarExampleSelect,
-  PANEL_ANCHORS,
+  ANCHORS,
+  Pane,
   PanelChromeTabBar,
   PanelDockProvider,
   Popover,
@@ -123,6 +124,7 @@ import {
   UiChromeLabelPolicyProvider,
   UI_MOBILE_MEDIA_QUERY,
   usePanelChromeHotkeys,
+  usePaneSlot,
   useElementsSurfaceChrome,
   useMediaQuery,
   useActionHotkey,
@@ -174,7 +176,7 @@ import {
   type FuseResult,
   type ModeWindowDescriptor,
   type NavbarItem,
-  type PanelAnchor,
+  type Anchor,
   type PanelDock,
   type PanelTabDockMove,
   type PanelTabNode,
@@ -268,6 +270,7 @@ import {
   DockUiStateStore,
   NamedLayoutStore,
   createBrowserStoragePort,
+  createMemoryStoragePort,
   createNamedLayout,
   type DockSkeleton,
   type DockUiPanelState,
@@ -1163,12 +1166,36 @@ export function resolveShellDefaults(brand: ShellBrand | undefined, defaults: Fr
 
 /** 🎓 Whether a brand's introduction should auto-start on every window load, ignoring any device-local seen flag. */
 export function shouldReplayIntroductionOnLoad(brand: ShellBrand | undefined): boolean {
-  return brand?.replayIntroductionOnLoad === true;
+  return isEphemeralShellBrand(brand) || brand?.replayIntroductionOnLoad === true;
 }
 
 /** 🎓 Whether completing or dismissing an introduction should persist a device-local seen flag for this brand. */
 export function shouldPersistIntroductionSeen(brand: ShellBrand | undefined): boolean {
   return !shouldReplayIntroductionOnLoad(brand);
+}
+
+/** 🧊 Whether a brand boots with no durable shell state — every refresh starts from locks/defaults only. */
+export function isEphemeralShellBrand(brand: ShellBrand | undefined): boolean {
+  return brand?.ephemeral === true;
+}
+
+/** 🧊 Removes known durable shell keys so an ephemeral brand leaves no localStorage/sessionStorage residue across refresh. */
+export function clearDurableShellStorage(): void {
+  if (typeof window === "undefined") return;
+  const prefixes = ["ui.chrome.", "ui.introduction.seen.", "ui.themes.", "ui.compute.", "semio.os.", "compose.display.layouts."];
+  try {
+    const keys = Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)).filter((key): key is string => typeof key === "string");
+    for (const key of keys) {
+      if (prefixes.some((prefix) => key === prefix || key.startsWith(prefix))) localStorage.removeItem(key);
+    }
+  } catch {
+    /* ignore */
+  }
+  try {
+    window.sessionStorage.removeItem(PRESENCE_CLIENT_STORAGE_KEY);
+  } catch {
+    /* ignore */
+  }
 }
 
 /** 🎛️ Stable empty-defaults reference so an omitted `defaults` prop never busts memo dependency arrays. */
@@ -1232,7 +1259,7 @@ type PanelState = {
 };
 
 type ShellLayoutState = {
-  readonly panels: Record<PanelAnchor, PanelState>;
+  readonly panels: Record<Anchor, PanelState>;
   /** 🗄️ User-rearranged dock diff against `defaultDock`, persisted via `DockLayoutStore`; `null` means "use the computed default arrangement". */
   readonly dockOverride: DockSkeleton | null;
   /** 🌱 Per-branch drill-down memory across every anchor + mobile (see `progressPanelTabSelection`), persisted via `DockUiStateStore`. */
@@ -1325,9 +1352,9 @@ export type ShellAction =
   | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
   | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_COMMAND_ARGS"; readonly commandId: string }
-  | { readonly type: "SET_PANEL_VISIBLE"; readonly anchor: PanelAnchor; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_PANEL_SIZE"; readonly anchor: PanelAnchor; readonly value: Updatable<number> }
-  | { readonly type: "SET_PANEL_PATH"; readonly anchor: PanelAnchor; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_PANEL_VISIBLE"; readonly anchor: Anchor; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_PANEL_SIZE"; readonly anchor: Anchor; readonly value: Updatable<number> }
+  | { readonly type: "SET_PANEL_PATH"; readonly anchor: Anchor; readonly value: Updatable<readonly string[]> }
   | { readonly type: "SET_DOCK_OVERRIDE"; readonly value: DockSkeleton | null }
   | { readonly type: "SET_PANEL_PATH_MEMORY"; readonly value: Updatable<Readonly<Record<string, string>>> }
   | { readonly type: "SET_TREE_OPEN_STATE"; readonly id: string; readonly open: boolean }
@@ -1474,7 +1501,7 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
     case "HYDRATE_DOCK_UI": {
       if (!action.value) return state;
       const panels = { ...state.panels };
-      for (const anchor of PANEL_ANCHORS) {
+      for (const anchor of ANCHORS) {
         const saved = action.value.anchors[anchor];
         if (!saved) continue;
         panels[anchor] = {
@@ -1486,8 +1513,8 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, panels, panelPathMemory: action.value.pathMemory ?? state.panelPathMemory, treeOpenStates: action.value.treeOpen ?? state.treeOpenStates };
     }
     case "RESET_DOCK": {
-      const panels = {} as Record<PanelAnchor, PanelState>;
-      for (const anchor of PANEL_ANCHORS) panels[anchor] = { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] };
+      const panels = {} as Record<Anchor, PanelState>;
+      for (const anchor of ANCHORS) panels[anchor] = { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] };
       return { ...state, dockOverride: null, panels, panelPathMemory: {}, treeOpenStates: {} };
     }
     case "SET_ACTIVE_WINDOW_ID":
@@ -1581,9 +1608,16 @@ export const selectUiDevice = (state: ShellState, mobile: boolean): ElementsSurf
 //#endregion selectors
 
 /** 🌱 Builds the starting `ShellState` for `FrameworkOsShell`, mirroring exactly what each migrated `useState` used to initialize to (including reads from local storage for UI prefs). */
-export function initialShellState(_props: { readonly pluginFilter?: string; readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[]; readonly locks?: ResolvedShellLocks; readonly defaults?: FrameworkOsDefaults }): ShellState {
+export function initialShellState(_props: {
+  readonly pluginFilter?: string;
+  readonly plugins: readonly { readonly pluginId: string; readonly moduleUrl: string }[];
+  readonly locks?: ResolvedShellLocks;
+  readonly defaults?: FrameworkOsDefaults;
+  readonly ephemeral?: boolean;
+}): ShellState {
   const locks = _props.locks ?? {};
   const defaults = _props.defaults ?? {};
+  const ephemeral = _props.ephemeral === true;
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
     windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
@@ -1591,7 +1625,7 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {} },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
-      panels: Object.fromEntries(PANEL_ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<PanelAnchor, PanelState>,
+      panels: Object.fromEntries(ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<Anchor, PanelState>,
       dockOverride: null,
       panelPathMemory: {},
       treeOpenStates: {},
@@ -1603,14 +1637,14 @@ export function initialShellState(_props: { readonly pluginFilter?: string; read
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
     uiPrefs: {
-      uiAppearance: locks.appearance ?? readStoredUiChromeAppearance(),
-      uiLayout: readStoredUiChromeLayout(),
-      uiCompact: readStoredUiChromeCompact(),
-      uiExpertise: readStoredUiChromeExpertise(),
-      uiLocale: locks.locale ?? readStoredUiChromeLocale() ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
-      uiTerminology: locks.terminology ?? readStoredUiChromeTerminology(),
-      uiThemeId: locks.themeId ?? readStoredUiChromeThemeId() ?? "semio",
-      uiCustomThemes: readStoredUiCustomThemes(),
+      uiAppearance: locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()),
+      uiLayout: ephemeral ? "desktop" : readStoredUiChromeLayout(),
+      uiCompact: ephemeral ? false : readStoredUiChromeCompact(),
+      uiExpertise: ephemeral ? Expertise.NORMAL : readStoredUiChromeExpertise(),
+      uiLocale: locks.locale ?? (ephemeral ? undefined : readStoredUiChromeLocale()) ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
+      uiTerminology: locks.terminology ?? (ephemeral ? UI_TERMINOLOGY_NATIVE : readStoredUiChromeTerminology()),
+      uiThemeId: locks.themeId ?? (ephemeral ? "semio" : readStoredUiChromeThemeId()) ?? "semio",
+      uiCustomThemes: ephemeral ? {} : readStoredUiCustomThemes(),
       uiThemeDraft: null,
     },
     sync: { syncBackboneUri: null, syncCardKind: null, syncDraftPath: "", syncStatusByDocumentId: {} },
@@ -1627,14 +1661,16 @@ function syncDocumentId(session: ActiveSession, panel: StudioPanelState | null, 
   return `${session.pluginId}-${session.instanceId}`;
 }
 
-/** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact utility tree, so a narrower default suits them; the middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search). */
-const DEFAULT_PANEL_SIZES: Record<PanelAnchor, number> = {
+/** @emoji 🧭 Starting width for each panel anchor — `top-left`/`top-right` mirror the old left/right side-panel defaults; `bottom-left`/`bottom-right` host the sync card and a compact utility tree, so a narrower default suits them; the top/bottom-middle anchors start empty but default wider since they grow both ways and tend to host transient centered content (e.g. search); the side-middle anchors default to the corner widths of their column. */
+const DEFAULT_PANEL_SIZES: Record<Anchor, number> = {
   "top-left": 280,
   "top-middle": 360,
   "top-right": 320,
-  "bottom-left": 240,
-  "bottom-middle": 360,
+  "right-middle": 320,
   "bottom-right": 240,
+  "bottom-middle": 360,
+  "bottom-left": 240,
+  "left-middle": 280,
 };
 
 /** @emoji 🌳 Root category id for the nested dock tab tree — the top row of {@link defaultDock}'s bottom-left (Display) anchor tabs; top-left (Workbench), top-right (Details) and bottom-right (Settings) render their tabs flat instead of under a category branch. */
@@ -1642,8 +1678,8 @@ const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 /** @emoji 🎛 Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
 const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
 
-/** @emoji 🎛️ Every anchor's root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on the floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. */
-const PANEL_TAB_BAR_HOSTS: Record<PanelAnchor, "navbar" | "footer"> = {
+/** @emoji 🎛️ The four corner/top-middle/bottom-middle anchors' root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on the floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. The two side-middle anchors have no navbar/footer slot to host into, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar. */
+const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
   "top-left": "navbar",
   "top-middle": "navbar",
   "top-right": "navbar",
@@ -1656,20 +1692,22 @@ const APP_DOCUMENT_SEPARATOR = " · ";
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
 
-function presenceClientIdentity(): { readonly clientId: string; readonly name: string } {
+function presenceClientIdentity(ephemeral = false): { readonly clientId: string; readonly name: string } {
   if (typeof window === "undefined") return { clientId: "server", name: "Server" };
-  const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
-  if (stored) {
-    try {
-      const parsed = JSON.parse(stored) as { readonly clientId?: string; readonly name?: string };
-      if (parsed.clientId && parsed.name) return { clientId: parsed.clientId, name: parsed.name };
-    } catch {
-      /* reseed identity */
+  if (!ephemeral) {
+    const stored = window.sessionStorage.getItem(PRESENCE_CLIENT_STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as { readonly clientId?: string; readonly name?: string };
+        if (parsed.clientId && parsed.name) return { clientId: parsed.clientId, name: parsed.name };
+      } catch {
+        /* reseed identity */
+      }
     }
   }
   const clientId = `client-${Math.random().toString(36).slice(2, 10)}`;
   const identity = { clientId, name: `Guest ${clientId.slice(-4).toUpperCase()}` };
-  window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, JSON.stringify(identity));
+  if (!ephemeral) window.sessionStorage.setItem(PRESENCE_CLIENT_STORAGE_KEY, JSON.stringify(identity));
   return identity;
 }
 
@@ -2362,8 +2400,8 @@ function parsePanelState(viewState: ViewState): StudioPanelState | null {
   }
 }
 
-/** @emoji 🧭 Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the two middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
-function panelAnchorForGroup(group: string): PanelAnchor {
+/** @emoji 🧭 Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
+function panelAnchorForGroup(group: string): Anchor {
   if (group === "workbench" || group === "document") return "top-left";
   if (group === "details") return "top-right";
   if (group === "display") return "bottom-left";
@@ -2892,6 +2930,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       value={[measure.value]}
       min={measure.min}
       max={measure.max}
+      ready={measure.ready}
       step={measure.step}
       onValueChange={(values) => dispatchLatest({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
     />
@@ -2926,7 +2965,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   }
   if (measure.kind === "slider") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label} loading={measure.loading === true}>
         <WindowMeasureSlider measure={measure} onAction={onAction} />
       </WindowMeasureTreeLeaf>
     );
@@ -3835,8 +3874,10 @@ export async function bootFrameworkOs(options: FrameworkOsBootOptions = {}): Pro
   if (!root) throw new Error("missing #root");
   const locks = resolveShellLocks(mergeShellLockSources(options.brand?.locks, options.locks));
   const defaults = resolveShellDefaults(options.brand, options.defaults);
+  const ephemeral = isEphemeralShellBrand(options.brand);
+  if (ephemeral) clearDurableShellStorage();
   if (options.brand) document.title = options.brand.windowTitle;
-  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? readStoredUiChromeAppearance());
+  bootstrapElementsSurfaceChromeDocument(locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()));
   // 🐢 No hardcoded fallback app — an omitted `plugins` list boots the shell with an explicit
   // "no plugins available" state rather than silently picking one app.
   createRoot(root).render(<FrameworkOsShell pluginFilter={options.plugin} plugins={options.plugins ?? []} appId={options.appId} locks={locks} defaults={defaults} brand={options.brand} />);
@@ -3891,7 +3932,8 @@ export function FrameworkOsShell({
   const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
   const locks = locksProp ?? EMPTY_SHELL_LOCKS;
   const defaults = defaultsProp ?? EMPTY_SHELL_DEFAULTS;
-  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults }));
+  const ephemeral = isEphemeralShellBrand(brand);
+  const [shellState, dispatch] = useReducer(shellReducer, undefined, () => initialShellState({ pluginFilter, plugins, locks, defaults, ephemeral }));
   const { loadedPlugins, session, error } = shellState.pluginRuntime;
   const hostPlugin = useMemo(() => (hostConfig ? loadedPlugins.find((entry) => entry.handle.pluginId === hostConfig.pluginId) : undefined), [loadedPlugins, hostConfig]);
   const hostApp = useMemo(() => hostPlugin?.manifest.apps.find((app) => app.id === hostConfig?.hostAppId), [hostPlugin, hostConfig]);
@@ -3930,8 +3972,8 @@ export function FrameworkOsShell({
   const uiTheme: UiTheme = useMemo(() => {
     if (uiThemeDraft) return uiThemeDraft;
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
-    return found ?? readStoredUiChromeThemeSnapshot() ?? semioTheme();
-  }, [uiThemeId, uiCustomThemes, uiThemeDraft]);
+    return found ?? (ephemeral ? undefined : readStoredUiChromeThemeSnapshot()) ?? semioTheme();
+  }, [uiThemeId, uiCustomThemes, uiThemeDraft, ephemeral]);
   /** 🧵 Lazily-created worker running `backbone-worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and op-origin filtering. */
@@ -3974,9 +4016,10 @@ export function FrameworkOsShell({
 
   const { uri: shellUri, canGoBack, canGoForward, canGoUp, goBack, goForward, goUp, navigate: navigateHistory } = useUIHistory("/", studioMode);
 
-  const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", createBrowserStoragePort()), [session?.app.id]);
-  const dockLayoutStore = useMemo(() => new DockLayoutStore(createBrowserStoragePort(), session?.app.id), [session?.app.id]);
-  const dockUiStateStore = useMemo(() => new DockUiStateStore(createBrowserStoragePort(), session?.app.id), [session?.app.id]);
+  const shellStorage = useMemo(() => (ephemeral ? createMemoryStoragePort() : createBrowserStoragePort()), [ephemeral]);
+  const namedLayoutStore = useMemo(() => new NamedLayoutStore(session?.app.id ?? "framework-os", shellStorage), [session?.app.id, shellStorage]);
+  const dockLayoutStore = useMemo(() => new DockLayoutStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
+  const dockUiStateStore = useMemo(() => new DockUiStateStore(shellStorage, session?.app.id), [session?.app.id, shellStorage]);
 
   const registry = useMemo(() => {
     const expanded = expandPluginRegistry(plugins, pluginFilter ? resolvePluginRegistryId(pluginFilter) : undefined, studioMode);
@@ -4952,7 +4995,7 @@ export function FrameworkOsShell({
   const studioSessionControllerId = studioSessionActive ? session?.app.controllerId : undefined;
   useEffect(() => {
     if (!studioSessionActive || !studioSessionControllerId || typeof window === "undefined") return;
-    const identity = presenceClientIdentity();
+    const identity = presenceClientIdentity(ephemeral);
     const beat = () => onActionRef.current({ controllerId: studioSessionControllerId, action: "presenceHeartbeat", args: identity });
     const initial = window.setTimeout(beat, 1000);
     const timer = window.setInterval(beat, PRESENCE_HEARTBEAT_INTERVAL_MS);
@@ -4960,7 +5003,7 @@ export function FrameworkOsShell({
       window.clearTimeout(initial);
       window.clearInterval(timer);
     };
-  }, [studioSessionActive, studioSessionControllerId]);
+  }, [studioSessionActive, studioSessionControllerId, ephemeral]);
 
   usePanelChromeHotkeys({
     onToggle: (anchor) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible }),
@@ -4968,8 +5011,13 @@ export function FrameworkOsShell({
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
 
-  //#region 💾 uiPrefs persistence (skips localStorage writes for any locked preference)
+  //#region 💾 uiPrefs persistence (skips localStorage writes for any locked preference; skipped entirely for ephemeral brands)
   useEffect(() => {
+    if (ephemeral) {
+      void setUiLocale(uiLocale);
+      setActiveUiTheme(uiTheme);
+      return;
+    }
     if (!locks.appearance) writeStoredUiChromeAppearance(uiAppearance);
     writeStoredUiChromeLayout(uiLayout);
     writeStoredUiChromeCompact(uiCompact);
@@ -4983,7 +5031,7 @@ export function FrameworkOsShell({
       writeStoredUiChromeThemeId(uiThemeId);
     }
     writeStoredUiCustomThemes(uiCustomThemes);
-  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks]);
+  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, ephemeral]);
   //#endregion
 
   useActionHotkey(
@@ -5530,7 +5578,7 @@ export function FrameworkOsShell({
     // category leaf inlined along the footer.
     const bottomMiddle: PanelTabNode[] =
       commandCategoryTabs.length > 0 ? [{ kind: "branch", id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 0, children: commandCategoryTabs }] : [];
-    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "bottom-left": bottomLeft, "bottom-middle": bottomMiddle, "bottom-right": bottomRight } };
+    return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
   }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
@@ -5567,8 +5615,8 @@ export function FrameworkOsShell({
       dockUiPersistedOnceRef.current = true;
       return;
     }
-    const anchors: Partial<Record<PanelAnchor, DockUiPanelState>> = {};
-    for (const anchor of PANEL_ANCHORS) {
+    const anchors: Partial<Record<Anchor, DockUiPanelState>> = {};
+    for (const anchor of ANCHORS) {
       const panelState = panels[anchor];
       const entry: DockUiPanelState = {};
       if (panelState.visible) entry.visible = true;
@@ -5579,7 +5627,7 @@ export function FrameworkOsShell({
     const hasPathMemory = Object.keys(panelPathMemory).length > 0;
     const hasTreeOpen = Object.keys(treeOpenStates).length > 0;
     const isDefault = Object.keys(anchors).length === 0 && !hasPathMemory && !hasTreeOpen;
-    dockUiStateStore.save(isDefault ? null : { version: 2, anchors, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
+    dockUiStateStore.save(isDefault ? null : { version: 3, anchors, pathMemory: hasPathMemory ? panelPathMemory : undefined, treeOpen: hasTreeOpen ? treeOpenStates : undefined });
   }, [panels, panelPathMemory, treeOpenStates, dockUiStateStore]);
 
   const handleTabDockDrop = useCallback(
@@ -5620,7 +5668,7 @@ export function FrameworkOsShell({
   /** @emoji 🎓 The current introduction step's anchor, decomposed by kind — `null` unless that kind is
    * active, so every reveal override below (here and in `modeWindows`) is a plain truthiness check. A
    * folded utility bar/Actions rail/dock panel would otherwise hide the step's anchor from ever mounting (see
-   * `useIntroductionAnchorRect`), leaving the step centered with no highlight and no way for the user to
+   * `useIntroductionAnchorRect`), leaving the step centered with no cutout and no way for the user to
    * find what to do. */
   const activeIntroductionStepAnchor: IntroductionAnchor | null = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex]?.anchor ?? null) : null;
   const introductionUtilityId = activeIntroductionStepAnchor?.kind === "utility" ? activeIntroductionStepAnchor.id : null;
@@ -5663,15 +5711,15 @@ export function FrameworkOsShell({
   }, [introductionPanelTabId, introductionPanelTabAnchor, dock]);
 
   /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
-  const panelActivePaths = useMemo((): Record<PanelAnchor, readonly string[]> => {
-    const result = {} as Record<PanelAnchor, readonly string[]>;
-    for (const anchor of PANEL_ANCHORS) result[anchor] = reconcileActivePath(dock.anchors[anchor], panels[anchor].path, panelTabChildren);
+  const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
+    const result = {} as Record<Anchor, readonly string[]>;
+    for (const anchor of ANCHORS) result[anchor] = reconcileActivePath(dock.anchors[anchor], panels[anchor].path, panelTabChildren);
     return result;
   }, [panels, dock]);
 
   /**
    * 🧭 Generalizes the old `leftPanelActivePath`/`rightPanelActivePath` studio/plugin "snap to the active panel
-   * tab" overrides across all six anchors. Write-through rather than read-time: each override dispatches
+   * tab" overrides across all eight anchors. Write-through rather than read-time: each override dispatches
    * `SET_PANEL_PATH` only when its target tab id actually changes, so a user's own collapse/navigation
    * afterward sticks instead of being reasserted on every render (progressive reveal made read-time reassertion
    * fight the user's own collapses). Studio wins over details when both would touch the same anchor.
@@ -5706,15 +5754,12 @@ export function FrameworkOsShell({
   }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs]);
   //#endregion 🧭DockAssembly
 
-  const mobilePanelTabs = useMemo(
-    () => [...defaultDock.anchors["top-left"], ...defaultDock.anchors["top-middle"], ...defaultDock.anchors["top-right"], ...defaultDock.anchors["bottom-left"], ...defaultDock.anchors["bottom-middle"], ...defaultDock.anchors["bottom-right"]],
-    [defaultDock],
-  );
+  const mobilePanelTabs = useMemo(() => ANCHORS.flatMap((anchor) => defaultDock.anchors[anchor]), [defaultDock]);
 
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: PANEL_ANCHORS.some((anchor) => panels[anchor].visible),
+      visible: ANCHORS.some((anchor) => panels[anchor].visible),
       tabs: mobilePanelTabs,
       activeTabPath: mobilePanelPath,
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -5765,7 +5810,7 @@ export function FrameworkOsShell({
   // {@link PANEL_TAB_BAR_HOSTS}) and the floating `Panel` itself (`buildPanelProps`) — the two hosts of the
   // SAME anchor always read/write the exact same controlled state.
   const buildPanelSelectionProps = useCallback(
-    (anchor: PanelAnchor): PanelTabSelectionOptions => ({
+    (anchor: Anchor): PanelTabSelectionOptions => ({
       tabs: dock.anchors[anchor],
       visible: panels[anchor].visible,
       onVisibleChange: (value: boolean) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value }),
@@ -6227,7 +6272,7 @@ export function FrameworkOsShell({
   }, [brand?.id, buildPanelSelectionProps, uiLocale]);
 
   const buildPanelProps = useCallback(
-    (anchor: PanelAnchor) => ({
+    (anchor: Anchor) => ({
       ...buildPanelSelectionProps(anchor),
       size: panels[anchor].size,
       onSizeChange: (value: number) => dispatch({ type: "SET_PANEL_SIZE", anchor, value }),
@@ -6268,14 +6313,7 @@ export function FrameworkOsShell({
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle />}
               footer={<Footer items={footerItems} />}
-              panels={{
-                "top-left": buildPanelProps("top-left"),
-                "top-middle": buildPanelProps("top-middle"),
-                "top-right": buildPanelProps("top-right"),
-                "bottom-left": buildPanelProps("bottom-left"),
-                "bottom-middle": buildPanelProps("bottom-middle"),
-                "bottom-right": buildPanelProps("bottom-right"),
-              }}
+              panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
               canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
             />
           </PanelDockProvider>
@@ -9164,6 +9202,11 @@ function useMeshStylePalette(): MeshStylePalette {
   return palette;
 }
 
+/** 🎨 Remount key for world mesh materials — R3F/three often keep the previous selected emissive until a later hover forces an update. */
+export function worldMeshMaterialRevision(kind: MeshStyleKind): MeshStyleKind {
+  return kind;
+}
+
 /** 🎨 Resolves the effective style kind for an instance/component, premigration priority: disabled → selected → highlighted → hovered → neutral. */
 export function resolveMeshStyle(state: { readonly disabled?: boolean; readonly selected?: boolean; readonly highlighted?: boolean; readonly hovered?: boolean }): MeshStyleKind {
   if (state.disabled) return "disabled";
@@ -9628,6 +9671,7 @@ function paintTextureUrl(base64: string): string {
 function PaintTexturedMesh({
   geometry,
   style,
+  styleKind,
   textureBase64,
   flatShading,
   children,
@@ -9635,6 +9679,7 @@ function PaintTexturedMesh({
 }: {
   readonly geometry: BufferGeometry;
   readonly style: MeshStyleColors;
+  readonly styleKind: MeshStyleKind;
   readonly textureBase64?: string;
   readonly flatShading?: boolean;
   readonly children?: React.ReactNode;
@@ -9646,6 +9691,7 @@ function PaintTexturedMesh({
   return (
     <mesh geometry={geometry} {...meshProps}>
       <meshStandardMaterial
+        key={worldMeshMaterialRevision(styleKind)}
         color={hasVertexColors ? "#ffffff" : style.meshColor}
         vertexColors={hasVertexColors}
         map={paintMap ?? undefined}
@@ -9703,6 +9749,7 @@ function GlbInstanceMesh({
   borderColor,
   material,
   shadowEnabled,
+  revision,
 }: {
   readonly url: string;
   readonly color: string;
@@ -9712,39 +9759,30 @@ function GlbInstanceMesh({
   readonly borderColor: string;
   readonly material?: WorldEnvironmentMaterialRecord;
   readonly shadowEnabled?: boolean;
+  readonly revision: MeshStyleKind;
 }) {
   const gltf = useLoader(GLTFLoader, url);
+  // 🎨 Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
+  // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
   const scene = useMemo(() => {
     const cloned = gltf.scene.clone(true);
     cloned.traverse((child) => {
       if (!(child instanceof Mesh)) return;
-      child.material = new MeshStandardMaterial({ metalness: material?.metalness ?? 0, roughness: material?.roughness ?? 1 });
+      child.material = new MeshStandardMaterial({
+        color: new Color(color),
+        emissive: new Color(emissive),
+        emissiveIntensity,
+        metalness: material?.metalness ?? 0,
+        roughness: material?.roughness ?? 1,
+        transparent: opacity < 1,
+        opacity,
+      });
       child.castShadow = shadowEnabled === true;
       child.receiveShadow = shadowEnabled === true;
     });
     applyGlbMeshEdgeBorders(cloned, borderColor);
     return cloned;
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- borderColor intentionally excluded: applied once at clone time, then kept in sync imperatively by the effect below without rebuilding the clone.
-  }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled]);
-
-  useEffect(() => {
-    scene.traverse((child) => {
-      if (child instanceof Mesh) {
-        const standard = child.material;
-        if (standard instanceof MeshStandardMaterial) {
-          standard.color.set(color);
-          standard.emissive.set(emissive);
-          standard.emissiveIntensity = emissiveIntensity;
-          standard.transparent = opacity < 1;
-          standard.opacity = opacity;
-        }
-        return;
-      }
-      if (child instanceof LineSegments && child.userData[WORLD_MESH_OUTLINE_USER_DATA_KEY]) {
-        (child.material as LineBasicMaterial).color.set(borderColor);
-      }
-    });
-  }, [scene, color, emissive, emissiveIntensity, opacity, borderColor]);
+  }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision]);
 
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
@@ -9963,6 +10001,7 @@ function WorldInstanceNode({
           <PaintTexturedMesh
             geometry={geometry}
             style={style}
+            styleKind={styleKind}
             textureBase64={paintTextureBase64}
             flatShading={flatShading}
             onPointerDown={(event) => {
@@ -10149,6 +10188,7 @@ function WorldInstanceNode({
         >
           <Suspense fallback={null}>
             <GlbInstanceMesh
+              key={worldMeshMaterialRevision(styleKind)}
               url={meshRecord.url}
               color={glbColor}
               emissive={glbEmissive}
@@ -10157,6 +10197,7 @@ function WorldInstanceNode({
               borderColor={palette.neutral.lineColor}
               material={environmentMaterial}
               shadowEnabled={environmentShadowEnabled}
+              revision={styleKind}
             />
           </Suspense>
         </group>
@@ -10169,7 +10210,7 @@ function WorldInstanceNode({
           }}
         >
           <boxGeometry args={[1, 1, 1]} />
-          <meshStandardMaterial color={style.meshColor} metalness={0} roughness={1} emissive={style.meshColor} emissiveIntensity={style.emissiveIntensity} transparent={style.opacity < 1} opacity={style.opacity} />
+          <meshStandardMaterial key={worldMeshMaterialRevision(styleKind)} color={style.meshColor} metalness={0} roughness={1} emissive={style.meshColor} emissiveIntensity={style.emissiveIntensity} transparent={style.opacity < 1} opacity={style.opacity} />
         </mesh>
       )}
     </group>
@@ -10240,6 +10281,7 @@ function WorldInstancesLayer({
   const selectedComponentIds = mergedComponentIdsSet ? new Set([...currentComponentIds].filter((id) => mergedComponentIdsSet.has(id))) : currentComponentIds;
   const previewComponentIds = mergedComponentIdsSet ? new Set([...mergedComponentIdsSet].filter((id) => !currentComponentIds.has(id))) : new Set<number>();
   const mergedInstanceIdsSet = mergedInstanceIds ? new Set(mergedInstanceIds) : null;
+  const selectedIds = useMemo(() => new Set(selection.ids ?? []), [selection.ids]);
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
   const transformMode = selection.transformMode ?? "move";
   const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode), [transformMode]);
@@ -10276,10 +10318,15 @@ function WorldInstancesLayer({
           const rotation = instance.rotation;
           const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
           const previewInstanceSelected = mergedInstanceIdsSet ? mergedInstanceIdsSet.has(instance.id) : undefined;
+          const paintInstance: WorldInstanceRecord = {
+            ...instance,
+            selected: selectedIds.has(instance.id),
+            hovered: selection.hoveredId === instance.id,
+          };
           return (
             <WorldInstanceNode
               key={instance.id}
-              instance={instance}
+              instance={paintInstance}
               previewInstanceSelected={previewInstanceSelected}
               index={index}
               meshRecord={meshRecord}
@@ -10565,7 +10612,7 @@ function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: Wor
     <group position={position} scale={scale} quaternion={quaternion}>
       {meshRecord?.url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={meshRecord.url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} />
+          <GlbInstanceMesh url={meshRecord.url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} revision="highlighted" />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
@@ -11002,7 +11049,7 @@ function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Pu
     <group position={preview.origin as [number, number, number]} raycast={() => null}>
       {url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} />
+          <GlbInstanceMesh url={url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={0.88} borderColor={palette.neutral.lineColor} revision="highlighted" />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
@@ -11035,6 +11082,16 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   const denominator = a * c - b * b;
   if (Math.abs(denominator) < 1e-9) return null;
   return (a * e - b * d) / denominator;
+}
+
+/** @emoji 🔀 Portals the world's orthographic/perspective switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane, instead of the fixed corner it used to be hardcoded to. */
+function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
+  const [anchor, setAnchor] = useState<Anchor>("bottom-right");
+  return usePaneSlot(
+    <Pane id="world-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label="Projection">
+      <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
+    </Pane>,
+  );
 }
 
 //#region World3dHost
@@ -11827,7 +11884,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           frame || cameraState.explicitProjection ? (
             <>
               {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
-              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitch projection={cameraState.projection ?? "perspective"} onProjectionChange={handleProjectionChange} /> : null}
+              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitchPane projection={cameraState.projection ?? "perspective"} onProjectionChange={handleProjectionChange} /> : null}
             </>
           ) : undefined
         }

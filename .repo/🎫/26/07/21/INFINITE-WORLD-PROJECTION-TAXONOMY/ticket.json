@@ -1,0 +1,13 @@
+{
+  "title": "Infinite World Projection Taxonomy",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Introduce the full classical 3D projection taxonomy as a generic Window-menu tree for infinite worlds: Parallel (Orthographic: Plan/Top/Bottom/Front/Back/Left/Right, Axonometric: Isometric/Dimetric/Trimetric, Oblique: Cabinet/Cavalier/Military) and Perspective (1-Point, 2-Point, 3-Point, Curvilinear), with all angles/params adjustable via sliders. Implement once in infinite/world/r3f + framework/plugin/rs so puzzle 3d and cad both get it, replacing the old binary orthographic/perspective + ad-hoc view-preset scheme (no legacy dual paths). See plan at /Users/ueli/.claude/plans/parallel-orthographic-plan-top-calm-pearl.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2198"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪14536a6c5d714af7b3fedb4e8f3e84cc"
+  ]
+}

@@ -4,7 +4,7 @@
 // #endregion 🧲Header
 
 //#region 🔌Adapters
-import type { Design, Kit, Piece, Session, SetResult, Type } from "@semio-tech/compose-js";
+import type { Design, Kit, Piece, PositionInput, Session, SetResult, Type } from "@semio-tech/compose-js";
 import { Design as JsDesign, Kit as JsKitEntity, Piece as JsPiece, Session as ComposeSession } from "@semio-tech/compose-js";
 import { fetchComposeFileSystemChildren, type ComposeFileSystemChildRef, type ComposeFileSystemParentRef } from "@semio-tech/compose-react";
 import { gunzipSync } from "fflate";
@@ -56,6 +56,8 @@ import {
   type UiTreeNode,
   type WindowBodyViewContext,
   uiDeclarativeSectionsToTree,
+  uiInspectorStepperField,
+  uiInspectorVec3Group,
   getPlatformControllerById,
   WindowKindRuntime,
   AppRuntime,
@@ -11443,15 +11445,18 @@ function sketchpadTypeInheritanceChain(kit: Kit, typeId: string): readonly Type[
 }
 
 /** @emoji ⛓️ Patches connection scalar fields on an in-memory kit snapshot. */
-function sketchpadPatchRouteConnectionsInKit(kit: Kit, designId: string, connectionIds: readonly string[], field: "gap", value: unknown): Kit {
-  const parsed = Number(value);
-  if (!Number.isFinite(parsed)) return kit;
+const SKETCHPAD_CONNECTION_NUMERIC_FIELDS = ["gap", "shift", "rise", "rotation", "turn", "tilt"] as const;
+
+function sketchpadPatchRouteConnectionsInKit(kit: Kit, designId: string, connectionIds: readonly string[], field: string, value: unknown, delta?: unknown): Kit {
+  if (!(SKETCHPAD_CONNECTION_NUMERIC_FIELDS as readonly string[]).includes(field)) return kit;
   const patchDesign = (design: Design): Design => {
     if (design.id !== designId) return design;
     const connections = ((design as { connections?: readonly SketchpadKitConnection[] }).connections ?? []) as SketchpadKitConnection[];
     const nextConnections = connections.map((connection) => {
       if (!connection.id || !connectionIds.includes(connection.id)) return connection;
-      return { ...connection, gap: parsed };
+      const current = (connection as Record<string, unknown>)[field];
+      const resolved = sketchpadResolveNumberEdit(typeof current === "number" ? current : 0, value, delta);
+      return { ...connection, [field]: resolved };
     });
     return { ...design, connections: nextConnections } as Design;
   };
@@ -12814,6 +12819,31 @@ function sketchpadPieceAbsolutePose(piece: { readonly id: string }): SketchpadPi
   return row.flatPosition ?? row.position ?? (row.center || row.plane ? { center: row.center, plane: row.plane } : undefined);
 }
 
+/** @emoji 📐 Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
+ * otherwise a `delta` (stepper nudge) is added to `current`. */
+function sketchpadResolveNumberEdit(current: number, value: unknown, delta: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  if (typeof delta === "number" && Number.isFinite(delta)) return current + delta;
+  return current;
+}
+
+/** @emoji 📐 Applies one dot-path axis edit (`"center.u"`, `"plane.origin.x"`, …) from the inspector's
+ * `ui_inspector_vec3_group`/`ui_inspector_stepper_field` dispatch onto a full {@link PositionInput} —
+ * `Piece.move` always takes the complete position, so every axis edit starts from `current`. */
+function sketchpadPatchPositionField(position: PositionInput, field: string, value: unknown, delta: unknown): PositionInput {
+  const parts = field.split(".");
+  if (parts.length === 2 && parts[0] === "center" && (parts[1] === "u" || parts[1] === "v")) {
+    const axis = parts[1] as "u" | "v";
+    return { ...position, center: { ...position.center, [axis]: sketchpadResolveNumberEdit(position.center[axis], value, delta) } };
+  }
+  if (parts.length === 3 && parts[0] === "plane" && (parts[1] === "origin" || parts[1] === "xAxis" || parts[1] === "yAxis") && (parts[2] === "x" || parts[2] === "y" || parts[2] === "z")) {
+    const key = parts[1] as "origin" | "xAxis" | "yAxis";
+    const axis = parts[2] as "x" | "y" | "z";
+    return { ...position, plane: { ...position.plane, [key]: { ...position.plane[key], [axis]: sketchpadResolveNumberEdit(position.plane[key][axis], value, delta) } } };
+  }
+  return position;
+}
+
 function sketchpadPieceDiagramUv(piece: { readonly id: string }, index: number): { readonly u: number; readonly v: number } {
   const pose = sketchpadPieceAbsolutePose(piece);
   const center = pose?.center;
@@ -13959,7 +13989,9 @@ function sketchpadAllEqual<T>(values: readonly T[]): boolean {
 }
 
 /** @emoji 🗣️ Atomic labels for the document/catalogue/inspection corner panels, resolved at call time via {@link composeCurrentUiLocale}. */
-const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<"selectedKits" | "openKits" | "designs" | "types" | "homeSelection" | "id" | "name" | "description" | "gap" | "representations" | "quality"> = {
+const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<
+  "selectedKits" | "openKits" | "designs" | "types" | "homeSelection" | "id" | "name" | "description" | "gap" | "representations" | "quality" | "center" | "plane" | "origin" | "xAxis" | "yAxis" | "shift" | "rise" | "rotation" | "turn" | "tilt"
+> = {
   en: {
     selectedKits: "Selected kits",
     openKits: "Open kits",
@@ -13972,6 +14004,16 @@ const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<"selectedKits" | "openKits" 
     gap: "Gap",
     representations: "Representations",
     quality: "Quality",
+    center: "Center",
+    plane: "Plane",
+    origin: "Origin",
+    xAxis: "X Axis",
+    yAxis: "Y Axis",
+    shift: "Shift",
+    rise: "Rise",
+    rotation: "Rotation",
+    turn: "Turn",
+    tilt: "Tilt",
   },
   de: {
     selectedKits: "Ausgewaehlte Kits",
@@ -13985,6 +14027,16 @@ const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<"selectedKits" | "openKits" 
     gap: "Abstand",
     representations: "Repraesentationen",
     quality: "Qualitaet",
+    center: "Zentrum",
+    plane: "Ebene",
+    origin: "Ursprung",
+    xAxis: "X-Achse",
+    yAxis: "Y-Achse",
+    shift: "Verschiebung",
+    rise: "Anstieg",
+    rotation: "Rotation",
+    turn: "Drehung",
+    tilt: "Neigung",
   },
 };
 
@@ -14261,6 +14313,36 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
         },
       },
     );
+    const poses = pieces.map((piece) => sketchpadPieceAbsolutePose(piece));
+    const piecePatchCmd = (field: string) => sketchpadShellAct("patchRoutePieces", { kitId, designId, pieceIds: selection.pieceIds, field });
+    const us = poses.map((pose) => pose?.center?.u ?? 0);
+    const vs = poses.map((pose) => pose?.center?.v ?? 0);
+    pieceFields.push({
+      type: "group",
+      id: "sketchpad.inspection.piece.center",
+      label: l.center,
+      defaultOpen: true,
+      children: [
+        uiInspectorStepperField("sketchpad.inspection.piece.center.u", "U", us, 0.1, piecePatchCmd("center.u")),
+        uiInspectorStepperField("sketchpad.inspection.piece.center.v", "V", vs, 0.1, piecePatchCmd("center.v")),
+      ],
+    });
+    const axisTuples = (axis: "origin" | "xAxis" | "yAxis"): readonly (readonly [number, number, number])[] =>
+      poses.map((pose) => {
+        const point = pose?.plane?.[axis];
+        return [point?.x ?? 0, point?.y ?? 0, point?.z ?? 0] as const;
+      });
+    pieceFields.push({
+      type: "group",
+      id: "sketchpad.inspection.piece.plane",
+      label: l.plane,
+      defaultOpen: true,
+      children: [
+        uiInspectorVec3Group("sketchpad.inspection.piece.plane.origin", l.origin, axisTuples("origin"), 0.1, (axis) => piecePatchCmd(`plane.origin.${axis}`)),
+        uiInspectorVec3Group("sketchpad.inspection.piece.plane.xAxis", l.xAxis, axisTuples("xAxis"), 0.1, (axis) => piecePatchCmd(`plane.xAxis.${axis}`)),
+        uiInspectorVec3Group("sketchpad.inspection.piece.plane.yAxis", l.yAxis, axisTuples("yAxis"), 0.1, (axis) => piecePatchCmd(`plane.yAxis.${axis}`)),
+      ],
+    });
     children.push({
       type: "section",
       id: "sketchpad.inspection.pieces",
@@ -14272,8 +14354,10 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
     const design = findDesignInKit(kit, designId);
     const connections = ((design as { connections?: readonly SketchpadKitConnection[] } | undefined)?.connections ?? []) as readonly SketchpadKitConnection[];
     const selected = connections.filter((connection) => connection.id && selection.connectionIds.includes(connection.id));
-    const gaps = selected.map((connection) => (connection as Record<string, unknown>).gap).filter((value): value is number => typeof value === "number");
-    const gapUniform = sketchpadAllEqual(gaps);
+    const numericField = (connection: SketchpadKitConnection, field: string): number => {
+      const value = (connection as Record<string, unknown>)[field];
+      return typeof value === "number" ? value : 0;
+    };
     const connectionFields: UiNode[] = [];
     if (selection.connectionIds.length === 1) {
       connectionFields.push({
@@ -14283,20 +14367,17 @@ function buildSketchpadInspectionPanelBody(ctx: WindowBodyViewContext): UiTreeNo
         child: { type: "text", value: selection.connectionIds[0]! },
       });
     }
-    if (gaps.length > 0) {
-      connectionFields.push({
-        type: "field",
-        id: "sketchpad.inspection.connection.gap",
-        label: l.gap,
-        child: {
-          type: "input",
-          id: "sketchpad.inspection.connection.gap.input",
-          inputKind: "number",
-          value: gapUniform ? String(gaps[0] ?? 0) : "",
-          placeholder: gapUniform ? undefined : "Mixed",
-          onChange: sketchpadShellAct("patchRouteConnections", { kitId, designId, connectionIds: selection.connectionIds, field: "gap" }),
-        },
-      });
+    const connectionPatchCmd = (field: string) => sketchpadShellAct("patchRouteConnections", { kitId, designId, connectionIds: selection.connectionIds, field });
+    if (selected.length > 0) {
+      const numbers = (field: string): readonly number[] => selected.map((connection) => numericField(connection, field));
+      connectionFields.push(
+        uiInspectorStepperField("sketchpad.inspection.connection.gap", l.gap, numbers("gap"), 0.1, connectionPatchCmd("gap")),
+        uiInspectorStepperField("sketchpad.inspection.connection.shift", l.shift, numbers("shift"), 0.1, connectionPatchCmd("shift")),
+        uiInspectorStepperField("sketchpad.inspection.connection.rise", l.rise, numbers("rise"), 0.1, connectionPatchCmd("rise")),
+        uiInspectorStepperField("sketchpad.inspection.connection.rotation", l.rotation, numbers("rotation"), 1, connectionPatchCmd("rotation")),
+        uiInspectorStepperField("sketchpad.inspection.connection.turn", l.turn, numbers("turn"), 1, connectionPatchCmd("turn")),
+        uiInspectorStepperField("sketchpad.inspection.connection.tilt", l.tilt, numbers("tilt"), 1, connectionPatchCmd("tilt")),
+      );
     }
     children.push({
       type: "section",
@@ -15111,17 +15192,34 @@ export class SketchpadShellController extends VirtualFileSystemController {
           kitId: string;
           designId: string;
           pieceIds: readonly string[];
-          field: "name" | "description";
+          field: string;
           value?: unknown;
+          delta?: unknown;
         };
         if (!payload.kitId || !payload.designId || !payload.pieceIds.length) break;
-        const value = String(payload.value ?? "");
         void executeSketchpadJsKitMutation(payload.kitId, async (kit) => {
           const design = kit.design(payload.designId);
           let last: SetResult = { ok: true };
           for (const pieceId of payload.pieceIds) {
             const piece = design.piece(pieceId);
-            last = payload.field === "name" ? await piece.rename(value) : await piece.changeDescription(value);
+            if (payload.field === "name" || payload.field === "description") {
+              const text = String(payload.value ?? "");
+              last = payload.field === "name" ? await piece.rename(text) : await piece.changeDescription(text);
+            } else {
+              const frag = await piece.readKitInner(piece.kitInnerPath("center { u v } plane { origin { x y z } xAxis { x y z } yAxis { x y z } }"));
+              const row = ((frag as Record<string, unknown> | null)?.["design"] as Record<string, unknown> | undefined)?.["piece"] as
+                | { center?: { u?: number; v?: number }; plane?: { origin?: { x?: number; y?: number; z?: number }; xAxis?: { x?: number; y?: number; z?: number }; yAxis?: { x?: number; y?: number; z?: number } } }
+                | undefined;
+              const current: PositionInput = {
+                center: { u: row?.center?.u ?? 0, v: row?.center?.v ?? 0 },
+                plane: {
+                  origin: { x: row?.plane?.origin?.x ?? 0, y: row?.plane?.origin?.y ?? 0, z: row?.plane?.origin?.z ?? 0 },
+                  xAxis: { x: row?.plane?.xAxis?.x ?? 1, y: row?.plane?.xAxis?.y ?? 0, z: row?.plane?.xAxis?.z ?? 0 },
+                  yAxis: { x: row?.plane?.yAxis?.x ?? 0, y: row?.plane?.yAxis?.y ?? 1, z: row?.plane?.yAxis?.z ?? 0 },
+                },
+              };
+              last = await piece.move(sketchpadPatchPositionField(current, payload.field, payload.value, payload.delta));
+            }
             if (!last.ok) return last;
           }
           return last;
@@ -15137,14 +15235,15 @@ export class SketchpadShellController extends VirtualFileSystemController {
           kitId: string;
           designId: string;
           connectionIds: readonly string[];
-          field: "gap";
+          field: string;
           value?: unknown;
+          delta?: unknown;
         };
-        if (!payload.kitId || !payload.designId || !payload.connectionIds.length || payload.field !== "gap") break;
+        if (!payload.kitId || !payload.designId || !payload.connectionIds.length) break;
         const store = this.getKitStore(payload.kitId);
         if (!store) break;
         const current = store.getSnapshot().kit;
-        store.replaceKit(sketchpadPatchRouteConnectionsInKit(current, payload.designId, payload.connectionIds, payload.field, payload.value));
+        store.replaceKit(sketchpadPatchRouteConnectionsInKit(current, payload.designId, payload.connectionIds, payload.field, payload.value, payload.delta));
         break;
       }
       case "closeKit": {
@@ -16532,8 +16631,8 @@ if (import.meta.vitest) {
       ctrl.setRouteSelection({ pieceIds: [], connectionIds: [connectionA, connectionB], kitWiresNodeIds: [], kitWiresHoveredNodeId: null });
       const tree = buildSketchpadInspectionPanelBody({ platform, windowKindId: "design", bus: platform.actionBus });
       const gapField = tree.sections.flatMap((section) => section.items).find((item) => item.id === "sketchpad.inspection.connection.gap");
-      expect(gapField?.control?.type).toBe("input");
-      expect(gapField?.control?.onChange?.action).toBe("patchRouteConnections");
+      expect(gapField?.control?.type).toBe("numberStepper");
+      expect(gapField?.control?.onAbsolute?.action).toBe("patchRouteConnections");
       ctrl.run("patchRouteConnections", { kitId, designId, connectionIds: [connectionA, connectionB], field: "gap", value: 5 });
       const design = findDesignInKit(ctrl.getKitStore(kitId)!.getSnapshot().kit, designId);
       const gaps = ((design as { connections?: readonly { gap?: number }[] }).connections ?? []).map((row) => row.gap);

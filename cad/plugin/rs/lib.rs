@@ -2124,9 +2124,9 @@ use geometry_import::{
 use semio_framework_plugin::{PanelGroup,
     apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
-    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_mixed_vec3, ui_inspector_all_equal, ui_inspector_readonly_field,
+    ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group,
     ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode,
+    ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode, UiGroupNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -3846,40 +3846,20 @@ fn inspector_number_field(
     })
 }
 
-fn inspector_vec3_field(
-    id: &str,
-    label: &str,
-    values: &[[f64; 3]],
-    object_ids: &[String],
-    field: &str,
-) -> UiNode {
-    let mixed = ui_inspector_mixed_vec3(values);
-    let value = mixed.value.unwrap_or([0.0, 0.0, 0.0]);
-    UiNode::Field(UiFieldNode {
+/// @emoji 🌀 Builds an editable 4-component quaternion group (`X`/`Y`/`Z`/`W` steppers) — orientation
+/// fields have no shared helper (quaternions aren't `ui_inspector_vec3_group`'s 3-wide shape), so
+/// this mirrors that helper's structure one component wider. The patch handler renormalizes after
+/// any component edit so the result stays a valid unit quaternion.
+fn inspector_quat_group(id: &str, label: &str, values: &[[f64; 4]], step: f64, axis_action: impl Fn(&str) -> ActionDescriptor) -> UiNode {
+    let component = |index: usize, name: &str, label: &str| {
+        let values: Vec<f64> = values.iter().map(|q| q[index]).collect();
+        ui_inspector_stepper_field(format!("{id}.{name}"), label, &values, step, axis_action(name))
+    };
+    UiNode::Group(UiGroupNode {
         id: id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{id}.input"),
-            input_kind: "text".into(),
-            value: if mixed.uniform {
-                format!("[{}, {}, {}]", value[0], value[1], value[2])
-            } else {
-                String::new()
-            },
-            placeholder: if mixed.uniform { None } else { Some("—".into()) },
-            commit: None,
-            on_change: cad_action(
-                "patchSelection",
-                Some(json!({ "objectIds": object_ids, "field": field })),
-            ),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
+        default_open: Some(true),
+        children: vec![component(0, "x", "X"), component(1, "y", "Y"), component(2, "z", "Z"), component(3, "w", "W")],
     })
 }
 
@@ -3990,26 +3970,21 @@ fn object_inspector_group(objects: &[&CadObject], term_labels: &CadLabels) -> Ui
                 required: None,
                 error: None,
             }),
-            inspector_vec3_field(
-                "cad-play-inspector.object.origin",
-                term_labels.position,
-                &origins,
-                &object_ids,
-                "origin",
-            ),
-            inspector_vec3_field(
-                "cad-play-inspector.object.scale",
-                term_labels.scale,
-                &scales,
-                &object_ids,
-                "scale",
-            ),
-            inspector_quat_field(
-                "cad-play-inspector.object.orientation",
-                term_labels.rotation,
-                &orientations,
-                &object_ids,
-            ),
+            {
+                let object_ids = object_ids.clone();
+                ui_inspector_vec3_group("cad-play-inspector.object.origin", term_labels.position, &origins, 0.1, move |axis| {
+                    cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("origin.{axis}") })))
+                })
+            },
+            {
+                let object_ids = object_ids.clone();
+                ui_inspector_vec3_group("cad-play-inspector.object.scale", term_labels.scale, &scales, 0.1, move |axis| {
+                    cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("scale.{axis}") })))
+                })
+            },
+            inspector_quat_group("cad-play-inspector.object.orientation", term_labels.rotation, &orientations, 0.01, |axis| {
+                cad_action("patchSelection", Some(json!({ "objectIds": object_ids, "field": format!("orientation.{axis}") })))
+            }),
         ],
     }
 }
@@ -4034,41 +4009,6 @@ fn primitive_inspector_group(object: &CadObject, labels: &CadLabels, primitive_i
     }
 }
 
-fn inspector_quat_field(id: &str, label: &str, values: &[[f64; 4]], object_ids: &[String]) -> UiNode {
-    let serialized: Vec<String> = values
-        .iter()
-        .map(|row| format!("[{}, {}, {}, {}]", row[0], row[1], row[2], row[3]))
-        .collect();
-    let uniform = ui_inspector_all_equal(&serialized);
-    let value = values.first().copied().unwrap_or([0.0, 0.0, 0.0, 1.0]);
-    UiNode::Field(UiFieldNode {
-        id: id.into(),
-        label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
-            id: format!("{id}.input"),
-            input_kind: "text".into(),
-            value: if uniform {
-                format!("[{}, {}, {}, {}]", value[0], value[1], value[2], value[3])
-            } else {
-                String::new()
-            },
-            placeholder: if uniform { None } else { Some("—".into()) },
-            commit: None,
-            on_change: cad_action(
-                "patchSelection",
-                Some(json!({ "objectIds": object_ids, "field": "orientation" })),
-            ),
-            min: None,
-            max: None,
-            step: None,
-            accept: None,
-        })),
-        description: None,
-        required: None,
-        error: None,
-    })
-}
-
 fn reference_inspector_group(model_definition_id: &str, reference: &CadReference, labels: &CadLabels) -> UiInspectorFieldGroup {
     UiInspectorFieldGroup {
         id: "cad-play-inspector.reference".into(),
@@ -4081,39 +4021,24 @@ fn reference_inspector_group(model_definition_id: &str, reference: &CadReference
                 labels.source,
                 &reference.source_url,
             ),
-            UiNode::Field(UiFieldNode {
-                id: "cad-play-inspector.reference.widthWorld".into(),
-                label: labels.width_world.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    id: "cad-play-inspector.reference.widthWorld.input".into(),
-                    input_kind: "number".into(),
-                    value: reference.width_world.to_string(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: cad_action(
+            {
+                let patch_cmd = |field: &str| {
+                    cad_action(
                         "patchCadPlayReference",
-                        Some(json!({
-                            "modelDefinitionId": model_definition_id,
-                            "referenceId": reference.id,
-                            "field": "widthWorld",
-                        })),
-                    ),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-            }),
-            inspector_vec3_field(
-                "cad-play-inspector.reference.origin",
-                labels.position,
-                &[reference.origin],
-                &[reference.id.clone()],
-                "origin",
-            ),
+                        Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id, "field": field })),
+                    )
+                };
+                ui_inspector_stepper_field("cad-play-inspector.reference.widthWorld", labels.width_world, &[reference.width_world], 0.1, patch_cmd("widthWorld"))
+            },
+            {
+                let patch_cmd = move |axis: &str| {
+                    cad_action(
+                        "patchCadPlayReference",
+                        Some(json!({ "modelDefinitionId": model_definition_id, "referenceId": reference.id, "field": format!("origin.{axis}") })),
+                    )
+                };
+                ui_inspector_vec3_group("cad-play-inspector.reference.origin", labels.position, &[reference.origin], 0.1, patch_cmd)
+            },
         ],
     }
 }
@@ -4271,90 +4196,92 @@ fn object_patch_from_field(field: &str, value: Option<&Value>) -> Option<CadObje
             locked: Some(locked),
             ..Default::default()
         }),
-        "origin" => value.and_then(parse_vec3_value).map(|origin| CadObjectPatch {
-            origin: Some(origin),
-            ..Default::default()
-        }),
-        "scale" => value.and_then(parse_vec3_value).map(|scale| CadObjectPatch {
-            scale: Some(scale),
-            ..Default::default()
-        }),
-        "orientation" => value.and_then(parse_quat_value).map(|orientation| CadObjectPatch {
-            orientation: Some(orientation),
-            ..Default::default()
-        }),
         _ => None,
     }
 }
 
-fn parse_quat_value(value: &Value) -> Option<[f64; 4]> {
-    if let Some(array) = value.as_array() {
-        if array.len() >= 4 {
-            return Some([
-                array[0].as_f64().unwrap_or(0.0),
-                array[1].as_f64().unwrap_or(0.0),
-                array[2].as_f64().unwrap_or(0.0),
-                array[3].as_f64().unwrap_or(1.0),
-            ]);
-        }
+/** @emoji 📐 Resolves one numeric-field edit: an absolute `value` (typed entry) wins when present,
+ * otherwise a `delta` (stepper nudge) is added to `current` — offset-preserving across a multi-select
+ * where `current` differs per entity. `None` when neither parses. */
+fn resolve_number_edit(current: f64, value: Option<&Value>, delta: Option<&Value>) -> Option<f64> {
+    if let Some(absolute) = value.and_then(Value::as_f64) {
+        return Some(absolute);
     }
-    if let Some(text) = value.as_str() {
-        let trimmed = text.trim().trim_start_matches('[').trim_end_matches(']');
-        let parts: Vec<f64> = trimmed
-            .split(',')
-            .filter_map(|part| part.trim().parse().ok())
-            .collect();
-        if parts.len() >= 4 {
-            return Some([parts[0], parts[1], parts[2], parts[3]]);
-        }
-    }
-    None
+    delta.and_then(Value::as_f64).map(|delta| current + delta)
 }
 
-fn parse_vec3_value(value: &Value) -> Option<[f64; 3]> {
-    if let Some(array) = value.as_array() {
-        if array.len() >= 3 {
-            return Some([
-                array[0].as_f64().unwrap_or(0.0),
-                array[1].as_f64().unwrap_or(0.0),
-                array[2].as_f64().unwrap_or(0.0),
-            ]);
-        }
+/** @emoji 📐 Parses a nested stepper-group field id as `"<base>.<axis>"` (`x`/`y`/`z`), returning the
+ * axis index when `field` names a component of `base`. */
+fn axis3_index(field: &str, base: &str) -> Option<usize> {
+    match field.strip_prefix(base)?.strip_prefix('.')? {
+        "x" => Some(0),
+        "y" => Some(1),
+        "z" => Some(2),
+        _ => None,
     }
-    if let Some(text) = value.as_str() {
-        let trimmed = text.trim().trim_start_matches('[').trim_end_matches(']');
-        let parts: Vec<f64> = trimmed
-            .split(',')
-            .filter_map(|part| part.trim().parse().ok())
-            .collect();
-        if parts.len() >= 3 {
-            return Some([parts[0], parts[1], parts[2]]);
-        }
-    }
-    None
 }
 
-/// @emoji 🩹 Builds the `PatchObject` operations that apply `field=value` across `object_ids`.
+/** @emoji 📐 Same as {@link axis3_index} for a 4-component quaternion group (`x`/`y`/`z`/`w`). */
+fn axis4_index(field: &str, base: &str) -> Option<usize> {
+    match field.strip_prefix(base)?.strip_prefix('.')? {
+        "x" => Some(0),
+        "y" => Some(1),
+        "z" => Some(2),
+        "w" => Some(3),
+        _ => None,
+    }
+}
+
+/** @emoji 🌀 Renormalizes a quaternion to unit length, guarding the degenerate zero case. */
+fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+    let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
+    if len < 1e-9 {
+        return [0.0, 0.0, 0.0, 1.0];
+    }
+    [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
+}
+
+/// @emoji 🩹 Builds the `PatchObject` operations that apply `field`'s edit across `object_ids`: whole-value
+/// fields (label/typology/hidden/locked) use the same patch for every object; `origin.<axis>`/`scale.<axis>`/
+/// `orientation.<axis>` read each object's own current component so `value` (absolute) or `delta` (relative)
+/// applies per-object, preserving each object's other axes and any offset across a multi-select.
 fn patch_objects_ops(
     document: &CadScene,
     object_ids: &[String],
     field: &str,
     value: Option<&Value>,
+    delta: Option<&Value>,
 ) -> Vec<CadOp> {
-    let patch = match object_patch_from_field(field, value) {
-        Some(patch) => patch,
-        None => return Vec::new(),
-    };
+    if let Some(patch) = object_patch_from_field(field, value) {
+        return object_ids
+            .iter()
+            .filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadOp::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() }))
+            .collect();
+    }
     let mut operations = Vec::new();
     for object_id in object_ids {
-        let Some(pane) = cad_find_object_pane(document, object_id) else {
+        let Some((object, pane)) = cad_all_objects(document).find(|(object, _)| &object.id == object_id) else {
             continue;
         };
-        operations.push(CadOp::PatchObject {
-            pane,
-            object_id: object_id.clone(),
-            patch: patch.clone(),
-        });
+        let patch = if let Some(axis) = axis3_index(field, "origin") {
+            let mut origin = object.origin;
+            let Some(updated) = resolve_number_edit(origin[axis], value, delta) else { continue };
+            origin[axis] = updated;
+            CadObjectPatch { origin: Some(origin), ..Default::default() }
+        } else if let Some(axis) = axis3_index(field, "scale") {
+            let mut scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
+            let Some(updated) = resolve_number_edit(scale[axis], value, delta) else { continue };
+            scale[axis] = updated;
+            CadObjectPatch { scale: Some(scale), ..Default::default() }
+        } else if let Some(axis) = axis4_index(field, "orientation") {
+            let mut orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+            let Some(updated) = resolve_number_edit(orientation[axis], value, delta) else { continue };
+            orientation[axis] = updated;
+            CadObjectPatch { orientation: Some(quat_normalize(orientation)), ..Default::default() }
+        } else {
+            continue;
+        };
+        operations.push(CadOp::PatchObject { pane, object_id: object_id.clone(), patch });
     }
     operations
 }
@@ -4647,7 +4574,8 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
-                ActionEmit::ops(patch_objects_ops(document, &object_ids, field, value))
+                let delta = args.and_then(|value| value.get("delta"));
+                ActionEmit::ops(patch_objects_ops(document, &object_ids, field, value, delta))
             }
             "deleteObject" => {
                 let object_id = args
@@ -4902,6 +4830,7 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
+                let delta = args.and_then(|value| value.get("delta"));
                 let patch = match field {
                     "hidden" => value.and_then(|entry| entry.as_bool()).map(|hidden| CadReferencePatch {
                         hidden: Some(hidden),
@@ -4911,15 +4840,26 @@ impl DocumentApp for CadPlayApp {
                         locked: Some(locked),
                         ..Default::default()
                     }),
-                    "widthWorld" => value.and_then(|entry| entry.as_f64()).map(|width_world| CadReferencePatch {
-                        width_world: Some(width_world),
-                        ..Default::default()
+                    "widthWorld" => {
+                        let current = document
+                            .references_by_model_definition_id
+                            .get(model_definition_id)
+                            .and_then(|refs| refs.iter().find(|reference| reference.id == reference_id))
+                            .map(|reference| reference.width_world)
+                            .unwrap_or(0.0);
+                        resolve_number_edit(current, value, delta).map(|width_world| CadReferencePatch { width_world: Some(width_world), ..Default::default() })
+                    }
+                    _ => axis3_index(field, "origin").and_then(|axis| {
+                        let mut origin = document
+                            .references_by_model_definition_id
+                            .get(model_definition_id)
+                            .and_then(|refs| refs.iter().find(|reference| reference.id == reference_id))
+                            .map(|reference| reference.origin)
+                            .unwrap_or([0.0, 0.0, 0.0]);
+                        let updated = resolve_number_edit(origin[axis], value, delta)?;
+                        origin[axis] = updated;
+                        Some(CadReferencePatch { origin: Some(origin), ..Default::default() })
                     }),
-                    "origin" => value.and_then(parse_vec3_value).map(|origin| CadReferencePatch {
-                        origin: Some(origin),
-                        ..Default::default()
-                    }),
-                    _ => None,
                 };
                 match patch {
                     Some(patch) => ActionEmit::ops(vec![CadOp::PatchReference {
