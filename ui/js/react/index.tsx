@@ -2409,6 +2409,9 @@ export function resolveControlLabelId(id: string): string {
   if (id === "ui.fullscreen.toggle") {
     return _controlLabelIdResolver("ui.fullscreen.toggle");
   }
+  if (id === "ui.mobilePanel.toggle") {
+    return _controlLabelIdResolver("ui.mobilePanel.toggle");
+  }
   if (id.startsWith("ui.panelToggle.")) {
     return _controlLabelIdResolver(`ui.panelToggle.${id.slice("ui.panelToggle.".length)}`);
   }
@@ -2598,6 +2601,10 @@ export type UiTranslationSchema = {
     };
     readonly fullscreen: {
       readonly toggle: UiLabelValue;
+    };
+    readonly mobilePanel: {
+      readonly toggle: UiLabelValue;
+      readonly app: UiLabelValue;
     };
     readonly panelToggle: {
       readonly topLeft: UiLabelValue;
@@ -3065,6 +3072,20 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Vollbild",
               beginner: "Vollbild",
+            },
+          },
+        },
+        mobilePanel: {
+          toggle: {
+            label: {
+              normal: "Panel",
+              beginner: "Panel",
+            },
+          },
+          app: {
+            label: {
+              normal: "App",
+              beginner: "App",
             },
           },
         },
@@ -3622,6 +3643,20 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Fullscreen",
               beginner: "Fullscreen",
+            },
+          },
+        },
+        mobilePanel: {
+          toggle: {
+            label: {
+              normal: "Panel",
+              beginner: "Panel",
+            },
+          },
+          app: {
+            label: {
+              normal: "App",
+              beginner: "App",
             },
           },
         },
@@ -4407,6 +4442,23 @@ export function useMediaQuery(query: string, defaultValue = false): boolean {
   return matches;
 }
 
+// #region 📱UiMobile Context
+const UiMobileContext = reactHostPort.createContext<boolean | undefined>(undefined);
+
+/** @emoji 📱 Broadcasts the shell's authoritative mobile flag to descendants (e.g. {@link Pane}, {@link Window}) that have no `mobile` prop of their own. */
+export const UiMobileProvider: React.FC<{
+  readonly mobile: boolean;
+  readonly children: React.ReactNode;
+}> = ({ mobile, children }) => <UiMobileContext.Provider value={mobile}>{children}</UiMobileContext.Provider>;
+
+/** @emoji 📱 Returns the nearest {@link UiMobileProvider} flag, falling back to {@link UI_MOBILE_MEDIA_QUERY} for standalone usage (Storybook, tests). */
+export function useUiMobile(): boolean {
+  const media = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const ctx = reactHostPort.useContext(UiMobileContext);
+  return ctx ?? media;
+}
+// #endregion 📱UiMobile Context
+
 /**
  * 3D point with x, y, z coordinates.
  **/
@@ -4946,24 +4998,34 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         </div>
         <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
         {step.logos && step.logos.length > 0 && (
-          <div className="mb-double flex flex-wrap items-center gap-double">
-            {step.logos.map((logo, index) => {
-              const image = (
-                <>
-                  <img src={logo.src} alt={logo.alt} className={cn("h-16 w-auto object-contain", logo.darkSrc && "dark:hidden")} />
-                  {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-16 w-auto object-contain dark:block" />}
-                </>
-              );
-              return logo.href ? (
-                <a key={index} href={logo.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center transition-opacity hover:opacity-80">
-                  {image}
-                </a>
-              ) : (
-                <span key={index} className="inline-flex items-center">
-                  {image}
-                </span>
-              );
-            })}
+          <div className="mb-double flex flex-col gap-double">
+            {[step.logos.slice(0, -1), step.logos.slice(-1)].map((row, rowIndex) =>
+              row.length === 0 ? null : (
+                // 🎓 Each logo gets an equal-width flex-1 slot spanning the row's full width; `w-full h-auto`
+                // then lets the browser compute that slot's height from the image's own intrinsic aspect
+                // ratio — logos with different proportions end up at different heights (never distorted)
+                // while the row as a whole always uses all the space it's given, no guessed height constant.
+                <div key={rowIndex} className="flex w-full items-center gap-double">
+                  {row.map((logo, index) => {
+                    const image = (
+                      <>
+                        <img src={logo.src} alt={logo.alt} className={cn("h-auto w-full object-contain", logo.darkSrc && "dark:hidden")} />
+                        {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-auto w-full object-contain dark:block" />}
+                      </>
+                    );
+                    return logo.href ? (
+                      <a key={index} href={logo.href} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center transition-opacity hover:opacity-80">
+                        {image}
+                      </a>
+                    ) : (
+                      <span key={index} className="flex flex-1 items-center">
+                        {image}
+                      </span>
+                    );
+                  })}
+                </div>
+              ),
+            )}
           </div>
         )}
         <div className="flex items-center justify-between gap-single">
@@ -7046,33 +7108,37 @@ export interface LayoutProps {
 }
 
 const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
-  <GhostProvider>
-    <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
-      {navbar && <div className="flex-shrink-0">{navbar}</div>}
-      {mobile ? (
-        <div className="flex flex-col flex-1 min-h-0">
-          {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
-          <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-        </div>
-      ) : (
-        // Positioned within this region (relative, between navbar and footer), not the whole display — panels
-        // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
-        // the same way a window's options rail overlays its own canvas.
-        <div className="flex flex-1 min-h-0 relative">
-          <div className="flex flex-col flex-1 min-w-0 relative z-0">
-            <div className="flex flex-1 min-h-0 relative">
-              <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-            </div>
+  <UiMobileProvider mobile={mobile}>
+    <GhostProvider>
+      <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
+        {navbar && <div className="flex-shrink-0">{navbar}</div>}
+        {mobile ? (
+          <div className="flex flex-col flex-1 min-h-0">
+            {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
+            {/* 📱 The canvas stays mounted (never unmounted) while the mobile panel covers it, so the WASM/3D
+                world keeps its context instead of replugging on every toggle — it just stops being visible. */}
+            <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden")}>{canvas}</div>
           </div>
-          {ANCHORS.map((anchor) => {
-            const panelProps = panels?.[anchor];
-            return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
-          })}
-        </div>
-      )}
-      {footer && <div className="flex-shrink-0">{footer}</div>}
-    </div>
-  </GhostProvider>
+        ) : (
+          // Positioned within this region (relative, between navbar and footer), not the whole display — panels
+          // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
+          // the same way a window's options rail overlays its own canvas.
+          <div className="flex flex-1 min-h-0 relative">
+            <div className="flex flex-col flex-1 min-w-0 relative z-0">
+              <div className="flex flex-1 min-h-0 relative">
+                <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
+              </div>
+            </div>
+            {ANCHORS.map((anchor) => {
+              const panelProps = panels?.[anchor];
+              return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
+            })}
+          </div>
+        )}
+        {footer && <div className="flex-shrink-0">{footer}</div>}
+      </div>
+    </GhostProvider>
+  </UiMobileProvider>
 );
 
 export { Layout };
@@ -17126,6 +17192,8 @@ export const Pane: React.FC<PaneProps> = ({
   children,
 }) => {
   const host = usePaneHostContext();
+  const mobile = useUiMobile();
+  const effectiveFolded = mobile ? false : folded;
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
   const [dragging, setDragging] = reactHostPort.useState(false);
@@ -17147,7 +17215,8 @@ export const Pane: React.FC<PaneProps> = ({
     onCancel: () => setDragging(false),
   });
 
-  const positionStyle: React.CSSProperties = { ...anchorPositionStyle(anchor), order, zIndex, width: !folded && size ? `${size}px` : undefined };
+  // 📱 Panes are fixed on mobile — no drag handle, no resize, no fold; width tracks content instead of a persisted size.
+  const positionStyle: React.CSSProperties = { ...anchorPositionStyle(anchor), order, zIndex, width: !mobile && !effectiveFolded && size ? `${size}px` : undefined };
   const resizeSide: "left" | "right" = horizontal === "right" ? "left" : "right";
 
   return (
@@ -17159,14 +17228,14 @@ export const Pane: React.FC<PaneProps> = ({
         "pointer-events-auto absolute flex min-w-0 max-w-full box-border overflow-hidden",
         flow.block === "up" ? "flex-col-reverse" : "flex-col",
         horizontal === "left" ? "items-start" : horizontal === "right" ? "items-end" : "items-center",
-        !folded && "w-fit",
+        !effectiveFolded && "w-fit",
         className,
       )}
       style={positionStyle}
     >
       <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-      <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, folded && "justify-end border-b-0")}>
-        {onAnchorChange ? (
+      <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
+        {onAnchorChange && !mobile ? (
           <span
             data-slot="pane-drag-handle"
             className="inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing mx-half"
@@ -17175,14 +17244,20 @@ export const Pane: React.FC<PaneProps> = ({
             <GripVerticalIcon size={12} />
           </span>
         ) : null}
-        <ActionGroupItem id={`${id}-pane-fold`} icon={folded ? "chevron-left" : "chevron-right"} text={label ?? id} className={windowRailChromeLabelActionClass} onClick={onFoldToggle} />
+        <ActionGroupItem
+          id={`${id}-pane-fold`}
+          icon={effectiveFolded ? "chevron-left" : "chevron-right"}
+          text={label ?? id}
+          className={windowRailChromeLabelActionClass}
+          onClick={mobile ? undefined : onFoldToggle}
+        />
       </div>
-      {!folded ? (
+      {!effectiveFolded ? (
         <div data-slot="pane-body" className="relative min-h-0 flex-1 overflow-y-auto">
           {children}
         </div>
       ) : null}
-      {resizable && !folded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
+      {resizable && !mobile && !effectiveFolded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
     </div>
   );
 };
@@ -17190,7 +17265,8 @@ export const Pane: React.FC<PaneProps> = ({
 // #endregion 🪟Pane
 
 // #region 💧MobilePanel
-// Full-width tabbed panel for mobile layouts. Not resizable. All tabs in one panel.
+// Full-height tabbed panel for mobile layouts, filling the space between navbar and footer. Not
+// resizable. All tabs in one panel.
 
 /**
  * Props interface for the MobilePanel component.
@@ -17207,14 +17283,13 @@ export interface MobilePanelProps {
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
   className?: string;
-  height?: number;
 }
 
 /**
- * MobilePanel is a full-width tabbed panel for mobile layouts.
- * It merges all tabs into a single non-resizable panel.
+ * MobilePanel is a full-height tabbed panel for mobile layouts.
+ * It merges all tabs into a single non-resizable panel filling the available space.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "", height = 260 }) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "" }) => {
   // 🌱 `visible: true` — MobilePanel has no folded state of its own (it renders nothing at all instead, below);
   // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
@@ -17227,7 +17302,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
 
   return (
     <LevelProvider level="panel">
-      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full text-foreground flex flex-col box-border overflow-hidden", className)} style={{ height: `${height}px` }}>
+      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
@@ -18555,6 +18630,9 @@ const Window: React.FC<WindowProps> = ({
   const closeLabel = useLabel("ui.common.close");
   const controlsFocusLabel = useLabel("ui.common.focus");
   const controlsUnfocusLabel = useLabel("ui.common.unfocus");
+  // 📱 Windows always take the full space on mobile — Focus/Unfocus is meaningless there and is hidden.
+  const mobile = useUiMobile();
+  const focusControl = !mobile && (onMaximize || onMinimize);
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -18662,15 +18740,15 @@ const Window: React.FC<WindowProps> = ({
 
   if (!isVisible) return null;
 
-  const hasControls = showControls || controls || onOpenInNewWindow || onMaximize || onMinimize || onClose;
+  const hasControls = showControls || controls || onOpenInNewWindow || focusControl || onClose;
 
   const controlsContent = hasControls && (
     <div data-dim className="flex items-stretch gap-single">
       {controls}
-      {(showControls || onOpenInNewWindow || onMaximize || onMinimize || onClose) && (
+      {(showControls || onOpenInNewWindow || focusControl || onClose) && (
         <ActionGroup id={`${id}-window-controls`}>
           {onOpenInNewWindow && <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
-          {(onMaximize || onMinimize) && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
+          {focusControl && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
           {onClose && <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text={closeLabel} />}
         </ActionGroup>
       )}
@@ -23633,9 +23711,11 @@ interface ModeDockTabBarProps {
   onSelectTab: (windowId: string) => void;
   chromeGrid?: ModeDockChromeGrid;
   chromeBody?: React.ReactNode;
+  /** @emoji 📱 Windows always take the full space on mobile — the Focus/Unfocus control is meaningless there and is hidden; Close stays. */
+  mobile?: boolean;
 }
 
-const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody }, ref) => {
+const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarProps>(({ stackPath, tabs, activeId, activeWindowId, onSelectTab, chromeGrid, chromeBody, mobile = false }, ref) => {
   const dock = reactHostPort.useContext(ModeDockContext);
   const dockFocusLabel = useLabel("ui.common.focus");
   const dockUnfocusLabel = useLabel("ui.common.unfocus");
@@ -23699,15 +23779,17 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   const controlsCap = (
     <div data-slot="mode-dock-controls-cap" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
-      <button
-        type="button"
-        data-slot="mode-dock-maximize"
-        className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
-        onClick={() => dock?.toggleMaximize(stackPath)}
-      >
-        {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
-        <span className="text-tiny whitespace-nowrap">{isMaximized ? dockUnfocusLabel : dockFocusLabel}</span>
-      </button>
+      {!mobile ? (
+        <button
+          type="button"
+          data-slot="mode-dock-maximize"
+          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+          onClick={() => dock?.toggleMaximize(stackPath)}
+        >
+          {isMaximized ? <Minimize2Icon className="size-small" /> : <Maximize2Icon className="size-small" />}
+          <span className="text-tiny whitespace-nowrap">{isMaximized ? dockUnfocusLabel : dockFocusLabel}</span>
+        </button>
+      ) : null}
       {activeId ? (
         <button
           type="button"
@@ -23806,7 +23888,7 @@ interface ModeDockStackProps {
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
-  /** @emoji 📱 Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, so the Focus/Close controls stay reachable when many windows collapse into one mobile tab stack. */
+  /** @emoji 📱 Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. */
   mobile?: boolean;
 }
 
@@ -23847,10 +23929,10 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   return (
     <div data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
       {chromeGrid ? (
-        <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
+        <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
       ) : (
         <>
-          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} />
+          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
           {stackBody}
         </>
       )}
@@ -24656,6 +24738,7 @@ if (import.meta.vitest) {
                   emphasis: "cutout",
                   placement: "auto",
                   advance: { kind: "utility", id: "move" },
+                  logos: [],
                 },
               ],
             }}
@@ -24676,8 +24759,8 @@ if (import.meta.vitest) {
   describe("UIIntroduction appearance", () => {
     it("stamps a cutout anchor as introduced and clears it on step change", async () => {
       const steps: IntroductionStepDefinition[] = [
-        { id: "footer", title: "Footer", body: "This is the footer.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" } },
-        { id: "welcome", title: "Welcome", body: "No anchor.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" } },
+        { id: "footer", title: "Footer", body: "This is the footer.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" }, logos: [] },
+        { id: "welcome", title: "Welcome", body: "No anchor.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
       ];
       const Harness: React.FC = () => {
         const [stepIndex, setStepIndex] = reactHostPort.useState(0);
@@ -24706,7 +24789,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Cutout.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" } }],
+              steps: [{ id: "footer", title: "Footer", body: "Cutout.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" }, logos: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -24729,7 +24812,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", anchor: { kind: "footer" }, emphasis: "none", placement: "auto", advance: { kind: "next" } }],
+              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", anchor: { kind: "footer" }, emphasis: "none", placement: "auto", advance: { kind: "next" }, logos: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -24755,6 +24838,7 @@ if (import.meta.vitest) {
                 emphasis: "none",
                 placement: "center",
                 advance: { kind: "next" },
+                logos: [],
               },
             ],
           }}
@@ -24785,7 +24869,7 @@ if (import.meta.vitest) {
                 advance: { kind: "next" },
                 logos: [
                   { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
-                  { src: "/asset/logo/zukunft-bau.png", alt: "Zukunft Bau" },
+                  { src: "/asset/logo/zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
                 ],
               },
             ],
@@ -25647,6 +25731,22 @@ if (import.meta.vitest) {
       expect(topMarkup).toContain('data-direction="down"');
       const bottomMarkup = renderToStaticMarkup(<Panel anchor="bottom-left" visible tabs={tabs} />);
       expect(bottomMarkup).toContain('data-direction="up"');
+    });
+
+    it("Layout on mobile fills the mobile panel to the available space and hides (not unmounts) the canvas while it's open", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "mobile-tab", icon: StubIcon, name: "Mobile Tab", tree: { sections: [{ id: "mobile-tab.section", label: "", items: [{ id: "mobile-tab.item", label: "", control: <div data-testid="mobile-tab-content">Tab body</div> }] }] } })];
+      const { container, rerender } = render(<Layout mobile mobilePanel={{ visible: true, tabs, activeTabPath: ["mobile-tab"] }} canvas={<div data-testid="canvas">Canvas</div>} />);
+      const mobilePanel = container.querySelector('[data-panel="mobilePanel"]');
+      expect(mobilePanel).toBeTruthy();
+      expect(mobilePanel?.className).toContain("flex-1");
+      expect(screen.getByTestId("mobile-tab-content")).toBeTruthy();
+      const canvasWrapper = screen.getByTestId("canvas").parentElement;
+      expect(canvasWrapper?.className).toContain("hidden");
+
+      rerender(<Layout mobile mobilePanel={{ visible: false, tabs, activeTabPath: ["mobile-tab"] }} canvas={<div data-testid="canvas">Canvas</div>} />);
+      expect(container.querySelector('[data-panel="mobilePanel"]')).toBeNull();
+      expect(screen.getByTestId("canvas").parentElement?.className).not.toContain("hidden");
     });
 
     it("computeTabDockDropZone inverts the insert-index fraction test for mirrored (right) anchors, but not for a middle anchor", () => {
@@ -27345,6 +27445,19 @@ if (import.meta.vitest) {
       expect(maximizeBtn?.textContent?.trim()).toBe("Unfocus");
     });
 
+    it("Window drops the Focus control on mobile — windows always take the full space — but keeps Close", () => {
+      const { container } = render(
+        <UiMobileProvider mobile>
+          <Window id="mobile-window" onOpenInNewWindow={() => {}} onMaximize={() => {}} onClose={() => {}}>
+            <div>Body</div>
+          </Window>
+        </UiMobileProvider>,
+      );
+      expect(container.querySelector('[id="mobile-window-window-controls-maximize"]')).toBeNull();
+      expect(container.querySelector('[id="mobile-window-window-controls-external"]')).toBeTruthy();
+      expect(container.querySelector('[id="mobile-window-window-controls-close"]')).toBeTruthy();
+    });
+
     it("Window search max width shrinks when measures rail is present", () => {
       const { container } = render(
         <Window id="layout-window" active search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
@@ -27743,6 +27856,21 @@ if (import.meta.vitest) {
       }
       const { container: withoutHost } = render(<OrphanDeepChild />);
       expect(withoutHost.querySelector('[data-slot="pane"]')).toBeNull();
+    });
+
+    it("is fixed on mobile — no drag handle, no resize handle, and content visible despite folded", () => {
+      const { container } = render(
+        <UiMobileProvider mobile>
+          <PaneHost>
+            <Pane id="mobile-pane" anchor="bottom-right" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
+              <div data-testid="mobile-pane-content">Content</div>
+            </Pane>
+          </PaneHost>
+        </UiMobileProvider>,
+      );
+      expect(container.querySelector('[data-slot="pane-drag-handle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
+      expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
     });
     });
 
@@ -29262,11 +29390,11 @@ if (treeVitest) {
       ],
     };
 
-    it("collapses split panes into one tab stack with the regular window chrome, including the Focus/Close controls", () => {
+    it("collapses split panes into one tab stack with the regular window chrome, dropping Focus but keeping Close", () => {
       const markup = renderToStaticMarkup(<Mode mobile windows={windows} activeWindowId="b" layout={splitLayout} />);
       expect(markup).toContain('data-slot="mode-dock-tabbar"');
       expect(markup).toContain('data-slot="mode-dock-tab"');
-      expect(markup).toContain('data-slot="mode-dock-maximize"');
+      expect(markup).not.toContain('data-slot="mode-dock-maximize"');
       expect(markup).toContain('data-slot="mode-dock-close"');
       expect(markup).toContain("A");
       expect(markup).toContain("B body");
@@ -29279,7 +29407,7 @@ if (treeVitest) {
       expect(markup).not.toContain("B body");
     });
 
-    it("keeps the Focus control out of the unshrinkable per-tab chrome grid even with many windows", () => {
+    it("drops the Focus control out of the unshrinkable per-tab chrome grid even with many windows — windows always take the full space on mobile", () => {
       const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: `semio · cad · ${id}`, children: <div>{id} body</div> }));
       const manyLayout: WindowLayoutNode = {
         kind: "row",
@@ -29288,8 +29416,14 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Mode mobile windows={manyWindows} activeWindowId="a" layout={manyLayout} />);
       expect(markup).not.toContain('data-slot="mode-dock-chrome-column"');
       expect(markup).toContain('data-slot="mode-dock-tab-cap"');
-      expect(markup).toContain('data-slot="mode-dock-maximize"');
+      expect(markup).not.toContain('data-slot="mode-dock-maximize"');
       expect(markup.match(/data-slot="mode-dock-tab"/g)?.length).toBe(4);
+    });
+
+    it("keeps the Focus control on desktop for the same layout", () => {
+      const markup = renderToStaticMarkup(<Mode windows={windows} activeWindowId="b" layout={splitLayout} />);
+      expect(markup).toContain('data-slot="mode-dock-maximize"');
+      expect(markup).toContain('data-slot="mode-dock-close"');
     });
   });
 

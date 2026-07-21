@@ -424,9 +424,12 @@ import {
   WorldCanvas,
   WorldLayerStack,
   WorldLodBridge,
-  WorldOrbitCameraViewRig,
   WorldOrbitGated,
   WorldOrbitProjectionSwitch,
+  WorldProjectionRig,
+  worldProjectionFamily,
+  worldProjectionOrbitConstraints,
+  type WorldProjectionSpec,
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
@@ -1270,6 +1273,8 @@ type ShellLayoutState = {
   readonly shellLayout: WindowLayoutNode | null;
   readonly activeExampleId: string;
   readonly mobilePanelPath: readonly string[];
+  /** 📱 Whether the merged mobile panel is open — dedicated state (not derived from `panels[anchor].visible`) so desktop-persisted anchor visibility never auto-opens the mobile strip on hydrate. Never persisted; mobile always boots canvas-first. */
+  readonly mobilePanelVisible: boolean;
   readonly extraWindowInstances: readonly ExtraWindowInstance[];
 };
 
@@ -1364,6 +1369,7 @@ export type ShellAction =
   | { readonly type: "SET_SHELL_LAYOUT"; readonly value: Updatable<WindowLayoutNode | null> }
   | { readonly type: "SET_ACTIVE_EXAMPLE_ID"; readonly value: Updatable<string> }
   | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
+  | { readonly type: "SET_MOBILE_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
@@ -1525,6 +1531,8 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, activeExampleId: resolveUpdatable(action.value, state.activeExampleId) };
     case "SET_MOBILE_PANEL_PATH":
       return { ...state, mobilePanelPath: resolveUpdatable(action.value, state.mobilePanelPath) };
+    case "SET_MOBILE_PANEL_VISIBLE":
+      return { ...state, mobilePanelVisible: resolveUpdatable(action.value, state.mobilePanelVisible) };
     case "SET_EXTRA_WINDOW_INSTANCES":
       return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
     default:
@@ -1633,6 +1641,7 @@ export function initialShellState(_props: {
       shellLayout: null,
       activeExampleId: locks.exampleId ?? defaults.exampleId ?? "",
       mobilePanelPath: [],
+      mobilePanelVisible: false,
       extraWindowInstances: [],
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
@@ -3947,7 +3956,7 @@ export function FrameworkOsShell({
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
-  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, extraWindowInstances } = shellState.layout;
+  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -5006,7 +5015,8 @@ export function FrameworkOsShell({
   }, [studioSessionActive, studioSessionControllerId, ephemeral]);
 
   usePanelChromeHotkeys({
-    onToggle: (anchor) => dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible }),
+    // 📱 All eight anchor hotkeys collapse onto the single mobile panel toggle on mobile.
+    onToggle: (anchor) => (mobile ? dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible }) : dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible })),
   });
 
   useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
@@ -5527,6 +5537,62 @@ export function FrameworkOsShell({
   const activePluginManifest = useMemo(() => loadedPlugins.find((entry) => entry.handle.pluginId === session?.pluginId)?.manifest, [loadedPlugins, session?.pluginId]);
   const activeModeId = session?.viewState.activeModeId ?? session?.app.modes[0]?.id ?? session?.app.id ?? "";
 
+  // 📱 Moved ahead of `mobilePanelTabs` (below) so its synthetic mobile "App" tab can share the exact
+  // example-select/mode-switcher elements the desktop navbar center cluster renders — single source of truth.
+  const exampleOptions = useMemo(() => {
+    const appId = session?.app.id ?? "";
+    if (!appId) return [];
+    const seen = new Set<string>();
+    return (activePluginManifest?.examples ?? [])
+      .filter((example) => example.appId === appId)
+      .filter((example) => {
+        if (seen.has(example.id)) return false;
+        seen.add(example.id);
+        return true;
+      })
+      .map((example) => ({ id: example.id, label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label) }));
+  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
+
+  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  const exampleSelectElement = useMemo(() => {
+    if (!session || exampleOptions.length === 0 || locks.exampleId || (studioMode && session.app.id === landingAppId)) return null;
+    return (
+      <NavbarExampleSelect
+        key="fixture"
+        id="playground.navbar.fixture"
+        value={activeExampleId}
+        options={exampleOptions}
+        onValueChange={(exampleId) => {
+          dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+          onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
+        }}
+      />
+    );
+  }, [session, exampleOptions, locks.exampleId, studioMode, landingAppId, activeExampleId, onAction]);
+
+  /** @emoji 🎛️ Shared by the desktop navbar center cluster and the mobile panel's synthetic "App" tab (see `mobilePanelTabs`). */
+  const modeSwitcherElement = useMemo(() => {
+    if (!session || session.app.modes.length <= 1) return null;
+    return (
+      <ButtonGroup key="modes" id="playground.navbar.modes">
+        {session.app.modes.map((mode) => {
+          const isActive = activeModeId === mode.id;
+          return (
+            <ButtonGroupItem
+              key={mode.id}
+              id={`playground.navbar.modes.${mode.id}`}
+              className={cn(isActive && interactiveActiveFillClass)}
+              data-state={isActive ? "on" : undefined}
+              onClick={() => applyModeChange(mode.id)}
+              icon={<span className="hidden" />}
+              text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
+            />
+          );
+        })}
+      </ButtonGroup>
+    );
+  }, [session, activeModeId, applyModeChange, appLabelsOverlay]);
+
   const resolvedCommands = useMemo(() => resolveCommands(osCommands, activePluginManifest, session?.app, activeModeId), [osCommands, activePluginManifest, session?.app, activeModeId]);
 
   const commandCategoryList = useMemo(() => commandCategories(resolvedCommands), [resolvedCommands, uiLocale]);
@@ -5586,6 +5652,36 @@ export function FrameworkOsShell({
   }, [dockLayoutStore]);
 
   const dock = useMemo((): PanelDock => applyDockSkeleton(defaultDock, dockOverride), [defaultDock, dockOverride]);
+
+  // 📱 All eight anchors' tabs flattened into the single mobile panel's tab list — defined here (ahead of the
+  // dock-assembly override effects below) so those effects can resolve a mobile-panel path alongside the
+  // desktop per-anchor one.
+  const mobilePanelTabs = useMemo(() => {
+    const anchorTabs = ANCHORS.flatMap((anchor) => defaultDock.anchors[anchor]);
+    // 📱 The example selector and mode switcher have no navbar room on mobile (see `navbarItems`) — they
+    // surface as one more tab in the merged mobile panel instead, sharing the exact same elements the
+    // desktop navbar center cluster renders.
+    if (!exampleSelectElement && !modeSwitcherElement) return anchorTabs;
+    const appTab = singleTreeLeaf({
+      id: "framework.mobile.app",
+      icon: shellTabIcon("smartphone"),
+      name: shellLabel("ui.mobilePanel.app"),
+      order: 99,
+      tree: {
+        sections: [
+          {
+            id: "framework.mobile.app.root",
+            label: "",
+            items: [
+              ...(exampleSelectElement ? [{ id: "framework.mobile.app.example", label: "", control: exampleSelectElement }] : []),
+              ...(modeSwitcherElement ? [{ id: "framework.mobile.app.modes", label: "", control: modeSwitcherElement }] : []),
+            ],
+          },
+        ],
+      },
+    });
+    return [...anchorTabs, appTab];
+  }, [defaultDock, exampleSelectElement, modeSwitcherElement]);
 
   /** 🗄️ Skips the very first (pre-hydration) commit so a persisted skeleton isn't clobbered with `null` before the seeding effect above has a chance to read and apply it. */
   const dockPersistedOnceRef = useRef(false);
@@ -5705,10 +5801,16 @@ export function FrameworkOsShell({
     }
     if (lastIntroductionPanelTabIdRef.current === introductionPanelTabId) return;
     lastIntroductionPanelTabIdRef.current = introductionPanelTabId;
+    if (mobile) {
+      const resolved = findPanelTabPath(mobilePanelTabs, introductionPanelTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+      return;
+    }
     const resolved = findPanelTabPath(dock.anchors[introductionPanelTabAnchor], introductionPanelTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: introductionPanelTabAnchor, value: resolved });
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
-  }, [introductionPanelTabId, introductionPanelTabAnchor, dock]);
+  }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);
 
   /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
   const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
@@ -5732,10 +5834,16 @@ export function FrameworkOsShell({
     }
     if (lastStudioOverrideTabIdRef.current === studioOverrideTabId) return;
     lastStudioOverrideTabIdRef.current = studioOverrideTabId;
+    if (mobile) {
+      if (mobilePanelPath[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
+      const resolved = findPanelTabPath(mobilePanelTabs, studioOverrideTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      return;
+    }
     if (panels[studioOverrideAnchor].path[0] === FRAMEWORK_CATEGORY_DISPLAY_ID) return;
     const resolved = findPanelTabPath(dock.anchors[studioOverrideAnchor], studioOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: studioOverrideAnchor, value: resolved });
-  }, [studioOverrideTabId, studioOverrideAnchor, dock, panels]);
+  }, [studioOverrideTabId, studioOverrideAnchor, dock, panels, mobile, mobilePanelTabs, mobilePanelPath]);
 
   const lastDetailsOverrideTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -5748,18 +5856,22 @@ export function FrameworkOsShell({
     if (detailsOverrideAnchor === studioOverrideAnchor) return;
     // 🧭 Settings tabs render flat now (no category branch to check against) — skip the override if the
     // anchor's active leaf already belongs to Settings, so browsing Theme/Settings there doesn't get stomped.
+    if (mobile) {
+      if (settingsRightTabs.some((tab) => tab.id === mobilePanelPath[0])) return;
+      const resolved = findPanelTabPath(mobilePanelTabs, detailsOverrideTabId);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      return;
+    }
     if (settingsRightTabs.some((tab) => tab.id === panels[detailsOverrideAnchor].path[0])) return;
     const resolved = findPanelTabPath(dock.anchors[detailsOverrideAnchor], detailsOverrideTabId);
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: detailsOverrideAnchor, value: resolved });
-  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs]);
+  }, [detailsOverrideTabId, detailsOverrideAnchor, studioOverrideAnchor, dock, panels, settingsRightTabs, mobile, mobilePanelTabs, mobilePanelPath]);
   //#endregion 🧭DockAssembly
-
-  const mobilePanelTabs = useMemo(() => ANCHORS.flatMap((anchor) => defaultDock.anchors[anchor]), [defaultDock]);
 
   const mobilePanel = useMemo(() => {
     if (mobilePanelTabs.length === 0) return undefined;
     return {
-      visible: ANCHORS.some((anchor) => panels[anchor].visible),
+      visible: mobilePanelVisible,
       tabs: mobilePanelTabs,
       activeTabPath: mobilePanelPath,
       onActiveTabPathChange: (path: readonly string[]) => {
@@ -5775,21 +5887,7 @@ export function FrameworkOsShell({
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
     };
-  }, [panels, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId]);
-
-  const exampleOptions = useMemo(() => {
-    const appId = session?.app.id ?? "";
-    if (!appId) return [];
-    const seen = new Set<string>();
-    return (activePluginManifest?.examples ?? [])
-      .filter((example) => example.appId === appId)
-      .filter((example) => {
-        if (seen.has(example.id)) return false;
-        seen.add(example.id);
-        return true;
-      })
-      .map((example) => ({ id: example.id, label: resolveAppLabel(appLabelsOverlay, "example", example.id, example.label) }));
-  }, [activePluginManifest, session?.app.id, appLabelsOverlay]);
+  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId]);
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
@@ -5840,50 +5938,33 @@ export function FrameworkOsShell({
 
   const navbarItems = useMemo((): NavbarItem[] => {
     if (!session) return [];
-    // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
-    // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
-    const centerContent: ReactNode[] = [
+    const logoAndTitle = (
       <div key="logoAndTitle" className="flex min-w-0 shrink-0 items-center gap-single">
         {brand?.logoSvg ? <ShellBrandLogo svg={brand.logoSvg} className="size-workbench shrink-0" /> : <SemioLogo className="size-workbench shrink-0" />}
         <span data-slot="app-name" className={cn("px-single", shellChromeTitleClassName)}>
           {appDocumentLabel(resolveAppDocument(session.app, uiTerminology))}
         </span>
-      </div>,
-    ];
-    if (exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId)) {
-      centerContent.push(
-        <NavbarExampleSelect
-          key="fixture"
-          id="playground.navbar.fixture"
-          value={activeExampleId}
-          options={exampleOptions}
-          onValueChange={(exampleId) => {
-            dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
-            onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: exampleId || "" } });
-          }}
-        />,
-      );
+      </div>
+    );
+    const showExampleSelect = exampleOptions.length > 0 && !locks.exampleId && (!studioMode || session.app.id !== landingAppId);
+    // 📱 Mobile has no room for tab bars, example selector, or mode switcher in the navbar — just the
+    // logo/title and the single toggle for the merged mobile panel (the two dropped controls resurface as
+    // the panel's synthetic "App" tab, see `mobilePanelTabs`).
+    if (mobile) {
+      return [
+        { key: "logoAndTitle", content: logoAndTitle },
+        navbarFillItem("navbarTrailingFill"),
+        {
+          key: "mobilePanelToggle",
+          content: <Toggle id="ui.mobilePanel.toggle" pressed={mobilePanelVisible} onPressedChange={(value) => dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value })} icon="panel-left" />,
+        },
+      ];
     }
-    if (session.app.modes.length > 1) {
-      centerContent.push(
-        <ButtonGroup key="modes" id="playground.navbar.modes">
-          {session.app.modes.map((mode) => {
-            const isActive = activeModeId === mode.id;
-            return (
-              <ButtonGroupItem
-                key={mode.id}
-                id={`playground.navbar.modes.${mode.id}`}
-                className={cn(isActive && interactiveActiveFillClass)}
-                data-state={isActive ? "on" : undefined}
-                onClick={() => applyModeChange(mode.id)}
-                icon={<span className="hidden" />}
-                text={resolveAppLabel(appLabelsOverlay, "mode", mode.id, mode.label)}
-              />
-            );
-          })}
-        </ButtonGroup>,
-      );
-    }
+    // Logo/title, example selector, and mode switcher render as one cluster, centered as a group in the navbar
+    // (via `centered`) rather than left-anchored with fill spacers pushing the rest toward the trailing edge.
+    const centerContent: ReactNode[] = [logoAndTitle];
+    if (showExampleSelect && exampleSelectElement) centerContent.push(exampleSelectElement);
+    if (modeSwitcherElement) centerContent.push(modeSwitcherElement);
     return [
       { key: "topLeftPanelTabs", content: <PanelChromeTabBar anchor="top-left" {...buildPanelSelectionProps("top-left")} /> },
       navbarFillItem("navbarTrailingFill"),
@@ -5899,7 +5980,7 @@ export function FrameworkOsShell({
         ),
       },
     ];
-  }, [activeExampleId, activeModeId, appLabelsOverlay, applyModeChange, brand, buildPanelSelectionProps, exampleOptions, locks.exampleId, onAction, session, uiTerminology, studioMode, landingAppId]);
+  }, [brand, buildPanelSelectionProps, exampleOptions, exampleSelectElement, locks.exampleId, mobile, mobilePanelVisible, modeSwitcherElement, session, uiTerminology, studioMode, landingAppId]);
 
   const searchItems = useMemo(() => {
     if (!session) return [];
@@ -5983,8 +6064,16 @@ export function FrameworkOsShell({
         category: commandCategoryLabel(definition.category),
         onSelect: () => {
           if (argCarrying) {
-            dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
-            dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${definition.category}`] });
+            const commandPath = [FRAMEWORK_CATEGORY_COMMAND_ID, `command.category.${definition.category}`];
+            // 📱 On mobile every anchor's tabs are merged into the single mobile panel — route the same
+            // path there instead of the (unrendered) bottom-middle anchor, and open the mobile panel itself.
+            if (mobile) {
+              dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+              dispatch({ type: "SET_MOBILE_PANEL_PATH", value: commandPath });
+            } else {
+              dispatch({ type: "SET_PANEL_VISIBLE", anchor: "bottom-middle", value: true });
+              dispatch({ type: "SET_PANEL_PATH", anchor: "bottom-middle", value: commandPath });
+            }
             dispatch({ type: "SET_COMMAND_EXPANDED", value: definition.id });
             dispatch({ type: "SET_SEARCH_OPEN", value: false });
             return;
@@ -6026,7 +6115,7 @@ export function FrameworkOsShell({
       );
     }
     return items;
-  }, [activeWindowId, appLabelsOverlay, loadedPlugins, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology, hostControllerId]);
+  }, [activeWindowId, appLabelsOverlay, loadedPlugins, mobile, onAction, onCommand, panel, resolvedCommands, session, studioMode, uiLocale, uiTerminology, hostControllerId]);
 
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
@@ -6252,10 +6341,13 @@ export function FrameworkOsShell({
     // A single middle flex-1 fill pushes the funding credit to the trailing edge; fixed `w-huge` gaps keep each credit
     // off the exact corner pixel that floating corner panels also anchor to (a second flex-1 would center the funding
     // credit under the Command overlay; `w-double` reads as flush against the toggle group).
-    const items: NavbarItem[] = [
-      { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
-      { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
-    ];
+    // 📱 The three tab bars have no anchor on mobile (all anchors merge into the mobile panel) — only the credits stay.
+    const items: NavbarItem[] = mobile
+      ? []
+      : [
+          { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
+          { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
+        ];
     if (brand?.id === "entwerfen-mit-bestand") {
       items.push(
         { key: "footerProjectOfGap", className: "w-huge", content: null },
@@ -6267,9 +6359,9 @@ export function FrameworkOsShell({
     } else {
       items.push(navbarFillItem("footerLeadingFill"));
     }
-    items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
+    if (!mobile) items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
     return items;
-  }, [brand?.id, buildPanelSelectionProps, uiLocale]);
+  }, [brand?.id, buildPanelSelectionProps, mobile, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: Anchor) => ({
@@ -6311,7 +6403,7 @@ export function FrameworkOsShell({
             <Layout
               mobile={mobile}
               mobilePanel={mobilePanel}
-              navbar={<Navbar items={navbarItems} showFullscreenToggle />}
+              navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} />}
               footer={<Footer items={footerItems} />}
               panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
               canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
@@ -9247,19 +9339,34 @@ function semanticColorsFromPalette(palette: MeshStylePalette): SemanticColors {
 
 type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
 
+/** 📐 A `camera_json.projection` field is either the legacy binary string or the full taxonomy spec object. */
+function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefined {
+  if (!value || typeof value !== "object") {
+    return undefined;
+  }
+  const kind = (value as { kind?: unknown }).kind;
+  if (typeof kind !== "string") {
+    return undefined;
+  }
+  return value as WorldProjectionSpec;
+}
+
 function parseCameraState(cameraJson: string): WorldParsedCameraState {
   try {
-    const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number; up?: readonly [number, number, number]; projection?: string };
+    const parsed = JSON.parse(cameraJson) as WorldCameraRecord & { target?: readonly [number, number, number]; zoom?: number; up?: readonly [number, number, number]; projection?: string | object };
     const position: [number, number, number] = parsed.position ? [parsed.position[0], parsed.position[1], parsed.position[2]] : [parsed.x ?? 4, parsed.y ?? -4, parsed.z ?? 3];
     const target: [number, number, number] = parsed.target ? [parsed.target[0], parsed.target[1], parsed.target[2]] : [0, 0, 0];
-    const explicitProjection = parsed.projection === "perspective" || parsed.projection === "orthographic";
+    const projectionSpec = parseWorldProjectionField(parsed.projection);
+    const explicitProjection = projectionSpec !== undefined || parsed.projection === "perspective" || parsed.projection === "orthographic";
+    const projectionFamily = projectionSpec ? worldProjectionFamily(projectionSpec) : undefined;
     return {
       position,
       target,
       up: parsed.up ? [parsed.up[0], parsed.up[1], parsed.up[2]] : undefined,
       zoom: typeof parsed.zoom === "number" ? parsed.zoom : 1,
-      projection: parsed.projection === "orthographic" ? "orthographic" : "perspective",
-      fov: parsed.fov ?? 45,
+      projection: projectionFamily ? (projectionFamily === "parallel" ? "orthographic" : "perspective") : parsed.projection === "orthographic" ? "orthographic" : "perspective",
+      projectionSpec,
+      fov: parsed.fov ?? (projectionSpec && "fov" in projectionSpec ? projectionSpec.fov : 45),
       explicitProjection,
     };
   } catch {
@@ -9268,7 +9375,7 @@ function parseCameraState(cameraJson: string): WorldParsedCameraState {
 }
 
 //#region WorldViewportCamera
-/** 📷 Merges an orbit/projection report into the viewport-owned camera without losing FOV or explicit-projection flags. */
+/** 📷 Merges an orbit/projection report into the viewport-owned camera without losing FOV, explicit-projection flags, or the full projection spec (orbit reports only ever carry the binary family, never the taxonomy spec). */
 export function mergeWorldViewportCamera(base: WorldParsedCameraState, next: WorldCameraState): WorldParsedCameraState {
   return {
     position: next.position,
@@ -9276,6 +9383,7 @@ export function mergeWorldViewportCamera(base: WorldParsedCameraState, next: Wor
     zoom: next.zoom,
     up: next.up ?? base.up,
     projection: next.projection ?? base.projection,
+    projectionSpec: next.projectionSpec ?? base.projectionSpec,
     fov: base.fov,
     explicitProjection: base.explicitProjection || next.projection === "perspective" || next.projection === "orthographic",
   };
@@ -11554,12 +11662,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           zoom: cameraState.zoom,
           up: cameraState.up,
           projection,
+          projectionSpec: projection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: cameraState.fov },
         },
         true,
       );
     },
     [adoptViewportCamera, cameraState],
   );
+
+  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: cameraState.fov });
+  const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
     if (!marqueeDragActive || !hostRef.current || !cameraRef.current) return { mergedComponentIds: null, mergedInstanceIds: null };
@@ -11890,12 +12002,13 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         }
       >
         <WorldOrbitViewSnapGateProvider>
-          <WorldOrbitCameraViewRig state={cameraState} seedKey={cameraSeedKey} perspectiveFov={cameraState.fov} />
+          <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} />
           <WorldOrbitGated
             controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}
             onCamera={handleCameraChange}
             zoom={cameraState.zoom}
             projection={cameraState.explicitProjection ? cameraState.projection : undefined}
+            constraints={worldOrbitConstraints}
             onRightPointerDown={handleWorldOrbitRightPointerDown}
           />
           <WorldLodBridge

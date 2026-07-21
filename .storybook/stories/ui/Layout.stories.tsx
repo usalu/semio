@@ -187,6 +187,47 @@ export const Default: Story = {
   },
 };
 
+// 📱 Mobile: the merged panel fills the space between navbar and footer while open; the canvas stays
+// mounted underneath (hidden, not unmounted) so toggling the panel doesn't replug the 3D world.
+export const Mobile: Story = {
+  args: { canvas: null },
+  render: () => {
+    const [visible, setVisible] = useState(true);
+    const [activeTabPath, setActiveTabPath] = useState<readonly string[]>(["workbench", "explorer"]);
+    const mobileTabs = [...topLeftTabs, ...bottomRightTabs];
+
+    return (
+      <div className="h-[812px] w-[375px] border mx-auto">
+        <Layout
+          mobile
+          mobilePanel={{ visible, tabs: mobileTabs, activeTabPath, onActiveTabPathChange: setActiveTabPath }}
+          navbar={
+            <Navbar
+              items={[
+                { content: <Home size={20} />, key: "home" },
+                { content: <span className="font-bold">Application</span>, key: "title" },
+                navbarFillItem("mobileNavbarFill"),
+                { key: "mobilePanelToggle", content: <button onClick={() => setVisible((current) => !current)}>Panel</button> },
+              ]}
+              showFullscreenToggle={false}
+            />
+          }
+          footer={<Footer items={[{ content: "Ready", key: "status" }]} />}
+          canvas={
+            <Canvas>
+              <HorizontalWindows>
+                <Window id="main" defaultSize={100}>
+                  <ExampleContent title="Main Window" />
+                </Window>
+              </HorizontalWindows>
+            </Canvas>
+          }
+        />
+      </div>
+    );
+  },
+};
+
 // #endregion 🪨Layout
 
 // 🔷#region 🌈Page

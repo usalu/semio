@@ -572,6 +572,38 @@ Refactor everything
 
 ---
 
+## infinite
+
+### 3d
+
+---
+
+Parallel
+ Orthographic
+  Plan
+  Top
+  Front
+  Back
+  Left
+  Right
+ Axonometric
+  Isometric
+  Dimetric
+  Trimetric
+ Oblique
+  Cabinet
+  Cavalier
+  Military
+Perspective
+ 1-point
+ 2-point
+ 3-point
+ Curvilinear
+Make sure all angle values, etc are adjustable
+Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
+
+---
+
 ## 🧩puzzle
 
 ---

@@ -21,9 +21,9 @@ import { useState } from "react";
 const walkthrough: IntroductionDefinition = {
   title: "Welcome to Semio",
   steps: [
-    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" } },
-    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" } },
-    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" } },
+    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
   ],
 };
 

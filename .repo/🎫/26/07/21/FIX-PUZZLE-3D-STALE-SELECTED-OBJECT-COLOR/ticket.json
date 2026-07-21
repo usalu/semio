@@ -1,9 +1,9 @@
 {
   "title": "Fix Puzzle 3D Stale Selected Object Color",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 3D: deselected objects keep the selected mesh color until the mouse hovers them again. Fix stale selected styling so deselect immediately restores the neutral appearance. Likely related to mesh material not re-keying/updating when selected flips false without a hover transition.",
-  "summary": "Fixed deselected Puzzle 3D objects keeping selected mesh color until hover. World instance paint now follows selectionJson ids/hoveredId, procedural materials remount via worldMeshMaterialRevision(styleKind), and GLB materials force needsUpdate on style revision — same stale-material class as the vortex fix. Vitest coverage for the revision helper passes.",
+  "summary": "Root-fixed stale selected mesh paint after deselect. React GLB instances now bake selection/hover colors into a style-keyed clone (no more imperative color.set that left the selected tint until hover) and remount on styleKind. WGPU/infinite-world apply_runtime_draw_flags now assigns selected/hovered from the live selection snapshot instead of OR-ing with stale instancesJson bits. Also repaired the world test scene helper for new UiComponentSceneNode fields. Verified with vitest mesh-revision tests and runtime_draw_flags_clear_stale_instance_selected_when_selection_is_empty.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2197"
   },

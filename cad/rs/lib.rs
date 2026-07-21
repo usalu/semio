@@ -191,11 +191,15 @@ pub struct CadCamera {
     pub zoom: f64,
     #[serde(default = "default_fov")]
     pub fov: f64,
+    /// 📐 Serialized `semio_framework_plugin::WorldProjectionConfig` — kept as raw json here (cad/rs has no
+    /// dependency on the plugin layer); `cad/plugin/rs` parses/writes it around the shared projection helpers.
+    #[serde(default)]
+    pub projection: Value,
 }
 
 impl Default for CadCamera {
     fn default() -> Self {
-        Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov() }
+        Self { position: default_camera_position(), target: default_camera_target(), zoom: one_f64(), fov: default_fov(), projection: Value::Null }
     }
 }
 
@@ -1516,7 +1520,7 @@ mod tests {
     #[test]
     fn set_camera_flows_through_ops() {
         let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
-        let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0 };
+        let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0, projection: Value::Null };
         store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);

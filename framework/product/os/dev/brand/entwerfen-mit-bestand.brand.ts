@@ -28,6 +28,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "none",
         placement: "center",
         advance: { kind: "next" },
+        logos: [],
       },
       {
         id: "prototype",
@@ -37,6 +38,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "none",
         placement: "center",
         advance: { kind: "next" },
+        logos: [],
       },
       {
         id: "funding",
@@ -60,6 +62,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "cutout",
         placement: "auto",
         advance: { kind: "next" },
+        logos: [],
       },
       {
         id: "move-utility",
@@ -69,6 +72,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "cutout",
         placement: "auto",
         advance: { kind: "utility", id: "move" },
+        logos: [],
       },
       {
         id: "catalogue",
@@ -78,6 +82,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "cutout",
         placement: "auto",
         advance: { kind: "next" },
+        logos: [],
       },
       {
         id: "add-object",
@@ -87,6 +92,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         emphasis: "cutout",
         placement: "auto",
         advance: { kind: "action", id: "addObjectKind" },
+        logos: [],
       },
     ],
   },

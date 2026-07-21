@@ -2122,16 +2122,16 @@ use geometry_import::{
     cad_object_from_mesh, cad_object_from_solid_handle, objects_from_fixture_model, parse_geometry, tessellate_geometry_handle,
 };
 use semio_framework_plugin::{PanelGroup,
-    apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
+    apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, merge_world_selection_ids, mesh_from_kind,
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group,
-    ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
+    ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, ResourceKindSpec, UtilityCategory, UtilityDefinition, UiFieldNode, UiGroupNode,
     UiInspectorFieldGroup, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiTreeItemAction, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
     WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode,
-    WindowLayoutWindowNode, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    WindowLayoutWindowNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeshImporter,
     is_de_locale, localized_label_map, selection_ids, tree_item, PanelTreeBuilder,
@@ -2472,6 +2472,7 @@ fn default_document() -> CadScene {
         target: [0.0, 0.0, 0.0],
         zoom: 1.0,
         fov: 50.0,
+        projection: Value::Null,
     };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
@@ -2538,6 +2539,7 @@ fn forest_play_document(source_json: &str, id: &str) -> CadScene {
         target: [5.4, 2.34, 1.5],
         zoom: 1.0,
         fov: 50.0,
+        projection: Value::Null,
     };
     CadScene {
         schema: CAD_PLAY_DOCUMENT_SCHEMA.into(),
@@ -2583,8 +2585,29 @@ fn cad_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
+/// 📐 Reads `camera.projection`'s raw json into the shared taxonomy config, defaulting when absent/stale.
+fn cad_camera_projection_config(camera: &CadCamera) -> WorldProjectionConfig {
+    serde_json::from_value(camera.projection.clone()).unwrap_or_default()
+}
+
+/// 📐 Writes a taxonomy config back into `camera.projection`'s raw json slot.
+fn cad_camera_set_projection_config(camera: &mut CadCamera, config: &WorldProjectionConfig) {
+    camera.projection = serde_json::to_value(config).unwrap_or(Value::Null);
+}
+
+/// 📐 Distance from `camera.position` to `camera.target`, defaulting to the historic orbit radius when degenerate.
+fn cad_camera_distance(camera: &CadCamera) -> f64 {
+    let [dx, dy, dz] = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
+    let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+    if distance > 1e-3 {
+        distance
+    } else {
+        20.0
+    }
+}
+
 fn camera_json(camera: &CadCamera) -> String {
-    ui_wgpu::world3d_camera_json(camera.position, camera.target, camera.fov)
+    world3d_camera_projection_json(camera.position, camera.target, None, camera.zoom, &cad_camera_projection_config(camera))
 }
 
 /// 🎯 Wraps the SDK's `selection_ids` core `"ids"`-array extraction with a fallback-to-current-selection
@@ -3417,6 +3440,8 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("patchCadPlayReference", "Patch Reference", "Referenz aktualisieren"),
         ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
+        ("setProjection", "Set Projection", "Projektion festlegen"),
+        ("setProjectionParam", "Set Projection Parameter", "Projektionsparameter festlegen"),
         ("focusModelDefinition", "Focus Model Definition", "Modelldefinition fokussieren"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
@@ -4516,6 +4541,27 @@ impl DocumentApp for CadPlayApp {
                 }
                 ActionEmit::default()
             }
+            "setProjection" | "setProjectionParam" => {
+                let pane = args
+                    .and_then(|value| value.get("surfaceId"))
+                    .and_then(|v| v.as_str())
+                    .map(cad_pane_id_from_surface_id)
+                    .unwrap_or(CadPaneId::Shape);
+                let mut camera = cad_pane_camera(document, pane).clone();
+                let mut config = cad_camera_projection_config(&camera);
+                let moves_pose = world3d_projection_action_moves_pose(action, args);
+                apply_world3d_projection_action(&mut config, action, args);
+                if moves_pose {
+                    let (position, _up) = world3d_projection_pose(&config, camera.target, cad_camera_distance(&camera));
+                    camera.position = position;
+                }
+                cad_camera_set_projection_config(&mut camera, &config);
+                ActionEmit {
+                    ops: vec![CadOp::SetCamera { pane, camera }],
+                    coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
+                    ..Default::default()
+                }
+            }
             "translateSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
                 if ids.is_empty() {
@@ -5034,13 +5080,19 @@ impl DocumentApp for CadPlayApp {
         ])
     }
 
-    fn window_measures(&self, _doc: &DocumentView<'_, CadScene>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-        let measures = vec![world3d_sun_measures("cad", &self.runtime.sun, cad_action)];
+    fn window_measures(&self, doc: &DocumentView<'_, CadScene>, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let document = doc.projection;
+        let pane_measures = |pane: CadPaneId| {
+            vec![
+                world3d_projection_measures(&format!("cad-{}", pane.model_definition_id()), &cad_camera_projection_config(cad_pane_camera(document, pane)), cad_action),
+                world3d_sun_measures("cad", &self.runtime.sun, cad_action),
+            ]
+        };
         HashMap::from([
-            (CAD_PLAY_WINDOW_SHAPE.to_string(), measures.clone()),
-            (CAD_PLAY_WINDOW_BUILDING.to_string(), measures.clone()),
-            (CAD_PLAY_WINDOW_ENERGY.to_string(), measures.clone()),
-            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), measures),
+            (CAD_PLAY_WINDOW_SHAPE.to_string(), pane_measures(CadPaneId::Shape)),
+            (CAD_PLAY_WINDOW_BUILDING.to_string(), pane_measures(CadPaneId::Building)),
+            (CAD_PLAY_WINDOW_ENERGY.to_string(), pane_measures(CadPaneId::Energy)),
+            (CAD_PLAY_WINDOW_STRUCTURE_CLASSIC.to_string(), pane_measures(CadPaneId::StructureClassic)),
         ])
     }
 
@@ -5164,6 +5216,8 @@ fn create_cad_app() -> App {
             .operation("patchCadPlayReference", "Patch Reference")
             .operation("engagementSubmit", "Engagement Submit")
             .operation("setCamera", "Set Camera")
+            .operation("setProjection", "Set Projection")
+            .operation("setProjectionParam", "Set Projection Parameter")
             .operation("focusModelDefinition", "Focus Model Definition")
             .operation("setActiveExample", "Set Active Example")
             .view_action("setSelection", "Set Selection")

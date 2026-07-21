@@ -3180,6 +3180,8 @@ mod tests {
             ink_canvas: None,
             graph_timeline: None,
             block_list: None,
+            diff_view: None,
+            event_feed: None,
         }
     }
 

@@ -838,7 +838,7 @@ pub mod d2 {
             active_utility_id: Some(PUZZLE2D_UTILITY_FILL.into()),
             children: vec![WindowMeasure::Slider {
                 id: "puzzle2d-fill-count".into(),
-                label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
+                label: Some(labels.count.into()),
                 value: envelope.runtime.fill_count as f64,
                 min: 0.0,
                 max: PUZZLE2D_FILL_COUNT_MAX as f64,
@@ -1127,6 +1127,7 @@ pub mod d2 {
         select: &'static str,
         brush: &'static str,
         fill: &'static str,
+        count: &'static str,
         placement: &'static str,
         // example picker
         example_concrete_forest: &'static str,
@@ -1155,6 +1156,7 @@ pub mod d2 {
         select: "Select",
         brush: "Brush",
         fill: "Fill",
+        count: "Count",
         placement: "Placement",
         example_concrete_forest: "Concrete Forest",
     };
@@ -1182,6 +1184,7 @@ pub mod d2 {
         select: "Auswählen",
         brush: "Pinsel",
         fill: "Füllen",
+        count: "Anzahl",
         placement: "Platzierung",
         example_concrete_forest: "Concrete Forest",
     };
@@ -2624,9 +2627,9 @@ pub mod d3 {
 
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
-        apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
-        ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
-        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
+        ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
+        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -2677,7 +2680,18 @@ pub mod d3 {
         #[serde(default)]
         up: Option<[f64; 3]>,
         #[serde(default)]
-        projection: Option<String>,
+        projection: WorldProjectionConfig,
+    }
+
+    /// 📐 Distance from `camera.position` to `camera.target`, defaulting to the historic 30-unit orbit radius when degenerate.
+    fn puzzle3d_camera_distance(camera: &Puzzle3dCamera) -> f64 {
+        let [dx, dy, dz] = [camera.position[0] - camera.target[0], camera.position[1] - camera.target[1], camera.position[2] - camera.target[2]];
+        let distance = (dx * dx + dy * dy + dz * dz).sqrt();
+        if distance > 1e-3 {
+            distance
+        } else {
+            30.0
+        }
     }
 
     fn one_f64() -> f64 {
@@ -2913,8 +2927,6 @@ pub mod d3 {
         fill_edit_target_volumes: bool,
         #[serde(default = "default_voxel_dims")]
         voxel_dims: [u32; 3],
-        #[serde(default = "default_view_preset")]
-        view_preset: String,
         /// 🌀 When to emit vortex markers: [`PUZZLE3D_VORTEX_SHOW_ALWAYS`] or [`PUZZLE3D_VORTEX_SHOW_SELECTED`].
         #[serde(default = "default_vortex_show")]
         vortex_show: String,
@@ -2951,15 +2963,10 @@ pub mod d3 {
                 chunk_size: default_chunk_size(),
                 fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
-                view_preset: default_view_preset(),
                 vortex_show: default_vortex_show(),
                 sun: WorldSunConfig::default(),
             }
         }
-    }
-
-    fn default_view_preset() -> String {
-        "perspective".into()
     }
 
     fn default_overlap_budget() -> f64 {
@@ -3093,21 +3100,7 @@ pub mod d3 {
     }
 
     fn camera_json(camera: &Puzzle3dCamera) -> String {
-        let mut value = json!({
-            "position": camera.position,
-            "target": camera.target,
-            "zoom": camera.zoom,
-            "fov": 45.0,
-        });
-        if let Some(object) = value.as_object_mut() {
-            if let Some(up) = camera.up {
-                object.insert("up".into(), json!(up));
-            }
-            if let Some(projection) = &camera.projection {
-                object.insert("projection".into(), json!(projection));
-            }
-        }
-        value.to_string()
+        world3d_camera_projection_json(camera.position, camera.target, camera.up, camera.zoom, &camera.projection)
     }
 
     fn mesh_selection_ids(args: Option<&Value>, fallback: &[String]) -> Vec<String> {
@@ -3115,16 +3108,6 @@ pub mod d3 {
     }
 
     /// 🎥 Named orbit-camera rigs — top/front/right use an orthographic projection with a non-Z `up` to avoid gimbal lock when looking straight down/along the Z-up axis.
-    fn puzzle3d_camera_view_preset(preset: &str) -> Puzzle3dCamera {
-        match preset {
-            "top" => Puzzle3dCamera { position: [0.0, 0.0, 30.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 1.0, 0.0]), projection: Some("orthographic".into()) },
-            "front" => Puzzle3dCamera { position: [0.0, -30.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("orthographic".into()) },
-            "right" => Puzzle3dCamera { position: [30.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("orthographic".into()) },
-            "perspective" => Puzzle3dCamera { position: [12.0, -12.0, 9.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: Some([0.0, 0.0, 1.0]), projection: Some("perspective".into()) },
-            _ => Puzzle3dCamera { position: [12.0, -12.0, 9.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: None, projection: None },
-        }
-    }
-
     fn quat_mul(a: [f64; 4], b: [f64; 4]) -> [f64; 4] {
         [a[3] * b[0] + a[0] * b[3] + a[1] * b[2] - a[2] * b[1], a[3] * b[1] - a[0] * b[2] + a[1] * b[3] + a[2] * b[0], a[3] * b[2] + a[0] * b[1] - a[1] * b[0] + a[2] * b[3], a[3] * b[3] - a[0] * b[0] - a[1] * b[1] - a[2] * b[2]]
     }
@@ -4309,6 +4292,7 @@ pub mod d3 {
         window_main: &'static str,
         example_concrete_forest: &'static str,
         fill: &'static str,
+        count: &'static str,
         brush: &'static str,
         mode: &'static str,
         edit_volumes: &'static str,
@@ -4335,6 +4319,7 @@ pub mod d3 {
         window_main: "Puzzle 3D",
         example_concrete_forest: "Concrete Forest",
         fill: "Fill",
+        count: "Count",
         brush: "Brush",
         mode: "Mode",
         edit_volumes: "Edit Volumes",
@@ -4360,6 +4345,7 @@ pub mod d3 {
         window_main: "Puzzle 3D",
         example_concrete_forest: "Concrete Forest",
         fill: "Fuellen",
+        count: "Anzahl",
         brush: "Pinsel",
         mode: "Modus",
         edit_volumes: "Volumen bearbeiten",
@@ -5217,21 +5203,6 @@ pub mod d3 {
         ]
     }
 
-    fn puzzle3d_view_measure(runtime: &Puzzle3dRuntime) -> WindowMeasure {
-        WindowMeasure::Select {
-            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-view"),
-            label: Some("View".into()),
-            value: runtime.view_preset.clone(),
-            items: vec![
-                MeasureSelectItem { id: "perspective".into(), value: "perspective".into(), label: "Perspective".into() },
-                MeasureSelectItem { id: "top".into(), value: "top".into(), label: "Top".into() },
-                MeasureSelectItem { id: "front".into(), value: "front".into(), label: "Front".into() },
-                MeasureSelectItem { id: "right".into(), value: "right".into(), label: "Right".into() },
-            ],
-            on_change: puzzle3d_action("setCameraViewPreset", None),
-        }
-    }
-
     /// 🌀 Window option for when vortex markers are emitted — Always (every object) or Selected (hovered/selected only).
     fn puzzle3d_vortex_show_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
         WindowMeasure::Select {
@@ -5256,7 +5227,7 @@ pub mod d3 {
         let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
         WindowMeasure::Slider {
             id: "puzzle3d-fill-count".into(),
-            label: Some(labels.fill.into()),
+            label: Some(labels.count.into()),
             value: envelope.runtime.fill_count.min(available_count) as f64,
             min: 0.0,
             max: PUZZLE3D_FILL_COUNT_MAX as f64,
@@ -5380,7 +5351,7 @@ pub mod d3 {
 
     fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         let mut measures = vec![
-            puzzle3d_view_measure(&envelope.runtime),
+            world3d_projection_measures("puzzle3d", &envelope.fixture.camera.projection, puzzle3d_action),
             puzzle3d_vortex_show_measure(&envelope.runtime, labels),
             puzzle3d_lod_measures_group(&envelope.runtime),
             puzzle3d_grid_measures_group(&envelope.runtime),
@@ -5570,15 +5541,14 @@ pub mod d3 {
                         }
                     }
                 }
-                "setProjection" => {
-                    if let Some(projection) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.fixture.camera.projection = Some(projection.into());
-                    }
-                }
-                "setCameraViewPreset" => {
-                    if let Some(preset) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
-                        envelope.fixture.camera = puzzle3d_camera_view_preset(preset);
-                        envelope.runtime.view_preset = preset.into();
+                "setProjection" | "setProjectionParam" => {
+                    let moves_pose = world3d_projection_action_moves_pose(action, args);
+                    apply_world3d_projection_action(&mut envelope.fixture.camera.projection, action, args);
+                    if moves_pose {
+                        let distance = puzzle3d_camera_distance(&envelope.fixture.camera);
+                        let (position, up) = world3d_projection_pose(&envelope.fixture.camera.projection, envelope.fixture.camera.target, distance);
+                        envelope.fixture.camera.position = position;
+                        envelope.fixture.camera.up = Some(up);
                     }
                 }
                 "setVortexShow" => {
@@ -6227,7 +6197,7 @@ pub mod d3 {
             ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
             ("setCamera", "Set Camera", "Kamera festlegen"),
             ("setProjection", "Set Projection", "Projektion festlegen"),
-            ("setCameraViewPreset", "Set Camera View Preset", "Kameraansicht-Voreinstellung festlegen"),
+            ("setProjectionParam", "Set Projection Parameter", "Projektionsparameter festlegen"),
             ("translateSelection", "Translate Selection", "Auswahl verschieben"),
             ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
             ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
@@ -6356,7 +6326,7 @@ pub mod d3 {
                 .operation("duplicateSelection", "Duplicate Selection")
                 .operation("setCamera", "Set Camera")
                 .operation("setProjection", "Set Projection")
-                .operation("setCameraViewPreset", "Set Camera View Preset")
+                .operation("setProjectionParam", "Set Projection Parameter")
                 .operation("translateSelection", "Translate Selection")
                 .operation("rotateSelection", "Rotate Selection")
                 .operation("scaleSelection", "Scale Selection")
@@ -7006,7 +6976,7 @@ pub mod d3 {
             session.precompute_step(1);
             match puzzle3d_fill_count_measure(&scene, &session, &PUZZLE3D_LABELS_NATIVE_EN) {
                 WindowMeasure::Slider { label: Some(label), max, ready, loading, .. } => {
-                    assert_eq!(label, PUZZLE3D_LABELS_NATIVE_EN.fill, "fill label stays fixed while planning");
+                    assert_eq!(label, PUZZLE3D_LABELS_NATIVE_EN.count, "fill count label stays fixed as Count while planning");
                     assert_eq!(max, PUZZLE3D_FILL_COUNT_MAX as f64, "fill slider max stays fixed while planning");
                     let ready = ready.expect("planning must expose a ready extent");
                     assert!(ready >= 0.0 && ready <= max, "ready extent must lie on the fixed range");
@@ -7379,6 +7349,7 @@ pub mod d5 {
         select: &'static str,
         brush: &'static str,
         fill: &'static str,
+        count: &'static str,
         placement: &'static str,
         duplicate: &'static str,
         select_same_kind: &'static str,
@@ -7423,6 +7394,7 @@ pub mod d5 {
         select: "Select",
         brush: "Brush",
         fill: "Fill",
+        count: "Count",
         placement: "Placement",
         duplicate: "Duplicate",
         select_same_kind: "Select all of same kind",
@@ -7466,6 +7438,7 @@ pub mod d5 {
         select: "Auswählen",
         brush: "Pinsel",
         fill: "Füllen",
+        count: "Anzahl",
         placement: "Platzierung",
         duplicate: "Duplizieren",
         select_same_kind: "Alle gleicher Art auswählen",
@@ -8774,7 +8747,7 @@ pub mod d5 {
     fn puzzle5d_fill_count_measure(envelope: &Puzzle5dScene, labels: &Puzzle5dLabels) -> WindowMeasure {
         WindowMeasure::Slider {
             id: "puzzle5d-fill-count".into(),
-            label: Some(format!("{} {}", labels.fill, envelope.runtime.fill_count)),
+            label: Some(labels.count.into()),
             value: envelope.runtime.fill_count as f64,
             min: 0.0,
             max: PUZZLE5D_FILL_COUNT_MAX as f64,

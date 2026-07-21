@@ -4623,11 +4623,6 @@ pub fn world3d_camera_projection_json(position: [f64; 3], target: [f64; 3], up: 
     value.to_string()
 }
 
-/** 📐 Whether `kind` is a parallel-family (orthographic camera) projection vs. a perspective one. */
-fn world3d_projection_kind_is_parallel(kind: &str) -> bool {
-    matches!(kind, "orthographic" | "axonometric" | "oblique")
-}
-
 /** 📐 Canonical camera pose (`position`, `up`) for a projection config, orbiting `target` at `distance` — mirrors
  * `computeWorldProjectionPose` in `infinite/world/r3f/index.tsx`; used to snap the viewport on kind/view changes. */
 pub fn world3d_projection_pose(p: &WorldProjectionConfig, target: [f64; 3], distance: f64) -> ([f64; 3], [f64; 3]) {
@@ -5317,11 +5312,14 @@ pub use plugin_runtime::{
     plugin_ingest_operations, plugin_load_document,
 };
 pub use world3d_host::{
-    apply_world3d_sun_action, default_world3d_selection, export_mesh_glb_bytes, export_mesh_obj,
-    merge_world_selection_ids, mesh_kind_from_json, world3d_default_camera,
-    world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds,
-    world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_scene,
-    world3d_scene_extended, world3d_selection_json, world3d_sun_measures, WorldSunConfig,
+    apply_world3d_projection_action, apply_world3d_sun_action, default_world3d_selection,
+    export_mesh_glb_bytes, export_mesh_obj, merge_world_selection_ids, mesh_kind_from_json,
+    world3d_camera_projection_json, world3d_default_camera, world3d_environment_json,
+    world3d_mesh_id_from_url, world3d_meshes_json_from_kinds,
+    world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls,
+    world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose,
+    world3d_projection_spec_json, world3d_scene, world3d_scene_extended, world3d_selection_json,
+    world3d_sun_measures, WorldProjectionConfig, WorldSunConfig,
 };
 pub use semio_framework_core::*;
 // 🧩 Declarative component model (UiNode, layouts, utilities) — moved into ui_wgpu; re-exported here so

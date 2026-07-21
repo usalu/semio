@@ -1972,7 +1972,7 @@ export function worldCurvilinearUnproject(ndc: readonly [number, number], spec: 
   }
   const theta = r * halfFov;
   const rectilinearR = Math.tan(theta) / Math.tan(halfFov);
-  const sourceR = rectilinearR / Math.max(spec.strength, 1e-3);
+  const sourceR = r + (rectilinearR - r) * spec.strength;
   const scale = sourceR / r;
   return [(scaled[0] * scale) / aspect, scaled[1] * scale];
 }
@@ -2300,6 +2300,8 @@ export interface WorldOrbitGatedProps {
   readonly camera?: ThreePerspectiveCamera | null;
   readonly zoom?: number;
   readonly projection?: OrbitCameraProjection;
+  /** @emoji 🔒 Rotation/polar-angle limits implied by the active {@link WorldProjectionSpec}; see {@link worldProjectionOrbitConstraints}. */
+  readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly onCamera?: (state: WorldCameraState) => void;
   readonly controlsGate?: boolean;
   readonly onCameraNavigate?: (active: boolean) => void;
@@ -2307,11 +2309,14 @@ export interface WorldOrbitGatedProps {
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
 }
 
+const WORLD_ORBIT_CONSTRAINTS_DEFAULT = { rotate: true } as const;
+
 /** @emoji 🛰️ Canvas-local Three orbit-control binding that never crosses the optional Drei runtime boundary. */
 function WorldOrbitControlsBridge({
   camera,
   enabled,
   mouseButtons,
+  constraints,
   controlsKey,
   onChange,
   onStart,
@@ -2320,6 +2325,7 @@ function WorldOrbitControlsBridge({
   readonly camera: Camera;
   readonly enabled: boolean;
   readonly mouseButtons: ReturnType<typeof resolveWorldOrbitMouseButtonsIdle>;
+  readonly constraints?: { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number };
   readonly controlsKey?: string | number;
   readonly onChange: () => void;
   readonly onStart: () => void;
@@ -2331,6 +2337,7 @@ function WorldOrbitControlsBridge({
   const controlsRef = reactHostPort.useRef<ThreeOrbitControls | null>(null);
   const callbacksRef = reactHostPort.useRef({ onChange, onStart, onEnd });
   callbacksRef.current = { onChange, onStart, onEnd };
+  const resolvedConstraints = constraints ?? WORLD_ORBIT_CONSTRAINTS_DEFAULT;
   reactHostPort.useEffect(() => {
     const controls = new ThreeOrbitControls(camera, gl.domElement);
     controls.enableDamping = false;
@@ -2361,8 +2368,11 @@ function WorldOrbitControlsBridge({
     if (!controls) return;
     controls.enabled = enabled;
     controls.mouseButtons = { ...mouseButtons };
+    controls.enableRotate = resolvedConstraints.rotate;
+    controls.minPolarAngle = resolvedConstraints.minPolar ?? 0;
+    controls.maxPolarAngle = resolvedConstraints.maxPolar ?? Math.PI;
     controls.update();
-  }, [enabled, mouseButtons]);
+  }, [enabled, mouseButtons, resolvedConstraints]);
   return null;
 }
 
@@ -2398,6 +2408,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       camera={camera}
       enabled={!gate && !snapGate}
       mouseButtons={mouseButtonsIdle}
+      constraints={props.constraints}
       controlsKey={props.controlsKey}
       onChange={() => invalidate()}
       onStart={() => {
@@ -3265,6 +3276,90 @@ if (import.meta.vitest) {
       const layouts = createOrbitCameraViewLayoutDescriptors();
       expect(layouts.some((row) => row.id === "view-quad-standard")).toBe(true);
       expect(layouts.find((row) => row.id === "view-single-top")?.groupPath).toEqual(["Single", "2D"]);
+    });
+  });
+
+  describe("worldProjectionFamily", () => {
+    it("treats orthographic/axonometric/oblique as parallel and everything else as perspective", () => {
+      expect(worldProjectionFamily({ kind: "orthographic", view: "top" })).toBe("parallel");
+      expect(worldProjectionFamily({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" })).toBe("parallel");
+      expect(worldProjectionFamily({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 })).toBe("parallel");
+      expect(worldProjectionFamily({ kind: "threePoint", fov: 50 })).toBe("perspective");
+      expect(worldProjectionFamily({ kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" })).toBe("perspective");
+      expect(worldProjectionFamily(undefined)).toBe("perspective");
+    });
+  });
+
+  describe("computeWorldProjectionPose", () => {
+    it("places plan/top directly above the target with orthographic projection", () => {
+      const state = computeWorldProjectionPose({ kind: "orthographic", view: "top" }, { target: [0, 0, 40], distance: 800 });
+      expect(state).toMatchObject({ position: [0, 0, 840], target: [0, 0, 40], up: [0, 1, 0], projection: "orthographic", zoom: 50 });
+      const plan = computeWorldProjectionPose({ kind: "orthographic", view: "plan" }, { target: [0, 0, 40], distance: 800 });
+      expect(plan.position).toEqual(state.position);
+    });
+
+    it("derives the classic 35.264/45 isometric direction from the 30/30 axis angles", () => {
+      const state = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, { target: [0, 0, 0], distance: 10 });
+      expect(state.position[2] / 10).toBeCloseTo(Math.sin((35.264 * Math.PI) / 180), 3);
+      const azimuth = (Math.atan2(state.position[0], state.position[1]) * 180) / Math.PI;
+      expect(azimuth).toBeCloseTo(45, 2);
+    });
+
+    it("mirrors quadrant sign flips for axonometric corners", () => {
+      const ne = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, { target: [0, 0, 0], distance: 10 });
+      const sw = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" }, { target: [0, 0, 0], distance: 10 });
+      expect(sw.position[0]).toBeCloseTo(-ne.position[0], 5);
+      expect(sw.position[1]).toBeCloseTo(-ne.position[1], 5);
+    });
+
+    it("keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle", () => {
+      const cavalier = computeWorldProjectionPose({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, { target: [0, 0, 0], distance: 10 });
+      expect(cavalier.position).toEqual([0, -10, 0]);
+      const military = computeWorldProjectionPose({ kind: "oblique", variant: "military", angle: 30, depthScale: 1 }, { target: [0, 0, 0], distance: 10 });
+      expect(military.position).toEqual([0, 0, 10]);
+      expect(military.up![0]).toBeCloseTo(Math.sin((30 * Math.PI) / 180), 5);
+    });
+
+    it("reports perspective projection for the perspective family", () => {
+      const threePoint = computeWorldProjectionPose({ kind: "threePoint", fov: 50 }, { target: [0, 0, 0], distance: 100 });
+      expect(threePoint.projection).toBe("perspective");
+      expect(Math.hypot(...threePoint.position)).toBeGreaterThan(90);
+    });
+  });
+
+  describe("worldProjectionOrbitConstraints", () => {
+    it("locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest", () => {
+      expect(worldProjectionOrbitConstraints({ kind: "orthographic", view: "plan" }).rotate).toBe(false);
+      expect(worldProjectionOrbitConstraints({ kind: "orthographic", view: "top" }).rotate).toBe(true);
+      expect(worldProjectionOrbitConstraints({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }).rotate).toBe(false);
+      expect(worldProjectionOrbitConstraints({ kind: "onePoint", axis: "y", fov: 50 }).rotate).toBe(false);
+      const twoPoint = worldProjectionOrbitConstraints({ kind: "twoPoint", fov: 50, verticalShift: 0 });
+      expect(twoPoint.minPolar).toBeCloseTo(Math.PI / 2);
+      expect(twoPoint.maxPolar).toBeCloseTo(Math.PI / 2);
+      expect(worldProjectionOrbitConstraints({ kind: "threePoint", fov: 50 }).rotate).toBe(true);
+    });
+  });
+
+  describe("worldCurvilinearUnproject", () => {
+    it("is the identity mapping at strength 0 (rectilinear passthrough)", () => {
+      const spec = { kind: "curvilinear" as const, fov: 120, strength: 0, mapping: "fisheye" as const };
+      const [x, y] = worldCurvilinearUnproject([0.3, 0.2], spec);
+      expect(x).toBeCloseTo(0.3, 5);
+      expect(y).toBeCloseTo(0.2, 5);
+    });
+  });
+
+  describe("createWorldProjectionTemplates", () => {
+    it("emits exactly the requested Parallel/Perspective taxonomy tree", () => {
+      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+      expect(templates.map((row) => row.id)).toEqual(["parallel", "perspective"]);
+      const [parallel, perspective] = templates;
+      expect(parallel!.children!.map((row) => row.id)).toEqual(["orthographic", "axonometric", "oblique"]);
+      expect(parallel!.children![0]!.children!.map((row) => row.label)).toEqual(["Plan", "Top", "Bottom", "Front", "Back", "Left", "Right"]);
+      expect(parallel!.children![1]!.children!.map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
+      expect(parallel!.children![2]!.children!.map((row) => row.label)).toEqual(["Cabinet", "Cavalier", "Military"]);
+      expect(perspective!.children!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
+      expect(templates[0]).toMatchObject({ controllerId: "demo", command: WORLD_PROJECTION_COMMAND });
     });
   });
 

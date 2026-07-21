@@ -43,7 +43,7 @@ export const Default: Story = {
   render: (args) => {
     const [activeTabPath, setActiveTabPath] = useState<readonly string[]>([]);
     return (
-      <div className="relative h-[420px] w-[375px] border bg-base mx-auto">
+      <div className="flex flex-col h-[420px] w-[375px] border bg-base mx-auto">
         <MobilePanel {...args} activeTabPath={activeTabPath} onActiveTabPathChange={setActiveTabPath} />
       </div>
     );
@@ -53,7 +53,7 @@ export const Default: Story = {
 export const Hidden: Story = {
   args: { visible: false, tabs: mobileTabs },
   render: (args) => (
-    <div className="relative h-[420px] w-[375px] border bg-base mx-auto">
+    <div className="flex flex-col h-[420px] w-[375px] border bg-base mx-auto">
       <MobilePanel {...args} />
       <div className="p-4 text-xs text-muted-foreground">visible=false renders nothing — this text is the only content.</div>
     </div>
