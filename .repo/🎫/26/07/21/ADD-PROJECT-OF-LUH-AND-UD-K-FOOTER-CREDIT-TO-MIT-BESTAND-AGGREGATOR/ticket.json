@@ -1,0 +1,14 @@
+{
+  "title": "Add Project-Of LUH and UdK Footer Credit to Mit Bestand Aggregator",
+  "emoji": "🏛️",
+  "status": "closed",
+  "description": "Add a left-side footer credit \"Ein Projekt von \u003cLUH-Logo\u003e und \u003cUdK-Logo\u003e\" to the Entwerfen mit Bestand Aggregator, mirroring the existing right-side \"Gefördert durch \u003cZukunft Bau\u003e\" funding credit. Reuse the zwischenbericht partner logos (light/dark), place them in ui/asset for chrome serving, and wire the footer item into the OS shell footer layout.",
+  "summary": "Added left-side Aggregator footer credit \"Ein Projekt von \u003cLUH\u003e und \u003cUdK\u003e\" mirroring the right-side \"Gefördert durch \u003cZukunft Bau\u003e\".\n\n- Copied light/dark LUH and UdK logos from the Zwischenbericht into `ui/asset/logo/` (served at `/asset/logo/*`).\n- Added `LuhLogo`, `UdkLogo`, and `aProjectOfLuhUdkFooterItem` in `ui/js/react`, and made `fundedByZukunftBauFooterItem` locale-aware (`Gefördert durch` / `Funded by`).\n- Wired both partner credits into the OS shell footer only for the `entwerfen-mit-bestand` brand: left gap + project-of, flex fill, funded-by + right gap.\n- Extended the existing footer chrome unit test; confirmed runtime on the Aggregator at :6023 (DOM text + logo img counts + screenshots in the ticket folder).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2185"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪821498e921f84f2ba7076a182b8beae5"
+  ]
+}

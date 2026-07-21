@@ -3279,9 +3279,26 @@ pub mod d3 {
         })
     }
 
+    /// 👁️ True when this object's vortices should render — parent object hovered/selected, or any of its vortices hovered/selected (vortex-only selection still needs markers).
+    fn puzzle3d_object_vortices_visible(object: &Puzzle3dObject, runtime: &Puzzle3dRuntime) -> bool {
+        if runtime.selection.object_ids.contains(&object.id) {
+            return true;
+        }
+        if runtime.hovered_object_id.as_deref() == Some(object.id.as_str()) {
+            return true;
+        }
+        object.vortices.iter().any(|vortex| {
+            let full_id = puzzle3d_vortex_full_id(&object.id, &vortex.id);
+            runtime.selection.vortex_ids.contains(&full_id) || runtime.hovered_vortex_full_id.as_deref() == Some(full_id.as_str())
+        })
+    }
+
     fn world_vortices_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
         let mut records = Vec::new();
         for object in &fixture.objects {
+            if !puzzle3d_object_vortices_visible(object, runtime) {
+                continue;
+            }
             for vortex in &object.vortices {
                 let position = world_vortex_position(object, vortex);
                 let direction = world_vortex_direction(object, vortex);
@@ -3433,6 +3450,33 @@ pub mod d3 {
     fn drive_precompute(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
         sync_precompute_session(session, envelope);
         session.precompute_step(8);
+    }
+
+    /// 🐢 Background fill planning only mutates the main world body's `fillBuild` interaction JSON and the
+    /// fill-count slider range in measures — never panels, engagements, utilities, or labels. Emitting
+    /// `Full` on every 120ms tick was the other half of the fill-utility stall (alongside unbounded tick
+    /// queueing on the host): each tick re-fetched the entire shell UI.
+    fn puzzle3d_fill_build_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
+            panel_bodies: Vec::new(),
+            utilities: false,
+            engagements: false,
+            measures: true,
+            labels: false,
+        }
+    }
+
+    /// 🐢 Suggestion collision ticking only refreshes the world body's suggestion-menu interaction JSON.
+    fn puzzle3d_suggestions_tick_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
+            panel_bodies: Vec::new(),
+            utilities: false,
+            engagements: false,
+            measures: false,
+            labels: false,
+        }
     }
 
     fn scene_config_json(envelope: &Puzzle3dScene) -> String {
@@ -5193,6 +5237,7 @@ pub mod d3 {
             let before = doc.projection.clone();
             let active_utility_initial = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY).to_string();
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
+            let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
             let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
             if !preserve_fill_plan {
                 sync_precompute_session(&mut self.precompute, &envelope);
@@ -5838,9 +5883,11 @@ pub mod d3 {
                 }
                 "suggestionsTick" => {
                     drive_precompute(&mut self.precompute, &envelope);
+                    ui_scope = puzzle3d_suggestions_tick_scope();
                 }
                 "fillBuildTick" => {
                     self.precompute.precompute_step(8);
+                    ui_scope = puzzle3d_fill_build_scope();
                 }
                 "registerBrushMesh" => {
                     if let (Some(url), Some(positions), Some(indices)) =
@@ -5875,7 +5922,7 @@ pub mod d3 {
             } else {
                 Vec::new()
             };
-            ActionEmit { ops, coalesce_key, effects, ..Default::default() }
+            ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
@@ -6109,7 +6156,6 @@ pub mod d3 {
                 .operation("addBrushObject", "Add Brush Object")
                 .operation("setFillCount", "Set Fill Count")
                 .operation("acceptSuggestion", "Accept Suggestion")
-                .operation("fillBuildTick", "Fill Build Tick")
                 // 🗨️ Shell-only effect (no document mutation): opens the "addObject" dialog.
                 .shell_action("openAddObjectDialog", "Add Object…")
                 // 👁️ Ephemeral view state — selection, hover, camera scratch, utility-parameter runtime.
@@ -6155,6 +6201,7 @@ pub mod d3 {
                 .view_action("closeVortexSuggestions", "Close Vortex Suggestions")
                 .view_action("hoverSuggestion", "Hover Suggestion")
                 .view_action("suggestionsTick", "Suggestions Tick")
+                .view_action("fillBuildTick", "Fill Build Tick")
                 .view_action("registerBrushMesh", "Register Brush Mesh")
                 .view_action("worldPointerDown", "World Pointer Down")
                 // 📝 Staged argument forms for the panel-visible create/query actions (P1).
@@ -6571,6 +6618,29 @@ pub mod d3 {
         }
 
         #[test]
+        fn fill_build_tick_is_a_view_action_with_narrow_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let app = create_puzzle3d_app();
+            let def = app.definition.actions.iter().find(|entry| entry.id == "fillBuildTick").expect("fillBuildTick declared");
+            assert_eq!(def.kind, ActionKind::View, "fillBuildTick must stay a View action — it only advances background planning");
+            let mut live = testkit::new_app::<Puzzle3dPlayApp>();
+            let fill_view = ViewState { active_utility_id: Some("fill".into()), ..ViewState::default() };
+            live.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill utility");
+            let result = live.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick");
+            match result.ui_scope {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, labels } => {
+                    assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                    assert!(panel_bodies.is_empty());
+                    assert!(measures, "fill planning must refresh the fill-count slider range");
+                    assert!(!engagements);
+                    assert!(!utilities);
+                    assert!(!labels);
+                }
+                other => panic!("expected a Partial ui_scope for fillBuildTick, got {other:?}"),
+            }
+        }
+
+        #[test]
         fn fill_count_measure_shows_planning_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
             let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
@@ -6715,6 +6785,34 @@ pub mod d3 {
             app.handle_action("worldPick", Some(&json!({ "id": null, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("clear");
             let selected_after_clear = selection_of(&render_composite(&mut app));
             assert_eq!(selected_after_clear.get("ids").and_then(Value::as_array).map(Vec::len), Some(0));
+        }
+
+        #[test]
+        fn world_vortices_only_emit_for_hovered_or_selected_objects() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let all_vortex_ids = vortex_full_ids(&app);
+            assert!(!all_vortex_ids.is_empty(), "fixture must expose vortices");
+            let first_object_id = all_vortex_ids[0].split(':').next().expect("object id").to_string();
+            let idle = render_composite(&mut app);
+            let idle_vortices = idle.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(idle_vortices.is_empty(), "idle scene must hide every vortex marker");
+
+            app.handle_action("worldHover", Some(&json!({ "id": first_object_id })), &ViewState::default(), &testkit::meta("local")).expect("hover object");
+            let hovered = render_composite(&mut app);
+            let hovered_vortices = hovered.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(!hovered_vortices.is_empty(), "hovered object must reveal its vortices");
+            assert!(hovered_vortices.iter().all(|entry| entry.get("objectId").and_then(Value::as_str) == Some(first_object_id.as_str())));
+
+            app.handle_action("worldHover", Some(&json!({ "id": null })), &ViewState::default(), &testkit::meta("local")).expect("clear hover");
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("select object");
+            let selected = render_composite(&mut app);
+            let selected_vortices = selected.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(!selected_vortices.is_empty(), "selected object must reveal its vortices");
+
+            app.handle_action("worldPick", Some(&json!({ "id": null, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("clear selection");
+            let cleared = render_composite(&mut app);
+            let cleared_vortices = cleared.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(cleared_vortices.is_empty(), "clearing selection must hide vortex markers again");
         }
 
         #[test]

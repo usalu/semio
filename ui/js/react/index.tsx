@@ -11590,6 +11590,44 @@ export function ZukunftBauLogo({ className, style }: { className?: string; style
 }
 //#endregion 🏛️ZukunftBauLogo
 
+//#region 🏛️LuhLogo
+/** @emoji 🏛️ Leibniz Universität Hannover wordmark for partner chrome credits. @see https://www.uni-hannover.de/ */
+export const LUH_LOGO_URL = "/asset/logo/luh.png";
+/** @emoji 🏛️ Dark-appearance LUH wordmark. */
+export const LUH_LOGO_DARK_URL = "/asset/logo/luh-dark.png";
+/** @emoji 🏛️ LUH university home page. */
+export const LUH_URL = "https://www.uni-hannover.de/";
+
+/** @emoji 🏛️ Leibniz Universität Hannover logo with light/dark variants served from `ui/asset/logo`. */
+export function LuhLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
+      <img src={LUH_LOGO_URL} alt="Leibniz Universität Hannover" className="h-full w-auto dark:hidden" />
+      <img src={LUH_LOGO_DARK_URL} alt="Leibniz Universität Hannover" className="hidden h-full w-auto dark:block" />
+    </span>
+  );
+}
+//#endregion 🏛️LuhLogo
+
+//#region 🏛️UdkLogo
+/** @emoji 🏛️ Universität der Künste Berlin wordmark for partner chrome credits. @see https://www.udk-berlin.de/ */
+export const UDK_LOGO_URL = "/asset/logo/udk.png";
+/** @emoji 🏛️ Dark-appearance UdK wordmark. */
+export const UDK_LOGO_DARK_URL = "/asset/logo/udk-dark.png";
+/** @emoji 🏛️ UdK Berlin university home page. */
+export const UDK_URL = "https://www.udk-berlin.de/";
+
+/** @emoji 🏛️ Universität der Künste Berlin logo with light/dark variants served from `ui/asset/logo`. */
+export function UdkLogo({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return (
+    <span className={cn("inline-flex shrink-0 items-center", className)} style={style}>
+      <img src={UDK_LOGO_URL} alt="Universität der Künste Berlin" className="h-full w-auto dark:hidden" />
+      <img src={UDK_LOGO_DARK_URL} alt="Universität der Künste Berlin" className="hidden h-full w-auto dark:block" />
+    </span>
+  );
+}
+//#endregion 🏛️UdkLogo
+
 /** @emoji ↔️ Flex grow class that pushes trailing navbar chrome to the right edge. */
 export const navbarFillClassName = "flex-1 min-w-0";
 
@@ -11609,7 +11647,7 @@ export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forsc
  * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
  * chrome rather than page content; the click opens the funded project page in a new tab.
  **/
-export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): NavbarItem {
+export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "en"): NavbarItem {
   return {
     key,
     className: "relative z-40",
@@ -11619,13 +11657,51 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau"): Navbar
         onClick={() => window.open(ZUKUNFT_BAU_PROJECT_URL, "_blank", "noopener,noreferrer")}
         className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
       >
-        <span className="whitespace-nowrap">Funded by</span>
+        <span className="whitespace-nowrap">{locale === "de" ? "Gefördert durch" : "Funded by"}</span>
         <ZukunftBauLogo className="h-tiny w-auto shrink-0" />
       </button>
     ),
   };
 }
 //#endregion 🏛️FundedByZukunftBauFooterItem
+
+//#region 🏛️AProjectOfLuhUdkFooterItem
+/**
+ * @emoji 🏛️ Left-side footer partner credit mirroring {@link fundedByZukunftBauFooterItem} on the right —
+ * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the university home page;
+ * `relative z-40` matches panel-tab chrome so the credit stays visible above anchored panels.
+ **/
+export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de"): NavbarItem {
+  return {
+    key,
+    className: "relative z-40",
+    content: (
+      <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground">
+        <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>
+        <a
+          href={LUH_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+          aria-label="Leibniz Universität Hannover"
+        >
+          <LuhLogo className="h-tiny" />
+        </a>
+        <span className="whitespace-nowrap">{locale === "de" ? "und" : "and"}</span>
+        <a
+          href={UDK_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex h-tiny items-center rounded-sm hover:opacity-80 transition-opacity"
+          aria-label="Universität der Künste Berlin"
+        >
+          <UdkLogo className="h-tiny" />
+        </a>
+      </div>
+    ),
+  };
+}
+//#endregion 🏛️AProjectOfLuhUdkFooterItem
 
 /** @emoji ∅ Sentinel id for the navbar “No example” row (matches {@link PLAYGROUND_NO_EXAMPLE_ID}). */
 export const NAVBAR_NO_EXAMPLE_ID = "__none__";
@@ -28952,6 +29028,19 @@ if (treeVitest) {
       expect(fundedByMarkup).toContain("Funded by");
       expect(fundedByMarkup).toContain("z-40");
       expect(ZUKUNFT_BAU_PROJECT_URL).toMatch(/^https:\/\/www\.zukunftbau\.de\//);
+      const fundedByDeMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem("fundedByDe", "de")]} />);
+      expect(fundedByDeMarkup).toContain("Gefördert durch");
+      const projectOfMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem()]} />);
+      expect(projectOfMarkup).toContain("Ein Projekt von");
+      expect(projectOfMarkup).toContain("und");
+      expect(projectOfMarkup).toContain(LUH_LOGO_URL);
+      expect(projectOfMarkup).toContain(UDK_LOGO_URL);
+      expect(projectOfMarkup).toContain(LUH_URL);
+      expect(projectOfMarkup).toContain(UDK_URL);
+      expect(projectOfMarkup).toContain("z-40");
+      const projectOfEnMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem("projectOfEn", "en")]} />);
+      expect(projectOfEnMarkup).toContain("A project of");
+      expect(projectOfEnMarkup).toContain("and");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");

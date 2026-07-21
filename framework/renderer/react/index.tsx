@@ -164,6 +164,7 @@ import {
   introductionUtilityBarUnfoldSelector,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
+  aProjectOfLuhUdkFooterItem,
   fundedByZukunftBauFooterItem,
   navbarFillItem,
   type ElementsSurfaceAppearance,
@@ -2870,6 +2871,28 @@ export function createLatestAsyncDispatcher<T>(dispatchValue: (value: T) => unkn
     });
   };
   return dispatchLatest;
+}
+
+/**
+ * @emoji 🚦 Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
+ * in flight are dropped (not queued). Used by World3dHost's `suggestionsTick`/`fillBuildTick` loops so a
+ * slow plugin tick cannot unbounded-queue into the serialized WASM handle and starve the fill utility.
+ */
+export function createInFlightSkippingInterval(run: () => unknown, delayMs: number, setIntervalFn: typeof setInterval = setInterval, clearIntervalFn: typeof clearInterval = clearInterval): () => void {
+  let cancelled = false;
+  let inFlight = false;
+  const tick = () => {
+    if (cancelled || inFlight) return;
+    inFlight = true;
+    void Promise.resolve(run()).finally(() => {
+      inFlight = false;
+    });
+  };
+  const timer = setIntervalFn(tick, delayMs);
+  return () => {
+    cancelled = true;
+    clearIntervalFn(timer);
+  };
 }
 
 /** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
@@ -6189,21 +6212,29 @@ export function FrameworkOsShell({
     );
   }, [activeWindowId, effectiveModeLayout, error, handleTemplateDrop, loadedPlugins, mobile, modeWindows, navigateHistory, onAction, panel, session, studioMode, uiLocale, uiTerminology, updateStudioPanel]);
 
-  const footerItems = useMemo(
-    (): NavbarItem[] => [
+  const footerItems = useMemo((): NavbarItem[] => {
+    // 🏛️ Mit Bestand Aggregator partner credits: left "Ein Projekt von LUH und UdK", right "Gefördert durch Zukunft Bau".
+    // A single middle flex-1 fill pushes the funding credit to the trailing edge; fixed `w-huge` gaps keep each credit
+    // off the exact corner pixel that floating corner panels also anchor to (a second flex-1 would center the funding
+    // credit under the Command overlay; `w-double` reads as flush against the toggle group).
+    const items: NavbarItem[] = [
       { key: "bottomLeftPanelTabs", content: <PanelChromeTabBar anchor="bottom-left" {...buildPanelSelectionProps("bottom-left")} /> },
       { key: "bottomMiddlePanelTabs", centered: true, content: <PanelChromeTabBar anchor="bottom-middle" {...buildPanelSelectionProps("bottom-middle")} /> },
-      // 🏛️ A single leading fill spacer pushes the funding credit toward the trailing edge. Bracketing with a SECOND
-      // flex-1 spacer on the other side would instead center it at the exact midpoint of the footer — directly under
-      // the `centered` Command overlay above — so a fixed `w-huge` gap (not another flex-1, and not the far smaller
-      // `w-double`, which read as flush against the toggle group) separates it from the corner toggle instead.
-      navbarFillItem("footerLeadingFill"),
-      fundedByZukunftBauFooterItem(),
-      { key: "footerFundedByGap", className: "w-huge", content: null },
-      { key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> },
-    ],
-    [buildPanelSelectionProps],
-  );
+    ];
+    if (brand?.id === "entwerfen-mit-bestand") {
+      items.push(
+        { key: "footerProjectOfGap", className: "w-huge", content: null },
+        aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale),
+        navbarFillItem("footerLeadingFill"),
+        fundedByZukunftBauFooterItem("fundedByZukunftBau", uiLocale),
+        { key: "footerFundedByGap", className: "w-huge", content: null },
+      );
+    } else {
+      items.push(navbarFillItem("footerLeadingFill"));
+    }
+    items.push({ key: "bottomRightPanelTabs", content: <PanelChromeTabBar anchor="bottom-right" {...buildPanelSelectionProps("bottom-right")} /> });
+    return items;
+  }, [brand?.id, buildPanelSelectionProps, uiLocale]);
 
   const buildPanelProps = useCallback(
     (anchor: PanelAnchor) => ({
@@ -9203,6 +9234,31 @@ function parseCameraState(cameraJson: string): WorldParsedCameraState {
   }
 }
 
+//#region WorldViewportCamera
+/** 📷 Merges an orbit/projection report into the viewport-owned camera without losing FOV or explicit-projection flags. */
+export function mergeWorldViewportCamera(base: WorldParsedCameraState, next: WorldCameraState): WorldParsedCameraState {
+  return {
+    position: next.position,
+    target: next.target,
+    zoom: next.zoom,
+    up: next.up ?? base.up,
+    projection: next.projection ?? base.projection,
+    fov: base.fov,
+    explicitProjection: base.explicitProjection || next.projection === "perspective" || next.projection === "orthographic",
+  };
+}
+
+/** 📷 Orbit seed: follow `scene.cameraJson` until a programmatic viewport apply bumps `detachEpoch`; orbit-only detach keeps the seed stable. */
+export function world3dViewportCameraSeedKey(sceneCameraJson: string, detachEpoch: number): string {
+  return detachEpoch === 0 ? sceneCameraJson : `viewport:${detachEpoch}`;
+}
+
+/** 📷 True when `scene.cameraJson` changed from outside this viewport (view preset, focus, example load). */
+export function shouldReattachWorldViewportCamera(previousSceneCameraJson: string, nextSceneCameraJson: string): boolean {
+  return previousSceneCameraJson !== nextSceneCameraJson;
+}
+//#endregion WorldViewportCamera
+
 type WorldEnvironmentMaterialRecord = {
   readonly color?: string;
   readonly metalness?: number;
@@ -10305,6 +10361,11 @@ function WorldPointCloudLayer({ pointsJson }: { readonly pointsJson: string | un
 }
 //#endregion WorldPointCloudLayer
 
+//#region WorldVortexMarkers
+export function worldVortexMaterialRevision(selected?: boolean, hovered?: boolean): "selected" | "hovered" | "neutral" {
+  return selected ? "selected" : hovered ? "hovered" : "neutral";
+}
+
 function WorldVortexMarkers({
   vortices,
   palette,
@@ -10397,13 +10458,21 @@ function WorldVortexMarkers({
             }}
           >
             <sphereGeometry args={[radius, 16, 16]} />
-            <meshStandardMaterial color={color} emissive={style?.meshColor ?? "#000000"} emissiveIntensity={style?.emissiveIntensity ?? 0} transparent opacity={0.88} />
+            <meshStandardMaterial
+              key={worldVortexMaterialRevision(vortex.selected, vortex.hovered)}
+              color={color}
+              emissive={style?.meshColor ?? "#000000"}
+              emissiveIntensity={style?.emissiveIntensity ?? 0}
+              transparent
+              opacity={0.88}
+            />
           </mesh>
         );
       })}
     </group>
   );
 }
+//#endregion WorldVortexMarkers
 
 /** @emoji 🧲 Rubber-band line drawn from the drag-connect source vortex to the currently hovered vortex (or itself, if hovering nothing). */
 function WorldConnectRubberBand({ from, to }: { readonly from: readonly [number, number, number]; readonly to: readonly [number, number, number] }) {
@@ -10964,12 +11033,27 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
-  const parsedCamera = useMemo(() => parseCameraState(scene?.cameraJson ?? "{}"), [scene?.cameraJson]);
+  const sceneCameraJson = scene?.cameraJson ?? "{}";
+  const parsedCamera = useMemo(() => parseCameraState(sceneCameraJson), [sceneCameraJson]);
   const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
-  const cameraState = useMemo(() => {
-    if ((scene?.cameraJson ?? "").includes('"position"')) return parsedCamera;
+  const sceneCamera = useMemo(() => {
+    if (sceneCameraJson.includes('"position"')) return parsedCamera;
     return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
-  }, [instances, parsedCamera, scene?.cameraJson]);
+  }, [instances, parsedCamera, sceneCameraJson]);
+  const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(null);
+  const [viewportOwned, setViewportOwned] = useState(false);
+  const [detachEpoch, setDetachEpoch] = useState(0);
+  const previousSceneCameraJsonRef = useRef(sceneCameraJson);
+  useEffect(() => {
+    if (!shouldReattachWorldViewportCamera(previousSceneCameraJsonRef.current, sceneCameraJson)) return;
+    previousSceneCameraJsonRef.current = sceneCameraJson;
+    setViewportCamera(null);
+    setViewportOwned(false);
+    setDetachEpoch(0);
+    console.log("[DEBUG] world3d viewport reattached to scene camera", { surfaceId: node.surfaceId, sceneCameraJson });
+  }, [node.surfaceId, sceneCameraJson]);
+  const cameraState = viewportCamera ?? sceneCamera;
+  const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraJson, detachEpoch);
   const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
   const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
@@ -11000,8 +11084,23 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     readonly startPoint: readonly [number, number, number];
     readonly faceExtent?: readonly [number, number];
   } | null>(null);
-  const [connectDragSource, setConnectDragSource] = useState<{ readonly fullId: string; readonly position: readonly [number, number, number] } | null>(null);
+  const [connectDragSource, setConnectDragSource] = useState<{
+    readonly fullId: string;
+    readonly position: readonly [number, number, number];
+    readonly record?: WorldVortexRecord;
+  } | null>(null);
   const [connectDragHoverPosition, setConnectDragHoverPosition] = useState<readonly [number, number, number] | null>(null);
+  const displayVortices = useMemo(() => {
+    if (!connectDragSource) return vortices;
+    if (vortices.some((vortex) => vortex.fullId === connectDragSource.fullId)) return vortices;
+    const retained =
+      connectDragSource.record ??
+      ({
+        fullId: connectDragSource.fullId,
+        position: connectDragSource.position,
+      } satisfies WorldVortexRecord);
+    return [...vortices, retained];
+  }, [connectDragSource, vortices]);
   const [vortexPointerArm, setVortexPointerArm] = useState<{
     readonly fullId: string;
     readonly position: readonly [number, number, number];
@@ -11035,14 +11134,25 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   }, [marqueeDragActive, marqueeEnd, marqueePath, marqueeStart, method]);
 
   const dispatch = useCallback(
-    (action: string, args?: Record<string, unknown>) => {
+    (action: string, args?: Record<string, unknown>) =>
       onAction({
         controllerId: node.controllerId,
         action,
         args: { surfaceId: node.surfaceId, ...args },
-      });
-    },
+      }),
     [node.controllerId, node.surfaceId, onAction],
+  );
+
+  const adoptViewportCamera = useCallback(
+    (next: WorldCameraState, applyToRig: boolean) => {
+      setViewportCamera((prev) => mergeWorldViewportCamera(prev ?? sceneCamera, next));
+      setViewportOwned((owned) => {
+        if (!owned) console.log("[DEBUG] world3d viewport detached from shared scene camera", { surfaceId: node.surfaceId });
+        return true;
+      });
+      if (applyToRig) setDetachEpoch((epoch) => epoch + 1);
+    },
+    [node.surfaceId, sceneCamera],
   );
 
   const referenceSelectedIds = useMemo(() => {
@@ -11116,14 +11226,17 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       maxDistance = Math.max(maxDistance, Math.hypot(dx, dy, dz));
     }
     const distance = maxDistance * 3 + 2;
-    dispatch("setCamera", {
-      camera: {
+    adoptViewportCamera(
+      {
         position: [centerX + distance * 0.6, centerY - distance * 0.6, centerZ + distance * 0.5],
         target: [centerX, centerY, centerZ],
-        fov: cameraState.fov,
+        zoom: cameraState.zoom,
+        up: cameraState.up,
+        projection: cameraState.projection,
       },
-    });
-  }, [cameraState.fov, dispatch, instances, selection.ids]);
+      true,
+    );
+  }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, instances, selection.ids]);
 
   const handleContextMenuSelect = useCallback(
     (item: WorldContextMenuItem) => {
@@ -11160,19 +11273,19 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const handleSuggestionAccept = useCallback((index: number) => dispatch("acceptSuggestion", { index }), [dispatch]);
   const handleSuggestionClose = useCallback(() => dispatch("closeVortexSuggestions"), [dispatch]);
 
+  // 🐢 Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
+  // a blind `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle fill into an
+  // unbounded backlog that starves every other utility action (the fill utility appears to "die").
   useEffect(() => {
-    if (interaction.suggestionMenu?.open && interaction.suggestionMenu.pending) {
-      const timer = window.setInterval(() => dispatch("suggestionsTick"), 120);
-      return () => window.clearInterval(timer);
-    }
+    if (!(interaction.suggestionMenu?.open && interaction.suggestionMenu.pending)) return;
+    return createInFlightSkippingInterval(() => dispatch("suggestionsTick"), 120);
   }, [dispatch, interaction.suggestionMenu?.open, interaction.suggestionMenu?.pending]);
 
+  const fillBuildPending = Boolean(interaction.fillBuild && !interaction.fillBuild.done);
   useEffect(() => {
-    if (activeUtility === "fill" && interaction.fillBuild && !interaction.fillBuild.done) {
-      const timer = window.setInterval(() => dispatch("fillBuildTick"), 120);
-      return () => window.clearInterval(timer);
-    }
-  }, [activeUtility, dispatch, interaction.fillBuild]);
+    if (!(activeUtility === "fill" && fillBuildPending)) return;
+    return createInFlightSkippingInterval(() => dispatch("fillBuildTick"), 120);
+  }, [activeUtility, dispatch, fillBuildPending]);
 
   const selectionArgs = useCallback(
     () => ({
@@ -11238,11 +11351,15 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, selection.selectionMergeMode],
   );
 
-  const handleConnectDragStart = useCallback((fullId: string, position: readonly [number, number, number]) => {
-    setVortexPointerArm(null);
-    setConnectDragSource({ fullId, position });
-    setConnectDragHoverPosition(position);
-  }, []);
+  const handleConnectDragStart = useCallback(
+    (fullId: string, position: readonly [number, number, number]) => {
+      setVortexPointerArm(null);
+      const record = vortices.find((vortex) => vortex.fullId === fullId);
+      setConnectDragSource({ fullId, position, record });
+      setConnectDragHoverPosition(position);
+    },
+    [vortices],
+  );
 
   const handleVortexPointerArm = useCallback(
     (arm: {
@@ -11342,34 +11459,25 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleCameraChange = useCallback(
     (state: WorldCameraState) => {
-      dispatch("setCamera", {
-        camera: {
-          position: state.position,
-          target: state.target,
-          zoom: state.zoom,
-          fov: cameraState.fov,
-          ...(cameraState.explicitProjection ? { projection: state.projection ?? cameraState.projection } : {}),
-          ...(cameraState.up ? { up: cameraState.up } : {}),
-        },
-      });
+      adoptViewportCamera(state, false);
     },
-    [cameraState.explicitProjection, cameraState.fov, cameraState.projection, cameraState.up, dispatch],
+    [adoptViewportCamera],
   );
 
   const handleProjectionChange = useCallback(
     (projection: OrbitCameraProjection) => {
-      dispatch("setCamera", {
-        camera: {
+      adoptViewportCamera(
+        {
           position: cameraState.position,
           target: cameraState.target,
           zoom: cameraState.zoom,
-          fov: cameraState.fov,
+          up: cameraState.up,
           projection,
-          ...(cameraState.up ? { up: cameraState.up } : {}),
         },
-      });
+        true,
+      );
     },
-    [cameraState, dispatch],
+    [adoptViewportCamera, cameraState],
   );
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -11701,7 +11809,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         }
       >
         <WorldOrbitViewSnapGateProvider>
-          <WorldOrbitCameraViewRig state={cameraState} seedKey={scene?.cameraJson ?? "default"} perspectiveFov={cameraState.fov} />
+          <WorldOrbitCameraViewRig state={cameraState} seedKey={cameraSeedKey} perspectiveFov={cameraState.fov} />
           <WorldOrbitGated
             controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}
             onCamera={handleCameraChange}
@@ -11768,7 +11876,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
               />
             </group>
             <WorldVortexMarkers
-              vortices={vortices}
+              vortices={displayVortices}
               palette={meshStylePalette}
               brushMode={brushMode}
               selectionMode={selectionMode}

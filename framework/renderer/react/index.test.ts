@@ -54,12 +54,16 @@ import {
   World3dHost,
   brushObjectPlacementArgs,
   parsePuzzle3dCatalogueDragPayload,
+  mergeWorldViewportCamera,
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
   resolveVortexPointerDownIntent,
+  worldVortexMaterialRevision,
   resolveWorldSelectionMergeMode,
   resolveWorldContextMenuTarget,
+  shouldReattachWorldViewportCamera,
   snapWorldPointToGrid,
+  world3dViewportCameraSeedKey,
   worldInstancePickBlocked,
   parseWorldTerrainStyle,
   InkCanvasHost,
@@ -105,6 +109,7 @@ import {
   buildCommandCategoryTabs,
   buildOsCommands,
   createLatestAsyncDispatcher,
+  createInFlightSkippingInterval,
   dispatchOsCommand,
   mergeShellLockSources,
   resolveShellDefaults,
@@ -185,6 +190,38 @@ describe("live measure dispatch", () => {
 
     finishFirst();
     await vi.waitFor(() => expect(values).toEqual([1, 24]));
+  });
+});
+
+describe("in-flight skipping interval", () => {
+  it("drops overlapping ticks instead of queueing them behind a slow run", async () => {
+    const runs: number[] = [];
+    let finishFirst = () => {};
+    const timers: Array<() => void> = [];
+    const stop = createInFlightSkippingInterval(
+      () => {
+        runs.push(runs.length + 1);
+        if (runs.length === 1) return new Promise<void>((resolve) => (finishFirst = resolve));
+      },
+      10,
+      (fn) => {
+        timers.push(fn as () => void);
+        return 1 as unknown as ReturnType<typeof setInterval>;
+      },
+      () => {},
+    );
+
+    expect(timers).toHaveLength(1);
+    timers[0]!();
+    timers[0]!();
+    timers[0]!();
+    expect(runs).toEqual([1]);
+
+    finishFirst();
+    await Promise.resolve();
+    timers[0]!();
+    expect(runs).toEqual([1, 2]);
+    stop();
   });
 });
 
@@ -1347,6 +1384,27 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-world-3d-empty");
   });
 
+  it("keeps world-3d orbit camera seed local per viewport once detached", () => {
+    const sceneCamera = '{"position":[1,2,3],"target":[0,0,0],"zoom":1}';
+    expect(world3dViewportCameraSeedKey(sceneCamera, 0)).toBe(sceneCamera);
+    expect(world3dViewportCameraSeedKey(sceneCamera, 1)).toBe("viewport:1");
+    expect(world3dViewportCameraSeedKey(sceneCamera, 2)).toBe("viewport:2");
+    expect(world3dViewportCameraSeedKey(sceneCamera, 0)).not.toBe(world3dViewportCameraSeedKey(sceneCamera, 1));
+    expect(shouldReattachWorldViewportCamera(sceneCamera, sceneCamera)).toBe(false);
+    expect(shouldReattachWorldViewportCamera(sceneCamera, '{"position":[9,9,9],"target":[0,0,0],"zoom":1}')).toBe(true);
+    const merged = mergeWorldViewportCamera(
+      { position: [1, 2, 3], target: [0, 0, 0], zoom: 1, projection: "perspective", fov: 45, explicitProjection: true, up: [0, 0, 1] },
+      { position: [4, 5, 6], target: [1, 1, 1], zoom: 2, projection: "orthographic", up: [0, 1, 0] },
+    );
+    expect(merged.position).toEqual([4, 5, 6]);
+    expect(merged.target).toEqual([1, 1, 1]);
+    expect(merged.zoom).toBe(2);
+    expect(merged.projection).toBe("orthographic");
+    expect(merged.fov).toBe(45);
+    expect(merged.explicitProjection).toBe(true);
+    expect(merged.up).toEqual([0, 1, 0]);
+  });
+
   it("accepts extended world 3d scene fields", () => {
     const node: UiNode = {
       type: "componentScene",
@@ -1405,6 +1463,12 @@ describe("framework renderer hosts", () => {
     expect(resolveVortexPointerDownIntent(false, "vertex")).toBe("select");
     expect(resolveVortexPointerDownIntent(false)).toBe("click-or-drag");
     expect(resolveVortexPointerDownIntent(false, "mesh")).toBe("click-or-drag");
+  });
+
+  it("revisions vortex materials when selection or hover state changes", () => {
+    expect(worldVortexMaterialRevision()).toBe("neutral");
+    expect(worldVortexMaterialRevision(false, true)).toBe("hovered");
+    expect(worldVortexMaterialRevision(true, true)).toBe("selected");
   });
 
   it("uses the world surface selection mode instead of a stale shared invertive mode", () => {

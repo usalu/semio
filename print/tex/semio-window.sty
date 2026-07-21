@@ -53,9 +53,12 @@
 \bool_new:N \g_semio_image_target_h_set_bool
 \dim_new:N \l_semio_image_target_w_dim
 \dim_new:N \l_semio_image_target_h_dim
+\dim_new:N \l_semio_image_nat_w_dim
+\dim_new:N \l_semio_image_nat_h_dim
 \dim_new:N \l_semio_image_cover_excess_dim
 \dim_new:N \l_semio_image_cover_offset_dim
 \dim_new:N \l_semio_image_cover_offset_neg_dim
+\dim_new:N \l_semio_image_cover_render_dim
 \dim_new:N \l_semio_image_cover_ypos_dim
 \tl_new:N \l_semio_window_height_tl
 \bool_new:N \l_semio_register_list_bool
@@ -697,6 +700,14 @@
     semio~window,
     width=\linewidth,
   },
+  semio~window~image~cover/.style={
+    clip~upper=true,
+    parbox=true,
+    top=0pt,
+    left=0pt,
+    right=0pt,
+    bottom=0pt,
+  },
 }
 
 \semio_window_define_tier:n { visual }
@@ -1150,9 +1161,14 @@
         { \semio_window_tcb_open:n { semio~window~tier~#2, semio~window~table } }
     }
     {
-      \bool_if:NTF \l_semio_window_in_item_bool
-        { \semio_window_tcb_open:n { semio~window~tier~#2, breakable=false } }
-        { \semio_window_tcb_open:n { semio~window~tier~#2 } }
+      \tl_set:Nn \l_tmpa_tl { semio~window~tier~#2 }
+      \str_if_eq:VnT \l_semio_window_imagefit_tl { cover } {
+        \tl_put_right:Nn \l_tmpa_tl { , semio~window~image~cover }
+      }
+      \bool_if:NT \l_semio_window_in_item_bool {
+        \tl_put_right:Nn \l_tmpa_tl { , breakable=false }
+      }
+      \exp_args:NV \semio_window_tcb_open:n \l_tmpa_tl
     }
   \semio_window_textsize_apply:
 }
@@ -1210,11 +1226,19 @@
     \tl_if_blank:eTF { \semio@window@height@dim } {
       \bool_gset_false:N \g_semio_image_target_h_set_bool
     } {
-      \dim_set:Nn \l_semio_image_target_h_dim {
-        \dimexpr \semio@window@height@dim
-          - \semio@chrome@padding - \semio@chrome@padding
-          - \semio@stroke@hairline
-        \relax
+      \str_if_eq:VnTF \l_semio_image_fit_tl { cover } {
+        \dim_set:Nn \l_semio_image_target_h_dim {
+          \dimexpr \semio@window@height@dim
+            - \semio@stroke@hairline - \semio@stroke@hairline
+          \relax
+        }
+      } {
+        \dim_set:Nn \l_semio_image_target_h_dim {
+          \dimexpr \semio@window@height@dim
+            - \semio@chrome@padding - \semio@chrome@padding
+            - \semio@stroke@hairline
+          \relax
+        }
       }
       \bool_gset_true:N \g_semio_image_target_h_set_bool
     }
@@ -1243,39 +1267,87 @@
   }
 }
 
-% 🎯 Renders cover by scaling to ONE dimension into a savebox, then
-% TikZ-clips a target-sized window out of it at an anchor-driven offset,
-% mirroring \semio_image_graphics_itemclip:n's structure. Deliberately
-% avoids \includegraphics's own trim=/clip=true: that combination
-% silently double-paints the image with this driver (confirmed via an
-% independent PDFKit render showing the duplicate baked into the PDF
-% content stream, not a poppler artifact).
-%
-% ⚠️ KNOWN UNRESOLVED BUG (pre-existing, not introduced here): the
-% double-paint reproduces with THIS savebox+TikZ-clip technique too,
-% and even with \semio_image_graphics_itemclip:n's shipped contain-mode
-% version, whenever the box is narrower than its window — confirmed via
-% an independent PDFKit render, a single-pass (reruns=0) compile (rules
-% out aux-file/rerun state), and minimal reproductions outside any
-% window (no duplicate) vs. inside a semio window/tcolorbox (duplicates)
-% — so the trigger is specific to typesetting a savebox-measured graphic
-% inside this package's tcolorbox body (enhanced + custom overlays),
-% independent of breakable. Root cause not yet found; anchor cropping
-% and the crop math above are correct, but any cover (or contain,
-% via itemclip) image narrower than its window may still visibly
-% double-render until this is fixed. See ticket 26/07/17/FIX-IMAGE-COVER-ANCHOR-MECHANISM.
+% 🖼️ Matches CSS object-fit:cover with proportional scaling and anchor-aware clipping.
 \newsavebox{\semio@image@cover@box}
-\newsavebox{\semio@image@cover@measure@box}
 \cs_new_protected:Npn \semio_image_typeset_cover:n #1 {
-  \leavevmode\includegraphics[width=\l_semio_image_target_w_dim,height=\l_semio_image_target_h_dim]{#1}%
+  \sbox{\semio@image@cover@box}{\includegraphics[draft]{#1}}
+  \dim_set:Nn \l_semio_image_nat_w_dim { \wd \semio@image@cover@box }
+  \dim_set:Nn \l_semio_image_nat_h_dim {
+    \dim_eval:n { \ht \semio@image@cover@box + \dp \semio@image@cover@box }
+  }
+  \fp_compare:nNnTF
+    {
+      \dim_to_decimal:n { \l_semio_image_nat_w_dim }
+      / \dim_to_decimal:n { \l_semio_image_nat_h_dim }
+    }
+    >
+    {
+      \dim_to_decimal:n { \l_semio_image_target_w_dim }
+      / \dim_to_decimal:n { \l_semio_image_target_h_dim }
+  }
+  {
+    \dim_set:Nn \l_semio_image_cover_render_dim {
+      \fp_eval:n {
+        \dim_to_decimal:n { \l_semio_image_nat_w_dim }
+          * \dim_to_decimal:n { \l_semio_image_target_h_dim }
+          / \dim_to_decimal:n { \l_semio_image_nat_h_dim }
+      } pt
+    }
+    \dim_set:Nn \l_semio_image_cover_excess_dim {
+      \dim_eval:n { \l_semio_image_cover_render_dim - \l_semio_image_target_w_dim }
+    }
+    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
+      { \semio@window@halign } { left } { right }
+    \dim_set:Nn \l_semio_image_cover_offset_neg_dim { - \l_semio_image_cover_offset_dim }
+    \leavevmode
+    \begin{tikzpicture}[baseline=0pt]
+      \useasboundingbox (0,0) rectangle
+        (\dim_use:N \l_semio_image_target_w_dim,\dim_use:N \l_semio_image_target_h_dim);
+      \path[clip] (0,0) rectangle
+        (\dim_use:N \l_semio_image_target_w_dim,\dim_use:N \l_semio_image_target_h_dim);
+      \node[anchor=north~west,inner~sep=0pt] at
+        (\dim_use:N \l_semio_image_cover_offset_neg_dim,\dim_use:N \l_semio_image_target_h_dim)
+        {\includegraphics[width=\l_semio_image_cover_render_dim]{#1}};
+    \end{tikzpicture}
+  } {
+    \dim_set:Nn \l_semio_image_cover_render_dim {
+      \fp_eval:n {
+        \dim_to_decimal:n { \l_semio_image_nat_h_dim }
+          * \dim_to_decimal:n { \l_semio_image_target_w_dim }
+          / \dim_to_decimal:n { \l_semio_image_nat_w_dim }
+      } pt
+    }
+    \dim_set:Nn \l_semio_image_cover_excess_dim {
+      \dim_eval:n { \l_semio_image_cover_render_dim - \l_semio_image_target_h_dim }
+    }
+    \exp_args:Nx \semio_image_cover_offset_distribute:nnn
+      { \semio@window@valign } { top } { bottom }
+    \dim_set:Nn \l_semio_image_cover_ypos_dim {
+      \dim_eval:n { \l_semio_image_target_h_dim + \l_semio_image_cover_offset_dim }
+    }
+    \leavevmode
+    \begin{tikzpicture}[baseline=0pt]
+      \useasboundingbox (0,0) rectangle
+        (\dim_use:N \l_semio_image_target_w_dim,\dim_use:N \l_semio_image_target_h_dim);
+      \path[clip] (0,0) rectangle
+        (\dim_use:N \l_semio_image_target_w_dim,\dim_use:N \l_semio_image_target_h_dim);
+      \node[anchor=north~west,inner~sep=0pt] at
+        (0pt,\dim_use:N \l_semio_image_cover_ypos_dim)
+        {\includegraphics[width=\l_semio_image_target_w_dim]{#1}};
+    \end{tikzpicture}
+  }
 }
 
 \cs_new_protected:Npn \semio_image_default_width_resolve: {
-  \dim_set:Nn \l_semio_image_target_w_dim {
-    \dimexpr \linewidth
-      - \semio@chrome@padding - \semio@chrome@padding
-      - \semio@stroke@hairline - \semio@stroke@hairline
-    \relax
+  \str_if_eq:VnTF \l_semio_image_fit_tl { cover } {
+    \dim_set:Nn \l_semio_image_target_w_dim { \linewidth }
+  } {
+    \dim_set:Nn \l_semio_image_target_w_dim {
+      \dimexpr \linewidth
+        - \semio@chrome@padding - \semio@chrome@padding
+        - \semio@stroke@hairline - \semio@stroke@hairline
+      \relax
+    }
   }
 }
 
@@ -1366,13 +1438,11 @@
       \semio_image_graphics_fill:n {#1}
     }
     { cover } {
-      % 🎯 Unlike contain below, cover never needs the in-item/itemclip
-      % split: \semio_image_typeset_cover:n always sizes \includegraphics
-      % by a single dimension into a savebox, then TikZ-clips the target
-      % window out of it — it never feeds a height-derived value into the
-      % graphic's own sizing, so it stays outside the tcolorbox
-      % double-typeset trigger described below.
+      % 🎯 Cover derives one proportional render dimension from the source
+      % ratio, clips locally, and relies on the cover window's outer clip as
+      % the CSS-like overflow boundary for the tcolorbox/driver paint pass.
       \semio_image_bounded_height_required:n { cover }
+      \dim_set:Nn \l_semio_image_target_w_dim { \linewidth }
       \semio_image_typeset_cover:n {#1}
     }
     { contain } {

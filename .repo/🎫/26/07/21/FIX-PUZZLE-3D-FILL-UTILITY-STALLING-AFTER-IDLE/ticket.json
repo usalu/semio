@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3d Fill Utility Stalling After Idle",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Puzzle 3d fill window utility starts filling then stops working after ~15s of waiting. Root-cause and fix: fillBuildTick fires every 120ms without coalescing into the serialized plugin WASM queue, and each tick defaults to a Full UiDirtyScope refresh — after ~15s the action queue backs up so the fill utility (and host) appear dead. Also demote fillBuildTick from Operation to View and emit a narrow window+measures ui_scope so background planning stays responsive.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2187"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪e67f48b2ad874d7b9e69258fb3a07457"
+  ]
+}
