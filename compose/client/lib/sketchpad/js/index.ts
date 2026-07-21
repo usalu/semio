@@ -284,7 +284,7 @@ const composeSketchpadTranslationBundles = {
         "back": {
           "label": {
             "normal": "Zurück",
-            "beginner": "Klicken, um zurueckzugehen, halten um Historie zu sehen"
+            "beginner": "Klicken, um zurückzugehen, halten um Historie zu sehen"
           },
           "manual": "navigation",
           "tutorial": "getting-started/intro",
@@ -292,8 +292,8 @@ const composeSketchpadTranslationBundles = {
         },
         "forward": {
           "label": {
-            "normal": "Vorwaerts",
-            "beginner": "Klicken, um vorwaerts zu gehen, halten um Historie zu sehen"
+            "normal": "Vorwärts",
+            "beginner": "Klicken, um vorwärts zu gehen, halten um Historie zu sehen"
           },
           "manual": "navigation",
           "tutorial": "getting-started/intro",
@@ -302,7 +302,7 @@ const composeSketchpadTranslationBundles = {
         "up": {
           "label": {
             "normal": "Eine Ebene hoch",
-            "beginner": "Klicken, um eine Ebene hoeher in der Navigationshierarchie zu gehen"
+            "beginner": "Klicken, um eine Ebene höher in der Navigationshierarchie zu gehen"
           },
           "manual": "navigation",
           "tutorial": "getting-started/intro",
@@ -335,7 +335,7 @@ const composeSketchpadTranslationBundles = {
           "open": {
             "label": {
               "normal": "Suche",
-              "beginner": "Klicken, um Suche zu oeffnen und schnell zu jedem Element zu navigieren"
+              "beginner": "Klicken, um Suche zu öffnen und schnell zu jedem Element zu navigieren"
             },
             "manual": "navigation#search",
             "tutorial": "getting-started/intro#search",
@@ -843,7 +843,7 @@ const composeSketchpadTranslationBundles = {
           },
           "device": {
             "label": {
-              "normal": "Geraet",
+              "normal": "Gerät",
               "beginner": "Gerätemodus für die Interaktion wählen"
             },
             "desktop": {
@@ -1044,7 +1044,7 @@ const composeSketchpadTranslationBundles = {
           "title": "Home",
           "fileInput": {
             "label": {
-              "normal": "Kit-Datei waehlen",
+              "normal": "Kit-Datei wählen",
               "beginner": "Eine .zip-Kit-Datei von Ihrem Gerät auswählen"
             }
           },
@@ -1119,14 +1119,14 @@ const composeSketchpadTranslationBundles = {
               "local": {
                 "label": {
                   "normal": "Lokale Kits anzeigen",
-                  "beginner": "Kits anzeigen, die lokal auf Ihrem Geraet gespeichert sind"
+                  "beginner": "Kits anzeigen, die lokal auf Ihrem Gerät gespeichert sind"
                 },
                 "hotkey": "Ctrl+2"
               },
               "createLocal": {
                 "label": {
                   "normal": "Lokales Kit erstellen",
-                  "beginner": "Ein neues Kit erstellen, das lokal auf Ihrem Geraet gespeichert wird"
+                  "beginner": "Ein neues Kit erstellen, das lokal auf Ihrem Gerät gespeichert wird"
                 },
                 "hotkey": "Ctrl+Shift+2"
               },
@@ -1191,27 +1191,27 @@ const composeSketchpadTranslationBundles = {
               },
               "placeholder": {
                 "label": {
-                  "normal": "Sprache waehlen...",
-                  "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+                  "normal": "Sprache wählen...",
+                  "beginner": "Wählen Sie die Sprache, in der die Anwendung angezeigt wird"
                 }
               }
             },
             "mode": {
               "label": {
                 "normal": "Modus",
-                "beginner": "Waehlen Sie den Benutzeroberflaechen-Modus"
+                "beginner": "Wählen Sie den Benutzeroberflächen-Modus"
               }
             },
             "expertise": {
               "label": {
                 "normal": "Erfahrung",
-                "beginner": "Waehlen Sie Ihr Erfahrungsniveau"
+                "beginner": "Wählen Sie Ihr Erfahrungsniveau"
               }
             },
             "device": {
               "label": {
-                "normal": "Geraet",
-                "beginner": "Waehlen Sie das Eingabegeraet"
+                "normal": "Gerät",
+                "beginner": "Wählen Sie das Eingabegerät"
               }
             },
             "layout": {
@@ -1234,13 +1234,13 @@ const composeSketchpadTranslationBundles = {
               "linkDistance": {
                 "label": {
                   "normal": "Verbindungsabstand",
-                  "beginner": "Der Zielabstand zwischen verbundenen Knoten. Groessere Werte verteilen das Diagramm."
+                  "beginner": "Der Zielabstand zwischen verbundenen Knoten. Größere Werte verteilen das Diagramm."
                 }
               },
               "collideRadius": {
                 "label": {
                   "normal": "Kollisionsradius",
-                  "beginner": "Der Mindestabstand zwischen Knotenzentren zur Vermeidung von Ueberlappung."
+                  "beginner": "Der Mindestabstand zwischen Knotenzentren zur Vermeidung von Überlappung."
                 }
               },
               "centerStrength": {
@@ -1540,20 +1540,20 @@ const composeSketchpadTranslationBundles = {
             },
             "openFolder": {
               "label": {
-                "normal": "Ordner oeffnen",
-                "beginner": "Ein Kit aus einem Ordner oeffnen"
+                "normal": "Ordner öffnen",
+                "beginner": "Ein Kit aus einem Ordner öffnen"
               }
             },
             "openFile": {
               "label": {
-                "normal": "Datei oeffnen",
-                "beginner": "Ein Kit aus einer Zip-Datei oeffnen"
+                "normal": "Datei öffnen",
+                "beginner": "Ein Kit aus einer Zip-Datei öffnen"
               }
             },
             "openRemote": {
               "label": {
-                "normal": "Remote oeffnen",
-                "beginner": "Ein Kit von einer Remote-URL oeffnen"
+                "normal": "Remote öffnen",
+                "beginner": "Ein Kit von einer Remote-URL öffnen"
               }
             },
             "createFile": {
@@ -1583,7 +1583,7 @@ const composeSketchpadTranslationBundles = {
             "exportArchive": {
               "label": {
                 "normal": "Archiv exportieren",
-                "beginner": "Das ausgewaehlte Kit als Zip-Archiv exportieren"
+                "beginner": "Das ausgewählte Kit als Zip-Archiv exportieren"
               }
             }
           }
@@ -1605,7 +1605,7 @@ const composeSketchpadTranslationBundles = {
               "beginner": "Das angeforderte Kit wurde nicht gefunden"
             },
             "description": {
-              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungueltig.",
+              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungültig.",
               "beginner": "Zurück zur Startseite und ein anderes Kit öffnen oder ein neues erstellen."
             }
           },
@@ -2302,7 +2302,7 @@ const composeSketchpadTranslationBundles = {
             "multipleTitle": {
               "label": {
                 "normal": "{{count}} Schnittstellen",
-                "beginner": "{{count}} Schnittstellen ausgewaehlt"
+                "beginner": "{{count}} Schnittstellen ausgewählt"
               }
             }
           },
@@ -2341,8 +2341,8 @@ const composeSketchpadTranslationBundles = {
           "tags": {
             "multipleSelected": {
               "label": {
-                "normal": "Mehrere Tags ausgewaehlt",
-                "beginner": "Mehrere Tags ausgewaehlt"
+                "normal": "Mehrere Tags ausgewählt",
+                "beginner": "Mehrere Tags ausgewählt"
               }
             },
             "multipleTitle": "{{count}} Tags"
@@ -2358,8 +2358,8 @@ const composeSketchpadTranslationBundles = {
           "concepts": {
             "multipleSelected": {
               "label": {
-                "normal": "Mehrere Konzepte ausgewaehlt",
-                "beginner": "Mehrere Konzepte ausgewaehlt"
+                "normal": "Mehrere Konzepte ausgewählt",
+                "beginner": "Mehrere Konzepte ausgewählt"
               }
             }
           },
@@ -2521,19 +2521,19 @@ const composeSketchpadTranslationBundles = {
             "scene": {
               "label": {
                 "normal": "Szenen-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von 3D-Szenen-Fenstern zum Betrachten Ihres Entwurfs im 3D-Raum."
+                "beginner": "Durchsuchen und Hinzufügen von 3D-Szenen-Fenstern zum Betrachten Ihres Entwurfs im 3D-Raum."
               }
             },
             "diagram": {
               "label": {
                 "normal": "Diagramm-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von 2D-Diagramm-Fenstern zum Betrachten der Verbindungstopologie."
+                "beginner": "Durchsuchen und Hinzufügen von 2D-Diagramm-Fenstern zum Betrachten der Verbindungstopologie."
               }
             },
             "table": {
               "label": {
                 "normal": "Tabellen-Fenster",
-                "beginner": "Durchsuchen und Hinzufuegen von Tabellen-Fenstern zum Betrachten von Entwurfsdaten in tabellarischer Form."
+                "beginner": "Durchsuchen und Hinzufügen von Tabellen-Fenstern zum Betrachten von Entwurfsdaten in tabellarischer Form."
               }
             }
           },
@@ -2700,8 +2700,8 @@ const composeSketchpadTranslationBundles = {
             },
             "mixedSelectionMessage": {
               "label": {
-                "normal": "Mehrere Teile mit unterschiedlichen Werten ausgewaehlt",
-                "beginner": "Mehrere Teile mit unterschiedlichen Werten ausgewaehlt"
+                "normal": "Mehrere Teile mit unterschiedlichen Werten ausgewählt",
+                "beginner": "Mehrere Teile mit unterschiedlichen Werten ausgewählt"
               }
             },
             "connectedPieceInfo": {
@@ -2945,13 +2945,13 @@ const composeSketchpadTranslationBundles = {
                   "properties": {
                     "label": {
                       "normal": "Bauteil",
-                      "beginner": "Eigenschaften des ausgewaehlten Bauteils."
+                      "beginner": "Eigenschaften des ausgewählten Bauteils."
                     }
                   },
                   "multipleTitle": {
                     "label": {
                       "normal": "Bauteile",
-                      "beginner": "Eigenschaften der ausgewaehlten Bauteile."
+                      "beginner": "Eigenschaften der ausgewählten Bauteile."
                     }
                   },
                   "pieceInfo": {
@@ -3151,13 +3151,13 @@ const composeSketchpadTranslationBundles = {
                   "properties": {
                     "label": {
                       "normal": "Verbindung",
-                      "beginner": "Eigenschaften der ausgewaehlten Verbindung."
+                      "beginner": "Eigenschaften der ausgewählten Verbindung."
                     }
                   },
                   "multipleTitle": {
                     "label": {
                       "normal": "Verbindungen",
-                      "beginner": "Eigenschaften der ausgewaehlten Verbindungen."
+                      "beginner": "Eigenschaften der ausgewählten Verbindungen."
                     }
                   },
                   "description": {
@@ -3376,27 +3376,27 @@ const composeSketchpadTranslationBundles = {
             "hud": {
               "overview": {
                 "label": {
-                  "normal": "HUD-Uebersicht",
-                  "beginner": "HUD-Uebersicht"
+                  "normal": "HUD-Übersicht",
+                  "beginner": "HUD-Übersicht"
                 }
               },
               "selection": {
                 "pieces": {
                   "label": {
-                    "normal": "Ausgewaehlte Bauteile",
-                    "beginner": "Ausgewaehlte Bauteile"
+                    "normal": "Ausgewählte Bauteile",
+                    "beginner": "Ausgewählte Bauteile"
                   }
                 },
                 "connections": {
                   "label": {
-                    "normal": "Ausgewaehlte Verbindungen",
-                    "beginner": "Ausgewaehlte Verbindungen"
+                    "normal": "Ausgewählte Verbindungen",
+                    "beginner": "Ausgewählte Verbindungen"
                   }
                 },
                 "connector": {
                   "label": {
-                    "normal": "Connector ausgewaehlt",
-                    "beginner": "Connector ausgewaehlt"
+                    "normal": "Connector ausgewählt",
+                    "beginner": "Connector ausgewählt"
                   }
                 }
               }
@@ -3690,8 +3690,8 @@ const composeSketchpadTranslationBundles = {
           },
           "noHeadings": {
             "label": {
-              "normal": "Keine Ueberschriften gefunden",
-              "beginner": "Keine Ueberschriften gefunden"
+              "normal": "Keine Überschriften gefunden",
+              "beginner": "Keine Überschriften gefunden"
             }
           },
           "docs": {
@@ -3720,7 +3720,7 @@ const composeSketchpadTranslationBundles = {
             "appearance": {
               "label": {
                 "normal": "Design",
-                "beginner": "Farbschema waehlen"
+                "beginner": "Farbschema wählen"
               }
             },
             "language": {
@@ -3731,20 +3731,20 @@ const composeSketchpadTranslationBundles = {
             },
             "device": {
               "label": {
-                "normal": "Geraet",
-                "beginner": "Eingabegeraet waehlen"
+                "normal": "Gerät",
+                "beginner": "Eingabegerät wählen"
               }
             },
             "expertise": {
               "label": {
                 "normal": "Erfahrung",
-                "beginner": "Erfahrungsniveau waehlen"
+                "beginner": "Erfahrungsniveau wählen"
               }
             },
             "mode": {
               "label": {
                 "normal": "Modus",
-                "beginner": "Benutzer- oder Entwicklermodus waehlen"
+                "beginner": "Benutzer- oder Entwicklermodus wählen"
               }
             }
           },
@@ -4800,7 +4800,7 @@ const composeSketchpadTranslationBundles = {
           "canScale": {
             "label": {
               "normal": "Kann skalieren",
-              "beginner": "Ob diese Qualitaet mit der Teilegroesse skaliert"
+              "beginner": "Ob diese Qualitaet mit der Teilegröße skaliert"
             }
           },
           "panel": {
@@ -4984,7 +4984,7 @@ const composeSketchpadTranslationBundles = {
         },
         "device": {
           "label": {
-            "normal": "Geraet",
+            "normal": "Gerät",
             "beginner": "Layoutmodus für die Oberfläche"
           },
           "desktop": {
@@ -5049,8 +5049,8 @@ const composeSketchpadTranslationBundles = {
           },
           "placeholder": {
             "label": {
-              "normal": "Sprache waehlen...",
-              "beginner": "Waehlen Sie die Sprache, in der die Anwendung angezeigt wird"
+              "normal": "Sprache wählen...",
+              "beginner": "Wählen Sie die Sprache, in der die Anwendung angezeigt wird"
             }
           },
           "de": {
@@ -14016,7 +14016,7 @@ const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<
     tilt: "Tilt",
   },
   de: {
-    selectedKits: "Ausgewaehlte Kits",
+    selectedKits: "Ausgewählte Kits",
     openKits: "Offene Kits",
     designs: "Designs",
     types: "Typen",

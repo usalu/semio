@@ -75,6 +75,13 @@
         "cwd": "ui/js/react",
         "command": "bun ./script.ts check-ui-primitives"
       }
+    },
+    "check-chrome-i18n": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "ui/js/react",
+        "command": "bun ./script.ts check-chrome-i18n"
+      }
     }
   }
 }

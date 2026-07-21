@@ -1,0 +1,13 @@
+{
+  "title": "Enforce Chrome I18n Exhaustiveness For Locale-Locked Brand Shells",
+  "emoji": "🌐",
+  "status": "open",
+  "description": "Make it impossible — enforced at compile/lint time, gated in verify — for untranslated English chrome strings to appear in a locale-locked branded shell build (the Entwerfen mit Bestand Aggregator, locale=de, terminology=reuse). TS side: strict typed useLabel with no string escape hatch, fix every inventoried English literal/fallback leak in framework/renderer/react and ui/js/react, resolve framework panel tabs through the typed chrome schema instead of the plugin overlay, add a check-chrome-i18n lint, add typecheck targets everywhere and gate them in verify (repaying ~280 pre-existing type errors along the way). Rust side: replace the hand-built AppLabelsOverlay HashMap with a single-source Label{en,de} builder API across all plugin crates so an app cannot declare a labeled entity without both locales, backed by a generated per-crate coverage test. Full design already produced by exploration + planning agents; plan file at /Users/ueli/.claude/plans/introduce-a-sophisticated-general-quizzical-hanrahan.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2204"
+  },
+  "goal": "🎯r2603",
+  "sessions": [
+    "⚪505b68bd33a04c06af44e9d233cb255d"
+  ]
+}

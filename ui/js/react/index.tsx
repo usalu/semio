@@ -56,6 +56,8 @@ import {
   canvasPickTargetKey,
   effectiveActionArgs,
   missingRequiredArgs,
+  SHELL_LOCALES,
+  SHELL_TERMINOLOGIES,
   type ActionArgDef,
   type CanvasHoverFocus,
   type CanvasPickRequest,
@@ -67,8 +69,11 @@ import {
   type IntroductionAnchor,
   type IntroductionDefinition,
   type IntroductionEmphasis,
+  type IntroductionLogo,
   type IntroductionPlacement,
   type IntroductionStepDefinition,
+  type ShellLocale,
+  type ShellTerminology,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
 } from "@semio-tech/framework-core";
@@ -808,7 +813,7 @@ export type { CanvasHoverFocus, CanvasPickRequest, CanvasPickTarget } from "@sem
 export function CanvasPickMenu({ request, hoveredKey, onHoverKey, onPick, onDismiss, renderRow, title }: CanvasPickMenuProps): React.ReactNode {
   const menuRef = React.useRef<HTMLDivElement | null>(null);
   const selectTargetLabel = useLabel("ui.common.selectTarget");
-  const resolvedTitle = title ?? selectTargetLabel ?? "Select target";
+  const resolvedTitle = title ?? selectTargetLabel;
 
   React.useEffect(() => {
     if (!request) return;
@@ -1170,6 +1175,8 @@ function resolveShortcodeIcon(code: string): Icon {
   }
   return { kind: "shortcode", code: key };
 }
+
+const iconUrlDataCache = new Map<string, string>();
 
 async function fetchIconUrlAsDataUrl(url: string): Promise<string | undefined> {
   const cached = iconUrlDataCache.get(url);
@@ -1700,10 +1707,11 @@ type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventList
 function createDOMEventBinding() {
   const cleanups: Array<() => void> = [];
   return {
-    listen(target: DOMListenerTarget | null | undefined, type: string, listener: EventListenerOrEventListenerObject, options?: boolean | AddEventListenerOptions) {
+    listen<E extends Event>(target: DOMListenerTarget | null | undefined, type: string, listener: (event: E) => void, options?: boolean | AddEventListenerOptions) {
       if (!target) return;
-      target.addEventListener(type, listener, options);
-      cleanups.push(() => target.removeEventListener(type, listener, options));
+      const wrapped = listener as EventListener;
+      target.addEventListener(type, wrapped, options);
+      cleanups.push(() => target.removeEventListener(type, wrapped, options));
     },
     dispose() {
       while (cleanups.length > 0) cleanups.pop()?.();
@@ -2471,13 +2479,12 @@ export function useControlAccessibleLabel(id: string | undefined, text?: string)
   if (text !== undefined && text !== "") return text;
   if (!id || isInternalChromeControlId(id)) return undefined;
   const labelId = resolveControlLabelId(id);
-  const localized = useLabel(labelId);
-  if (localized && localized !== labelId) return localized;
+  const localized = useIdLabel(labelId);
+  if (localized) return localized;
   const panelKind = panelKindFromPanelToggleControlId(id);
   if (panelKind) {
-    const uiPanelKey = `ui.panelToggle.${panelKind}` as UiTranslationKey;
-    const fromUiPanel = useLabel(uiPanelKey);
-    if (fromUiPanel && fromUiPanel !== uiPanelKey) return fromUiPanel;
+    const fromUiPanel = useIdLabel(`ui.panelToggle.${panelKind}`);
+    if (fromUiPanel) return fromUiPanel;
     return humanizeEngagementStepId(panelKind);
   }
   if (labelId.startsWith("ui.")) return humanizeControlId(labelId);
@@ -2514,8 +2521,9 @@ export function ChromeControlHint({ id, text, children }: { readonly id?: string
 // #region 🔑Schema & Keys
 // Type/key-derivation machinery: locale codes, label shapes, the deep dot-path key type, and compile-time key-coverage checks.
 
-/** @emoji 🪁 Supported UI locale codes. */
-export type UiLocale = "en" | "de";
+/** @emoji 🪁 Supported UI locale codes — the single source is `@semio-tech/framework-core`'s
+ * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
+export type UiLocale = ShellLocale;
 
 /** @emoji 🪁 Expertise-specific label pair. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
@@ -2529,7 +2537,7 @@ export type UiLabelValue = {
 };
 
 /** @emoji 🪁 Ribbon collection ids for ribbon collection toggles. */
-export type UiRibbonParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "utilities" | "sync";
+export type UiRibbonParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "tools" | "utilities" | "sync";
 
 /** @emoji 🪁 i18n key for a ribbon collection toggle. */
 export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
@@ -2711,6 +2719,16 @@ export type UiTranslationSchema = {
       };
       readonly parent: UiRibbonParentEntries;
     };
+    readonly selection: {
+      readonly method: UiLabelValue;
+      readonly mode: UiLabelValue;
+      readonly rectangle: UiLabelValue;
+      readonly lasso: UiLabelValue;
+      readonly selective: UiLabelValue;
+      readonly additive: UiLabelValue;
+      readonly subtractive: UiLabelValue;
+      readonly invertive: UiLabelValue;
+    };
     readonly common: {
       readonly mixedValues: UiLabelValue;
       readonly name: UiLabelValue;
@@ -2747,6 +2765,15 @@ export type UiTranslationSchema = {
       readonly action: UiLabelValue;
       readonly actions: UiLabelValue;
       readonly utilities: UiLabelValue;
+      readonly retry: UiLabelValue;
+      readonly somethingWentWrong: UiLabelValue;
+      readonly doubleClickToEdit: UiLabelValue;
+      readonly importFile: UiLabelValue;
+      readonly clear: UiLabelValue;
+      readonly collapse: UiLabelValue;
+      readonly expand: UiLabelValue;
+      readonly cancel: UiLabelValue;
+      readonly error: UiLabelValue;
     };
     readonly contextMenu: {
       readonly select: UiLabelValue;
@@ -2769,6 +2796,10 @@ export type UiTranslationSchema = {
       readonly suggestCompletions: UiLabelValue;
       readonly selectToken: UiLabelValue;
       readonly selectLine: UiLabelValue;
+      readonly hide: UiLabelValue;
+      readonly show: UiLabelValue;
+      readonly lock: UiLabelValue;
+      readonly unlock: UiLabelValue;
     };
     readonly host: {
       readonly emptyScene: UiLabelValue;
@@ -2783,6 +2814,21 @@ export type UiTranslationSchema = {
       readonly checkingPlacement: UiLabelValue;
       readonly noPlacement: UiLabelValue;
       readonly canvasUnavailable: UiLabelValue;
+      readonly rendering: UiLabelValue;
+      readonly documentPlaceholder: UiLabelValue;
+      readonly languageDocument: UiLabelValue;
+      readonly iconShot: UiLabelValue;
+      readonly projection: UiLabelValue;
+      readonly perspective: UiLabelValue;
+      readonly orthographic: UiLabelValue;
+    };
+    readonly chat: {
+      readonly readyFor: UiLabelValue;
+      readonly localOnly: UiLabelValue;
+      readonly instructions: UiLabelValue;
+      readonly placeholder: UiLabelValue;
+      readonly savedLocally: UiLabelValue;
+      readonly send: UiLabelValue;
     };
     readonly docs: {
       readonly navigation: {
@@ -2862,8 +2908,8 @@ export type AssertUiSettingsLanguageKeysCovered<Locales extends string> = {
   ? true
   : false;
 
-/** @emoji 🗣️ Chrome-known terminology ids; app-declared ids beyond this set fall back to their raw id in the dropdown. */
-export type UiChromeTerminologyId = "native" | "reuse";
+/** @emoji 🗣️ Chrome-known terminology ids — single source `@semio-tech/framework-core`'s `ShellTerminology`; app-declared ids beyond this set fall back to their raw id in the dropdown. */
+export type UiChromeTerminologyId = ShellTerminology;
 
 /** @emoji 🗣️ Compile-time check that every {@link UiChromeTerminologyId} has a settings-dropdown label key. */
 export type AssertUiSettingsTerminologyKeysCovered<Ids extends string> = {
@@ -2890,6 +2936,10 @@ const _assertUiSettingsLanguageKeys: AssertUiSettingsLanguageKeysCovered<UiLocal
 
 const _assertUiSettingsTerminologyKeys: AssertUiSettingsTerminologyKeysCovered<UiChromeTerminologyId> = true;
 
+/** @emoji 🏷️ Compile-time check that every brand-lockable {@link ShellLocale} has a complete chrome bundle — closes the loop from a brand's `locks.locale` through `ShellLocale` to an actual translated `uiChromeTranslationBundles` entry. */
+type AssertShellBrandLocalesBundled<L extends string> = L extends keyof typeof uiChromeTranslationBundles ? true : false;
+const _assertShellBrandLocalesBundled: AssertShellBrandLocalesBundled<ShellLocale> = true;
+
 // #endregion 🔑Schema & Keys
 
 // #region 🇩🇪 German Bundle
@@ -2915,6 +2965,7 @@ const uiRibbonParentDe: UiRibbonParentEntries = {
   targets: { label: { normal: "Ziele", beginner: "Ziele" } },
   export: { label: { normal: "Export", beginner: "Export" } },
   tools: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
+  utilities: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
   sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
@@ -2943,6 +2994,7 @@ const uiRibbonParentEn: UiRibbonParentEntries = {
   targets: { label: { normal: "Targets", beginner: "Targets" } },
   export: { label: { normal: "Export", beginner: "Export" } },
   tools: { label: { normal: "Tools", beginner: "Tools" } },
+  utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
   sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
@@ -2962,8 +3014,8 @@ export const uiChromeTranslationBundles = {
           },
           forward: {
             label: {
-              normal: "Vorwaerts",
-              beginner: "Vorwaerts",
+              normal: "Vorwärts",
+              beginner: "Vorwärts",
             },
           },
           up: {
@@ -3259,6 +3311,16 @@ export const uiChromeTranslationBundles = {
           },
           parent: uiRibbonParentDe,
         },
+        selection: {
+          method: { label: { normal: "Methode", beginner: "Methode" } },
+          mode: { label: { normal: "Modus", beginner: "Modus" } },
+          rectangle: { label: { normal: "Rechteck", beginner: "Rechteck" } },
+          lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+          selective: { label: { normal: "Selektiv", beginner: "Selektiv" } },
+          additive: { label: { normal: "Additiv", beginner: "Additiv" } },
+          subtractive: { label: { normal: "Subtraktiv", beginner: "Subtraktiv" } },
+          invertive: { label: { normal: "Invertierend", beginner: "Invertierend" } },
+        },
         common: {
           mixedValues: {
             label: {
@@ -3300,6 +3362,15 @@ export const uiChromeTranslationBundles = {
           action: { label: { normal: "Aktion", beginner: "Aktion" } },
           actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
           utilities: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
+          retry: { label: { normal: "Erneut versuchen", beginner: "Erneut versuchen" } },
+          somethingWentWrong: { label: { normal: "Etwas ist schiefgelaufen", beginner: "Etwas ist schiefgelaufen" } },
+          doubleClickToEdit: { label: { normal: "Zum Bearbeiten doppelklicken", beginner: "Zum Bearbeiten doppelklicken" } },
+          importFile: { label: { normal: "Datei importieren…", beginner: "Datei importieren…" } },
+          clear: { label: { normal: "Leeren", beginner: "Leeren" } },
+          collapse: { label: { normal: "Einklappen", beginner: "Einklappen" } },
+          expand: { label: { normal: "Ausklappen", beginner: "Ausklappen" } },
+          cancel: { label: { normal: "Abbrechen", beginner: "Abbrechen" } },
+          error: { label: { normal: "Fehler", beginner: "Fehler" } },
         },
         contextMenu: {
           select: { label: { normal: "Auswählen", beginner: "Auswählen" } },
@@ -3322,6 +3393,10 @@ export const uiChromeTranslationBundles = {
           suggestCompletions: { label: { normal: "Vervollständigungen vorschlagen", beginner: "Vervollständigungen vorschlagen" } },
           selectToken: { label: { normal: "Token auswählen", beginner: "Token auswählen" } },
           selectLine: { label: { normal: "Zeile auswählen", beginner: "Zeile auswählen" } },
+          hide: { label: { normal: "Ausblenden", beginner: "Ausblenden" } },
+          show: { label: { normal: "Einblenden", beginner: "Einblenden" } },
+          lock: { label: { normal: "Sperren", beginner: "Sperren" } },
+          unlock: { label: { normal: "Entsperren", beginner: "Entsperren" } },
         },
         host: {
           emptyScene: { label: { normal: "Keine Szene", beginner: "Keine Szene" } },
@@ -3336,6 +3411,21 @@ export const uiChromeTranslationBundles = {
           checkingPlacement: { label: { normal: "Prüfe kollisionsfreie Platzierungen…", beginner: "Prüfe kollisionsfreie Platzierungen…" } },
           noPlacement: { label: { normal: "Keine kollisionsfreie Platzierung an diesem Verbinder", beginner: "Keine kollisionsfreie Platzierung an diesem Verbinder" } },
           canvasUnavailable: { label: { normal: "Leinwand nicht verfügbar", beginner: "Leinwand nicht verfügbar" } },
+          rendering: { label: { normal: "Wird gerendert…", beginner: "Wird gerendert…" } },
+          documentPlaceholder: { label: { normal: "Dokument", beginner: "Dokument" } },
+          languageDocument: { label: { normal: "{{language}}-Dokument", beginner: "{{language}}-Dokument" } },
+          iconShot: { label: { normal: "Symbolbild", beginner: "Symbolbild" } },
+          projection: { label: { normal: "Projektion", beginner: "Projektion" } },
+          perspective: { label: { normal: "Perspektivisch", beginner: "Perspektivisch" } },
+          orthographic: { label: { normal: "Orthografisch", beginner: "Orthografisch" } },
+        },
+        chat: {
+          readyFor: { label: { normal: "Chat ist bereit für {{title}}.", beginner: "Chat ist bereit für {{title}}." } },
+          localOnly: { label: { normal: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird.", beginner: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird." } },
+          instructions: { label: { normal: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile.", beginner: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile." } },
+          placeholder: { label: { normal: "Nachricht für {{title}} schreiben…", beginner: "Nachricht für {{title}} schreiben…" } },
+          savedLocally: { label: { normal: "Lokal gespeichert: „{{preview}}“", beginner: "Lokal gespeichert: „{{preview}}“" } },
+          send: { label: { normal: "Senden", beginner: "Senden" } },
         },
         blockList: {
           steps: { label: { normal: "Schritte", beginner: "Schritte" } },
@@ -3397,7 +3487,7 @@ export const uiChromeTranslationBundles = {
           action: {
             label: {
               normal: "Aktion",
-              beginner: "Aktion eingeben oder aus der Liste waehlen",
+              beginner: "Aktion eingeben oder aus der Liste wählen",
             },
           },
           actionActive: {
@@ -3444,7 +3534,7 @@ export const uiChromeTranslationBundles = {
         compact: {
           label: {
             normal: "Kompakt",
-            beginner: "Schaltflaechen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen",
+            beginner: "Schaltflächen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen",
           },
         },
         mode: {
@@ -3830,6 +3920,16 @@ export const uiChromeTranslationBundles = {
           },
           parent: uiRibbonParentEn,
         },
+        selection: {
+          method: { label: { normal: "Method", beginner: "Method" } },
+          mode: { label: { normal: "Mode", beginner: "Mode" } },
+          rectangle: { label: { normal: "Rectangle", beginner: "Rectangle" } },
+          lasso: { label: { normal: "Lasso", beginner: "Lasso" } },
+          selective: { label: { normal: "Selective", beginner: "Selective" } },
+          additive: { label: { normal: "Additive", beginner: "Additive" } },
+          subtractive: { label: { normal: "Subtractive", beginner: "Subtractive" } },
+          invertive: { label: { normal: "Invertive", beginner: "Invertive" } },
+        },
         common: {
           mixedValues: {
             label: {
@@ -3871,6 +3971,15 @@ export const uiChromeTranslationBundles = {
           action: { label: { normal: "Action", beginner: "Action" } },
           actions: { label: { normal: "Actions", beginner: "Actions" } },
           utilities: { label: { normal: "Utilities", beginner: "Utilities" } },
+          retry: { label: { normal: "Retry", beginner: "Retry" } },
+          somethingWentWrong: { label: { normal: "Something went wrong", beginner: "Something went wrong" } },
+          doubleClickToEdit: { label: { normal: "Double-click to edit", beginner: "Double-click to edit" } },
+          importFile: { label: { normal: "Import file…", beginner: "Import file…" } },
+          clear: { label: { normal: "Clear", beginner: "Clear" } },
+          collapse: { label: { normal: "Collapse", beginner: "Collapse" } },
+          expand: { label: { normal: "Expand", beginner: "Expand" } },
+          cancel: { label: { normal: "Cancel", beginner: "Cancel" } },
+          error: { label: { normal: "Error", beginner: "Error" } },
         },
         contextMenu: {
           select: { label: { normal: "Select", beginner: "Select" } },
@@ -3893,6 +4002,10 @@ export const uiChromeTranslationBundles = {
           suggestCompletions: { label: { normal: "Suggest completions", beginner: "Suggest completions" } },
           selectToken: { label: { normal: "Select token", beginner: "Select token" } },
           selectLine: { label: { normal: "Select line", beginner: "Select line" } },
+          hide: { label: { normal: "Hide", beginner: "Hide" } },
+          show: { label: { normal: "Show", beginner: "Show" } },
+          lock: { label: { normal: "Lock", beginner: "Lock" } },
+          unlock: { label: { normal: "Unlock", beginner: "Unlock" } },
         },
         host: {
           emptyScene: { label: { normal: "No scene", beginner: "No scene" } },
@@ -3907,6 +4020,21 @@ export const uiChromeTranslationBundles = {
           checkingPlacement: { label: { normal: "Checking collision-free placements…", beginner: "Checking collision-free placements…" } },
           noPlacement: { label: { normal: "No collision-free placement at this connector", beginner: "No collision-free placement at this connector" } },
           canvasUnavailable: { label: { normal: "Canvas unavailable", beginner: "Canvas unavailable" } },
+          rendering: { label: { normal: "Rendering…", beginner: "Rendering…" } },
+          documentPlaceholder: { label: { normal: "Document", beginner: "Document" } },
+          languageDocument: { label: { normal: "{{language}} document", beginner: "{{language}} document" } },
+          iconShot: { label: { normal: "Icon shot", beginner: "Icon shot" } },
+          projection: { label: { normal: "Projection", beginner: "Projection" } },
+          perspective: { label: { normal: "Perspective", beginner: "Perspective" } },
+          orthographic: { label: { normal: "Orthographic", beginner: "Orthographic" } },
+        },
+        chat: {
+          readyFor: { label: { normal: "Chat is ready for {{title}}.", beginner: "Chat is ready for {{title}}." } },
+          localOnly: { label: { normal: "Messages stay local in this panel until a connected assistant is added.", beginner: "Messages stay local in this panel until a connected assistant is added." } },
+          instructions: { label: { normal: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line.", beginner: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line." } },
+          placeholder: { label: { normal: "Write a message for {{title}}…", beginner: "Write a message for {{title}}…" } },
+          savedLocally: { label: { normal: "Saved locally: \"{{preview}}\"", beginner: "Saved locally: \"{{preview}}\"" } },
+          send: { label: { normal: "Send", beginner: "Send" } },
         },
         blockList: {
           steps: { label: { normal: "Steps", beginner: "Steps" } },
@@ -4111,15 +4239,24 @@ declare module "i18next" {
   }
 }
 
-/** @emoji 🪁 Merges additional locale bundles into the shared UI i18n instance. */
-export function registerUiTranslationBundles(bundles: UiTranslationBundlesInput): void {
+declare const uiRegisteredTranslationKeyBrand: unique symbol;
+/** @emoji 🪁 Key branded by {@link registerUiTranslationBundles} — only obtainable from the caster it
+ * returns, so a value of this type provably exists in every {@link UiLocale} bundle registered together
+ * with it. Products (coda, compose, …) hold this instead of hand-rolling their own translation-key union
+ * and casting into `useLabel`. */
+export type UiRegisteredTranslationKey = string & { readonly [uiRegisteredTranslationKeyBrand]: true };
+
+/** @emoji 🪁 Merges additional locale bundles into the shared UI i18n instance, requiring every
+ * {@link UiLocale} to register the exact same schema `S` (a compile error otherwise — the same
+ * both-locales-or-nothing guarantee the domain-neutral chrome bundle gets from `satisfies
+ * UiTranslationSchema`). Returns a caster from `S`'s own dot-path key union to {@link UiRegisteredTranslationKey}
+ * — the only way callers should obtain a key for their registered strings; passing an unregistered
+ * string does not type-check. */
+export function registerUiTranslationBundles<S extends Record<string, unknown>>(bundles: { readonly [L in UiLocale]: { readonly translation: S } }): <K extends DeepUiTranslationKeys<S>>(key: K) => UiRegisteredTranslationKey {
   for (const [language, resource] of Object.entries(bundles)) {
-    if (!i18next.hasResourceBundle(language, "translation")) {
-      i18next.addResourceBundle(language, "translation", resource.translation, true, true);
-      continue;
-    }
     i18next.addResourceBundle(language, "translation", resource.translation, true, true);
   }
+  return (key) => key as UiRegisteredTranslationKey;
 }
 
 //#region 🗣️TsNativeTerminology
@@ -4244,18 +4381,59 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
 // #endregion 🪁I18n Resources
 
 /**
- * React hook that resolves a localized label by i18n key and expertise level.
+ * React hook that resolves a localized label by i18n key and expertise level. Strict: `id` must be a
+ * real key from the domain-neutral chrome schema or a product's {@link registerUiTranslationBundles}
+ * bundle — both are guaranteed complete for every {@link UiLocale}, so a defined `id` always yields a
+ * `string`. For ids that may or may not be a registered key (e.g. resolved from an arbitrary DOM/control
+ * id), use {@link useIdLabel} instead — it is the only place a lookup is allowed to come up empty.
  **/
-export function useLabel(id: UiTranslationKey | (string & {}) | undefined): string | undefined {
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, options?: Record<string, unknown>): string;
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined;
+export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined {
   const { t } = useUiTranslation();
   const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
   if (!id) return undefined;
+  const value = t(id as UiTranslationKey, options);
+
+  if (typeof value === "string") return value;
+
+  if (value && typeof value === "object" && "label" in value) {
+    const label = value.label;
+
+    if (typeof label === "string") {
+      return label;
+    }
+
+    if (label && typeof label === "object") {
+      if (expertise === Expertise.BEGINNER && "beginner" in label && label.beginner !== undefined) {
+        return String(label.beginner);
+      }
+      if ("normal" in label && label.normal !== undefined) {
+        return String(label.normal);
+      }
+      if ("beginner" in label && label.beginner !== undefined) {
+        return String(label.beginner);
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
+ * @emoji 🏷️ Resolves a label only when `id` happens to be a registered translation key — the deliberate
+ * dynamic port for generic components whose `id` is not a key contract (e.g. resolved from an arbitrary
+ * DOM/control id via `resolveControlLabelId`). Chrome call sites with a known key must use the strict
+ * {@link useLabel} instead. Checks existence first, so it never echoes an unresolved id back as if it
+ * were a translation — unlike i18next's default missing-key behavior.
+ **/
+export function useIdLabel(id: string | undefined): string | undefined {
+  const { t, i18n } = useUiTranslation();
+  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  if (!id || !i18n.exists(id)) return undefined;
   const value = t(id as UiTranslationKey);
 
-  if (typeof value === "string") {
-    if (isInternalChromeControlId(id) || isInternalChromeControlId(value)) return undefined;
-    return value;
-  }
+  if (typeof value === "string") return value;
 
   if (value && typeof value === "object" && "label" in value) {
     const label = value.label;
@@ -4349,9 +4527,13 @@ export function resolveHotkeyValue(value: unknown): string | undefined {
 }
 
 /**
- * React hook that resolves a localized hotkey by i18n key.
+ * React hook that resolves a localized hotkey by i18n key. `id` is a dynamic, caller-supplied hotkey-or-key
+ * string (often a literal chord like `"ctrl+z"`, never author-typed against the schema), so this stays on
+ * the dynamic port rather than the strict {@link useLabel}: an unresolved `id` falls through unchanged,
+ * exactly like i18next's own missing-key echo — which is the desired fallback here (the id itself becomes
+ * the chord).
  **/
-export function useTranslatedHotkey(id: UiTranslationKey | (string & {})): string | undefined {
+export function useTranslatedHotkey(id: string): string | undefined {
   const { t } = useUiTranslation();
   const directHotkey = resolveHotkeyValue(t(id as UiTranslationKey));
 
@@ -4734,10 +4916,13 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
 
 /** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
- * stamps on navbar/footer/window/utility/action/panel-tab chrome instead of adding new markup: utility leaf
+ * stamps on navbar/footer/window/utility/action/panel chrome instead of adding new markup: utility leaf
  * buttons already carry `id={utilityId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
- * `-execute` suffix for staged-arg actions), panel tab buttons carry `data-tab-id`, and window bodies
- * carry `data-window-kind-id`. `null` means "no specific element" (paired with `Screen`/`Center`). */
+ * `-execute` suffix for staged-arg actions), visible panels carry `data-active-tab-id` for the selected
+ * leaf (so a `panelTab` cutout is the uncollapsed panel, not the tab chip — see
+ * {@link introductionPanelTabFallbackSelector} while the panel is still mounting), draggable tree rows
+ * carry `data-draggable="true"` (so `panelFirstDraggable` resolves the first catalogue drag source), and
+ * window bodies carry `data-window-kind-id`. `null` means "no specific element" (paired with `Screen`/`Center`). */
 export function introductionAnchorSelector(anchor: IntroductionAnchor): string | null {
   switch (anchor.kind) {
     case "screen":
@@ -4753,10 +4938,18 @@ export function introductionAnchorSelector(anchor: IntroductionAnchor): string |
     case "action":
       return `[id$="-action-${anchor.id}"], [id$="-action-${anchor.id}-execute"]`;
     case "panelTab":
-      return `[data-tab-id="${anchor.id}"]`;
+      return `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${anchor.id}"]`;
+    case "panelFirstDraggable":
+      return `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${anchor.id}"] [data-slot="tree-item-row"][data-draggable="true"]`;
     case "slot":
       return `[data-slot="${anchor.id}"]`;
   }
+}
+
+/** @emoji 📑 CSS selector for a panel-tab chip — folded-chrome fallback while a `panelTab` /
+ * `panelFirstDraggable` step's uncollapsed panel (or its first drag source) is still mounting. */
+export function introductionPanelTabFallbackSelector(tabId: string): string {
+  return `[data-tab-id="${tabId}"]`;
 }
 
 /** @emoji 🧰 CSS selector for a window's folded Utilities-rail unfold chip — used when a utility anchor is still hidden inside the folded utility bar. */
@@ -4857,22 +5050,79 @@ function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: r
 
 export type IntroductionVeilBand = IntroductionRect;
 
-/** @emoji 🎓 Splits `viewport` into up to four glass bands tiling the space around `cutout` — real
- * `backdrop-filter` glass survives this way (an SVG mask over the whole screen can't carry it), and the
- * hole left in the middle is a genuine DOM gap rather than a clipped overlay, so it stays interactive.
- * A `null` cutout (a `Screen`/no-emphasis step) returns one full-viewport band. */
-export function introductionVeilBands(viewport: { readonly width: number; readonly height: number }, cutout: IntroductionRect | null): readonly IntroductionVeilBand[] {
-  if (!cutout) return [{ top: 0, left: 0, width: viewport.width, height: viewport.height }];
-  const top = Math.max(0, Math.min(cutout.top, viewport.height));
-  const bottom = Math.max(0, Math.min(cutout.top + cutout.height, viewport.height));
-  const left = Math.max(0, Math.min(cutout.left, viewport.width));
-  const right = Math.max(0, Math.min(cutout.left + cutout.width, viewport.width));
+/** @emoji 🎓 Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when they don't overlap). */
+export function punchIntroductionCutout(band: IntroductionRect, hole: IntroductionRect): readonly IntroductionRect[] {
+  const top = Math.max(band.top, hole.top);
+  const left = Math.max(band.left, hole.left);
+  const bottom = Math.min(band.top + band.height, hole.top + hole.height);
+  const right = Math.min(band.left + band.width, hole.left + hole.width);
+  if (right <= left || bottom <= top) return [band];
   return [
-    { top: 0, left: 0, width: viewport.width, height: top },
-    { top: bottom, left: 0, width: viewport.width, height: Math.max(0, viewport.height - bottom) },
-    { top, left: 0, width: left, height: Math.max(0, bottom - top) },
-    { top, left: right, width: Math.max(0, viewport.width - right), height: Math.max(0, bottom - top) },
-  ].filter((band) => band.width > 0 && band.height > 0);
+    { top: band.top, left: band.left, width: band.width, height: top - band.top },
+    { top: bottom, left: band.left, width: band.width, height: band.top + band.height - bottom },
+    { top, left: band.left, width: left - band.left, height: bottom - top },
+    { top, left: right, width: band.left + band.width - right, height: bottom - top },
+  ].filter((piece) => piece.width > 0 && piece.height > 0);
+}
+
+/** @emoji 🎓 Splits `viewport` into glass bands tiling the space around every `cutout` — real
+ * `backdrop-filter` glass survives this way (an SVG mask over the whole screen can't carry it), and each
+ * hole left in the middle is a genuine DOM gap rather than a clipped overlay, so it stays interactive.
+ * An empty cutout list (a `Screen`/no-emphasis step) returns one full-viewport band. */
+export function introductionVeilBands(viewport: { readonly width: number; readonly height: number }, cutouts: readonly IntroductionRect[]): readonly IntroductionVeilBand[] {
+  let bands: IntroductionRect[] = [{ top: 0, left: 0, width: viewport.width, height: viewport.height }];
+  for (const cutout of cutouts) {
+    const clamped: IntroductionRect = {
+      top: Math.max(0, Math.min(cutout.top, viewport.height)),
+      left: Math.max(0, Math.min(cutout.left, viewport.width)),
+      width: Math.max(0, Math.min(cutout.left + cutout.width, viewport.width) - Math.max(0, Math.min(cutout.left, viewport.width))),
+      height: Math.max(0, Math.min(cutout.top + cutout.height, viewport.height) - Math.max(0, Math.min(cutout.top, viewport.height))),
+    };
+    if (clamped.width <= 0 || clamped.height <= 0) continue;
+    bands = bands.flatMap((band) => [...punchIntroductionCutout(band, clamped)]);
+  }
+  return bands;
+}
+
+/** @emoji 🎓 Live-tracks the DOM rects of every element matching `selectors` (all matches per selector via
+ * `querySelectorAll`) — used for secondary introduction cutouts such as drop-target windows that must stay
+ * interactive without receiving the introduced pulse. */
+function useIntroductionCutoutRects(selectors: readonly string[]): readonly IntroductionRect[] {
+  const [rects, setRects] = reactHostPort.useState<readonly IntroductionRect[]>([]);
+
+  reactHostPort.useEffect(() => {
+    if (selectors.length === 0) {
+      setRects([]);
+      return;
+    }
+    let resizeObserver: ResizeObserver | null = null;
+    const measure = () => {
+      const next: IntroductionRect[] = [];
+      const observed = new Set<Element>();
+      for (const selector of selectors) {
+        document.querySelectorAll(selector).forEach((element) => {
+          next.push(domRectToIntroductionRect(element.getBoundingClientRect()));
+          observed.add(element);
+        });
+      }
+      setRects(next);
+      resizeObserver?.disconnect();
+      resizeObserver = new ResizeObserver(measure);
+      for (const element of observed) resizeObserver.observe(element);
+    };
+    measure();
+    const mutationObserver = new MutationObserver(measure);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("resize", measure);
+    return () => {
+      resizeObserver?.disconnect();
+      mutationObserver.disconnect();
+      window.removeEventListener("resize", measure);
+      setRects([]);
+    };
+  }, [selectors]);
+
+  return rects;
 }
 
 type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
@@ -4922,16 +5172,80 @@ export type UIIntroductionProps = {
   readonly onDismiss: (completed: boolean) => void;
   /** @emoji 🎯 Folded-chrome fallbacks tried after the step's primary anchor selector — e.g. a Tools-rail unfold chip while a utility button is still hidden. */
   readonly anchorFallbackSelectors?: readonly string[];
+  /** @emoji 🕳️ Extra cutout selectors merged with the step's declared `cutouts` — e.g. every mounted World3d window that accepts a catalogue drop. */
+  readonly additionalCutoutSelectors?: readonly string[];
 };
 
+/** @emoji 📐 One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
+ * so the row fills its full width edge-to-edge with no logo dominating over another — the height isn't
+ * guessed: it's solved from the row's measured width and each logo's own natural aspect ratio (`width /
+ * sum-of-aspect-ratios`, accounting for the `gap-double` between logos), so it's exactly right for
+ * whatever logos a step declares, never distorting any of them. */
+function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionLogo[] }) {
+  const rowRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [rowWidth, setRowWidth] = reactHostPort.useState(0);
+  const [gapPx, setGapPx] = reactHostPort.useState(0);
+  const [aspectRatios, setAspectRatios] = reactHostPort.useState<readonly (number | null)[]>(() => logos.map(() => null));
+
+  reactHostPort.useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const measure = () => {
+      setRowWidth(el.getBoundingClientRect().width);
+      setGapPx(parseFloat(getComputedStyle(el).columnGap) || 0);
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const onLogoLoad = reactHostPort.useCallback((index: number, event: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = event.currentTarget;
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    setAspectRatios((prev) => (prev[index] != null ? prev : prev.map((ratio, i) => (i === index ? img.naturalWidth / img.naturalHeight : ratio))));
+  }, []);
+
+  const aspectRatioSum = aspectRatios.reduce<number | null>((sum, ratio) => (sum == null || ratio == null ? null : sum + ratio), 0);
+  const height = rowWidth > 0 && aspectRatioSum != null && aspectRatioSum > 0 ? (rowWidth - gapPx * (logos.length - 1)) / aspectRatioSum : undefined;
+
+  return (
+    <div ref={rowRef} className="flex w-full items-center gap-double" style={{ visibility: height == null ? "hidden" : "visible" }}>
+      {logos.map((logo, index) => {
+        const style = height != null ? { height } : { height: 0, width: 0 };
+        return (
+          <span key={index} className="inline-flex items-center">
+            {logo.href ? (
+              <a href={logo.href} target="_blank" rel="noopener noreferrer" className="inline-flex items-center transition-opacity hover:opacity-80">
+                <img src={logo.src} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className={cn("w-auto object-contain", logo.darkSrc && "dark:hidden")} style={style} />
+                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden w-auto object-contain dark:block" style={style} />}
+              </a>
+            ) : (
+              <>
+                <img src={logo.src} alt={logo.alt} onLoad={(event) => onLogoLoad(index, event)} className={cn("w-auto object-contain", logo.darkSrc && "dark:hidden")} style={style} />
+                {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden w-auto object-contain dark:block" style={style} />}
+              </>
+            )}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 /** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
- * anchor is cut out of it and — for `emphasis: "cutout"` — pulses the introduced border itself, and an
- * info box explains it — renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition`
- * contract. */
-export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss, anchorFallbackSelectors = [] }) => {
+ * anchor is cut out of it and — for `emphasis: "cutout"` — pulses the introduced border itself, optional
+ * secondary `cutouts` stay interactive without pulsing, and an info box explains it — renders the
+ * declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
+export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss, anchorFallbackSelectors = [], additionalCutoutSelectors = [] }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const selector = step ? introductionAnchorSelector(step.anchor) : null;
   const { rect: anchorRect, viaFallback } = useIntroductionAnchorRect(selector, anchorFallbackSelectors, step ? step.emphasis !== "none" : false);
+  const cutoutSelectors = reactHostPort.useMemo((): readonly string[] => {
+    const fromStep = (step?.cutouts ?? []).map((anchor) => introductionAnchorSelector(anchor)).filter((entry): entry is string => Boolean(entry));
+    return [...new Set([...fromStep, ...additionalCutoutSelectors])];
+  }, [additionalCutoutSelectors, step]);
+  const extraCutoutRects = useIntroductionCutoutRects(cutoutSelectors);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -4976,13 +5290,15 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   const advance: IntroductionAdvance = step.advance;
   const emphasis: IntroductionEmphasis = anchorRect ? (viaFallback ? "cutout" : step.emphasis) : "none";
-  const cutout = emphasis === "none" ? null : anchorRect;
-  const bands = introductionVeilBands(viewport, cutout);
+  const primaryCutouts = emphasis === "none" || !anchorRect ? [] : [anchorRect];
+  const cutouts = [...primaryCutouts, ...extraCutoutRects];
+  const bands = introductionVeilBands(viewport, cutouts);
   const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
   // 🎓 A targeted anchor that hasn't mounted yet (a folded utility bar/panel) must not trap the user behind
   // an opaque-to-clicks veil — only `Screen` steps (and steps whose anchor did resolve) block pointer
   // events; an unresolved targeted anchor lets clicks through so the user can reveal it themselves.
-  const veilBlocksPointer = step.anchor.kind === "screen" || anchorRect != null;
+  // Secondary cutouts alone also count as resolved targets (e.g. drop windows while the drag source mounts).
+  const veilBlocksPointer = step.anchor.kind === "screen" || anchorRect != null || extraCutoutRects.length > 0;
 
   return (
     <>
@@ -4999,41 +5315,17 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
         {step.logos && step.logos.length > 0 && (
           <div className="mb-double flex flex-col gap-double">
-            {[step.logos.slice(0, -1), step.logos.slice(-1)].map((row, rowIndex) =>
-              row.length === 0 ? null : (
-                // 🎓 Each logo gets an equal-width flex-1 slot spanning the row's full width; `w-full h-auto`
-                // then lets the browser compute that slot's height from the image's own intrinsic aspect
-                // ratio — logos with different proportions end up at different heights (never distorted)
-                // while the row as a whole always uses all the space it's given, no guessed height constant.
-                <div key={rowIndex} className="flex w-full items-center gap-double">
-                  {row.map((logo, index) => {
-                    const image = (
-                      <>
-                        <img src={logo.src} alt={logo.alt} className={cn("h-auto w-full object-contain", logo.darkSrc && "dark:hidden")} />
-                        {logo.darkSrc && <img src={logo.darkSrc} alt={logo.alt} className="hidden h-auto w-full object-contain dark:block" />}
-                      </>
-                    );
-                    return logo.href ? (
-                      <a key={index} href={logo.href} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center transition-opacity hover:opacity-80">
-                        {image}
-                      </a>
-                    ) : (
-                      <span key={index} className="flex flex-1 items-center">
-                        {image}
-                      </span>
-                    );
-                  })}
-                </div>
-              ),
-            )}
+            {[step.logos.slice(0, -1), step.logos.slice(-1)].filter((row) => row.length > 0).map((row, rowIndex) => (
+              <IntroductionLogoRow key={rowIndex} logos={row} />
+            ))}
           </div>
         )}
         <div className="flex items-center justify-between gap-single">
-          <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel ?? "Skip"} onClick={skip} />
+          <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel} onClick={skip} />
           <div className="flex items-center gap-single">
-            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel ?? "Back"} onClick={back} />}
+            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} />}
             {advance.kind === "next" ? (
-              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={(isLast ? doneLabel : nextLabel) ?? (isLast ? "Done" : "Next")} onClick={next} />
+              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />
             ) : (
               <span className="text-xs text-muted-foreground">
                 {(advance.kind === "utility" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
@@ -5063,6 +5355,7 @@ export type UIDialogProps = {
  * renders the declarative `DialogDefinition` contract. Submit dispatches the merged effective args;
  * cancel (Escape, veil click, or the Cancel button) all funnel through `onCancel`. */
 export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderField, onSubmit, onCancel }) => {
+  const cancelLabel = useLabel("ui.common.cancel");
   const [staged, setStaged] = reactHostPort.useState<Record<string, unknown>>({});
   const buffer = reactHostPort.useMemo(() => ({ ...seedArgs, ...staged }), [seedArgs, staged]);
   const effective = reactHostPort.useMemo(() => effectiveActionArgs(dialog.args, buffer), [dialog.args, buffer]);
@@ -5093,7 +5386,7 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
           </div>
         )}
         <div className="flex items-center justify-between gap-single">
-          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ?? "Cancel"} onClick={onCancel} />
+          <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ?? cancelLabel} onClick={onCancel} />
           <Button id="ui.dialog.submit" icon="check" text={dialog.submitLabel} disabled={!canSubmit} onClick={submit} />
         </div>
       </div>
@@ -5432,11 +5725,14 @@ export function flowFromAnchor(anchor: Anchor): Flow {
   return { inline: anchorHorizontal(anchor) === "right" ? "rtl" : "ltr", block: anchorVertical(anchor) === "bottom" ? "up" : "down" };
 }
 
-/** @emoji 🧭 Edge insets for an {@link Anchor} plus a max-height clamp to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
+/** @emoji 🧭 Edge insets for an {@link Anchor} plus responsive width/height clamps to its containing region — corners inset on both axes, an edge-middle anchor centers along its middle axis via a translate. Shared by {@link Panel} and {@link Pane} so both float from identical math. */
 export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
   const horizontal = anchorHorizontal(anchor);
   const vertical = anchorVertical(anchor);
-  const style: React.CSSProperties = { maxHeight: "calc(100% - (var(--spacing-single) * 2))" };
+  const style: React.CSSProperties = {
+    maxWidth: "calc(100% - (var(--spacing-single) * 2))",
+    maxHeight: "calc(100% - (var(--spacing-single) * 2))",
+  };
   if (horizontal === "middle") {
     style.left = "50%";
     style.transform = "translateX(-50%)";
@@ -6845,8 +7141,8 @@ function CommandDialog({
 }) {
   const commandPaletteLabel = useLabel("ui.common.commandPalette");
   const searchForCommandLabel = useLabel("ui.common.searchForCommand");
-  const resolvedTitle = title ?? commandPaletteLabel ?? "Command Palette";
-  const resolvedDescription = description ?? searchForCommandLabel ?? "Search for a command to run...";
+  const resolvedTitle = title ?? commandPaletteLabel;
+  const resolvedDescription = description ?? searchForCommandLabel;
   return (
     <Dialog {...props}>
       <DialogHeader className="sr-only">
@@ -7207,7 +7503,7 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
  * Configuration for enhanced tooltip with label, paths, and hotkey.
  **/
 export interface TooltipConfig {
-  labelKey: string;
+  labelKey: UiTranslationKey | UiRegisteredTranslationKey;
   manualPath?: string;
   tutorialPath?: string;
   hotkey?: string;
@@ -7379,7 +7675,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const value = t(labelId as any) as any;
   const manualPath = typeof value === "object" && value?.manual ? value.manual : undefined;
   const tutorialPath = typeof value === "object" && value?.tutorial ? value.tutorial : undefined;
-  const localized = useLabel(labelId);
+  const localized = useIdLabel(labelId);
   const label =
     localized ??
     (typeof value === "string" && value !== labelId
@@ -7475,11 +7771,11 @@ interface LabelProps {
    * (gutter, tree-label slot, trailing control) so collection rows do not drift into the value column.
    */
   labelLayoutKind?: "property" | "treeGroupHeader";
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }
 // [🏘️compose📚js🗃️sketchpad💻elements🔖basecomponents🪨label](repo://p/u/compose/b/l/js/fd/org/sketchpad/f/elements.tsx/s/Base%20Components/d/i/Label)
 export function Label({ id, rowId, label, labelElementId, className, children, labelLayoutKind = "property" }: LabelProps) {
-  const localizedLabel = useLabel(id);
+  const localizedLabel = useIdLabel(id);
   const resolvedLabel = label ?? localizedLabel;
   const fallbackLabel = reactHostPort.useMemo(() => {
     if (!id) return "";
@@ -7657,9 +7953,10 @@ interface ComposeTooltipProps {
  **/
 function ComposeTooltip({ children, config }: ComposeTooltipProps) {
   const mode = useTooltipMode();
+  const label = useLabel(config.labelKey);
   if (mode === Expertise.EXPERT) return children;
   if (!React.isValidElement(children)) return children;
-  return <ChromeControlHint id={config.id}>{children}</ChromeControlHint>;
+  return <ChromeControlHint text={label}>{children}</ChromeControlHint>;
 }
 
 /**
@@ -7988,6 +8285,7 @@ export interface NotFoundProps {
  **/
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
   const navigate = useNavigate();
+  const goBackLabel = useLabel("ui.nav.back");
   return (
     <div className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
       <div className="flex items-center justify-center size-huge text-muted-foreground">{icon || <AlertCircleIcon className="size-huge" />}</div>
@@ -7996,7 +8294,7 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
       {parentPath && (
         <button onClick={() => navigate(parentPath)} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
           <ChevronLeftIcon className="size-small" />
-          <span>{parentLabel || "Go back"}</span>
+          <span>{parentLabel || goBackLabel}</span>
         </button>
       )}
     </div>
@@ -8150,16 +8448,18 @@ export interface ErrorViewProps {
 
 /** @emoji 🚨 Centered error placeholder with an optional retry action. */
 export function ErrorView({ id, title, message, onRetry }: ErrorViewProps): React.ReactElement {
+  const somethingWentWrongLabel = useLabel("ui.common.somethingWentWrong");
+  const retryLabel = useLabel("ui.common.retry");
   return (
     <div id={id} data-slot="error-view" className="flex flex-col items-center justify-center h-full gap-medium p-large text-center">
       <div className="flex items-center justify-center size-huge text-destructive-foreground">
         <AlertCircleIcon className="size-huge" />
       </div>
-      <h2 className="text-xl font-semibold">{title || "Something went wrong"}</h2>
+      <h2 className="text-xl font-semibold">{title || somethingWentWrongLabel}</h2>
       <p className="text-muted-foreground max-w-md">{message}</p>
       {onRetry && (
         <button type="button" onClick={onRetry} className="flex items-center gap-single text-sm text-primary hover:underline cursor-pointer mt-small">
-          <span>Retry</span>
+          <span>{retryLabel}</span>
         </button>
       )}
     </div>
@@ -8253,7 +8553,7 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
  * PlaceholderDiagramNode holds the data fields for a PlaceholderDiagramNode record.
  **/
 export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => void }> = ({ id = "diagram.placeholder", onClick }) => {
-  return <DiagramNode content={useLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
+  return <DiagramNode content={useIdLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
 };
 
 // #endregion 🔓DiagramNode
@@ -8893,13 +9193,13 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const [open, setOpen] = reactHostPort.useState(false);
   const { t } = useTranslation();
-  const placeholderIdLabel = useLabel(placeholderId);
+  const placeholderIdLabel = useIdLabel(placeholderId);
   const selectOptionLabel = useLabel("ui.common.selectOption");
   const searchLabel = useLabel("ui.common.select");
   const noOptionsFoundLabel = useLabel("ui.common.noOptionsFound");
   const clearSelectionLabel = useLabel("ui.contextMenu.clearSelection");
-  const computedPlaceholder = placeholderId ? placeholderIdLabel : (placeholder ?? selectOptionLabel ?? "Select option...");
-  const resolvedEmptyMessage = emptyMessage ?? noOptionsFoundLabel ?? "No options found.";
+  const computedPlaceholder = placeholderId ? placeholderIdLabel : (placeholder ?? selectOptionLabel);
+  const resolvedEmptyMessage = emptyMessage ?? noOptionsFoundLabel;
 
   const selectedOption = options.find((option) => option.value === value);
 
@@ -9321,7 +9621,7 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
   const skipLazyBlurCommitRef = reactHostPort.useRef(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
-  const placeholderLabel = useLabel(placeholderId || "");
+  const placeholderLabel = useIdLabel(placeholderId);
   const mixedLabel = useLabel("ui.common.mixedValues");
   const computedPlaceholder = mixed ? mixedLabel || "—" : placeholderId ? placeholderLabel : placeholder;
 
@@ -9707,6 +10007,7 @@ function Slider({
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
+  const doubleClickToEditLabel = useLabel("ui.common.doubleClickToEdit");
   const externalValues = reactHostPort.useMemo(() => (Array.isArray(value) ? value : Array.isArray(defaultValue) ? defaultValue : [min, max]), [value, defaultValue, min, max]);
   // 🖱️ While actively sliding, track the value locally instead of re-reading the (possibly-controlled)
   // `value` prop on every render — a slow or stale round-trip back to `value` would otherwise fight the
@@ -9897,7 +10198,7 @@ function Slider({
             id={id}
           />
         ) : (
-          <span data-slot="slider-value" className={sliderValueClassName} role="button" onDoubleClick={handleValueClick} title="Double-click to edit">
+          <span data-slot="slider-value" className={sliderValueClassName} role="button" onDoubleClick={handleValueClick} title={doubleClickToEditLabel}>
             {formatNumber(displayValue)}
           </span>
         )}
@@ -10228,7 +10529,8 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [isFocused, setIsFocused] = reactHostPort.useState(false);
   const textareaRef = reactHostPort.useRef<HTMLTextAreaElement>(null);
-  const computedPlaceholder = placeholderId ? useLabel(placeholderId) : placeholder;
+  const placeholderIdLabel = useIdLabel(placeholderId);
+  const computedPlaceholder = placeholderId ? placeholderIdLabel : placeholder;
   const mixedLabel = useLabel("ui.common.mixedValues");
   const effectivePlaceholder = mixed ? mixedLabel || "—" : computedPlaceholder;
 
@@ -11100,6 +11402,7 @@ function DialogContent({
   showCloseButton?: boolean;
 }) {
   const flow = useFlow();
+  const closeLabel = useLabel("ui.common.close");
   return (
     <DialogPortal data-slot="dialog-portal">
       <DialogPrimitive.Content
@@ -11121,7 +11424,7 @@ function DialogContent({
             className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small"
           >
             <CloseIconAlt />
-            <span className="sr-only">Close</span>
+            <span className="sr-only">{closeLabel}</span>
           </DialogPrimitive.Close>
         )}
       </DialogPrimitive.Content>
@@ -11786,7 +12089,8 @@ export const ZUKUNFT_BAU_PROJECT_URL = "https://www.zukunftbau.de/projekte/forsc
  * never disappears behind an anchored panel's own chrome. Rendered as a real `<button>` (not a link) so it reads as
  * chrome rather than page content; the click opens the funded project page in a new tab.
  **/
-export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "en"): NavbarItem {
+/** @emoji 📱 On mobile the credit shrinks to just its logo — the "Funded by"/"Ein Projekt von" text has no room. */
+export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale: UiLocale = "en", iconOnly = false): NavbarItem {
   return {
     key,
     className: "relative z-40",
@@ -11796,7 +12100,7 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale:
         onClick={() => window.open(ZUKUNFT_BAU_PROJECT_URL, "_blank", "noopener,noreferrer")}
         className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground hover:text-foreground hover:bg-hover-window transition-colors cursor-pointer"
       >
-        <span className="whitespace-nowrap">{locale === "de" ? "Gefördert durch" : "Funded by"}</span>
+        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Gefördert durch" : "Funded by"}</span>}
         <ZukunftBauLogo className="h-tiny w-auto shrink-0" />
       </button>
     ),
@@ -11810,13 +12114,14 @@ export function fundedByZukunftBauFooterItem(key = "fundedByZukunftBau", locale:
  * "Ein Projekt von" / "A project of" with LUH and UdK logos. Each logo links out to the partner team page;
  * `relative z-40` matches panel-tab chrome so the credit stays visible above anchored panels.
  **/
-export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de"): NavbarItem {
+/** @emoji 📱 On mobile the credit shrinks to just its logos — the "Ein Projekt von"/"und" text has no room. */
+export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiLocale = "de", iconOnly = false): NavbarItem {
   return {
     key,
     className: "relative z-40",
     content: (
       <div className="inline-flex items-center gap-tiny rounded-sm px-single py-half text-2xs text-muted-foreground">
-        <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>
+        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "Ein Projekt von" : "A project of"}</span>}
         <a
           href={LUH_URL}
           target="_blank"
@@ -11826,7 +12131,7 @@ export function aProjectOfLuhUdkFooterItem(key = "aProjectOfLuhUdk", locale: UiL
         >
           <LuhLogo className="h-tiny" />
         </a>
-        <span className="whitespace-nowrap">{locale === "de" ? "und" : "and"}</span>
+        {!iconOnly && <span className="whitespace-nowrap">{locale === "de" ? "und" : "and"}</span>}
         <a
           href={UDK_URL}
           target="_blank"
@@ -11871,18 +12176,18 @@ export interface NavbarExampleSelectProps {
 function NavbarExampleSelect({ id, label, value, options, onValueChange, className, includeNoExample = true }: NavbarExampleSelectProps) {
   const exampleLabel = useLabel("ui.common.example");
   const noExampleLabel = useLabel("ui.common.noExample");
-  const resolvedLabel = label ?? exampleLabel ?? "Example";
+  const resolvedLabel = label ?? exampleLabel;
   const resolvedOptions = reactHostPort.useMemo(() => {
     const withoutSentinels = options.filter((row) => row.id !== NAVBAR_NO_EXAMPLE_ID && row.id !== "empty");
     if (!includeNoExample) return withoutSentinels;
-    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel ?? "No example" }, ...withoutSentinels];
+    return [{ id: NAVBAR_NO_EXAMPLE_ID, label: noExampleLabel }, ...withoutSentinels];
   }, [includeNoExample, options, noExampleLabel]);
   if (resolvedOptions.length === 0) return null;
   const resolvedValue = !value || value === NAVBAR_NO_EXAMPLE_ID ? NAVBAR_NO_EXAMPLE_ID : value;
   return (
     <div className={cn("flex min-w-0 max-w-md flex-1 items-center justify-center px-single", className)}>
       <Label id={`${id}.label`} label={resolvedLabel} className="sr-only" />
-      <Select value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
+      <Select id={`${id}.select`} value={resolvedValue} onValueChange={(next) => onValueChange(normalizePlaygroundExampleId(next))}>
         <SelectTrigger className="h-medium w-full min-w-[12rem] max-w-md" id={`${id}.trigger`} size="sm">
           <SelectValue placeholder={resolvedLabel} />
         </SelectTrigger>
@@ -12124,6 +12429,8 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
   const fileInputRef = reactHostPort.useRef<HTMLInputElement>(null);
   const locked = disabled || !uniform;
   const editorValue = uniform ? innerFromIconForSelectorMode(value, activeMode) : "";
+  const importFileLabel = useLabel("ui.common.importFile");
+  const clearLabel = useLabel("ui.common.clear");
 
   const onModeSelect = (next: string) => {
     if (locked) {
@@ -12233,8 +12540,8 @@ export function IconSelector({ id, value, onChange, disabled = false, uniform = 
       />
       <div className="bg-muted/30 flex min-h-peta items-center justify-center overflow-hidden rounded-sm border px-1 py-2">{preview}</div>
       <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-        <Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text="Import file…" />
-        <Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text="Clear" />
+        <Button className="h-7 shrink-0 gap-1 px-2 text-xs" disabled={locked} onClick={() => fileInputRef.current?.click()} type="button" variant="outline" icon="folder-open" text={importFileLabel} />
+        <Button className="h-7 shrink-0 px-2 text-xs whitespace-nowrap" disabled={locked} onClick={() => onChange("")} type="button" variant="ghost" icon="x" text={clearLabel} />
       </div>
       <input accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,.svg,.png,.jpg,.jpeg,.webp,.gif" className="hidden" onChange={onPickFiles} ref={fileInputRef} type="file" />
     </div>
@@ -12709,7 +13016,7 @@ const renderTreeHeaderActions = (actions: TreeHeaderAction[]) => (
             id={action.id}
             type="checkbox"
             className="m-0 size-tiny cursor-pointer accent-foreground"
-            aria-label={action.ariaLabel ?? action.title ?? action.id ?? "Toggle tree item"}
+            aria-label={action.ariaLabel ?? action.title ?? action.id}
             checked={action.checked}
             disabled={action.disabled}
             onChange={(event) => {
@@ -12925,7 +13232,7 @@ export interface CatalogueItem {
 }
 
 export interface CatalogueProps {
-  readonly title?: React.ReactNode;
+  readonly title: React.ReactNode;
   readonly items: readonly CatalogueItem[];
   readonly mime?: string;
   readonly className?: string;
@@ -12938,7 +13245,7 @@ export const Catalogue: React.FC<CatalogueProps> = ({ title, items, mime = CATAL
     () => [
       {
         id: "catalogue",
-        label: title ?? "Catalogue",
+        label: title,
         items: items.map((item) => ({
           id: item.id,
           label: item.label,
@@ -13519,7 +13826,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const suppressLocalizedLabel = label == null || label === "";
   const resolvedLabel = suppressLocalizedLabel ? undefined : label;
-  const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? useLabel(id) : undefined;
+  const idLabel = useIdLabel(id);
+  const localizedLabel = !suppressLocalizedLabel && resolvedLabel === undefined && id ? idLabel : undefined;
   const displayLabel = resolvedLabel ?? localizedLabel;
   const controlHint = useControlAccessibleLabel(id);
   assertNoNestedTreeSections(children, "TreeSection");
@@ -13716,7 +14024,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   layoutKind = "default",
 }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
-  const localizedLabel = id ? useLabel(id) : undefined;
+  const localizedLabel = useIdLabel(id);
   const displayLabel = label ?? localizedLabel;
   const itemKey = id ?? displayLabel ?? id;
   const itemId = `item-${id}-${itemKey}`;
@@ -13744,6 +14052,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             data-hover-scope
             data-tree-row-kind="group"
             data-tree-group
+            data-draggable={isDragHandle ? "true" : undefined}
             role="treeitem"
             id={id}
             ref={setNodeRef}
@@ -14036,7 +14345,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   dragInitiation = "surface",
   isDropReady = false,
 }) => {
-  const localizedLabel = id ? useLabel(id) : undefined;
+  const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const controlHint = useControlAccessibleLabel(id);
   assertNoNestedTreeSections(children, "TreeItem");
@@ -14245,6 +14554,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
               data-hover-scope
               data-tree-row-kind="group"
               data-tree-group
+              data-draggable={draggable ? "true" : undefined}
               role="treeitem"
               id={id}
               className={itemShellClasses}
@@ -14376,6 +14686,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
         data-slot="tree-item-row"
         data-hover-scope
         data-tree-row-kind={layoutKind === "property" ? "property" : "leaf"}
+        data-draggable={draggable ? "true" : undefined}
         role="treeitem"
         id={id}
         className={itemShellClasses}
@@ -14478,7 +14789,7 @@ export const TreeRow: React.FC<{
   onDoubleClick?: (event: React.MouseEvent) => void;
   actions?: TreeHeaderAction[];
 }> = ({ children, className, id, label, onClick, onDoubleClick, actions }) => {
-  const localizedLabel = id ? useLabel(id) : undefined;
+  const localizedLabel = useIdLabel(id);
   const resolvedLabel = label !== undefined ? label : localizedLabel;
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const rowKind = treeRowUsesPropertyHeaderAnchor(children) ? "property" : "content";
@@ -15496,23 +15807,25 @@ interface BasicChatMessage {
   body: string;
 }
 
-const createBasicChatMessages = (id: string, title: string): BasicChatMessage[] => [
-  {
-    id: `${id}.assistant.0`,
-    role: "assistant",
-    body: `Chat is ready for ${title}.`,
-  },
-  {
-    id: `${id}.assistant.1`,
-    role: "assistant",
-    body: "Messages stay local in this panel until a connected assistant is added.",
-  },
-];
-
 export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
-  const [messages, setMessages] = reactHostPort.useState<BasicChatMessage[]>(() => createBasicChatMessages(id, title));
+  const readyForLabel = useLabel("ui.chat.readyFor", { title });
+  const localOnlyLabel = useLabel("ui.chat.localOnly");
+  const instructionsLabel = useLabel("ui.chat.instructions", { title });
+  const placeholderLabel = useLabel("ui.chat.placeholder", { title: title.toLowerCase() });
+  const clearLabel = useLabel("ui.common.clear");
+  const sendLabel = useLabel("ui.chat.send");
+  const { t } = useUiTranslation();
+  const savedLocally = reactHostPort.useCallback((preview: string) => resolveTranslationLabel(t("ui.chat.savedLocally", { preview })) ?? preview, [t]);
+  const createBasicChatMessages = reactHostPort.useCallback(
+    (chatId: string): BasicChatMessage[] => [
+      { id: `${chatId}.assistant.0`, role: "assistant", body: readyForLabel },
+      { id: `${chatId}.assistant.1`, role: "assistant", body: localOnlyLabel },
+    ],
+    [readyForLabel, localOnlyLabel],
+  );
+  const [messages, setMessages] = reactHostPort.useState<BasicChatMessage[]>(() => createBasicChatMessages(id));
   const [draft, setDraft] = reactHostPort.useState("");
   const nextMessageIndexRef = reactHostPort.useRef(2);
   const appendMessage = (role: BasicChatMessageRole, body: string) => {
@@ -15529,7 +15842,7 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
   };
   const clearMessages = () => {
     nextMessageIndexRef.current = 2;
-    setMessages(createBasicChatMessages(id, title));
+    setMessages(createBasicChatMessages(id));
     setDraft("");
   };
   const sendDraft = () => {
@@ -15540,18 +15853,18 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
     const responsePreview = trimmedDraft.length > 72 ? `${trimmedDraft.slice(0, 69)}...` : trimmedDraft;
     setDraft("");
     appendMessage("user", trimmedDraft);
-    appendMessage("assistant", `Saved locally: "${responsePreview}"`);
+    appendMessage("assistant", savedLocally(responsePreview));
   };
 
   reactHostPort.useEffect(() => {
     nextMessageIndexRef.current = 2;
-    setMessages(createBasicChatMessages(id, title));
+    setMessages(createBasicChatMessages(id));
     setDraft("");
-  }, [id, title]);
+  }, [id, createBasicChatMessages]);
 
   return (
     <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
-      <HelperRow>{`Local chat for ${title}. Use Enter to send and Shift+Enter for a new line.`}</HelperRow>
+      <HelperRow>{instructionsLabel}</HelperRow>
       <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-sm border", borderClass)}>
         <div className="flex min-w-0 flex-col p-single">
           {messages.map((message) => (
@@ -15578,11 +15891,11 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
             sendDraft();
           }}
           rows={3}
-          placeholder={`Write a message for ${title.toLowerCase()}...`}
+          placeholder={placeholderLabel}
         />
         <div className="flex items-center justify-end gap-single">
-          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text="Clear" icon="trash-2" onClick={clearMessages} />
-          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text="Send" icon="arrow-right" onClick={sendDraft} disabled={!draft.trim()} />
+          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text={clearLabel} icon="trash-2" onClick={clearMessages} />
+          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text={sendLabel} icon="arrow-right" onClick={sendDraft} disabled={!draft.trim()} />
         </div>
       </div>
     </div>
@@ -16032,15 +16345,18 @@ const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right
 );
 
 /** @emoji 🌳 Root tree shell for the window measures rail (guide lines + indentation). */
-export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className }) => {
+export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className?: string; direction?: FlowBlock }> = ({ children, className, direction = "down" }) => {
   const { treeRootRef, handleTreePointerOver, handleTreePointerLeave, refreshTreeHoverPath } = useTreeHoverPathRootHandlers();
+  const orderedChildren = direction === "up" ? React.Children.toArray(children).reverse() : children;
 
   return (
-    <div ref={treeRootRef} data-slot="window-measures-tree" className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
-      <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
-        <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{children}</TreeContext.Provider>
-      </TreeHoverPathRefreshContext.Provider>
-    </div>
+    <FlowProvider block={direction}>
+      <div ref={treeRootRef} data-slot="window-measures-tree" data-direction={direction} className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
+        <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{orderedChildren}</TreeContext.Provider>
+        </TreeHoverPathRefreshContext.Provider>
+      </div>
+    </FlowProvider>
   );
 };
 
@@ -16054,48 +16370,60 @@ export interface WindowMeasureTreeGroupProps {
 /** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
 export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { block } = useFlow();
   const itemId = `window-measure-group-${id}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
   const hasChildren = hasNonEmptyChildren(children);
-  return (
+  const toggleIcon = open ? (block === "up" ? <ChevronUpIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronDownIcon className="size-tiny flex-shrink-0 text-muted-foreground" />) : block === "up" ? <ChevronLeftIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-tiny flex-shrink-0 text-muted-foreground" />;
+  const row = (
+    <WindowMeasureTreeRow
+      left={
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          extendCurrentLevelToBottom={open && hasChildren && block === "down"}
+          slotOffsetPx={2}
+          slot={
+            hasChildren ? (
+              <button
+                type="button"
+                className="flex-shrink-0 cursor-pointer border-0 bg-transparent p-0"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpen(!open);
+                }}
+              >
+                {toggleIcon}
+              </button>
+            ) : undefined
+          }
+          contentClassName="flex min-w-0 items-center gap-double"
+        >
+          <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
+            {label}
+          </span>
+        </TreeAlignedRow>
+      }
+    />
+  );
+  const branch =
+    open && hasChildren ? (
+      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+        <TreeBranchContent slot="window-measure-tree-content">{block === "up" ? React.Children.toArray(children).reverse() : children}</TreeBranchContent>
+      </TreeContext.Provider>
+    ) : null;
+  return block === "up" ? (
     <>
-      <WindowMeasureTreeRow
-        left={
-          <TreeAlignedRow
-            level={level}
-            isLastAtLevel={isLastAtLevel}
-            showLines={showLines}
-            connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={open && hasChildren}
-            slotOffsetPx={2}
-            slot={
-              hasChildren ? (
-                <button
-                  type="button"
-                  className="flex-shrink-0 cursor-pointer border-0 bg-transparent p-0"
-                  onClick={(event) => {
-                    event.preventDefault();
-                    event.stopPropagation();
-                    setOpen(!open);
-                  }}
-                >
-                  {open ? <ChevronDownIcon className="size-tiny flex-shrink-0 text-muted-foreground" /> : <ChevronRightIcon className="size-tiny flex-shrink-0 text-muted-foreground" />}
-                </button>
-              ) : undefined
-            }
-            contentClassName="flex min-w-0 items-center gap-double"
-          >
-            <span data-slot="tree-label" className={cn("flex-1 truncate select-none", windowMeasureTreeGroupLabelClass)} style={treeItemLabelStyle}>
-              {label}
-            </span>
-          </TreeAlignedRow>
-        }
-      />
-      {open && hasChildren ? (
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
-          <TreeBranchContent slot="window-measure-tree-content">{children}</TreeBranchContent>
-        </TreeContext.Provider>
-      ) : null}
+      {branch}
+      {row}
+    </>
+  ) : (
+    <>
+      {row}
+      {branch}
     </>
   );
 };
@@ -16227,7 +16555,7 @@ interface WindowSearchChromeProps {
 
 /** @emoji 🔎 Title bar for the top-middle window search pane: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowSearchChrome: React.FC<WindowSearchChromeProps> = ({ windowId, expanded, onToggle }) => {
-  const searchLabel = useLabel(UI_WINDOW_SEARCH.title) || WINDOW_SEARCH_USER.title;
+  const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
   if (!expanded) {
     return (
       <div data-slot="window-search-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-center border-b-0")}>
@@ -16992,6 +17320,7 @@ const Panel: React.FC<PanelProps> = ({
         data-slot="panel"
         data-anchor={anchor}
         data-panel-visible={visible ? "true" : "false"}
+        data-active-tab-id={activeNode?.id}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground", isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
@@ -17224,8 +17553,9 @@ export const Pane: React.FC<PaneProps> = ({
       data-slot="pane"
       data-anchor={anchor}
       data-dragging={dragging ? "true" : undefined}
+      dir={flow.inline === "rtl" ? "rtl" : undefined}
       className={cn(
-        "pointer-events-auto absolute flex min-w-0 max-w-full box-border overflow-hidden",
+        "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-hidden",
         flow.block === "up" ? "flex-col-reverse" : "flex-col",
         horizontal === "left" ? "items-start" : horizontal === "right" ? "items-end" : "items-center",
         !effectiveFolded && "w-fit",
@@ -17233,31 +17563,33 @@ export const Pane: React.FC<PaneProps> = ({
       )}
       style={positionStyle}
     >
-      <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-      <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
-        {onAnchorChange && !mobile ? (
-          <span
-            data-slot="pane-drag-handle"
-            className="inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing mx-half"
-            {...dragPointerProps}
-          >
-            <GripVerticalIcon size={12} />
-          </span>
-        ) : null}
-        <ActionGroupItem
-          id={`${id}-pane-fold`}
-          icon={effectiveFolded ? "chevron-left" : "chevron-right"}
-          text={label ?? id}
-          className={windowRailChromeLabelActionClass}
-          onClick={mobile ? undefined : onFoldToggle}
-        />
-      </div>
-      {!effectiveFolded ? (
-        <div data-slot="pane-body" className="relative min-h-0 flex-1 overflow-y-auto">
-          {children}
+      <FlowProvider inline={flow.inline} block={flow.block}>
+        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+        <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
+          {onAnchorChange && !mobile ? (
+            <span
+              data-slot="pane-drag-handle"
+              className="inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing mx-half"
+              {...dragPointerProps}
+            >
+              <GripVerticalIcon size={12} />
+            </span>
+          ) : null}
+          <ActionGroupItem
+            id={`${id}-pane-fold`}
+            icon={effectiveFolded ? "chevron-left" : "chevron-right"}
+            text={label ?? id}
+            className={windowRailChromeLabelActionClass}
+            onClick={mobile ? undefined : onFoldToggle}
+          />
         </div>
-      ) : null}
-      {resizable && !mobile && !effectiveFolded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
+        {!effectiveFolded ? (
+          <div data-slot="pane-body" dir="ltr" className="relative min-h-0 flex-1 overflow-y-auto">
+            <FlowProvider inline="ltr">{children}</FlowProvider>
+          </div>
+        ) : null}
+        {resizable && !mobile && !effectiveFolded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
+      </FlowProvider>
     </div>
   );
 };
@@ -17302,7 +17634,13 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
 
   return (
     <LevelProvider level="panel">
-      <PanelGhostRoot data-panel="mobilePanel" className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}>
+      <PanelGhostRoot
+        data-slot="panel"
+        data-panel="mobilePanel"
+        data-panel-visible="true"
+        data-active-tab-id={activeNode?.id}
+        className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}
+      >
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
@@ -17319,136 +17657,6 @@ export { MobilePanel };
 
 // #endregion 💧MobilePanel
 
-// #region 🧭ShellDisplayPanel
-// Pure, prop-driven display-settings panel: choose/save/apply a named layout, toggle compact mode.
-// A shell hosts this panel and owns persistence; this component only renders and forwards callbacks.
-
-/**
- * Named layout option offered by {@link ShellDisplayPanel}.
- **/
-export interface ShellDisplayPanelLayoutOption {
-  readonly id: string;
-  readonly label: string;
-}
-
-/**
- * Props interface for the ShellDisplayPanel component (a DisplayHostApi-shaped surface).
- **/
-export interface ShellDisplayPanelProps {
-  readonly layouts: readonly ShellDisplayPanelLayoutOption[];
-  readonly activeLayoutId?: string;
-  readonly onLayoutChange?: (layoutId: string) => void;
-  readonly onSaveLayout?: () => void;
-  readonly onApplyLayout?: () => void;
-  readonly compact?: boolean;
-  readonly onCompactChange?: (compact: boolean) => void;
-  readonly className?: string;
-}
-
-/** @emoji 🧭 Prop-driven panel a shell renders for choosing/saving/applying a layout and toggling compact mode. */
-export const ShellDisplayPanel: React.FC<ShellDisplayPanelProps> = ({ layouts, activeLayoutId, onLayoutChange, onSaveLayout, onApplyLayout, compact = false, onCompactChange, className }) => {
-  return (
-    <div data-slot="shell-display-panel" className={cn("flex flex-col gap-double p-double", className)}>
-      <Field id="shell-display-panel.layout" label="Layout">
-        <Select value={activeLayoutId} onValueChange={onLayoutChange}>
-          <SelectTrigger id="shell-display-panel.layout">
-            <SelectValue placeholder="Choose a layout" />
-          </SelectTrigger>
-          <SelectContent>
-            {layouts.map((layout) => (
-              <SelectItem key={layout.id} value={layout.id}>
-                {layout.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <div data-slot="shell-display-panel-actions" className="flex gap-single">
-        <Button id="shell-display-panel.save" icon="save" text="Save" onClick={onSaveLayout} />
-        <Button id="shell-display-panel.apply" icon="check" text="Apply" onClick={onApplyLayout} />
-      </div>
-      <Field id="shell-display-panel.compact" label="Compact Mode">
-        <Toggle id="shell-display-panel.compact" pressed={compact} onPressedChange={onCompactChange} icon={compact ? "check" : "x"} text={compact ? "On" : "Off"} />
-      </Field>
-    </div>
-  );
-};
-
-// #endregion 🧭ShellDisplayPanel
-
-// #region 🧭ShellSettingsPanel
-// Pure, prop-driven app-settings panel: locale, theme, and expertise level.
-// A shell hosts this panel and owns persistence; this component only renders and forwards callbacks.
-
-/**
- * Locale option offered by {@link ShellSettingsPanel}.
- **/
-export interface ShellSettingsPanelLocaleOption {
-  readonly id: UiLocale;
-  readonly label: string;
-}
-
-/**
- * Props interface for the ShellSettingsPanel component (a SettingsHostApi-shaped surface).
- **/
-export interface ShellSettingsPanelProps {
-  readonly locale: UiLocale;
-  readonly locales: readonly ShellSettingsPanelLocaleOption[];
-  readonly onLocaleChange?: (locale: UiLocale) => void;
-  readonly theme: ElementsSurfaceAppearance;
-  readonly onThemeChange?: (theme: ElementsSurfaceAppearance) => void;
-  readonly expertise: Expertise;
-  readonly onExpertiseChange?: (expertise: Expertise) => void;
-  readonly className?: string;
-}
-
-/** @emoji 🧭 Prop-driven panel a shell renders for changing locale, theme, and expertise level. */
-export const ShellSettingsPanel: React.FC<ShellSettingsPanelProps> = ({ locale, locales, onLocaleChange, theme, onThemeChange, expertise, onExpertiseChange, className }) => {
-  return (
-    <div data-slot="shell-settings-panel" className={cn("flex flex-col gap-double p-double", className)}>
-      <Field id="shell-settings-panel.locale" label="Language">
-        <Select value={locale} onValueChange={(value) => onLocaleChange?.(value as UiLocale)}>
-          <SelectTrigger id="shell-settings-panel.locale">
-            <SelectValue placeholder="Choose a language" />
-          </SelectTrigger>
-          <SelectContent>
-            {locales.map((option) => (
-              <SelectItem key={option.id} value={option.id}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field id="shell-settings-panel.theme" label="Theme">
-        <Select value={theme} onValueChange={(value) => onThemeChange?.(value as ElementsSurfaceAppearance)}>
-          <SelectTrigger id="shell-settings-panel.theme">
-            <SelectValue placeholder="Choose a theme" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="system">System</SelectItem>
-            <SelectItem value="light">Light</SelectItem>
-            <SelectItem value="dark">Dark</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-      <Field id="shell-settings-panel.expertise" label="Expertise Level">
-        <Select value={expertise} onValueChange={(value) => onExpertiseChange?.(value as Expertise)}>
-          <SelectTrigger id="shell-settings-panel.expertise">
-            <SelectValue placeholder="Choose an expertise level" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={Expertise.BEGINNER}>Beginner</SelectItem>
-            <SelectItem value={Expertise.NORMAL}>Normal</SelectItem>
-            <SelectItem value={Expertise.EXPERT}>Expert</SelectItem>
-          </SelectContent>
-        </Select>
-      </Field>
-    </div>
-  );
-};
-
-// #endregion 🧭ShellSettingsPanel
 
 // #endregion 📷Panel Components
 
@@ -17456,11 +17664,13 @@ export const ShellSettingsPanel: React.FC<ShellSettingsPanelProps> = ({ locale, 
 
 interface RibbonZoneProps extends React.ComponentProps<"div"> {
   children: React.ReactNode;
+  /** @emoji 📏 Lets intrinsically tall ribbon content define the row height while retaining the standard minimum. */
+  variableHeight?: boolean;
 }
 
-function RibbonZone({ className, children, ...props }: RibbonZoneProps) {
+function RibbonZone({ className, children, variableHeight = false, ...props }: RibbonZoneProps) {
   return (
-    <div data-slot="ribbon-zone" className={cn("flex h-medium shrink-0 items-center gap-single min-w-0", className)} {...props}>
+    <div data-slot="ribbon-zone" data-variable-height={variableHeight ? "true" : undefined} className={cn("flex shrink-0 items-center gap-single min-w-0", variableHeight ? "h-auto min-h-medium" : "h-medium", className)} {...props}>
       {children}
     </div>
   );
@@ -17530,7 +17740,7 @@ function Ribbon({ id, direction, rows, className }: RibbonProps) {
   return (
     <div id={id} data-slot="ribbon" data-direction={direction} className={cn("flex w-fit max-w-full shrink-0", direction === "up" ? "flex-col-reverse items-start" : "w-full flex-col items-stretch", className)}>
       {rows.map((row, depth) => (
-        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full items-stretch">
+        <div key={row.key} data-slot="ribbon-row" data-depth={depth} className="flex min-w-0 w-full shrink-0 items-stretch">
           {row.content}
         </div>
       ))}
@@ -17653,7 +17863,7 @@ export type EngagementControl = EngagementSliderControl | EngagementStepperContr
 /** @emoji 🏷 i18n keys for window engagement chrome (`ui.engagement.*` in {@link uiChromeTranslationBundles}). */
 export const UI_ENGAGEMENT = {
   actions: "ui.engagement.actions",
-} as const;
+} as const satisfies Record<string, UiTranslationKey>;
 
 /** @emoji 🏷 Default English copy for window engagement chrome (matches `ui.engagement.*` en bundle). */
 export const ENGAGEMENT_USER = {
@@ -17667,16 +17877,7 @@ export const UI_WINDOW_SEARCH = {
   actionActive: "ui.windowSearch.actionActive",
   suggestions: "ui.windowSearch.suggestions",
   noMatches: "ui.windowSearch.noMatches",
-} as const;
-
-/** @emoji 🏷 Default English copy for the window search pane (matches `ui.windowSearch.*` en bundle). */
-export const WINDOW_SEARCH_USER = {
-  title: "Search",
-  actionPlaceholder: "Action",
-  actionPlaceholderActive: "Action or value",
-  suggestionsAria: "Suggestions",
-  noMatches: "No matches",
-} as const;
+} as const satisfies Record<string, UiTranslationKey>;
 
 /** @emoji 🏷 Turns an internal step id (`first_corner`) into readable status text (`First Corner`). */
 export function humanizeEngagementStepId(stepId: string): string {
@@ -18081,6 +18282,7 @@ function engagementControlIsNumeric(control: EngagementControl): control is Enga
 /** @emoji 🎛 Renders one engagement {@link EngagementControl} using Slider, Stepper, Ring, toggle group, or Select. */
 function EngagementControlView({ control }: { readonly control: EngagementControl }): React.ReactElement | null {
   const label = engagementControlLabel(control);
+  const selectLabel = useLabel("ui.common.select");
   const lastNumericRef = reactHostPort.useRef(engagementControlIsNumeric(control) ? control.value : 0);
   reactHostPort.useEffect(() => {
     if (engagementControlIsNumeric(control)) lastNumericRef.current = control.value;
@@ -18155,7 +18357,7 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
         {label ? <span className="text-element text-xs">{label}</span> : null}
         <Select value={control.value} onValueChange={(value) => control.onChange?.(value)} disabled={control.disabled}>
           <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
-            <SelectValue placeholder={control.placeholder ?? "Select"} />
+            <SelectValue placeholder={control.placeholder ?? selectLabel} />
           </SelectTrigger>
           <SelectContent>
             {control.items.map((item) => (
@@ -18189,10 +18391,12 @@ function EngagementControlView({ control }: { readonly control: EngagementContro
 const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles, className = "", active = false }) => {
   const actionPlaceholderLabel = useLabel(UI_WINDOW_SEARCH.action);
   const actionActivePlaceholderLabel = useLabel(UI_WINDOW_SEARCH.actionActive);
+  const suggestionsAriaLabel = useLabel(UI_WINDOW_SEARCH.suggestions);
+  const noMatchesLabel = useLabel(UI_WINDOW_SEARCH.noMatches);
   const [uncontrolledDraft, setUncontrolledDraft] = reactHostPort.useState("");
   const isControlledInput = !!input?.onChange;
   const draft = normalizeEngagementActionText(isControlledInput ? (input?.value ?? "") : uncontrolledDraft);
-  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel || WINDOW_SEARCH_USER.actionPlaceholderActive : actionPlaceholderLabel || WINDOW_SEARCH_USER.actionPlaceholder);
+  const actionPlaceholder = input?.placeholder ?? (sessionActive ? actionActivePlaceholderLabel : actionPlaceholderLabel);
   const [possiblesExpanded, setPossiblesExpanded] = reactHostPort.useState(false);
   const [activePossibleIndex, setActivePossibleIndex] = reactHostPort.useState(0);
   const searchRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -18341,7 +18545,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                 <Action
                   id={UI_WINDOW_SEARCH.suggestions}
                   aria-expanded={possiblesExpanded}
-                  aria-label={WINDOW_SEARCH_USER.suggestionsAria}
+                  aria-label={suggestionsAriaLabel}
                   data-slot="search-possibles-toggle"
                   icon={possiblesExpanded ? <ChevronDownIcon className="size-small" /> : <ChevronRightIcon className="size-small" />}
                   onClick={() => setPossiblesExpanded((open) => !open)}
@@ -18375,7 +18579,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
                       ))}
                     </CommandGroup>
                   ) : (
-                    <CommandEmpty>{WINDOW_SEARCH_USER.noMatches}</CommandEmpty>
+                    <CommandEmpty>{noMatchesLabel}</CommandEmpty>
                   )}
                 </CommandList>
               </Command>
@@ -18509,11 +18713,12 @@ interface WindowProps extends WindowConfig {
  **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
   const bgClass = "bg-window";
+  const errorLabel = useLabel("ui.common.error");
   return (
     <div className={cn("flex flex-col items-center justify-center h-full w-full p-small", bgClass)}>
       <div className="text-center space-y-2 max-w-md">
         <div className="text-4xl mb-4">⚠️</div>
-        <h3 className="text-lg font-medium">Error</h3>
+        <h3 className="text-lg font-medium">{errorLabel}</h3>
         <p className="text-sm text-muted-foreground">{error.message}</p>
       </div>
     </div>
@@ -21669,6 +21874,8 @@ export const Scene: React.FC<SceneProps> = ({
   onProjectionChange,
   selectionOnDrag = false,
 }) => {
+  const perspectiveLabel = useLabel("ui.host.perspective");
+  const orthographicLabel = useLabel("ui.host.orthographic");
   const [resolvedProjection, setResolvedProjection] = reactHostPort.useState<SceneProjectionKind>(projection ?? (orthographic ? "orthographic" : "camera"));
 
   reactHostPort.useEffect(() => {
@@ -21687,12 +21894,12 @@ export const Scene: React.FC<SceneProps> = ({
     {
       value: "camera",
       icon: <CameraIcon className="size-3" />,
-      label: "Perspective",
+      label: perspectiveLabel,
     },
     {
       value: "orthographic",
       icon: <GripVerticalIcon className="size-3" />,
-      label: "Orthographic",
+      label: orthographicLabel,
     },
   ];
 
@@ -21939,7 +22146,7 @@ const Table = <T,>({
   wrapperComponent: WrapperComponent,
 }: TableProps<T>) => {
   const noDataLabel = useLabel("ui.common.noData");
-  const resolvedEmptyMessage = emptyMessage ?? noDataLabel ?? "No data";
+  const resolvedEmptyMessage = emptyMessage ?? noDataLabel;
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
   const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
@@ -22442,8 +22649,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Root",
     icon: "layout-grid",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" },
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
     ],
   },
   branch: {
@@ -22451,8 +22658,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Branch",
     icon: "folder",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" },
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
     ],
   },
   leaf: {
@@ -22460,8 +22667,8 @@ export const VIRTUAL_FILE_SYSTEM_DEMO_FILE_NODE_KINDS: Readonly<Record<string, F
     name: "Leaf",
     icon: "file",
     descriptors: [
-      { id: "path", descriptorKindId: "text", label: "Path" },
-      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" },
+      { id: "path", descriptorKindId: "text", label: "Path" }, // chrome-i18n-allow: demo fixture
+      { id: "fileNodeKind", descriptorKindId: "text", label: "Node kind" }, // chrome-i18n-allow: demo fixture
     ],
   },
 };
@@ -22828,7 +23035,10 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
   extraColumns = [],
 }) => {
   const noFileSystemNodesLabel = useLabel("ui.common.noFileSystemNodes");
-  const resolvedEmptyMessage = emptyMessage ?? noFileSystemNodesLabel ?? "No file system nodes";
+  const resolvedEmptyMessage = emptyMessage ?? noFileSystemNodesLabel;
+  const nameLabel = useLabel("ui.common.name");
+  const collapseLabel = useLabel("ui.common.collapse");
+  const expandLabel = useLabel("ui.common.expand");
   const [uncontrolledSelectedRowIds, setUncontrolledSelectedRowIds] = reactHostPort.useState<Set<string>>(() => new Set(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)));
   const selectionAnchorRowIdRef = reactHostPort.useRef<string | undefined>(normalizeVirtualFileSystemSelectedRowIds(defaultSelectedRowIds, selectionMode)[0]);
   const orderedRowIds = reactHostPort.useMemo(() => getVirtualFileSystemOrderedRowIds(rows), [rows]);
@@ -22867,7 +23077,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
     const base: TableColumn<VirtualFileSystemRow>[] = [
       {
         id: "name",
-        header: "Name",
+        header: nameLabel,
         width: "32%",
         accessor: (row) => (
           <div className="flex min-w-0 items-center gap-single" style={{ paddingLeft: (row.level ?? 0) * 14 }}>
@@ -22876,7 +23086,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
                 type="button"
                 data-vfs-expand
                 className="inline-flex size-small shrink-0 items-center justify-center rounded text-element hover:bg-hover-interactive-fill hover:text-emphasized"
-                aria-label={row.isExpanded ? "Collapse" : "Expand"}
+                aria-label={row.isExpanded ? collapseLabel : expandLabel}
                 onClick={(event) => {
                   event.stopPropagation();
                   onToggleExpand?.(row.id);
@@ -22896,7 +23106,7 @@ export const VirtualFileSystem: React.FC<VirtualFileSystemProps> = ({
       ...buildVirtualFileSystemDescriptorColumns(schema),
     ];
     return [...base, ...extraColumns];
-  }, [extraColumns, onToggleExpand, schema]);
+  }, [extraColumns, onToggleExpand, schema, nameLabel, collapseLabel, expandLabel]);
 
   return (
     <Table<VirtualFileSystemRow>
@@ -23698,6 +23908,8 @@ interface ModeDockContextValue {
   closeWindow: (windowId: string) => void;
   activateWindow: (windowId: string) => void;
   maximizedStackPath: ModeLayoutPath | null;
+  /** @emoji ⛶ False when the canvas has only one window — Focus/Unfocus has nothing to enlarge against. */
+  canMaximize: boolean;
   toggleMaximize: (stackPath: ModeLayoutPath) => void;
 }
 
@@ -23721,6 +23933,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const dockUnfocusLabel = useLabel("ui.common.unfocus");
   const dockCloseLabel = useLabel("ui.common.close");
   const isMaximized = dock?.maximizedStackPath === stackPath;
+  const showMaximize = !mobile && Boolean(dock?.canMaximize);
   const modeDragActive = Boolean(dock?.dragState);
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
   const perTabActiveChrome = Boolean(chromeGrid);
@@ -23779,7 +23992,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   const controlsCap = (
     <div data-slot="mode-dock-controls-cap" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
-      {!mobile ? (
+      {showMaximize ? (
         <button
           type="button"
           data-slot="mode-dock-maximize"
@@ -23888,7 +24101,7 @@ interface ModeDockStackProps {
   node: WindowLayoutStackNode;
   windowsById: ReadonlyMap<string, ModeWindowDescriptor>;
   activeWindowId: string | null;
-  /** @emoji 📱 Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. */
+  /** @emoji 📱 Skips the per-tab active-chrome grid (which sizes tab columns to their content and doesn't scroll) in favor of the plain scrollable tab strip, and drops the Focus control (windows always take the full space on mobile) so only Close stays reachable when many windows collapse into one mobile tab stack. Desktop also hides Focus when the canvas has only one window. */
   mobile?: boolean;
 }
 
@@ -24412,6 +24625,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   }, [dragState, layoutState, templateDrag, windowsById]);
 
   const noopDrag = reactHostPort.useCallback(() => {}, []);
+  const canMaximize = modeCollectWindowIds(layoutState).length > 1;
+
+  reactHostPort.useEffect(() => {
+    if (canMaximize || maximizedStackPath === null) return;
+    setMaximizedStackPath(null);
+  }, [canMaximize, maximizedStackPath]);
 
   const dockContext = reactHostPort.useMemo<ModeDockContextValue>(
     () => ({
@@ -24425,9 +24644,10 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       closeWindow,
       activateWindow,
       maximizedStackPath,
+      canMaximize,
       toggleMaximize,
     }),
-    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, toggleMaximize],
+    [mobile, noopDrag, previewDragState, tabInsertPreview, draggedInsertTabs, registerStackDropTargets, startTabDrag, startStackDrag, clearPendingDrag, closeWindow, activateWindow, maximizedStackPath, canMaximize, toggleMaximize],
   );
 
   const renderContext = reactHostPort.useMemo<ModeRenderContext>(
@@ -24591,6 +24811,7 @@ export interface AppProps {
 
 /** @emoji 📱 App shell with optional mode switcher and one active mode body. */
 const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, children, className = "", chrome = true }) => {
+  const modeLabel = useLabel("ui.selection.mode");
   const activeMode = modes.find((mode) => mode.id === activeModeId) ?? modes[0];
   const body = children ?? activeMode?.children;
   const showModeNav = chrome && modes.length > 1 && !!onActiveModeChange;
@@ -24601,7 +24822,7 @@ const App: React.FC<AppProps> = ({ modes, activeModeId, onActiveModeChange, chil
         <div data-slot="app-mode-nav" className="flex shrink-0 items-center gap-single border-b p-single">
           <Select id="app.mode.select" value={activeModeId} onValueChange={onActiveModeChange}>
             <SelectTrigger className="w-[min(100%,16rem)]">
-              <SelectValue placeholder="Mode" />
+              <SelectValue placeholder={modeLabel} />
             </SelectTrigger>
             <SelectContent>
               {modes.map((mode) => (
@@ -24709,13 +24930,90 @@ if (import.meta.vitest) {
       expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
       expect(introductionAnchorSelector({ kind: "utility", id: "brush" })).toBe('[id="brush"]');
       expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$="-action-addLayer"], [id$="-action-addLayer-execute"]');
-      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-tab-id="puzzle.catalogue"]');
+      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="puzzle.catalogue"]');
+      expect(introductionAnchorSelector({ kind: "panelFirstDraggable", id: "puzzle.catalogue" })).toBe(
+        '[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="puzzle.catalogue"] [data-slot="tree-item-row"][data-draggable="true"]',
+      );
       expect(introductionAnchorSelector({ kind: "slot", id: "window-body" })).toBe('[data-slot="window-body"]');
     });
 
     it("maps folded window chrome toggles for utility/action fallbacks", () => {
       expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-utility-bar-unfold"]');
       expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-engagement-toggle"]');
+      expect(introductionPanelTabFallbackSelector("puzzle.catalogue")).toBe('[data-tab-id="puzzle.catalogue"]');
+    });
+  });
+
+  describe("UIIntroduction panelTab cutout", () => {
+    it("cuts out the uncollapsed panel stamped with data-active-tab-id, not only the tab chip", async () => {
+      const { container } = render(
+        <div>
+          <button type="button" data-tab-id="framework.panel.catalogue">
+            Katalog
+          </button>
+          <div data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "catalogue",
+                  title: "Der Katalog",
+                  body: "Browse kinds.",
+                  anchor: { kind: "panelTab", id: "framework.panel.catalogue" },
+                  emphasis: "cutout",
+                  placement: "right",
+                  advance: { kind: "next" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBe("true");
+      });
+      expect(container.querySelector('[data-tab-id="framework.panel.catalogue"]')?.getAttribute("data-introduced")).toBeNull();
+    });
+
+    it("introduces the first draggable tree item inside the panel for panelFirstDraggable", async () => {
+      const { container } = render(
+        <div>
+          <div data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue">
+            <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:first" />
+            <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:second" />
+          </div>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "add-object",
+                  title: "Baukomponente hinzufügen",
+                  body: "Drag the first kind.",
+                  anchor: { kind: "panelFirstDraggable", id: "framework.panel.catalogue" },
+                  emphasis: "cutout",
+                  placement: "right",
+                  advance: { kind: "action", id: "addObjectKind" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector('[id="puzzle3d-kind:first"]')?.getAttribute("data-introduced")).toBe("true");
+      });
+      expect(container.querySelector('[id="puzzle3d-kind:second"]')?.getAttribute("data-introduced")).toBeNull();
+      expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBeNull();
     });
   });
 
@@ -24891,18 +25189,30 @@ if (import.meta.vitest) {
 
   describe("introductionVeilBands", () => {
     it("returns one full-viewport band when there is no cutout", () => {
-      const bands = introductionVeilBands({ width: 800, height: 600 }, null);
+      const bands = introductionVeilBands({ width: 800, height: 600 }, []);
       expect(bands).toEqual([{ top: 0, left: 0, width: 800, height: 600 }]);
     });
 
     it("tiles the viewport into up to four bands around the cutout, dropping zero-area bands", () => {
-      const bands = introductionVeilBands({ width: 800, height: 600 }, { top: 100, left: 200, width: 100, height: 50 });
+      const bands = introductionVeilBands({ width: 800, height: 600 }, [{ top: 100, left: 200, width: 100, height: 50 }]);
       const coveredArea = bands.reduce((sum, band) => sum + band.width * band.height, 0);
       expect(coveredArea).toBe(800 * 600 - 100 * 50);
       for (const band of bands) {
         expect(band.width).toBeGreaterThan(0);
         expect(band.height).toBeGreaterThan(0);
       }
+    });
+
+    it("punches multiple cutouts so each hole stays interactive", () => {
+      const bands = introductionVeilBands(
+        { width: 800, height: 600 },
+        [
+          { top: 40, left: 10, width: 80, height: 40 },
+          { top: 100, left: 300, width: 400, height: 400 },
+        ],
+      );
+      const coveredArea = bands.reduce((sum, band) => sum + band.width * band.height, 0);
+      expect(coveredArea).toBe(800 * 600 - 80 * 40 - 400 * 400);
     });
   });
 
@@ -26686,6 +26996,36 @@ if (import.meta.vitest) {
       expect(screen.queryByText("B Body")).toBeNull();
     });
 
+    it("Mode hides the Focus enlarge control when only one window is on the canvas", () => {
+      const { container, rerender } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode windows={[{ id: "solo", title: "Solo", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
+        </div>,
+      );
+      expect(container.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
+      expect(container.querySelector('[data-slot="mode-dock-close"]')).toBeTruthy();
+      rerender(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[
+              { id: "solo", title: "Solo", children: <div>Solo Body</div> },
+              { id: "peer", title: "Peer", children: <div>Peer Body</div> },
+            ]}
+            layout={{
+              kind: "row",
+              children: [
+                { kind: "stack", children: [{ kind: "window", id: "solo" }], activeId: "solo" },
+                { kind: "stack", children: [{ kind: "window", id: "peer" }], activeId: "peer" },
+              ],
+            }}
+            activeWindowId="solo"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      expect(container.querySelectorAll('[data-slot="mode-dock-maximize"]').length).toBeGreaterThan(0);
+    });
+
     it("Engagement renders options and status lines; Search renders the input", () => {
       const { container } = render(
         <>
@@ -26773,7 +27113,7 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder }}
+          input={{ placeholder: "Action" }}
           possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
@@ -26781,7 +27121,7 @@ if (import.meta.vitest) {
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(WINDOW_SEARCH_USER.actionPlaceholder);
+      const field = screen.getByPlaceholderText("Action");
       expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "f" } });
       await waitFor(() => expect(document.querySelector('[data-slot="search-inline-suffix"]')?.textContent).toBe("ill"));
@@ -26800,14 +27140,14 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder }}
+          input={{ placeholder: "Action" }}
           possibles={[
             { id: "primitive.box", label: "Box", detail: "b", onSelect: () => selected.push("primitive.box") },
             { id: "primitive.sphere", label: "Sphere", detail: "s", onSelect: () => selected.push("primitive.sphere") },
           ]}
         />,
       );
-      const field = screen.getByPlaceholderText(WINDOW_SEARCH_USER.actionPlaceholder);
+      const field = screen.getByPlaceholderText("Action");
       expect(document.querySelector('[data-slot="search-autocomplete"]')).toBeNull();
       fireEvent.change(field, { target: { value: "b" } });
       await waitFor(() => {
@@ -26846,7 +27186,7 @@ if (import.meta.vitest) {
       render(
         <Search
           active
-          input={{ placeholder: WINDOW_SEARCH_USER.actionPlaceholder, value: "Extr", onChange: () => {} }}
+          input={{ placeholder: "Action", value: "Extr", onChange: () => {} }}
           possibles={[
             { id: "feature.extrudeWire", label: "ExtrudeWire", detail: "e", onSelect: () => selected.push("feature.extrudeWire") },
             { id: "surface.extrudeCrv", label: "ExtrudeCrv", detail: "e", onSelect: () => selected.push("surface.extrudeCrv") },
@@ -27764,6 +28104,42 @@ if (import.meta.vitest) {
       expect(screen.queryByTestId("pane-content")).toBeNull();
     });
 
+    it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
+      const { container, rerender } = render(
+        <PaneHost>
+          <Pane id="direction-pane" anchor="top-left" label="Direction">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      const pane = () => container.querySelector('[data-slot="pane"]') as HTMLElement;
+      expect(pane().className).toContain("flex-col");
+      expect(pane().className).not.toContain("flex-col-reverse");
+      expect(pane().style.top).toBe("var(--spacing-single)");
+      expect(pane().style.maxWidth).toBe("calc(100% - (var(--spacing-single) * 2))");
+      expect(pane().style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+
+      rerender(
+        <PaneHost>
+          <Pane id="direction-pane" anchor="bottom-left" label="Direction">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(pane().className).toContain("flex-col-reverse");
+      expect(pane().style.bottom).toBe("var(--spacing-single)");
+
+      rerender(
+        <PaneHost>
+          <Pane id="direction-pane" anchor="left-middle" label="Direction">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(pane().style.top).toBe("50%");
+      expect(pane().style.transform).toBe("translateY(-50%)");
+    });
+
     it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
       let anchor: Anchor = "top-left";
       const onAnchorChange = vi.fn((next: Anchor) => {
@@ -27883,45 +28259,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("ShellDisplayPanel", () => {
-    it("renders without crashing given minimal props", () => {
-      const markup = renderToStaticMarkup(<ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" />);
-      expect(markup).toContain('data-slot="shell-display-panel"');
-      expect(markup).toContain("Default");
-    });
-
-    it("forwards save/apply/compact callbacks", () => {
-      const onSaveLayout = vi.fn();
-      const onApplyLayout = vi.fn();
-      const onCompactChange = vi.fn();
-      const { container } = render(<ShellDisplayPanel layouts={[{ id: "default", label: "Default" }]} activeLayoutId="default" compact={false} onSaveLayout={onSaveLayout} onApplyLayout={onApplyLayout} onCompactChange={onCompactChange} />);
-      fireEvent.click(container.querySelector("#shell-display-panel\\.save")!);
-      fireEvent.click(container.querySelector("#shell-display-panel\\.apply")!);
-      fireEvent.click(container.querySelector("#shell-display-panel\\.compact")!);
-      expect(onSaveLayout).toHaveBeenCalledTimes(1);
-      expect(onApplyLayout).toHaveBeenCalledTimes(1);
-      expect(onCompactChange).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("ShellSettingsPanel", () => {
-    it("renders without crashing given minimal props", () => {
-      const markup = renderToStaticMarkup(
-        <ShellSettingsPanel
-          locale="en"
-          locales={[
-            { id: "en", label: "English" },
-            { id: "de", label: "Deutsch" },
-          ]}
-          theme="system"
-          expertise={Expertise.NORMAL}
-        />,
-      );
-      expect(markup).toContain('data-slot="shell-settings-panel"');
-      expect(markup).toContain("English");
-    });
-  });
-
   describe("ShellSearchDialog", () => {
     it("renders without crashing given minimal props", () => {
       const { container } = render(<ShellSearchDialog open query="" onQueryChange={() => undefined} results={[{ id: "a", label: "Alpha" }]} onPick={() => undefined} onClose={() => undefined} />);
@@ -27956,7 +28293,6 @@ export { CSS as DndCSS } from "@dnd-kit/utilities";
 // #region 📰Three.js
 export { Select as DreiSelect, Edges, GizmoHelper, GizmoViewport, Grid, Line, OrbitControls, Sphere, useFBX, useGLTF } from "@react-three/drei";
 export { Canvas as ThreeCanvas, useFrame, useLoader, useThree } from "@react-three/fiber";
-export type { ThreeEvent } from "@react-three/fiber";
 export * as THREE from "three";
 export { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 // #endregion 📰Three.js
@@ -29467,6 +29803,25 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-branch-elbow"');
     });
 
+    it("renders bottom-pane measure trees upward with children above their group row", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree direction="up">
+          <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+            <WindowMeasureTreeLeaf label="Count">
+              <span>1000</span>
+            </WindowMeasureTreeLeaf>
+            <WindowMeasureTreeLeaf label="Mode">
+              <span>Voxel</span>
+            </WindowMeasureTreeLeaf>
+          </WindowMeasureTreeGroup>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toContain('data-direction="up"');
+      expect(markup.indexOf("Voxel")).toBeLessThan(markup.indexOf("Count"));
+      expect(markup.indexOf("Count")).toBeLessThan(markup.indexOf("Fill"));
+      expect(markup).toContain('data-icon="chevron-up"');
+    });
+
     it("stretches full-width measure toggles so active fill spans the tree row", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
@@ -29772,6 +30127,14 @@ if (treeVitest) {
       const projectOfEnMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem("projectOfEn", "en")]} />);
       expect(projectOfEnMarkup).toContain("A project of");
       expect(projectOfEnMarkup).toContain("and");
+      // 📱 iconOnly (mobile) drops the surrounding text but keeps both logos and their links.
+      const fundedByIconOnlyMarkup = renderToStaticMarkup(<Footer items={[fundedByZukunftBauFooterItem("fundedByIconOnly", "en", true)]} />);
+      expect(fundedByIconOnlyMarkup).not.toContain("Funded by");
+      const projectOfIconOnlyMarkup = renderToStaticMarkup(<Footer items={[aProjectOfLuhUdkFooterItem("projectOfIconOnly", "de", true)]} />);
+      expect(projectOfIconOnlyMarkup).not.toContain("Ein Projekt von");
+      expect(projectOfIconOnlyMarkup).not.toContain(">und<");
+      expect(projectOfIconOnlyMarkup).toContain(LUH_LOGO_URL);
+      expect(projectOfIconOnlyMarkup).toContain(UDK_LOGO_URL);
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
       expect(breadcrumbMarkup).not.toContain("border-emphasized");
@@ -29839,6 +30202,7 @@ if (treeVitest) {
       expect(upMarkup).toContain('data-direction="up"');
       expect(upMarkup).toContain("flex-col-reverse");
       expect(upMarkup.match(/data-slot="ribbon-row"/g)?.length).toBe(2);
+      expect(upMarkup.match(/data-slot="ribbon-row"[^>]*shrink-0/g)?.length).toBe(2);
       expect(upMarkup.indexOf("Base")).toBeLessThan(upMarkup.indexOf("Nested"));
 
       const downMarkup = renderToStaticMarkup(<Ribbon direction="down" rows={rows} />);
@@ -29853,6 +30217,17 @@ if (treeVitest) {
       expect(inlineMarkup).toContain('role="toolbar"');
       expect(inlineMarkup).toContain('data-slot="ribbon-zone"');
       expect(inlineMarkup).not.toContain('data-slot="ribbon-row"');
+
+      const variableMarkup = renderToStaticMarkup(
+        <RibbonZone variableHeight>
+          <div>Intrinsic content</div>
+        </RibbonZone>,
+      );
+      expect(variableMarkup).toContain('data-variable-height="true"');
+      const variableZoneClass = variableMarkup.match(/data-variable-height="true" class="([^"]*)"/)?.[1].split(" ") ?? [];
+      expect(variableZoneClass).toContain("h-auto");
+      expect(variableZoneClass).toContain("min-h-medium");
+      expect(variableZoneClass).not.toContain("h-medium");
     });
 
     it("reconcileActivePath validates each segment and truncates at the first invalid one — no first-sibling substitution, no auto-descend", () => {

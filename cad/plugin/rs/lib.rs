@@ -3372,7 +3372,7 @@ const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
     utility: "Werkzeug",
     action_placeholder: "Aktion",
     ok: "OK",
-    selected: "ausgewaehlt",
+    selected: "ausgewählt",
     step: "Schritt",
 };
 
@@ -3463,8 +3463,8 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
         ("toggleSun", "Toggle Sun", "Sonne umschalten"),
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
         ("saveSelected", "Save Selected", "Auswahl speichern"),
         ("saveInPlay", "Save In Play", "Im Play speichern"),
         ("saveCurrent", "Save Current", "Aktuelles speichern"),

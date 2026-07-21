@@ -284,7 +284,7 @@ semio_framework_plugin::app_labels! {
         window_generate_preview: &'static str = en: "Preview", de: "Vorschau";
         lod_mode: &'static str = en: "LOD Mode", de: "LOD-Modus";
         automatic: &'static str = en: "Automatic", de: "Automatisch";
-        proximity_distance: &'static str = en: "Proximity Distance", de: "Naeheabstand";
+        proximity_distance: &'static str = en: "Proximity Distance", de: "Näheabstand";
         value: &'static str = en: "Value", de: "Wert";
         text: &'static str = en: "Text", de: "Text";
         kind: &'static str = en: "Kind", de: "Art";

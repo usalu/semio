@@ -405,13 +405,13 @@ semio_framework_plugin::app_labels! {
 /// builder chain; mirrors `puzzle3d_action_labels`.
 fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     const ENTRIES: &[(&str, &str, &str)] = &[
-        ("incrementCounter", "Increment Counter", "Zaehler erhoehen"),
+        ("incrementCounter", "Increment Counter", "Zähler erhöhen"),
         ("patchProjection", "Patch Projection", "Projektion aktualisieren"),
         ("textEdit", "Edit Text", "Text bearbeiten"),
         ("edit", "Edit", "Bearbeiten"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("noop", "No-op", "Keine Aktion"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
         ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
         ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
         ("canvasWheel", "Canvas Wheel", "Leinwand-Mausrad"),

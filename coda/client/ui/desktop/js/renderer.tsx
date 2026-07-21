@@ -74,7 +74,7 @@ type CodaTranslationKey =
   | "coda.titlebar.refresh";
 
 const CODA_NAV_LABELS_EN: Readonly<Record<Page, string>> = { dashboard: "Dashboard", config: "Config", runs: "Runs", report: "Report", translations: "Translations", actions: "Actions", events: "Events" };
-const CODA_NAV_LABELS_DE: Readonly<Record<Page, string>> = { dashboard: "Uebersicht", config: "Konfiguration", runs: "Durchlaeufe", report: "Bericht", translations: "Uebersetzungen", actions: "Aktionen", events: "Ereignisse" };
+const CODA_NAV_LABELS_DE: Readonly<Record<Page, string>> = { dashboard: "Übersicht", config: "Konfiguration", runs: "Durchläufe", report: "Bericht", translations: "Übersetzungen", actions: "Aktionen", events: "Ereignisse" };
 
 /** @emoji 🪁 Flat one-off `coda.*` label keys (page/section titles, card titles, placeholders, loading/empty copy) that don't fit the nav/titlebar shape below — mirrors the flat-map style used by `mcp-app.tsx`'s `McpAppTranslationKey` bundle. */
 const CODA_MISC_LABELS_EN: Readonly<Record<string, string>> = {
@@ -118,11 +118,11 @@ const CODA_MISC_LABELS_EN: Readonly<Record<string, string>> = {
 };
 
 const CODA_MISC_LABELS_DE: Readonly<Record<string, string>> = {
-  "coda.page.dashboard.title": "Uebersicht",
+  "coda.page.dashboard.title": "Übersicht",
   "coda.page.config.title": "Konfiguration",
-  "coda.page.runs.title": "Durchlaeufe & Iterationen",
-  "coda.page.report.title": "Konformitaetsbericht",
-  "coda.page.translations.title": "Uebersetzungen",
+  "coda.page.runs.title": "Durchläufe & Iterationen",
+  "coda.page.report.title": "Konformitätsbericht",
+  "coda.page.translations.title": "Übersetzungen",
   "coda.page.actions.title": "Aktionen",
   "coda.page.events.title": "Ereignisse",
   "coda.section.generalConfig.title": "Allgemeine Konfiguration",
@@ -179,7 +179,9 @@ function codaTranslationBundle(
   return entries as Readonly<Record<CodaTranslationKey, { readonly label: { readonly normal: string; readonly beginner: string } }>>;
 }
 
-registerUiTranslationBundles({
+/** @emoji 🪁 Casts a `coda.*` key to the branded {@link UiRegisteredTranslationKey} `useLabel` requires —
+ * the only way to obtain one, so a typo'd/unregistered key does not type-check. */
+const codaKey = registerUiTranslationBundles({
   en: {
     translation: codaTranslationBundle(
       CODA_NAV_LABELS_EN,
@@ -759,7 +761,7 @@ function Button({
  *MUST display an animated spinning indicator.
  **/
 function Spinner({ label }: { label?: string }) {
-  const fallbackLabel = useLabel("coda.common.loading" as CodaTranslationKey);
+  const fallbackLabel = useLabel(codaKey("coda.common.loading"));
   const resolvedLabel = label ?? fallbackLabel ?? "Loading...";
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-12 text-muted-foreground">
@@ -1253,11 +1255,11 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
 
   const totalPropertyCount = reactHostPort.useMemo(() => (properties ? countProperties(properties) : 0), [properties]);
 
-  const loadingDashboardLabel = useLabel("coda.loading.dashboard" as CodaTranslationKey);
-  const dashboardTitle = useLabel("coda.page.dashboard.title" as CodaTranslationKey);
-  const latestValidationTitle = useLabel("coda.card.latestValidation.title" as CodaTranslationKey);
-  const generalConfigTitle = useLabel("coda.section.generalConfig.title" as CodaTranslationKey);
-  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
+  const loadingDashboardLabel = useLabel(codaKey("coda.loading.dashboard"));
+  const dashboardTitle = useLabel(codaKey("coda.page.dashboard.title"));
+  const latestValidationTitle = useLabel(codaKey("coda.card.latestValidation.title"));
+  const generalConfigTitle = useLabel(codaKey("coda.section.generalConfig.title"));
+  const propertiesTitle = useLabel(codaKey("coda.section.properties.title"));
 
   if (loading) return <Spinner label={loadingDashboardLabel} />;
 
@@ -1365,9 +1367,9 @@ function countProperties(props: Property[]): number {
  *MUST display kind, measure_kinds, description, levels, nested properties, and items recursively.
  **/
 function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
-  const levelsTitle = useLabel("coda.section.levels.title" as CodaTranslationKey);
-  const itemsTitle = useLabel("coda.section.items.title" as CodaTranslationKey);
-  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
+  const levelsTitle = useLabel(codaKey("coda.section.levels.title"));
+  const itemsTitle = useLabel(codaKey("coda.section.items.title"));
+  const propertiesTitle = useLabel(codaKey("coda.section.properties.title"));
   return (
     <div className={`rounded bg-panel border border-border-window p-2 ${depth > 0 ? "ml-3" : ""}`}>
       <div className="flex items-center gap-2 flex-wrap">
@@ -1504,10 +1506,10 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
   const { data: platforms, loading: platformsLoading } = useCodaResource<Platform[]>("coda://platforms", refreshKey);
 
   const loading = propertyKindsLoading || propertiesLoading || correlationLoading || frameworksLoading || platformsLoading;
-  const loadingConfigLabel = useLabel("coda.loading.config" as CodaTranslationKey);
-  const configTitle = useLabel("coda.page.config.title" as CodaTranslationKey);
-  const propertiesTitle = useLabel("coda.section.properties.title" as CodaTranslationKey);
-  const rulesTitle = useLabel("coda.section.rules.title" as CodaTranslationKey);
+  const loadingConfigLabel = useLabel(codaKey("coda.loading.config"));
+  const configTitle = useLabel(codaKey("coda.page.config.title"));
+  const propertiesTitle = useLabel(codaKey("coda.section.properties.title"));
+  const rulesTitle = useLabel(codaKey("coda.section.rules.title"));
   if (loading) return <Spinner label={loadingConfigLabel} />;
 
   const totalPropertyCount = properties ? countProperties(properties) : 0;
@@ -1766,14 +1768,14 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
   const { data: iteration, loading: iterLoading } = useCodaResource<Iteration>("coda://current-iteration", refreshKey);
 
   const loading = runLoading || itersLoading || iterLoading;
-  const loadingRunsLabel = useLabel("coda.loading.runs" as CodaTranslationKey);
-  const runsTitle = useLabel("coda.page.runs.title" as CodaTranslationKey);
-  const currentRunTitle = useLabel("coda.card.currentRun.title" as CodaTranslationKey);
-  const idColumn = useLabel("coda.column.id" as CodaTranslationKey);
-  const startedColumn = useLabel("coda.column.started" as CodaTranslationKey);
-  const noRunsMessage = useLabel("coda.empty.noRuns" as CodaTranslationKey);
-  const noIterationsMessage = useLabel("coda.empty.noIterations" as CodaTranslationKey);
-  const targetsTitle = useLabel("coda.section.targets.title" as CodaTranslationKey);
+  const loadingRunsLabel = useLabel(codaKey("coda.loading.runs"));
+  const runsTitle = useLabel(codaKey("coda.page.runs.title"));
+  const currentRunTitle = useLabel(codaKey("coda.card.currentRun.title"));
+  const idColumn = useLabel(codaKey("coda.column.id"));
+  const startedColumn = useLabel(codaKey("coda.column.started"));
+  const noRunsMessage = useLabel(codaKey("coda.empty.noRuns"));
+  const noIterationsMessage = useLabel(codaKey("coda.empty.noIterations"));
+  const targetsTitle = useLabel(codaKey("coda.section.targets.title"));
   if (loading) return <Spinner label={loadingRunsLabel} />;
 
   return (
@@ -1851,8 +1853,8 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
  **/
 function ReportPage({ refreshKey }: { refreshKey: number }) {
   const { data: report, loading: reportLoading, error: reportError } = useCodaResource<Report>("coda://report", refreshKey);
-  const loadingReportLabel = useLabel("coda.loading.report" as CodaTranslationKey);
-  const reportTitle = useLabel("coda.page.report.title" as CodaTranslationKey);
+  const loadingReportLabel = useLabel(codaKey("coda.loading.report"));
+  const reportTitle = useLabel(codaKey("coda.page.report.title"));
 
   if (reportLoading) return <Spinner label={loadingReportLabel} />;
 
@@ -1930,7 +1932,7 @@ function ReportPage({ refreshKey }: { refreshKey: number }) {
 function TranslationsPage({ refreshKey }: { refreshKey: number }) {
   const { data: project } = useCodaResource<Project>("coda://project", refreshKey);
   const targetIds = reactHostPort.useMemo(() => project?.targets?.map((t) => t.id) ?? [], [project]);
-  const translationsTitle = useLabel("coda.page.translations.title" as CodaTranslationKey);
+  const translationsTitle = useLabel(codaKey("coda.page.translations.title"));
 
   return (
     <div className="space-y-6">
@@ -1976,12 +1978,12 @@ function ActionsPage({ refreshKey, onRefresh }: { refreshKey: number; onRefresh:
 
   const [actionLog, setActionLog] = reactHostPort.useState<Array<{ id: number; action: string; result: unknown; timestamp: string; success: boolean }>>([]);
   const [loading, setLoading] = reactHostPort.useState<string | null>(null);
-  const actionsTitle = useLabel("coda.page.actions.title" as CodaTranslationKey);
-  const runManagementTitle = useLabel("coda.card.runManagement.title" as CodaTranslationKey);
-  const translationValidationTitle = useLabel("coda.card.translationValidation.title" as CodaTranslationKey);
-  const fixDesignTitle = useLabel("coda.card.fixDesign.title" as CodaTranslationKey);
-  const manualFixResultTitle = useLabel("coda.card.manualFixResult.title" as CodaTranslationKey);
-  const actionLogTitle = useLabel("coda.card.actionLog.title" as CodaTranslationKey);
+  const actionsTitle = useLabel(codaKey("coda.page.actions.title"));
+  const runManagementTitle = useLabel(codaKey("coda.card.runManagement.title"));
+  const translationValidationTitle = useLabel(codaKey("coda.card.translationValidation.title"));
+  const fixDesignTitle = useLabel(codaKey("coda.card.fixDesign.title"));
+  const manualFixResultTitle = useLabel(codaKey("coda.card.manualFixResult.title"));
+  const actionLogTitle = useLabel(codaKey("coda.card.actionLog.title"));
 
   const runTool = reactHostPort.useCallback(
     async (name: string, args: Record<string, unknown>, label: string) => {
@@ -2207,7 +2209,7 @@ function TargetActionCard({
  **/
 function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | null; onSubmit: (result: unknown) => void; disabled: boolean }) {
   const [input, setInput] = reactHostPort.useState("");
-  const fixResultJsonPlaceholder = useLabel("coda.placeholder.fixResultJson" as CodaTranslationKey);
+  const fixResultJsonPlaceholder = useLabel(codaKey("coda.placeholder.fixResultJson"));
   const handleSubmit = () => {
     if (!input.trim()) return;
     try {
@@ -2243,7 +2245,7 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
  **/
 function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix: (prompt: string) => void; disabled: boolean }) {
   const [prompt, setPrompt] = reactHostPort.useState("");
-  const fixDescriptionExamplePlaceholder = useLabel("coda.placeholder.fixDescriptionExample" as CodaTranslationKey);
+  const fixDescriptionExamplePlaceholder = useLabel(codaKey("coda.placeholder.fixDescriptionExample"));
   const handleSubmit = () => {
     if (prompt.trim()) {
       onFix(prompt.trim());
@@ -2285,8 +2287,8 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
  **/
 function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => void }) {
   const [filter, setFilter] = reactHostPort.useState("");
-  const eventsTitle = useLabel("coda.page.events.title" as CodaTranslationKey);
-  const filterEventsPlaceholder = useLabel("coda.placeholder.filterEvents" as CodaTranslationKey);
+  const eventsTitle = useLabel(codaKey("coda.page.events.title"));
+  const filterEventsPlaceholder = useLabel(codaKey("coda.placeholder.filterEvents"));
 
   const filteredEvents = reactHostPort.useMemo(() => {
     if (!filter.trim()) return events;
@@ -2376,12 +2378,12 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   const [selectedFolder, setSelectedFolder] = reactHostPort.useState<string | null>(null);
   const [error, setError] = reactHostPort.useState<string | null>(null);
   const [loading, setLoading] = reactHostPort.useState(false);
-  const titlebarSubtitle = useLabel("coda.titlebar.subtitle" as CodaTranslationKey);
-  const createProjectTitle = useLabel("coda.welcome.createProject.title" as CodaTranslationKey);
-  const openProjectTitle = useLabel("coda.welcome.openProject.title" as CodaTranslationKey);
-  const projectNameLabel = useLabel("coda.welcome.projectName.label" as CodaTranslationKey);
-  const projectFolderLabel = useLabel("coda.welcome.projectFolder.label" as CodaTranslationKey);
-  const projectNamePlaceholder = useLabel("coda.placeholder.projectName" as CodaTranslationKey);
+  const titlebarSubtitle = useLabel(codaKey("coda.titlebar.subtitle"));
+  const createProjectTitle = useLabel(codaKey("coda.welcome.createProject.title"));
+  const openProjectTitle = useLabel(codaKey("coda.welcome.openProject.title"));
+  const projectNameLabel = useLabel(codaKey("coda.welcome.projectName.label"));
+  const projectFolderLabel = useLabel(codaKey("coda.welcome.projectFolder.label"));
+  const projectNamePlaceholder = useLabel(codaKey("coda.placeholder.projectName"));
 
   const handlePickFolder = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
@@ -2921,7 +2923,7 @@ function CodaMainSurfaceHost(_props: { readonly node: UiPanelHostSurfaceNode }):
 }
 
 function CodaNavButton({ item, active, onSelect }: { readonly item: (typeof navItems)[number]; readonly active: boolean; readonly onSelect: () => void }): React.ReactElement {
-  const label = useLabel(`coda.nav.${item.id}` as CodaTranslationKey);
+  const label = useLabel(codaKey(`coda.nav.${item.id}`));
   return (
     <button type="button" onClick={onSelect} className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${active ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"}`}>
       {label}
@@ -2983,13 +2985,13 @@ function App() {
   const [sidecarConnected, setSidecarConnected] = reactHostPort.useState(false);
   const [events, setEvents] = reactHostPort.useState<CodaEvent[]>([]);
   const platform = reactHostPort.useMemo(() => ensureCodaPlatform(), []);
-  const titlebarSubtitle = useLabel("coda.titlebar.subtitle" as CodaTranslationKey);
-  const sidecarConnectedLabel = useLabel("coda.titlebar.sidecarConnected" as CodaTranslationKey);
-  const sidecarDisconnectedLabel = useLabel("coda.titlebar.sidecarDisconnected" as CodaTranslationKey);
-  const connectedLabel = useLabel("coda.titlebar.connected" as CodaTranslationKey);
-  const offlineLabel = useLabel("coda.titlebar.offline" as CodaTranslationKey);
-  const refreshLabel = useLabel("coda.titlebar.refresh" as CodaTranslationKey);
-  const loadingLabel = useLabel("coda.common.loading" as CodaTranslationKey);
+  const titlebarSubtitle = useLabel(codaKey("coda.titlebar.subtitle"));
+  const sidecarConnectedLabel = useLabel(codaKey("coda.titlebar.sidecarConnected"));
+  const sidecarDisconnectedLabel = useLabel(codaKey("coda.titlebar.sidecarDisconnected"));
+  const connectedLabel = useLabel(codaKey("coda.titlebar.connected"));
+  const offlineLabel = useLabel(codaKey("coda.titlebar.offline"));
+  const refreshLabel = useLabel(codaKey("coda.titlebar.refresh"));
+  const loadingLabel = useLabel(codaKey("coda.common.loading"));
 
   reactHostPort.useEffect(() => {
     async function init() {

@@ -440,7 +440,7 @@ pub mod app_jack {
             ("editorEngagementInput", "Editor Engagement Input", "Editor-Eingabe"),
             ("graphEngagementInput", "Graph Engagement Input", "Graph-Eingabe"),
             ("resultsEngagementInput", "Results Engagement Input", "Ergebnis-Eingabe"),
-            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrueckt"),
+            ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
         ])
     }
     //#endregion 🔖CommandLabels

@@ -904,36 +904,44 @@ impl AppBuilder {
                     self.id,
                     step.id
                 );
-                match &step.anchor {
+                let validate_anchor = |anchor: &IntroductionAnchor, role: &str| match anchor {
                     IntroductionAnchor::Screen | IntroductionAnchor::Navbar | IntroductionAnchor::Footer | IntroductionAnchor::Slot(_) => {}
                     IntroductionAnchor::WindowKind(id) => assert!(
                         window_kind_ids.contains(id),
-                        "app {} introduction step {} anchors undeclared window kind {}",
+                        "app {} introduction step {} {} undeclared window kind {}",
                         self.id,
                         step.id,
+                        role,
                         id
                     ),
                     IntroductionAnchor::Utility(utility_ref) => assert!(
                         declared_utility_ids.contains(utility_ref.as_str()),
-                        "app {} introduction step {} anchors undeclared utility {}",
+                        "app {} introduction step {} {} undeclared utility {}",
                         self.id,
                         step.id,
+                        role,
                         utility_ref.as_str()
                     ),
                     IntroductionAnchor::Action(action_ref) => assert!(
                         declared_action_ids.contains(action_ref.as_str()),
-                        "app {} introduction step {} anchors undeclared action {}",
+                        "app {} introduction step {} {} undeclared action {}",
                         self.id,
                         step.id,
+                        role,
                         action_ref.as_str()
                     ),
-                    IntroductionAnchor::PanelTab(id) => assert!(
+                    IntroductionAnchor::PanelTab(id) | IntroductionAnchor::PanelFirstDraggable(id) => assert!(
                         panel_tab_ids.contains(id),
-                        "app {} introduction step {} anchors undeclared panel tab {}",
+                        "app {} introduction step {} {} undeclared panel tab {}",
                         self.id,
                         step.id,
+                        role,
                         id
                     ),
+                };
+                validate_anchor(&step.anchor, "anchors");
+                for cutout in &step.cutouts {
+                    validate_anchor(cutout, "cutout references");
                 }
                 match &step.advance {
                     IntroductionAdvance::Next => {}

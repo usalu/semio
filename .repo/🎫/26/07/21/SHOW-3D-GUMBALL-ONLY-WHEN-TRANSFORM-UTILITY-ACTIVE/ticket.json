@@ -1,0 +1,15 @@
+{
+  "title": "Show 3D Gumball Only When Transform Utility Active",
+  "emoji": "🎛",
+  "status": "open",
+  "description": "Puzzle 3D currently defaults the host-unset active utility to `move`, so selecting an object shows the gumball even when no transform utility is pressed in the utility bar (and Escape-cleared utilities fall back to move again). Only show the gumball when move/rotate/scale is explicitly active.",
+  "summary": "Puzzle 3D no longer treats an unset/cleared host utility as `move`, so the gumball only appears when move/rotate/scale is explicitly active.\n\nRoot cause: `PUZZLE3D_DEFAULT_UTILITY` was `\"move\"`. The shell starts with no utility pressed and Escape clears it to null, but the plugin fell back to move — so any object selection showed the gumball.\n\nFix: set `PUZZLE3D_DEFAULT_UTILITY` to `\"\"`. Existing `puzzle3d_gumball_active` already gates on `move|rotate|scale`.\n\nTests: `gumball_active_only_for_transform` (idle/move/rotate/scale/brush) and `main_window_utilities_lead_with_move` both pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2203"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪b78f32fec185486f8ec641c416d98838",
+    "⚪6d5887518b2441c48c3f5748a84bc952"
+  ]
+}

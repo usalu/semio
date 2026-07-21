@@ -353,8 +353,8 @@ app_labels! {
         measure_center_model: &'static str = en: "Center Model", de: "Modell zentrieren";
         measure_sun: &'static str = en: "Sun", de: "Sonne";
         measure_sun_azimuth: &'static str = en: "Sun Azimuth", de: "Sonnenazimut";
-        measure_sun_elevation: &'static str = en: "Sun Elevation", de: "Sonnenhoehe";
-        measure_sun_intensity: &'static str = en: "Sun Intensity", de: "Sonnenintensitaet";
+        measure_sun_elevation: &'static str = en: "Sun Elevation", de: "Sonnenhöhe";
+        measure_sun_intensity: &'static str = en: "Sun Intensity", de: "Sonnenintensität";
         measure_ambient: &'static str = en: "Ambient", de: "Umgebungslicht";
         measure_shadow: &'static str = en: "Shadow", de: "Schatten";
         measure_roughness: &'static str = en: "Roughness", de: "Rauheit";
@@ -362,7 +362,7 @@ app_labels! {
         field_format: &'static str = en: "Format", de: "Format";
         field_shape: &'static str = en: "Shape", de: "Form";
         field_width: &'static str = en: "Width", de: "Breite";
-        field_height: &'static str = en: "Height", de: "Hoehe";
+        field_height: &'static str = en: "Height", de: "Höhe";
         field_name: &'static str = en: "Name", de: "Name";
         field_url: &'static str = en: "URL", de: "URL";
     }
@@ -384,9 +384,9 @@ fn shooting_action_labels(is_de: bool) -> HashMap<String, String> {
         ("saveCamera", "Save Camera", "Kamera speichern"),
         ("loadSavedCamera", "Load Saved Camera", "Gespeicherte Kamera laden"),
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-        ("setSunElevation", "Set Sun Elevation", "Sonnenhoehe festlegen"),
-        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensitaet festlegen"),
-        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensitaet festlegen"),
+        ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
+        ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
+        ("setAmbientIntensity", "Set Ambient Intensity", "Umgebungslichtintensität festlegen"),
         ("setMaterialRoughness", "Set Material Roughness", "Materialrauheit festlegen"),
         ("setShadowEnabled", "Set Shadow Enabled", "Schatten aktivieren"),
         ("toggleSun", "Toggle Sun", "Sonne umschalten"),

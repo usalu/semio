@@ -2671,6 +2671,17 @@
       }
     },
     {
+      "name": "🧪verify🌐chrome-i18n",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-react:check-chrome-i18n",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.115
+      }
+    },
+    {
       "name": "🧪verify🎨raw-colors",
       "type": "node-terminal",
       "request": "launch",

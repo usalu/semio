@@ -628,7 +628,7 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "puzzle3d",
+  variant: "aggregator",
   registryPluginId: "puzzle",
   defaultAppId: "puzzle3d-play",
   studioMode: false,

@@ -1,0 +1,24 @@
+step 0 Willkommen bei Entwerfen mit Bestand
+step 1 Früher Prototyp
+step 2 Förderhinweis
+step 3 Die 3D-Ansicht
+[DEBUG] UIIntroduction step {id: catalogue, anchor: Object, placement: right, viaFallback: false, cutout: Object}
+[DEBUG] UIIntroduction step {id: catalogue, anchor: Object, placement: right, viaFallback: true, cutout: Object}
+[DEBUG] UIIntroduction step {id: catalogue, anchor: Object, placement: right, viaFallback: false, cutout: Object}
+step 4 Der Katalog
+[DEBUG] UIIntroduction step {id: add-object, anchor: Object, placement: right, viaFallback: false, cutout: Object}
+[DEBUG] UIIntroduction step {id: add-object, anchor: Object, placement: right, viaFallback: false, cutout: Object}
+step 5 Baukomponente hinzufügen
+[DEBUG] UIIntroduction step {id: add-object, anchor: Object, placement: right, viaFallback: false, cutout: Object}
+{
+  "title": "Baukomponente hinzufügen",
+  "body": "Ziehen Sie die erste Baukomponente per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.",
+  "introducedCount": 1,
+  "attrs": {
+    "slot": "tree-item-row",
+    "draggable": "true",
+    "id": "puzzle3d-kind:Hexagonal Cut Concrete Forest Left",
+    "rowKind": "group"
+  },
+  "treeRows": 2
+}

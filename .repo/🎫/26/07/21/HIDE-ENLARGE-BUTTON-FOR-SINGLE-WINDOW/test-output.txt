@@ -1,0 +1,4 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+[budget] /Users/ueli/.bun/bin/bun x vitest run --config vitest.config.ts --passWithNoTests -- -t Mode hides the Focus enlarge|Mode maximize shows only one stack|keeps the Focus control on desktop exceeded 300000ms — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).

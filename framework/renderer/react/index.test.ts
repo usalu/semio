@@ -138,7 +138,10 @@ import {
   sampleMediaFrameTimestampsMs,
   runTier2VideoFrames,
   runRequestMediaFrames,
+  createFrameworkDisplayPanelTabs,
+  type DisplayHostApi,
 } from "./index.tsx";
+import { decodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌jsdom polyfills
 // cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
@@ -2244,7 +2247,9 @@ describe("partitionWindowMeasures", () => {
     };
     const measures = { [kind.id]: [brushGroup] };
     const activeChrome = spawnedWindowChromeForKind(kind, {}, measures, "brush", noopAction);
-    expect(renderToStaticMarkup(activeChrome.utilityOptions as ReactElement)).toContain("Brush size");
+    const activeMarkup = renderToStaticMarkup(activeChrome.utilityOptions as ReactElement);
+    expect(activeMarkup).toContain("Brush size");
+    expect(activeMarkup).toContain('data-direction="up"');
     expect(activeChrome.measures).toBeUndefined();
     const idleChrome = spawnedWindowChromeForKind(kind, {}, measures, "fill", noopAction);
     expect(idleChrome.utilityOptions).toBeUndefined();
@@ -2547,6 +2552,13 @@ describe("utility ribbon", () => {
     );
     expect(markup).toContain('data-testid="brush-options"');
     expect(markup).toContain("Brush size");
+    expect(markup).toContain('data-variable-height="true"');
+    expect(markup).toContain("h-auto min-h-medium");
+    expect(markup).toContain("items-start");
+    const variableZoneClass = markup.match(/data-variable-height="true" class="([^"]*)"/)?.[1].split(" ") ?? [];
+    expect(variableZoneClass).toContain("h-auto");
+    expect(variableZoneClass).not.toContain("h-medium");
+    expect(markup).toContain("h-auto items-start");
   });
 });
 
@@ -3055,7 +3067,15 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "move-utility", "catalogue", "add-object"]);
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "move-utility"]);
+    expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
+    expect(steps.find((step) => step.id === "add-object")).toMatchObject({
+      anchor: { kind: "panelFirstDraggable", id: "framework.panel.catalogue" },
+      placement: "right",
+      advance: { kind: "action", id: "addObjectKind" },
+      cutouts: [{ kind: "windowKind", id: "puzzle3d-main" }],
+    });
+    expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/Drag-and-Drop|ziehen/i);
 
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -3330,5 +3350,51 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
     const actions = dispatchOne.mock.calls.map((call) => call[0] as string);
     expect(actions.at(-1)).toBe("done");
     expect(actions.filter((action) => action === "frame").length).toBeGreaterThan(0);
+  });
+});
+
+describe("Display Windows tab — projection drag templates", () => {
+  function windowsTreeSections(windowKinds: DisplayHostApi["windowKinds"]) {
+    const host: DisplayHostApi = {
+      windowKinds,
+      namedLayouts: [],
+      userLayouts: [],
+      saveCurrentLayout: () => {},
+      applyNamedLayout: () => {},
+      deleteUserLayout: () => {},
+      layoutSaveLabel: "",
+      setLayoutSaveLabel: () => {},
+    };
+    const tabs = createFrameworkDisplayPanelTabs(() => host);
+    type WindowsTreeSections = { readonly sections: readonly { readonly id: string; readonly items?: readonly unknown[] }[] };
+    type LeafWithTrees = { readonly trees: readonly { readonly tree: { readonly resolveTree: () => WindowsTreeSections } }[] };
+    const windowsTab = tabs.find((tab) => tab.id === "framework.display.windows") as unknown as LeafWithTrees;
+    return windowsTab.trees[0]!.tree.resolveTree().sections;
+  }
+
+  it("nests the full Parallel/Perspective projection taxonomy under a world-3d window kind", () => {
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    expect(sections).toHaveLength(1);
+    const items = sections[0]!.items as { readonly id: string; readonly label?: string; readonly items?: readonly { readonly id: string }[] }[];
+    expect(items[0]!.id).toBe("framework.display.windows.puzzle3d-main.kind");
+    const [, parallel, perspective] = items;
+    expect(parallel!.label).toBe("Parallel");
+    expect(perspective!.label).toBe("Perspective");
+    expect(parallel!.items!.map((row) => row.id.split(".").pop())).toEqual(["orthographic", "axonometric", "oblique"]);
+  });
+
+  it("keeps a flat single drag entry for non-world-3d window kinds", () => {
+    const sections = windowsTreeSections([{ id: "puzzle2d-overview", label: "Overview", surfaceKind: "canvas-2d" }]);
+    expect(sections[0]!.items).toHaveLength(1);
+  });
+
+  it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    const items = sections[0]!.items as { readonly items?: readonly { readonly items?: readonly unknown[]; readonly dragData?: Record<string, string> }[] }[];
+    const orthographic = items[1]!.items![0]! as { readonly items: readonly { readonly dragData: Record<string, string> }[] };
+    const topLeaf = orthographic.items[1]!;
+    const payload = JSON.parse(topLeaf.dragData["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
+    expect(payload.windowKindId).toBe("puzzle3d-main");
+    expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
   });
 });

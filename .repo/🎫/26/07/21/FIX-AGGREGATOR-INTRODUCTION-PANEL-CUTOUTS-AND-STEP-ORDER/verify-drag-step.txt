@@ -1,0 +1,17 @@
+{
+  "id": "add-object",
+  "title": "Baukomponente hinzufügen",
+  "body": "Ziehen Sie die erste Baukomponente per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.",
+  "anchor": {
+    "kind": "panelFirstDraggable",
+    "id": "framework.panel.catalogue"
+  },
+  "emphasis": "cutout",
+  "placement": "right",
+  "advance": {
+    "kind": "action",
+    "id": "addObjectKind"
+  },
+  "logos": []
+}
+selector [data-slot="panel"][data-panel-visible="true"][data-active-tab-id="framework.panel.catalogue"] [data-slot="tree-item-row"][data-draggable="true"]

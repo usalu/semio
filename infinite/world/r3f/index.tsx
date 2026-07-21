@@ -2151,6 +2151,27 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
 
   return [parallel, perspective];
 }
+
+const WORLD_PROJECTION_TEMPLATE_PREFIX = "world-projection:";
+
+/** @emoji 🪟 Encodes a {@link WorldProjectionSpec} into a `WindowTemplateDropPayload.templateId` string,
+ * for the Display "Windows" drag palette to seed a freshly-opened pane's initial camera. */
+export function encodeWorldProjectionTemplateId(spec: WorldProjectionSpec): string {
+  return `${WORLD_PROJECTION_TEMPLATE_PREFIX}${JSON.stringify(spec)}`;
+}
+
+/** @emoji 🪟 Inverse of {@link encodeWorldProjectionTemplateId}; `null` for anything else (including `undefined`). */
+export function decodeWorldProjectionTemplateId(templateId: string | undefined): WorldProjectionSpec | null {
+  if (!templateId || !templateId.startsWith(WORLD_PROJECTION_TEMPLATE_PREFIX)) {
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(templateId.slice(WORLD_PROJECTION_TEMPLATE_PREFIX.length)) as { readonly kind?: unknown };
+    return typeof parsed.kind === "string" ? (parsed as WorldProjectionSpec) : null;
+  } catch {
+    return null;
+  }
+}
 // #endregion 📐WorldProjection
 
 // #region 🖱️OrbitMouseBindings
@@ -3360,6 +3381,21 @@ if (import.meta.vitest) {
       expect(parallel!.children![2]!.children!.map((row) => row.label)).toEqual(["Cabinet", "Cavalier", "Military"]);
       expect(perspective!.children!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
       expect(templates[0]).toMatchObject({ controllerId: "demo", command: WORLD_PROJECTION_COMMAND });
+    });
+  });
+
+  describe("encodeWorldProjectionTemplateId / decodeWorldProjectionTemplateId", () => {
+    it("round-trips a spec through the template id string", () => {
+      const spec: WorldProjectionSpec = { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15, quadrant: "nw" };
+      const encoded = encodeWorldProjectionTemplateId(spec);
+      expect(typeof encoded).toBe("string");
+      expect(decodeWorldProjectionTemplateId(encoded)).toEqual(spec);
+    });
+
+    it("returns null for undefined, unrelated, or malformed template ids", () => {
+      expect(decodeWorldProjectionTemplateId(undefined)).toBeNull();
+      expect(decodeWorldProjectionTemplateId("top")).toBeNull();
+      expect(decodeWorldProjectionTemplateId("world-projection:not-json")).toBeNull();
     });
   });
 

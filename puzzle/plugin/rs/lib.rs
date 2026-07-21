@@ -2631,7 +2631,7 @@ pub mod d3 {
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
         SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
-        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition,
+        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -2655,8 +2655,9 @@ pub mod d3 {
     const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
     const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
-    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — the first declared utility.
-    const PUZZLE3D_DEFAULT_UTILITY: &str = "move";
+    /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — none.
+    /// Transform gumball utilities (`move`/`rotate`/`scale`) must be pressed explicitly; an unset/cleared utility must not fall back to `move` or the gumball appears without an active transform tool.
+    const PUZZLE3D_DEFAULT_UTILITY: &str = "";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
     /// 🌀 Window option: emit every object's vortices into the 3D scene.
     const PUZZLE3D_VORTEX_SHOW_ALWAYS: &str = "always";
@@ -4344,7 +4345,7 @@ pub mod d3 {
         attractions: "Anziehungen",
         window_main: "Puzzle 3D",
         example_concrete_forest: "Concrete Forest",
-        fill: "Fuellen",
+        fill: "Füllen",
         count: "Anzahl",
         brush: "Pinsel",
         mode: "Modus",
@@ -4352,7 +4353,7 @@ pub mod d3 {
         voxel: "Voxel",
         width: "Breite",
         depth: "Tiefe",
-        height: "Hoehe",
+        height: "Höhe",
         placement: "Platzierung",
         show: "Anzeigen",
         hide: "Ausblenden",
@@ -6274,7 +6275,7 @@ pub mod d3 {
             ("rotate", "Rotate", "Drehen"),
             ("scale", "Scale", "Skalieren"),
             ("brush", "Brush", "Pinsel"),
-            ("fill", "Fill", "Fuellen"),
+            ("fill", "Fill", "Füllen"),
             ("worldRelocate", "Relocate", "Verlagern"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
@@ -6407,7 +6408,7 @@ pub mod d3 {
                 .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
                 // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
-                // of the viewport, the Move utility, the catalogue panel, and adding an object.
+                // of the viewport, the catalogue panel, adding an object, and the Move utility.
                 .introduction(IntroductionDefinition {
                     title: "Welcome to Puzzle 3D".into(),
                     steps: vec![
@@ -6424,25 +6425,28 @@ pub mod d3 {
                             IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into()),
                         ),
                         IntroductionStepDefinition::new(
+                            "catalogue",
+                            "The Catalogue",
+                            "Browse the object kinds available to place from here.",
+                            IntroductionAnchor::PanelTab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+                        )
+                        .placement(IntroductionPlacement::Right),
+                        IntroductionStepDefinition::new(
+                            "add-object",
+                            "Add an Object",
+                            "Drag the first object kind from the catalogue into the viewport.",
+                            IntroductionAnchor::PanelFirstDraggable(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
+                        )
+                        .placement(IntroductionPlacement::Right)
+                        .advance_on(IntroductionAdvance::Action("addObjectKind".into()))
+                        .cutouts(vec![IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into())]),
+                        IntroductionStepDefinition::new(
                             "move-utility",
                             "Move Objects",
                             "Activate the Move utility to reposition objects in the scene.",
                             IntroductionAnchor::Utility("move".into()),
                         )
                         .advance_on(IntroductionAdvance::Utility("move".into())),
-                        IntroductionStepDefinition::new(
-                            "catalogue",
-                            "The Catalogue",
-                            "Browse the object kinds available to place from here.",
-                            IntroductionAnchor::PanelTab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
-                        ),
-                        IntroductionStepDefinition::new(
-                            "add-object",
-                            "Add an Object",
-                            "Add your first object to the scene to get started.",
-                            IntroductionAnchor::Action("addObjectKind".into()),
-                        )
-                        .advance_on(IntroductionAdvance::Action("addObjectKind".into())),
                     ],
                 })
                 // 🗨️ Reference dialog (proof of the framework's Dialog mechanism, see `DialogDefinition`
@@ -7099,7 +7103,7 @@ pub mod d3 {
         }
 
         #[test]
-        fn main_window_utilities_default_to_move_without_select_tool() {
+        fn main_window_utilities_lead_with_move_without_select_tool_and_no_default_utility() {
             let definition = create_puzzle3d_app().definition;
             let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
             assert!(!utility_ids.contains(&"select"), "puzzle 3d must not declare a select utility");
@@ -7107,7 +7111,7 @@ pub mod d3 {
             let main_utilities: Vec<&str> = main.utilities.iter().map(|utility| utility.as_str()).collect();
             assert_eq!(main_utilities.first().copied(), Some("move"));
             assert!(!main_utilities.contains(&"select"));
-            assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "move");
+            assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "", "unset/cleared host utility must not impersonate move");
         }
 
         #[test]
@@ -7243,9 +7247,17 @@ pub mod d3 {
         fn gumball_active_only_for_transform_utilities_with_object_selection() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
+            let idle_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap());
+            assert_eq!(idle_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "selection alone must not show the gumball");
             let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
             let move_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &move_view).expect("render")).unwrap());
             assert_eq!(move_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            let rotate_view = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
+            let rotate_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &rotate_view).expect("render")).unwrap());
+            assert_eq!(rotate_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            let scale_view = ViewState { active_utility_id: Some("scale".into()), ..ViewState::default() };
+            let scale_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &scale_view).expect("render")).unwrap());
+            assert_eq!(scale_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let brush_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render")).unwrap());
             assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
@@ -9981,7 +9993,7 @@ pub mod d5 {
             ("rotate", "Rotate", "Drehen"),
             ("scale", "Scale", "Skalieren"),
             ("brush", "Brush", "Pinsel"),
-            ("fill", "Fill", "Fuellen"),
+            ("fill", "Fill", "Füllen"),
             ("worldRelocate", "Relocate", "Verlagern"),
         ];
         ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()

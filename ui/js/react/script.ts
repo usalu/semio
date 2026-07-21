@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy|check-ui-primitives> [args…]`. */
+/** 🧭 Elements react UI router: `bun ./script.ts <dev|build|lint|test|policy|check-ui-primitives|check-chrome-i18n> [args…]`. */
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { BundleLinter } from "../../../repo/lib/js/index.ts";
@@ -185,12 +185,128 @@ class CheckUiPrimitivesScript extends BundleScript {
 }
 //#endregion 🔖ui-primitives-lint
 
+//#region 🌐chrome-i18n-lint
+/** 🌐 Locale-locked brand shells must never show an untranslated English chrome literal — the strict
+ * `useLabel` overloads (non-optional for known keys) are the primary guarantee; this lint is the
+ * line-based backstop for the label-prop/label-field/fallback/JSX-text positions the type system can't
+ * see through (e.g. a hardcoded `text="Clear"` compiles fine — only this scan catches it). Empty on
+ * 2026-07-21 after II.3's leak sweep; a listed file with zero hits is a stale entry (fails). */
+export const CHROME_I18N_ALLOWLIST: readonly string[] = [];
+
+const CHROME_I18N_SCANNED_FILES = ["ui/js/react/index.tsx", "framework/renderer/react/index.tsx"] as const;
+
+const CHROME_I18N_ATTR_RE = /\b(text|label|title|placeholder|alt|submitLabel|header|emptyMessage|aria-label)="[A-Z][^"]*"/;
+const CHROME_I18N_FIELD_RE = /\blabel:\s*"[A-Z][^"]*"/;
+const CHROME_I18N_FALLBACK_RE = /(\?\?|\|\|)\s*"[A-Z][^"]*"/;
+const CHROME_I18N_JSX_TEXT_RE = />[A-Z][a-zA-Z]+(?: [a-zA-Z…]+)*<\//;
+const CHROME_I18N_VITEST_START_RE = /if\s*\(\s*import\.meta\.vitest\s*\)/;
+
+/** 🗣️ Proper nouns (organization names) whose value is identical across every locked locale — not a
+ * translation gap, so the lint must not flag them even though they start with a capital letter. */
+const CHROME_I18N_LOCALE_INVARIANT_VALUES = new Set(["Leibniz Universität Hannover", "Universität der Künste Berlin"]);
+
+/** 🙈 Explicit, greppable per-line escape hatch (mirrors `eslint-disable-line`) for English literals that
+ * are demo/fixture data — never rendered by a real locale-locked app — rather than actual chrome. */
+const CHROME_I18N_IGNORE_MARKER = "chrome-i18n-allow";
+
+interface ChromeI18nHit {
+  file: string;
+  line: number;
+  kind: string;
+  text: string;
+}
+
+/** 🔍 Scans the fixed chrome-bearing file list for label-prop/label-field/fallback-literal/bare-JSX-text
+ * English hits, skipping `import.meta.vitest` blocks (test fixtures, not real chrome) via brace tracking. */
+function collectChromeI18nHits(repoRootPath: string): Map<string, ChromeI18nHit[]> {
+  const hitsByFile = new Map<string, ChromeI18nHit[]>();
+  const record = (file: string, hit: ChromeI18nHit): void => {
+    const bucket = hitsByFile.get(file) ?? [];
+    bucket.push(hit);
+    hitsByFile.set(file, bucket);
+  };
+
+  for (const rel of CHROME_I18N_SCANNED_FILES) {
+    const full = join(repoRootPath, rel);
+    let content: string;
+    try {
+      content = readFileSync(full, "utf8");
+    } catch {
+      continue;
+    }
+    const lines = content.split("\n");
+    // 🧪 `import.meta.vitest` blocks are always the last top-level statement in a chrome file (in-file
+    // vitest convention) — once seen, everything after is test fixture content, not real chrome.
+    const vitestStart = lines.findIndex((line) => CHROME_I18N_VITEST_START_RE.test(line));
+    const scannable = vitestStart === -1 ? lines : lines.slice(0, vitestStart);
+    for (let i = 0; i < scannable.length; i++) {
+      const line = scannable[i]!;
+      if (line.includes(CHROME_I18N_IGNORE_MARKER)) {
+        continue;
+      }
+      const attrMatch = CHROME_I18N_ATTR_RE.exec(line);
+      if (attrMatch && !CHROME_I18N_LOCALE_INVARIANT_VALUES.has(attrMatch[0].slice(attrMatch[0].indexOf('"') + 1, -1))) {
+        record(rel, { file: rel, line: i + 1, kind: "label-prop-literal", text: line.trim() });
+      }
+      if (CHROME_I18N_FIELD_RE.test(line)) {
+        record(rel, { file: rel, line: i + 1, kind: "label-field-literal", text: line.trim() });
+      }
+      if (CHROME_I18N_FALLBACK_RE.test(line)) {
+        record(rel, { file: rel, line: i + 1, kind: "fallback-literal", text: line.trim() });
+      }
+      if (CHROME_I18N_JSX_TEXT_RE.test(line)) {
+        record(rel, { file: rel, line: i + 1, kind: "bare-jsx-text", text: line.trim() });
+      }
+    }
+  }
+  return hitsByFile;
+}
+
+/** 🚫 Fails when a scanned chrome file has an untranslated-English hit outside the allowlist, or when the
+ * allowlist carries a stale entry for a file that no longer has any hits. */
+class CheckChromeI18nScript extends BundleScript {
+  run(): void {
+    const hitsByFile = collectChromeI18nHits(this.repoRoot);
+    const allowlist = new Set(CHROME_I18N_ALLOWLIST);
+    const failures: string[] = [];
+
+    for (const [file, hits] of hitsByFile) {
+      if (allowlist.has(file)) {
+        continue;
+      }
+      for (const hit of hits) {
+        failures.push(`${hit.file}:${hit.line} [${hit.kind}] ${hit.text}`);
+      }
+    }
+    for (const file of allowlist) {
+      if (!hitsByFile.has(file)) {
+        failures.push(`${file} [stale-allowlist-entry] listed in CHROME_I18N_ALLOWLIST but has zero hits — remove it`);
+      }
+    }
+
+    if (failures.length === 0) {
+      console.log(`ui/js/react: no chrome i18n violations (${allowlist.size} allowlisted files)`);
+      return;
+    }
+    console.error(`ui/js/react: found ${failures.length} chrome i18n violation(s):`);
+    for (const failure of failures.slice(0, 120)) {
+      console.error(`  ${failure}`);
+    }
+    if (failures.length > 120) {
+      console.error(`  … and ${failures.length - 120} more`);
+    }
+    process.exit(1);
+  }
+}
+//#endregion 🌐chrome-i18n-lint
+
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
   .register("lint", LintScript)
   .register("test", TestScript)
   .register("typecheck", TypecheckScript)
-  .register("check-ui-primitives", CheckUiPrimitivesScript);
+  .register("check-ui-primitives", CheckUiPrimitivesScript)
+  .register("check-chrome-i18n", CheckChromeI18nScript);
 
 await runBundleScriptMain(router, import.meta.url);

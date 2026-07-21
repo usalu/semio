@@ -55,11 +55,11 @@ registerUiTranslationBundles({
   },
   de: {
     translation: mcpAppTranslationBundle({
-      "mcpApp.panel.dashboard": "Uebersicht",
+      "mcpApp.panel.dashboard": "Übersicht",
       "mcpApp.panel.config": "Konfiguration",
-      "mcpApp.panel.runs": "Durchlaeufe",
+      "mcpApp.panel.runs": "Durchläufe",
       "mcpApp.panel.report": "Bericht",
-      "mcpApp.panel.translations": "Uebersetzungen",
+      "mcpApp.panel.translations": "Übersetzungen",
       "mcpApp.panel.actions": "Aktionen",
       "mcpApp.panel.events": "Ereignisse",
       "mcpApp.card.propertyKinds": "Eigenschaftsarten",

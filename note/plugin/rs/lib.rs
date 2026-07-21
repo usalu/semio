@@ -1022,7 +1022,7 @@ semio_framework_plugin::app_labels! {
         field_x: &'static str = en: "X", de: "X";
         field_y: &'static str = en: "Y", de: "Y";
         field_width: &'static str = en: "Width", de: "Breite";
-        field_height: &'static str = en: "Height", de: "Hoehe";
+        field_height: &'static str = en: "Height", de: "Höhe";
         field_visible: &'static str = en: "Visible", de: "Sichtbar";
         field_locked: &'static str = en: "Locked", de: "Gesperrt";
         measure_camera: &'static str = en: "Camera", de: "Kamera";
@@ -1072,8 +1072,8 @@ fn note_action_labels(is_de: bool) -> HashMap<String, String> {
         ("moveBlock", "Move Block", "Block verschieben"),
         ("deleteBlock", "Delete Block", "Block löschen"),
         ("duplicateBlock", "Duplicate Block", "Block duplizieren"),
-        ("patchBlocks", "Patch Blocks", "Bloecke aktualisieren"),
-        ("engagementSubmit", "Engagement Submit", "Eingabe bestaetigen"),
+        ("patchBlocks", "Patch Blocks", "Blöcke aktualisieren"),
+        ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
         ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
         ("inkApplyEvents", "Apply Note Events", "Notiz-Ereignisse anwenden"),
         ("nudgeSelection", "Nudge Selection", "Auswahl verschieben"),

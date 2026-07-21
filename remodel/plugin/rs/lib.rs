@@ -818,7 +818,7 @@ app_labels! {
         trajectory: &'static str = en: "Trajectory", de: "Trajektorie";
         poses: &'static str = en: "poses", de: "Posen";
         geo_products: &'static str = en: "Geo products", de: "Geo-Produkte";
-        available: &'static str = en: "available", de: "verfuegbar";
+        available: &'static str = en: "available", de: "verfügbar";
         params_ingest: &'static str = en: "Ingest", de: "Ingest";
         params_feature: &'static str = en: "Feature", de: "Feature";
         params_matching: &'static str = en: "Matching", de: "Matching";
@@ -853,24 +853,24 @@ app_labels! {
         qc_dense_coverage: &'static str = en: "Dense coverage ratio", de: "Dense-Abdeckungsanteil";
         qc_gcp_rmse: &'static str = en: "GCP checkpoint RMSE", de: "Passpunkt-Kontroll-RMSE";
         qc_watertight: &'static str = en: "Watertight", de: "Wasserdicht";
-        qc_boundary_edges: &'static str = en: "Boundary edges", de: "Raender";
+        qc_boundary_edges: &'static str = en: "Boundary edges", de: "Ränder";
         qc_components: &'static str = en: "Connected components", de: "Zusammenhangskomponenten";
         qc_euler: &'static str = en: "Euler characteristic", de: "Euler-Charakteristik";
         qc_genus: &'static str = en: "Genus", de: "Genus";
-        qc_closed_fallback: &'static str = en: "Closed via fallback", de: "Ueber Fallback geschlossen";
+        qc_closed_fallback: &'static str = en: "Closed via fallback", de: "Über Fallback geschlossen";
         panel_media: &'static str = en: "Media", de: "Medien";
         panel_pipeline: &'static str = en: "Pipeline", de: "Pipeline";
         panel_results: &'static str = en: "Results", de: "Ergebnisse";
         panel_parameters: &'static str = en: "Parameters", de: "Parameter";
         panel_calibration: &'static str = en: "Calibration", de: "Kalibrierung";
         panel_tracks: &'static str = en: "Tracks", de: "Spuren";
-        panel_qc: &'static str = en: "Quality", de: "Qualitaet";
+        panel_qc: &'static str = en: "Quality", de: "Qualität";
         window_frames: &'static str = en: "Frames", de: "Frames";
         window_report: &'static str = en: "Report", de: "Bericht";
         layers: &'static str = en: "Layers", de: "Ebenen";
         layer_mesh: &'static str = en: "Mesh", de: "Mesh";
         layer_dense: &'static str = en: "Dense cloud", de: "Dichte Punktwolke";
-        layer_sparse: &'static str = en: "Sparse cloud", de: "Duenne Punktwolke";
+        layer_sparse: &'static str = en: "Sparse cloud", de: "Dünne Punktwolke";
         layer_cameras: &'static str = en: "Cameras", de: "Kameras";
         layer_gcps: &'static str = en: "GCPs", de: "Passpunkte";
     }
@@ -893,15 +893,15 @@ fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
             ("runReconstruction", "Run Reconstruction", "Rekonstruktion starten"),
             ("cancelReconstruction", "Cancel Reconstruction", "Rekonstruktion abbrechen"),
             ("retryStage", "Retry", "Wiederholen"),
-            ("runStage", "Run Stage", "Stufe ausfuehren"),
+            ("runStage", "Run Stage", "Stufe ausführen"),
             ("importFrames", "Import Frames", "Frames importieren"),
             ("importVideo", "Import Video", "Video importieren"),
-            ("addStream", "Add Stream", "Stream hinzufuegen"),
+            ("addStream", "Add Stream", "Stream hinzufügen"),
             ("removeStream", "Remove Stream", "Stream entfernen"),
             ("setStreamSync", "Set Stream Sync", "Stream-Synchronisation festlegen"),
             ("editCalibration", "Edit Calibration", "Kalibrierung bearbeiten"),
             ("calibrateCameras", "Calibrate Cameras", "Kameras kalibrieren"),
-            ("addGcp", "Add Ground Control Point", "Passpunkt hinzufuegen"),
+            ("addGcp", "Add Ground Control Point", "Passpunkt hinzufügen"),
             ("removeGcp", "Remove Ground Control Point", "Passpunkt entfernen"),
             ("placeGcpObservation", "Place GCP Observation", "Passpunkt-Beobachtung setzen"),
             ("setIngestParams", "Set Ingest Params", "Ingest-Parameter festlegen"),
@@ -912,13 +912,13 @@ fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
             ("setMeshParams", "Set Mesh Params", "Mesh-Parameter festlegen"),
             ("setMotionParams", "Set Motion Params", "Bewegungs-Parameter festlegen"),
             ("setGeoParams", "Set Geo Params", "Geo-Parameter festlegen"),
-            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zuruecksetzen"),
-            ("clearSparse", "Clear Sparse Cloud", "Duenne Punktwolke loeschen"),
-            ("clearDense", "Clear Dense Cloud", "Dichte Punktwolke loeschen"),
-            ("clearMeshResult", "Clear Mesh", "Mesh loeschen"),
-            ("clearTracks", "Clear Tracks", "Spuren loeschen"),
-            ("clearGeoProducts", "Clear Geo Products", "Geo-Produkte loeschen"),
-            ("clearResult", "Clear Result", "Ergebnis loeschen"),
+            ("resetPlaceholderMesh", "Reset Placeholder Mesh", "Platzhalter-Mesh zurücksetzen"),
+            ("clearSparse", "Clear Sparse Cloud", "Dünne Punktwolke löschen"),
+            ("clearDense", "Clear Dense Cloud", "Dichte Punktwolke löschen"),
+            ("clearMeshResult", "Clear Mesh", "Mesh löschen"),
+            ("clearTracks", "Clear Tracks", "Spuren löschen"),
+            ("clearGeoProducts", "Clear Geo Products", "Geo-Produkte löschen"),
+            ("clearResult", "Clear Result", "Ergebnis löschen"),
             ("exportQcReport", "Export QC Report", "QC-Bericht exportieren"),
         ],
     )
@@ -926,7 +926,7 @@ fn remodel_action_labels(is_de: bool) -> std::collections::HashMap<String, Strin
 
 /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_remodel_app`.
 fn remodel_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-    localized_label_map(is_de, &[("select", "Select", "Auswaehlen"), ("sculpt", "Sculpt", "Formen"), ("measure", "Measure", "Messen"), ("gcpPlace", "Place GCP", "Passpunkt setzen")])
+    localized_label_map(is_de, &[("select", "Select", "Auswählen"), ("sculpt", "Sculpt", "Formen"), ("measure", "Measure", "Messen"), ("gcpPlace", "Place GCP", "Passpunkt setzen")])
 }
 //#endregion 🔖CommandLabels
 

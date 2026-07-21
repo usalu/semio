@@ -870,10 +870,10 @@ app_labels! {
         provenance: &'static str = en: "Made By", de: "Erstellt von";
         validation_warning: &'static str = en: "Warning", de: "Warnung";
         source: &'static str = en: "Source", de: "Quelle";
-        window_main: &'static str = en: "Workpiece", de: "Werkstueck";
+        window_main: &'static str = en: "Workpiece", de: "Werkstück";
         field_width: &'static str = en: "Width", de: "Breite";
         field_depth: &'static str = en: "Depth", de: "Tiefe";
-        field_height: &'static str = en: "Height", de: "Hoehe";
+        field_height: &'static str = en: "Height", de: "Höhe";
         field_radius: &'static str = en: "Radius", de: "Radius";
         field_pos_x: &'static str = en: "X", de: "X";
         field_pos_y: &'static str = en: "Y", de: "Y";

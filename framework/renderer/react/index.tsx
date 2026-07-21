@@ -162,6 +162,8 @@ import {
   UI_TERMINOLOGY_NATIVE,
   UIIntroduction,
   UIDialog,
+  introductionAnchorSelector,
+  introductionPanelTabFallbackSelector,
   introductionWindowActionPaneUnfoldSelector,
   introductionUtilityBarUnfoldSelector,
   readStoredIntroductionSeen,
@@ -256,16 +258,12 @@ import {
   type HostEffect,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID,
   FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
-  FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
   FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID,
   FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
-  FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
   FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID,
   FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-  FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID,
   FRAMEWORK_PANEL_TAB_PARAMETERS_ID,
-  FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL,
   DockLayoutStore,
   DockUiStateStore,
   NamedLayoutStore,
@@ -377,6 +375,10 @@ import {
   inkCanvasActions,
   type EventFeedEntry,
   type ShellBrand,
+  SHELL_LOCALES,
+  SHELL_TERMINOLOGIES,
+  type ShellLocale,
+  type ShellTerminology,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-cavas-react-renderer";
@@ -429,7 +431,12 @@ import {
   WorldProjectionRig,
   worldProjectionFamily,
   worldProjectionOrbitConstraints,
+  createWorldProjectionTemplates,
+  decodeWorldProjectionTemplateId,
+  encodeWorldProjectionTemplateId,
+  computeWorldProjectionPose,
   type WorldProjectionSpec,
+  type WorldProjectionTemplateDescriptor,
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
@@ -466,9 +473,9 @@ const COMPONENT_SCENE_HOSTS: Record<ComponentKind, LazyExoticComponent<Component
 };
 //#endregion ComponentSceneHostRegistry
 
-/** @emoji 🗣️ Resolves a chrome translation key outside hook context (plain node-builder functions run there). */
-function interpLabel(key: string): string {
-  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+/** @emoji 🗣️ Resolves a chrome translation key outside hook context (plain node-builder functions run there) — an alias of {@link shellLabel} scoped to this region. */
+function interpLabel(key: UiTranslationKey): string {
+  return shellLabel(key);
 }
 
 function ComponentSceneFallback() {
@@ -776,7 +783,8 @@ function DeclarativeTreePanel({ treeNode, onAction }: { readonly treeNode: UiTre
 //#region VirtualFileSystemHost
 function VirtualFileSystemHost({ node, onAction }: { readonly node: Extract<UiNode, { type: "componentScene" }>; readonly onAction: (action: ActionDescriptor) => void }) {
   const scene = node.virtualFileSystem;
-  if (!scene) return <div className="semio-vfs-empty">No virtual file system scene</div>;
+  const emptySceneLabel = useLabel("ui.host.emptyScene");
+  if (!scene) return <div className="semio-vfs-empty">{emptySceneLabel}</div>;
   const schema = JSON.parse(scene.schemaJson) as Parameters<typeof VirtualFileSystem>[0]["schema"];
   const rows = JSON.parse(scene.rowsJson) as Parameters<typeof VirtualFileSystem>[0]["rows"];
   const selectedRowIds = scene.selectedRowIdsJson ? (JSON.parse(scene.selectedRowIdsJson) as string[]) : undefined;
@@ -1105,7 +1113,7 @@ export type FrameworkOsLocks = {
 export type ResolvedShellLocks = {
   readonly exampleId?: string;
   readonly locale?: UiLocale;
-  readonly terminology?: string;
+  readonly terminology?: ShellTerminology;
   readonly themeId?: string;
   readonly appearance?: ElementsSurfaceAppearance;
 };
@@ -1120,14 +1128,21 @@ export function resolveShellLocks(locks: FrameworkOsLocks | undefined): Resolved
   const resolved: { -readonly [K in keyof ResolvedShellLocks]?: ResolvedShellLocks[K] } = {};
   if (locks.exampleId) resolved.exampleId = locks.exampleId;
   if (locks.locale !== undefined) {
-    if (locks.locale === "en" || locks.locale === "de") {
-      resolved.locale = locks.locale;
+    if ((SHELL_LOCALES as readonly string[]).includes(locks.locale)) {
+      resolved.locale = locks.locale as ShellLocale;
     } else {
       console.warn(`[os] invalid SEMIO_LOCKED_LOCALE ${JSON.stringify(locks.locale)}, falling back to "en"`);
       resolved.locale = "en";
     }
   }
-  if (locks.terminology) resolved.terminology = locks.terminology;
+  if (locks.terminology !== undefined) {
+    if ((SHELL_TERMINOLOGIES as readonly string[]).includes(locks.terminology)) {
+      resolved.terminology = locks.terminology as ShellTerminology;
+    } else {
+      console.warn(`[os] invalid SEMIO_LOCKED_TERMINOLOGY ${JSON.stringify(locks.terminology)}, falling back to "native"`);
+      resolved.terminology = "native";
+    }
+  }
   if (locks.themeId !== undefined) {
     const known = new Set([...builtinUiThemes().map((t) => t.id), ...Object.keys(readStoredUiCustomThemes())]);
     if (known.has(locks.themeId)) {
@@ -2642,7 +2657,7 @@ export function flattenPanelTabLeaves<T extends { readonly children?: readonly T
 /** @emoji 🌳 Converts one plugin-declared {@link AppPanelTabDefinition} (recursively) into a {@link PanelTabNode}. */
 function panelTabDefinitionToNode(tab: AppPanelTabDefinition, group: string, panelUiByKey: Readonly<Record<string, UiNode>>, onAction: (action: ActionDescriptor) => void, order: number, appLabelsOverlay: PluginAppLabelsOverlay): PanelTabNode {
   const tabId = panelTabKindId(tab.kind);
-  const label = resolveAppLabel(appLabelsOverlay, "panelTab", tabId, tab.label);
+  const label = resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label);
   if (tab.children && tab.children.length > 0) {
     return {
       kind: "branch",
@@ -2800,9 +2815,26 @@ function shellTabIcon(iconId: string): React.FC<{ size?: number }> {
   };
 }
 
-/** @emoji 🌐 Resolves a chrome translation key outside hook context (tree builders run there). */
-function shellLabel(key: UiTranslationKey): string {
-  return resolveTranslationLabel(uiI18n.t(key)) ?? key;
+/** @emoji 🌐 Resolves a chrome translation key outside hook context (tree builders run there). Both bundles
+ * are guaranteed complete for every key via `satisfies UiTranslationSchema`, so `?? key` is unreachable in
+ * practice — kept only as a last-resort literal rather than a thrown error. `options` supports i18next
+ * interpolation for keys with `{{placeholders}}`. */
+function shellLabel(key: UiTranslationKey, options?: Record<string, unknown>): string {
+  return resolveTranslationLabel(uiI18n.t(key, options)) ?? key;
+}
+
+/** @emoji 🧭 The four panel tabs the framework itself owns (never app-supplied) — routed through the typed chrome schema instead of the plugin overlay so a locale-locked shell can never show their English manifest label. */
+const FRAMEWORK_PANEL_TAB_LABEL_KEYS: Readonly<Record<string, UiTranslationKey>> = {
+  [FRAMEWORK_PANEL_TAB_DOCUMENT_ID]: "ui.panel.document",
+  [FRAMEWORK_PANEL_TAB_CATALOGUE_ID]: "ui.panel.catalogue",
+  [FRAMEWORK_PANEL_TAB_INSPECTION_ID]: "ui.panel.inspection",
+  [FRAMEWORK_PANEL_TAB_PARAMETERS_ID]: "ui.panel.parameters",
+};
+
+/** @emoji 🧭 Framework-owned panel tabs resolve through the chrome schema (`shellLabel`); every other app-declared tab still resolves through the plugin overlay (`resolveAppLabel`). */
+function resolvePanelTabLabel(overlay: PluginAppLabelsOverlay, tabId: string, fallback: string): string {
+  const chromeKey = FRAMEWORK_PANEL_TAB_LABEL_KEYS[tabId];
+  return chromeKey ? shellLabel(chromeKey) : resolveAppLabel(overlay, "panelTab", tabId, fallback);
 }
 
 /** @emoji 🗣️ Stable empty overlay reference so components depending on it don't re-render before the first `appLabels` fetch resolves. */
@@ -2995,12 +3027,20 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   return null;
 }
 
-function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): ReactNode | undefined {
+function windowMeasuresOverlay(measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown, direction: "up" | "down" = "down"): ReactNode | undefined {
   if (!measures || measures.length === 0) return undefined;
-  return <WindowMeasuresTree>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
+  return <WindowMeasuresTree direction={direction}>{measures.map((measure) => renderWindowMeasure(measure, onAction))}</WindowMeasuresTree>;
 }
 
 function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { readonly activeUtilityId: string | undefined; readonly windowId: string; readonly onAction: (action: ActionDescriptor) => void }) {
+  const methodLabel = useLabel("ui.selection.method");
+  const modeLabel = useLabel("ui.selection.mode");
+  const rectangleLabel = useLabel("ui.selection.rectangle");
+  const lassoLabel = useLabel("ui.selection.lasso");
+  const selectiveLabel = useLabel("ui.selection.selective");
+  const additiveLabel = useLabel("ui.selection.additive");
+  const subtractiveLabel = useLabel("ui.selection.subtractive");
+  const invertiveLabel = useLabel("ui.selection.invertive");
   const selectionMethod = activeUtilityId === "selectLasso" ? "lasso" : "rectangle";
 
   const [selectionMode, setSelectionMode] = useState<"default" | "additive" | "subtractive" | "invertive">(() => {
@@ -3024,7 +3064,7 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
   return (
     <div className="flex items-center gap-double">
       <div className="flex items-center gap-single">
-        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">Method</span>
+        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{methodLabel}</span>
         <ToggleGroup
           kind="single"
           value={selectionMethod}
@@ -3034,14 +3074,14 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
             }
           }}
           items={[
-            { value: "rectangle", icon: <Icon icon="square-dashed" size="small" />, text: "Rectangle" },
-            { value: "lasso", icon: <Icon icon="lasso" size="small" />, text: "Lasso" },
+            { value: "rectangle", icon: <Icon icon="square-dashed" size="small" />, text: rectangleLabel },
+            { value: "lasso", icon: <Icon icon="lasso" size="small" />, text: lassoLabel },
           ]}
         />
       </div>
       <RibbonDivider />
       <div className="flex items-center gap-single">
-        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">Mode</span>
+        <span className="text-tiny text-muted-foreground uppercase tracking-wider font-semibold">{modeLabel}</span>
         <ToggleGroup
           kind="single"
           value={selectionMode}
@@ -3051,10 +3091,10 @@ function SelectionUtilityOptions({ activeUtilityId, windowId, onAction }: { read
             }
           }}
           items={[
-            { value: "default", text: "Selective" },
-            { value: "additive", text: "Additive" },
-            { value: "subtractive", text: "Subtractive" },
-            { value: "invertive", text: "Invertive" },
+            { value: "default", text: selectiveLabel },
+            { value: "additive", text: additiveLabel },
+            { value: "subtractive", text: subtractiveLabel },
+            { value: "invertive", text: invertiveLabel },
           ]}
         />
       </div>
@@ -3071,7 +3111,7 @@ function windowMeasuresChrome(
   const { general, utilityOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
   return {
     measures: windowMeasuresOverlay(general, onAction),
-    utilityOptions: windowMeasuresOverlay(utilityOptions, onAction),
+    utilityOptions: windowMeasuresOverlay(utilityOptions, onAction, "up"),
   };
 }
 
@@ -5119,6 +5159,8 @@ export function FrameworkOsShell({
       if (!kind) return;
       extraWindowCounterRef.current += 1;
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
+      const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
+      if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
       dispatch({
         type: "SET_EXTRA_WINDOW_INSTANCES",
         value: (current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) }],
@@ -5769,7 +5811,8 @@ export function FrameworkOsShell({
   const activeIntroductionStepAnchor: IntroductionAnchor | null = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex]?.anchor ?? null) : null;
   const introductionUtilityId = activeIntroductionStepAnchor?.kind === "utility" ? activeIntroductionStepAnchor.id : null;
   const introductionActionId = activeIntroductionStepAnchor?.kind === "action" ? activeIntroductionStepAnchor.id : null;
-  const introductionPanelTabId = activeIntroductionStepAnchor?.kind === "panelTab" ? activeIntroductionStepAnchor.id : null;
+  const introductionPanelTabId =
+    activeIntroductionStepAnchor?.kind === "panelTab" || activeIntroductionStepAnchor?.kind === "panelFirstDraggable" ? activeIntroductionStepAnchor.id : null;
   const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
   const introductionUtilityWindowId = useMemo(() => {
     if (!introductionUtilityId || !session) return null;
@@ -5790,8 +5833,25 @@ export function FrameworkOsShell({
   const introductionAnchorFallbackSelectors = useMemo((): readonly string[] => {
     if (introductionUtilityWindowId) return [introductionUtilityBarUnfoldSelector(introductionUtilityWindowId)];
     if (introductionActionWindowId) return [introductionWindowActionPaneUnfoldSelector(introductionActionWindowId)];
+    if (introductionPanelTabId) {
+      // 🎓 panelFirstDraggable upgrades from the tab chip → the panel → the first drag row as each mounts.
+      if (activeIntroductionStepAnchor?.kind === "panelFirstDraggable") {
+        return [
+          introductionPanelTabFallbackSelector(introductionPanelTabId),
+          `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${introductionPanelTabId}"]`,
+        ];
+      }
+      return [introductionPanelTabFallbackSelector(introductionPanelTabId)];
+    }
     return [];
-  }, [introductionActionWindowId, introductionUtilityWindowId]);
+  }, [activeIntroductionStepAnchor, introductionActionWindowId, introductionPanelTabId, introductionUtilityWindowId]);
+  const introductionWorld3dCutoutSelectors = useMemo((): readonly string[] => {
+    if (activeIntroductionStepAnchor?.kind !== "panelFirstDraggable" || !session) return [];
+    return session.app.windowKinds
+      .filter((kind) => kind.surfaceKind === "world-3d")
+      .map((kind) => introductionAnchorSelector({ kind: "windowKind", id: kind.id }))
+      .filter((entry): entry is string => Boolean(entry));
+  }, [activeIntroductionStepAnchor, session]);
 
   const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -5989,7 +6049,7 @@ export function FrameworkOsShell({
       const tabId = panelTabKindId(tab.kind);
       items.push({
         id: `panel.${tabId}`,
-        label: resolveAppLabel(appLabelsOverlay, "panelTab", tabId, tab.label),
+        label: resolvePanelTabLabel(appLabelsOverlay, tabId, tab.label),
         category: shellLabel("ui.search.category.panels"),
         icon: <Icon icon="panel-left" size="small" />,
         onSelect: () => onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } }),
@@ -6178,7 +6238,9 @@ export function FrameworkOsShell({
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         children: (
           <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
-            <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+            <WindowInstanceIdContext.Provider value={kind.id}>
+              <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+            </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
         ),
       };
@@ -6205,7 +6267,9 @@ export function FrameworkOsShell({
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
             <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
-              <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+              <WindowInstanceIdContext.Provider value={instance.id}>
+                <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+              </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
           ),
         },
@@ -6351,9 +6415,9 @@ export function FrameworkOsShell({
     if (brand?.id === "entwerfen-mit-bestand") {
       items.push(
         { key: "footerProjectOfGap", className: "w-huge", content: null },
-        aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale),
+        aProjectOfLuhUdkFooterItem("aProjectOfLuhUdk", uiLocale, mobile),
         navbarFillItem("footerLeadingFill"),
-        fundedByZukunftBauFooterItem("fundedByZukunftBau", uiLocale),
+        fundedByZukunftBauFooterItem("fundedByZukunftBau", uiLocale, mobile),
         { key: "footerFundedByGap", className: "w-huge", content: null },
       );
     } else {
@@ -6417,6 +6481,7 @@ export function FrameworkOsShell({
             introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
             anchorFallbackSelectors={introductionAnchorFallbackSelectors}
+            additionalCutoutSelectors={introductionWorld3dCutoutSelectors}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
               dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
@@ -7464,8 +7529,8 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     rows.push({
       key: "row-utility-options",
       content: (
-        <RibbonZone>
-          <RibbonItem>{utilityOptions}</RibbonItem>
+        <RibbonZone variableHeight className="items-start">
+          <RibbonItem className="h-auto items-start">{utilityOptions}</RibbonItem>
         </RibbonZone>
       ),
     });
@@ -7494,7 +7559,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
 
 //#region DisplayPanel
 export type DisplayHostApi = {
-  readonly windowKinds: readonly { readonly id: string; readonly label: string }[];
+  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly surfaceKind?: string }[];
   readonly namedLayouts: readonly NamedLayout[];
   readonly userLayouts: readonly NamedLayout[];
   readonly saveCurrentLayout: (label: string) => void;
@@ -7552,6 +7617,21 @@ function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: 
   return root;
 }
 
+/** @emoji 🪟 Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
+ * into draggable {@link TreeDataItem}s for a window kind's Display "Windows" section — each leaf drags a
+ * `{windowKindId, templateId}` payload that seeds the freshly-opened pane's initial camera (see
+ * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}). */
+function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], windowKindId: string, idPrefix: string): TreeDataItem[] {
+  return templates.map((template) => ({
+    id: `${idPrefix}.${template.id}`,
+    label: template.label,
+    defaultOpen: false,
+    ...(template.children?.length
+      ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) }
+      : { dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) } }),
+  }));
+}
+
 function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
   return {
     dragAndDropController: windowTemplatePaletteTreeDragController(),
@@ -7560,15 +7640,25 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
           id: `framework.display.windows.${kind.id}`,
           label: kind.label,
           defaultOpen: false,
-          items: [
-            {
-              id: `framework.display.windows.${kind.id}.kind`,
-              label: kind.label,
-              dragData: {
-                [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }),
-              },
-            },
-          ],
+          items:
+            kind.surfaceKind === "world-3d"
+              ? [
+                  {
+                    id: `framework.display.windows.${kind.id}.kind`,
+                    label: kind.label,
+                    dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) },
+                  },
+                  ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, `framework.display.windows.${kind.id}.projection`),
+                ]
+              : [
+                  {
+                    id: `framework.display.windows.${kind.id}.kind`,
+                    label: kind.label,
+                    dragData: {
+                      [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }),
+                    },
+                  },
+                ],
         }))
       : [{ id: "framework.display.windows.empty", items: [{ id: "empty", label: "—" }] }],
   };
@@ -8108,7 +8198,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
 
 export function useNamedLayoutHost(options: {
   readonly appId: string;
-  readonly windowKinds: readonly { readonly id: string; readonly label: string }[];
+  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly surfaceKind?: string }[];
   readonly builtinLayouts: readonly NamedLayout[];
   readonly currentLayout: WindowLayout | undefined;
   readonly onApplyLayout: (layout: WindowLayout) => void;
@@ -11195,16 +11285,43 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
 /** @emoji 🔀 Portals the world's orthographic/perspective switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane, instead of the fixed corner it used to be hardcoded to. */
 function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
+  const projectionLabel = useLabel("ui.host.projection");
   return usePaneSlot(
-    <Pane id="world-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label="Projection">
+    <Pane id="world-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label={projectionLabel}>
       <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
     </Pane>,
   );
 }
 
+//#region WorldWindowInstance
+/** @emoji 🪪 Identifies which window *pane* (not just which window *kind*) a `ComponentSceneHost` is
+ * mounted for — every window kind's `UiNode` is shared verbatim across all of its open instances, so a
+ * host can't otherwise tell which pane it is; provided per-pane around each `<InterpretedUiNode>` call. */
+const WindowInstanceIdContext = createContext<string | null>(null);
+
+/** @emoji 🪟 One-shot initial camera pose, keyed by window instance id, consumed by {@link World3dHost} on
+ * mount and then discarded — the side-channel a Display "Windows" drag-and-drop template uses to seed a
+ * freshly-opened pane's projection (dragging "Top" opens a pane that starts in the Top view, etc.). */
+const pendingWorldProjectionByWindowId = new Map<string, WorldProjectionSpec>();
+
+/** @emoji 🪟 Registers `spec` to be consumed once by the next {@link World3dHost} mounted for `windowId`. */
+function registerPendingWorldProjection(windowId: string, spec: WorldProjectionSpec): void {
+  pendingWorldProjectionByWindowId.set(windowId, spec);
+}
+
+/** @emoji 🪟 Consumes (reads + clears) the pending initial projection for `windowId`, if any. */
+function takePendingWorldProjection(windowId: string | null): WorldProjectionSpec | null {
+  if (!windowId) return null;
+  const spec = pendingWorldProjectionByWindowId.get(windowId);
+  if (spec) pendingWorldProjectionByWindowId.delete(windowId);
+  return spec ?? null;
+}
+//#endregion WorldWindowInstance
+
 //#region World3dHost
 export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
@@ -11215,7 +11332,13 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     if (sceneCameraJson.includes('"position"')) return parsedCamera;
     return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
   }, [instances, parsedCamera, sceneCameraJson]);
-  const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(null);
+  const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(() => {
+    const pendingSpec = takePendingWorldProjection(windowInstanceId);
+    if (!pendingSpec) return null;
+    const distance = Math.hypot(sceneCamera.position[0] - sceneCamera.target[0], sceneCamera.position[1] - sceneCamera.target[1], sceneCamera.position[2] - sceneCamera.target[2]) || 600;
+    const pose = computeWorldProjectionPose(pendingSpec, { target: sceneCamera.target, distance });
+    return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
+  });
   const [viewportOwned, setViewportOwned] = useState(false);
   const [detachEpoch, setDetachEpoch] = useState(0);
   const previousSceneCameraJsonRef = useRef(sceneCameraJson);
@@ -14080,9 +14203,9 @@ function HighlightedBuffer({ buffer, tokens }: { readonly buffer: string; readon
 //#endregion HighlightedBuffer
 
 //#region EditingHelpers
-/** 🌐 Resolves a translation key outside of component render (e.g. `buildTextEditorContextMenuItems`), mirroring `shellLabel`/`interpLabel`. */
-function hostLabel(key: string): string {
-  return resolveTranslationLabel(uiI18n.t(key as never)) ?? key;
+/** 🌐 Resolves a translation key outside of component render (e.g. `buildTextEditorContextMenuItems`) — an alias of {@link shellLabel} scoped to this region. */
+function hostLabel(key: UiTranslationKey): string {
+  return shellLabel(key);
 }
 
 /** ✂️ Language-agnostic multi-span rename preview: replaces every span with `nextName`, remapping spans left-to-right. */
@@ -14721,6 +14844,8 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
     }
   }, [scene?.diagnosticsJson]);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const documentPlaceholderLabel = useLabel("ui.host.documentPlaceholder");
+  const languageDocumentLabel = useLabel("ui.host.languageDocument", { language: scene?.language });
 
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
@@ -14737,7 +14862,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
             lazy
             rows={24}
             value={scene.buffer}
-            placeholder={scene.language ? `${scene.language} document` : "Document"}
+            placeholder={scene.language ? languageDocumentLabel : documentPlaceholderLabel}
             onLazyChange={(value) =>
               onAction({
                 controllerId: node.controllerId,
@@ -14913,7 +15038,6 @@ export function TableHost({ node, onAction }: ComponentSceneHostProps) {
         className="h-full w-full"
         columns={tableColumns}
         data={rows}
-        emptyMessage="No rows"
         getRowId={(row, index) => String(row.id ?? row.programId ?? index)}
         selectedRows={selectedRows}
         sortColumn={sort?.columnId}
@@ -16747,10 +16871,10 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   const anyUnlocked = selectedEntities.some((entity) => !puzzle2dEntityFlag(entity, "locked"));
 
   return [
-    { id: "toggleHidden", label: anyVisible ? "Hide" : "Show", action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
-    { id: "toggleLocked", label: anyUnlocked ? "Lock" : "Unlock", action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
+    { id: "toggleHidden", label: anyVisible ? hostLabel("ui.contextMenu.hide") : hostLabel("ui.contextMenu.show"), action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
+    { id: "toggleLocked", label: anyUnlocked ? hostLabel("ui.contextMenu.lock") : hostLabel("ui.contextMenu.unlock"), action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
     { id: "duplicate", label: hostLabel("ui.contextMenu.duplicate"), action: "duplicateSelection", disabled: !hasSelectedNode },
-    { id: "selectSameKind", label: "Select all of same kind", action: "selectSameKind" },
+    { id: "selectSameKind", label: hostLabel("ui.contextMenu.selectSameKind"), action: "selectSameKind" },
     { id: "focusSelection", label: hostLabel("ui.contextMenu.zoomToSelection"), action: "focusSelection" },
     { id: "deleteSelection", label: hostLabel("ui.contextMenu.delete"), action: "deleteSelection", destructive: true },
   ];
@@ -17534,6 +17658,8 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
+  const iconShotLabel = useLabel("ui.host.iconShot");
+  const renderingLabel = useLabel("ui.host.rendering");
   useEffect(() => {
     setPreview(null);
     setError(null);
@@ -17557,9 +17683,9 @@ export function IconRenderHost({ node }: ComponentSceneHostProps) {
   const content = error ? (
     <div className="flex h-full items-center justify-center p-4 text-sm text-destructive">{error}</div>
   ) : preview ? (
-    <img alt={scene.footer ?? "Icon shot"} className="block h-full w-full" src={preview} />
+    <img alt={scene.footer ?? iconShotLabel} className="block h-full w-full" src={preview} />
   ) : (
-    <div className="flex h-full items-center justify-center text-sm opacity-60">Rendering…</div>
+    <div className="flex h-full items-center justify-center text-sm opacity-60">{renderingLabel}</div>
   );
   return (
     <div className="semio-icon-render-host absolute inset-0 flex flex-col" data-surface-id={node.surfaceId}>

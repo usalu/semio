@@ -1,0 +1,60 @@
+intro mounted Willkommen bei Entwerfen mit Bestand
+1 / 7
+
+Der Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.
+
+Das Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit KI-Unterstützung und Leistungsbewertung entlang komplexer funktionaler und struktureller Abhängigkeiten.
+
+Überspringen
+Weiter
+click next 0 Willkommen bei Entwerfen mit Bestand
+click next 1 Früher Prototyp
+click next 2 Förderhinweis
+click next 3 Die 3D-Ansicht
+{
+  "catalogue": {
+    "catalogueTitle": "Der Katalog",
+    "panelIntroduced": 1,
+    "panelVisible": 1,
+    "panelBox": {
+      "x": 3.1875,
+      "y": 31.984375,
+      "width": 280,
+      "height": 146
+    },
+    "boxBox": {
+      "x": 299.1875,
+      "y": 55.984375,
+      "width": 384,
+      "height": 97.9375
+    },
+    "boxRightOfPanel": true
+  },
+  "add": {
+    "addTitle": "Baukomponente hinzufügen",
+    "panelIntroduced": 1,
+    "panelBox": {
+      "x": 3.1875,
+      "y": 31.984375,
+      "width": 280,
+      "height": 146
+    },
+    "boxBox": {
+      "x": 299.1875,
+      "y": 50.984375,
+      "width": 384,
+      "height": 107.546875
+    },
+    "boxRightOfPanel": true
+  },
+  "debugStepIds": [
+    "[DEBUG] UIIntroduction step {id: welcome, anchor: Object, placement: center, viaFallback: false, cutout: null}",
+    "[DEBUG] UIIntroduction step {id: prototype, anchor: Object, placement: center, viaFallback: false, cutout: null}",
+    "[DEBUG] UIIntroduction step {id: funding, anchor: Object, placement: center, viaFallback: false, cutout: null}",
+    "[DEBUG] UIIntroduction step {id: viewport, anchor: Object, placement: auto, viaFallback: false, cutout: null}",
+    "[DEBUG] UIIntroduction step {id: viewport, anchor: Object, placement: auto, viaFallback: false, cutout: Object}",
+    "[DEBUG] UIIntroduction step {id: catalogue, anchor: Object, placement: right, viaFallback: false, cutout: Object}",
+    "[DEBUG] UIIntroduction step {id: catalogue, anchor: Object, placement: right, viaFallback: true, cutout: Object}",
+    "[DEBUG] UIIntroduction step {id: add-object, anchor: Object, placement: right, viaFallback: false, cutout: Object}"
+  ]
+}

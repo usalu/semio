@@ -3443,6 +3443,11 @@ pub struct IntroductionStepDefinition {
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
+    /// 🕳️ Extra interactive cutouts (no introduced pulse) — e.g. every 3D window that accepts a catalogue drop
+    /// while the primary `anchor` teaches the drag source.
+    #[serde(default)]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cutouts: Vec<IntroductionAnchor>,
 }
 
 impl IntroductionStepDefinition {
@@ -3456,6 +3461,7 @@ impl IntroductionStepDefinition {
             placement: IntroductionPlacement::default(),
             advance: IntroductionAdvance::default(),
             logos: Vec::new(),
+            cutouts: Vec::new(),
         }
     }
 
@@ -3480,6 +3486,12 @@ impl IntroductionStepDefinition {
     /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
     pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
         self.logos = logos;
+        self
+    }
+
+    /// @emoji 🕳️ Extra interactive cutouts alongside the primary anchor (no introduced pulse).
+    pub fn cutouts(mut self, cutouts: Vec<IntroductionAnchor>) -> Self {
+        self.cutouts = cutouts;
         self
     }
 }
@@ -3517,6 +3529,9 @@ pub enum IntroductionAnchor {
     Action(ActionRef),
     /// 📑 References a declared `PanelTabDefinition.id()`.
     PanelTab(String),
+    /// 🌲 First draggable tree-item row inside the named panel tab (document order within that
+    /// uncollapsed panel) — used to teach catalogue drag-and-drop without hardcoding a kind id.
+    PanelFirstDraggable(String),
     /// 🪝 Escape hatch: a well-known `data-slot` name, unvalidated.
     Slot(String),
 }
@@ -5329,6 +5344,7 @@ mod app_document_tests {
             IntroductionAnchor::Utility(UtilityRef::new("brush")),
             IntroductionAnchor::Action(ActionRef::new("add")),
             IntroductionAnchor::PanelTab("puzzle.catalogue".into()),
+            IntroductionAnchor::PanelFirstDraggable("puzzle.catalogue".into()),
             IntroductionAnchor::Slot("navbar".into()),
         ] {
             let json = serde_json::to_string(&anchor).unwrap();

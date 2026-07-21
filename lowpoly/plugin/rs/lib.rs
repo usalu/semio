@@ -651,7 +651,7 @@ semio_framework_plugin::app_labels! {
         selection: &'static str = en: "Selection", de: "Auswahl";
         selection_mode: &'static str = en: "Selection Mode", de: "Auswahlmodus";
         utility: &'static str = en: "Utility", de: "Werkzeug";
-        selected: &'static str = en: "selected", de: "ausgewaehlt";
+        selected: &'static str = en: "selected", de: "ausgewählt";
         extrude: &'static str = en: "Extrude", de: "Extrudieren";
         triangulate: &'static str = en: "Triangulate", de: "Triangulieren";
         extrude_distance: &'static str = en: "Extrude Distance", de: "Extrusionsabstand";
@@ -659,12 +659,12 @@ semio_framework_plugin::app_labels! {
         bevel_amount: &'static str = en: "Bevel Amount", de: "Fasenbetrag";
         bevel_segments: &'static str = en: "Bevel Segments", de: "Fasensegmente";
         loop_cuts: &'static str = en: "Loop Cuts", de: "Schleifenschnitte";
-        decimate_ratio: &'static str = en: "Decimate Ratio", de: "Dezimierungsverhaeltnis";
-        snap_grid: &'static str = en: "Snap Grid", de: "Rastergroesse";
+        decimate_ratio: &'static str = en: "Decimate Ratio", de: "Dezimierungsverhältnis";
+        snap_grid: &'static str = en: "Snap Grid", de: "Rastergröße";
         mirror_axis: &'static str = en: "Mirror Axis", de: "Spiegelachse";
-        brush_size: &'static str = en: "Brush Size", de: "Pinselgroesse";
+        brush_size: &'static str = en: "Brush Size", de: "Pinselgröße";
         brush_opacity: &'static str = en: "Brush Opacity", de: "Pinseldeckkraft";
-        brush_hardness: &'static str = en: "Brush Hardness", de: "Pinselhaerte";
+        brush_hardness: &'static str = en: "Brush Hardness", de: "Pinselhärte";
         // engagement + measures
         snap: &'static str = en: "Snap", de: "Einrasten";
         smooth: &'static str = en: "Smooth", de: "Glätten";
@@ -750,7 +750,7 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
         ("paintStrokeBegin", "Paint Stroke Begin", "Malstrich beginnen"),
         ("paintStroke", "Paint Stroke", "Malstrich"),
         ("paintAt", "Paint At", "Malen bei"),
-        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrueckt"),
+        ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
         ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
         ("paintSample", "Paint Sample", "Farbe aufnehmen"),
         ("transformBegin", "Transform Begin", "Transformation beginnen"),
@@ -766,7 +766,7 @@ fn lowpoly_utility_labels(is_de: bool) -> HashMap<String, String> {
         ("scale", "Scale", "Skalieren"),
         ("brush", "Brush", "Pinsel"),
         ("eraser", "Eraser", "Radierer"),
-        ("fill", "Fill", "Fuellen"),
+        ("fill", "Fill", "Füllen"),
         ("eyedropper", "Eyedropper", "Pipette"),
     ];
     localized_label_map(is_de, ENTRIES)

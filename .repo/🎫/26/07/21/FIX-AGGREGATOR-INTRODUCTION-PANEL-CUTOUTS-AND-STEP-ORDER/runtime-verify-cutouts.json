@@ -1,0 +1,24 @@
+{
+  "title": "Baukomponente hinzufügen",
+  "body": "Ziehen Sie die erste Baukomponente per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.",
+  "introduced": [
+    {
+      "id": "puzzle3d-kind:Hexagonal Cut Concrete Forest Left",
+      "slot": "tree-item-row",
+      "draggable": "true",
+      "windowKind": null
+    }
+  ],
+  "worldWindows": [
+    {
+      "width": 1425,
+      "height": 806,
+      "top": 58,
+      "left": 7
+    }
+  ],
+  "veilCount": 7,
+  "veilAtProbe": false,
+  "veilAtDrag": false,
+  "stepTitle": "Baukomponente hinzufügen"
+}

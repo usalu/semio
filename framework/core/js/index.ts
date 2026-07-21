@@ -1348,11 +1348,23 @@ export type IntroductionLogo = GeneratedIntroductionLogo;
 export type DialogDefinition = GeneratedDialogDefinition;
 
 //#region 🏷️ShellBrand
+/** 🌐 Locales the shell chrome ships a complete translation bundle for — the single source `UiLocale`
+ * (`ui/js/react`), `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from. Adding a locale
+ * means adding it here, which the ui-react schema asserts force a matching bundle for. */
+export const SHELL_LOCALES = ["en", "de"] as const;
+export type ShellLocale = (typeof SHELL_LOCALES)[number];
+
+/** 🗣️ Chrome-known terminology ids; declaring a new terminology means adding it here plus its
+ * `ui.settings.terminology.*` labels (an app-declared id beyond this set is still accepted at
+ * runtime, falling back to its raw id in the settings dropdown — only these two are chrome-known). */
+export const SHELL_TERMINOLOGIES = ["native", "reuse"] as const;
+export type ShellTerminology = (typeof SHELL_TERMINOLOGIES)[number];
+
 /** 🔒 Shell preferences a brand pins at boot: each set axis is fixed and its in-app switcher hidden (validated by the renderer's `resolveShellLocks`). */
 export type ShellBrandLocks = {
   readonly exampleId?: string;
-  readonly locale?: string;
-  readonly terminology?: string;
+  readonly locale?: ShellLocale;
+  readonly terminology?: ShellTerminology;
   readonly themeId?: string;
   readonly appearance?: string;
 };

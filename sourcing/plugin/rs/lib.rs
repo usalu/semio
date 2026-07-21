@@ -120,7 +120,7 @@ app_labels! {
         col_name: &'static str = en: "Name", de: "Name";
         col_module: &'static str = en: "Module", de: "Modul";
         col_typology: &'static str = en: "Typology", de: "Typologie";
-        col_availability: &'static str = en: "Availability", de: "Verfuegbarkeit";
+        col_availability: &'static str = en: "Availability", de: "Verfügbarkeit";
         col_curated: &'static str = en: "Curated", de: "Kuratiert";
         col_count: &'static str = en: "Count", de: "Anzahl";
         remove: &'static str = en: "Remove", de: "Entfernen";
