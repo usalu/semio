@@ -1,0 +1,13 @@
+{
+  "title": "Introduce Tools to App Modes",
+  "emoji": "🛠️",
+  "status": "open",
+  "description": "Introduce Tools as a first-class mode-scoped manifest concept, distinct from window-scoped Utilities. A Tool is an activatable, stateful capability of a whole app mode (not a window) — rendered as a Tool panel toggle placed left of Commands in the middle of the footer. Migrate puzzle fill (3d and 2d) from a per-window utility to a mode-level tool, since fill is a document-wide generator (count slider, edit-target mode, voxel dims), not a per-window pointer mode. Active tool and active window utility are mutually exclusive (single interaction owner). wgpu renderer gets compile parity only in this ticket; full wgpu tool UI is a follow-up. Delete the dead ModeDefinition.utilities/.mode_utilities() (zero non-test consumers) in favor of ModeDefinition.tools/.mode_tools(). Full plan at /Users/ueli/.claude/plans/introduce-tools-to-app-atomic-shell.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2220"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪f887d665ebf749f98971586146bff1dd"
+  ]
+}

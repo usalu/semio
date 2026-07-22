@@ -167,6 +167,14 @@ pub mod d2 {
         ActionDescriptor { controller_id: PUZZLE2D_PLAY_CONTROLLER_ID.into(), action: action.into(), args }
     }
 
+    /// 🪟 Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
+    /// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
+    /// gets exactly the one entry today's single-instance-per-pane callers expect.
+    fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
+        let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
+        if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
+    }
+
     /// 🧰 The host-owned active utility for this view, read from `ViewState.active_utility_id` (defaulting to
     /// `select`) — the single source of truth for the canvas utility, never a document field or runtime cache.
     fn puzzle2d_active_utility(view_state: &ViewState) -> String {
@@ -1698,7 +1706,7 @@ pub mod d2 {
                             // active utility: point the local engine now and let the framework persist the new
                             // `view_state.active_utility_id` for the pane via `HostEffect::SetActiveUtility`.
                             self.host.set_active_utility(value.as_str());
-                            effects.push(HostEffect::SetActiveUtility { window_kind_id: pane.clone(), utility_id: value.clone() });
+                            effects.push(HostEffect::SetActiveUtility { window_id: pane.clone(), utility_id: value.clone() });
                             true
                         }
                         "clear" => {
@@ -1730,7 +1738,7 @@ pub mod d2 {
                     }
                     if active_utility != PUZZLE2D_UTILITY_SELECT {
                         self.host.set_active_utility(PUZZLE2D_UTILITY_SELECT);
-                        effects.push(HostEffect::SetActiveUtility { window_kind_id: pane.to_string(), utility_id: PUZZLE2D_UTILITY_SELECT.into() });
+                        effects.push(HostEffect::SetActiveUtility { window_id: pane.to_string(), utility_id: PUZZLE2D_UTILITY_SELECT.into() });
                     }
                     {}
                 }
@@ -1850,7 +1858,7 @@ pub mod d2 {
                 "setFillCount" => {
                     let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(PUZZLE2D_FILL_COUNT_MAX);
                     envelope.runtime.fill_count = count;
-                    effects.push(HostEffect::SetActiveUtility { window_kind_id: PUZZLE2D_PANE_OVERVIEW.into(), utility_id: PUZZLE2D_UTILITY_FILL.into() });
+                    effects.push(HostEffect::SetActiveUtility { window_id: PUZZLE2D_PANE_OVERVIEW.into(), utility_id: PUZZLE2D_UTILITY_FILL.into() });
                     self.host.set_active_utility("brush");
                     self.host.brush_fill_session_begin(count, 1);
                     let step = self.host.brush_fill_session_step(count.max(1));
@@ -2006,13 +2014,22 @@ pub mod d2 {
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
             let labels = puzzle2d_labels(view_state);
-            PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_engagement(&envelope, &self.host, pane, labels))).collect()
+            // 🪟 One entry per live window INSTANCE of each pane kind — a split/extra instance of e.g. the
+            // overview pane gets its own entry (built from the same pane's per-pane state) instead of being
+            // silently absent, which is what a bare `PUZZLE2D_PANES` iteration would produce.
+            PUZZLE2D_PANES
+                .iter()
+                .flat_map(|pane| window_instance_ids(view_state, pane).into_iter().map(|wid| (wid, puzzle2d_engagement(&envelope, &self.host, pane, labels))))
+                .collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
             let labels = puzzle2d_labels(view_state);
-            PUZZLE2D_PANES.iter().map(|pane| (pane.to_string(), puzzle2d_window_measures(pane, &envelope, labels))).collect()
+            PUZZLE2D_PANES
+                .iter()
+                .flat_map(|pane| window_instance_ids(view_state, pane).into_iter().map(|wid| (wid, puzzle2d_window_measures(pane, &envelope, labels))))
+                .collect()
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -2629,7 +2646,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
-        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -2637,7 +2654,7 @@ pub mod d3 {
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
-    use std::collections::{HashMap, HashSet};
+    use std::collections::{BTreeMap, HashMap, HashSet};
     use std::sync::atomic::{AtomicU32, Ordering};
     use std::sync::LazyLock;
 
@@ -2939,6 +2956,13 @@ pub mod d3 {
         vortex_show: String,
         #[serde(default)]
         sun: WorldSunConfig,
+        /// 🪟 Per-window-instance snapshot of every option field above, keyed by window INSTANCE id (never
+        /// by window kind) — see [`Puzzle3dWindowOptions`]. The flat fields above are a scratch,
+        /// currently-materialized-window working copy: `load_window`/`save_window` swap them in/out around
+        /// every `render`/`window_measures`/`window_engagements`/`handle_action` call so two window
+        /// instances of the same kind (e.g. split top/perspective panes) never share a value.
+        #[serde(default)]
+        window_options: BTreeMap<String, Puzzle3dWindowOptions>,
     }
 
     impl Default for Puzzle3dRuntime {
@@ -2972,6 +2996,7 @@ pub mod d3 {
                 voxel_dims: default_voxel_dims(),
                 vortex_show: default_vortex_show(),
                 sun: WorldSunConfig::default(),
+                window_options: BTreeMap::new(),
             }
         }
     }
@@ -3002,6 +3027,132 @@ pub mod d3 {
 
     fn default_voxel_dims() -> [u32; 3] {
         [1, 1, 1]
+    }
+
+    /// 🪟 Every option a puzzle3d window's chrome exposes (grid, LOD, selection method/mode, vortex
+    /// display, sun, and the fill/voxel tool's displayed parameters) — stored per window INSTANCE in
+    /// [`Puzzle3dRuntime::window_options`]. Field set mirrors exactly the flat fields on
+    /// [`Puzzle3dRuntime`] that back a window measure/engagement; see `load_window`/`save_window`.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Puzzle3dWindowOptions {
+        selection_method: String,
+        overlap_budget: f64,
+        fill_count: u32,
+        object_kind_weights: HashMap<String, f64>,
+        vortex_kind_weights: HashMap<String, f64>,
+        lod_automatic: bool,
+        lod_depth_variable: bool,
+        grid_visible: bool,
+        lod_manual: f64,
+        grid_snap_enabled: bool,
+        grid_spacing: f64,
+        selectable_kinds: Puzzle3dSelectableKinds,
+        engagement_input: String,
+        selection_mode_default: String,
+        proximity_radius: f64,
+        chunk_size: f64,
+        fill_edit_target_volumes: bool,
+        voxel_dims: [u32; 3],
+        vortex_show: String,
+        sun: WorldSunConfig,
+    }
+
+    impl Default for Puzzle3dWindowOptions {
+        fn default() -> Self {
+            Self {
+                selection_method: default_selection_method(),
+                overlap_budget: default_overlap_budget(),
+                fill_count: 0,
+                object_kind_weights: HashMap::new(),
+                vortex_kind_weights: HashMap::new(),
+                lod_automatic: default_true(),
+                lod_depth_variable: false,
+                grid_visible: default_true(),
+                lod_manual: default_manual_lod(),
+                grid_snap_enabled: false,
+                grid_spacing: default_grid_spacing(),
+                selectable_kinds: Puzzle3dSelectableKinds::default(),
+                engagement_input: String::new(),
+                selection_mode_default: default_selection_mode(),
+                proximity_radius: default_proximity_radius(),
+                chunk_size: default_chunk_size(),
+                fill_edit_target_volumes: false,
+                voxel_dims: default_voxel_dims(),
+                vortex_show: default_vortex_show(),
+                sun: WorldSunConfig::default(),
+            }
+        }
+    }
+
+    impl Puzzle3dRuntime {
+        /// 🪟 Snapshots this runtime's currently-materialized flat window-option fields into a
+        /// [`Puzzle3dWindowOptions`] — the counterpart to `apply_window_options`.
+        fn snapshot_window_options(&self) -> Puzzle3dWindowOptions {
+            Puzzle3dWindowOptions {
+                selection_method: self.selection_method.clone(),
+                overlap_budget: self.overlap_budget,
+                fill_count: self.fill_count,
+                object_kind_weights: self.object_kind_weights.clone(),
+                vortex_kind_weights: self.vortex_kind_weights.clone(),
+                lod_automatic: self.lod_automatic,
+                lod_depth_variable: self.lod_depth_variable,
+                grid_visible: self.grid_visible,
+                lod_manual: self.lod_manual,
+                grid_snap_enabled: self.grid_snap_enabled,
+                grid_spacing: self.grid_spacing,
+                selectable_kinds: self.selectable_kinds.clone(),
+                engagement_input: self.engagement_input.clone(),
+                selection_mode_default: self.selection_mode_default.clone(),
+                proximity_radius: self.proximity_radius,
+                chunk_size: self.chunk_size,
+                fill_edit_target_volumes: self.fill_edit_target_volumes,
+                voxel_dims: self.voxel_dims,
+                vortex_show: self.vortex_show.clone(),
+                sun: self.sun.clone(),
+            }
+        }
+
+        /// 🪟 Materializes `options` onto this runtime's flat window-option fields — the counterpart to
+        /// `snapshot_window_options`.
+        fn apply_window_options(&mut self, options: &Puzzle3dWindowOptions) {
+            self.selection_method = options.selection_method.clone();
+            self.overlap_budget = options.overlap_budget;
+            self.fill_count = options.fill_count;
+            self.object_kind_weights = options.object_kind_weights.clone();
+            self.vortex_kind_weights = options.vortex_kind_weights.clone();
+            self.lod_automatic = options.lod_automatic;
+            self.lod_depth_variable = options.lod_depth_variable;
+            self.grid_visible = options.grid_visible;
+            self.lod_manual = options.lod_manual;
+            self.grid_snap_enabled = options.grid_snap_enabled;
+            self.grid_spacing = options.grid_spacing;
+            self.selectable_kinds = options.selectable_kinds.clone();
+            self.engagement_input = options.engagement_input.clone();
+            self.selection_mode_default = options.selection_mode_default.clone();
+            self.proximity_radius = options.proximity_radius;
+            self.chunk_size = options.chunk_size;
+            self.fill_edit_target_volumes = options.fill_edit_target_volumes;
+            self.voxel_dims = options.voxel_dims;
+            self.vortex_show = options.vortex_show.clone();
+            self.sun = options.sun.clone();
+        }
+
+        /// 🪟 Materializes `window_id`'s stored options (the type default, for a window never touched yet)
+        /// onto this runtime's flat fields — call before building a `Puzzle3dScene` for that window, in
+        /// every read (`render`/`window_engagements`/`window_measures`) and write (`handle_action`) path.
+        fn load_window(&mut self, window_id: &str) {
+            let options = self.window_options.get(window_id).cloned().unwrap_or_default();
+            self.apply_window_options(&options);
+        }
+
+        /// 🪟 Snapshots this runtime's current flat window-option fields (as left by whatever action just
+        /// ran) back into `window_id`'s stored entry. Other windows' entries in `window_options` are
+        /// untouched, so a `setGridVisible` in one window instance never affects another's.
+        fn save_window(&mut self, window_id: &str) {
+            let options = self.snapshot_window_options();
+            self.window_options.insert(window_id.to_string(), options);
+        }
     }
 
 
@@ -3100,6 +3251,14 @@ pub mod d3 {
     fn scene_from_projection(projection: &Value, runtime: Puzzle3dRuntime, active_utility: &str) -> Puzzle3dScene {
         let fixture = serde_json::from_value::<Puzzle3dFixture>(projection.clone()).unwrap_or_else(|_| empty_fixture());
         Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
+    }
+
+    /// 🪟 Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
+    /// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
+    /// gets exactly the one entry today's single-window callers expect.
+    fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
+        let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
+        if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
     }
 
     fn puzzle3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -5417,7 +5576,13 @@ pub mod d3 {
             }
             let before = doc.projection.clone();
             let active_utility_initial = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY).to_string();
-            let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
+            // 🪟 This action targets exactly one window instance — materialize ITS options onto the scene
+            // runtime before handling, and snapshot them back out (via `save_window`, at every exit below)
+            // so a grid/LOD/selection/vortex/sun mutation never leaks into another window's options.
+            let wid = view_state.window_id.clone().unwrap_or_else(|| PUZZLE3D_PLAY_WINDOW_MAIN.into());
+            let mut runtime_for_window = self.runtime.clone();
+            runtime_for_window.load_window(&wid);
+            let mut envelope = scene_from_projection(&before, runtime_for_window, &active_utility_initial);
             let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
             let mut effects = Vec::new();
             let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
@@ -5535,10 +5700,12 @@ pub mod d3 {
                 }
                 "selectSameKindSelection" => {
                     let Some(first_id) = envelope.runtime.selection.object_ids.first() else {
+                        envelope.runtime.save_window(&wid);
                         self.runtime = envelope.runtime;
                         return ActionEmit::default();
                     };
                     let Some(kind) = envelope.fixture.objects.iter().find(|object| object.id == *first_id).and_then(|object| object.object_kind.clone()).filter(|kind| !kind.is_empty()) else {
+                        envelope.runtime.save_window(&wid);
                         self.runtime = envelope.runtime;
                         return ActionEmit::default();
                     };
@@ -6113,6 +6280,7 @@ pub mod d3 {
                 _ => {}
             }
             let next_active_utility = envelope.active_utility.clone();
+            envelope.runtime.save_window(&wid);
             self.runtime = envelope.runtime;
             let after = serde_json::to_value(&envelope.fixture).unwrap_or_else(|_| before.clone());
             let ops = puzzle3d_document_delta_ops(&before, &after);
@@ -6127,14 +6295,20 @@ pub mod d3 {
             // 🧰 Programmatic utility switches (engagement submit/abort, suggestions, fill) push the active utility
             // back into the host session; `setActiveUtility` itself never re-emits (the host already applied it).
             if next_active_utility != active_utility_initial {
-                effects.push(HostEffect::SetActiveUtility { window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.into(), utility_id: next_active_utility });
+                effects.push(HostEffect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
             }
             ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY);
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
+            // 🪟 Materialize THIS window instance's own options before rendering its scene/panels — never
+            // the runtime's bare (last-touched-window) fields — so a split top/perspective pane pair each
+            // render with their own grid/LOD/vortex/sun instead of whichever window rendered last.
+            let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
+            let mut runtime_for_window = self.runtime.clone();
+            runtime_for_window.load_window(wid);
+            let envelope = scene_from_projection(doc.projection, runtime_for_window, active_utility);
             let labels = puzzle3d_labels(view_state);
             match body_key {
                 PUZZLE3D_PLAY_BODY_COMPOSITE => {
@@ -6171,16 +6345,32 @@ pub mod d3 {
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY);
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle3d_labels(view_state);
-            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_engagement(&envelope, labels))])
+            // 🪟 One entry per live window INSTANCE (split top/perspective panes are two instances of the
+            // same kind) — each built from ITS OWN materialized options, never the shared kind entry.
+            window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
+                .into_iter()
+                .map(|wid| {
+                    let mut runtime_for_window = self.runtime.clone();
+                    runtime_for_window.load_window(&wid);
+                    let envelope = scene_from_projection(doc.projection, runtime_for_window, active_utility);
+                    (wid, puzzle3d_engagement(&envelope, labels))
+                })
+                .collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY);
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle3d_labels(view_state);
-            HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.into(), puzzle3d_window_measures(&envelope, &self.precompute, labels))])
+            window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
+                .into_iter()
+                .map(|wid| {
+                    let mut runtime_for_window = self.runtime.clone();
+                    runtime_for_window.load_window(&wid);
+                    let envelope = scene_from_projection(doc.projection, runtime_for_window, active_utility);
+                    (wid, puzzle3d_window_measures(&envelope, &self.precompute, labels))
+                })
+                .collect()
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -6842,6 +7032,14 @@ pub mod d3 {
             })
         }
 
+        fn find_measure_toggle(measures: &[WindowMeasure], toggle_id: &str) -> Option<bool> {
+            measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Toggle { id, pressed, .. } if id == toggle_id => Some(*pressed),
+                WindowMeasure::Group { children, .. } => find_measure_toggle(children, toggle_id),
+                _ => None,
+            })
+        }
+
         /// 🎯 Top-level utility tag of a [`WindowMeasure::Group`] by id, or `None` when the group is absent.
         fn measure_group_tag(measures: &[WindowMeasure], group_id: &str) -> Option<Option<String>> {
             measures.iter().find_map(|measure| match measure {
@@ -6890,7 +7088,7 @@ pub mod d3 {
             let vortex = first_vortex_full_id(&app);
             let result = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
             assert!(
-                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_kind_id, utility_id }] if window_kind_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id == "brush"),
+                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id == "brush"),
                 "opening suggestions switches the host-owned utility to brush",
             );
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
@@ -6952,7 +7150,7 @@ pub mod d3 {
             let result = app.handle_action("acceptSuggestion", None, &brush_view, &testkit::meta("local")).expect("acceptSuggestion");
             assert_eq!(object_count(&app), object_count_before + 1);
             assert!(
-                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_kind_id, utility_id }] if window_kind_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id.is_empty()),
+                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id.is_empty()),
                 "accepting a context-menu suggestion restores the host-owned default selection mode",
             );
             let interaction = interaction_of(&render_composite(&mut app));
@@ -6972,6 +7170,51 @@ pub mod d3 {
             let window_measures = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
             assert_eq!(measure_group_tag(window_measures, "puzzle3d-play-grid"), Some(None));
             assert_eq!(find_measure_slider(window_measures, "puzzle3d-play-grid-spacing"), Some(7.5));
+        }
+
+        /// 🪟 The regression this whole ticket exists for: two window instances of the same kind (e.g. a
+        /// split top/perspective pane pair) must never share window options — toggling grid visibility in
+        /// one instance must leave every other instance's grid untouched, both in its measures chrome and
+        /// in its own rendered scene.
+        #[test]
+        fn window_options_are_local_to_the_window_instance_not_shared_across_split_panes() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let second_window = "puzzle3d-main-2";
+            let instances = vec![
+                ViewWindowInstance { id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+                ViewWindowInstance { id: second_window.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+            ];
+            let second_window_view = ViewState { window_id: Some(second_window.to_string()), window_instances: instances.clone(), ..ViewState::default() };
+            let toggle_id = format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible");
+
+            // Both instances start visible (the type default).
+            let initial_measures = app.window_measures(&ViewState { window_instances: instances.clone(), ..ViewState::default() });
+            assert_eq!(find_measure_toggle(initial_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("base measures"), &toggle_id), Some(true));
+            assert_eq!(find_measure_toggle(initial_measures.get(second_window).expect("second measures"), &toggle_id), Some(true));
+
+            // Hide the grid, but ONLY on the second window instance.
+            app.handle_action("setGridVisible", Some(&json!({ "pressed": false })), &second_window_view, &testkit::meta("local")).expect("setGridVisible on second window");
+
+            let measures_after = app.window_measures(&ViewState { window_instances: instances.clone(), ..ViewState::default() });
+            assert_eq!(
+                find_measure_toggle(measures_after.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("base measures"), &toggle_id),
+                Some(true),
+                "the base window instance's grid must stay visible",
+            );
+            assert_eq!(
+                find_measure_toggle(measures_after.get(second_window).expect("second measures"), &toggle_id),
+                Some(false),
+                "only the targeted window instance's grid toggles off",
+            );
+
+            // The rendered scenes agree: the base window still draws its LOD grid, the second does not.
+            let base_composite = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState { window_id: Some(PUZZLE3D_PLAY_WINDOW_MAIN.into()), ..ViewState::default() }).expect("render base window");
+            let base_lod = lod_of(&serde_json::to_value(&base_composite).unwrap());
+            assert_eq!(base_lod.get("showLodGrid").and_then(Value::as_bool), Some(true));
+
+            let second_composite = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &second_window_view).expect("render second window");
+            let second_lod = lod_of(&serde_json::to_value(&second_composite).unwrap());
+            assert_eq!(second_lod.get("showLodGrid").and_then(Value::as_bool), Some(false));
         }
 
         #[test]
@@ -7008,8 +7251,16 @@ pub mod d3 {
             let object_count_before = object_count(&app);
             let fill_view = ViewState { active_utility_id: Some("fill".into()), ..ViewState::default() };
             app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill utility");
-            for _ in 0..500 {
+            for _ in 0..64 {
                 app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick");
+                let measures = app.window_measures(&fill_view);
+                let ready = measures
+                    .get(PUZZLE3D_PLAY_WINDOW_MAIN)
+                    .and_then(|window_measures| find_measure_slider_ready(window_measures, "puzzle3d-fill-count"))
+                    .unwrap_or(0.0);
+                if ready >= 4.0 {
+                    break;
+                }
             }
             let measures = app.window_measures(&fill_view);
             let window_measures = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
@@ -7047,7 +7298,7 @@ pub mod d3 {
             let target_window_measures = target_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
             assert_eq!(find_measure_slider(target_window_measures, "puzzle3d-fill-count"), Some(available_count as f64), "the slider thumb must retain the requested target above its ready extent");
 
-            for _ in 0..500 {
+            for _ in 0..64 {
                 let tick = app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick after reduction");
                 for effect in tick.requested_effects {
                     if let HostEffect::DispatchAction { action, args, .. } = effect {
@@ -7973,6 +8224,14 @@ pub mod d5 {
     fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, active_utility: &str) -> Puzzle5dScene {
         let document = serde_json::from_value::<Puzzle5dDocument>(projection.clone()).unwrap_or_else(|_| empty_document());
         Puzzle5dScene { document, runtime, active_utility: active_utility.to_string() }
+    }
+
+    /// 🪟 Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
+    /// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
+    /// gets exactly the one entry today's single-instance-per-window callers expect.
+    fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
+        let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
+        if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
     }
 
     fn puzzle5d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -9969,7 +10228,7 @@ pub mod d5 {
             // 🧰 Programmatic utility switches (engagement submit/abort, fill) push the active utility back into the
             // host session for both windows; `setActiveUtility` itself never re-emits (the host already applied it).
             let effects = if next_active_utility != active_utility_initial {
-                PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveUtility { window_kind_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
+                PUZZLE5D_PLAY_WINDOWS.iter().map(|window| HostEffect::SetActiveUtility { window_id: (*window).into(), utility_id: next_active_utility.clone() }).collect()
             } else {
                 Vec::new()
             };
@@ -10017,14 +10276,22 @@ pub mod d5 {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_engagement(&envelope, window, labels))).collect()
+            // 🪟 One entry per live window INSTANCE of each of the 2D/3D window kinds — a split/extra
+            // instance gets its own entry instead of being silently absent.
+            PUZZLE5D_PLAY_WINDOWS
+                .iter()
+                .flat_map(|window| window_instance_ids(view_state, window).into_iter().map(|wid| (wid, puzzle5d_engagement(&envelope, window, labels))))
+                .collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
-            PUZZLE5D_PLAY_WINDOWS.iter().map(|window| (window.to_string(), puzzle5d_window_measures(window, &envelope, &self.precompute, labels))).collect()
+            PUZZLE5D_PLAY_WINDOWS
+                .iter()
+                .flat_map(|window| window_instance_ids(view_state, window).into_iter().map(|wid| (wid, puzzle5d_window_measures(window, &envelope, &self.precompute, labels))))
+                .collect()
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
@@ -10445,7 +10712,7 @@ pub mod d5 {
             // 🧰 Reconciled dual entry point: the engagement token drives the same host-owned utility switch, once per window.
             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
             let result = app.handle_action("engagementSubmit", Some(&json!({ "window": PUZZLE5D_PLAY_WINDOW_3D, "value": "brush" })), &ViewState::default(), &testkit::meta("local")).expect("submit");
-            let windows: Vec<&str> = result.requested_effects.iter().filter_map(|effect| match effect { HostEffect::SetActiveUtility { window_kind_id, utility_id } if utility_id == "brush" => Some(window_kind_id.as_str()), _ => None }).collect();
+            let windows: Vec<&str> = result.requested_effects.iter().filter_map(|effect| match effect { HostEffect::SetActiveUtility { window_id, utility_id } if utility_id == "brush" => Some(window_id.as_str()), _ => None }).collect();
             assert!(windows.contains(&PUZZLE5D_PLAY_WINDOW_2D) && windows.contains(&PUZZLE5D_PLAY_WINDOW_3D), "brush switch is pushed to both windows, got {windows:?}");
         }
 

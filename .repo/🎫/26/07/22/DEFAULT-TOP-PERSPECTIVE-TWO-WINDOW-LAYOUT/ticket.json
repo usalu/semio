@@ -1,13 +1,15 @@
 {
   "title": "Default Top Perspective Two Window Layout",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Make puzzle 3d and aggregator use a two-window layout by default: Top (left 1/3), Perspective (right 2/3). Honor instanceId and templateId from app default layouts so each pane seeds the correct projection.",
+  "summary": "Follow-up: Top orthographic pane was seeded with zoom=50 and the shared perspective camera target, so the reference image appeared massively zoomed-in and off-frame.\n\nWorld3dHost now frames pending projection templates to scene content (instances + visible references): target is the content center, and orthographic zoom is derived from the live viewport size (drei/R3F pixel frustum). A one-shot WorldProjectionContentFrame refines zoom once the pane size is known. Helpers: worldSceneContentBounds, worldProjectionOrthoZoom, frameWorldProjectionPose.\n\nTests: infinite-world-r3f framing cases (100/100), framework-renderer-react (204/204).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2216"
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪85dd92ab229b4e7c8a3b1245e86878f1"
+    "⚪85dd92ab229b4e7c8a3b1245e86878f1",
+    "⚪c45dbacfb89748d38c2289fa9521fc40"
   ]
 }

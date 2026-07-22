@@ -194,6 +194,8 @@ members = [
     "norm/en/1997/rs",
     "norm/en/1998/rs",
     "norm/en/1999/rs",
+    "norm/iso/16757/rs",
+    "norm/vdi/3805/rs",
     "norm/plugin/rs",
     "energy/engine/rs",
     "architect/program/rs",

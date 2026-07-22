@@ -1,0 +1,15 @@
+{
+  "title": "Fix Print Paragraph Text Overshoot And Hyphenation",
+  "emoji": "🖨️",
+  "status": "closed",
+  "description": "In the zwischenbericht \"Tragwerksplanung\" paragraph (section 1.2.1.2.2.3), text overshoots the right edge of the window box border — the appendix cross-reference \"Anhang I.TW\" (rendered via \\appendixref) sticks out past the right margin instead of wrapping or hyphenating correctly. Investigate the print LaTeX pipeline (semio-window.sty tcolorbox text width, \\appendixref's \\nobreakspace glue, babel/microtype hyphenation settings) to find the root cause and fix it so justified paragraph text never overshoots the window border, with correct German hyphenation.",
+  "summary": "Root cause: TeX only hyphenates a run of letters that is itself preceded by a glue node. A word right at the very start of a paragraph/cell has no such glue (fixed generically already by the `\\hspace{0pt}` prefix baked into semio-table.sty's p-column preamble), but a slash-joined compound like \"Wand-/Scheibenelement\" breaks cleanly at the literal hyphen and then leaves \"/Scheibenelement\" glued directly to the \"/\" with still no preceding glue — so pattern hyphenation never resumes on the second half, and the whole remainder overflows the narrow \"Typologie\" column into \"Beispiele\". Reproduced and confirmed in isolation with tectonic/babel/ngerman (bare \"Scheibenelement\" at a cell start overflows; adding `\\hspace{0pt}` first fixes it; \"Wand-/Scheibenelement\" overflows on the \"/Scheibenelement\" remainder specifically, fixed by inserting `\\hspace{0pt}` right after the slash).\n\nFix: added a reusable `\\SemioSlash` macro to print/tex/semio-core.sty (Hyphenation Safety region) that expands to `/\\hspace{0pt}`, restoring the missing glue after the slash. Replaced the 8 occurrences of \"X-/Y\" typology labels in mit-bestand/bericht/zwischenbericht/anhang/typologie.tex with \"X-\\SemioSlash{}Y\". Rebuilt the zwischenbericht and confirmed via rendered page 60 that \"Wand-/Scheibenelement\", \"Lokales Knoten-/Übergangselement\", and \"Mehrgliedriges Knoten-/Übergangselement\" now hyphenate correctly and stay inside the Typologie column; all Overfull hbox warnings in that table section are gone (log count dropped from 86 to 79 overall, zero remaining in the typologie.tex range).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2217"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪0370ec1b1fc24979b2b42265e67b2565",
+    "⚪ff23a5210ced444c9ac3b755673a0ea4"
+  ]
+}

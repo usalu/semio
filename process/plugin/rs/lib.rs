@@ -120,7 +120,7 @@ fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 /// 🧰 Host effect that programmatically switches the workpiece window's active utility — the active
 /// utility is host-owned session state (`view_state.active_utility_id`), never a document op.
 fn set_active_utility_effect(utility: &str) -> HostEffect {
-    HostEffect::SetActiveUtility { window_kind_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
+    HostEffect::SetActiveUtility { window_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
 
 /// 📇 A non-palette action declaration (dispatched by UI wiring/keybindings, never surfaced in the

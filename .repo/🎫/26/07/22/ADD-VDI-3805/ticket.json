@@ -1,0 +1,18 @@
+{
+  "title": "Add VDI 3805",
+  "emoji": "📏",
+  "status": "open",
+  "description": "Add VDI 3805 as norm_vdi_3805 family crate under norm/vdi/3805 with full Part 1 + sheet modules, runtime edition registry, NormFamily/plugin/workspace integration.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2222"
+  },
+  "goal": "🎯norm",
+  "plan": {
+    "client": "cursor",
+    "id": "65dbc40e",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/add_vdi_3805_65dbc40e.plan.md"
+  },
+  "sessions": [
+    "⚪3416ca2045be4870aa17e3e3574082b1"
+  ]
+}

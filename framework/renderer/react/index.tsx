@@ -436,9 +436,13 @@ import {
   createWorldProjectionTemplates,
   decodeWorldProjectionTemplateId,
   encodeWorldProjectionTemplateId,
+  worldProjectionSpecLabel,
   computeWorldProjectionPose,
+  frameWorldProjectionPose,
+  worldSceneContentBounds,
   type WorldProjectionSpec,
   type WorldProjectionTemplateDescriptor,
+  type WorldSceneContentBounds,
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
@@ -1235,10 +1239,12 @@ type PluginRuntimeState = {
   readonly error: string | null;
 };
 
+/** 🪟 Window UI/engagements/measures are keyed by window INSTANCE id, never by window kind — two
+ * instances of the same kind (e.g. split top/perspective panes) must never share chrome or options. */
 type WindowUiState = {
-  readonly windowUiByKind: Readonly<Record<string, UiNode>>;
-  readonly windowEngagementsByKind: Readonly<Record<string, WindowEngagement>>;
-  readonly windowMeasuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>;
+  readonly windowUiByWindowId: Readonly<Record<string, UiNode>>;
+  readonly windowEngagementsByWindowId: Readonly<Record<string, WindowEngagement>>;
+  readonly windowMeasuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>;
   readonly panelUiByKey: Readonly<Record<string, UiNode>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
@@ -1355,9 +1361,9 @@ export type ShellAction =
   | { readonly type: "SET_LOADED_PLUGINS"; readonly value: Updatable<readonly LoadedPluginState[]> }
   | { readonly type: "SET_SESSION"; readonly value: Updatable<ActiveSession | null> }
   | { readonly type: "SET_ERROR"; readonly value: Updatable<string | null> }
-  | { readonly type: "SET_WINDOW_UI_BY_KIND"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
-  | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_KIND"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
-  | { readonly type: "SET_WINDOW_MEASURES_BY_KIND"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
+  | { readonly type: "SET_WINDOW_UI_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
+  | { readonly type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, WindowEngagement>>> }
+  | { readonly type: "SET_WINDOW_MEASURES_BY_WINDOW_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_PANEL_UI_BY_KEY"; readonly value: Updatable<Readonly<Record<string, UiNode>>> }
   | { readonly type: "SET_APP_LABELS_OVERLAY"; readonly value: Updatable<PluginAppLabelsOverlay> }
   | { readonly type: "SET_SPAWNED_WINDOW_UI"; readonly value: Updatable<UiNode | null> }
@@ -1420,12 +1426,12 @@ function pluginRuntimeReducer(state: PluginRuntimeState, action: ShellAction): P
 
 function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiState {
   switch (action.type) {
-    case "SET_WINDOW_UI_BY_KIND":
-      return { ...state, windowUiByKind: resolveUpdatable(action.value, state.windowUiByKind) };
-    case "SET_WINDOW_ENGAGEMENTS_BY_KIND":
-      return { ...state, windowEngagementsByKind: resolveUpdatable(action.value, state.windowEngagementsByKind) };
-    case "SET_WINDOW_MEASURES_BY_KIND":
-      return { ...state, windowMeasuresByKind: resolveUpdatable(action.value, state.windowMeasuresByKind) };
+    case "SET_WINDOW_UI_BY_WINDOW_ID":
+      return { ...state, windowUiByWindowId: resolveUpdatable(action.value, state.windowUiByWindowId) };
+    case "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID":
+      return { ...state, windowEngagementsByWindowId: resolveUpdatable(action.value, state.windowEngagementsByWindowId) };
+    case "SET_WINDOW_MEASURES_BY_WINDOW_ID":
+      return { ...state, windowMeasuresByWindowId: resolveUpdatable(action.value, state.windowMeasuresByWindowId) };
     case "SET_PANEL_UI_BY_KEY":
       return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
     case "SET_APP_LABELS_OVERLAY":
@@ -1642,7 +1648,7 @@ export function initialShellState(_props: {
   const ephemeral = _props.ephemeral === true;
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
-    windowUi: { windowUiByKind: {}, windowEngagementsByKind: {}, windowMeasuresByKind: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
     actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {} },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
@@ -2689,10 +2695,10 @@ function defaultViewportEngagement(): WindowEngagement {
   };
 }
 
-function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], byKind: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
+function resolveWindowEngagement(kind: AppDefinition["windowKinds"][number], windowId: string, byWindowId: Readonly<Record<string, WindowEngagement>>): WindowEngagement | undefined {
   const surfaceKind = (kind as { surfaceKind?: string }).surfaceKind;
   const declaredEngagement = kind.options.engagement.kind === "some" ? kind.options.engagement.value : undefined;
-  return byKind[kind.id] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
+  return byWindowId[windowId] ?? declaredEngagement ?? (isViewportSurface(surfaceKind) ? defaultViewportEngagement() : undefined);
 }
 
 function windowEngagementToSpec(engagement: WindowEngagement | undefined, onAction: (action: ActionDescriptor) => void): EngagementSpec | undefined {
@@ -2870,16 +2876,17 @@ export function resolveUtilityNodes(
 }
 //#endregion 🧰UtilityRegistry
 
-/** @emoji 💬 Builds spawned-window engagement, search, measures, and utility-options chrome for one window kind. */
+/** @emoji 💬 Builds spawned-window engagement, search, measures, and utility-options chrome for one window instance. */
 export function spawnedWindowChromeForKind(
   kind: AppDefinition["windowKinds"][number],
-  engagementsByKind: Readonly<Record<string, WindowEngagement>>,
-  measuresByKind: Readonly<Record<string, readonly WindowMeasure[]>>,
+  windowId: string,
+  engagementsByWindowId: Readonly<Record<string, WindowEngagement>>,
+  measuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>,
   activeUtilityId: string | undefined,
   onAction: (action: ActionDescriptor) => void,
 ): { readonly engagement?: EngagementSpec; readonly search?: SearchSpec; readonly measures: ReactNode; readonly utilityOptions: ReactNode } {
-  const { measures, utilityOptions } = windowMeasuresChrome(measuresByKind[kind.id] ?? kind.options.measures, activeUtilityId, kind.id, onAction);
-  const resolvedEngagement = resolveWindowEngagement(kind, engagementsByKind);
+  const { measures, utilityOptions } = windowMeasuresChrome(measuresByWindowId[windowId] ?? kind.options.measures, activeUtilityId, windowId, onAction);
+  const resolvedEngagement = resolveWindowEngagement(kind, windowId, engagementsByWindowId);
   return {
     engagement: windowEngagementToSpec(resolvedEngagement, onAction),
     search: windowEngagementToSearchSpec(resolvedEngagement, onAction),
@@ -3257,9 +3264,13 @@ function windowMeasuresChrome(
   onAction: (action: ActionDescriptor) => unknown,
 ): { readonly measures: ReactNode | undefined; readonly utilityOptions: ReactNode | undefined } {
   const { general, utilityOptions } = partitionWindowMeasures(measures ?? [], activeUtilityId);
+  // 🪟 Stamps this chrome's owning `windowId` onto every measure action, mirroring `tagSetActiveUtilityWindow`
+  // for the utility bar — the generic `onAction` dispatch path reads it back out to target the plugin call's
+  // `view_state.windowId`, so a grid/LOD/selection toggle only ever mutates ITS OWN window's options.
+  const taggedOnAction = (action: ActionDescriptor) => onAction({ ...action, args: { ...(action.args as object | undefined), windowId } });
   return {
-    measures: windowMeasuresOverlay(general, onAction),
-    utilityOptions: windowMeasuresOverlay(utilityOptions, onAction, "up"),
+    measures: windowMeasuresOverlay(general, taggedOnAction),
+    utilityOptions: windowMeasuresOverlay(utilityOptions, taggedOnAction, "up"),
   };
 }
 
@@ -3995,7 +4006,7 @@ export function preserveJsonIdentity<T>(previous: T | undefined, next: T): T {
 /**
  * @emoji 🐢 Builds a `Record<string, V>` from `entries`, reusing `prev`'s per-key value reference where
  * `preserveJsonIdentity` finds no structural change, and reusing `prev` itself (the whole record) when
- * no key actually changed — so a no-op action's `dispatch` doesn't hand `windowUiByKind`/etc. a new
+ * no key actually changed — so a no-op action's `dispatch` doesn't hand `windowUiByWindowId`/etc. a new
  * object reference and cascade an unmemoizable re-render through every downstream consumer.
  */
 export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V>>, entries: readonly (readonly [string, V])[]): Readonly<Record<string, V>> {
@@ -4024,20 +4035,41 @@ function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures
 }
 
 /**
+ * 🪟 Every live window instance for a session — one per base `AppDefinition.windowKinds` entry (id ==
+ * kind id) plus one per split/spawned extra — so `refreshUi` fetches and the plugin returns state for
+ * every actual window, never collapsing two same-kind instances (e.g. split top/perspective panes) onto
+ * one shared entry.
+ */
+function sessionWindowInstances(
+  app: { readonly windowKinds: readonly { readonly id: string; readonly bodyKey: string }[] },
+  extraWindowInstances: readonly ExtraWindowInstance[],
+): readonly { readonly id: string; readonly bodyKey: string; readonly windowKindId: string }[] {
+  const kindById = new Map(app.windowKinds.map((kind) => [kind.id, kind] as const));
+  const base = app.windowKinds.map((kind) => ({ id: kind.id, bodyKey: kind.bodyKey, windowKindId: kind.id }));
+  const extra = extraWindowInstances.flatMap((instance) => {
+    const kind = kindById.get(instance.windowKindId);
+    return kind ? [{ id: instance.id, bodyKey: kind.bodyKey, windowKindId: instance.windowKindId }] : [];
+  });
+  return [...base, ...extra];
+}
+
+/**
  * @emoji 🐢 Builds one batched `refresh-ui` request restricted to `scope` — `null` when the scope
  * resolves to nothing worth fetching (`none`, or a `partial` whose fields all miss this app's actual
- * bodies/kinds). Every requested entry carries the host's cached hash so the plugin can omit payloads
- * for sections that didn't change.
+ * bodies/instances). Every requested entry carries the host's cached hash so the plugin can omit payloads
+ * for sections that didn't change. `windowInstances` is keyed by window INSTANCE id (base windows plus any
+ * split/spawned extras) — never by window kind — so two instances of the same kind get independent
+ * cache entries and independent rendered bodies.
  */
 export function buildUiRefreshRequest(
   scope: UiDirtyScope,
-  windowKinds: readonly { readonly id: string; readonly bodyKey: string }[],
+  windowInstances: readonly { readonly id: string; readonly bodyKey: string }[],
   panelTabLeaves: readonly { readonly kind: PanelTabKind; readonly bodyKey?: string }[],
   viewState: PluginViewState,
   cache: UiRefreshCache,
 ): PluginUiRefreshRequest | null {
   if (scope.kind === "none") return null;
-  const windows = windowKinds.filter((kind) => uiRefreshWantsWindow(scope, kind.bodyKey)).map((kind) => ({ key: kind.id, bodyKey: kind.bodyKey, hash: cache.get(`window:${kind.id}`)?.hash }));
+  const windows = windowInstances.filter((instance) => uiRefreshWantsWindow(scope, instance.bodyKey)).map((instance) => ({ key: instance.id, bodyKey: instance.bodyKey, hash: cache.get(`window:${instance.id}`)?.hash }));
   const panels = panelTabLeaves
     .filter((tab): tab is { readonly kind: string; readonly bodyKey: string } => Boolean(tab.bodyKey) && uiRefreshWantsPanel(scope, tab.bodyKey!))
     .map((tab) => ({ key: panelTabKindId(tab.kind), bodyKey: tab.bodyKey, hash: cache.get(`panel:${panelTabKindId(tab.kind)}`)?.hash }));
@@ -4140,7 +4172,7 @@ export function FrameworkOsShell({
   const hostControllerId = hostApp?.controllerId;
   const landingControllerId = landingApp?.controllerId;
   const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
-  const { windowUiByKind, windowEngagementsByKind, windowMeasuresByKind, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
@@ -4408,27 +4440,43 @@ export function FrameworkOsShell({
   );
 
   const refreshUi = useCallback(
-    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }) => {
+    // 🪟 `extraInstancesOverride` lets a caller that just synchronously computed a NEW extra-window list
+    // (split/drop, layout/mode switch) hand it straight to this fetch instead of reading `extraWindowInstances`
+    // from React state, which wouldn't reflect the just-dispatched change until the next render.
+    async (nextSession: ActiveSession, scopeArg: UiDirtyScope = { kind: "full" }, extraInstancesOverride?: readonly ExtraWindowInstance[]) => {
       if (scopeArg.kind === "none") return;
       const generation = ++refreshGenerationRef.current;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === nextSession.pluginId)?.handle;
       if (!plugin) return;
       const layoutSeedKey = `${nextSession.pluginId}:${nextSession.app.id}:${nextSession.instanceId}`;
+      const isSessionSwitch = layoutSeedKeyRef.current !== layoutSeedKey;
       // 🐢 A session switch invalidates every cached hash from the previous instance — force a full
       // fetch regardless of what scope this particular call was given.
       let scope = scopeArg;
-      if (layoutSeedKeyRef.current !== layoutSeedKey) {
+      if (isSessionSwitch) {
         uiRefreshCacheRef.current = new Map();
         scope = { kind: "full" };
       }
       const cache = uiRefreshCacheRef.current;
+      // 🪟 On a session switch, seed the default layout's extra instances BEFORE fetching (not after), so
+      // this very first fetch already requests every default-layout pane's body/measures/engagements
+      // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
+      const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay) : undefined;
+      const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstances;
+      const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = injectActiveUtility({ ...nextSession.viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology });
+      const viewState: ViewState = injectActiveUtility({
+        ...nextSession.viewState,
+        contributionsJson,
+        locale: uiLocale,
+        terminology: uiTerminology,
+        windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+      });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
       // render/utilities/windowEngagements/windowMeasures/appLabels calls — the plugin omits payloads for
       // any section whose hash still matches what `cache` already holds.
-      const request = buildUiRefreshRequest(scope, nextSession.app.windowKinds, panelTabLeaves, viewState, cache);
+      const request = buildUiRefreshRequest(scope, windowInstances, panelTabLeaves, viewState, cache);
       if (request) {
         const response = await plugin.refreshUi(nextSession.instanceId, request);
         if (generation !== refreshGenerationRef.current) return;
@@ -4449,25 +4497,25 @@ export function FrameworkOsShell({
       // bails on them via reference equality — this is what lets `InterpretedUiNode`'s `React.memo` (and
       // `modeWindows`'s `useMemo`) skip reconciling the whole shell on every interaction.
       dispatch({
-        type: "SET_WINDOW_UI_BY_KIND",
+        type: "SET_WINDOW_UI_BY_WINDOW_ID",
         value: (current) =>
           mergeRecordPreservingIdentity(
             current,
-            nextSession.app.windowKinds.map((kind) => [kind.id, (cache.get(`window:${kind.id}`)?.value as UiNode | undefined) ?? current[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${kind.id}` }] as const),
+            windowInstances.map((instance) => [instance.id, (cache.get(`window:${instance.id}`)?.value as UiNode | undefined) ?? current[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.loading")}: ${instance.id}` }] as const),
           ),
       });
       const dynamicEngagements = (cache.get("engagements")?.value as Readonly<Record<string, WindowEngagement>> | undefined) ?? {};
       dispatch({
-        type: "SET_WINDOW_ENGAGEMENTS_BY_KIND",
+        type: "SET_WINDOW_ENGAGEMENTS_BY_WINDOW_ID",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicEngagements)),
       });
       const dynamicMeasures = (cache.get("measures")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
       dispatch({
-        type: "SET_WINDOW_MEASURES_BY_KIND",
+        type: "SET_WINDOW_MEASURES_BY_WINDOW_ID",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
       });
-      const appLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
-      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, appLabelsOverlay) });
+      const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
+      dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
       dispatch({
         type: "SET_PANEL_UI_BY_KEY",
         value: (current) =>
@@ -4478,17 +4526,16 @@ export function FrameworkOsShell({
               .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
           ),
       });
-      if (layoutSeedKeyRef.current !== layoutSeedKey) {
+      if (isSessionSwitch && layoutSeed) {
         layoutSeedKeyRef.current = layoutSeedKey;
-        const seeded = applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay);
-        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
-        extraWindowCounterRef.current = seeded.extraInstances.length;
-        dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
-        if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
+        extraWindowCounterRef.current = layoutSeed.extraInstances.length;
+        dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
+        if (layoutSeed.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: layoutSeed.activeWindowId });
         else if (nextSession.app.windowKinds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: nextSession.app.windowKinds[0].id });
       }
     },
-    [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
+    [appLabelsOverlay, extraWindowInstances, injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -4521,8 +4568,11 @@ export function FrameworkOsShell({
       }
       const cache = spawnedUiRefreshCacheRef.current;
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const fullViewState: ViewState = injectActiveUtility({ ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology }, spawned.id);
       const bodyKey = resolveCanvasBodyKey(app);
+      const fullViewState: ViewState = injectActiveUtility(
+        { ...viewState, contributionsJson, locale: uiLocale, terminology: uiTerminology, windowId: bodyKey, windowInstances: [{ id: bodyKey, windowKindId: bodyKey }] },
+        spawned.id,
+      );
       // 🐢 A spawned instance's view is a single body + utilities + engagements + measures (no panels, no
       // labels) — that's already the minimal grouping, so there is no narrower-than-full "partial" scope
       // worth expressing here; only `none` (handled above) short-circuits the request.
@@ -4693,9 +4743,9 @@ export function FrameworkOsShell({
         if ("setActiveUtility" in effect) {
           // 🧰 A plugin programmatically switched utility: mirror it into the host-owned store slice and,
           // when it targets the active window, into the view state fed to the follow-up refresh.
-          const { windowKindId, utilityId } = effect.setActiveUtility;
-          dispatch({ type: "SET_ACTIVE_UTILITY", windowId: windowKindId, utilityId: utilityId || null });
-          if (windowKindId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined };
+          const { windowId, utilityId } = effect.setActiveUtility;
+          dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: utilityId || null });
+          if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined };
           continue;
         }
         if ("openDialog" in effect) {
@@ -5042,7 +5092,7 @@ export function FrameworkOsShell({
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined };
+          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void plugin
             .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
@@ -5140,7 +5190,19 @@ export function FrameworkOsShell({
       // (`OsAppInstance.document` is now just an `OsDocumentRef` handle). A spawned instance's content
       // sync now goes through its own `openDocument`-opened `DocumentHost` channel, same as any other
       // document; there is no host-side JS mirroring step anymore.
-      const dispatchViewState = injectActiveUtility(targetSession.viewState);
+      // 🪟 `windowId` is read back off the tagged `action.args` (see `windowMeasuresChrome`/`tagSetActiveUtilityWindow`),
+      // falling back to the active window — stamped into the dispatched view state so the plugin can key any
+      // per-window option mutation off `view_state.windowId` instead of ever guessing at the active window.
+      const actionWindowId = typeof action.args === "object" && action.args != null && typeof (action.args as { windowId?: unknown }).windowId === "string" ? (action.args as { windowId: string }).windowId : undefined;
+      const dispatchWindowId = actionWindowId ?? activeWindowIdRef.current ?? undefined;
+      const dispatchViewState = injectActiveUtility(
+        {
+          ...targetSession.viewState,
+          windowId: dispatchWindowId,
+          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        },
+        dispatchWindowId,
+      );
       return plugin
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
@@ -5152,6 +5214,7 @@ export function FrameworkOsShell({
       applyHostEffects,
       attachSyncBackbone,
       detachSyncBackbone,
+      extraWindowInstances,
       findPluginForAction,
       injectActiveUtility,
       loadedPlugins,
@@ -5262,8 +5325,12 @@ export function FrameworkOsShell({
       extraWindowCounterRef.current = seeded.extraInstances.length;
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+      // 🪟 Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
+      // state (which wouldn't reflect this dispatch until the next render) — every newly-seeded pane's own
+      // body/measures/engagement gets fetched immediately instead of showing "missing window" until later.
+      void refreshUi(session, { kind: "full" }, seeded.extraInstances);
     },
-    [session, appLabelsOverlay],
+    [session, appLabelsOverlay, refreshUi],
   );
 
   const applyModeChange = useCallback(
@@ -5273,18 +5340,20 @@ export function FrameworkOsShell({
         value: (current) => {
           if (!current) return current;
           const layout = resolveLayoutForMode(current.app, modeId);
+          const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
           if (layout) {
             const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay);
             dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
             extraWindowCounterRef.current = seeded.extraInstances.length;
             dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
             if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+            void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
           }
-          return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+          return nextSession;
         },
       });
     },
-    [appLabelsOverlay],
+    [appLabelsOverlay, refreshUi],
   );
 
   const handleTemplateDrop = useCallback(
@@ -5296,10 +5365,12 @@ export function FrameworkOsShell({
       const instanceId = `${payload.windowKindId}-${extraWindowCounterRef.current}`;
       const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
       if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
-      dispatch({
-        type: "SET_EXTRA_WINDOW_INSTANCES",
-        value: (current) => [...current, { id: instanceId, windowKindId: payload.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) }],
-      });
+      const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label);
+      const nextExtraInstances = [...extraWindowInstances, { id: instanceId, windowKindId: payload.windowKindId, title }];
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
+      // 🪟 The new split pane is its own window instance — fetch its body/measures/engagement right away
+      // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
+      void refreshUi(session, { kind: "full" }, nextExtraInstances);
       dispatch({
         type: "SET_SHELL_LAYOUT",
         value: (current) => {
@@ -5311,7 +5382,7 @@ export function FrameworkOsShell({
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
     },
-    [appLabelsOverlay, session],
+    [appLabelsOverlay, extraWindowInstances, refreshUi, session],
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
@@ -6324,7 +6395,7 @@ export function FrameworkOsShell({
       if (spawned) {
         const spawnedApp = loadedPlugins.find((entry) => entry.handle.pluginId === spawned.pluginId)?.manifest.apps.find((candidate) => candidate.id === spawned.appId);
         const windowKind = spawnedApp?.windowKinds[0];
-        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
+        const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
         const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay) : [];
         const spawnedActions = spawnedApp && windowKind ? resolveWindowActions(spawnedApp, windowKind) : [];
         return [
@@ -6349,12 +6420,12 @@ export function FrameworkOsShell({
         ];
       }
     }
-    if (Object.keys(windowUiByKind).length === 0) return [];
+    if (Object.keys(windowUiByWindowId).length === 0) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
-      const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
-      const resolvedEngagement = resolveWindowEngagement(kind, windowEngagementsByKind);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
         title: appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
@@ -6370,19 +6441,22 @@ export function FrameworkOsShell({
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
-              <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+              <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
             </WindowInstanceIdContext.Provider>
           </ChromeAwareWindowScrollSurface>
         ),
       };
     });
+    // 🪟 Each extra (split/spawned) instance renders its OWN `windowUiByWindowId[instance.id]` body,
+    // measures, and engagement — never the base kind's shared entry — so two instances of the same kind
+    // (e.g. split top/perspective panes) never show or affect each other's options.
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
       const actions = resolveWindowActions(session.app, kind);
-      const chrome = windowMeasuresChrome(windowMeasuresByKind[kind.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
-      const resolvedEngagement = resolveWindowEngagement(kind, windowEngagementsByKind);
+      const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
+      const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
       return [
         {
           id: instance.id,
@@ -6399,7 +6473,7 @@ export function FrameworkOsShell({
           children: (
             <ChromeAwareWindowScrollSurface id={childElementId("framework.window", instance.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
               <WindowInstanceIdContext.Provider value={instance.id}>
-                <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
+                <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${instance.id}` }} onAction={onActionStable} />
               </WindowInstanceIdContext.Provider>
             </ChromeAwareWindowScrollSurface>
           ),
@@ -6426,9 +6500,9 @@ export function FrameworkOsShell({
     studioMode,
     uiLocale,
     uiTerminology,
-    windowEngagementsByKind,
-    windowMeasuresByKind,
-    windowUiByKind,
+    windowEngagementsByWindowId,
+    windowMeasuresByWindowId,
+    windowUiByWindowId,
   ]);
 
   const effectiveModeLayout = useMemo(
@@ -7777,16 +7851,25 @@ function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: 
 /** @emoji 🪟 Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
  * into draggable {@link TreeDataItem}s for a window kind's Display "Windows" section — each leaf drags a
  * `{windowKindId, templateId}` payload that seeds the freshly-opened pane's initial camera (see
- * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}). */
+ * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}).
+ *
+ * The Display "Windows" section is always docked at the `bottom-left` panel anchor (see
+ * `PanelGroup::Display`'s `anchor()`), so `Tree` always renders it with `direction="up"` — by design it
+ * reverses sibling order at *every* level (`ui/js/react/index.tsx`'s `direction === "up" ? [...items].reverse() : items`,
+ * exercised by existing tests), so the box can grow upward from its anchor without breaking parent/child
+ * nesting. We pre-reverse each level here to cancel that out, so the palette still *reads* top-to-bottom as
+ * Plan/Top/Bottom/Front/Back/Left/Right (etc.) instead of backwards. */
 function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], windowKindId: string, idPrefix: string): TreeDataItem[] {
-  return templates.map((template) => ({
-    id: `${idPrefix}.${template.id}`,
-    label: template.label,
-    defaultOpen: false,
-    ...(template.children?.length
-      ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) }
-      : { dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) } }),
-  }));
+  return [...templates]
+    .reverse()
+    .map((template) => ({
+      id: `${idPrefix}.${template.id}`,
+      label: template.label,
+      defaultOpen: false,
+      ...(template.children?.length
+        ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) }
+        : { dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) } }),
+    }));
 }
 
 function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
@@ -7797,15 +7880,14 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
           id: `framework.display.windows.${kind.id}`,
           label: kind.label,
           defaultOpen: false,
+          // 🔃 `worldProjectionTemplatesToTreeItems` already returns its items pre-reversed for one "up" render
+          // level (see its docstring); the plain kind leaf renders *last* raw so the bottom-anchored Tree's own
+          // reversal puts it first — reading top-to-bottom: the plain kind leaf, then Parallel, then Perspective.
           items:
             kind.surfaceKind === "world-3d"
               ? [
-                  {
-                    id: `framework.display.windows.${kind.id}.kind`,
-                    label: kind.label,
-                    dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) },
-                  },
                   ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, `framework.display.windows.${kind.id}.projection`),
+                  { id: `framework.display.windows.${kind.id}.kind`, label: kind.label, dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) } },
                 ]
               : [
                   {
@@ -9788,6 +9870,50 @@ function autofitCameraFromInstances(instances: readonly WorldInstanceRecord[]): 
   };
 }
 
+/** @emoji 📷 Seeds a pending display-template projection, framing visible references/instances when present. */
+function seedPendingWorldProjectionCamera(
+  pendingSpec: WorldProjectionSpec,
+  sceneCamera: WorldParsedCameraState,
+  instances: readonly WorldInstanceRecord[],
+  references: readonly WorldReferenceRecord[],
+  viewport?: { readonly width: number; readonly height: number },
+): WorldParsedCameraState {
+  const bounds = worldSceneContentBounds(instances, references);
+  const pose = bounds
+    ? frameWorldProjectionPose(pendingSpec, bounds, {
+        viewportWidth: viewport?.width,
+        viewportHeight: viewport?.height,
+      })
+    : computeWorldProjectionPose(pendingSpec, {
+        target: sceneCamera.target,
+        distance: Math.hypot(sceneCamera.position[0] - sceneCamera.target[0], sceneCamera.position[1] - sceneCamera.target[1], sceneCamera.position[2] - sceneCamera.target[2]) || 600,
+      });
+  return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
+}
+
+/** @emoji 📷 One-shot viewport-aware reframe for a projection seed so orthographic panes fit content once size is known. */
+function WorldProjectionContentFrame(props: {
+  readonly enabled: boolean;
+  readonly spec: WorldProjectionSpec | undefined;
+  readonly bounds: WorldSceneContentBounds | null;
+  readonly fov: number;
+  readonly onFramed: (state: WorldParsedCameraState) => void;
+}): null {
+  const size = useThree((state) => state.size);
+  const appliedRef = useRef(false);
+  const onFramedRef = useRef(props.onFramed);
+  onFramedRef.current = props.onFramed;
+  useLayoutEffect(() => {
+    if (!props.enabled || !props.spec || !props.bounds || appliedRef.current) return;
+    if (size.width < 1 || size.height < 1) return;
+    appliedRef.current = true;
+    const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
+    onFramedRef.current({ ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true });
+    console.log("[DEBUG] world projection content frame", { width: size.width, height: size.height, zoom: pose.zoom, target: pose.target });
+  }, [props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
+  return null;
+}
+
 function parseMeshes(meshesJson: string): WorldMeshRecord[] {
   try {
     const parsed = JSON.parse(meshesJson);
@@ -11628,17 +11754,20 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const sceneCameraJson = scene?.cameraJson ?? "{}";
   const parsedCamera = useMemo(() => parseCameraState(sceneCameraJson), [sceneCameraJson]);
   const instances = useMemo(() => parseInstances(scene?.instancesJson ?? "[]"), [scene?.instancesJson]);
+  const references = useMemo(() => parseJsonArray<WorldReferenceRecord>(scene?.referencesJson), [scene?.referencesJson]);
   const sceneCamera = useMemo(() => {
     if (sceneCameraJson.includes('"position"')) return parsedCamera;
     return instances.length > 0 ? autofitCameraFromInstances(instances) : parsedCamera;
   }, [instances, parsedCamera, sceneCameraJson]);
+  const contentBounds = useMemo(() => worldSceneContentBounds(instances, references), [instances, references]);
+  const pendingProjectionSpecRef = useRef<WorldProjectionSpec | null>(null);
   const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(() => {
     const pendingSpec = takePendingWorldProjection(windowInstanceId);
     if (!pendingSpec) return null;
-    const distance = Math.hypot(sceneCamera.position[0] - sceneCamera.target[0], sceneCamera.position[1] - sceneCamera.target[1], sceneCamera.position[2] - sceneCamera.target[2]) || 600;
-    const pose = computeWorldProjectionPose(pendingSpec, { target: sceneCamera.target, distance });
-    return { ...pose, fov: "fov" in pendingSpec ? pendingSpec.fov : sceneCamera.fov, explicitProjection: true };
+    pendingProjectionSpecRef.current = pendingSpec;
+    return seedPendingWorldProjectionCamera(pendingSpec, sceneCamera, instances, references);
   });
+  const [projectionFramePending, setProjectionFramePending] = useState(() => pendingProjectionSpecRef.current !== null);
   const [viewportOwned, setViewportOwned] = useState(false);
   const [detachEpoch, setDetachEpoch] = useState(0);
   const previousSceneCameraJsonRef = useRef(sceneCameraJson);
@@ -11648,6 +11777,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     setViewportCamera(null);
     setViewportOwned(false);
     setDetachEpoch(0);
+    setProjectionFramePending(false);
     console.log("[DEBUG] world3d viewport reattached to scene camera", { surfaceId: node.surfaceId, sceneCameraJson });
   }, [node.surfaceId, sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
@@ -11657,7 +11787,6 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);
   const attractions = useMemo(() => parseJsonArray<WorldAttractionRecord>(scene?.attractionsJson), [scene?.attractionsJson]);
   const targetVolumes = useMemo(() => parseJsonArray<WorldTargetVolumeRecord>(scene?.targetVolumesJson), [scene?.targetVolumesJson]);
-  const references = useMemo(() => parseJsonArray<WorldReferenceRecord>(scene?.referencesJson), [scene?.referencesJson]);
   const interaction = useMemo(() => parseInteraction(scene?.interactionJson), [scene?.interactionJson]);
   const lod = useMemo(() => parseLod(scene?.lodJson), [scene?.lodJson]);
   const engagementPreview = useMemo(() => parseEngagementPreview(scene?.engagementPreviewJson), [scene?.engagementPreviewJson]);
@@ -12098,6 +12227,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [adoptViewportCamera, cameraState],
   );
 
+  const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
+    setViewportCamera(state);
+    setDetachEpoch((epoch) => epoch + 1);
+    setProjectionFramePending(false);
+  }, []);
+
   const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: cameraState.fov });
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
@@ -12446,6 +12581,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       >
         <WorldOrbitViewSnapGateProvider>
           <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} />
+          {projectionFramePending ? (
+            <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? undefined} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
+          ) : null}
           <WorldOrbitGated
             controlsGate={marqueeDown || gumballDragActive || connectDragSource !== null || faceDragSession !== null}
             onCamera={handleCameraChange}

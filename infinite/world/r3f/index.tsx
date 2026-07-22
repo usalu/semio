@@ -1816,6 +1816,113 @@ export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProject
 }
 
 const WORLD_PROJECTION_DEFAULT_DISTANCE = 600;
+/** @emoji 📷 Fallback canvas size when framing a projection before the live viewport is known. */
+const WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT = 640;
+/** @emoji 📷 Default padding around content when framing a projection pane. */
+const WORLD_PROJECTION_FRAME_PADDING = 1.2;
+
+export type WorldSceneContentBounds = {
+  readonly center: Vec3;
+  readonly halfExtent: Vec3;
+};
+
+/** @emoji 📷 Axis-aligned bounds of instances and visible reference planes, for framing projection panes. */
+export function worldSceneContentBounds(
+  instances: readonly { readonly position?: Vec3; readonly x?: number; readonly y?: number; readonly z?: number }[],
+  references: readonly { readonly origin: Vec3; readonly widthWorld?: number; readonly hidden?: boolean }[] = [],
+): WorldSceneContentBounds | null {
+  let minX = Number.POSITIVE_INFINITY;
+  let minY = Number.POSITIVE_INFINITY;
+  let minZ = Number.POSITIVE_INFINITY;
+  let maxX = Number.NEGATIVE_INFINITY;
+  let maxY = Number.NEGATIVE_INFINITY;
+  let maxZ = Number.NEGATIVE_INFINITY;
+  let any = false;
+  const expand = (x: number, y: number, z: number) => {
+    minX = Math.min(minX, x);
+    minY = Math.min(minY, y);
+    minZ = Math.min(minZ, z);
+    maxX = Math.max(maxX, x);
+    maxY = Math.max(maxY, y);
+    maxZ = Math.max(maxZ, z);
+    any = true;
+  };
+  for (const instance of instances) {
+    const position = instance.position ?? ([instance.x ?? 0, instance.y ?? 0, instance.z ?? 0] as Vec3);
+    expand(position[0], position[1], position[2]);
+  }
+  for (const reference of references) {
+    if (reference.hidden) continue;
+    const half = Math.max(reference.widthWorld ?? 1, 1e-3) * 0.5;
+    const [x, y, z] = reference.origin;
+    expand(x - half, y - half, z);
+    expand(x + half, y + half, z);
+  }
+  if (!any) return null;
+  return {
+    center: [(minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5],
+    halfExtent: [Math.max((maxX - minX) * 0.5, 0.5), Math.max((maxY - minY) * 0.5, 0.5), Math.max((maxZ - minZ) * 0.5, 0.5)],
+  };
+}
+
+/** @emoji 📷 Half-width/height of `bounds` in the projection's view plane (CAD axes). */
+export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds: WorldSceneContentBounds): { readonly halfWidth: number; readonly halfHeight: number } {
+  const [hx, hy, hz] = bounds.halfExtent;
+  if (spec.kind === "orthographic") {
+    switch (spec.view) {
+      case "front":
+      case "back":
+        return { halfWidth: hx, halfHeight: hz };
+      case "left":
+      case "right":
+        return { halfWidth: hy, halfHeight: hz };
+      default:
+        return { halfWidth: hx, halfHeight: hy };
+    }
+  }
+  if (spec.kind === "oblique" && spec.variant !== "military") {
+    return { halfWidth: hx, halfHeight: hz };
+  }
+  if (spec.kind === "onePoint") {
+    switch (spec.axis) {
+      case "x":
+        return { halfWidth: hy, halfHeight: hz };
+      case "z":
+        return { halfWidth: hx, halfHeight: hy };
+      default:
+        return { halfWidth: hx, halfHeight: hz };
+    }
+  }
+  const span = Math.max(hx, hy, hz);
+  return { halfWidth: span, halfHeight: span };
+}
+
+/** @emoji 📷 Orthographic zoom that fits content in a drei/R3F pixel-sized frustum (`left = -width/2`, …). */
+export function worldProjectionOrthoZoom(halfWidth: number, halfHeight: number, viewportWidth: number, viewportHeight: number, padding = WORLD_PROJECTION_FRAME_PADDING): number {
+  const paddedHalfW = Math.max(halfWidth * padding, 0.5);
+  const paddedHalfH = Math.max(halfHeight * padding, 0.5);
+  const zoomX = viewportWidth * 0.5 / paddedHalfW;
+  const zoomY = viewportHeight * 0.5 / paddedHalfH;
+  return Math.max(Math.min(zoomX, zoomY), 1e-3);
+}
+
+/** @emoji 📷 Frames a projection to scene content — centers the target and sets viewport-aware orthographic zoom. */
+export function frameWorldProjectionPose(
+  spec: WorldProjectionSpec,
+  bounds: WorldSceneContentBounds,
+  options?: { readonly padding?: number; readonly viewportWidth?: number; readonly viewportHeight?: number; readonly distance?: number },
+): WorldCameraState {
+  const padding = options?.padding ?? WORLD_PROJECTION_FRAME_PADDING;
+  const { halfWidth, halfHeight } = worldProjectionViewHalfExtent(spec, bounds);
+  const span = Math.max(halfWidth, halfHeight) * 2 * padding;
+  const distance = options?.distance ?? Math.max(span * 1.5, 2);
+  const family = worldProjectionFamily(spec);
+  const zoom =
+    family === "parallel"
+      ? worldProjectionOrthoZoom(halfWidth, halfHeight, options?.viewportWidth ?? WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT, options?.viewportHeight ?? WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT, padding)
+      : 1;
+  return computeWorldProjectionPose(spec, { target: bounds.center, distance, zoom });
+}
 
 /** @emoji 📷 Computes a Z-up camera pose for the full projection taxonomy — the axonometric branch derives
  * elevation/azimuth from the two projected-axis angles (`elevation = asin(sqrt(tan a * tan b))`,
@@ -1824,7 +1931,7 @@ export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: {
   const distance = options.distance ?? WORLD_PROJECTION_DEFAULT_DISTANCE;
   const target = options.target;
   const family = worldProjectionFamily(spec);
-  const zoom = family === "parallel" ? (options.zoom !== undefined && options.zoom !== 1 ? options.zoom : 50) : (options.zoom ?? 1);
+  const zoom = family === "parallel" ? (options.zoom ?? 50) : (options.zoom ?? 1);
   const at = (dir: Vec3, up: Vec3): WorldCameraState => ({
     position: [target[0] + dir[0] * distance, target[1] + dir[1] * distance, target[2] + dir[2] * distance],
     target,
@@ -1900,7 +2007,7 @@ export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | unde
  * (pure parameter tweaks like angle/depth/fov never move the camera — only the matrix driver re-shears). */
 export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
   const family = worldProjectionFamily(spec);
-  return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom !== 1 ? state.zoom : 50) : state.zoom };
+  return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom === 1 ? 50 : state.zoom) : state.zoom };
 }
 
 /** @emoji 📷 Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
@@ -2170,6 +2277,32 @@ export function decodeWorldProjectionTemplateId(templateId: string | undefined):
     return typeof parsed.kind === "string" ? (parsed as WorldProjectionSpec) : null;
   } catch {
     return null;
+  }
+}
+
+const WORLD_ORTHOGRAPHIC_VIEW_LABELS: Record<WorldOrthographicViewId, string> = { plan: "Plan", top: "Top", bottom: "Bottom", front: "Front", back: "Back", left: "Left", right: "Right" };
+const WORLD_AXONOMETRIC_VARIANT_LABELS: Record<WorldAxonometricVariant, string> = { isometric: "Isometric", dimetric: "Dimetric", trimetric: "Trimetric" };
+const WORLD_OBLIQUE_VARIANT_LABELS: Record<WorldObliqueVariant, string> = { cabinet: "Cabinet", cavalier: "Cavalier", military: "Military" };
+
+/** @emoji 🪟 The exact label a {@link WorldProjectionSpec} shows as in {@link createWorldProjectionTemplates}'s
+ * drag tree — used to title a pane opened by dragging a specific view (e.g. "Top", "Isometric", "Curvilinear")
+ * instead of the generic window-kind label every pane would otherwise share. */
+export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
+  switch (spec.kind) {
+    case "orthographic":
+      return WORLD_ORTHOGRAPHIC_VIEW_LABELS[spec.view];
+    case "axonometric":
+      return WORLD_AXONOMETRIC_VARIANT_LABELS[spec.variant];
+    case "oblique":
+      return WORLD_OBLIQUE_VARIANT_LABELS[spec.variant];
+    case "onePoint":
+      return "1-Point";
+    case "twoPoint":
+      return "2-Point";
+    case "threePoint":
+      return "3-Point";
+    case "curvilinear":
+      return "Curvilinear";
   }
 }
 // #endregion 📐WorldProjection
@@ -3340,6 +3473,11 @@ if (import.meta.vitest) {
       expect(plan.position).toEqual(state.position);
     });
 
+    it("accepts an explicit orthographic zoom including values below the legacy default", () => {
+      const state = computeWorldProjectionPose({ kind: "orthographic", view: "top" }, { target: [7, 0, 0], distance: 100, zoom: 6.4 });
+      expect(state.zoom).toBe(6.4);
+    });
+
     it("derives the classic 35.264/45 isometric direction from the 30/30 axis angles", () => {
       const state = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, { target: [0, 0, 0], distance: 10 });
       expect(state.position[2] / 10).toBeCloseTo(Math.sin((35.264 * Math.PI) / 180), 3);
@@ -3366,6 +3504,21 @@ if (import.meta.vitest) {
       const threePoint = computeWorldProjectionPose({ kind: "threePoint", fov: 50 }, { target: [0, 0, 0], distance: 100 });
       expect(threePoint.projection).toBe("perspective");
       expect(Math.hypot(...threePoint.position)).toBeGreaterThan(90);
+    });
+  });
+
+  describe("frameWorldProjectionPose", () => {
+    it("centers top orthographic on reference bounds and fits width in the viewport", () => {
+      const bounds = worldSceneContentBounds([], [{ origin: [7, 0, 0.01], widthWorld: 50 }]);
+      expect(bounds).toEqual({ center: [7, 0, 0.01], halfExtent: [25, 25, 0.5] });
+      const state = frameWorldProjectionPose({ kind: "orthographic", view: "top" }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.2 });
+      expect(state.target).toEqual([7, 0, 0.01]);
+      expect(state.position[0]).toBe(7);
+      expect(state.position[1]).toBe(0);
+      expect(state.position[2]).toBeGreaterThan(0.01);
+      expect(state.projection).toBe("orthographic");
+      // visible half-width = (viewportWidth/2) / zoom = 25 * 1.2 ⇒ zoom = 200 / 30
+      expect(state.zoom).toBeCloseTo(200 / 30, 5);
     });
   });
 
@@ -3417,6 +3570,17 @@ if (import.meta.vitest) {
       expect(decodeWorldProjectionTemplateId(undefined)).toBeNull();
       expect(decodeWorldProjectionTemplateId("top")).toBeNull();
       expect(decodeWorldProjectionTemplateId("world-projection:not-json")).toBeNull();
+    });
+  });
+
+  describe("worldProjectionSpecLabel", () => {
+    it("matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from", () => {
+      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+      const collectLeafLabels = (nodes: readonly WorldProjectionTemplateDescriptor[]): readonly [string, WorldProjectionSpec][] =>
+        nodes.flatMap((node) => (node.children?.length ? collectLeafLabels(node.children) : [[node.label, node.args.spec] as const]));
+      for (const [label, spec] of collectLeafLabels(templates)) {
+        expect(worldProjectionSpecLabel(spec)).toBe(label);
+      }
     });
   });
 

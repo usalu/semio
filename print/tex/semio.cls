@@ -64,6 +64,16 @@
 
 \RequirePackage[ngerman,english]{babel}
 \RequirePackage{microtype}
+
+%region Justification Safety
+% 🧵 German compound words carry hard hyphens (e.g. "material- und
+% anwendungsbezogen") that are the paragraph's only nearby break point; without
+% slack a line ending there can overshoot \linewidth instead of breaking.
+% emergencystretch lets justification loosen such lines rather than overflow.
+\tolerance=1000
+\emergencystretch=3em
+%endregion Justification Safety
+
 \RequirePackage[style=\semio@citestyle,backend=bibtex,sorting=nyt]{biblatex}
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}

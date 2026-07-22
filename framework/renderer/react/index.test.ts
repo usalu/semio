@@ -559,6 +559,21 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     expect(request?.windows?.find((w) => w.key === "detail")?.hash).toBeUndefined();
   });
 
+  // 🪟 Two window INSTANCES of the same kind (e.g. a split top/perspective pane pair both rendering
+  // `puzzle3d.play.main`) must get distinct request entries and distinct cache keys — never collapse
+  // onto one shared entry, which is exactly the bug this ticket fixes.
+  it("buildUiRefreshRequest gives two instances of the same window kind distinct keys and independent cached hashes", () => {
+    const splitInstances = [
+      { id: "puzzle3d-main", bodyKey: "puzzle3d.play.main" },
+      { id: "puzzle3d-main-2", bodyKey: "puzzle3d.play.main" },
+    ];
+    const cache: UiRefreshCache = new Map([["window:puzzle3d-main", { hash: "base-hash", value: { type: "text", value: "base" } }]]);
+    const request = buildUiRefreshRequest({ kind: "full" }, splitInstances, [], {}, cache);
+    expect(request?.windows?.map((w) => w.key)).toEqual(["puzzle3d-main", "puzzle3d-main-2"]);
+    expect(request?.windows?.find((w) => w.key === "puzzle3d-main")?.hash).toBe("base-hash");
+    expect(request?.windows?.find((w) => w.key === "puzzle3d-main-2")?.hash).toBeUndefined();
+  });
+
   it("applyUiRefreshResponseToCache writes changed sections and ignores hash-only (unchanged) ones", () => {
     const cache: UiRefreshCache = new Map([["window:detail", { hash: "old-hash", value: { type: "text", value: "stale-should-not-be-touched" } }]]);
     applyUiRefreshResponseToCache(cache, {
@@ -2310,7 +2325,7 @@ describe("spawned window chrome", () => {
       },
     };
     const measures = { [kind.id]: kind.options.measures ?? [] };
-    const chrome = spawnedWindowChromeForKind(kind, engagements, measures, undefined, noopAction);
+    const chrome = spawnedWindowChromeForKind(kind, kind.id, engagements, measures, undefined, noopAction);
     expect(chrome.search?.input?.value).toBe("Box");
     expect(chrome.search?.possibles?.[0]?.label).toBe("Box");
     const measuresMarkup = renderToStaticMarkup(chrome.measures as ReactElement);
@@ -2357,12 +2372,12 @@ describe("partitionWindowMeasures", () => {
       children: [{ kind: "slider", id: "size", label: "Brush size", value: 4, min: 1, max: 10, onChange: { controllerId: "c", action: "setSize" } }],
     };
     const measures = { [kind.id]: [brushGroup] };
-    const activeChrome = spawnedWindowChromeForKind(kind, {}, measures, "brush", noopAction);
+    const activeChrome = spawnedWindowChromeForKind(kind, kind.id, {}, measures, "brush", noopAction);
     const activeMarkup = renderToStaticMarkup(activeChrome.utilityOptions as ReactElement);
     expect(activeMarkup).toContain("Brush size");
     expect(activeMarkup).toContain('data-direction="up"');
     expect(activeChrome.measures).toBeUndefined();
-    const idleChrome = spawnedWindowChromeForKind(kind, {}, measures, "fill", noopAction);
+    const idleChrome = spawnedWindowChromeForKind(kind, kind.id, {}, measures, "fill", noopAction);
     expect(idleChrome.utilityOptions).toBeUndefined();
     expect(idleChrome.measures).toBeUndefined();
   });
@@ -3594,15 +3609,19 @@ describe("Display Windows tab — projection drag templates", () => {
     return windowsTab.trees[0]!.tree.resolveTree().sections;
   }
 
+  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly items?: readonly LabeledTreeItem[]; readonly dragData?: Record<string, string> };
+  const byLabel = (items: readonly LabeledTreeItem[], label: string) => items.find((row) => row.label === label);
+
   it("nests the full Parallel/Perspective projection taxonomy under a world-3d window kind", () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
     expect(sections).toHaveLength(1);
-    const items = sections[0]!.items as { readonly id: string; readonly label?: string; readonly items?: readonly { readonly id: string }[] }[];
-    expect(items[0]!.id).toBe("framework.display.windows.puzzle3d-main.kind");
-    const [, parallel, perspective] = items;
-    expect(parallel!.label).toBe("Parallel");
-    expect(perspective!.label).toBe("Perspective");
-    expect(parallel!.items!.map((row) => row.id.split(".").pop())).toEqual(["orthographic", "axonometric", "oblique"]);
+    const items = sections[0]!.items as LabeledTreeItem[];
+    expect(items).toHaveLength(3);
+    expect(items.some((row) => row.id === "framework.display.windows.puzzle3d-main.kind")).toBe(true);
+    const parallel = byLabel(items, "Parallel")!;
+    const perspective = byLabel(items, "Perspective")!;
+    expect(perspective).toBeDefined();
+    expect(parallel.items!.map((row) => row.id.split(".").pop()).sort()).toEqual(["axonometric", "oblique", "orthographic"]);
   });
 
   it("keeps a flat single drag entry for non-world-3d window kinds", () => {
@@ -3610,12 +3629,24 @@ describe("Display Windows tab — projection drag templates", () => {
     expect(sections[0]!.items).toHaveLength(1);
   });
 
+  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Orthographic's children top-to-bottom as Plan/Top/Bottom/Front/Back/Left/Right", () => {
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    const items = sections[0]!.items as LabeledTreeItem[];
+    const parallel = byLabel(items, "Parallel")!;
+    const orthographic = byLabel(parallel.items!, "Orthographic")!;
+    // Raw (pre-render) order is reversed once more so that after the Tree's own "up" reversal on render,
+    // it reads Plan, Top, Bottom, Front, Back, Left, Right — top to bottom, not backwards.
+    const renderedOrder = [...orthographic.items!].reverse().map((row) => row.label);
+    expect(renderedOrder).toEqual(["Plan", "Top", "Bottom", "Front", "Back", "Left", "Right"]);
+  });
+
   it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
-    const items = sections[0]!.items as { readonly items?: readonly { readonly items?: readonly unknown[]; readonly dragData?: Record<string, string> }[] }[];
-    const orthographic = items[1]!.items![0]! as { readonly items: readonly { readonly dragData: Record<string, string> }[] };
-    const topLeaf = orthographic.items[1]!;
-    const payload = JSON.parse(topLeaf.dragData["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
+    const items = sections[0]!.items as LabeledTreeItem[];
+    const parallel = byLabel(items, "Parallel")!;
+    const orthographic = byLabel(parallel.items!, "Orthographic")!;
+    const topLeaf = byLabel(orthographic.items!, "Top")!;
+    const payload = JSON.parse(topLeaf.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(payload.windowKindId).toBe("puzzle3d-main");
     expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
   });

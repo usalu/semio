@@ -520,6 +520,7 @@
 }
 \NewDocumentCommand \SemioKindLabel { m } { \semio_kind_label_document:n {#1} }
 \NewDocumentCommand \appendixref { m } { \hyperref [#1] { \semio_kind_label_document:n { appendix } \nobreakspace \ref* {#1} } }
+\NewDocumentCommand \tableref { m } { \hyperref [#1] { \semio_kind_label_document:n { table } \nobreakspace \ref* {#1} } }
 \NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \exp_args:Ne \semio_kind_chip_bare:n {#1} }
@@ -540,6 +541,17 @@
 \NewDocumentCommand \semio@abbreviations@header@definition { } { \semio_abbreviations_header_definition: }
 \NewDocumentCommand \semio@abbreviations@header@pages { } { \semio_abbreviations_header_pages: }
 \ExplSyntaxOff
+
+%region Hyphenation Safety
+% 🪢 TeX only hyphenates a run of letters that is itself preceded by glue;
+% a slash-joined compound like "Wand-/Scheibenelement" breaks cleanly at the
+% literal hyphen but leaves "/Scheibenelement" with no glue in front of it,
+% so pattern hyphenation never resumes and the remainder overflows narrow
+% table columns. \SemioSlash inserts the missing zero-width glue right after
+% the slash so the following word hyphenates normally again.
+\newcommand{\SemioSlash}{/\hspace{0pt}}
+%endregion Hyphenation Safety
+
 \makeatletter
 
 \newcommand{\semio@heading@kind@number}[2]{%

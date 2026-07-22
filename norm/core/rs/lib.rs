@@ -426,6 +426,8 @@ pub enum NormFamilyId {
     En1997,
     En1998,
     En1999,
+    Iso16757,
+    Vdi3805,
 }
 
 impl NormFamilyId {
@@ -444,6 +446,8 @@ impl NormFamilyId {
             Self::En1997 => "EN 1997",
             Self::En1998 => "EN 1998",
             Self::En1999 => "EN 1999",
+            Self::Iso16757 => "ISO 16757",
+            Self::Vdi3805 => "VDI 3805",
         }
     }
 }

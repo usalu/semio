@@ -95,11 +95,13 @@
 \ExplSyntaxOn
 \dim_new:N \l_semio_table_textsize_dim
 \bool_new:N \l_semio_table_textsize_set_bool
+\tl_new:N \l_semio_table_key_tl
 \keys_define:nn { semio / table } {
   text-size .code:n = {
     \dim_set:Nn \l_semio_table_textsize_dim {#1}
     \bool_set_true:N \l_semio_table_textsize_set_bool
   },
+  key .tl_set:N = \l_semio_table_key_tl,
 }
 % Named the plain (legacy) way, not \semio_table_keys_set:n — these get
 % called from \SemioTableLong's body, which is a plain \newcommand written
@@ -107,10 +109,12 @@
 % would not tokenize as one control word there (see the identical rationale
 % on \semio@table@long@prepare below).
 \cs_new_protected:Npn \semio@table@keys@set #1 {
+  \tl_clear:N \l_semio_table_key_tl
   \keys_set:nn { semio / table } {#1}
 }
 \cs_new_protected:Npn \semio@table@keys@reset {
   \bool_set_false:N \l_semio_table_textsize_set_bool
+  \tl_clear:N \l_semio_table_key_tl
 }
 \cs_new_protected:Npn \semio@table@fontsize@apply {
   \bool_if:NTF \l_semio_table_textsize_set_bool
@@ -473,9 +477,9 @@
 \newcommand{\SemioTableLong}[5][]{%
   \semio@table@keys@set{#1}%
   \semio@table@long@prepare{#3}{#4}%
-  \semio@register@window@open{#2}%
+  \semio@table@long@open{#2}%
   \expandafter\semio@table@long@render\expandafter{\semio@table@long@colspec@current}{\semio@table@long@head@current}{\semio@table@long@head@continuation@current}{#5}{\semio@table@long@column@count}%
-  \semio@register@window@close
+  \semio@table@long@close
   \semio@table@keys@reset
 }
 

@@ -240,6 +240,16 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Introduce tools to app modes:
+Tools are not bound to windows but like commands available to the complete mode of an app.
+There are some legacy tool naming which correctly is called utility (a utility is a tool for a specific window).
+e.g. fill in puzzle 3d is a tool.
+Place the tool panel toggel on the left of commands in the middle of the footer.
+Plan and execute everything end to end.
+Clean mechanisms and exhaustive refactors if necessary.
+
+---
+
 All code in this monorepo is not using any debugger anymore. Devs are not stepping through code anymore and agents only use console logs for debugging. Make sure to optimize and configure everything (such as rust, etc) to get maximum compile time speed.
 
 ---

@@ -31,6 +31,7 @@
 \tl_new:N \l_semio_window_kind_title_tl
 \tl_new:N \l_semio_window_number_tl
 \tl_new:N \l_semio_window_register_number_tl
+\tl_new:N \l_semio_window_key_tl
 \bool_new:N \l_semio_window_in_item_bool
 \dim_new:N \l_semio_window_pending_height_dim
 \bool_new:N \l_semio_window_pending_height_bool
@@ -155,8 +156,15 @@
       \int_to_alph:n { \int_use:c { c@semio@window@slot } }
     }
   }
+  % 🔑 Hierarchy key (e.g. TZ.a), not the bare kind counter — keeps
+  % \tableref / list-of-X "Schlüssel" aligned with the window chip.
+  \cs_gset:Npx \@currentlabel { \tl_use:N \l_semio_window_register_number_tl }
   \str_set:Nx \l_tmpb_str { semio-register-#2-\tl_use:N \l_semio_window_register_number_tl }
   \exp_args:NV \label \l_tmpb_str
+  \tl_if_empty:NF \l_semio_window_key_tl {
+    \exp_args:NV \label \l_semio_window_key_tl
+    \tl_clear:N \l_semio_window_key_tl
+  }
   \group_begin:
     \exp_args:Nc \seq_gput_right:Nx { g_semio_register_ #1 _num_seq }
       { \tl_use:N \l_semio_window_register_number_tl }
@@ -469,6 +477,32 @@
 \cs_new_protected:Npn \SemioTocTrack #1#2 { \semio_window_toc_append:nn {#1}{#2} }
 \cs_new_protected:Npn \SemioTocTrackNum #1#2#3 { \semio_window_toc_append:nnn {#1}{#2}{#3} }
 
+%region TableLongWindow
+% 📋 Long tables need register/number/label like \begin{Table}, but must not
+% open a tcolorbox (longtable supplies its own rules and page-break chrome).
+\cs_new_protected:Npn \semio_table_long_open:n #1 {
+  \semio_window_content_state_reset:
+  \tl_set_eq:NN \l_semio_window_key_tl \l_semio_table_key_tl
+  \tl_set:Nn \l_semio_window_kind_title_tl {#1}
+  \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
+  \use:c { semio@window@enter }
+  \refstepcounter { semiotable }
+  \semio_window_kind_number_set:n { semiotable }
+  \semio_window_register_write:nn { semiotable } { table }
+  \semio_window_break_suffix_apply:
+  \semio_window_header_store:
+  \semio_block_sep_before:
+  \semio_window_header_keep_with_body:
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
+}
+\cs_new_protected:Npn \semio_table_long_close: {
+  \use:c { semio@window@leave }
+}
+\cs_new_protected:Npn \semio@table@long@open #1 { \semio_table_long_open:n {#1} }
+\cs_new_protected:Npn \semio@table@long@close { \semio_table_long_close: }
+%endregion TableLongWindow
+
 %region Termlist (shared engine for Glossary + Abbreviations)
 \seq_new:N \l_semio_termlist_sorted_terms_seq
 \clist_new:N \l_semio_termlist_labels_clist
@@ -684,8 +718,7 @@
     % rendered into into so the *next* compile pass can show the ":<N>"
     % suffix on page 1 too (see \semio@window@break@record and the
     % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
-    overlay~unbroken={\semio@window@break@record{1}\semio@window@header@invoke@overlay},
-    overlay~first={\semio@window@header@invoke@overlay},
+    overlay~unbroken={\semio@window@break@record{1}},
     overlay~middle={\semio@window@header@repeat},
     overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
@@ -717,6 +750,7 @@
 
 \keys_define:nn { semio / window / kind } {
   title .tl_set:N = \l_semio_window_kind_title_tl,
+  key .tl_set:N = \l_semio_window_key_tl,
   hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
   hierarchy .default:n = true,
   anchor .choice:,
@@ -757,6 +791,7 @@
   \dim_zero:N \l_semio_window_height_dim
   \bool_set_false:N \l_semio_window_textsize_set_bool
   \bool_set_false:N \l_semio_window_textfit_bool
+  \tl_clear:N \l_semio_window_key_tl
   \semio_window_imagefit_set:n { contain }
   \group_begin:
   \ExplSyntaxOff
@@ -1970,14 +2005,6 @@
   };%
 }
 
-% 🩹 Repaints only page one's gap seam after the body fill. Redrawing the
-% complete header would double the chip outlines now that both rows are flush.
-\newcommand{\semio@window@header@invoke@overlay}{%
-  \draw[draw=semio-chrome-border-normal, line width=\semio@stroke@hairline]
-    ([xshift=\semio@window@header@tab@w]frame.north west) --
-    ([xshift=-\semio@window@header@ctrl@w]frame.north east);%
-}
-
 \ExplSyntaxOff
 %endregion WindowBreakParts chrome
 
@@ -2009,8 +2036,6 @@
 \newlength{\semio@window@gap@w}
 \newlength{\semio@window@cap@w}
 \newlength{\semio@window@cap@body@h}
-\newlength{\semio@window@header@tab@w}
-\newlength{\semio@window@header@ctrl@w}
 
 \newcommand{\semio@window@cap@body@h@set}{%
   \setlength{\semio@window@cap@body@h}{%
@@ -2533,10 +2558,8 @@
 
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
-  \global\semio@window@header@tab@w=\wd\semio@window@tab@box
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
-    \global\semio@window@header@ctrl@w=0pt
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth-\wd\semio@window@tab@box\relax
     }%
@@ -2548,7 +2571,6 @@
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
-    \global\semio@window@header@ctrl@w=\wd\semio@window@ctrl@box
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
     }%

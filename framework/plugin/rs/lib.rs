@@ -160,11 +160,11 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
+    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
-    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, UtilityDefinition,
-    UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, UtilityDefinition,
+    UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ActionDescriptor, NamedLayout, UiButtonNode,
@@ -183,7 +183,7 @@ use vcs::{
 pub struct ModeSpec {
     pub id: String,
     pub label: String,
-    pub utilities: Vec<UtilityRef>,
+    pub tools: Vec<ToolRef>,
     pub layout_id: Option<String>,
     pub commands: Vec<CommandRef>,
 }
@@ -324,6 +324,7 @@ pub struct AppBuilder {
     keybindings: Vec<KeybindingSpec>,
     actions: Vec<ActionDefinition>,
     utilities: Vec<UtilityDefinition>,
+    tools: Vec<ToolDefinition>,
     commands: Vec<CommandDefinition>,
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
@@ -352,6 +353,7 @@ impl AppBuilder {
             keybindings: Vec::new(),
             actions: Vec::new(),
             utilities: Vec::new(),
+            tools: Vec::new(),
             commands: Vec::new(),
             named_layouts: Vec::new(),
             default_layout: None,
@@ -432,7 +434,7 @@ impl AppBuilder {
         self.modes.push(ModeSpec {
             id: id.into(),
             label: label.into(),
-            utilities: Vec::new(),
+            tools: Vec::new(),
             layout_id: None,
             commands: Vec::new(),
         });
@@ -457,11 +459,12 @@ impl AppBuilder {
         self
     }
 
-    /// 🧰 Scopes utilities to a mode — references ids declared via `.utility()`/`.utility_simple()`.
-    pub fn mode_utilities(mut self, mode_id: impl AsRef<str>, utility_ids: Vec<UtilityRef>) -> Self {
+    /// 🛠️ Scopes tools to a mode — references ids declared via `.tool()`/`.tool_simple()`. A tool is a
+    /// mode-level activatable capability (e.g. puzzle3d fill); distinct from a window-scoped utility.
+    pub fn mode_tools(mut self, mode_id: impl AsRef<str>, tool_ids: Vec<ToolRef>) -> Self {
         let mode_id = mode_id.as_ref();
         if let Some(mode) = self.modes.iter_mut().find(|entry| entry.id == mode_id) {
-            mode.utilities = utility_ids;
+            mode.tools = tool_ids;
         }
         self
     }
@@ -646,7 +649,7 @@ impl AppBuilder {
         self
     }
 
-    /// @emoji 🧰 Declares an interactive utility this app exposes (referenced by `window_kind_utilities`/`mode_utilities`).
+    /// @emoji 🧰 Declares an interactive utility this app exposes (referenced by `window_kind_utilities`).
     pub fn utility(mut self, utility: UtilityDefinition) -> Self {
         self.utilities.push(utility);
         self
@@ -655,6 +658,19 @@ impl AppBuilder {
     /// @emoji 🧰 Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
     pub fn utility_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
         self.utility(UtilityDefinition::new(id, label, icon_id))
+    }
+
+    /// @emoji 🛠️ Declares a mode-level tool this app exposes (referenced by `.mode_tools()`). Distinct
+    /// from `.utility()`: a tool is scoped to a whole mode, not a window kind, and its live options are
+    /// supplied dynamically via `DocumentApp::tool_measures`/`PluginApp::tool_measures`.
+    pub fn tool(mut self, tool: ToolDefinition) -> Self {
+        self.tools.push(tool);
+        self
+    }
+
+    /// @emoji 🛠️ Declares a tool with default settings (no keybinding).
+    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+        self.tool(ToolDefinition::new(id, label, icon_id))
     }
 
     /// @emoji 🧷 Keybinding-vs-action-registry consistency is only enforced for apps that declare
@@ -755,6 +771,16 @@ impl AppBuilder {
                 utility.id
             );
         }
+        let mut declared_tool_ids = HashSet::new();
+        for tool in &self.tools {
+            assert!(!tool.id.trim().is_empty(), "app {} tool id must be non-empty", self.id);
+            assert!(
+                declared_tool_ids.insert(tool.id.clone()),
+                "app {} duplicate tool id {}",
+                self.id,
+                tool.id
+            );
+        }
         let mut declared_command_scopes: HashMap<String, CommandScope> = HashMap::new();
         for command in &self.commands {
             assert!(
@@ -780,6 +806,9 @@ impl AppBuilder {
         }
         if !self.utilities.is_empty() && declared_action_ids.insert(SET_ACTIVE_UTILITY_ACTION_ID.to_string()) {
             actions.push(set_active_utility_action_definition());
+        }
+        if !self.tools.is_empty() && declared_action_ids.insert(SET_ACTIVE_TOOL_ACTION_ID.to_string()) {
+            actions.push(set_active_tool_action_definition());
         }
         if self.introduction.is_some() && declared_action_ids.insert(START_INTRODUCTION_ACTION_ID.to_string()) {
             actions.push(start_introduction_action_definition());
@@ -820,6 +849,20 @@ impl AppBuilder {
                             controller_id: self.controller_id.clone(),
                             action: SET_ACTIVE_UTILITY_ACTION_ID.to_string(),
                             args: Some(serde_json::json!({ "utilityId": utility.id })),
+                        },
+                    });
+                }
+            }
+        }
+        for tool in &self.tools {
+            if let Some(keys) = &tool.keys {
+                if bound_keys.insert(keys.clone()) {
+                    keybindings.push(Keybinding {
+                        keys: keys.clone(),
+                        action: ActionDescriptor {
+                            controller_id: self.controller_id.clone(),
+                            action: SET_ACTIVE_TOOL_ACTION_ID.to_string(),
+                            args: Some(serde_json::json!({ "toolId": tool.id })),
                         },
                     });
                 }
@@ -2718,6 +2761,10 @@ pub trait DocumentApp: Send + 'static {
         ActionEmit::default()
     }
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
+    /// 🪟 Keyed by window INSTANCE id (from `view_state.window_instances`), not window kind — an app with
+    /// two open instances of the same kind (e.g. split panes) returns one entry per instance so their
+    /// chrome/options never collapse together. Apps with a single window kind and no splitting return
+    /// `vec![kind_id]`-worth of entries either way.
     fn window_engagements(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
@@ -2725,7 +2772,19 @@ pub trait DocumentApp: Send + 'static {
     ) -> HashMap<String, WindowEngagement> {
         HashMap::new()
     }
+    /// 🪟 See `window_engagements` — same per-window-instance keying.
     fn window_measures(
+        &self,
+        _doc: &DocumentView<'_, Self::Projection>,
+        _view_state: &ViewState,
+    ) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::new()
+    }
+    /// 🛠️ Keyed by TOOL id (`AppDefinition.tools[].id`), not window instance — a tool's live options
+    /// (e.g. puzzle3d fill's count slider) rendered in the mode-level tool panel rather than a
+    /// window's utility-options rail. Reuses `WindowMeasure` as the shared control vocabulary; the
+    /// `Group.active_utility_id` tag is simply unused for tool measures.
+    fn tool_measures(
         &self,
         _doc: &DocumentView<'_, Self::Projection>,
         _view_state: &ViewState,
@@ -2863,6 +2922,10 @@ pub trait PluginApp: Send {
         HashMap::new()
     }
     fn window_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        HashMap::new()
+    }
+    /// 🛠️ Object-safe counterpart to `DocumentApp::tool_measures` — keyed by tool id.
+    fn tool_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
     }
     fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
@@ -3345,6 +3408,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
         let doc = DocumentView { projection, history };
         app.window_measures(&doc, view_state)
+    }
+
+    fn tool_measures(&mut self, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        if self.refresh_cache().is_err() {
+            return HashMap::new();
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.tool_measures(&doc, view_state)
     }
 
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
@@ -3855,6 +3928,8 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(default)]
         measures: Option<SingleRequest>,
         #[serde(default)]
+        tools: Option<SingleRequest>,
+        #[serde(default)]
         labels: Option<SingleRequest>,
     }
     #[derive(Serialize)]
@@ -3879,6 +3954,8 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         #[serde(skip_serializing_if = "Option::is_none")]
         measures: Option<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
+        tools: Option<SectionResponse>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         labels: Option<SectionResponse>,
     }
 
@@ -3899,7 +3976,11 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         let mut response = RefreshResponse::default();
 
         for entry in &request.windows {
-            let node = instance.app.render(&entry.body_key, None, &request.view_state)?;
+            // 🪟 Stamp this window's instance id into the view state before rendering, so a `DocumentApp`
+            // can key any per-window option (grid, LOD, sun, ...) off `view_state.window_id` and never off
+            // the (potentially shared-by-kind) `body_key` alone — see `Puzzle3dWindowOptions`.
+            let window_view_state = ViewState { window_id: Some(entry.key.clone()), ..request.view_state.clone() };
+            let node = instance.app.render(&entry.body_key, None, &window_view_state)?;
             let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
             response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
@@ -3923,6 +4004,11 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             let measures = instance.app.window_measures(&request.view_state);
             let (hash, value) = ui_refresh_section(&measures, requested.hash.as_deref());
             response.measures = Some(SectionResponse { key: "measures".into(), hash, value });
+        }
+        if let Some(requested) = &request.tools {
+            let tool_measures = instance.app.tool_measures(&request.view_state);
+            let (hash, value) = ui_refresh_section(&tool_measures, requested.hash.as_deref());
+            response.tools = Some(SectionResponse { key: "tools".into(), hash, value });
         }
         if let Some(requested) = &request.labels {
             let mut overlay = instance.app.app_labels(&request.view_state);

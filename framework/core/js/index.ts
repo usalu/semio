@@ -1063,14 +1063,14 @@ export class DockUiStateStore extends Store<DockUiState | null> {
 //#endregion DockUiStateStore
 
 //#region WindowPaneStateStore
-/** 🪟 Persisted state for one window-level pane (a {@link DockUiPanelState} sibling, but keyed per window kind rather than globally) — only the fields that differ from the shell's computed defaults are ever stored. */
+/** 🪟 Persisted state for one window-level pane (a {@link DockUiPanelState} sibling, but keyed per window INSTANCE id rather than globally) — only the fields that differ from the shell's computed defaults are ever stored. */
 export interface WindowPaneState {
   anchor?: PersistedAnchor;
   folded?: boolean;
   size?: number;
 }
 
-/** 🪟 The full persisted window-pane arrangement: per-window-kind, per-pane anchor/fold/size — the pane-level analog of {@link DockUiState}, since panes float inside a window rather than docking to the shell's own edges. */
+/** 🪟 The full persisted window-pane arrangement: per-window-instance, per-pane anchor/fold/size — the pane-level analog of {@link DockUiState}, since panes float inside a window rather than docking to the shell's own edges. */
 export interface WindowPaneUiState {
   version: 1;
   windows: Record<string, Record<string, WindowPaneState>>;
@@ -1416,6 +1416,10 @@ export type PluginViewState = {
   readonly contributionsJson?: string;
   readonly locale?: string;
   readonly terminology?: string;
+  /** 🪟 The window instance a render/action call targets — plugins key per-window option state off this, never off `activeWindowKindId`. */
+  readonly windowId?: string;
+  /** 🪟 The live set of open window instances (base + spawned/split), so `windowMeasures`/`windowEngagements` can return one entry per instance. */
+  readonly windowInstances?: readonly { readonly id: string; readonly windowKindId: string }[];
 };
 
 export type PluginUiNode = Record<string, unknown> & { readonly type: string };
@@ -1921,7 +1925,7 @@ export type HostEffect =
     }
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
-  | { readonly setActiveUtility: { readonly windowKindId: string; readonly utilityId: string } }
+  | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
   | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } }
   /** @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a plugin
    * advance staged/progressive work over several ticks without blocking the host; the response's own

@@ -150,6 +150,8 @@ define_norm_family_app!(en1996, En1996PlayApp, "norm-en-1996-play", "EN 1996", "
 define_norm_family_app!(en1997, En1997PlayApp, "norm-en-1997-play", "EN 1997", "en1997", norm_en_1997, En1997Family);
 define_norm_family_app!(en1998, En1998PlayApp, "norm-en-1998-play", "EN 1998", "en1998", norm_en_1998, En1998Family);
 define_norm_family_app!(en1999, En1999PlayApp, "norm-en-1999-play", "EN 1999", "en1999", norm_en_1999, En1999Family);
+define_norm_family_app!(iso16757, Iso16757PlayApp, "norm-iso-16757-play", "ISO 16757", "iso16757", norm_iso_16757, Iso16757Family);
+define_norm_family_app!(vdi3805, Vdi3805PlayApp, "norm-vdi-3805-play", "VDI 3805", "vdi3805", norm_vdi_3805, Vdi3805Family);
 
 //#region 🔖Manifest
 fn register_norm_exports() {}
@@ -173,6 +175,8 @@ semio_framework_plugin::semio_plugin! {
         en1997::create_app => en1997::En1997PlayApp,
         en1998::create_app => en1998::En1998PlayApp,
         en1999::create_app => en1999::En1999PlayApp,
+        iso16757::create_app => iso16757::Iso16757PlayApp,
+        vdi3805::create_app => vdi3805::Vdi3805PlayApp,
     ],
 }
 //#endregion 🔖Manifest
@@ -187,7 +191,7 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn thirteen_family_apps_are_registered() {
+    fn fifteen_family_apps_are_registered() {
         let ids = [
             din4108::create_app().definition.id,
             din16798::create_app().definition.id,
@@ -202,8 +206,10 @@ mod tests {
             en1997::create_app().definition.id,
             en1998::create_app().definition.id,
             en1999::create_app().definition.id,
+            iso16757::create_app().definition.id,
+            vdi3805::create_app().definition.id,
         ];
-        assert_eq!(ids.len(), 13);
+        assert_eq!(ids.len(), 15);
         assert!(ids.iter().all(|id| id.starts_with("norm-")));
     }
 

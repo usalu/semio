@@ -388,7 +388,7 @@ fn commit_with_utility_reset(ops: Vec<DrawOp>, description: &str) -> ActionEmit<
     }
     let mut emit = ActionEmit::commit(ops, description);
     emit.effects.push(HostEffect::SetActiveUtility {
-        window_kind_id: DRAW_PLAY_WINDOW_CANVAS.into(),
+        window_id: DRAW_PLAY_WINDOW_CANVAS.into(),
         utility_id: DRAW_DEFAULT_UTILITY.into(),
     });
     emit
@@ -2181,7 +2181,7 @@ mod tests {
         assert!(projection.layers.iter().any(|layer| matches!(layer, DrawLayerNode::Shape(shape) if shape.shape_kind == "rect")));
         assert!(matches!(
             result.requested_effects.as_slice(),
-            [HostEffect::SetActiveUtility { window_kind_id, utility_id }] if window_kind_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
+            [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
         ), "the canvas returns to select-direct via a host effect, not a document op");
     }
 

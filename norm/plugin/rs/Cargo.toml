@@ -75,6 +75,16 @@ variant = "en1999"
 app = "norm-en-1999-play"
 ports = { react = 6103, wgpu = 6203 }
 
+[[package.metadata.semio.playground]]
+variant = "iso16757"
+app = "norm-iso-16757-play"
+ports = { react = 6104, wgpu = 6204 }
+
+[[package.metadata.semio.playground]]
+variant = "vdi3805"
+app = "norm-vdi-3805-play"
+ports = { react = 6105, wgpu = 6205 }
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"
@@ -94,6 +104,8 @@ norm_en_1996 = { path = "../../en/1996/rs" }
 norm_en_1997 = { path = "../../en/1997/rs" }
 norm_en_1998 = { path = "../../en/1998/rs" }
 norm_en_1999 = { path = "../../en/1999/rs" }
+norm_iso_16757 = { path = "../../iso/16757/rs" }
+norm_vdi_3805 = { path = "../../vdi/3805/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 vcs = { path = "../../../vcs/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

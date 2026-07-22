@@ -16438,9 +16438,9 @@ impl ShellState {
         // (Architecture Decision 4/9) — apply it to the host-owned map just like a user click.
         for effect in &result.requested_effects {
             match effect {
-                semio_framework_core::kernel::HostEffect::SetActiveUtility { window_kind_id, utility_id } => {
+                semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
                     self.active_utility_by_window
-                        .insert(window_kind_id.clone(), utility_id.clone());
+                        .insert(window_id.clone(), utility_id.clone());
                 }
                 // 🔁 Self re-dispatch (D2): queues `action` onto the same `deferred_actions` mechanism
                 // tree-hover/selection follow-ups already use, which `flush_deferred_actions` drains every

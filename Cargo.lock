@@ -6123,6 +6123,8 @@ dependencies = [
  "norm_en_1997",
  "norm_en_1998",
  "norm_en_1999",
+ "norm_iso_16757",
+ "norm_vdi_3805",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -6278,6 +6280,26 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+]
+
+[[package]]
+name = "norm_iso_16757"
+version = "0.1.0"
+dependencies = [
+ "norm_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "norm_vdi_3805"
+version = "0.1.0"
+dependencies = [
+ "norm_core",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
 ]
 
 [[package]]
