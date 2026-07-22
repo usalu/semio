@@ -2314,6 +2314,81 @@ mod tests {
     }
 
     #[test]
+    fn evaluate_channels_budgeted_probe_computes_nothing() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let tree = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("b", "double", Dictionary::new())],
+            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let calls = AtomicUsize::new(0);
+        let mut dispatch = |kind: &str, input: &Dictionary| {
+            calls.fetch_add(1, Ordering::Relaxed);
+            reg.dispatch(kind, input)
+        };
+        cache.begin_epoch();
+        let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 0).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 0, "a budget-0 probe must never dispatch");
+        assert_eq!(result.remaining, vec!["a".to_string(), "b".to_string()], "nothing computed yet — every neuron is still pending, in topo order");
+    }
+
+    #[test]
+    fn evaluate_channels_budgeted_resumes_across_calls_until_complete() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let tree = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("b", "double", Dictionary::new())],
+            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let calls = AtomicUsize::new(0);
+        let mut dispatch = |kind: &str, input: &Dictionary| {
+            calls.fetch_add(1, Ordering::Relaxed);
+            reg.dispatch(kind, input)
+        };
+        cache.begin_epoch();
+        // ⏱️ Tick 1: budget for exactly one cache miss — stops at "a", "b" hasn't run yet.
+        let tick1 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 1).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 1);
+        assert_eq!(tick1.remaining, vec!["b".to_string()]);
+        // ⏱️ Tick 2: "a" is now a cache hit (free), so this budget-1 call reaches and computes "b".
+        let tick2 = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, 1).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 2, "resuming must not recompute the already-cached \"a\"");
+        assert!(tick2.remaining.is_empty(), "the walk reached the end of the topo order");
+        let doubled = tick2.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
+        assert_eq!(doubled, Some(4.0));
+    }
+
+    #[test]
+    fn evaluate_channels_budgeted_unlimited_matches_full_evaluation() {
+        let tree = Tree {
+            neurons: vec![Neuron::with_kind("a", "echo", number_dictionary(2.0)), Neuron::with_kind("b", "double", Dictionary::new())],
+            synapses: vec![Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() }],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let mut dispatch = |kind: &str, input: &Dictionary| reg.dispatch(kind, input);
+        cache.begin_epoch();
+        let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &HashSet::new(), None, usize::MAX).unwrap();
+        assert!(result.remaining.is_empty());
+        let doubled = result.channels.outputs.get("b").and_then(|dict| dict.get("doubled")).and_then(|value| value.as_dictionary()).and_then(|dict| dict.get("value")).and_then(|value| value.as_atom()).and_then(|atom| atom.as_f64());
+        assert_eq!(doubled, Some(4.0));
+    }
+
+    #[test]
     fn cardinality_symbol_round_trips_json() {
         let channel = ChannelSpec::list("items", &["list.pack"]).with_cardinality(Cardinality::OneOrMore);
         let json = serde_json::to_string(&channel).unwrap();

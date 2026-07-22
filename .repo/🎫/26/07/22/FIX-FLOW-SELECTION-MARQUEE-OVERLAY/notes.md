@@ -17,8 +17,9 @@ Board rust publishes selection preview points as tuple arrays:
 ## Fix
 
 1. Parse both `[[x,y],…]` (rust wire) and `{x,y}` (legacy/tests) in `computeDagMarqueeOverlay`.
-2. Wire `selectionPreviewMethod` from flow / node-graph / sequence wasm so lasso draws a polygon, not a bounding rect.
-3. Paint marquee at `z-50` above label/pointer overlays.
+2. Infer rectangle vs lasso when `selectionPreviewMethod` is unavailable (four AA corners → rect, else path → lasso).
+3. Expose `selectionPreviewMethod` on flow / node-graph / sequence wasm bindings for an explicit method source after rebuild.
+4. Paint marquee at `z-50` above label/pointer overlays.
 
 ## Verify
 
@@ -26,10 +27,4 @@ Board rust publishes selection preview points as tuple arrays:
 cd framework/renderer/react && bunx vitest run -t "dag marquee overlay"
 ```
 
-Rebuild wasm for lasso method (optional for rectangle; method falls back to `"rectangle"`):
-
-```bash
-cd flow/core && bun ./script.ts wasm
-cd framework/surface/node-graph/rs && bun ./script.ts wasm
-cd sequence/core && bun ./script.ts wasm
-```
+All 10 overlay tests pass. Rectangle and lasso overlays work without a wasm rebuild.

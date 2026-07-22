@@ -2628,10 +2628,10 @@ struct NodeGraphSyncCache {
     catalogue_json: Option<String>,
     operators_json: Option<String>,
     computing_json: Option<String>,
+    eval_json: Option<String>,
     lod_json: Option<String>,
     viewport_json: Option<String>,
     scene_json: Option<String>,
-    evaluated: bool,
 }
 
 fn flow_fixture_semantic_eq(left: &FlowFixture, right: &FlowFixture) -> bool {
@@ -2803,15 +2803,15 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
                     host.set_camera(fixture.camera.x, fixture.camera.y, fixture.camera.zoom);
                 } else {
                     host.replace_fixture(fixture);
-                    let _ = host.evaluate();
                 }
             }
-        } else if !cache.evaluated {
-            let _ = host.evaluate();
         }
-        if !cache.evaluated {
-            let _ = host.evaluate();
-            cache.evaluated = true;
+    }
+    // 🧵 Never evaluates: `eval_json` comes from the plugin worker's off-main-thread `flowEvalTick`
+    // chain (see `FlowEvalDriver`) — this host is a pure view, mirroring the React canvas session.
+    if let Some(json) = &graph.eval_json {
+        if sync_field(&mut cache.eval_json, json) {
+            host.apply_eval_outputs_json(json);
         }
     }
     if let Some(json) = &graph.catalogue_json {
@@ -6352,6 +6352,7 @@ mod render_plan_validator_tests {
                 fit_json: None,
                 terrain_json: None,
                 points_json: None,
+                status_json: None,
             },
         );
         let error = validate_ui_node(&node, &limits).expect_err("oversized mesh count should be rejected");
@@ -12176,7 +12177,14 @@ pub struct NodeGraphSurface {
 struct GraphContextMenuItem {
     id: String,
     label: String,
-    action: String,
+    #[serde(default)]
+    icon: Option<String>,
+    #[serde(default)]
+    destructive: bool,
+    #[serde(default)]
+    separator: bool,
+    #[serde(default)]
+    action: Option<String>,
     #[serde(default)]
     args: Option<Value>,
 }
@@ -12187,12 +12195,20 @@ fn push_graph_context_menu(scene: &UiComponentSceneNode, graph: &ui_wgpu::NodeGr
     };
     let items: Vec<GraphContextMenuItem> = serde_json::from_str(raw).unwrap_or_default();
     for item in items {
+        if item.separator {
+            continue;
+        }
+        let Some(action) = item.action else {
+            continue;
+        };
         push_context_menu_item(ContextMenuItem {
             id: format!("{}.context.{}", scene.surface_id, item.id),
             label: item.label,
+            icon: item.icon,
+            destructive: item.destructive,
             action: Some(ActionDescriptor {
                 controller_id: scene.controller_id.clone(),
-                action: item.action,
+                action,
                 args: item.args,
             }),
         });
@@ -12472,6 +12488,8 @@ pub fn push_tiled_map_context_menu(
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.select"),
             label: "Select".into(),
+            icon: None,
+            destructive: false,
             action: Some(engine_canvas::map_action(
                 controller_id,
                 ui_wgpu::tiled_map_actions::SET_FEATURE_SELECTION,
@@ -12487,6 +12505,8 @@ pub fn push_tiled_map_context_menu(
             push_context_menu_item(ContextMenuItem {
                 id: format!("{surface_id}.context.deselect"),
                 label: "Deselect".into(),
+                icon: None,
+                destructive: false,
                 action: Some(engine_canvas::map_action(
                     controller_id,
                     ui_wgpu::tiled_map_actions::DESELECT,
@@ -12497,6 +12517,8 @@ pub fn push_tiled_map_context_menu(
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.focus"),
             label: "Focus / zoom to".into(),
+            icon: None,
+            destructive: false,
             action: Some(engine_canvas::map_action(
                 controller_id,
                 ui_wgpu::tiled_map_actions::FOCUS_FEATURE,
@@ -12516,6 +12538,8 @@ pub fn push_tiled_map_context_menu(
                 push_context_menu_item(ContextMenuItem {
                     id: format!("{surface_id}.context.source"),
                     label: "Open source".into(),
+                    icon: None,
+                    destructive: false,
                     action: Some(engine_canvas::map_action(
                         controller_id,
                         ui_wgpu::tiled_map_actions::OPEN_SOURCE,
@@ -12529,6 +12553,8 @@ pub fn push_tiled_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.select-all"),
         label: "Select all".into(),
+        icon: None,
+        destructive: false,
         action: Some(engine_canvas::map_action(
             controller_id,
             ui_wgpu::tiled_map_actions::SELECT_ALL,
@@ -12542,6 +12568,8 @@ pub fn push_tiled_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.clear"),
         label: "Clear selection".into(),
+        icon: None,
+        destructive: false,
         action: if has_selection {
             Some(engine_canvas::map_action(
                 controller_id,
@@ -12555,6 +12583,8 @@ pub fn push_tiled_map_context_menu(
     push_context_menu_item(ContextMenuItem {
         id: format!("{surface_id}.context.fit-world"),
         label: "Fit world".into(),
+        icon: None,
+        destructive: false,
         action: Some(engine_canvas::map_action(
             controller_id,
             ui_wgpu::tiled_map_actions::FIT_WORLD,
@@ -13099,9 +13129,11 @@ pub fn puzzle_board_wheel(surface_id: &str, controller_id: &str, inner: Rect, x:
 pub struct Puzzle2dSelectionMenuItem {
     pub id: String,
     pub label: String,
+    pub icon: String,
     pub action: String,
     pub args: Option<Value>,
     pub disabled: bool,
+    pub destructive: bool,
 }
 
 fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
@@ -13112,7 +13144,7 @@ fn puzzle2d_entity_flag(entity: &Value, key: &str) -> bool {
 pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[String]) -> Vec<Puzzle2dSelectionMenuItem> {
     let fixture: Value = serde_json::from_str(fixture_json).unwrap_or(Value::Null);
     if selection_ids.is_empty() {
-        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), action: "selectAll".into(), args: None, disabled: false }];
+        return vec![Puzzle2dSelectionMenuItem { id: "selectAll".into(), label: "Select all".into(), icon: "maximize-2".into(), action: "selectAll".into(), args: None, disabled: false, destructive: false }];
     }
     let selected: HashSet<&str> = selection_ids.iter().map(String::as_str).collect();
     let nodes = fixture.get("nodes").and_then(Value::as_array).cloned().unwrap_or_default();
@@ -13149,21 +13181,25 @@ pub fn build_puzzle2d_selection_menu_items(fixture_json: &str, selection_ids: &[
         Puzzle2dSelectionMenuItem {
             id: "toggleHidden".into(),
             label: (if any_visible { "Hide" } else { "Show" }).into(),
+            icon: (if any_visible { "eye-off" } else { "eye" }).into(),
             action: "setSelectionFlag".into(),
             args: Some(json!({ "flag": "hidden", "value": any_visible })),
             disabled: false,
+            destructive: false,
         },
         Puzzle2dSelectionMenuItem {
             id: "toggleLocked".into(),
             label: (if any_unlocked { "Lock" } else { "Unlock" }).into(),
+            icon: (if any_unlocked { "lock" } else { "lock-open" }).into(),
             action: "setSelectionFlag".into(),
             args: Some(json!({ "flag": "locked", "value": any_unlocked })),
             disabled: false,
+            destructive: false,
         },
-        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), action: "duplicateSelection".into(), args: None, disabled: !has_selected_node },
-        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), action: "selectSameKind".into(), args: None, disabled: false },
-        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), action: "focusSelection".into(), args: None, disabled: false },
-        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), action: "deleteSelection".into(), args: None, disabled: false },
+        Puzzle2dSelectionMenuItem { id: "duplicate".into(), label: "Duplicate".into(), icon: "copy".into(), action: "duplicateSelection".into(), args: None, disabled: !has_selected_node, destructive: false },
+        Puzzle2dSelectionMenuItem { id: "selectSameKind".into(), label: "Select all of same kind".into(), icon: "layers".into(), action: "selectSameKind".into(), args: None, disabled: false, destructive: false },
+        Puzzle2dSelectionMenuItem { id: "focusSelection".into(), label: "Zoom to selection".into(), icon: "crosshair".into(), action: "focusSelection".into(), args: None, disabled: false, destructive: false },
+        Puzzle2dSelectionMenuItem { id: "deleteSelection".into(), label: "Delete".into(), icon: "trash".into(), action: "deleteSelection".into(), args: None, disabled: false, destructive: true },
     ]
 }
 //#endregion Puzzle2dSelectionMenu
@@ -13187,6 +13223,8 @@ pub async fn open_board2d_context_menu(shell: &mut ShellState, surface_id: &str,
         push_context_menu_item(ContextMenuItem {
             id: format!("{surface_id}.context.{}", item.id),
             label: item.label,
+            icon: Some(item.icon),
+            destructive: item.destructive,
             action: if item.disabled { None } else { Some(engine_canvas::board_action(controller_id, &item.action, item.args.unwrap_or(Value::Null))) },
         });
     }
@@ -14675,6 +14713,8 @@ pub struct StudioPanelState {
 pub struct ContextMenuItem {
     pub id: String,
     pub label: String,
+    pub icon: Option<String>,
+    pub destructive: bool,
     pub action: Option<ActionDescriptor>,
 }
 
@@ -18142,6 +18182,8 @@ impl ShellState {
                 items.push(ContextMenuItem {
                     id: format!("shell.context.node.select.{node_id}"),
                     label: "Select node".into(),
+                    icon: None,
+                    destructive: false,
                     action: Some(ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
                         action: "setMediaNodeSelection".into(),
@@ -18155,11 +18197,15 @@ impl ShellState {
                 ContextMenuItem {
                     id: "shell.context.copy".into(),
                     label: "Copy".into(),
+                    icon: None,
+                    destructive: false,
                     action: None,
                 },
                 ContextMenuItem {
                     id: "shell.context.paste".into(),
                     label: "Paste".into(),
+                    icon: None,
+                    destructive: false,
                     action: None,
                 },
             ];
@@ -18168,6 +18214,8 @@ impl ShellState {
             items.push(ContextMenuItem {
                 id: "shell.context.home".into(),
                 label: "Go Home".into(),
+                icon: None,
+                destructive: false,
                 action: Some(ActionDescriptor {
                     controller_id,
                     action: "goHome".into(),

@@ -653,8 +653,10 @@ fn render_main_graph(document: &DagDocument, camera: &DagCamera, selected: &[Str
     let context_menu_json = json!([{
         "id": "delete-selection",
         "label": labels.delete_selection,
+        "icon": "trash",
         "action": "nodeGraphEdit",
         "args": { "ops": [{ "op": "deleteSelection" }] },
+        "destructive": true,
     }])
     .to_string();
     build_node_graph_scene(DAG_PLAY_SURFACE_MAIN, DAG_PLAY_APP_ID, NodeGraphScene { editable: Some(true), selection_json, context_menu_json: Some(context_menu_json), ..NodeGraphScene::base(nodes_json, edges_json, viewport_json) })

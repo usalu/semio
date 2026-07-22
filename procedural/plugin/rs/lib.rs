@@ -3,7 +3,7 @@
 pub mod app_2d {
     //! 🎲 Procedural 2D plugin — procedural flow play app bundled as a hot-swappable WASM component.
 
-    use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowFixture, FlowHost, Widget};
+    use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowEvalDriver, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_ops, Procedural2dDocument, Procedural2dOp, PROCEDURAL_2D_SCHEMA};
     use protocol::{
@@ -47,13 +47,13 @@ pub mod app_2d {
 
     //#region 🔖Types
     /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, the
-    /// active show mode, the last evaluation outputs, and the derived generation preview all live
-    /// here on the app struct, out of the VCS document.
+    /// active show mode, the off-main-thread eval driver, and the derived generation preview all
+    /// live here on the app struct, out of the VCS document.
     #[derive(Clone, Debug)]
     struct Procedural2dPlayRuntime {
         selected_ids: Vec<String>,
         show_mode: String,
-        eval_outputs_json: String,
+        eval_driver: FlowEvalDriver,
         selected_generation_id: Option<String>,
         generation_preview_text: Option<String>,
     }
@@ -63,7 +63,7 @@ pub mod app_2d {
             Self {
                 selected_ids: Vec::new(),
                 show_mode: default_show_mode(),
-                eval_outputs_json: String::new(),
+                eval_driver: FlowEvalDriver::default(),
                 selected_generation_id: None,
                 generation_preview_text: None,
             }
@@ -110,8 +110,17 @@ pub mod app_2d {
         }
     }
 
+    /// 🧠 Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions —
+    /// lets a `flowEvalTick` chain's per-tick host rebuild pick up earlier ticks' cached node outputs
+    /// instead of recomputing the whole graph from scratch every tick.
+    static PROCEDURAL2D_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
+
+    fn procedural2d_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
+        PROCEDURAL2D_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
+    }
+
     fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
-        let mut host = FlowHost::from_fixture(fixture.clone());
+        let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural2d_neural_cache());
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
         host
     }
@@ -315,16 +324,13 @@ pub mod app_2d {
     }
 
     fn eval_preview_layers(play: &Procedural2dPlayView, preview: bool) -> String {
-        let mut host = host_from_fixture(&play.fixture);
-        let eval_json = if play.runtime.eval_outputs_json.is_empty() {
-            host.evaluate().unwrap_or_default()
-        } else {
-            host.apply_eval_outputs_json(&play.runtime.eval_outputs_json);
-            play.runtime.eval_outputs_json.clone()
-        };
+        // 🧵 Never evaluates: reads whatever the off-main-thread `flowEvalTick` chain (or an explicit
+        // generation-preview/`setEvalOutputs` push) has cached so far — stale/empty is fine, the next
+        // tick's scene refresh fills it in.
+        let eval_json = play.runtime.eval_driver.eval_json();
         let prefix = if preview { "procedural2d-preview" } else { "procedural2d-main" };
         let mut layers = Vec::new();
-        if let Ok(outputs) = serde_json::from_str::<Value>(&eval_json) {
+        if let Ok(outputs) = serde_json::from_str::<Value>(eval_json) {
             let mut handles = Vec::new();
             collect_drawing_handles_from_eval(&outputs, &mut handles);
             handles.sort();
@@ -395,7 +401,7 @@ pub mod app_2d {
         };
         let preview = evaluate_generation_preview(fixture, &selected.values);
         runtime.generation_preview_text = Some(preview.clone());
-        runtime.eval_outputs_json = preview;
+        runtime.eval_driver.set_eval_json(preview);
     }
     //#endregion 🔖DocumentHelpers
 
@@ -604,12 +610,14 @@ pub mod app_2d {
         } else {
             serde_json::to_string(&play.runtime.selected_ids).ok()
         };
-        let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
+        let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&play.runtime.eval_driver));
         let context_menu_json = serde_json::to_string(&json!([{
             "id": "delete-selection",
             "label": labels.delete_selection,
+            "icon": "trash",
             "action": "nodeGraphEdit",
             "args": { "ops": [{ "op": "deleteSelection" }] },
+            "destructive": true,
         }]))
         .ok();
         build_node_graph_scene(
@@ -791,17 +799,21 @@ pub mod app_2d {
                     ActionEmit::default()
                 }
                 "generate" => {
-                    self.runtime.eval_outputs_json = host_from_fixture(fixture).evaluate().unwrap_or_default();
                     self.runtime.show_mode = "generate".into();
                     ActionEmit::default()
                 }
                 "setEvalOutputs" => {
                     if let Some(outputs) = args.and_then(|value| value.get("outputs")) {
-                        self.runtime.eval_outputs_json = outputs.to_string();
+                        self.runtime.eval_driver.set_eval_json(outputs.to_string());
                     } else if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
-                        self.runtime.eval_outputs_json = json_text.into();
+                        self.runtime.eval_driver.set_eval_json(json_text.into());
                     }
                     ActionEmit::default()
+                }
+                "flowEvalTick" => {
+                    let mut host = host_from_fixture(fixture);
+                    let more = self.runtime.eval_driver.tick(&mut host);
+                    ActionEmit { effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() }, ..ActionEmit::default() }
                 }
                 "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
                 // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
@@ -928,6 +940,18 @@ pub mod app_2d {
                     self.handle_generation(action, args, doc.projection)
                 }
                 _ => ActionEmit::default(),
+            }
+        }
+
+        /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
+        /// covers every mutation path (edits, undo/redo, remote ops) in one place instead of each
+        /// action re-checking. `FlowEvalDriver::sync` is cheap when nothing changed.
+        fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural2dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
+            let host = host_from_fixture(&doc.projection.fixture);
+            if self.runtime.eval_driver.sync(&host) {
+                vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+            } else {
+                Vec::new()
             }
         }
 
@@ -1282,7 +1306,7 @@ pub mod app_3d {
         dag::DagFixture,
         flow_backed_node_graph_extras,
         forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-        FlowFixture, FlowHost, Widget,
+        FlowEvalDriver, FlowFixture, FlowHost, Widget,
     };
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_ops, Procedural3dDocument, Procedural3dOp, PROCEDURAL_3D_SCHEMA};
@@ -1416,6 +1440,8 @@ pub mod app_3d {
         sun: WorldSunConfig,
         selected_generation_id: Option<String>,
         generation_preview_text: Option<String>,
+        /// 🧵 Off-main-thread evaluation state — see `FlowEvalDriver`.
+        eval_driver: FlowEvalDriver,
     }
 
     impl Default for Procedural3dRuntime {
@@ -1432,6 +1458,7 @@ pub mod app_3d {
                 sun: WorldSunConfig::default(),
                 selected_generation_id: None,
                 generation_preview_text: None,
+                eval_driver: FlowEvalDriver::default(),
             }
         }
     }
@@ -1561,14 +1588,16 @@ pub mod app_3d {
         });
     }
 
+    /// 🧵 Never evaluates: a signature mismatch (fixture changed since the cache was built) means a
+    /// `flowEvalTick` chain is converging on the new fixture — this returns the stale cache as-is
+    /// rather than blocking the render to recompute; the scene's `statusJson` reports "computing" in
+    /// the meantime (see `pending_effects`/`FlowEvalDriver`). Only a cold start (no cache at all) falls
+    /// back to a placeholder mesh per node kind.
     fn preview_payload_cached(runtime: &Procedural3dRuntime, fixture: &FlowFixture) -> (String, String) {
-        let signature = fixture_signature(fixture);
         if let Some(cache) = &runtime.preview_cache {
-            if cache.signature == signature {
-                return (cache.meshes_json.clone(), cache.instances_json.clone());
-            }
+            return (cache.meshes_json.clone(), cache.instances_json.clone());
         }
-        evaluated_preview_payload(fixture, runtime)
+        (preview_meshes_json_fallback(fixture), preview_instances_json_fallback(fixture, runtime))
     }
 
     /// 🗂️ Refreshes the ephemeral base + generation mesh preview caches after a mutation, so the next
@@ -2306,13 +2335,14 @@ pub mod app_3d {
     }
 
     impl Procedural3dPlayApp {
-        /// 🔀 Diffs a mutated fixture into ops and refreshes the ephemeral base preview cache. Diffs
-        /// against the host-normalized baseline of `before` (not the raw projection) so `FlowHost`'s
-        /// own dedupe/dag-rebuild normalization does not leak spurious collection ops — only the
-        /// actual mutation becomes an op, keeping concurrent disjoint edits mergeable on the backbone.
+        /// 🔀 Diffs a mutated fixture into ops. Diffs against the host-normalized baseline of `before`
+        /// (not the raw projection) so `FlowHost`'s own dedupe/dag-rebuild normalization does not leak
+        /// spurious collection ops — only the actual mutation becomes an op, keeping concurrent
+        /// disjoint edits mergeable on the backbone. Never evaluates: `pending_effects` (called after
+        /// every action's `refreshUi` pass) arms the `flowEvalTick` chain that refreshes the preview
+        /// cache once the new fixture's dirty set resolves.
         fn commit_fixture(&mut self, before: &FlowFixture, target: &FlowFixture) -> Vec<Procedural3dOp> {
             let baseline = host_from_fixture(before).fixture;
-            refresh_preview_cache(&mut self.runtime, target);
             procedural3d_fixture_ops(&baseline, target)
         }
 
@@ -2505,7 +2535,6 @@ pub mod app_3d {
                         .collect();
                     ops.extend(procedural3d_fixture_ops(fixture, &target.fixture));
                     self.runtime = Procedural3dRuntime::default();
-                    refresh_preview_cache(&mut self.runtime, &target.fixture);
                     ActionEmit::ops(ops)
                 }
                 "nodeGraphEdit" => {
@@ -2620,9 +2649,7 @@ pub mod app_3d {
                             }
                         }
                     }
-                    let ops = procedural3d_fixture_ops(&baseline, &host.fixture);
-                    refresh_preview_cache(&mut self.runtime, &host.fixture);
-                    ActionEmit::ops(ops)
+                    ActionEmit::ops(procedural3d_fixture_ops(&baseline, &host.fixture))
                 }
                 "reorganize" => {
                     let mut host = host_from_fixture(fixture);
@@ -2664,7 +2691,33 @@ pub mod app_3d {
                 "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
                     self.handle_generation(action, args, doc.projection)
                 }
+                // 🧵 One budgeted evaluation step (see `FlowEvalDriver::tick`), off the main thread —
+                // the plugin worker runs this, never the renderer. Chains itself via `DispatchAction`
+                // until the fixture's dirty set is empty, then refreshes the mesh preview caches once
+                // (cheap: every node hit the shared `procedural_neural_cache()` during ticking).
+                "flowEvalTick" => {
+                    let mut host = host_from_fixture(fixture);
+                    let more = self.runtime.eval_driver.tick(&mut host);
+                    if !more {
+                        refresh_all_caches(&mut self.runtime, fixture, &doc.projection.generation);
+                    }
+                    ActionEmit {
+                        effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
+                        ..ActionEmit::default()
+                    }
+                }
                 _ => ActionEmit::default(),
+            }
+        }
+
+        /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
+        /// covers every mutation path (edits, undo/redo, example load, remote ops) in one place.
+        fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural3dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
+            let host = host_from_fixture(&doc.projection.fixture);
+            if self.runtime.eval_driver.sync(&host) {
+                vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+            } else {
+                Vec::new()
             }
         }
 
@@ -2683,12 +2736,14 @@ pub mod app_3d {
                     } else {
                         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
                     };
-                    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
+                    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, Some(&envelope.runtime.eval_driver));
                     let context_menu_json = serde_json::to_string(&json!([{
                         "id": "delete-selection",
                         "label": labels.delete_selection,
+                        "icon": "trash",
                         "action": "nodeGraphEdit",
                         "args": { "ops": [{ "op": "deleteSelection" }] },
+                        "destructive": true,
                     }]))
                     .ok();
                     build_node_graph_scene(
@@ -2700,6 +2755,8 @@ pub mod app_3d {
                             capabilities_json: flow_extras.capabilities_json,
                             lod_json: flow_extras.lod_json,
                             fixture_json: flow_extras.fixture_json,
+                            eval_json: flow_extras.eval_json,
+                            computing_json: flow_extras.computing_json,
                             selection_json,
                             hover_json: node_graph_hover_json(&envelope.runtime),
                             context_menu_json,
@@ -2712,13 +2769,16 @@ pub mod app_3d {
                     build_world_3d_scene(
                         PROCEDURAL_3D_PLAY_SURFACE_PREVIEW,
                         PROCEDURAL_3D_PLAY_APP_ID,
-                        world3d_scene(
-                            preview_camera_json(&envelope.runtime),
-                            meshes_json,
-                            instances_json,
-                            preview_selection_json(&envelope.runtime, active_utility),
-                            &envelope.runtime.sun,
-                        ),
+                        ui_wgpu::World3dScene {
+                            status_json: envelope.runtime.eval_driver.pending().then(|| r#"{"computing":true}"#.to_string()),
+                            ..world3d_scene(
+                                preview_camera_json(&envelope.runtime),
+                                meshes_json,
+                                instances_json,
+                                preview_selection_json(&envelope.runtime, active_utility),
+                                &envelope.runtime.sun,
+                            )
+                        },
                     )
                 }
                 PROCEDURAL_3D_PLAY_BODY_GENERATIONS => render_generate_generations(&envelope),
@@ -3020,6 +3080,25 @@ pub mod app_3d {
             testkit::new_app_with_registry::<Procedural3dPlayApp>(create_procedural3d_app)
         }
 
+        /// 🧵 A `flowEvalTick` chain self-dispatches via `requestedEffects`, which only the JS renderer
+        /// drains in production (see `applyHostEffects`'s `dispatchAction` branch) — a unit test has
+        /// to do that draining itself. Mirrors `pending_effects`'s own arming logic so tests don't need
+        /// to know whether a mutation left the driver already ticking.
+        fn drain_flow_eval_ticks(app: &mut VcsDocumentApp<Procedural3dPlayApp>) {
+            // 🧵 Arms the chain if it isn't already (a no-op if a caller already armed it — `sync`
+            // correctly declines to re-arm one already scheduled, so this must not gate on its return
+            // value). A "flowEvalTick" dispatched with nothing pending is a harmless, immediate no-op
+            // (`evaluate_step`'s own early-return), so always ticking at least once is safe.
+            app.pending_effects(&ViewState::default());
+            for _ in 0..1000 {
+                let result = app.handle_action("flowEvalTick", None, &ViewState::default(), &meta("local")).expect("flowEvalTick");
+                if !result.requested_effects.iter().any(|effect| matches!(effect, semio_framework_core::kernel::HostEffect::DispatchAction { action, .. } if action == "flowEvalTick")) {
+                    return;
+                }
+            }
+            panic!("flowEvalTick chain did not converge within 1000 ticks");
+        }
+
         #[test]
         fn set_active_example_arg_form_materializes_into_ops() {
             let mut app = new_app_with_registry();
@@ -3167,6 +3246,10 @@ pub mod app_3d {
 
         #[test]
         fn sphere_cut_example_preview_renders_meshes() {
+            // 🧵 Loading the example never evaluates synchronously anymore (see `pending_effects`) —
+            // draining the `flowEvalTick` chain here simulates what the JS renderer's `applyHostEffects`
+            // does automatically after every refresh, so the render below sees the real evaluated
+            // geometry rather than the cold-start placeholder mesh.
             let mut app = new_app();
             app.handle_action(
                 "setActiveExample",
@@ -3175,6 +3258,7 @@ pub mod app_3d {
                 &meta("local"),
             )
             .expect("set example");
+            drain_flow_eval_ticks(&mut app);
             let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
             let parsed: ui_wgpu::UiNode = serde_json::from_str(&serde_json::to_string(&node).unwrap()).expect("preview ui json");
             match parsed {
@@ -3185,6 +3269,33 @@ pub mod app_3d {
                 }
                 other => panic!("expected component scene, got {other:?}"),
             }
+        }
+
+        #[test]
+        fn sphere_cut_example_computing_chrome_clears_once_ticks_converge() {
+            let mut app = new_app();
+            app.handle_action(
+                "setActiveExample",
+                Some(&json!({ "exampleId": PROCEDURAL_EXAMPLE_SPHERE_TORUS })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("set example");
+            let main_graph = |app: &mut VcsDocumentApp<Procedural3dPlayApp>| -> ui_wgpu::NodeGraphScene {
+                let node = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("render");
+                match serde_json::from_str::<ui_wgpu::UiNode>(&serde_json::to_string(&node).unwrap()).expect("graph ui json") {
+                    ui_wgpu::UiNode::ComponentScene(scene) => scene.node_graph.expect("node_graph payload"),
+                    other => panic!("expected component scene, got {other:?}"),
+                }
+            };
+            // 🧵 In production, `pending_effects` runs after every `refreshUi` pass — a test driving
+            // `render` directly has to call it explicitly to arm the driver the same way. Before any
+            // tick runs, the graph must flag the cut node (and its downstream preview) as computing —
+            // this is what drives the dag canvas's animated loading border.
+            assert!(!app.pending_effects(&ViewState::default()).is_empty(), "loading the example must arm a tick chain");
+            assert!(main_graph(&mut app).computing_json.is_some(), "pending nodes must be reported before the chain runs");
+            drain_flow_eval_ticks(&mut app);
+            assert!(main_graph(&mut app).computing_json.is_none(), "computing chrome clears once the chain converges");
         }
 
         #[test]
@@ -3272,6 +3383,7 @@ pub mod app_3d {
         #[test]
         fn renders_world_preview_scene() {
             let mut app = new_app();
+            drain_flow_eval_ticks(&mut app);
             let node = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("render");
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("world-3d"));

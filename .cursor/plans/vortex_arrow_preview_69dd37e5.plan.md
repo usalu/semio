@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: tests-close
     content: Extend puzzle-plugin tests; close ticket
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

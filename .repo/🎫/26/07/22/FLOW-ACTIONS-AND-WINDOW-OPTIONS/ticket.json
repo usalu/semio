@@ -1,8 +1,9 @@
 {
   "title": "Flow Actions and Window Options",
   "emoji": "🌊",
-  "status": "open",
+  "status": "closed",
   "description": "Bring flow play app to board-app chrome parity: palette/context actions (select all, zoom to selection), window-options rail (LOD, proximity connect, grid), and DAG-engine grid support so those options work end-to-end.",
+  "summary": "Brought Flow play app to board-app chrome parity.\n\n- DAG engine: grid visible/snap/factor with LOD-tiered painting, drag snap, focus_selection_camera API, and tests.\n- Flow core: grid setters on FlowHost, extended flow_backed_node_graph_extras lod_json (gridVisible, gridSnapEnabled, gridFactor), default proximity 48.\n- WGPU + node-graph surfaces: sync grid fields from lod_json.\n- Flow plugin: window_measures rail (LOD, proximity slider, grid group); removed canvas settings from empty inspector; palette actions selectAll/focusSelection with mod+a; context menu select-all / zoom-to-selection / delete; internal actions marked in_palette:false; procedural plugin callers updated.\n\nTests: infinite_board_port_directed_dag (grid snap, focus selection), flow-plugin (23 tests), flow_core extras.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2236"
   },

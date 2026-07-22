@@ -334,7 +334,7 @@ fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -
         NodeGraphScene {
             editable: Some(true),
             selection_json,
-            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into()),
+            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )

@@ -7453,6 +7453,7 @@ dependencies = [
  "semio-framework-plugin",
  "serde",
  "serde_json",
+ "ui_styling",
  "ui_wgpu",
  "vcs",
 ]

@@ -8,8 +8,9 @@
 
 // #endregion 🧲Header
 
-import { Cursor, LoadingRow, Spinner } from "@semio-tech/ui-react";
+import { Cursor, Icon, LoadingRow, Spinner } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
+import { ICON_NAMES, type IconName } from "@semio-tech/ui-asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🖼️#region 🛒Icons
@@ -46,6 +47,44 @@ export const Default: Story = {
     </div>
   ),
 };
+
+// 🔷#region 🫨IconAnimations
+const NON_CATALOG_KIND_TILES: { readonly label: string; readonly icon: React.ComponentProps<typeof Icon>["icon"] }[] = [
+  { label: "kind:emoji", icon: { kind: "emoji", emoji: "🙂" } },
+  { label: "kind:text", icon: { kind: "text", text: "Hi" } },
+  { label: "kind:typst", icon: { kind: "typst", src: "$x^2$" } },
+  { label: "kind:image", icon: { kind: "url", url: "https://picsum.photos/32" } },
+  { label: "kind:svg", icon: { kind: "svg", svg: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="currentColor"/></svg>' } },
+  { label: "kind:node", icon: { kind: "node", node: <strong>N</strong> } },
+  { label: "kind:missing", icon: "definitely-not-a-vendored-icon" as IconName },
+];
+
+export const IconAnimations: Story = {
+  args: { color: "#000000" },
+  render: () => (
+    <div className="max-w-4xl space-y-4">
+      <p className="text-sm text-muted-foreground">Hover an icon, or its button, to trigger its closed micro animation once.</p>
+      <div className="grid grid-cols-8 gap-2">
+        {ICON_NAMES.map((name) => (
+          <button key={name} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={name}>
+            <Icon icon={name} size="large" />
+            <span className="truncate w-full text-center text-2xs text-muted-foreground">{name}</span>
+          </button>
+        ))}
+      </div>
+      <p className="text-sm font-medium">Non-catalog icon kinds</p>
+      <div className="grid grid-cols-8 gap-2">
+        {NON_CATALOG_KIND_TILES.map(({ label, icon }) => (
+          <button key={label} type="button" className="flex flex-col items-center gap-1 rounded-sm border p-2 hover:bg-hover-interactive-fill" title={label}>
+            <Icon icon={icon} size="large" />
+            <span className="truncate w-full text-center text-2xs text-muted-foreground">{label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  ),
+};
+// #endregion 🫨IconAnimations
 
 // #endregion 🛒Icons
 

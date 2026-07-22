@@ -3,7 +3,7 @@
   "emoji": "🪟",
   "status": "closed",
   "description": "Make puzzle 3d and aggregator use a two-window layout by default: Top (left 1/3), Perspective (right 2/3). Honor instanceId and templateId from app default layouts so each pane seeds the correct projection.",
-  "summary": "Root cause of Top still being too zoomed in: WorldProjectionRig used R3F's bare `\u003corthographicCamera\u003e` (unit frustum -1..1) while framing math assumed drei's pixel-sized frustum (left=-width/2). Zoom values that should fit a 50-unit reference only showed ~0.3 world units.\n\nSwitched parallel-family cameras in WorldProjectionRig and WorldOrbitCameraViewRig to drei OrthographicCamera (pixel frustum). WorldProjectionContentFrame now also writes left/right/top/bottom/zoom onto the live OrthographicCamera. Padding raised to 1.35.\n\nTests: infinite-world-r3f 100/100, framework-renderer-react 205/205.",
+  "summary": "Completed the Top/Perspective 3D window follow-up by binding middle-button drag directly to pan for every projection, so plan/orthographic windows no longer require Shift. Added a real Three.js OrbitControls regression test proving an unmodified middle drag moves the plan target while preserving the camera offset (pan, not orbit). Verified the live Puzzle 3D React preview loads both Top and Perspective windows without console warnings/errors; infinite-world-r3f quick suite passes 102/102.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2216"
   },
@@ -11,6 +11,7 @@
   "sessions": [
     "⚪85dd92ab229b4e7c8a3b1245e86878f1",
     "⚪c45dbacfb89748d38c2289fa9521fc40",
-    "⚪d94540c2b85b4ab0aa5ba1a00aa0d6f4"
+    "⚪d94540c2b85b4ab0aa5ba1a00aa0d6f4",
+    "⚪d64daf1211bb498f8600613708793b77"
   ]
 }

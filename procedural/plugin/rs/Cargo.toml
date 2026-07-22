@@ -40,6 +40,7 @@ semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../framework/core/rs" }
 semio-framework-os = { path = "../../../framework/product/os/core/rs" }
 ui_wgpu = { path = "../../../ui/wgpu/rs" }
+ui_styling = { path = "../../../ui/styling/rs" }
 kernel_3d_engine = { path = "../../../kernel/3d/brep/engine/rs", features = ["parallel"] }
 kernel_3d_scene = { path = "../../../kernel/3d/scene/rs" }
 vcs = { path = "../../../vcs/rs" }

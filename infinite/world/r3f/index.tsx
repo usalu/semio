@@ -2066,7 +2066,11 @@ function WorldProjectionMatrixDriver(props: { readonly spec: Extract<WorldProjec
     }
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
     invalidate();
-  }, 1);
+    // 🎯 Priority 0 (the default — omitted, not `1`): this only tweaks the projection matrix before the
+    // frame paints. A *positive* useFrame priority tells r3f "I'll call gl.render myself" and suppresses
+    // its own default render entirely — since this driver never calls gl.render, giving it priority 1
+    // blanked every oblique/two-point window (nothing ever painted the canvas).
+  });
   return null;
 }
 
@@ -2317,17 +2321,12 @@ export type WorldOrbitControlsBinding = {
   readonly update?: () => void;
 };
 
-/** @emoji 🖱️ Default orbit mouse map: orthographic middle orbit / alt+right pan; perspective middle pan / alt+right orbit —
- * except when rotation is disabled entirely (e.g. a `plan`/oblique/one-point projection, see
- * {@link worldProjectionOrbitConstraints}), where middle always pans since there is nothing to orbit. */
-export function resolveWorldOrbitMouseButtonsIdle(projection: OrbitCameraProjection = "perspective", rotateEnabled = true): {
+/** @emoji 🖱️ Default orbit mouse map: middle always pans; Alt+right orbits when rotation is enabled. */
+export function resolveWorldOrbitMouseButtonsIdle(_projection: OrbitCameraProjection = "perspective", _rotateEnabled = true): {
   readonly LEFT: number | null;
   readonly MIDDLE: number;
   readonly RIGHT: number | null;
 } {
-  if (rotateEnabled && projection === "orthographic") {
-    return { LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null };
-  }
   return { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null };
 }
 
@@ -3353,9 +3352,37 @@ if (import.meta.vitest) {
   });
 
   describe("resolveWorldOrbitMouseButtonsIdle", () => {
-    it("maps middle click to orbit in orthographic and pan in perspective", () => {
-      expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null });
+    it("maps an unmodified middle click to pan in every projection", () => {
+      expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
       expect(resolveWorldOrbitMouseButtonsIdle("perspective")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    });
+
+    it("pans an orthographic plan camera on an unmodified middle drag", () => {
+      const canvas = document.createElement("canvas");
+      Object.defineProperties(canvas, {
+        clientWidth: { value: 400 },
+        clientHeight: { value: 300 },
+        setPointerCapture: { value: () => undefined },
+        releasePointerCapture: { value: () => undefined },
+      });
+      const camera = new ThreeOrthographicCamera(-200, 200, 150, -150, 0.1, 1_000);
+      camera.position.set(0, 0, 10);
+      camera.lookAt(0, 0, 0);
+      const controls = new ThreeOrbitControls(camera, canvas);
+      applyWorldOrbitMouseButtonsIdle(controls, "orthographic");
+      const offsetBefore = camera.position.clone().sub(controls.target);
+      const pointer = (kind: string, x: number, y: number, button: number) => {
+        const event = new MouseEvent(kind, { bubbles: true, button, clientX: x, clientY: y });
+        Object.defineProperties(event, { pointerId: { value: 1 }, pointerType: { value: "mouse" }, pageX: { value: x }, pageY: { value: y } });
+        return event;
+      };
+      canvas.dispatchEvent(pointer("pointerdown", 100, 100, 1));
+      document.dispatchEvent(pointer("pointermove", 140, 125, 1));
+      document.dispatchEvent(pointer("pointerup", 140, 125, 1));
+      const offsetAfter = camera.position.clone().sub(controls.target);
+      expect(controls.target.length()).toBeGreaterThan(0);
+      expect(offsetAfter.distanceTo(offsetBefore)).toBeLessThan(1e-9);
+      controls.dispose();
     });
 
     it("always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {

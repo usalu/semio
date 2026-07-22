@@ -2925,8 +2925,7 @@ impl DagHost {
             self.fixture.nodes[idx].y = y;
             if self.grid_snap_enabled {
                 if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
-                    engine_node.center.x = x;
-                    engine_node.center.y = y;
+                    engine_node.center = cavas::Point::new(x, y);
                 }
             }
         }
@@ -5612,6 +5611,8 @@ mod tests {
     fn dag_host_grid_snap_aligns_dragged_node() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("normal");
         host.set_grid_snap_enabled(true);
         host.set_grid_factor(10.0).expect("grid factor");
         let mut dragged = false;

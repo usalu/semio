@@ -14,8 +14,8 @@ use dag::{
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
 use neural::{
-    channel_output, cluster_operator_info, compute_dirty_set, Atom, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND, INPUT_KIND,
-    OUTPUT_KIND,
+    channel_output, cluster_operator_info, compute_dirty_set, Atom, BudgetedEval, ChannelSpec, Dictionary, EvalChannels, EvalError, Evaluator, NeuralCache, Neuron, OperatorInfo, Synapse, Tree, TreeSnapshot, Value as NeuralValue, CLUSTER_KIND,
+    INPUT_KIND, OUTPUT_KIND,
 };
 use serde::{Deserialize, Serialize};
 
@@ -1204,9 +1204,12 @@ pub struct FlowBackedNodeGraphExtras {
     pub operators_json: Option<String>,
     pub capabilities_json: Option<String>,
     pub lod_json: Option<String>,
+    pub eval_json: Option<String>,
+    pub computing_json: Option<String>,
 }
 
-/// 🌊 Builds shared NodeGraphScene fields for flow-backed plugins.
+/// 🌊 Builds shared NodeGraphScene fields for flow-backed plugins. `driver`, when set, contributes
+/// `eval_json`/`computing_json` from an off-main-thread `flowEvalTick` chain (see [`FlowEvalDriver`]).
 pub fn flow_backed_node_graph_extras(
     fixture: &FlowFixture,
     lod_mode: &str,
@@ -1214,6 +1217,7 @@ pub fn flow_backed_node_graph_extras(
     grid_visible: bool,
     grid_snap_enabled: bool,
     grid_factor: f64,
+    driver: Option<&FlowEvalDriver>,
 ) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     FlowBackedNodeGraphExtras {
@@ -1231,6 +1235,8 @@ pub fn flow_backed_node_graph_extras(
             })
             .to_string(),
         ),
+        eval_json: driver.map(|driver| driver.eval_json().to_string()),
+        computing_json: driver.and_then(|driver| driver.computing_json().map(str::to_string)),
     }
 }
 // #endregion 🔖Catalogue
@@ -1830,11 +1836,6 @@ impl FlowHost {
         self.eval_bridge = Some(EvalBridge { cb });
     }
 
-    #[cfg(target_arch = "wasm32")]
-    pub fn set_eval_bridge_js(&mut self, cb: js_sys::Function) {
-        self.eval_bridge = Some(EvalBridge { cb });
-    }
-
     pub fn evaluate(&mut self) -> Result<String, FlowCoreError> {
         self.evaluate_internal();
         Ok(self.last_eval_json.clone())
@@ -2357,31 +2358,53 @@ impl FlowHost {
     }
 
     fn evaluate_internal(&mut self) {
+        self.evaluate_step(usize::MAX);
+    }
+
+    /// ⏳🧵 Evaluates at most `budget` cache-missed (dirty) nodes and returns the not-yet-computed
+    /// widget ids in topo order — `remaining[0]` is the node currently blocking, `remaining[1..]`
+    /// are downstream widgets waiting behind it. An off-main-thread caller (a plugin worker) resumes
+    /// with another `evaluate_step` call until `remaining` is empty; a single `evaluate_step(usize::MAX)`
+    /// call (via [`FlowHost::evaluate`]/`evaluate_internal`) still evaluates everything synchronously
+    /// in one shot for callers that don't need to spread the work across ticks (tests, explicit
+    /// worker-side `evaluate` actions that already run off the caller's main thread).
+    ///
+    /// `begin_epoch`/`sweep` bracket the *whole run* (every tick up to and including the completing
+    /// one), not each tick: `begin_epoch` is cheap to call repeatedly (just bumps a counter), while
+    /// `sweep` evicts anything not touched since — calling it before the run completes would discard
+    /// earlier ticks' results. A run interleaved with another unrelated evaluation sharing the same
+    /// [`NeuralCache`] (e.g. a generation-preview eval firing mid-chain) may have its in-progress
+    /// entries swept early by that other call's completion; the next tick simply recomputes them —
+    /// extra work, never a wrong result.
+    pub fn evaluate_step(&mut self, budget: usize) -> Vec<String> {
         let tree = self.build_tree();
         let seeds = self.build_seeds();
         let snapshot = TreeSnapshot::capture(&tree, &seeds);
         let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
         if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
-            return;
+            return Vec::new();
         }
         let registry = flow_registry();
         let evaluator = Evaluator::new(registry);
         self.neural_cache.begin_epoch();
         let previous = self.previous_channels.as_ref();
-        let result = if let Some(bridge) = self.eval_bridge.as_ref() {
+        let budgeted = if let Some(bridge) = self.eval_bridge.as_ref() {
             let mut dispatch = |kind: &str, input: &Dictionary| bridge.evaluate(kind, input);
-            evaluator.evaluate_channels_sequential_cached(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous)
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         } else {
-            let dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
-            evaluator.evaluate_channels_cached(&tree, &seeds, &self.kind_infos, &dispatch, &self.neural_cache, &dirty, previous)
+            let mut dispatch = |kind: &str, input: &Dictionary| registry.dispatch(kind, input);
+            evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut dispatch, &self.neural_cache, &dirty, previous, budget)
         };
-        self.neural_cache.sweep();
-        match result {
-            Ok(channels) => {
+        match budgeted {
+            Ok(BudgetedEval { channels, remaining }) => {
                 self.outputs = channels.outputs.clone();
                 self.apply_preview_outputs(&channels.outputs);
                 self.apply_export_outputs(&channels.outputs);
                 self.last_eval_json = build_channel_eval_json(&self.fixture, &channels, &self.kind_infos);
+                if !remaining.is_empty() {
+                    return remaining;
+                }
+                self.neural_cache.sweep();
                 let live_handles = collect_live_geometry_handles_from_channels(&channels);
                 flow_module_brep::retain_geometry_handles(&live_handles);
                 let live_drawing_handles = collect_live_drawing_handles_from_channels(&channels);
@@ -2391,12 +2414,35 @@ impl FlowHost {
                 // which is always a safe (never under-dirty) baseline.
                 self.previous_snapshot = Some(snapshot);
                 self.previous_channels = Some(channels);
+                Vec::new()
             }
             Err(err) => {
+                self.neural_cache.sweep();
                 if self.last_eval_json.is_empty() || is_global_eval_error_json(&self.last_eval_json) {
                     self.last_eval_json = serde_json::json!({ "error": err.to_string() }).to_string();
                 }
+                Vec::new()
             }
+        }
+    }
+
+    /// 👀 Probes which widget ids still need evaluation without computing anything (`budget = 0`) —
+    /// used to decide whether a tick chain must be (re)armed and what to mark as computing/stale.
+    pub fn pending_eval_widget_ids(&self) -> Vec<String> {
+        let tree = self.build_tree();
+        let seeds = self.build_seeds();
+        let snapshot = TreeSnapshot::capture(&tree, &seeds);
+        let dirty = compute_dirty_set(self.previous_snapshot.as_ref(), &snapshot);
+        if dirty.is_empty() && self.previous_channels.is_some() && !self.outputs.is_empty() {
+            return Vec::new();
+        }
+        let registry = flow_registry();
+        let evaluator = Evaluator::new(registry);
+        let previous = self.previous_channels.as_ref();
+        let mut probe_never_dispatches = |kind: &str, _: &Dictionary| -> Result<Dictionary, EvalError> { Err(EvalError::InvalidInput(format!("pending_eval_widget_ids probed a dispatch for {kind}"))) };
+        match evaluator.evaluate_channels_budgeted(&tree, &seeds, &self.kind_infos, &mut probe_never_dispatches, &self.neural_cache, &dirty, previous, 0) {
+            Ok(BudgetedEval { remaining, .. }) => remaining,
+            Err(_) => Vec::new(),
         }
     }
 
@@ -2728,7 +2774,6 @@ impl FlowHost {
             }
         }
         self.sync_dag_display_from_widgets();
-        let _ = self.evaluate();
     }
 
     pub fn slider_overlay_state_json(&self) -> Result<String, FlowCoreError> {
@@ -2746,7 +2791,6 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         self.dag.fit_note_sizes();
-        let _ = self.evaluate();
     }
 
     /// ✏️ Begins inline note editing for a widget at a world-space click.
@@ -2847,7 +2891,6 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         self.dag.fit_preview_sizes();
-        let _ = self.evaluate();
     }
 
     pub fn preview_text(&self) -> String {
@@ -3201,6 +3244,82 @@ impl FlowHost {
     // #endregion History
 }
 
+// #region 🔖EvalDriver
+/// 🧵 Off-main-thread evaluation state a flow-backed plugin runtime embeds across its per-action
+/// `FlowHost` reconstructions (the [`NeuralCache`] persists via [`FlowHost::from_fixture_with_cache`]'s
+/// shared `Arc`, but everything else on `FlowHost` is rebuilt every call — this is the part that
+/// needs to survive between ticks). Drives a chain of single-node ticks via `HostEffect::DispatchAction`
+/// instead of one synchronous full evaluate: `sync` decides whether a tick chain must be (re)armed,
+/// `tick` performs one budgeted step.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FlowEvalDriver {
+    #[serde(default)]
+    eval_json: String,
+    #[serde(default)]
+    computing_json: Option<String>,
+    /// Guards against `sync` re-arming a chain that's already ticking — never persisted, an
+    /// in-progress chain doesn't survive a process restart anyway.
+    #[serde(skip)]
+    tick_scheduled: bool,
+}
+
+fn flow_eval_computing_progress_json(remaining: &[String]) -> String {
+    serde_json::json!({ "active": remaining.first(), "stale": remaining.get(1..).unwrap_or(&[]) }).to_string()
+}
+
+impl FlowEvalDriver {
+    /// 🔁 Probes `host` for pending work (cheap — reuses `FlowHost`'s own dirty-set diffing) and
+    /// reports whether a `flowEvalTick` chain needs to be (re)armed. Safe to call on every
+    /// mutation/refresh; a no-op when nothing changed or a chain is already running.
+    pub fn sync(&mut self, host: &FlowHost) -> bool {
+        let remaining = host.pending_eval_widget_ids();
+        if remaining.is_empty() {
+            self.computing_json = None;
+            return false;
+        }
+        self.computing_json = Some(flow_eval_computing_progress_json(&remaining));
+        if self.tick_scheduled {
+            return false;
+        }
+        self.tick_scheduled = true;
+        true
+    }
+
+    /// ⏱️ Runs one budgeted evaluation step on `host` and updates the driver's view of the result.
+    /// Returns whether another tick is still needed.
+    pub fn tick(&mut self, host: &mut FlowHost) -> bool {
+        let remaining = host.evaluate_step(1);
+        self.eval_json = host.last_eval_json.clone();
+        self.computing_json = if remaining.is_empty() { None } else { Some(flow_eval_computing_progress_json(&remaining)) };
+        self.tick_scheduled = !remaining.is_empty();
+        self.tick_scheduled
+    }
+
+    pub fn eval_json(&self) -> &str {
+        &self.eval_json
+    }
+
+    /// ✍️ Overwrites the cached eval JSON directly — for callers that computed it out-of-band (a
+    /// synchronous generation-preview eval, or an explicit "push these outputs" action) rather than
+    /// via `tick`. Clears any in-progress chain since the picture it was converging toward is moot.
+    pub fn set_eval_json(&mut self, eval_json: String) {
+        self.eval_json = eval_json;
+        self.computing_json = None;
+        self.tick_scheduled = false;
+    }
+
+    pub fn computing_json(&self) -> Option<&str> {
+        self.computing_json.as_deref()
+    }
+
+    /// ⏳ Whether a tick chain is currently arming/running.
+    pub fn pending(&self) -> bool {
+        self.tick_scheduled
+    }
+}
+// #endregion 🔖EvalDriver
+
 fn dedupe_fixture_widgets(fixture: &mut FlowFixture) {
     let mut seen = BTreeSet::new();
     fixture.widgets.retain(|widget| seen.insert(widget_id_for(widget).to_string()));
@@ -3322,11 +3441,6 @@ impl FlowSession {
         self.state.borrow().host.catalogue_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    #[wasm_bindgen(js_name = setEvalBridge)]
-    pub fn set_eval_bridge(&self, cb: js_sys::Function) {
-        self.state.borrow_mut().host.set_eval_bridge_js(cb);
-    }
-
     #[wasm_bindgen(js_name = setCatalogueJson)]
     pub fn set_catalogue_json(&self, json: &str) {
         self.state.borrow_mut().host.set_host_catalogue_json(json);
@@ -3360,24 +3474,6 @@ impl FlowSession {
     #[wasm_bindgen(js_name = connectPorts)]
     pub fn connect_ports(&self, from_id: &str, from_port: &str, to_id: &str, to_port: &str) -> Result<String, JsValue> {
         self.state.borrow_mut().host.connect_ports(from_id, from_port, to_id, to_port).map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
-    #[wasm_bindgen(js_name = evaluate)]
-    pub fn evaluate(&self) -> js_sys::Promise {
-        let state = self.state.clone();
-        future_to_promise(async move {
-            let json = {
-                let mut inner = state.borrow_mut();
-                inner.host.evaluate_internal();
-                inner.host.last_eval_json.clone()
-            };
-            Ok(JsValue::from_str(&json))
-        })
-    }
-
-    #[wasm_bindgen(js_name = evaluateSync)]
-    pub fn evaluate_sync(&self) -> Result<String, JsValue> {
-        self.state.borrow_mut().host.evaluate().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
     #[wasm_bindgen(js_name = compiledWireLiteral)]
@@ -4608,8 +4704,12 @@ mod tests {
 
     #[test]
     fn slider_updates_preview() {
+        // 🧵 Mutating a widget never auto-evaluates anymore (see `evaluate_step`'s doc comment) — an
+        // off-main-thread ticker outside `flow_core` is responsible for that; this simulates one tick
+        // with a direct `evaluate_internal` call.
         let mut host = host_with_test_bridge();
         host.set_slider_value("slider", 5.0);
+        host.evaluate_internal();
         assert_eq!(host.preview_text(), "5");
     }
 
@@ -4630,6 +4730,84 @@ mod tests {
         host.move_widget("slider", -120.0, 20.0).unwrap();
         host.evaluate_internal();
         assert_eq!(calls.load(Ordering::Relaxed), baseline);
+    }
+
+    #[test]
+    fn pending_eval_widget_ids_reports_without_computing() {
+        let mut host = host_with_test_bridge();
+        let before = host.preview_text();
+        host.set_slider_value("slider", 9.0);
+        let pending = host.pending_eval_widget_ids();
+        assert!(pending.contains(&"add".to_string()), "the widget downstream of the changed slider is pending");
+        assert_eq!(host.preview_text(), before, "a probe must never actually compute anything");
+    }
+
+    /// 🧵 Builds a two-computable-node chain (`add` -> `pass`, replacing `add`'s direct link to
+    /// `preview`) on top of the default fixture, for tests that need more than one node to step
+    /// through with a budgeted `evaluate_step`.
+    fn host_with_two_node_chain() -> (FlowHost, String) {
+        let mut host = host_with_test_bridge();
+        let pass_id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough","params":{},"input_ports":[],"preview":false}"#, 240.0, 0.0).unwrap();
+        host.connect_ports("add", "sum", &pass_id, "number").unwrap();
+        host.connect_ports(&pass_id, "number", "preview", "").unwrap();
+        let stale_link = host.fixture.synapses.iter().find(|s| s.from == "add" && s.to == "preview").map(|s| s.id.clone());
+        if let Some(id) = stale_link {
+            host.disconnect(&id).unwrap();
+        }
+        host.evaluate_internal();
+        (host, pass_id)
+    }
+
+    #[test]
+    fn evaluate_step_budget_one_converges_over_multiple_calls() {
+        let (mut host, _pass_id) = host_with_two_node_chain();
+        assert_eq!(host.preview_text(), "3", "chain settles to the same value as the direct add->preview link");
+        host.set_slider_value("slider", 6.0);
+        // ⏳ Nothing evaluates until stepped — mirrors a mutation with no tick chain run yet.
+        assert_eq!(host.preview_text(), "3");
+        // ⏱️ Tick 1: budget for one cache-missed node — computes "add" for free-riding boundary nodes
+        // plus that one dispatch, then stops right before the next miss ("pass"). `remaining[0]` is
+        // the blocking node; anything after it (here, "preview") is just downstream-and-untouched.
+        let remaining_after_tick1 = host.evaluate_step(1);
+        assert_eq!(remaining_after_tick1.first(), Some(&"pass".to_string()), "pass is the next node blocking completion");
+        assert_eq!(host.preview_text(), "3", "the chain hasn't reached \"pass\" (and thus \"preview\") yet");
+        // ⏱️ Tick 2: "add" is now cached, so this reaches and computes "pass".
+        let remaining_after_tick2 = host.evaluate_step(1);
+        assert!(remaining_after_tick2.is_empty(), "the walk reached the end of the topo order");
+        assert_eq!(host.preview_text(), "6", "converged to the dragged value after both ticks");
+    }
+
+    #[test]
+    fn flow_eval_driver_sync_and_tick_state_machine() {
+        let (mut host, _pass_id) = host_with_two_node_chain();
+        let mut driver = FlowEvalDriver::default();
+        assert!(!driver.pending());
+        // 🔁 Nothing changed yet — sync must not arm a chain.
+        assert!(!driver.sync(&host));
+        assert!(!driver.pending());
+        host.set_slider_value("slider", 12.0);
+        assert!(driver.sync(&host), "a changed slider arms the chain");
+        assert!(driver.pending());
+        assert!(driver.computing_json().is_some_and(|json| json.contains("add")), "the immediate dependent is reported as active");
+        // 🔁 A `pending_effects`-style resync while a chain is already scheduled must not re-arm it.
+        assert!(!driver.sync(&host));
+        assert!(driver.tick(&mut host), "one more tick (\"pass\") is still needed");
+        assert!(driver.pending());
+        assert!(!driver.tick(&mut host), "the chain has converged");
+        assert!(!driver.pending());
+        assert_eq!(host.preview_text(), "12");
+        // 🔀 Mid-chain fixture change: arm, tick once, then supersede with a newer value before the
+        // chain finishes. `sync` correctly declines to arm a second chain (one is already scheduled —
+        // `tick_scheduled` guards exactly this) but the in-flight chain's own ticks always re-derive
+        // from the live fixture, so it still converges on the LATEST value, not the superseded one.
+        host.set_slider_value("slider", 20.0);
+        assert!(driver.sync(&host));
+        assert!(driver.tick(&mut host)); // computes "add" for 20
+        host.set_slider_value("slider", 30.0);
+        assert!(!driver.sync(&host), "a chain is already scheduled — sync must not arm a redundant second one");
+        assert!(driver.pending(), "the in-flight chain is still the one that will pick up 30");
+        while driver.tick(&mut host) {}
+        assert_eq!(host.preview_text(), "30", "converges on the latest value, not the superseded intermediate one");
     }
 
     #[test]
@@ -4819,14 +4997,21 @@ mod tests {
     }
 
     #[test]
-    fn slider_drag_evaluates_preview_before_release() {
+    fn slider_drag_does_not_evaluate_until_explicit_evaluate() {
+        // 🧵 A live drag firing many pointer-move ticks used to re-evaluate the whole graph on every
+        // one of them (fine for cheap graphs, a repeated multi-second stall for a heavy one, e.g. a
+        // brep boolean). Dragging alone must never evaluate now — the off-main-thread ticker (outside
+        // `flow_core`) picks up the changed slider value at its own pace; an explicit `evaluate`
+        // (simulated here) still updates the preview once it runs.
         let mut host = host_with_test_bridge();
         host.set_viewport(800, 600, 1.0);
         let (sx, sy) = widget_slider_track_screen_point(&host, "slider");
         assert_eq!(host.preview_text(), "3");
         host.pointer_down_screen(sx, sy, 0, false, false, false, false);
         host.pointer_move_screen(sx + 80.0, sy, false, false, false);
-        assert_ne!(host.preview_text(), "3");
+        assert_eq!(host.preview_text(), "3", "a live drag must not synchronously re-evaluate the graph");
+        host.evaluate_internal();
+        assert_ne!(host.preview_text(), "3", "an explicit evaluate still picks up the dragged value");
         host.pointer_up_screen(sx + 80.0, sy, false, false, false);
     }
 
@@ -5030,7 +5215,7 @@ mod tests {
     #[test]
     fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
         let host = host_with_test_bridge();
-        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
+        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT, None);
         assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
         assert!(extras.operators_json.as_ref().is_some_and(|json| json.contains("math.add")));
         assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));
@@ -5059,6 +5244,7 @@ mod tests {
         host.connect_ports("slider", "number", &id, "number").unwrap();
         host.connect_ports(&id, "number", "preview", "").unwrap();
         host.set_slider_value("slider", 4.0);
+        host.evaluate_internal();
         assert_eq!(host.preview_text(), "4");
     }
 
@@ -5072,6 +5258,7 @@ mod tests {
         let id = host.add_widget(r#"{"kind":"outputExport","format":"png"}"#, 120.0, 80.0).unwrap();
         host.connect_ports("add", "sum", &id, "").unwrap();
         host.set_slider_value("slider", 4.0);
+        host.evaluate_internal();
         let payload_json = host.export_payload_json(&id).expect("export payload");
         assert_ne!(payload_json, "{}");
         assert!(payload_json.contains("4") || payload_json.contains("value") || payload_json.contains("sum"));
@@ -5821,6 +6008,7 @@ mod tests {
         let id = host.add_widget(r#"{"kind":"neuron","id":"pass","neuronKind":"math.passThrough"}"#, 100.0, 0.0).unwrap();
         host.connect_ports(&id, "number", "preview", "").unwrap();
         host.set_neuron_params(&id, r#"{"number":{"$schema":"number","value":7.5}}"#).unwrap();
+        host.evaluate_internal();
         assert_eq!(host.preview_text(), "7.5");
     }
 

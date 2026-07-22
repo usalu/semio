@@ -2167,6 +2167,11 @@ pub struct World3dScene {
     /// base64 of u8 rgb interleaved, one per point. Consumed by `WorldPointCloudLayer`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub points_json: Option<String>,
+    /// ⏳ Off-main-thread compute status (`{"computing": true, "label": "…"}`) shown as an overlay
+    /// while a `flowEvalTick` chain is still resolving the meshes this scene renders — the meshes
+    /// themselves stay the last-known-good (stale) cache until the chain completes.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub status_json: Option<String>,
 }
 
 impl World3dScene {
@@ -2192,6 +2197,7 @@ impl World3dScene {
             fit_json: None,
             terrain_json: None,
             points_json: None,
+            status_json: None,
         }
     }
 }
@@ -2323,6 +2329,11 @@ pub struct NodeGraphScene {
     pub fixture_json: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence_peers_json: Option<String>,
+    /// 🧵 Channel-structured eval outputs from an off-main-thread `flowEvalTick` chain, applied via
+    /// `FlowSession::applyEvalOutputsJson` — lets a view-only `FlowHost` (e.g. a renderer's canvas
+    /// session) pick up results without ever calling `evaluate` itself.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub eval_json: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2850,6 +2861,7 @@ impl NodeGraphScene {
             capabilities_json: None,
             fixture_json: None,
             presence_peers_json: None,
+            eval_json: None,
         }
     }
 }
@@ -3774,6 +3786,7 @@ mod ui_node_wire_format_tests {
                         fit_json: None,
                         terrain_json: None,
                         points_json: None,
+                        status_json: None,
                     }),
                     node_graph: None,
                     text_editor: None,

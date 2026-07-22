@@ -4,14 +4,14 @@ use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
     flow_backed_node_graph_extras, flow_fixture_ops, flow_operator_catalogue_json,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    CameraJson, FlowFixture, FlowHost, FlowOp, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
+    CameraJson, FlowEvalDriver, FlowFixture, FlowHost, FlowOp, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
 };
 use protocol::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode, ViewState, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    UiTreeItemNode, UiTreeSectionNode, ViewState, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -53,8 +53,12 @@ const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
 #[serde(rename_all = "camelCase", default)]
 struct FlowPlayRuntime {
     selected_node_ids: Vec<String>,
+    #[serde(default)]
+    preview_off_node_ids: Vec<String>,
     camera: CameraJson,
-    last_eval_json: String,
+    /// 🧵 Off-main-thread evaluation state — see `FlowEvalDriver`. Explicit "evaluate" arms it; the
+    /// "auto-evaluate" extension additionally re-arms it after every mutation (see `pending_effects`).
+    eval_driver: FlowEvalDriver,
     lod_mode: String,
     #[serde(default = "default_proximity_distance")]
     proximity_distance: f64,
@@ -92,8 +96,9 @@ impl Default for FlowPlayRuntime {
     fn default() -> Self {
         Self {
             selected_node_ids: Vec::new(),
+            preview_off_node_ids: Vec::new(),
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
-            last_eval_json: String::new(),
+            eval_driver: FlowEvalDriver::default(),
             lod_mode: default_flow_lod_mode(),
             proximity_distance: default_proximity_distance(),
             grid_visible: default_grid_visible(),
@@ -165,8 +170,17 @@ fn apply_canvas_options(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
     let _ = host.set_grid_factor(runtime.grid_factor);
 }
 
+/// 🧠 Process-wide [`flow_core::neural::NeuralCache`] shared across `FlowHost` reconstructions —
+/// lets a `flowEvalTick` chain's per-tick host rebuild pick up earlier ticks' cached node outputs
+/// instead of recomputing the whole graph from scratch every tick.
+static FLOW_PLAY_NEURAL_CACHE: std::sync::OnceLock<std::sync::Arc<flow_core::neural::NeuralCache>> = std::sync::OnceLock::new();
+
+fn flow_play_neural_cache() -> std::sync::Arc<flow_core::neural::NeuralCache> {
+    FLOW_PLAY_NEURAL_CACHE.get_or_init(|| std::sync::Arc::new(flow_core::neural::NeuralCache::new())).clone()
+}
+
 fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHost {
-    let mut host = FlowHost::from_fixture(fixture.clone());
+    let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), flow_play_neural_cache());
     seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
     apply_canvas_options(&mut host, runtime);
     host
@@ -273,6 +287,59 @@ fn flow_widget_descriptor(kind: &str, neuron_kind: Option<&str>) -> Value {
 fn flow_widget_drag_json(descriptor: &Value) -> Value {
     json!({ FLOW_WIDGET_DRAG_MIME: descriptor.to_string() })
 }
+
+/// 🖱️ Selection-aware graph context menu shared by flow-backed node-graph apps.
+fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowFixture, labels: &FlowPlayLabels) -> String {
+    let selected = &runtime.selected_node_ids;
+    let has_selection = !selected.is_empty();
+    let all_preview_off = has_selection && selected.iter().all(|id| runtime.preview_off_node_ids.contains(id));
+    let is_image = selected.len() == 1
+        && fixture.widgets.iter().any(|widget| match widget {
+            Widget::InputImage { id, .. } => id == &selected[0],
+            _ => false,
+        });
+    let mut items = vec![
+        json!({ "id": "add-node", "label": labels.add_node, "icon": "plus", "action": "openSpotlight" }),
+        json!({ "id": "select-all", "label": labels.select_all, "icon": "maximize-2", "action": "selectAll" }),
+        json!({ "id": "reorganize", "label": labels.reorganize, "icon": "layout-grid", "action": "reorganize" }),
+    ];
+    if has_selection {
+        items.push(json!({ "id": "sep-selection", "separator": true }));
+        items.push(json!({
+            "id": "toggle-preview",
+            "label": if all_preview_off { labels.show_preview } else { labels.hide_preview },
+            "icon": if all_preview_off { "eye" } else { "eye-off" },
+            "checked": !all_preview_off,
+            "action": "setPreviewOff",
+            "args": { "ids": selected, "value": !all_preview_off },
+        }));
+        items.push(json!({ "id": "clear-selection", "label": labels.clear_selection, "icon": "square-dashed", "action": "clearSelection" }));
+        if is_image {
+            items.push(json!({ "id": "replace-image", "label": labels.replace_image, "icon": "image", "action": "replaceImage", "args": { "id": &selected[0] } }));
+        }
+        items.push(json!({ "id": "sep-delete", "separator": true }));
+        items.push(json!({
+            "id": "delete-selection",
+            "label": labels.delete_selection,
+            "icon": "trash",
+            "action": "nodeGraphEdit",
+            "args": { "ops": [{ "op": "deleteSelection" }] },
+            "destructive": true,
+        }));
+    } else {
+        items.push(json!({ "id": "sep-delete", "separator": true }));
+        items.push(json!({
+            "id": "delete-selection",
+            "label": labels.delete_selection,
+            "icon": "trash",
+            "action": "nodeGraphEdit",
+            "args": { "ops": [{ "op": "deleteSelection" }] },
+            "destructive": true,
+            "disabled": true,
+        }));
+    }
+    serde_json::to_string(&items).unwrap_or_else(|_| "[]".into())
+}
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
@@ -300,6 +367,11 @@ semio_framework_plugin::app_labels! {
         canvas: &'static str = en: "Canvas", de: "Leinwand";
         widget: &'static str = en: "Widget", de: "Widget";
         delete_selection: &'static str = en: "Delete selection", de: "Auswahl löschen";
+        hide_preview: &'static str = en: "Hide preview", de: "Vorschau ausblenden";
+        show_preview: &'static str = en: "Show preview", de: "Vorschau einblenden";
+        add_node: &'static str = en: "Add node…", de: "Knoten hinzufügen…";
+        reorganize: &'static str = en: "Reorganize", de: "Neu anordnen";
+        replace_image: &'static str = en: "Replace image…", de: "Bild ersetzen…";
         window_main: &'static str = en: "Flow", de: "Flow";
         window_compiled: &'static str = en: "DSL", de: "DSL";
         window_generations: &'static str = en: "Generations", de: "Generationen";
@@ -601,29 +673,8 @@ fn flow_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefini
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
 }
 
-fn flow_context_menu_json(selected: &[String], labels: &FlowPlayLabels) -> String {
-    if selected.is_empty() {
-        return json!([{
-            "id": "select-all",
-            "label": labels.select_all,
-            "action": "selectAll",
-        }])
-        .to_string();
-    }
-    json!([
-        {
-            "id": "focus-selection",
-            "label": labels.zoom_to_selection,
-            "action": "focusSelection",
-        },
-        {
-            "id": "delete-selection",
-            "label": labels.delete_selection,
-            "action": "nodeGraphEdit",
-            "args": { "ops": [{ "op": "deleteSelection" }] },
-        },
-    ])
-    .to_string()
+fn flow_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowFixture, labels: &FlowPlayLabels) -> String {
+    build_node_graph_context_menu_json(runtime, fixture, labels)
 }
 
 fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> Option<CameraJson> {
@@ -631,12 +682,13 @@ fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> O
         return None;
     }
     let mut host = host_from_fixture(fixture, runtime);
+    host.dag.set_viewport(1280, 800, 1.0);
     host.dag.set_selection(&runtime.selected_node_ids);
     host.focus_selection_camera(1.2)
 }
 //#endregion 🔖Actions
 
-fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
+fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
             loading: None,
@@ -773,8 +825,14 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
         runtime.grid_visible,
         runtime.grid_snap_enabled,
         runtime.grid_factor,
+        Some(&runtime.eval_driver),
     );
-    let context_menu_json = flow_context_menu_json(runtime.selected_node_ids.as_slice(), labels);
+    let context_menu_json = flow_context_menu_json(runtime, fixture, labels);
+    let preview_off_json = if runtime.preview_off_node_ids.is_empty() {
+        None
+    } else {
+        serde_json::to_string(&runtime.preview_off_node_ids).ok()
+    };
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
@@ -786,7 +844,10 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
             capabilities_json: flow_extras.capabilities_json,
             lod_json: flow_extras.lod_json,
             fixture_json: flow_extras.fixture_json.or(fixture_json),
+            eval_json: flow_extras.eval_json,
+            computing_json: flow_extras.computing_json,
             selection_json,
+            preview_off_json,
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -815,7 +876,7 @@ fn refresh_generation_preview(fixture: &FlowFixture, runtime: &mut FlowPlayRunti
     };
     let preview = evaluate_generation_preview(fixture, runtime, &generation.values.clone());
     runtime.generation.preview_text = Some(preview.clone());
-    runtime.last_eval_json = preview;
+    runtime.eval_driver.set_eval_json(preview);
 }
 
 fn render_generate_generations(runtime: &FlowPlayRuntime) -> UiNode {
@@ -950,14 +1011,24 @@ impl DocumentApp for FlowPlayApp {
                 }
                 ActionEmit::default()
             }
+            // 🧵 Arms the off-main-thread `flowEvalTick` chain (see `FlowEvalDriver`) instead of
+            // evaluating synchronously; `pending_effects` keeps it going after every subsequent
+            // mutation only while the "auto-evaluate" extension is on, but this explicit action
+            // always kicks at least one run to completion regardless of that toggle.
             "evaluate" => {
-                let mut host = host_from_fixture(fixture, &self.runtime);
-                host.clear_computing_widget_ids();
-                if let Ok(eval_json) = host.evaluate() {
-                    host.apply_eval_outputs_json(&eval_json);
-                    self.runtime.last_eval_json = eval_json;
+                let host = host_from_fixture(fixture, &self.runtime);
+                if self.runtime.eval_driver.sync(&host) {
+                    return ActionEmit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() };
                 }
                 ActionEmit::default()
+            }
+            "flowEvalTick" => {
+                let mut host = host_from_fixture(fixture, &self.runtime);
+                let more = self.runtime.eval_driver.tick(&mut host);
+                ActionEmit {
+                    effects: if more { vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() },
+                    ..ActionEmit::default()
+                }
             }
             "setLodMode" => {
                 if let Some(mode) = args.and_then(|value| value.get("mode").or_else(|| value.get("value"))).and_then(|value| value.as_str()) {
@@ -997,6 +1068,34 @@ impl DocumentApp for FlowPlayApp {
                 self.runtime.selected_node_ids.clear();
                 ActionEmit::default()
             }
+            "contextMenuAt" => {
+                let id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str());
+                if let Some(id) = id {
+                    if !id.is_empty() {
+                        self.runtime.selected_node_ids = vec![id.to_string()];
+                    }
+                }
+                ActionEmit::default()
+            }
+            "setPreviewOff" => {
+                let ids: Vec<String> = args
+                    .and_then(|value| value.get("ids"))
+                    .and_then(|value| serde_json::from_value(value.clone()).ok())
+                    .unwrap_or_else(|| self.runtime.selected_node_ids.clone());
+                let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_bool()).unwrap_or(true);
+                if value {
+                    for id in ids {
+                        if !self.runtime.preview_off_node_ids.contains(&id) {
+                            self.runtime.preview_off_node_ids.push(id);
+                        }
+                    }
+                } else {
+                    self.runtime.preview_off_node_ids.retain(|id| !ids.contains(id));
+                }
+                ActionEmit::default()
+            }
+            "openSpotlight" => ActionEmit::default(),
+            "replaceImage" => ActionEmit::default(),
             "focusSelection" => {
                 if let Some(camera) = focus_selection_camera(fixture, &self.runtime) {
                     self.runtime.camera = camera;
@@ -1192,9 +1291,9 @@ impl DocumentApp for FlowPlayApp {
                 match *effect {
                     "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
                     "evaluate" => {
-                        let mut host = host_from_fixture(fixture, &self.runtime);
-                        if let Ok(eval_json) = host.evaluate() {
-                            self.runtime.last_eval_json = eval_json;
+                        let host = host_from_fixture(fixture, &self.runtime);
+                        if self.runtime.eval_driver.sync(&host) {
+                            return ActionEmit { effects: vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() };
                         }
                         ActionEmit::default()
                     }
@@ -1202,6 +1301,22 @@ impl DocumentApp for FlowPlayApp {
                 }
             }
             _ => ActionEmit::default(),
+        }
+    }
+
+    /// 🧵 Keeps a `flowEvalTick` chain going after every mutation while the "auto-evaluate" extension
+    /// is on; otherwise only continues a chain the user already started explicitly (never spontaneously
+    /// arms one — evaluation here stays opt-in unless that extension is enabled).
+    fn pending_effects(&mut self, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> Vec<HostEffect> {
+        let auto_evaluate = self.runtime.extension_enabled.get("auto-evaluate").copied().unwrap_or(false);
+        if !auto_evaluate && !self.runtime.eval_driver.pending() {
+            return Vec::new();
+        }
+        let host = host_from_fixture(doc.projection, &self.runtime);
+        if self.runtime.eval_driver.sync(&host) {
+            vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
+        } else {
+            Vec::new()
         }
     }
 
@@ -1347,6 +1462,10 @@ fn create_flow_app() -> App {
             .action_with(flow_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
             .action_with(flow_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
             .action_with(flow_internal_action("clearSelection", "Clear Selection", ActionKind::View))
+            .action_with(flow_internal_action("contextMenuAt", "Context Menu At", ActionKind::View))
+            .action_with(flow_internal_action("setPreviewOff", "Set Preview Off", ActionKind::View))
+            .action_with(flow_internal_action("openSpotlight", "Open Spotlight", ActionKind::View))
+            .action_with(flow_internal_action("replaceImage", "Replace Image", ActionKind::View))
             .action_with(flow_internal_action("setCatalogueSections", "Set Catalogue Sections", ActionKind::View))
             .action_with(flow_internal_action("toggleExtension", "Toggle Extension", ActionKind::View))
             .action_with(flow_internal_action("addGeneration", "Add Generation", ActionKind::View))
@@ -1390,6 +1509,24 @@ mod tests {
 
     fn render(app: &mut VcsDocumentApp<FlowPlayApp>, body_key: &str, view_state: &ViewState) -> String {
         serde_json::to_string(&app.render(body_key, None, view_state).expect("render")).unwrap()
+    }
+
+    fn context_menu_items(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState) -> Value {
+        let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN, view_state)).expect("render json");
+        rendered
+            .pointer("/nodeGraph/contextMenuJson")
+            .and_then(Value::as_str)
+            .and_then(|raw| serde_json::from_str(raw).ok())
+            .unwrap_or(Value::Null)
+    }
+
+    fn preview_off_ids(app: &mut VcsDocumentApp<FlowPlayApp>, view_state: &ViewState) -> Value {
+        let rendered: Value = serde_json::from_str(&render(app, FLOW_PLAY_BODY_MAIN, view_state)).expect("render json");
+        rendered
+            .pointer("/nodeGraph/previewOffJson")
+            .and_then(Value::as_str)
+            .and_then(|raw| serde_json::from_str(raw).ok())
+            .unwrap_or(Value::Null)
     }
 
     #[test]
@@ -1549,9 +1686,27 @@ mod tests {
     #[test]
     fn context_menu_includes_select_all_when_empty() {
         let mut app = new_app::<FlowPlayApp>();
-        let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
-        assert!(json.contains("selectAll"));
-        assert!(json.contains("Select All") || json.contains("select-all"));
+        let menu = context_menu_items(&mut app, &ViewState::default());
+        let menu_json = menu.to_string();
+        assert!(menu_json.contains("selectAll"), "menu should be {menu_json}");
+        assert!(menu_json.contains("Select All") || menu_json.contains("select-all"), "menu should be {menu_json}");
+        assert!(menu_json.contains(r#""icon":"plus""#), "add-node icon: {menu_json}");
+        assert!(menu_json.contains(r#""icon":"trash""#), "delete icon: {menu_json}");
+        assert!(menu_json.contains(r#""destructive":true"#), "delete destructive: {menu_json}");
+    }
+
+    #[test]
+    fn context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene() {
+        let mut app = new_app::<FlowPlayApp>();
+        app.handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local")).expect("setSelection");
+        let menu = context_menu_items(&mut app, &ViewState::default()).to_string();
+        assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
+        assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
+        app.handle_action("setPreviewOff", Some(&json!({ "ids": ["slider"], "value": true })), &ViewState::default(), &meta("local")).expect("setPreviewOff");
+        let after_menu = context_menu_items(&mut app, &ViewState::default()).to_string();
+        let preview_off = preview_off_ids(&mut app, &ViewState::default());
+        assert_eq!(preview_off, json!(["slider"]), "preview_off should land on scene: {preview_off}");
+        assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
     }
 
     #[test]

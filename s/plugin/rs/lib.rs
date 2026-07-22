@@ -911,15 +911,17 @@ pub mod app_studio {
 
     fn media_graph_context_menu_json(labels: &SStudioLabels) -> String {
         json!([
-            { "id": "open-instance", "label": labels.context_open_instance, "action": "openInstance" },
-            { "id": "duplicate-instance", "label": labels.context_duplicate, "action": "duplicateAppInstance" },
-            { "id": "copy-instance", "label": labels.context_copy, "action": "copyAppInstance" },
-            { "id": "paste-instance", "label": labels.context_paste, "action": "pasteAppInstance" },
-            { "id": "rename-instance", "label": labels.context_rename_label, "action": "renameAppInstance" },
-            { "id": "remove-instance", "label": labels.context_remove, "action": "removeAppInstance" },
-            { "id": "select-all", "label": labels.context_select_all, "action": "setMediaNodeSelection", "args": { "selectAll": true } },
-            { "id": "clear-selection", "label": labels.context_clear_selection, "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
-            { "id": "reorganize", "label": labels.context_reorganize, "action": "reorganizeMediaGraph" }
+            { "id": "open-instance", "label": labels.context_open_instance, "icon": "external-link", "action": "openInstance" },
+            { "id": "duplicate-instance", "label": labels.context_duplicate, "icon": "copy", "action": "duplicateAppInstance" },
+            { "id": "copy-instance", "label": labels.context_copy, "icon": "clipboard-copy", "action": "copyAppInstance" },
+            { "id": "paste-instance", "label": labels.context_paste, "icon": "clipboard", "action": "pasteAppInstance" },
+            { "id": "rename-instance", "label": labels.context_rename_label, "icon": "edit-3", "action": "renameAppInstance" },
+            { "id": "sep-remove", "separator": true },
+            { "id": "remove-instance", "label": labels.context_remove, "icon": "trash", "action": "removeAppInstance", "destructive": true },
+            { "id": "sep-selection", "separator": true },
+            { "id": "select-all", "label": labels.context_select_all, "icon": "maximize-2", "action": "setMediaNodeSelection", "args": { "selectAll": true } },
+            { "id": "clear-selection", "label": labels.context_clear_selection, "icon": "square-dashed", "action": "setMediaNodeSelection", "args": { "nodeIds": [] } },
+            { "id": "reorganize", "label": labels.context_reorganize, "icon": "layout-grid", "action": "reorganizeMediaGraph" }
         ])
         .to_string()
     }

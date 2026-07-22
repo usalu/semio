@@ -508,6 +508,9 @@ export type World3dScene = {
   /** ☁️ Point-cloud rendering layers (10^5-10^6 points) — an array of `{ id, positionsB64 (base64 le
    * f32 xyz), colorsB64? (base64 u8 rgb), size, sizeAttenuation }`, consumed by `WorldPointCloudLayer`. */
   readonly pointsJson?: string;
+  /** ⏳ Off-main-thread compute status (`{"computing": true, "label": "…"}`) shown as an overlay while
+   * a `flowEvalTick` chain resolves the meshes this scene renders. */
+  readonly statusJson?: string;
 };
 
 /** 🕸️ A node-graph surface scene payload — mirrors the wasm `componentScene` node's `nodeGraph` field. */
@@ -530,6 +533,10 @@ export type NodeGraphScene = {
   readonly capabilitiesJson?: string;
   readonly fixtureJson?: string;
   readonly presencePeersJson?: string;
+  /** 🧵 Channel-structured eval outputs from an off-main-thread `flowEvalTick` chain, applied via
+   * `FlowWasmSession.applyEvalOutputsJson` — lets the canvas session pick up results without ever
+   * evaluating itself. */
+  readonly evalJson?: string;
 };
 
 /** 👥 A live-collaboration cursor/selection peer shown on a shared surface. */
@@ -1634,6 +1641,10 @@ export type PluginUiRefreshResponse = {
   readonly measures?: PluginUiRefreshSectionResponse;
   readonly tools?: PluginUiRefreshSectionResponse;
   readonly labels?: PluginUiRefreshSectionResponse;
+  /** ⏱️ See `DocumentApp::pending_effects` — background work (e.g. a `flowEvalTick` chain) the host
+   * should dispatch right after this refresh, fed through the same `applyHostEffects` pass as an
+   * action's own `requestedEffects`. */
+  readonly requestedEffects?: readonly HostEffect[];
 };
 //#endregion UiRefresh
 

@@ -245,6 +245,7 @@ import {
   verticalListSortingStrategy,
   type DragEndEvent,
   type UiRibbonParentCategory,
+  Spinner,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
 import {
@@ -4627,6 +4628,8 @@ export function FrameworkOsShell({
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current) return;
         applyUiRefreshResponseToCache(cache, { ...response, windows: resolvedWindows, panels: resolvedPanels });
+        // ⏱️ See `DocumentApp::pending_effects` — e.g. resuming a `flowEvalTick` chain after this refresh.
+        if (response.requestedEffects?.length) await applyHostEffects(response.requestedEffects, nextSession);
       }
       // 🐢 Merge-with-identity-preservation: unrequested/unchanged sections keep exactly the object
       // reference already in `cache` (dispatched from a prior refresh), so `mergeRecordPreservingIdentity`
@@ -4677,6 +4680,11 @@ export function FrameworkOsShell({
         else if (nextSession.app.windowKinds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: nextSession.app.windowKinds[0].id });
       }
     },
+    // 🐢 `applyHostEffects` is declared later in this component (its own deps need `updateStudioPanel`/
+    // `syncSpawnedPluginDocument`, declared later still) — referencing it here in the body only (never
+    // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
+    // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [appLabelsOverlay, injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
@@ -7070,7 +7078,9 @@ export type FlowWasmSession = GraphWasmSession & {
   setGhostWidget(descriptorJson: string, worldX: number, worldY: number): void;
   clearGhostWidget(): void;
   worldFromScreen(sx: number, sy: number): string;
-  evaluateSync(): string;
+  /** 🧵 Applies channel-structured eval JSON computed off-main-thread (a plugin worker's
+   * `flowEvalTick` chain) — the canvas session itself never evaluates. */
+  applyEvalOutputsJson(json: string): void;
   noteInsertText(chunk: string): void;
   noteBackspace(): void;
   noteDeleteForward(): void;
@@ -10214,6 +10224,14 @@ function parseJsonArray<T>(json: string | undefined): readonly T[] {
   }
 }
 
+/** @emoji 🧪 Temporary menu-open trace — item ids/icons for end-to-end rich-menu validation. */
+function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[]): void {
+  console.log(
+    `[DEBUG] context menu open (${source})`,
+    specs.map((spec) => ({ id: spec.id, icon: spec.icon, color: spec.color, action: spec.action })),
+  );
+}
+
 /** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
 export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
   return specs.map((spec) => ({
@@ -10233,6 +10251,9 @@ export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispa
       : undefined,
     onHover: spec.hoverAction
       ? () => {
+          if (spec.hoverAction === "hoverSuggestion") {
+            console.log(`[DEBUG] hoverSuggestion`, { index: spec.hoverArgs?.index, color: spec.color, icon: spec.icon });
+          }
           dispatch(spec.hoverAction!, spec.hoverArgs);
         }
       : undefined,
@@ -10832,11 +10853,14 @@ function WorldInstanceNode({
   const vertexSelectedOverlay = meshData ? buildVertexOverlayGeometry(meshData, selectedVertexIds) : null;
   const vertexHoveredOverlay = meshData && hoveredVertexId != null ? buildVertexOverlayGeometry(meshData, new Set([hoveredVertexId])) : null;
 
+  const hasShadedMesh = Boolean(meshData && geometry && meshData.indices.length > 0);
+
   return (
     <group position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
-      {geometry && meshData ? (
+      {meshData ? (
         <>
-          <PaintTexturedMesh
+          {hasShadedMesh ? (
+            <PaintTexturedMesh
             geometry={geometry}
             style={style}
             styleKind={styleKind}
@@ -10901,7 +10925,8 @@ function WorldInstanceNode({
               onComponentHover(null);
             }}
           ></PaintTexturedMesh>
-          {borderGeometry && (showEdges ?? true) && !edgeGeometry ? (
+          ) : null}
+          {hasShadedMesh && borderGeometry && (showEdges ?? true) && !edgeGeometry ? (
             <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null}>
               <lineBasicMaterial color={palette.neutral.lineColor} />
             </lineSegments>
@@ -10915,12 +10940,19 @@ function WorldInstanceNode({
                   onInstancePointerDown(instance.id, index, event);
                   return;
                 }
-                if (!instancePickEnabled || !meshData?.edgeIds?.length) return;
+                if (!instancePickEnabled) return;
                 event.stopPropagation();
-                const edgeIndex = Math.floor((event.index ?? 0) / 2);
-                const edgeId = meshData.edgeIds[edgeIndex];
-                if (edgeId == null) return;
-                onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
+                if (meshData.edgeIds?.length) {
+                  const edgeIndex = Math.floor((event.index ?? 0) / 2);
+                  const edgeId = meshData.edgeIds[edgeIndex];
+                  if (edgeId != null) {
+                    onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
+                    return;
+                  }
+                }
+                if (targets.mesh) {
+                  onInstancePointerDown(instance.id, index, event);
+                }
               }}
               onPointerMove={(event) => {
                 if (!instancePickEnabled || !meshData?.edgeIds?.length) return;
@@ -11852,16 +11884,33 @@ function paneSuffixFromSurfaceId(surfaceId?: string): string | undefined {
   return slash >= 0 ? surfaceId.slice(slash + 1) : surfaceId;
 }
 
-function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera): [number, number, number] | null {
+/** @emoji 📡 World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
+ * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
+ * R3F-swapped cameras stay correct. */
+function worldRayFromNdc(ndcX: number, ndcY: number, camera: import("three").Camera): { origin: Vector3; direction: Vector3 } | null {
+  const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
+  if (ortho.isOrthographicCamera) {
+    const origin = new Vector3(ndcX, ndcY, -1).unproject(camera);
+    const direction = new Vector3(ndcX, ndcY, 1).unproject(camera).sub(origin);
+    if (direction.lengthSq() < 1e-12) return null;
+    return { origin, direction: direction.normalize() };
+  }
+  const origin = camera.position.clone();
+  const direction = new Vector3(ndcX, ndcY, 0.5).unproject(camera).sub(origin);
+  if (direction.lengthSq() < 1e-12) return null;
+  return { origin, direction: direction.normalize() };
+}
+
+/** @emoji 🎯 Intersects the camera ray through a client point with the world Z=0 ground plane (catalogue drop + face drag). */
+export function raycastGroundPoint(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera): [number, number, number] | null {
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
-  const ray = new Vector3(ndcX, ndcY, 0.5).unproject(camera);
-  const origin = camera.position.clone();
-  const direction = ray.sub(origin).normalize();
-  if (Math.abs(direction.z) < 1e-6) return null;
-  const t = -origin.z / direction.z;
+  const ray = worldRayFromNdc(ndcX, ndcY, camera);
+  if (!ray) return null;
+  if (Math.abs(ray.direction.z) < 1e-6) return null;
+  const t = -ray.origin.z / ray.direction.z;
   if (t < 0) return null;
-  const hit = origin.add(direction.multiplyScalar(t));
+  const hit = ray.origin.add(ray.direction.multiplyScalar(t));
   return [hit.x, hit.y, hit.z];
 }
 
@@ -12001,15 +12050,15 @@ function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Pu
 function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, camera: import("three").Camera, origin: readonly [number, number, number], axis: readonly [number, number, number]): number | null {
   const ndcX = ((clientX - hostRect.left) / hostRect.width) * 2 - 1;
   const ndcY = -(((clientY - hostRect.top) / hostRect.height) * 2 - 1);
-  const rayOrigin = camera.position.clone();
-  const rayDirection = new Vector3(ndcX, ndcY, 0.5).unproject(camera).sub(rayOrigin).normalize();
+  const ray = worldRayFromNdc(ndcX, ndcY, camera);
+  if (!ray) return null;
   const axisOrigin = new Vector3(origin[0], origin[1], origin[2]);
   const axisDirection = new Vector3(axis[0], axis[1], axis[2]).normalize();
-  const originDelta = rayOrigin.clone().sub(axisOrigin);
-  const a = rayDirection.dot(rayDirection);
-  const b = rayDirection.dot(axisDirection);
+  const originDelta = ray.origin.clone().sub(axisOrigin);
+  const a = ray.direction.dot(ray.direction);
+  const b = ray.direction.dot(axisDirection);
   const c = axisDirection.dot(axisDirection);
-  const d = rayDirection.dot(originDelta);
+  const d = ray.direction.dot(originDelta);
   const e = axisDirection.dot(originDelta);
   const denominator = a * c - b * b;
   if (Math.abs(denominator) < 1e-9) return null;
@@ -12109,6 +12158,15 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const environment = useMemo(() => parseEnvironment(scene?.environmentJson), [scene?.environmentJson]);
   const frame = useMemo(() => parseFrame(scene?.frameJson), [scene?.frameJson]);
   const fit = useMemo(() => parseFit(scene?.fitJson), [scene?.fitJson]);
+  // 🧵 Off-main-thread compute status (see `World3dScene.statusJson`) — the meshes above stay the
+  // last-known-good (stale) cache while a plugin worker's `flowEvalTick` chain is still resolving.
+  const computing = useMemo(() => {
+    try {
+      return (JSON.parse(scene?.statusJson ?? "{}") as { readonly computing?: boolean; readonly label?: string }).computing === true;
+    } catch {
+      return false;
+    }
+  }, [scene?.statusJson]);
   const activeUtility = interaction.activeUtility ?? "select";
   const fillMode = activeUtility === "fill";
   const brushMode = activeUtility === "brush";
@@ -12167,6 +12225,18 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const gumballDragLastPoseRef = useRef<GumballPose | null>(null);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
+  useEffect(() => {
+    if (contextMenu == null || contextMenuItems.length === 0 || interaction.suggestionMenu?.open) return;
+    logContextMenuOpen("world3d", contextMenuItems);
+  }, [contextMenu, contextMenuItems, interaction.suggestionMenu?.open]);
+  useEffect(() => {
+    if (!interaction.suggestionMenu?.open) return;
+    logContextMenuOpen("world3d-suggestions", suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0));
+  }, [interaction.suggestionMenu, interaction.brushCandidateIndex]);
+  useEffect(() => {
+    if (!brushPreview) return;
+    console.log(`[DEBUG] brushPreview`, { color: brushPreview.color, objectKindId: brushPreview.objectKindId, meshUrl: brushPreview.meshUrl });
+  }, [brushPreview]);
   const gridFactor = lod.gridFactor ?? interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
   const marqueeDown = marqueePath.length > 0;
   const method = selection.method ?? "rectangle";
@@ -12883,10 +12953,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         shadows={environment?.shadow?.enabled === true ? true : undefined}
         onPointerMissed={handleEmptyClick}
         overlay={
-          frame || cameraState.explicitProjection ? (
+          frame || cameraState.explicitProjection || computing ? (
             <>
               {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
               {cameraState.explicitProjection ? <WorldOrbitProjectionSwitchPane projection={cameraState.projection ?? "perspective"} onProjectionChange={handleProjectionChange} /> : null}
+              {computing ? (
+                <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded bg-panel/90 px-2 py-1 text-xs shadow-sm" role="status" aria-busy="true">
+                  <Spinner size="small" />
+                  <span>{shellLabel("ui.common.loading")}</span>
+                </div>
+              ) : null}
             </>
           ) : undefined
         }
@@ -14448,6 +14524,10 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
   applyNodeGraphHoverFromScene(session, scene.hoverJson);
   if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
   if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
+  // 🧵 Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
+  // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
+  // immediately wiped by this call on the same sync pass.
+  if (scene.evalJson) session.applyEvalOutputsJson(scene.evalJson);
   if (scene.computingJson) session.setComputingProgress(scene.computingJson);
   if (scene.lodJson) {
     try {
@@ -14502,6 +14582,11 @@ export function FlowGraphCanvasHost({
   sceneRef.current = scene;
 
   useEffect(() => {
+    if (contextMenu == null || contextMenuItems.length === 0) return;
+    logContextMenuOpen("flow-graph", contextMenuItems);
+  }, [contextMenu, contextMenuItems]);
+
+  useEffect(() => {
     console.log("[DEBUG] FlowGraphCanvasHost mounted", { surfaceId, controllerId });
     return () => console.log("[DEBUG] FlowGraphCanvasHost UNMOUNTED", { surfaceId, controllerId });
   }, [surfaceId, controllerId]);
@@ -14513,6 +14598,9 @@ export function FlowGraphCanvasHost({
     [controllerId, onAction, surfaceId],
   );
 
+  // 🧵 Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
+  // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
+  // resync applies its `evalJson`/`computingJson` back onto this session (`syncFlowSessionFromScene`).
   const commitFixture = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
@@ -14520,7 +14608,6 @@ export function FlowGraphCanvasHost({
       const fixtureJson = session.fixtureJson();
       console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
       dispatch(nodeGraphActions.edit, { ops: [{ op: "setFixture", fixtureJson }] });
-      session.evaluateSync();
     } catch {
       /* session not ready */
     }
@@ -14967,7 +15054,11 @@ export function FlowGraphCanvasHost({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
-        setContextMenu({ x: event.clientX, y: event.clientY, widgetId: sessionRef.current?.hoveredWidgetId() });
+        const widgetId = sessionRef.current?.hoveredWidgetId();
+        if (widgetId) {
+          dispatch("contextMenuAt", { id: widgetId });
+        }
+        setContextMenu({ x: event.clientX, y: event.clientY, widgetId: widgetId ?? undefined });
       }}
     >
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
@@ -15064,9 +15155,14 @@ export function FlowGraphCanvasHost({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenuItems, (action, args) =>
-          dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args),
-        )}
+        items={mapContextMenuSpecs(contextMenuItems, (action, args) => {
+          if (action === "openSpotlight") {
+            const host = containerRef.current;
+            if (host) openSpotlightAtClient(contextMenu?.x ?? 0, contextMenu?.y ?? 0, host);
+            return;
+          }
+          dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args);
+        })}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

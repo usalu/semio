@@ -676,7 +676,7 @@ pub mod app_jack {
             NodeGraphScene {
                 selection_json,
                 context_menu_json: Some(
-                    r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#.into(),
+                    r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into(),
                 ),
                 lod_json: trinity_lod_json_for_window(runtime, TRINITY_JACK_PLAY_WINDOW_GRAPH),
                 ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
@@ -2435,7 +2435,7 @@ pub mod app_rewrite {
 
     //#region 🔖Render
     const DELETE_SELECTION_CONTEXT_MENU: &str =
-        r#"[{"id":"delete-selection","label":"Delete selection","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]}}]"#;
+        r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#;
 
     fn rewrite_lod_json_for_window(runtime: &RewritePlayRuntime, window_id: &str) -> Option<String> {
         let mode = runtime.lod_mode_by_window.get(window_id).map(String::as_str).unwrap_or(TRINITY_LOD_MODE_AUTOMATIC);

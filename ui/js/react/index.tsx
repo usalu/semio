@@ -1569,6 +1569,20 @@ export function loadingBorderStateClass(loading: boolean, active = false): strin
   return loading ? (active ? loadingBorderActiveClass : loadingBorderClass) : "";
 }
 
+/** @emoji 🌀 Dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color. */
+export const waitingBorderClass = "border-waiting";
+
+/** @emoji 🌀 Waiting ring recolored to the active stroke; pair with selected/active elements. */
+export const waitingBorderActiveClass = cn(waitingBorderClass, "border-waiting-active");
+
+/** @emoji 🌀 Waiting ring in the level-aware element border color. */
+export const waitingBorderElementClass = cn(waitingBorderClass, "border-waiting-element");
+
+/** @emoji 🌀 Waiting ring matching the element's current state color; empty when not waiting. */
+export function waitingBorderStateClass(waiting: boolean, active = false): string {
+  return waiting ? (active ? waitingBorderActiveClass : waitingBorderClass) : "";
+}
+
 /** @emoji 🎨 Active/on: primary fill + active border + emphasized content (never the transient hover fill). */
 export const interactiveOnClass = cn(
   "data-[state=on]:bg-active-base",
@@ -9044,6 +9058,7 @@ function ActionDropdown({ className, id, options, value, onValueChange, startTra
 interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
   as?: "button" | "div";
   loading?: boolean;
+  waiting?: boolean;
   icon: ControlIcon;
   text?: string;
   id?: string;
@@ -9052,7 +9067,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 /**
  * Action holds the data fields for a Action record.
  **/
-function Action({ className, id, icon, text, as = "button", loading = false, ...props }: ActionProps) {
+function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
@@ -9069,7 +9084,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, ...
       tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
       aria-label={ariaLabel}
-      aria-busy={loading || undefined}
+      aria-busy={loading || waiting || undefined}
       title={accessibleLabel}
       data-level={level}
       className={cn(
@@ -9077,7 +9092,7 @@ function Action({ className, id, icon, text, as = "button", loading = false, ...
         hasText && "aspect-auto gap-single",
         getLevelHoverClass(level),
         borderClass,
-        loading && loadingBorderElementClass,
+        (loading && loadingBorderElementClass) || (waiting && waitingBorderElementClass),
         className,
       )}
       {...(props as any)}
@@ -10111,6 +10126,7 @@ function Slider({
   max = 100,
   ready,
   loading = false,
+  waiting = false,
   showLabel,
   onValueChange,
   onPointerDown,
@@ -10126,6 +10142,8 @@ function Slider({
     ready?: number;
     /** @emoji 🌀 Spinning loading ring around the track only — never the row, so the knob and hover chrome stay visible. */
     loading?: boolean;
+    /** @emoji 🌀 Dashed, slow-spinning waiting ring around the track only — never the row, so the knob and hover chrome stay visible. */
+    waiting?: boolean;
     showLabel?: boolean;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
@@ -10299,7 +10317,12 @@ function Slider({
       )}
       {...props}
     >
-      <div data-slot="slider-track-wrap" data-loading={loading ? "true" : undefined} className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading))}>
+      <div
+        data-slot="slider-track-wrap"
+        data-loading={loading ? "true" : undefined}
+        data-waiting={waiting ? "true" : undefined}
+        className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading) || waitingBorderStateClass(waiting))}
+      >
         <SliderPrimitive.Track
           data-slot="slider-track"
           className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
@@ -13056,6 +13079,8 @@ export interface TreeDataItem {
   defaultOpen?: boolean;
   /** @emoji 🌀 Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
+  /** @emoji 🌀 Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  waiting?: boolean;
   collapsibleState?: TreeItemCollapsibleState;
   emptyState?: React.ReactNode;
   draggable?: boolean;
@@ -13082,6 +13107,8 @@ export interface TreeDataSection {
   defaultOpen?: boolean;
   /** @emoji 🌀 Host-declared loading state, ORed with the tree's own async {@link getItems} pending state. */
   loading?: boolean;
+  /** @emoji 🌀 Host-declared waiting state; dashed, slower ring than {@link loading}. */
+  waiting?: boolean;
   emptyState?: React.ReactNode;
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
@@ -13356,6 +13383,7 @@ interface TreeSectionProps {
   onOpenChange?: (open: boolean) => void;
   expandable?: boolean;
   loading?: boolean;
+  waiting?: boolean;
   className?: string;
   actions?: TreeHeaderAction[];
   onPointerEnter?: () => void;
@@ -13423,6 +13451,7 @@ interface TreeItemProps {
   onOpenChange?: (open: boolean) => void;
   expandable?: boolean;
   loading?: boolean;
+  waiting?: boolean;
   isLastItem?: boolean;
   actions?: TreeHeaderAction[];
   isDragging?: boolean;
@@ -13742,20 +13771,20 @@ function treeRowChromeShellClasses(isSelected: boolean, isHighlighted: boolean, 
 }
 
 /** @emoji 🎨 Tree row content fill: backgrounds apply only on the label column, not the guide gutter. */
-function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false): string {
-  const loadingClass = loadingBorderStateClass(isLoading, isSelected);
+function treeRowChromeContentFillClasses(isSelected: boolean, isHighlighted: boolean, isLoading = false, isWaiting = false): string {
+  const ringClass = loadingBorderStateClass(isLoading, isSelected) || waitingBorderStateClass(isWaiting, isSelected);
   if (isSelected) {
-    return cn(interactiveActiveFillClass, interactiveControlTransitionClass, loadingClass);
+    return cn(interactiveActiveFillClass, interactiveControlTransitionClass, ringClass);
   }
   if (isHighlighted) {
-    return cn("bg-hover-interactive-fill", interactiveControlTransitionClass, loadingClass);
+    return cn("bg-hover-interactive-fill", interactiveControlTransitionClass, ringClass);
   }
-  return cn(interactiveControlTransitionClass, groupHoverExcludingHandleBgFillClass, loadingClass);
+  return cn(interactiveControlTransitionClass, groupHoverExcludingHandleBgFillClass, ringClass);
 }
 
 /** @emoji 🎨 Tree row chrome: element gray at rest; hover highlight; selected primary + emphasized (no hover fill override). */
-function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false, isLoading = false): string {
-  return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted, isLoading));
+function treeRowChromeClasses(isSelected: boolean, isHighlighted: boolean, isHidden = false, isLoading = false, isWaiting = false): string {
+  return cn(treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), treeRowChromeContentFillClasses(isSelected, isHighlighted, isLoading, isWaiting));
 }
 
 const TreeItemRowContextMenu: React.FC<{ readonly items?: readonly ContextMenuItem[]; readonly children: React.ReactNode }> = ({ items, children }) => {
@@ -13786,6 +13815,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   onOpenChange,
   expandable,
   loading = false,
+  waiting = false,
   className = "",
   actions = [],
   onPointerEnter: onSectionPointerEnter,
@@ -13838,7 +13868,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     },
     [onDragEnd],
   );
-  const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !showDragHandle;
+  const isHeaderlessSection = suppressLocalizedLabel && localizedLabel === undefined && !icon && actions.length === 0 && !loading && !waiting && !showDragHandle;
   const rowClassName = cn(
     treeRowShellClassName,
     treeRowChromeShellClasses(false, false),
@@ -13847,7 +13877,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading), isDropReady && dropZoneReadyFillClass);
+  const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading, waiting), isDropReady && dropZoneReadyFillClass);
   const sectionDragHandle = showDragHandle ? <DragHandle onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
 
   if (isHeaderlessSection) {
@@ -14305,6 +14335,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   onOpenChange,
   expandable,
   loading = false,
+  waiting = false,
   draggable = false,
   onDragStart,
   onDragEnd,
@@ -14403,7 +14434,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     isDropReady && dropZoneReadyTextClass,
     className,
   );
-  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading), isDropReady && dropZoneReadyFillClass);
+  const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting), isDropReady && dropZoneReadyFillClass);
   const treeLabelSelectClass = draggable && dragInitiation === "surface" ? "select-none" : "select-text";
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
 
@@ -15137,6 +15168,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
   const rawChildItems = branchCount > 0 ? (alternatives[clampedBranchIndex] ?? []) : baseChildItems;
   const childItems = direction === "up" ? [...rawChildItems].reverse() : rawChildItems;
   const isLoading = (loadingById[getTreeItemLoadingId(item.id)] ?? false) || Boolean(item.loading);
+  const isWaiting = Boolean(item.waiting);
   const hasDynamicChildren = Boolean(item.getItems);
   const hasExpandableChildren = childItems.length > 0 || hasDynamicChildren || Boolean(item.emptyState) || branchCount > 0;
   const isExpandable = item.collapsibleState === TreeItemCollapsibleState.None ? false : hasExpandableChildren;
@@ -15172,6 +15204,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       onOpenChange={treeOpenState.setOpen}
       expandable={propertyExpandable}
       loading={isLoading}
+      waiting={isWaiting}
       isLastItem={isLastItem}
       actions={item.actions}
       contextMenu={item.contextMenu}
@@ -15235,6 +15268,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
   const rawItems = getTreeSectionItems(section, sectionItemsById);
   const items = direction === "up" ? [...rawItems].reverse() : rawItems;
   const isLoading = (loadingById[getTreeSectionLoadingId(section.id)] ?? false) || Boolean(section.loading);
+  const isWaiting = Boolean(section.waiting);
   const hasDynamicChildren = Boolean(section.getItems);
   const isExpandable = items.length > 0 || hasDynamicChildren || Boolean(section.emptyState);
   const sectionReorderable = sortableSections || Boolean(section.draggable);
@@ -15258,6 +15292,7 @@ const TreeDataSectionView = reactHostPort.memo(function TreeDataSectionView(prop
       onOpenChange={treeOpenState.setOpen}
       expandable={isExpandable}
       loading={isLoading}
+      waiting={isWaiting}
       actions={section.actions}
       onPointerEnter={section.onPointerEnter}
       onPointerLeave={section.onPointerLeave}
@@ -16307,14 +16342,16 @@ interface WindowMeasureTreeRowProps {
   left: React.ReactNode;
   right?: React.ReactNode;
   loading?: boolean;
+  waiting?: boolean;
 }
 
-const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right, loading = false }) => (
+const WindowMeasureTreeRow: React.FC<WindowMeasureTreeRowProps> = ({ left, right, loading = false, waiting = false }) => (
   <div
     data-dim
     data-slot="window-measure-tree-row"
     data-loading={loading ? "true" : undefined}
-    className={cn("grid min-w-0 w-full items-center gap-double", windowMeasureTreeRowClassName, loadingBorderStateClass(loading))}
+    data-waiting={waiting ? "true" : undefined}
+    className={cn("grid min-w-0 w-full items-center gap-double", windowMeasureTreeRowClassName, loadingBorderStateClass(loading) || waitingBorderStateClass(waiting))}
     style={{ gridTemplateColumns: right === undefined ? "minmax(0, 1fr)" : `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.windowMeasureValueColumnUiSpacing)}` }}
   >
     <div data-slot="window-measure-tree-row-left" className="relative min-w-0">
@@ -25506,7 +25543,7 @@ if (import.meta.vitest) {
       expect(renderToStaticMarkup(<Icon icon={{ kind: "url", url: "https://example.com/a.png" }} />)).toMatch(/data-icon-kind="image"/);
       expect(renderToStaticMarkup(<Icon icon={{ kind: "svg", svg: "<svg></svg>" }} />)).toMatch(/data-icon-kind="svg"/);
       expect(renderToStaticMarkup(<Icon icon={{ kind: "node", node: <span>x</span> }} />)).toMatch(/data-icon-kind="node"/);
-      expect(renderToStaticMarkup(<Icon icon="definitely-not-a-vendored-icon" />)).toMatch(/data-icon-kind="missing"/);
+      expect(renderToStaticMarkup(<Icon icon={"definitely-not-a-vendored-icon" as IconName} />)).toMatch(/data-icon-kind="missing"/);
     });
   });
 
@@ -25572,7 +25609,7 @@ if (import.meta.vitest) {
       );
       const item = await waitFor(() => screen.getByRole("menuitem", { name: "Capsule" }));
       const swatch = item.querySelector("[aria-hidden]") as HTMLElement | null;
-      expect(swatch?.style.background).toBe("rgb(170, 187, 204)");
+      expect(swatch?.getAttribute("style") ?? "").toMatch(/#aabbcc|rgb\(170,\s*187,\s*204\)/);
       fireEvent.pointerEnter(item);
       expect(onHover).toHaveBeenCalled();
       fireEvent.pointerLeave(item);

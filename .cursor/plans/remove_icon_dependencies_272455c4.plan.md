@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: verify
     content: Run generate all without lucide packages; confirm no remaining icon package deps
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

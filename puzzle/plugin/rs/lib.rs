@@ -3690,9 +3690,18 @@ pub mod d3 {
                         .iter()
                         .enumerate()
                         .map(|(index, candidate)| {
-                            let object_label = candidate.get("objectKind").and_then(Value::as_str).or_else(|| candidate.get("objectKindId").and_then(Value::as_str)).unwrap_or("kind");
+                            let object_kind = candidate.get("objectKind").and_then(Value::as_str).or_else(|| candidate.get("objectKindId").and_then(Value::as_str));
+                            let object_label = object_kind.unwrap_or("kind");
                             let source_vortex_index = candidate.get("sourceVortexIndex").and_then(Value::as_u64).unwrap_or(0);
-                            json!({ "index": index, "objectLabel": object_label, "vortexLabel": format!("vortex {source_vortex_index}") })
+                            let color = object_kind_color(&envelope.fixture.meta, object_kind);
+                            let icon = object_kind_icon(&envelope.fixture.meta, object_kind);
+                            json!({
+                                "index": index,
+                                "objectLabel": object_label,
+                                "vortexLabel": format!("vortex {source_vortex_index}"),
+                                "icon": icon,
+                                "color": color,
+                            })
                         })
                         .collect();
                     (pending, candidates)
@@ -3736,7 +3745,13 @@ pub mod d3 {
             return None;
         }
         let vortex_id = puzzle3d_brush_target_vortex(envelope)?;
-        session.brush_preview_json(&vortex_id, envelope.runtime.brush_candidate_index)
+        let preview_json = session.brush_preview_json(&vortex_id, envelope.runtime.brush_candidate_index)?;
+        let mut preview: Value = serde_json::from_str(&preview_json).ok()?;
+        let object_kind = preview.get("objectKindId").and_then(Value::as_str).map(str::to_string);
+        if let Some(obj) = preview.as_object_mut() {
+            obj.insert("color".into(), json!(object_kind_color(&envelope.fixture.meta, object_kind.as_deref())));
+        }
+        serde_json::to_string(&preview).ok()
     }
 
     /// ⏱️ Bounded to one small chunk per call (matches puzzle5d's drive path and the premigration idle
@@ -5231,38 +5246,27 @@ pub mod d3 {
             let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
             let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
             let items = vec![
-                json!({
-                    "id": "duplicate",
-                    "label": "Duplicate",
-                    "action": "duplicateSelection",
-                }),
-                json!({
-                    "id": "select-same-kind",
-                    "label": "Select all of same kind",
-                    "action": "selectSameKindSelection",
-                }),
+                json!({ "id": "duplicate", "label": "Duplicate", "icon": "copy", "action": "duplicateSelection" }),
+                json!({ "id": "select-same-kind", "label": "Select all of same kind", "icon": "layers", "action": "selectSameKindSelection" }),
+                json!({ "id": "sep-flags", "separator": true }),
                 json!({
                     "id": "hide-show",
                     "label": if all_hidden { "Show" } else { "Hide" },
+                    "icon": if all_hidden { "eye" } else { "eye-off" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "hidden", "value": !all_hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
                     "label": if all_locked { "Unlock" } else { "Lock" },
+                    "icon": if all_locked { "lock-open" } else { "lock" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "locked", "value": !all_locked },
                 }),
-                json!({
-                    "id": "zoom",
-                    "label": "Zoom to selection",
-                    "action": "zoomToSelection",
-                }),
-                json!({
-                    "id": "delete",
-                    "label": "Delete",
-                    "action": "deleteSelection",
-                }),
+                json!({ "id": "sep-zoom", "separator": true }),
+                json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }),
+                json!({ "id": "sep-delete", "separator": true }),
+                json!({ "id": "delete", "label": "Delete", "icon": "trash", "action": "deleteSelection", "destructive": true }),
             ];
             return serde_json::to_string(&items).ok();
         }
@@ -5272,18 +5276,25 @@ pub mod d3 {
                 items.push(json!({
                     "id": "suggest",
                     "label": "Suggest objects",
+                    "icon": "sparkles",
                     "action": "openVortexSuggestions",
                     "args": { "fullId": only },
                 }));
+                items.push(json!({ "id": "sep-suggest", "separator": true }));
             }
+            items.push(json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }));
+            items.push(json!({ "id": "sep-delete", "separator": true }));
+            items.push(json!({ "id": "delete", "label": "Delete", "icon": "trash", "action": "deleteSelection", "destructive": true }));
             return serde_json::to_string(&items).ok();
         }
         if let Some(id) = selection.attraction_ids.first() {
             let items = vec![json!({
                 "id": "delete",
                 "label": "Delete",
+                "icon": "trash",
                 "action": "deleteAttraction",
                 "args": { "id": id },
+                "destructive": true,
             })];
             return serde_json::to_string(&items).ok();
         }
@@ -5295,20 +5306,39 @@ pub mod d3 {
                 json!({
                     "id": "hide-show",
                     "label": if hidden { "Show" } else { "Hide" },
+                    "icon": if hidden { "eye" } else { "eye-off" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "hidden", "value": !hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
                     "label": if locked { "Unlock" } else { "Lock" },
+                    "icon": if locked { "lock-open" } else { "lock" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "locked", "value": !locked },
                 }),
+                json!({ "id": "sep-delete", "separator": true }),
                 json!({
                     "id": "delete",
                     "label": "Delete",
+                    "icon": "trash",
                     "action": "deleteTargetVolume",
                     "args": { "id": id },
+                    "destructive": true,
+                }),
+            ];
+            return serde_json::to_string(&items).ok();
+        }
+        if let Some(_id) = selection.reference_ids.first() {
+            let items = vec![
+                json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }),
+                json!({ "id": "sep-delete", "separator": true }),
+                json!({
+                    "id": "delete",
+                    "label": "Delete",
+                    "icon": "trash",
+                    "action": "deleteSelection",
+                    "destructive": true,
                 }),
             ];
             return serde_json::to_string(&items).ok();
@@ -7222,6 +7252,9 @@ pub mod d3 {
             let menu_json = serde_json::to_string(&menu).unwrap();
             assert!(menu_json.contains("Suggest objects"), "menu should be {menu_json}");
             assert!(menu_json.contains("openVortexSuggestions"));
+            assert!(menu_json.contains("sparkles"), "menu should include suggest icon: {menu_json}");
+            assert!(menu_json.contains("Zoom to selection"), "menu should include zoom: {menu_json}");
+            assert!(menu_json.contains("deleteSelection"), "menu should include delete: {menu_json}");
         }
 
         #[test]
@@ -7284,9 +7317,14 @@ pub mod d3 {
             let composite = serde_json::to_value(&node).unwrap();
             let interaction = interaction_of(&composite);
             assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(0), "opening suggestions starts hover at the first candidate");
+            let candidates = interaction.pointer("/suggestionMenu/candidates").and_then(Value::as_array).cloned().unwrap_or_default();
+            assert!(!candidates.is_empty(), "suggestion candidates should be present");
+            assert!(candidates[0].get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "candidates carry object-kind color: {candidates:?}");
+            assert!(candidates[0].get("icon").and_then(Value::as_str).is_some_and(|icon| !icon.is_empty()), "candidates carry icon: {candidates:?}");
             let preview = brush_preview_of(&composite);
             assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "the live preview must target the vortex the suggestion menu was opened on");
             assert!(preview.get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "the live preview must resolve to a real candidate object kind");
+            assert!(preview.get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "brush preview carries object-kind color: {preview}");
 
             app.handle_action("hoverSuggestion", Some(&json!({ "index": 1 })), &ViewState::default(), &testkit::meta("local")).expect("hoverSuggestion");
             let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
@@ -7295,6 +7333,7 @@ pub mod d3 {
             assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(1), "hovering a different row must move the tracked candidate index");
             let preview = brush_preview_of(&composite);
             assert_eq!(preview.get("targetVortexFullId").and_then(Value::as_str), Some(vortex.as_str()), "the preview must keep targeting the same vortex while only the hovered candidate changes");
+            assert!(preview.get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "hovered brush preview still carries color: {preview}");
         }
 
         #[test]
@@ -7959,6 +7998,10 @@ pub mod d5 {
         select_same_kind: &'static str,
         zoom_to_selection: &'static str,
         delete: &'static str,
+        hide: &'static str,
+        show: &'static str,
+        lock: &'static str,
+        unlock: &'static str,
         lod: &'static str,
         automatic: &'static str,
         suggestion: &'static str,
@@ -8004,6 +8047,10 @@ pub mod d5 {
         select_same_kind: "Select all of same kind",
         zoom_to_selection: "Zoom to selection",
         delete: "Delete",
+        hide: "Hide",
+        show: "Show",
+        lock: "Lock",
+        unlock: "Unlock",
         lod: "LOD",
         automatic: "Automatic",
         suggestion: "Suggestion",
@@ -8048,6 +8095,10 @@ pub mod d5 {
         select_same_kind: "Alle gleicher Art auswählen",
         zoom_to_selection: "Auf Auswahl zoomen",
         delete: "Löschen",
+        show: "Anzeigen",
+        hide: "Ausblenden",
+        lock: "Sperren",
+        unlock: "Entsperren",
         lod: "LOD",
         automatic: "Automatisch",
         suggestion: "Vorschlag",
@@ -9144,11 +9195,31 @@ pub mod d5 {
         if envelope.runtime.selection.part_ids.is_empty() {
             return None;
         }
+        let selected: Vec<&Puzzle5dPart> = envelope.document.parts.iter().filter(|part| envelope.runtime.selection.part_ids.contains(&part.id)).collect();
+        let all_hidden = !selected.is_empty() && selected.iter().all(|part| part.part_2d.hidden.unwrap_or(false));
+        let all_locked = !selected.is_empty() && selected.iter().all(|part| part.part_2d.locked.unwrap_or(false));
         let items = vec![
-            json!({ "id": "duplicate", "label": labels.duplicate, "action": "duplicateSelection" }),
-            json!({ "id": "select-same-kind", "label": labels.select_same_kind, "action": "selectSameKindSelection" }),
-            json!({ "id": "zoom", "label": labels.zoom_to_selection, "action": "zoomToSelection" }),
-            json!({ "id": "delete", "label": labels.delete, "action": "deleteSelection" }),
+            json!({ "id": "duplicate", "label": labels.duplicate, "icon": "copy", "action": "duplicateSelection" }),
+            json!({ "id": "select-same-kind", "label": labels.select_same_kind, "icon": "layers", "action": "selectSameKindSelection" }),
+            json!({ "id": "sep-flags", "separator": true }),
+            json!({
+                "id": "hide-show",
+                "label": if all_hidden { labels.show } else { labels.hide },
+                "icon": if all_hidden { "eye" } else { "eye-off" },
+                "action": "setSelectionFlag",
+                "args": { "flag": "hidden", "value": !all_hidden },
+            }),
+            json!({
+                "id": "lock-unlock",
+                "label": if all_locked { labels.unlock } else { labels.lock },
+                "icon": if all_locked { "lock-open" } else { "lock" },
+                "action": "setSelectionFlag",
+                "args": { "flag": "locked", "value": !all_locked },
+            }),
+            json!({ "id": "sep-zoom", "separator": true }),
+            json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
+            json!({ "id": "sep-delete", "separator": true }),
+            json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }),
         ];
         serde_json::to_string(&items).ok()
     }

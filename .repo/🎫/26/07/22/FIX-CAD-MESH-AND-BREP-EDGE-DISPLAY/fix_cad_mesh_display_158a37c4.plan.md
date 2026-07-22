@@ -13,7 +13,7 @@ todos:
     status: completed
   - id: tests
     content: Extend CAD and kernel tests for reversed-edge wire chaining, watertight-ish forest mesh, and edge_positions
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

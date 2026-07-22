@@ -105,6 +105,7 @@
     --border-element-color: var(--element-base);
     --border-color: var(--border-normal-color);
     --loading-border-duration: 1.6s;
+    --waiting-border-duration: 3.2s;
     --introduced-border-duration: 1.6s;
     --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
@@ -928,6 +929,18 @@
   initial-value: 1.6s;
 }
 
+@property --waiting-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --waiting-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 3.2s;
+}
+
 /* Same pruning risk as above, but these two are plain static keywords (never theme/appearance-reactive,
    just like the angle/duration tokens), so `@property` is a complete fix on its own. The six *color*
    tokens below it (`--border-normal-color` and friends) need a different fix — see the unlayered `:root`
@@ -963,6 +976,22 @@
   0%,
   100% {
     opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes waiting-border-spin {
+  to {
+    --waiting-border-angle: 360deg;
+  }
+}
+
+@keyframes waiting-border-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
   }
   50% {
     opacity: 1;
@@ -1010,6 +1039,49 @@
 /* Recolor the loading ring to the level-aware element border color. */
 @utility border-loading-element {
   --loading-border-color: var(--border-element-color);
+}
+
+/* Clockwise dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color; recolor via --waiting-border-color. */
+@utility border-waiting {
+  position: relative;
+  --waiting-border-angle: 0deg;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    border-radius: inherit;
+    padding: var(--stroke-hairline);
+    background:
+      repeating-conic-gradient(from var(--waiting-border-angle), var(--waiting-border-color, var(--border-normal-color)) 0deg 18deg, transparent 18deg 30deg), conic-gradient(color-mix(in oklab, var(--waiting-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    mask-composite: exclude;
+    animation:
+      waiting-border-spin var(--waiting-border-duration) linear infinite,
+      waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    &::after {
+      animation: none;
+    }
+  }
+}
+
+/* Recolor the waiting ring to the active stroke (selected/on elements). */
+@utility border-waiting-active {
+  --waiting-border-color: var(--active-base);
+}
+
+/* Recolor the waiting ring to the level-aware element border color. */
+@utility border-waiting-element {
+  --waiting-border-color: var(--border-element-color);
 }
 
 @keyframes introduced-border-pulse {

@@ -7,16 +7,16 @@ todos:
     status: completed
   - id: engine-grid
     content: Add grid visible/snap/factor draw+snap to DAG host and FlowHost; extend lod_json sync
-    status: in_progress
+    status: completed
   - id: window-measures
     content: Implement flow window_measures (LOD, proximity, grid); remove canvas settings from inspector
-    status: pending
+    status: completed
   - id: actions
     content: Add selectAll, focusSelection, keybindings, context menu; mark internal actions in_palette:false
-    status: pending
+    status: completed
   - id: tests
     content: Extend flow plugin and DAG host tests for measures, actions, grid, proximity default
-    status: pending
+    status: completed
 isProject: false
 ---
 

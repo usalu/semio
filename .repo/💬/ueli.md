@@ -459,6 +459,10 @@ This MUST NOT happen.
 
 ---
 
+introduce waiting state for all ui elements. waiting is like loading an active color border that spins pulsating around but the spin speed and pulse speed is lower and it shows dashed active border instead.
+
+---
+
 All ui items that load show a spinning with pulsing motion border in clockwise direction. same border color e.g. when not selected just normal gray and when active the normal active color, etc.
 Make sure to implement it for every ui element that is loadable such as tree items, etc
 

@@ -1,13 +1,15 @@
 {
   "title": "Puzzle 3D Vortex Arrow Preview",
   "emoji": "🌀",
-  "status": "open",
+  "status": "closed",
   "description": "Render puzzle 3D vortices as a small point sphere plus a directional arrow, with a per-window option to draw arrows outwards (tip away from the point) or inwards (tip on the point).",
+  "summary": "Brought Flow play app to board-app chrome parity.\n\n- DAG engine: grid visible/snap/factor with LOD-tiered painting, drag snap, focus_selection_camera API, and tests.\n- Flow core: grid setters on FlowHost, extended flow_backed_node_graph_extras lod_json (gridVisible, gridSnapEnabled, gridFactor), default proximity 48.\n- WGPU + node-graph surfaces: sync grid fields from lod_json.\n- Flow plugin: window_measures rail (LOD, proximity slider, grid group); removed canvas settings from empty inspector; palette actions selectAll/focusSelection with mod+a; context menu select-all / zoom-to-selection / delete; internal actions marked in_palette:false; procedural plugin callers updated.\n\nTests: infinite_board_port_directed_dag (grid snap, focus selection), flow-plugin (23 tests), flow_core extras.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2226"
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪81086581f676476fba4763dddd459e5f"
+    "⚪81086581f676476fba4763dddd459e5f",
+    "⚪8d3d118530044cad8a68ecc149d6d4ae"
   ]
 }

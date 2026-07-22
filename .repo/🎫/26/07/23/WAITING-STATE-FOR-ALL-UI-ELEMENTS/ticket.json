@@ -1,0 +1,13 @@
+{
+  "title": "Waiting State for All UI Elements",
+  "emoji": "⏳",
+  "status": "open",
+  "description": "Introduce a \"waiting\" UI state mirroring \"loading\": a dashed, slower-spinning, gentler-pulsing active-color border ring. Implement symmetrically in the React/Tailwind CSS renderer (ui/styling/js/ui.css, ui/js/react/index.tsx) and the wgpu/Rust renderer (ui/wgpu/rs/lib.rs), then thread through the framework protocol layer (framework/core/js/index.ts, framework/renderer/react/index.tsx). Loading wins precedence when both flags are set. See approved plan at /Users/ueli/.claude/plans/introduce-waiting-state-for-precious-pnueli.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2240"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪2fd49f6762ed4f1aa0ca2dfa4806e5bc"
+  ]
+}

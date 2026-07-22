@@ -1,8 +1,9 @@
 {
   "title": "Rich Context Menus Across Apps",
   "emoji": "🖱️",
-  "status": "open",
+  "status": "closed",
   "description": "Unify declarative context-menu specs end-to-end (icons, colors, hover previews, full item sets), fix host mapping that strips richness, and fill incomplete menus in flow, puzzle, and every other app.",
+  "summary": "Unified declarative ContextMenuItemSpec end-to-end: UI supports color swatches, hover, and submenus; hosts map full specs; suggestions use the same controller with per-kind colors on candidates and brush ghosts; flow emits rich menus (add/select-all/reorganize/hide-show preview/delete) with preview_off runtime; puzzle 2d/3d/5d and other node-graph apps emit icons, separators, and destructive delete; vortex menus include suggest plus zoom/delete. Verified via vitest and cargo tests; [DEBUG] logs on menu open and hoverSuggestion.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2237"
   },
@@ -10,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "fda2b32d",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/rich_context_menus_fda2b32d.plan.md"
+    "local": "rich_context_menus_fda2b32d.plan.md"
   },
   "sessions": [
     "⚪761aef9e059c4d4088bef3299e97e049"

@@ -1,8 +1,9 @@
 {
   "title": "Fix Flow Selection Marquee Overlay",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Flow selection is live and working but the selection rectangle/lasso overlay is not showing (unlike 3d). Rust publishes selection preview points as [[x,y],...] while computeDagMarqueeOverlay expects [{x,y},...] objects, producing NaN bounds and an invisible marquee. Fix the overlay point parsing at the shared React path, wire selectionPreviewMethod for lasso, and cover the tuple JSON format in tests.",
+  "summary": "Fixed flow selection rectangle/lasso overlay not painting. Root cause: board rust publishes preview points as [[x,y],…] but computeDagMarqueeOverlay only read {x,y} objects, yielding NaN bounds while live selection still worked. Parser now accepts the rust tuple wire format (and object format), infers rectangle vs lasso from point geometry when selectionPreviewMethod is absent, exposes selectionPreviewMethod on flow/node-graph/sequence wasm sessions, and paints the overlay at z-50. All 10 dag marquee overlay tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2233"
   },

@@ -70,7 +70,6 @@ pub mod geometry_import {
                     let shares_start = second_edge.vertex_ids[0] == start || second_edge.vertex_ids[1] == start;
                     let shares_end = second_edge.vertex_ids[0] == end || second_edge.vertex_ids[1] == end;
                     if shares_start && !shares_end {
-                    } else if shares_end && !shares_start {
                         std::mem::swap(&mut start, &mut end);
                     }
                 }
@@ -316,13 +315,7 @@ pub mod geometry_import {
     }
 
     fn curve_mesh_from_wire(kernel: &mut dyn BrepKernel, wire: &GeometryHandle) -> Option<MeshData> {
-        let profile_wire = kernel_3d_engine::block_on(kernel.regular_polygon_wire(0.08, 8)).ok()?;
-        let profile_face = kernel_3d_engine::block_on(kernel.planar_face_from_wire(&profile_wire)).ok()?;
-        let solid = kernel_3d_engine::block_on(kernel.sweep(&profile_face, wire)).ok()?;
-        let mesh = block_on(kernel.tessellate(&solid, 0.1)).ok()?;
-        let _ = kernel_3d_engine::block_on(kernel.dispose(&solid));
-        let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_face));
-        let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_wire));
+        let mesh = block_on(kernel.tessellate(wire, 0.1)).ok()?;
         Some(mesh_data_from_mesh_transfer(&mesh))
     }
 
@@ -596,7 +589,7 @@ pub mod geometry_import {
         }
 
         #[test]
-        fn forest_structure_curve_wires_tessellate_as_tubes() {
+        fn forest_structure_curve_wires_tessellate_as_centerlines() {
             let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
             let root: Value = serde_json::from_str(source).expect("fixture");
             let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
@@ -614,8 +607,9 @@ pub mod geometry_import {
                 .expect("curve object");
             let handle = curve_object.solid_handle.as_ref().expect("curve handle");
             let mesh = tessellate_geometry_handle(&mut kernel, handle, "curve").expect("curve mesh");
-            assert!(mesh.positions.len() > 36);
-            assert!(mesh.indices.len() > 12);
+            assert!(mesh.edge_positions.len() >= 6);
+            assert_eq!(mesh.edge_positions.len() % 6, 0);
+            assert!(mesh.indices.is_empty());
         }
     }
 }

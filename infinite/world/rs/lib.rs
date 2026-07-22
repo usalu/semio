@@ -208,6 +208,7 @@ struct WorldBrushPreviewRecord {
     target_vortex_full_id: Option<String>,
     object_kind_id: Option<String>,
     source_vortex_index: Option<usize>,
+    color: Option<String>,
 }
 
 #[derive(Clone, Debug, Deserialize, Default)]
@@ -1936,7 +1937,11 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
                 instances: vec![Instance3d {
                     id: "brush-preview".into(),
                     model: Instance3d::model_from_trs([origin[0] as f32, origin[1] as f32, origin[2] as f32], [rotation[0] as f32, rotation[1] as f32, rotation[2] as f32, rotation[3] as f32], scale),
-                    color: [0.35, 0.75, 1.0, 0.45],
+                    color: {
+                        let mut color = parse_color(preview.color.as_deref().unwrap_or("#59bfff"));
+                        color[3] = 0.45;
+                        color
+                    },
                     selected: false,
                     hovered: false,
                 }],
@@ -2840,7 +2845,7 @@ fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
 
 fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
     let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
-    if dir.length_squared() < 1e-12 {
+    if dir.dot(dir) < 1e-12 {
         Vec3::new(0.0, 0.0, -1.0)
     } else {
         dir.normalize()
@@ -2858,9 +2863,9 @@ fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: 
     let outward = !display_direction.is_some_and(|mode| mode == "inwards");
     let rotation = quat_from_unit_vectors(Vec3::new(0.0, 1.0, 0.0), dir);
     let (shaft_center, head_base) = if outward {
-        (pos + dir * (shaft_length * 0.5), pos + dir * shaft_length)
+        (pos.add(dir.scale(shaft_length * 0.5)), pos.add(dir.scale(shaft_length)))
     } else {
-        (pos - dir * (head_length + shaft_length * 0.5), pos - dir * head_length)
+        (pos.sub(dir.scale(head_length + shaft_length * 0.5)), pos.sub(dir.scale(head_length)))
     };
     VortexArrowLayout { point_radius, shaft_radius, shaft_length, head_length, shaft_center: shaft_center.to_array(), head_base: head_base.to_array(), rotation }
 }
@@ -3268,6 +3273,7 @@ mod tests {
                 fit_json: None,
                 terrain_json: None,
                 points_json: None,
+                status_json: None,
             }),
             node_graph: None,
             text_editor: None,

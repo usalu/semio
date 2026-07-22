@@ -1,8 +1,9 @@
 {
   "title": "Channels Are Not UI Elements",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "flow: No channel should be a ui element. Parametric input is passed over e.g. sliders. e.g. codemo vector component is showing steppers that it shouldnt.\n\nRemove InputStepper (and channel param overlays) so components like math.vector expose only ports; numbers come from Slider sources.",
+  "summary": "Channels are ports only — parametric input comes from sources like sliders, not inline channel editors or an InputStepper source. Removed InputStepper (Widget/NodeChrome/DagNodeKind/catalogue), channel param overlays on unconnected primitive ports (the bug on codemo math.vector x/y/z), and stepper overlays/APIs. Regenerated flow-dag manifest without stepper. Vector remains a computation component (math.vector) with ports; wire sliders into x/y/z.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2230"
   },

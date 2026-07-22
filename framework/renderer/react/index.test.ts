@@ -41,6 +41,7 @@ import {
   collectPuzzle2dLiveMirrorOps,
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
+  mapContextMenuSpecs,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
   board2dPeers,
@@ -70,6 +71,7 @@ import {
   brushObjectPlacementArgs,
   parsePuzzle3dCatalogueDragPayload,
   mergeWorldViewportCamera,
+  raycastGroundPoint,
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
   resolveVortexPointerDownIntent,
@@ -1436,17 +1438,36 @@ describe("framework renderer hosts", () => {
 
   it("builds a select-all menu when nothing is selected", () => {
     const items = buildPuzzle2dSelectionMenuItems(JSON.stringify({ nodes: [], edges: [] }), "[]");
-    expect(items).toEqual([{ id: "selectAll", label: "Select all", action: "selectAll" }]);
+    expect(items).toEqual([{ id: "selectAll", label: "Select all", icon: "maximize-2", action: "selectAll" }]);
+  });
+
+  it("maps context menu specs onto UI items with icons, colors, hover, and select handlers", () => {
+    const dispatch = vi.fn();
+    const items = mapContextMenuSpecs(
+      [
+        { id: "hide", label: "Hide", icon: "eye-off", color: "#ff0000", action: "setFlag", args: { flag: "hidden" }, hoverAction: "hoverFlag", hoverArgs: { index: 1 } },
+        { id: "sep", separator: true },
+        { id: "delete", label: "Delete", icon: "trash", destructive: true, action: "deleteSelection" },
+      ],
+      dispatch,
+    );
+    expect(items[0]).toMatchObject({ id: "hide", label: "Hide", icon: "eye-off", color: "#ff0000" });
+    items[0]?.onSelect?.(new Event("select"));
+    items[0]?.onHover?.();
+    expect(dispatch).toHaveBeenCalledWith("setFlag", { flag: "hidden" });
+    expect(dispatch).toHaveBeenCalledWith("hoverFlag", { index: 1 });
+    expect(items[1]).toMatchObject({ id: "sep", separator: true });
+    expect(items[2]).toMatchObject({ id: "delete", destructive: true, icon: "trash" });
   });
 
   it("builds the full selection menu with Hide/Lock/Duplicate/SelectSameKind/ZoomToSelection/Delete for a visible unlocked node", () => {
     const fixture = { nodes: [{ id: "alpha", nodeKind: "seed" }], edges: [] };
     const items = buildPuzzle2dSelectionMenuItems(JSON.stringify(fixture), JSON.stringify(["alpha"]));
-    expect(items.map((item) => item.id)).toEqual(["toggleHidden", "toggleLocked", "duplicate", "selectSameKind", "focusSelection", "deleteSelection"]);
-    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Hide", args: { flag: "hidden", value: true } });
-    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Lock", args: { flag: "locked", value: true } });
-    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: false });
-    expect(items.find((item) => item.id === "deleteSelection")).toMatchObject({ destructive: true });
+    expect(items.map((item) => item.id)).toEqual(["toggleHidden", "toggleLocked", "sep-selection", "duplicate", "selectSameKind", "focusSelection", "sep-delete", "deleteSelection"]);
+    expect(items.find((item) => item.id === "toggleHidden")).toMatchObject({ label: "Hide", icon: "eye-off", args: { flag: "hidden", value: true } });
+    expect(items.find((item) => item.id === "toggleLocked")).toMatchObject({ label: "Lock", icon: "lock", args: { flag: "locked", value: true } });
+    expect(items.find((item) => item.id === "duplicate")).toMatchObject({ disabled: false, icon: "copy" });
+    expect(items.find((item) => item.id === "deleteSelection")).toMatchObject({ destructive: true, icon: "trash" });
   });
 
   it("flips the selection menu labels to Show/Unlock for an already hidden and locked node", () => {
@@ -1481,6 +1502,49 @@ describe("framework renderer hosts", () => {
     expect(snapWorldPointToGrid([1.2, 2.7, 0.0], true, 1)).toEqual([1, 3, 0]);
     expect(snapWorldPointToGrid([1.2, 2.7, 0.0], false, 1)).toEqual([1.2, 2.7, 0]);
     expect(parsePuzzle3dCatalogueDragPayload(JSON.stringify({ meshUrl: "puzzle3d://capsule" }))).toBeNull();
+  });
+
+  it("raycasts the Z=0 ground under orthographic top and perspective cameras", async () => {
+    const { OrthographicCamera, PerspectiveCamera } = await import("three");
+    const rect = { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 } as DOMRect;
+
+    const ortho = new OrthographicCamera(-100, 100, 50, -50, 0.1, 1000);
+    ortho.position.set(0, 0, 100);
+    ortho.up.set(0, 1, 0);
+    ortho.lookAt(0, 0, 0);
+    ortho.updateMatrixWorld(true);
+    ortho.updateProjectionMatrix();
+
+    const orthoCenter = raycastGroundPoint(100, 50, rect, ortho);
+    expect(orthoCenter).not.toBeNull();
+    expect(orthoCenter![0]).toBeCloseTo(0, 5);
+    expect(orthoCenter![1]).toBeCloseTo(0, 5);
+    expect(orthoCenter![2]).toBeCloseTo(0, 5);
+
+    const orthoRight = raycastGroundPoint(150, 50, rect, ortho);
+    expect(orthoRight).not.toBeNull();
+    expect(orthoRight![0]).toBeCloseTo(50, 5);
+    expect(orthoRight![1]).toBeCloseTo(0, 5);
+    expect(orthoRight![2]).toBeCloseTo(0, 5);
+
+    const orthoUp = raycastGroundPoint(100, 25, rect, ortho);
+    expect(orthoUp).not.toBeNull();
+    expect(orthoUp![0]).toBeCloseTo(0, 5);
+    expect(orthoUp![1]).toBeCloseTo(25, 5);
+    expect(orthoUp![2]).toBeCloseTo(0, 5);
+
+    const perspective = new PerspectiveCamera(50, 2, 0.1, 1000);
+    perspective.position.set(0, 0, 10);
+    perspective.up.set(0, 1, 0);
+    perspective.lookAt(0, 0, 0);
+    perspective.updateMatrixWorld(true);
+    perspective.updateProjectionMatrix();
+
+    const perspectiveCenter = raycastGroundPoint(100, 50, rect, perspective);
+    expect(perspectiveCenter).not.toBeNull();
+    expect(perspectiveCenter![0]).toBeCloseTo(0, 4);
+    expect(perspectiveCenter![1]).toBeCloseTo(0, 4);
+    expect(perspectiveCenter![2]).toBeCloseTo(0, 4);
   });
 
   it("shares the world catalogue drop preview across all registered hosts", () => {

@@ -293,6 +293,29 @@ impl BrepkitKernel {
         flat
     }
 
+    fn sample_oriented_edge_lines(&self, edge: EdgeId, tol: f64) -> Result<Vec<f32>, BrepError> {
+        let nurbs = self.edge_to_nurbs(edge)?;
+        let (a, b) = nurbs.domain();
+        let samples = sample_deflection(&nurbs, a, b, tol);
+        let mut edges = Vec::new();
+        for pair in samples.windows(2) {
+            let p0 = pair[0].1;
+            let p1 = pair[1].1;
+            edges.extend([p0.x() as f32, p0.y() as f32, p0.z() as f32, p1.x() as f32, p1.y() as f32, p1.z() as f32]);
+        }
+        Ok(edges)
+    }
+
+    fn sample_face_boundary_edge_lines(&self, face: FaceId, tol: f64) -> Result<Vec<f32>, BrepError> {
+        let face_data = self.topo.face(face).map_err(Self::map_topo_err)?;
+        let wire = self.topo.wire(face_data.outer_wire()).map_err(Self::map_topo_err)?;
+        let mut edges = Vec::new();
+        for oriented_edge in wire.edges() {
+            edges.extend(self.sample_oriented_edge_lines(oriented_edge.edge(), tol)?);
+        }
+        Ok(edges)
+    }
+
     fn curve_domain_inner(curve: &KernelCurve) -> ParamDomain {
         match curve {
             KernelCurve::Line(_, len) => ParamDomain { min: 0.0, max: *len },
@@ -1453,7 +1476,8 @@ impl BrepkitKernel {
                 let position: Vec<f32> = mesh.positions.iter().flat_map(|p| [p.x() as f32, p.y() as f32, p.z() as f32]).collect();
                 let normal: Vec<f32> = mesh.normals.iter().flat_map(|n| [n.x() as f32, n.y() as f32, n.z() as f32]).collect();
                 let triangle_count = mesh.indices.len() as u32;
-                Ok(MeshTransfer { position, normal, index: mesh.indices, edges: Vec::new(), points: Vec::new(), face_groups: vec![FaceGroup { start: 0, count: triangle_count, entity_id: handle.as_str().to_string() }] })
+                let edges = self.sample_face_boundary_edge_lines(*face, tol)?;
+                Ok(MeshTransfer { position, normal, index: mesh.indices, edges, points: Vec::new(), face_groups: vec![FaceGroup { start: 0, count: triangle_count, entity_id: handle.as_str().to_string() }] })
             }
             Entity::Curve(c) => {
                 let nurbs = Self::curve_to_nurbs(c)?;
@@ -1478,15 +1502,8 @@ impl BrepkitKernel {
                     Entity::Wire(w) => self.topo.wire(*w).map_err(Self::map_topo_err)?.edges().iter().map(|oe| oe.edge()).collect(),
                     _ => Vec::new(),
                 };
-                for eid in edge_ids {
-                    let nurbs = self.edge_to_nurbs(eid)?;
-                    let (a, b) = nurbs.domain();
-                    let samples = sample_deflection(&nurbs, a, b, tol);
-                    for w in samples.windows(2) {
-                        let p0 = w[0].1;
-                        let p1 = w[1].1;
-                        edges.extend([p0.x() as f32, p0.y() as f32, p0.z() as f32, p1.x() as f32, p1.y() as f32, p1.z() as f32]);
-                    }
+                for edge_id in edge_ids {
+                    edges.extend(self.sample_oriented_edge_lines(edge_id, tol)?);
                 }
                 Ok(MeshTransfer { position: Vec::new(), normal: Vec::new(), index: Vec::new(), edges, points: Vec::new(), face_groups: Vec::new() })
             }
@@ -2031,6 +2048,19 @@ mod tests {
         assert!(mesh.edge_positions.len() >= 6);
         assert_eq!(mesh.edge_positions.len() % 6, 0);
         assert_eq!(mesh.edge_ids.len(), mesh.edge_positions.len() / 6);
+    }
+
+    #[test]
+    fn tessellate_face_carries_boundary_edge_positions() {
+        let mut kernel = BrepkitKernel::new();
+        let wire = kernel
+            .polyline_wire_sync(&[[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 2.0, 0.0], [0.0, 0.0, 0.0]])
+            .unwrap();
+        let face = kernel.planar_face_from_wire_sync(&wire).unwrap();
+        let mesh = kernel.tessellate_to_mesh_data_sync(&face, 0.1).unwrap();
+        assert!(mesh.triangle_count() > 0);
+        assert!(mesh.edge_positions.len() >= 6);
+        assert_eq!(mesh.edge_positions.len() % 6, 0);
     }
 
     type SolidCodec = (Box<dyn SolidExporter>, Box<dyn SolidImporter>, f64);

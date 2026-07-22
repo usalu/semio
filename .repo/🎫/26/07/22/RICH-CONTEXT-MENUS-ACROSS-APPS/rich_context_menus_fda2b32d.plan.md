@@ -10,19 +10,19 @@ todos:
     status: completed
   - id: brush-color
     content: Emit object-kind color on candidates and brushPreviewJson; React BrushPreviewGhost and WGPU cyan path use it
-    status: in_progress
+    status: completed
   - id: flow-menus
     content: "Flow (and shared node-graph apps): preview_off runtime, contextMenuAt, rich menu items + ops (selectAll/togglePreview already in flow/core)"
-    status: pending
+    status: completed
   - id: puzzle-menus
     content: Puzzle 2d/3d/5d rich menus with icons; vortex not suggestions-only; multi-vortex and reference menus; plugin-own board2d menu
-    status: pending
+    status: completed
   - id: other-apps
     content: "Procedural, trinity, sequence, dag, s, tiled map: adopt shared builders with icons; wgpu shell same wire schema"
-    status: pending
+    status: completed
   - id: tests-close
     content: Extend existing tests, runtime verify with [DEBUG] logs, close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

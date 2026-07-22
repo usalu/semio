@@ -2836,6 +2836,14 @@ pub trait DocumentApp: Send + 'static {
     ) -> ActionEmit<Self::Op> {
         ActionEmit::default()
     }
+    /// ⏱️ Effects the host should dispatch right after a refresh (not tied to any one action) —
+    /// the chokepoint for self-sustaining background work: since every action, document load, undo,
+    /// and remote op is followed by a `refreshUi` pass, an app that needs to notice "something changed,
+    /// keep going" (e.g. a `flowEvalTick` chain resuming an off-main-thread evaluation) arms it here
+    /// instead of duplicating the check into every mutating action. Default no-op.
+    fn pending_effects(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<HostEffect> {
+        Vec::new()
+    }
     fn render(&self, body_key: &str, doc: &DocumentView<'_, Self::Projection>, view_state: &ViewState) -> UiNode;
     /// 🪟 Keyed by window INSTANCE id (from `view_state.window_instances`), not window kind — an app with
     /// two open instances of the same kind (e.g. split panes) returns one entry per instance so their
@@ -3003,6 +3011,10 @@ pub trait PluginApp: Send {
     /// 🛠️ Object-safe counterpart to `DocumentApp::tool_measures` — keyed by tool id.
     fn tool_measures(&mut self, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
         HashMap::new()
+    }
+    /// ⏱️ Object-safe counterpart to `DocumentApp::pending_effects` — called once per `refreshUi` pass.
+    fn pending_effects(&mut self, _view_state: &ViewState) -> Vec<HostEffect> {
+        Vec::new()
     }
     fn app_labels(&mut self, _view_state: &ViewState) -> AppLabelsOverlay {
         AppLabelsOverlay::default()
@@ -3496,6 +3508,16 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         app.tool_measures(&doc, view_state)
     }
 
+    fn pending_effects(&mut self, view_state: &ViewState) -> Vec<HostEffect> {
+        if self.refresh_cache().is_err() {
+            return Vec::new();
+        }
+        let VcsDocumentApp { app, cache, .. } = self;
+        let (_, projection, history) = cache.as_ref().expect("cache refreshed above");
+        let doc = DocumentView { projection, history };
+        app.pending_effects(&doc, view_state)
+    }
+
     fn export_media(&mut self, port: &str) -> Result<Media, MediaError> {
         self.refresh_cache().map_err(|error| MediaError::Payload(port.to_string(), error))?;
         let VcsDocumentApp { app, cache, .. } = self;
@@ -3658,7 +3680,7 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
-use semio_framework_core::{kernel::InvocationResult, PluginManifest, ViewState};
+use semio_framework_core::{kernel::{HostEffect, InvocationResult}, PluginManifest, ViewState};
 use ui_wgpu::{framework_panel_tab_label, UiNode};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -4033,6 +4055,9 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         tools: Option<SectionResponse>,
         #[serde(skip_serializing_if = "Option::is_none")]
         labels: Option<SectionResponse>,
+        /// ⏱️ See `DocumentApp::pending_effects` — e.g. a `flowEvalTick` chain resuming after this refresh.
+        #[serde(skip_serializing_if = "Vec::is_empty")]
+        requested_effects: Vec<HostEffect>,
     }
 
     let request: RefreshRequest = serde_json::from_str(request_json).map_err(|error| error.to_string())?;
@@ -4050,6 +4075,11 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             .unwrap_or_default();
 
         let mut response = RefreshResponse::default();
+        // ⏱️ Arm/advance background work BEFORE rendering below, not after — e.g. a `flowEvalTick`
+        // chain's `computing_json` must be fresh by the time this same pass renders the graph, or a
+        // cold-start load would render one full refresh cycle behind (nothing flagged as computing
+        // until the *next* refresh).
+        response.requested_effects = instance.app.pending_effects(&request.view_state);
 
         for entry in &request.windows {
             // 🪟 Stamp this window's instance id into the view state before rendering, so a `DocumentApp`
@@ -5213,6 +5243,7 @@ pub fn world3d_scene_extended(
         fit_json: None,
         terrain_json: None,
         points_json: None,
+        status_json: None,
     }
 }
 

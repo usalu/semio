@@ -1,9 +1,9 @@
 {
   "title": "Get Aggregator Working End to End",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "Get aggregator working end to end. Currently no windows show content. Error: Fehlendes Fenster: puzzle3d-main-perspective",
-  "summary": "Fixed aggregator windows showing \"Fehlendes Fenster: puzzle3d-main-perspective\" (and empty Top pane).\n\nRoot cause: default layout seeds two instances of `puzzle3d-main` (`puzzle3d-main-top`, `puzzle3d-main-perspective`). A concurrent `refreshUi` from boot `setActiveExample` could run with a stale empty `extraWindowInstances` closure after the session-switch refresh had already written extras, then `mergeRecordPreservingIdentity` replaced the whole window-UI map with only the bare kind id — wiping instance-keyed bodies while the layout still referenced them.\n\nFix in framework/renderer/react/index.tsx:\n1. Seed default-layout extras + shell layout synchronously when creating the boot session (host + playground paths).\n2. Keep `extraWindowInstancesRef` updated on every seed/split/drop/retitle write; `refreshUi` and action dispatch read the ref, never the render-closure snapshot.\n3. Drop `extraWindowInstances` from `refreshUi` deps so seeding extras does not schedule a second full refresh.\n\nVerified: layout-seed vitest (3/3), browser smoke on http://127.0.0.1:6023 — no missing-window text, 2 window panes (Top + Perspective), introduction chrome present.",
+  "summary": "Fixed empty aggregator panes (missing-window race + blank WebGL).\n\nMissing body: seed default-layout extras/shell layout on session create; keep extraWindowInstancesRef authoritative for refreshUi so concurrent boot refresh cannot wipe instance-keyed window UI.\n\nBlank canvases: sticky peekPendingWorldProjection (clear on pane close only); layout effects use live store camera via getThree() + isOrthographicCamera duck-typing so Top gets pixel frustum; demand frameloop invalidates after reference/GLB load plus a short mount pump.\n\nVerified Playwright on :6023 — Top shows floor plan/grid/markers; Perspective shows reference plane + GLB mesh.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2231"
   },
