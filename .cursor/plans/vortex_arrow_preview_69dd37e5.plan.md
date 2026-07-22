@@ -4,19 +4,19 @@ overview: Render puzzle 3D vortices as a small point sphere plus a directional a
 todos:
   - id: ticket
     content: Open ticket under goal r2602
-    status: in_progress
+    status: completed
   - id: plugin-option
     content: Add vortex_direction window option, action, labels, and stamp displayDirection in world_vortices_json
-    status: pending
+    status: completed
   - id: react-markers
     content: Rewrite WorldVortexMarkers as small sphere + arrow with outwards/inwards layout
-    status: pending
+    status: completed
   - id: wgpu-markers
     content: Render vortex arrows in infinite/world (direction + displayDirection, shaft/head instances, pick unchanged)
-    status: pending
+    status: completed
   - id: tests-close
     content: Extend puzzle-plugin tests; close ticket
-    status: pending
+    status: in_progress
 isProject: false
 ---
 

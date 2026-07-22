@@ -1,0 +1,19 @@
+{
+  "title": "Flow Double-Click Catalogue Spotlight",
+  "emoji": "✨",
+  "status": "closed",
+  "description": "Double-clicking empty flow canvas background opens an inline search at the cursor. Typing filters catalogue nodes; hovering a match (or the top match while typing) previews it as a highlighted ghost node on the canvas (same paint path as catalogue drag). Enter/click inserts the node at the double-click world point; Escape closes and clears the ghost.",
+  "summary": "Restored flow canvas double-click catalogue spotlight in FlowGraphCanvasHost. Empty-canvas double-click opens an inline search; typing ranks catalogue matches and previews the active row as a highlighted ghost node via setGhostWidget; hover/arrow keys switch the preview; Enter/click places the node at the double-click world point. Added flowRankCatalogueSuggestions / flowCatalogueItemDescriptor helpers and vitest coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2232"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "587cf57b",
+    "local": "flow_double-click_add_587cf57b.plan.md"
+  },
+  "sessions": [
+    "⚪694a5cc18ec44ec1bc570df86443f018"
+  ]
+}

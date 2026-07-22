@@ -944,6 +944,11 @@ mod wasm_session {
             self.state.borrow().host.dag.selection_preview_crossing()
         }
 
+        #[wasm_bindgen(js_name = selectionPreviewMethod)]
+        pub fn selection_preview_method(&self) -> String {
+            self.state.borrow().host.dag.selection_preview_method().to_string()
+        }
+
         #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
         pub fn selection_union_bounds_screen_json(&self) -> String {
             self.state.borrow().host.dag.selection_union_bounds_screen_json()

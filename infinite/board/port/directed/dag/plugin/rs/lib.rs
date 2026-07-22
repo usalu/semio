@@ -1,8 +1,8 @@
 //! 🔀 DAG plugin — declarative DAG play app bundled as a hot-swappable WASM component.
 
 use infinite_board_port_directed_dag::{
-    dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, stepper_widget_height, stepper_widget_width, would_create_cycle, DagCamera, DagDocument,
-    DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec, DagOp, DagPreviewContent, DagStepperField, IoPortSpec, DAG_DOCUMENT_SCHEMA,
+    dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDocument,
+    DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec, DagOp, DagPreviewContent, IoPortSpec, DAG_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
@@ -172,21 +172,6 @@ fn default_node_for_kind(kind: &str, id: &str, x: f64, y: f64) -> DagNodeSpec {
                 ..Default::default()
             }
         }
-        "stepper" => {
-            let fields = vec![DagStepperField { key: "value".into(), label: "Value".into(), value: 0.0, step: 1.0 }];
-            DagNodeSpec {
-                id: id.into(),
-                name: "Stepper".into(),
-                abbreviation: "Stp".into(),
-                icon: "emoji:🎚️".into(),
-                x,
-                y,
-                width: stepper_widget_width(),
-                height: stepper_widget_height(fields.len()),
-                kind: DagNodeKind::Stepper { fields, output: IoPortSpec::named("N", "Num", "number", "Number") },
-                ..Default::default()
-            }
-        }
         _ => DagNodeSpec {
             id: id.into(),
             name: "Computation".into(),
@@ -337,7 +322,6 @@ struct DagPlayLabels {
     empty: &'static str,
     kind_computation: &'static str,
     kind_slider: &'static str,
-    kind_stepper: &'static str,
     kind_select: &'static str,
     kind_note: &'static str,
     kind_preview: &'static str,
@@ -364,7 +348,6 @@ const DAG_PLAY_LABELS_NATIVE_EN: DagPlayLabels = DagPlayLabels {
     empty: "(none)",
     kind_computation: "Computation",
     kind_slider: "Slider",
-    kind_stepper: "Stepper",
     kind_select: "Select",
     kind_note: "Note",
     kind_preview: "Preview",
@@ -391,7 +374,6 @@ const DAG_PLAY_LABELS_NATIVE_DE: DagPlayLabels = DagPlayLabels {
     empty: "(keine)",
     kind_computation: "Berechnung",
     kind_slider: "Schieberegler",
-    kind_stepper: "Schrittregler",
     kind_select: "Auswahl",
     kind_note: "Notiz",
     kind_preview: "Vorschau",
@@ -492,7 +474,6 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
 
 fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
     let kinds =
-        [("computation", labels.kind_computation), ("slider", labels.kind_slider), ("stepper", labels.kind_stepper), ("select", labels.kind_select), ("note", labels.kind_note), ("preview", labels.kind_preview), ("screen", labels.kind_screen)];
     UiNode::Tree(UiTreeNode {
         loading: None,
         sections: vec![UiTreeSectionNode {
@@ -992,7 +973,6 @@ fn create_dag_app() -> App {
                     ActionArgOption::new("screen", "Screen"),
                     ActionArgOption::new("note", "Note"),
                     ActionArgOption::new("preview", "Preview"),
-                    ActionArgOption::new("stepper", "Stepper"),
                 ]).default_value("computation"),
             ]),
     )

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Procedural 3d Hover Sync",
+  "emoji": "🎯",
+  "status": "closed",
+  "description": "Fix Procedural 3d Hover Sync",
+  "summary": "Fixed bidirectional procedural 3d hover sync: procedural plugin now handles nodeGraphHover and setHover (updates hovered_node_id, exports hover_json on graph scene), React FlowGraphCanvasHost/WasmGraphSurface dispatch hover on pointer move, and syncFlowSessionFromScene applies hoverJson back to the flow session.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2228"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪3a87e5dbe5d34862accb3b1174139f39"
+  ]
+}

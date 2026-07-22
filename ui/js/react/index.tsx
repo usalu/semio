@@ -1627,13 +1627,23 @@ export interface ContextMenuItem {
   id: string;
   label?: string;
   icon?: IconSource | string;
+  color?: string;
   shortcut?: string;
   disabled?: boolean;
   separator?: boolean;
   checked?: boolean;
   destructive?: boolean;
   onSelect?: (event: Event) => void;
+  onHover?: () => void;
+  onHoverEnd?: () => void;
   children?: ContextMenuItem[];
+}
+
+function renderContextMenuColor(color: string | undefined): React.ReactNode {
+  if (!color) {
+    return null;
+  }
+  return <span aria-hidden className="size-small shrink-0 rounded-sm border border-border" style={{ background: color }} />;
 }
 
 function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
@@ -1641,6 +1651,16 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
     return null;
   }
   return <Icon icon={icon as IconSource} size="small" className="shrink-0" />;
+}
+
+function renderContextMenuLeading(item: ContextMenuItem): React.ReactNode {
+  return (
+    <>
+      {item.checked !== undefined ? <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span> : null}
+      {renderContextMenuColor(item.color)}
+      {renderContextMenuIcon(item.icon)}
+    </>
+  );
 }
 
 /**
@@ -1660,7 +1680,7 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
       rows.push(
         <DropdownMenuPrimitive.Sub key={item.id}>
           <DropdownMenuPrimitive.SubTrigger disabled={item.disabled} className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}>
-            {renderContextMenuIcon(item.icon)}
+            {renderContextMenuLeading(item)}
             <span className="truncate">{item.label ?? item.id}</span>
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
           </DropdownMenuPrimitive.SubTrigger>
@@ -1668,25 +1688,6 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
             <DropdownMenuPrimitive.SubContent className={contextMenuContentClassName}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
           </DropdownMenuPrimitive.Portal>
         </DropdownMenuPrimitive.Sub>,
-      );
-      continue;
-    }
-    if (item.checked !== undefined) {
-      rows.push(
-        <DropdownMenuPrimitive.Item
-          key={item.id}
-          disabled={item.disabled}
-          className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
-          onSelect={(event) => {
-            item.onSelect?.(event as unknown as Event);
-            onClose?.();
-          }}
-        >
-          <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span>
-          {renderContextMenuIcon(item.icon)}
-          <span className="truncate">{item.label ?? item.id}</span>
-          {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
-        </DropdownMenuPrimitive.Item>,
       );
       continue;
     }
@@ -1699,8 +1700,10 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
           item.onSelect?.(event as unknown as Event);
           onClose?.();
         }}
+        onPointerEnter={() => item.onHover?.()}
+        onPointerLeave={() => item.onHoverEnd?.()}
       >
-        {renderContextMenuIcon(item.icon)}
+        {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
         {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
       </DropdownMenuPrimitive.Item>,
@@ -1822,10 +1825,38 @@ export interface ContextMenuControllerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenuItem; readonly onClose: () => void }): React.ReactNode {
+  const [open, setOpen] = reactHostPort.useState(false);
+  return (
+    <div className="relative" onPointerEnter={() => setOpen(true)} onPointerLeave={() => setOpen(false)}>
+      <button
+        aria-disabled={item.disabled}
+        className={cn(contextMenuItemClassName, "w-full bg-transparent text-start", item.destructive && "text-destructive focus:bg-destructive/10")}
+        data-disabled={item.disabled ? "" : undefined}
+        disabled={item.disabled}
+        role="menuitem"
+        type="button"
+      >
+        {renderContextMenuLeading(item)}
+        <span className="truncate">{item.label ?? item.id}</span>
+        <span className={contextMenuShortcutClassName}>›</span>
+      </button>
+      {open && item.children?.length ? (
+        <div className={cn(contextMenuContentClassName, "absolute start-full top-0 ms-tiny")} role="menu">
+          {renderFixedContextMenuItems(item.children, onClose)}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => void): React.ReactNode {
   return items.map((item) => {
     if (item.separator) {
       return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
+    }
+    if (item.children?.length) {
+      return <FixedContextMenuSubmenu key={item.id} item={item} onClose={onClose} />;
     }
     const role = item.checked === undefined ? "menuitem" : "menuitemcheckbox";
     return (
@@ -1840,11 +1871,12 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
           item.onSelect?.(event.nativeEvent);
           onClose();
         }}
+        onPointerEnter={() => item.onHover?.()}
+        onPointerLeave={() => item.onHoverEnd?.()}
         role={role}
         type="button"
       >
-        {item.checked !== undefined ? <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span> : null}
-        {renderContextMenuIcon(item.icon)}
+        {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
         {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
       </button>
@@ -2627,6 +2659,7 @@ export type UiTranslationSchema = {
       readonly bottomRight: UiLabelValue;
       readonly display: UiLabelValue;
       readonly command: UiLabelValue;
+      readonly tool: UiLabelValue;
       readonly overview: UiLabelValue;
       readonly workbench: UiLabelValue;
       readonly details: UiLabelValue;
@@ -3182,6 +3215,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Befehl",
               beginner: "Befehl",
+            },
+          },
+          tool: {
+            label: {
+              normal: "Werkzeug",
+              beginner: "Werkzeug",
             },
           },
           overview: {
@@ -3791,6 +3830,12 @@ export const uiChromeTranslationBundles = {
             label: {
               normal: "Command",
               beginner: "Command",
+            },
+          },
+          tool: {
+            label: {
+              normal: "Tool",
+              beginner: "Tool",
             },
           },
           overview: {
@@ -25512,6 +25557,26 @@ if (import.meta.vitest) {
       });
       expect(screen.queryByText("trash")).toBeNull();
       expect(screen.queryByText("sparkles")).toBeNull();
+    });
+
+    it("renders a color swatch and fires hover callbacks on controller items", async () => {
+      const onHover = vi.fn();
+      const onHoverEnd = vi.fn();
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 12, y: 24 }}
+          items={[{ id: "kind", label: "Capsule", icon: "box", color: "#aabbcc", onHover, onHoverEnd }]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const item = await waitFor(() => screen.getByRole("menuitem", { name: "Capsule" }));
+      const swatch = item.querySelector("[aria-hidden]") as HTMLElement | null;
+      expect(swatch?.style.background).toBe("rgb(170, 187, 204)");
+      fireEvent.pointerEnter(item);
+      expect(onHover).toHaveBeenCalled();
+      fireEvent.pointerLeave(item);
+      expect(onHoverEnd).toHaveBeenCalled();
     });
   });
 

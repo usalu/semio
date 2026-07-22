@@ -83,7 +83,6 @@ const configuration: UserConfig = {
       "fuse.js",
       "i18next",
       "i18next-browser-languagedetector",
-      "lucide-react",
       "react-hotkeys-hook",
       "react-i18next",
       "react-resizable-panels",

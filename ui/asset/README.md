@@ -1,167 +1,166 @@
 # UI assets
 
-Shared fonts, cursors, lists, and vendored UI icons served at `/asset/*`.
+Shared fonts, cursors, lists, and UI chrome icons served at `/asset/*`.
 
-## Icons (vendored from Lucide)
+## Icons
 
-Initial chrome icons were copied from [Lucide](https://lucide.dev) v0.536.0 (`lucide-static`, **ISC License**).
-Source: https://github.com/lucide-icons/lucide
+Chrome icons are committed SVGs under `icon/`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Do not edit files under `icons/*.svg` by hand — run **build ui assets** (`bun ./script.ts generate all`) after changing `VENDORED_ICON_IDS` in `script.ts`.
+Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts generate all`).
 
-### Vendored icon ids
+### Catalog icon ids
 
-- `alert-circle` (from Lucide `alert-circle`)
-- `align-left` (from Lucide `align-left`)
-- `app-window` (from Lucide `app-window`)
-- `arrow-down` (from Lucide `arrow-down`)
-- `arrow-left` (from Lucide `arrow-left`)
-- `arrow-right` (from Lucide `arrow-right`)
-- `arrow-right-left` (from Lucide `arrow-right-left`)
-- `arrow-up` (from Lucide `arrow-up`)
-- `award` (from Lucide `award`)
-- `bar-chart-3` (from Lucide `bar-chart-3`)
-- `bell` (from Lucide `bell`)
-- `book-open` (from Lucide `book-open`)
-- `box` (from Lucide `box`)
-- `calendar-days` (from Lucide `calendar-days`)
-- `camera` (from Lucide `camera`)
-- `check` (from Lucide `check`)
-- `check-circle-2` (from Lucide `check-circle-2`)
-- `chevron-down` (from Lucide `chevron-down`)
-- `chevron-left` (from Lucide `chevron-left`)
-- `chevron-right` (from Lucide `chevron-right`)
-- `chevron-up` (from Lucide `chevron-up`)
-- `chevrons-up-down` (from Lucide `chevrons-up-down`)
-- `circle` (from Lucide `circle`)
-- `circle-dot` (from Lucide `circle-dot`)
-- `clipboard` (from Lucide `clipboard`)
-- `clipboard-list` (from Lucide `clipboard-list`)
-- `clock` (from Lucide `clock`)
-- `cloud` (from Lucide `cloud`)
-- `code` (from Lucide `code`)
-- `combine` (from Lucide `combine`)
-- `component` (from Lucide `component`)
-- `copy` (from Lucide `copy`)
-- `crosshair` (from Lucide `crosshair`)
-- `cylinder` (from Lucide `cylinder`)
-- `download` (from Lucide `download`)
-- `edit-3` (from Lucide `edit-3`)
-- `eraser` (from Lucide `eraser`)
-- `external-link` (from Lucide `external-link`)
-- `eye` (from Lucide `eye`)
-- `eye-off` (from Lucide `eye-off`)
-- `file` (from Lucide `file`)
-- `file-archive` (from Lucide `file-archive`)
-- `file-code` (from Lucide `file-code`)
-- `file-image` (from Lucide `file-image`)
-- `file-json` (from Lucide `file-json`)
-- `file-spreadsheet` (from Lucide `file-spreadsheet`)
-- `file-text` (from Lucide `file-text`)
-- `file-type` (from Lucide `file-type`)
-- `file-video` (from Lucide `file-video`)
-- `filter` (from Lucide `filter`)
-- `flip-horizontal` (from Lucide `flip-horizontal`)
-- `flip-vertical` (from Lucide `flip-vertical`)
-- `focus` (from Lucide `focus`)
-- `folder` (from Lucide `folder`)
-- `folder-open` (from Lucide `folder-open`)
-- `git-branch` (from Lucide `git-branch`)
-- `git-commit` (from Lucide `git-commit`)
-- `git-merge` (from Lucide `git-merge`)
-- `globe` (from Lucide `globe`)
-- `graduation-cap` (from Lucide `graduation-cap`)
-- `grid-3x3` (from Lucide `grid-3x3`)
-- `grip-vertical` (from Lucide `grip-vertical`)
-- `hammer` (from Lucide `hammer`)
-- `hand` (from Lucide `hand`)
-- `hard-drive` (from Lucide `hard-drive`)
-- `hash` (from Lucide `hash`)
-- `hexagon` (from Lucide `hexagon`)
-- `home` (from Lucide `home`)
-- `image` (from Lucide `image`)
-- `image-plus` (from Lucide `image-plus`)
-- `image-up` (from Lucide `image-up`)
-- `info` (from Lucide `info`)
-- `landmark` (from Lucide `landmark`)
-- `lasso` (from Lucide `lasso`)
-- `layers` (from Lucide `layers`)
-- `layout` (from Lucide `layout`)
-- `layout-grid` (from Lucide `layout-grid`)
-- `library` (from Lucide `library`)
-- `lightbulb` (from Lucide `lightbulb`)
-- `link` (from Lucide `link`)
-- `link-2-off` (from Lucide `link-2-off`)
-- `list` (from Lucide `list`)
-- `list-ordered` (from Lucide `list-ordered`)
-- `list-tree` (from Lucide `list-tree`)
-- `loader-2` (from Lucide `loader-2`)
-- `lock` (from Lucide `lock`)
-- `lock-open` (from Lucide `lock-open`)
-- `magnet` (from Lucide `magnet`)
-- `maximize-2` (from Lucide `maximize-2`)
-- `message-circle` (from Lucide `message-circle`)
-- `message-square` (from Lucide `message-square`)
-- `minimize-2` (from Lucide `minimize-2`)
-- `minus` (from Lucide `minus`)
-- `monitor` (from Lucide `monitor`)
-- `moon` (from Lucide `moon`)
-- `more-horizontal` (from Lucide `more-horizontal`)
-- `mouse-pointer` (from Lucide `mouse-pointer`)
-- `mouse-pointer-2` (from Lucide `mouse-pointer-2`)
-- `move` (from Lucide `move`)
-- `move-3d` (from Lucide `move-3d`)
-- `network` (from Lucide `network`)
-- `paint-bucket` (from Lucide `paint-bucket`)
-- `paintbrush` (from Lucide `paintbrush`)
-- `panel-left` (from Lucide `panel-left`)
-- `panel-right` (from Lucide `panel-right`)
-- `panel-top` (from Lucide `panel-top`)
-- `pause` (from Lucide `pause`)
-- `pen-tool` (from Lucide `pen-tool`)
-- `pipette` (from Lucide `pipette`)
-- `play` (from Lucide `play`)
-- `plug` (from Lucide `plug`)
-- `plus` (from Lucide `plus`)
-- `puzzle` (from Lucide `puzzle`)
-- `redo` (from Lucide `redo`)
-- `redo-2` (from Lucide `redo-2`)
-- `rotate-ccw` (from Lucide `rotate-ccw`)
-- `rotate-cw` (from Lucide `rotate-cw`)
-- `save` (from Lucide `save`)
-- `scaling` (from Lucide `scaling`)
-- `scissors` (from Lucide `scissors`)
-- `search` (from Lucide `search`)
-- `settings` (from Lucide `settings`)
-- `settings-2` (from Lucide `settings-2`)
-- `shapes` (from Lucide `shapes`)
-- `sigma` (from Lucide `sigma`)
-- `skip-back` (from Lucide `skip-back`)
-- `skip-forward` (from Lucide `skip-forward`)
-- `smartphone` (from Lucide `smartphone`)
-- `smile` (from Lucide `smile`)
-- `sparkles` (from Lucide `sparkles`)
-- `square` (from Lucide `square`)
-- `square-arrow-down-left` (from Lucide `square-arrow-down-left`)
-- `square-arrow-down-right` (from Lucide `square-arrow-down-right`)
-- `square-arrow-up-left` (from Lucide `square-arrow-up-left`)
-- `square-arrow-up-right` (from Lucide `square-arrow-up-right`)
-- `square-dashed` (from Lucide `square-dashed`)
-- `sun` (from Lucide `sun`)
-- `table-2` (from Lucide `table-2`)
-- `tablet` (from Lucide `tablet`)
-- `tags` (from Lucide `tags`)
-- `text-cursor` (from Lucide `text-cursor`)
-- `text-search` (from Lucide `text-search`)
-- `trash-2` (from Lucide `trash-2`)
-- `triangle` (from Lucide `triangle`)
-- `triangle-alert` (from Lucide `triangle-alert`)
-- `undo` (from Lucide `undo`)
-- `undo-2` (from Lucide `undo-2`)
-- `unlink` (from Lucide `unlink`)
-- `user` (from Lucide `user`)
-- `users` (from Lucide `users`)
-- `wrench` (from Lucide `wrench`)
-- `x` (from Lucide `x`)
-- `zoom-in` (from Lucide `zoom-in`)
-- `zoom-out` (from Lucide `zoom-out`)
+- `alert-circle`
+- `align-left`
+- `app-window`
+- `arrow-down`
+- `arrow-left`
+- `arrow-right`
+- `arrow-right-left`
+- `arrow-up`
+- `award`
+- `bar-chart-3`
+- `bell`
+- `book-open`
+- `box`
+- `calendar-days`
+- `camera`
+- `check`
+- `check-circle-2`
+- `chevron-down`
+- `chevron-left`
+- `chevron-right`
+- `chevron-up`
+- `chevrons-up-down`
+- `circle`
+- `circle-dot`
+- `clipboard`
+- `clipboard-list`
+- `clock`
+- `cloud`
+- `code`
+- `combine`
+- `component`
+- `copy`
+- `crosshair`
+- `cylinder`
+- `download`
+- `edit-3`
+- `eraser`
+- `external-link`
+- `eye`
+- `eye-off`
+- `file`
+- `file-archive`
+- `file-code`
+- `file-image`
+- `file-json`
+- `file-spreadsheet`
+- `file-text`
+- `file-type`
+- `file-video`
+- `filter`
+- `flip-horizontal`
+- `flip-vertical`
+- `focus`
+- `folder`
+- `folder-open`
+- `git-branch`
+- `git-commit`
+- `git-merge`
+- `globe`
+- `graduation-cap`
+- `grid-3x3`
+- `grip-vertical`
+- `hammer`
+- `hand`
+- `hard-drive`
+- `hash`
+- `hexagon`
+- `home`
+- `image`
+- `image-plus`
+- `image-up`
+- `info`
+- `landmark`
+- `lasso`
+- `layers`
+- `layout`
+- `layout-grid`
+- `library`
+- `lightbulb`
+- `link`
+- `link-2-off`
+- `list`
+- `list-ordered`
+- `list-tree`
+- `loader-2`
+- `lock`
+- `lock-open`
+- `magnet`
+- `maximize-2`
+- `message-circle`
+- `message-square`
+- `minimize-2`
+- `minus`
+- `monitor`
+- `moon`
+- `more-horizontal`
+- `mouse-pointer`
+- `mouse-pointer-2`
+- `move`
+- `move-3d`
+- `network`
+- `paint-bucket`
+- `paintbrush`
+- `panel-left`
+- `panel-right`
+- `panel-top`
+- `pause`
+- `pen-tool`
+- `pipette`
+- `play`
+- `plug`
+- `plus`
+- `puzzle`
+- `redo`
+- `redo-2`
+- `rotate-ccw`
+- `rotate-cw`
+- `save`
+- `scaling`
+- `scissors`
+- `search`
+- `settings`
+- `settings-2`
+- `shapes`
+- `sigma`
+- `skip-back`
+- `skip-forward`
+- `smartphone`
+- `smile`
+- `sparkles`
+- `square`
+- `square-arrow-down-left`
+- `square-arrow-down-right`
+- `square-arrow-up-left`
+- `square-arrow-up-right`
+- `square-dashed`
+- `sun`
+- `table-2`
+- `tablet`
+- `tags`
+- `text-cursor`
+- `text-search`
+- `trash-2`
+- `triangle`
+- `triangle-alert`
+- `undo`
+- `undo-2`
+- `unlink`
+- `user`
+- `users`
+- `wrench`
+- `x`
+- `zoom-in`
+- `zoom-out`

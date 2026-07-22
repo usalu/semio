@@ -26,8 +26,6 @@
         "eslint-plugin-storybook": "10.4.0",
         "globals": "^16.4.0",
         "lint-staged": "^16.2.7",
-        "lucide": "0.536.0",
-        "lucide-static": "0.536.0",
         "nx": "21.6.11",
         "playwright": "^1.57.0",
         "react": "^19.2.3",
@@ -3517,10 +3515,6 @@
     "lowercase-keys": ["lowercase-keys@2.0.0", "", {}, "sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA=="],
 
     "lru-cache": ["lru-cache@6.0.0", "", { "dependencies": { "yallist": "^4.0.0" } }, "sha512-Jo6dJ04CmSjuznwJSS3pUeWmd/H0ffTlkXXgwZi+eq1UCmqQwCh+eLsYOYCwY991i2Fah4h1BEMCx4qThGbsiA=="],
-
-    "lucide": ["lucide@0.536.0", "", {}, "sha512-BmwmMcTpPcyW2fsF8psFg+/5/xQkSvJ7eSt223hzUSmITfxhfEc7gg16ivWz97cAPMzVSmhkQ2Uj5kN2xOnUeQ=="],
-
-    "lucide-static": ["lucide-static@0.536.0", "", {}, "sha512-sP/CE7WIORRnPcutL0tSm1SiLEQ2g8FYbUUkYNNscCGSmUA3LDHfOXdghEFSzFQuo+6yxaTJ+/xNDUGHKPPD5g=="],
 
     "luxon": ["luxon@3.7.2", "", {}, "sha512-vtEhXh/gNjI9Yg1u4jX/0YVPMvxzHuGgCm6tC5kZyb08yjGWGnqAjGJvcXbqQR2P3MyMEFnRbpcdFS6PBcLqew=="],
 

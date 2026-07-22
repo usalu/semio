@@ -1,0 +1,13 @@
+{
+  "title": "Flow Off Main Thread Node Computation With Loading Chrome",
+  "emoji": "🧵",
+  "status": "open",
+  "description": "Node computation in the flow graph (flow_core FlowHost::evaluate_internal / touch_channel_eval) runs synchronously on whatever thread mutates the host. The React renderer's FlowGraphCanvasHost owns a main-thread FlowSession and calls loadFixtureJson/evaluateSync directly, so heavy evaluations (e.g. procedural-3d's \"Sphere Cut With Torus\" example, which drives brep.bool.cut -\u003e boolean_mesh_sync, a ~20s WASM stall) freeze the UI. The procedural plugin worker also re-evaluates the whole graph synchronously on every action/render.\n\nGoal: move all flow node computation off the main thread and show per-node loading chrome (the dag canvas already has unfed animated active/stale border chrome) while nodes compute. Verify on procedural-3d \"Sphere Cut With Torus\".\n\nApproach (see approved plan): tick-driven evaluation inside the plugin worker via a budgeted evaluator (neural/engine), a shared FlowEvalDriver (flow/core), pending_effects wired through refreshUi/action responses using the existing HostEffect::DispatchAction self-dispatch loop, new NodeGraphScene.evalJson / World3dScene.statusJson fields, and renderer changes (React + wgpu) that stop evaluating locally and instead apply eval outputs + computing progress from the scene.\n\nFull plan on disk at /Users/ueli/.claude/plans/flow-the-computation-of-sparkling-whale.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2235"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪b42b3864448741d3aaf511b384b7d713"
+  ]
+}

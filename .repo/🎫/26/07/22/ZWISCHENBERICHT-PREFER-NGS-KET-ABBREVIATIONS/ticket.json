@@ -1,0 +1,14 @@
+{
+  "title": "Zwischenbericht Prefer NGS KET Abbreviations",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "Make sure that all KET, NGS, etc. in mit-bestand Zwischenbericht are properly abbreviated via \\Abbr{} (so Abkürzungsverzeichnis page hyperlinks populate) and prefer NGS over LUH and KET over UdK whenever the project partner/department is meant. Keep formal cover-page and Mittelverwendung full institution names. Wire \\Abbr at occurrences of AP, KI, LLM, HID, REST, NGS, KET, BBSR, and remaining LUH/UdK where those university names must stay.",
+  "summary": "Wired all Zwischenbericht abbreviations through \\Abbr{} so the Abkürzungsverzeichnis collects hyperlinked page references (AP, KI, LLM, HID, REST, NGS, KET, BBSR). Prefer NGS over LUH and KET over UdK in partner/responsibility contexts (operative start, risk table, Erfolgsindikatoren, AP responsibility statements). Removed standalone LUH/UdK AbbreviationDefine entries; NGS/KET definitions still name the parent universities. Left cover and Mittelverwendung full institution names, and bare abbrs in section titles / pre-define front matter. Build verified: 96 pages with page refs and GoTo links for every remaining abbreviation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2234"
+  },
+  "goal": "🎯r2602/🎯updateddocs",
+  "sessions": [
+    "⚪6e4e3959fae246cc81367ca030544919"
+  ]
+}

@@ -223,7 +223,6 @@ pub mod app_2d {
         match widget {
             Widget::Neuron { id, .. }
             | Widget::InputSlider { id, .. }
-            | Widget::InputStepper { id, .. }
             | Widget::InputNote { id, .. }
             | Widget::InputImage { id, .. }
             | Widget::Variable { id, .. }
@@ -418,7 +417,6 @@ pub mod app_2d {
             generate_hint: &'static str = en: "Add a generation to edit input values.", de: "Erstelle eine Generation, um Eingabewerte zu bearbeiten.";
             preview_hint: &'static str = en: "(evaluate a generation to preview output)", de: "(Generation auswerten, um die Ausgabe in der Vorschau zu sehen)";
             source_slider: &'static str = en: "Slider", de: "Schieberegler";
-            source_stepper: &'static str = en: "Stepper", de: "Schrittzähler";
             source_note: &'static str = en: "Note", de: "Notiz";
             component_add: &'static str = en: "Add", de: "Addieren";
             component_and: &'static str = en: "And", de: "Und";
@@ -504,7 +502,7 @@ pub mod app_2d {
     }
 
     fn build_catalogue_tree(labels: &Procedural2dLabels) -> UiNode {
-        let sources = [("inputSlider", labels.source_slider), ("inputStepper", labels.source_stepper), ("inputNote", labels.source_note)];
+        let sources = [("inputSlider", labels.source_slider), ("inputNote", labels.source_note)];
         let components = [("math.add", labels.component_add), ("logic.and", labels.component_and), ("text.concat", labels.component_concat)];
         let sinks = [("outputPreview", labels.sink_preview), ("outputExport", labels.sink_export)];
         PanelTreeBuilder::new("procedural2d-play-catalogue")
@@ -606,7 +604,7 @@ pub mod app_2d {
         } else {
             serde_json::to_string(&play.runtime.selected_ids).ok()
         };
-        let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0);
+        let flow_extras = flow_backed_node_graph_extras(&play.fixture, "", 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
         let context_menu_json = serde_json::to_string(&json!([{
             "id": "delete-selection",
             "label": labels.delete_selection,
@@ -1071,7 +1069,6 @@ pub mod app_2d {
                 .action_args("addWidget", vec![
                     ActionArgDef::select("kind", "Kind", vec![
                         ActionArgOption::new("inputSlider", "Slider"),
-                        ActionArgOption::new("inputStepper", "Stepper"),
                         ActionArgOption::new("inputNote", "Note"),
                         ActionArgOption::new("neuron", "Component"),
                         ActionArgOption::new("outputPreview", "Preview"),
@@ -1767,7 +1764,6 @@ pub mod app_3d {
         match widget {
             Widget::Neuron { id, .. }
             | Widget::InputSlider { id, .. }
-            | Widget::InputStepper { id, .. }
             | Widget::InputNote { id, .. }
             | Widget::InputImage { id, .. }
             | Widget::Variable { id, .. }
@@ -2123,6 +2119,7 @@ pub mod app_3d {
             ("selectNode", "Select Node", "Knoten auswählen"),
             ("nodeGraphSelect", "Node Graph Select", "Graph-Auswahl"),
             ("nodeGraphHover", "Node Graph Hover", "Graph-Hover"),
+            ("setHover", "Set Hover", "Hover festlegen"),
             ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
             ("graphPointerDown", "Graph Pointer Down", "Graph-Zeiger gedrückt"),
             ("worldSelect", "World Select", "Welt auswählen"),
@@ -2416,7 +2413,23 @@ pub mod app_3d {
                     self.runtime.selected_node_ids = node_graph_selection_ids(args);
                     ActionEmit::default()
                 }
-                "nodeGraphHover" => ActionEmit::default(),
+                "nodeGraphHover" => {
+                    if let Some(widget_id) = parse_node_graph_hover_widget_id(args) {
+                        self.runtime.hovered_node_id = widget_id;
+                    }
+                    ActionEmit::default()
+                }
+                "setHover" => {
+                    if args.is_none() || args.and_then(|value| value.get("objectId")).is_none() {
+                        self.runtime.hovered_node_id = None;
+                    } else {
+                        self.runtime.hovered_node_id = args
+                            .and_then(|value| value.get("objectId"))
+                            .and_then(|value| value.as_str())
+                            .map(str::to_string);
+                    }
+                    ActionEmit::default()
+                }
                 "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
                 // 🧰 Host-owned active-utility switch — clear in-progress hover scratch, never emit ops.
                 SET_ACTIVE_UTILITY_ACTION_ID => {
@@ -2670,7 +2683,7 @@ pub mod app_3d {
                     } else {
                         serde_json::to_string(&envelope.runtime.selected_node_ids).ok()
                     };
-                    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0);
+                    let flow_extras = flow_backed_node_graph_extras(&envelope.fixture, &envelope.runtime.lod_mode, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
                     let context_menu_json = serde_json::to_string(&json!([{
                         "id": "delete-selection",
                         "label": labels.delete_selection,
@@ -2688,6 +2701,7 @@ pub mod app_3d {
                             lod_json: flow_extras.lod_json,
                             fixture_json: flow_extras.fixture_json,
                             selection_json,
+                            hover_json: node_graph_hover_json(&envelope.runtime),
                             context_menu_json,
                             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
                         },
@@ -2753,6 +2767,31 @@ pub mod app_3d {
                     (PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", "Kugel mit Torus geschnitten"),
                 ]))
         }
+    }
+
+    /// 🎯 Parses `nodeGraphHover` args into the hovered widget id — accepts `null`, `{ nodeId }`, or a
+    /// `DagChannelRef` `{ widgetId, port, direction }` payload from the flow graph session.
+    fn parse_node_graph_hover_widget_id(args: Option<&Value>) -> Option<Option<String>> {
+        let hover = args?.get("hoverJson")?;
+        if hover.is_null() {
+            return Some(None);
+        }
+        let parsed = if let Some(text) = hover.as_str() {
+            serde_json::from_str::<Value>(text).unwrap_or_else(|_| Value::String(text.to_string()))
+        } else {
+            hover.clone()
+        };
+        Some(
+            parsed
+                .get("widgetId")
+                .or_else(|| parsed.get("nodeId"))
+                .and_then(|value| value.as_str())
+                .map(str::to_string),
+        )
+    }
+
+    fn node_graph_hover_json(runtime: &Procedural3dRuntime) -> Option<String> {
+        runtime.hovered_node_id.as_ref().map(|id| json!({ "nodeId": id }).to_string())
     }
 
     fn node_graph_selection_ids(args: Option<&Value>) -> Vec<String> {
@@ -2893,6 +2932,7 @@ pub mod app_3d {
                 .view_action("selectNode", "Select Node")
                 .view_action("nodeGraphSelect", "Node Graph Select")
                 .view_action("nodeGraphHover", "Node Graph Hover")
+                .view_action("setHover", "Set Hover")
                 .view_action("worldPointerDown", "World Pointer Down")
                 .view_action("graphPointerDown", "Graph Pointer Down")
                 .view_action("worldSelect", "World Select")
@@ -2993,6 +3033,38 @@ pub mod app_3d {
             .expect("set example");
             let projection = app.projection().expect("projection");
             assert!(projection.fixture.widgets.iter().any(|widget| matches!(widget, Widget::Neuron { neuron_kind, .. } if neuron_kind == "brep.prim3d.sphere")));
+        }
+
+        #[test]
+        fn node_graph_hover_updates_preview_selection_and_graph_scene() {
+            let mut app = new_app();
+            app.handle_action(
+                "nodeGraphHover",
+                Some(&json!({ "hoverJson": { "nodeId": "extrude" } })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("node graph hover");
+            let preview = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("preview");
+            let preview_json = serde_json::to_string(&preview).expect("preview json");
+            assert!(preview_json.contains(r#""hoveredId":"extrude""#) || preview_json.contains(r#""hoveredId": "extrude""#));
+            let graph = app.render(PROCEDURAL_3D_PLAY_BODY_MAIN, None, &ViewState::default()).expect("graph");
+            let graph_json = serde_json::to_string(&graph).expect("graph json");
+            assert!(graph_json.contains(r#""hoverJson":"{\"nodeId\":\"extrude\"}""#) || graph_json.contains(r#""hoverJson": "{\"nodeId\":\"extrude\"}""#));
+        }
+
+        #[test]
+        fn set_hover_from_world_updates_preview_and_graph_scene() {
+            let mut app = new_app();
+            app.handle_action("setHover", Some(&json!({ "objectId": "extrude" })), &ViewState::default(), &meta("local"))
+                .expect("set hover");
+            let preview = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("preview");
+            let preview_json = serde_json::to_string(&preview).expect("preview json");
+            assert!(preview_json.contains("extrude"));
+            app.handle_action("setHover", None, &ViewState::default(), &meta("local")).expect("clear hover");
+            let cleared = app.render(PROCEDURAL_3D_PLAY_BODY_PREVIEW, None, &ViewState::default()).expect("preview cleared");
+            let cleared_json = serde_json::to_string(&cleared).expect("cleared json");
+            assert!(!cleared_json.contains(r#""hoveredId":"extrude""#));
         }
 
         #[test]

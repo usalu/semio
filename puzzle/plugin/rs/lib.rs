@@ -645,6 +645,7 @@ pub mod d2 {
             window_bodies: if window_bodies { panes } else { Vec::new() },
             panel_bodies,
             utilities: false,
+            tools: false,
             engagements,
             measures,
             labels: false,
@@ -658,6 +659,7 @@ pub mod d2 {
             window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             utilities: false,
+            tools: false,
             engagements: false,
             measures: false,
             labels: false,
@@ -671,6 +673,7 @@ pub mod d2 {
             window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             utilities: false,
+            tools: false,
             engagements: true,
             measures: false,
             labels: false,
@@ -685,6 +688,7 @@ pub mod d2 {
             window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: Vec::new(),
             utilities: false,
+            tools: false,
             engagements: false,
             measures: true,
             labels: false,
@@ -698,6 +702,7 @@ pub mod d2 {
             window_bodies: PUZZLE2D_WINDOW_BODY_KEYS.iter().map(|body_key| body_key.to_string()).collect(),
             panel_bodies: vec![PUZZLE2D_PLAY_BODY_LAYERS.to_string(), PUZZLE2D_PLAY_BODY_PROPERTIES.to_string()],
             utilities: false,
+            tools: false,
             engagements: true,
             measures: false,
             labels: false,
@@ -2408,7 +2413,7 @@ pub mod d2 {
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             match result.ui_scope {
-                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, labels } => {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                     // 🐢 Regression: `window_bodies` must list the window *body keys* (matched against
                     // `AppDefinition.windowKinds[].bodyKey` by the shell's `buildUiRefreshRequest`), not
                     // the pane/kind-id constants (`PUZZLE2D_PANES`) — those are a different id space.
@@ -2418,6 +2423,7 @@ pub mod d2 {
                     assert!(engagements, "select must refresh the engagement bar");
                     assert!(!measures, "select must not force a measures refresh");
                     assert!(!utilities);
+                    assert!(!tools);
                     assert!(!labels);
                 }
                 other => panic!("expected a Partial ui_scope for select, got {other:?}"),
@@ -2432,10 +2438,10 @@ pub mod d2 {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 1.0, "y": 2.0, "zoom": 1.0 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
             match result.ui_scope {
-                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, labels } => {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
                     assert_eq!(window_bodies.len(), 3);
                     assert!(panel_bodies.is_empty());
-                    assert!(!engagements && !measures && !utilities && !labels);
+                    assert!(!engagements && !measures && !utilities && !tools && !labels);
                 }
                 other => panic!("expected a Partial ui_scope for a camera event, got {other:?}"),
             }
@@ -2676,7 +2682,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
-        SurfaceKind, ToolDefinition, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -2716,6 +2722,10 @@ pub mod d3 {
     const PUZZLE3D_VORTEX_SHOW_ALWAYS: &str = "always";
     /// 🌀 Window option: emit vortices only for hovered/selected objects (and vortex-only hover/selection).
     const PUZZLE3D_VORTEX_SHOW_SELECTED: &str = "selected";
+    /// 🧭 Window option: arrow tip points away from the vortex point along `direction`.
+    const PUZZLE3D_VORTEX_DIRECTION_OUTWARDS: &str = "outwards";
+    /// 🧭 Window option: arrow tip ends on the vortex point; shaft starts at `point - direction * length`.
+    const PUZZLE3D_VORTEX_DIRECTION_INWARDS: &str = "inwards";
 
     const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../3d/example/concrete-forest.3d.json");
     const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../3d/example/nakagin-capsule-tower.3d.json");
@@ -2929,6 +2939,10 @@ pub mod d3 {
         PUZZLE3D_VORTEX_SHOW_SELECTED.into()
     }
 
+    fn default_vortex_direction() -> String {
+        PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into()
+    }
+
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Puzzle3dRuntime {
@@ -2984,6 +2998,9 @@ pub mod d3 {
         /// 🌀 When to emit vortex markers: [`PUZZLE3D_VORTEX_SHOW_ALWAYS`] or [`PUZZLE3D_VORTEX_SHOW_SELECTED`].
         #[serde(default = "default_vortex_show")]
         vortex_show: String,
+        /// 🧭 How vortex direction arrows are drawn: [`PUZZLE3D_VORTEX_DIRECTION_OUTWARDS`] or [`PUZZLE3D_VORTEX_DIRECTION_INWARDS`].
+        #[serde(default = "default_vortex_direction")]
+        vortex_direction: String,
         #[serde(default)]
         sun: WorldSunConfig,
         /// 🪟 Per-window-instance snapshot of every option field above, keyed by window INSTANCE id (never
@@ -3025,6 +3042,7 @@ pub mod d3 {
                 fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
                 vortex_show: default_vortex_show(),
+                vortex_direction: default_vortex_direction(),
                 sun: WorldSunConfig::default(),
                 window_options: BTreeMap::new(),
             }
@@ -3085,6 +3103,7 @@ pub mod d3 {
         fill_edit_target_volumes: bool,
         voxel_dims: [u32; 3],
         vortex_show: String,
+        vortex_direction: String,
         sun: WorldSunConfig,
     }
 
@@ -3110,6 +3129,7 @@ pub mod d3 {
                 fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
                 vortex_show: default_vortex_show(),
+                vortex_direction: default_vortex_direction(),
                 sun: WorldSunConfig::default(),
             }
         }
@@ -3139,6 +3159,7 @@ pub mod d3 {
                 fill_edit_target_volumes: self.fill_edit_target_volumes,
                 voxel_dims: self.voxel_dims,
                 vortex_show: self.vortex_show.clone(),
+                vortex_direction: self.vortex_direction.clone(),
                 sun: self.sun.clone(),
             }
         }
@@ -3165,6 +3186,7 @@ pub mod d3 {
             self.fill_edit_target_volumes = options.fill_edit_target_volumes;
             self.voxel_dims = options.voxel_dims;
             self.vortex_show = options.vortex_show.clone();
+            self.vortex_direction = options.vortex_direction.clone();
             self.sun = options.sun.clone();
         }
 
@@ -3474,6 +3496,42 @@ pub mod d3 {
         "#38bdf8".into()
     }
 
+    fn object_kind_color(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+        let Some(kind_id) = object_kind else {
+            return "#38bdf8".into();
+        };
+        let Some(catalogs) = meta.kind_catalogs.as_ref() else {
+            return "#38bdf8".into();
+        };
+        let Some(entries) = catalogs.get("objects").and_then(|value| value.as_array()) else {
+            return "#38bdf8".into();
+        };
+        for entry in entries {
+            if entry.get("id").and_then(|value| value.as_str()) == Some(kind_id) {
+                return entry.get("color").and_then(|value| value.as_str()).unwrap_or("#38bdf8").to_string();
+            }
+        }
+        "#38bdf8".into()
+    }
+
+    fn object_kind_icon(meta: &Puzzle3dFixtureMeta, object_kind: Option<&str>) -> String {
+        let Some(kind_id) = object_kind else {
+            return "box".into();
+        };
+        let Some(catalogs) = meta.kind_catalogs.as_ref() else {
+            return "box".into();
+        };
+        let Some(entries) = catalogs.get("objects").and_then(|value| value.as_array()) else {
+            return "box".into();
+        };
+        for entry in entries {
+            if entry.get("id").and_then(|value| value.as_str()) == Some(kind_id) {
+                return entry.get("icon").or_else(|| entry.get("iconId")).and_then(|value| value.as_str()).unwrap_or("box").to_string();
+            }
+        }
+        "box".into()
+    }
+
     fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
         if vortex_id.contains(':') {
             vortex_id.to_string()
@@ -3550,6 +3608,7 @@ pub mod d3 {
                     "direction": direction,
                     "radius": vortex.radius.unwrap_or(0.36),
                     "color": vortex_color(&fixture.meta, vortex.vortex_kind.as_deref()),
+                    "displayDirection": runtime.vortex_direction,
                     "selected": selected,
                     "hovered": hovered,
                 }));
@@ -3711,6 +3770,7 @@ pub mod d3 {
             window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
             panel_bodies: Vec::new(),
             utilities: false,
+            tools: false,
             engagements: false,
             measures: false,
             labels: false,
@@ -4520,6 +4580,9 @@ pub mod d3 {
         always: &'static str,
         selected: &'static str,
         vortex_show: &'static str,
+        outwards: &'static str,
+        inwards: &'static str,
+        vortex_direction: &'static str,
     }
 
     const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels {
@@ -4547,6 +4610,9 @@ pub mod d3 {
         always: "Always",
         selected: "Selected",
         vortex_show: "Vortex Show",
+        outwards: "Outwards",
+        inwards: "Inwards",
+        vortex_direction: "Vortex Direction",
     };
     const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels {
         objects: "Objekte",
@@ -4573,6 +4639,9 @@ pub mod d3 {
         always: "Immer",
         selected: "Auswahl",
         vortex_show: "Vortex-Anzeige",
+        outwards: "Auswärts",
+        inwards: "Einwärts",
+        vortex_direction: "Vortex-Richtung",
     };
     const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels {
         objects: "Building components",
@@ -5429,6 +5498,20 @@ pub mod d3 {
         }
     }
 
+    /// 🧭 Window option for how vortex direction arrows are drawn — Outwards (tip away from point) or Inwards (tip on point).
+    fn puzzle3d_vortex_direction_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+        WindowMeasure::Select {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-vortex-direction"),
+            label: Some(labels.vortex_direction.into()),
+            value: runtime.vortex_direction.clone(),
+            items: vec![
+                MeasureSelectItem { id: PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into(), value: PUZZLE3D_VORTEX_DIRECTION_OUTWARDS.into(), label: labels.outwards.into() },
+                MeasureSelectItem { id: PUZZLE3D_VORTEX_DIRECTION_INWARDS.into(), value: PUZZLE3D_VORTEX_DIRECTION_INWARDS.into(), label: labels.inwards.into() },
+            ],
+            on_change: puzzle3d_action("setVortexDirection", None),
+        }
+    }
+
     /// 🪣 Fill-count slider measure — the fill-utility's core parameter, mirrors the retired
     /// `puzzle3d_fill_count_control` (`setFillCount` reads `count`-or-`value`, so a slider's `{value}` payload
     /// preserves the action semantics). The label stays fixed; preload progress is the ready extent + loading ring.
@@ -5567,6 +5650,7 @@ pub mod d3 {
         vec![
             world3d_projection_measures("puzzle3d", &envelope.fixture.camera.projection, puzzle3d_action),
             puzzle3d_vortex_show_measure(&envelope.runtime, labels),
+            puzzle3d_vortex_direction_measure(&envelope.runtime, labels),
             puzzle3d_lod_measures_group(&envelope.runtime),
             puzzle3d_grid_measures_group(&envelope.runtime),
             puzzle3d_select_measures_group(&envelope.runtime, labels),
@@ -5774,6 +5858,13 @@ pub mod d3 {
                     if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                         if mode == PUZZLE3D_VORTEX_SHOW_ALWAYS || mode == PUZZLE3D_VORTEX_SHOW_SELECTED {
                             envelope.runtime.vortex_show = mode.into();
+                        }
+                    }
+                }
+                "setVortexDirection" => {
+                    if let Some(mode) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
+                        if mode == PUZZLE3D_VORTEX_DIRECTION_OUTWARDS || mode == PUZZLE3D_VORTEX_DIRECTION_INWARDS {
+                            envelope.runtime.vortex_direction = mode.into();
                         }
                     }
                 }
@@ -6499,6 +6590,7 @@ pub mod d3 {
             ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setVortexShow", "Set Vortex Show", "Vortex-Anzeige festlegen"),
+            ("setVortexDirection", "Set Vortex Direction", "Vortex-Richtung festlegen"),
             ("toggleSun", "Toggle Sun", "Sonne umschalten"),
             ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
             ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
@@ -6663,6 +6755,7 @@ pub mod d3 {
                 .view_action("worldVortexSelect", "World Vortex Select")
                 .view_action("setSelectionMethod", "Set Selection Method")
                 .view_action("setVortexShow", "Set Vortex Show")
+                .view_action("setVortexDirection", "Set Vortex Direction")
                 .view_action("toggleSun", "Toggle Sun")
                 .view_action("setSunAzimuth", "Set Sun Azimuth")
                 .view_action("setSunElevation", "Set Sun Elevation")
@@ -7303,6 +7396,48 @@ pub mod d3 {
             app.handle_action("setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_SELECTED })), &ViewState::default(), &testkit::meta("local")).expect("setVortexShow selected");
             let idle_again = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
             assert!(idle_again.is_empty(), "switching back to Selected must hide idle vortices");
+        }
+
+        #[test]
+        fn vortex_direction_window_option_defaults_to_outwards_and_switches_to_inwards() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let measures = app.window_measures(&ViewState::default());
+            let window_measures = measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            assert_eq!(find_measure_select(window_measures, "puzzle3d-play-vortex-direction").as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS));
+
+            app.handle_action("setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), &ViewState::default(), &testkit::meta("local")).expect("setVortexShow always");
+            let outwards_vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(!outwards_vortices.is_empty(), "fixture must expose vortices");
+            assert!(outwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
+
+            app.handle_action("setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), &ViewState::default(), &testkit::meta("local")).expect("setVortexDirection inwards");
+            let measures_inwards = app.window_measures(&ViewState::default());
+            let window_measures_inwards = measures_inwards.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            assert_eq!(find_measure_select(window_measures_inwards, "puzzle3d-play-vortex-direction").as_deref(), Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS));
+            let inwards_vortices = render_composite(&mut app).pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(inwards_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
+        }
+
+        #[test]
+        fn vortex_direction_option_is_local_to_the_window_instance() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let second_window = "puzzle3d-main-2";
+            let instances = vec![
+                ViewWindowInstance { id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+                ViewWindowInstance { id: second_window.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+            ];
+            let second_window_view = ViewState { window_id: Some(second_window.to_string()), window_instances: instances.clone(), ..ViewState::default() };
+
+            app.handle_action("setVortexShow", Some(&json!({ "value": PUZZLE3D_VORTEX_SHOW_ALWAYS })), &ViewState { window_instances: instances.clone(), ..ViewState::default() }, &testkit::meta("local")).expect("setVortexShow always");
+            app.handle_action("setVortexDirection", Some(&json!({ "value": PUZZLE3D_VORTEX_DIRECTION_INWARDS })), &second_window_view, &testkit::meta("local")).expect("setVortexDirection inwards on second window");
+
+            let base_composite = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState { window_id: Some(PUZZLE3D_PLAY_WINDOW_MAIN.into()), window_instances: instances.clone(), ..ViewState::default() }).expect("render base window")).unwrap();
+            let base_vortices = base_composite.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(base_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_OUTWARDS)));
+
+            let second_composite = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &second_window_view).expect("render second window")).unwrap();
+            let second_vortices = second_composite.pointer("/world3d/vorticesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok()).unwrap_or_default();
+            assert!(second_vortices.iter().all(|record| record.get("displayDirection").and_then(Value::as_str) == Some(PUZZLE3D_VORTEX_DIRECTION_INWARDS)));
         }
 
         #[test]

@@ -467,6 +467,24 @@ export type Canvas2dScene = {
 };
 
 /** 🌐 A 3D world surface scene payload — mirrors the wasm `componentScene` node's `world3d` field. */
+/** 🖱️ Serializable context-menu entry emitted by plugins (`contextMenuJson`) and mapped to UI {@link ContextMenuItem} by hosts. */
+export type ContextMenuItemSpec = {
+  readonly id: string;
+  readonly label?: string;
+  readonly icon?: string;
+  readonly color?: string;
+  readonly shortcut?: string;
+  readonly disabled?: boolean;
+  readonly separator?: boolean;
+  readonly checked?: boolean;
+  readonly destructive?: boolean;
+  readonly action?: string;
+  readonly args?: Record<string, unknown>;
+  readonly hoverAction?: string;
+  readonly hoverArgs?: Record<string, unknown>;
+  readonly children?: readonly ContextMenuItemSpec[];
+};
+
 export type World3dScene = {
   readonly cameraJson: string;
   readonly meshesJson: string;

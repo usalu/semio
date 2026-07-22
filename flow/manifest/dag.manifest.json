@@ -6,7 +6,6 @@
   "nodeKinds": [
     { "id": "computation", "name": "Computation" },
     { "id": "slider", "name": "Slider" },
-    { "id": "stepper", "name": "Stepper" },
     { "id": "select", "name": "Select" },
     { "id": "screen", "name": "Screen" },
     { "id": "note", "name": "Note" },

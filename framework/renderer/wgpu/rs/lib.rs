@@ -2859,6 +2859,15 @@ fn sync_flow_host(host: &mut FlowHost, graph: &ui_wgpu::NodeGraphScene, cache: &
                 if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
                     host.set_proximity_distance(distance);
                 }
+                if let Some(visible) = value.get("gridVisible").and_then(|v| v.as_bool()) {
+                    host.set_grid_visible(visible);
+                }
+                if let Some(enabled) = value.get("gridSnapEnabled").and_then(|v| v.as_bool()) {
+                    host.set_grid_snap_enabled(enabled);
+                }
+                if let Some(factor) = value.get("gridFactor").and_then(|v| v.as_f64()) {
+                    let _ = host.set_grid_factor(factor);
+                }
             }
         }
     }

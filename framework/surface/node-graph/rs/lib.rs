@@ -267,6 +267,18 @@ impl GraphHost {
                 if let Some(distance) = value.get("proximityDistance").and_then(|v| v.as_f64()) {
                     self.dag.set_proximity_distance(distance);
                 }
+                if let Some(visible) = value.get("gridVisible").and_then(|v| v.as_bool()) {
+                    self.dag.set_grid_visible(visible);
+                }
+                if let Some(enabled) = value.get("gridSnapEnabled").and_then(|v| v.as_bool()) {
+                    self.dag.set_grid_snap_enabled(enabled);
+                }
+                if let Some(factor) = value.get("gridFactor").and_then(|v| v.as_f64()) {
+                    let _ = self.dag.set_grid_factor(factor);
+                }
+                if let Some(label) = value.get("forcedLabel").and_then(|v| v.as_str()) {
+                    self.dag.set_forced_draw_lod_label(label);
+                }
             }
         }
         if let Some(computing_json) = &payload.computing_json {
@@ -482,16 +494,6 @@ mod wasm_session {
             self.state.borrow().host.dag.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
         }
 
-        #[wasm_bindgen(js_name = paramOverlayPaintStateJson)]
-        pub fn param_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.dag.param_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
-        #[wasm_bindgen(js_name = stepperOverlayStateJson)]
-        pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
-            self.state.borrow().host.dag.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
-        }
-
         #[wasm_bindgen(js_name = sliderOverlayStateJson)]
         pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
             self.state.borrow().host.dag.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
@@ -510,6 +512,11 @@ mod wasm_session {
         #[wasm_bindgen(js_name = selectionPreviewCrossing)]
         pub fn selection_preview_crossing(&self) -> bool {
             self.state.borrow().host.dag.selection_preview_crossing()
+        }
+
+        #[wasm_bindgen(js_name = selectionPreviewMethod)]
+        pub fn selection_preview_method(&self) -> String {
+            self.state.borrow().host.dag.selection_preview_method().to_string()
         }
 
         #[wasm_bindgen(js_name = selectedNodeIdsJson)]

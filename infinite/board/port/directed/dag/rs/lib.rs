@@ -35,6 +35,8 @@ pub enum DagError {
     UnknownWidget(String),
     #[error("{0}")]
     CanvasTheme(String),
+    #[error("gridFactor must be finite and in (0, 1e6]")]
+    GridFactorOutOfRange,
     #[error(transparent)]
     Json(#[from] serde_json::Error),
 }
@@ -154,16 +156,6 @@ pub fn slider_widget_width(_name: &str, _output: &IoPortSpec) -> f64 {
 /// 📐 Slider track height — one computation channel row.
 pub fn slider_widget_height() -> f64 {
     DAG_CHANNEL_ROW_HEIGHT
-}
-
-/// 📐 Stepper widget width aligned with computation components.
-pub fn stepper_widget_width() -> f64 {
-    DAG_COMPONENT_WIDTH
-}
-
-/// 📐 Stepper widget height — one row per field.
-pub fn stepper_widget_height(field_count: usize) -> f64 {
-    field_count.max(1) as f64 * DAG_CHANNEL_ROW_HEIGHT
 }
 
 fn io_widget_label_center(node: &DagNodeSpec) -> (f64, f64) {
@@ -614,17 +606,7 @@ fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expand
 }
 // #endregion 🔖PreviewContent
 
-/// 🎚️ One named numeric field inside a stepper input widget.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct DagStepperField {
-    pub key: String,
-    pub label: String,
-    pub value: f64,
-    pub step: f64,
-}
-
-/// 🧩 Tagged node kind: computation, slider, stepper, select, or screen.
+/// 🧩 Tagged node kind: computation, slider, select, or screen.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DagNodeKind {
@@ -641,10 +623,6 @@ pub enum DagNodeKind {
         max: f64,
         step: f64,
         value: f64,
-        output: IoPortSpec,
-    },
-    Stepper {
-        fields: Vec<DagStepperField>,
         output: IoPortSpec,
     },
     Select {
@@ -706,7 +684,6 @@ pub fn dag_node_kind_tag(kind: &DagNodeKind) -> &'static str {
     match kind {
         DagNodeKind::Computation { .. } => "computation",
         DagNodeKind::Slider { .. } => "slider",
-        DagNodeKind::Stepper { .. } => "stepper",
         DagNodeKind::Select { .. } => "select",
         DagNodeKind::Screen { .. } => "screen",
         DagNodeKind::Note { .. } => "note",
@@ -840,7 +817,7 @@ impl DagNodeSpec {
     pub fn outputs(&self) -> &[IoPortSpec] {
         match &self.kind {
             DagNodeKind::Computation { outputs, .. } | DagNodeKind::Cluster { outputs, .. } | DagNodeKind::AppInstance { outputs, .. } => outputs,
-            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } | DagNodeKind::Note { output, .. } | DagNodeKind::Image { output, .. } | DagNodeKind::Stepper { output, .. } => std::slice::from_ref(output),
+            DagNodeKind::Slider { output, .. } | DagNodeKind::Select { output, .. } | DagNodeKind::Note { output, .. } | DagNodeKind::Image { output, .. } => std::slice::from_ref(output),
             _ => EMPTY_PORTS,
         }
     }
@@ -1066,10 +1043,6 @@ pub fn fit_node_size(node: &mut DagNodeSpec) {
         DagNodeKind::Slider { output, .. } => {
             node.width = slider_widget_width(&node.name, output);
             node.height = slider_widget_height();
-        }
-        DagNodeKind::Stepper { fields, .. } => {
-            node.width = stepper_widget_width();
-            node.height = stepper_widget_height(fields.len());
         }
         DagNodeKind::Note { text, .. } => {
             let (w, h) = note_widget_size(text);
@@ -1714,6 +1687,14 @@ fn dag_debug_log(msg: &str) {
     eprintln!("{msg}");
 }
 
+//#region 🔖Grid
+const GRID_WORLD_LARGE: f64 = ui_styling::metrics::board::GRID_WORLD_LARGE;
+const GRID_WORLD_MEDIUM: f64 = ui_styling::metrics::board::GRID_WORLD_MEDIUM;
+const GRID_WORLD_SMALL: f64 = ui_styling::metrics::board::GRID_WORLD_SMALL;
+const GRID_WORLD_MICRO: f64 = ui_styling::metrics::board::GRID_WORLD_MICRO;
+const GRID_FACTOR_DEFAULT: f64 = ui_styling::metrics::board::GRID_FACTOR_DEFAULT;
+//#endregion 🔖Grid
+
 // #region 🔖ChannelRef
 /// 🔌 Resolved fixture channel from a port handle hover or selection.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1772,6 +1753,9 @@ pub struct DagHost {
     wheel_zoom_render_lod: Option<DagDrawLod>,
     automatic_lod: bool,
     forced_draw_lod: Option<DagDrawLod>,
+    grid_visible: bool,
+    grid_snap_enabled: bool,
+    grid_factor: f64,
     icon_paint_cache: graph::IconPaintCache,
     ghost_node: Option<DagNodeSpec>,
     pending_cluster_explode: Option<String>,
@@ -1974,6 +1958,9 @@ impl DagHost {
             wheel_zoom_render_lod: None,
             automatic_lod: true,
             forced_draw_lod: None,
+            grid_visible: true,
+            grid_snap_enabled: false,
+            grid_factor: GRID_FACTOR_DEFAULT,
             icon_paint_cache: graph::IconPaintCache::new(),
             ghost_node: None,
             pending_cluster_explode: None,
@@ -2632,6 +2619,157 @@ impl DagHost {
         self.engine.proximity_distance_world = world.max(0.0);
     }
 
+    /// 🔲 Toggles LOD-tiered world grid painting.
+    pub fn set_grid_visible(&mut self, visible: bool) {
+        self.grid_visible = visible;
+    }
+
+    /// 🧲 Toggles node-drag snap to the finest visible LOD grid step.
+    pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
+        self.grid_snap_enabled = enabled;
+    }
+
+    /// 📐 Sets the positive multiplier for LOD world grid steps.
+    pub fn set_grid_factor(&mut self, factor: f64) -> Result<(), DagError> {
+        if !factor.is_finite() || factor <= 0.0 || factor > 1e6 {
+            return Err(DagError::GridFactorOutOfRange);
+        }
+        self.grid_factor = factor;
+        Ok(())
+    }
+
+    /// 🔍 Frames the current node selection in the viewport camera.
+    pub fn focus_selection_camera(&self, pad: f64) -> Option<DagCamera> {
+        let selected = self.selected_fixture_nodes();
+        if selected.is_empty() {
+            return None;
+        }
+        let mut min_x = f64::INFINITY;
+        let mut min_y = f64::INFINITY;
+        let mut max_x = f64::NEG_INFINITY;
+        let mut max_y = f64::NEG_INFINITY;
+        for (_, node) in &selected {
+            let hw = node.width * 0.5;
+            let hh = node.height * 0.5;
+            min_x = min_x.min(node.x - hw);
+            min_y = min_y.min(node.y - hh);
+            max_x = max_x.max(node.x + hw);
+            max_y = max_y.max(node.y + hh);
+        }
+        if !min_x.is_finite() {
+            return None;
+        }
+        let pad = pad.max(1.05);
+        let cx = (min_x + max_x) * 0.5;
+        let cy = (min_y + max_y) * 0.5;
+        let span_w = (max_x - min_x).max(1.0);
+        let span_h = (max_y - min_y).max(1.0);
+        let vw = self.width.max(1) as f64;
+        let vh = self.height.max(1) as f64;
+        let zoom = (vw / (span_w * pad))
+            .min(vh / (span_h * pad))
+            .clamp(ui_styling::metrics::camera::ZOOM_MIN, ui_styling::metrics::camera::FLOW_ZOOM_MAX);
+        Some(DagCamera { x: cx, y: cy, zoom })
+    }
+
+    fn grid_step_large_world(&self) -> f64 {
+        GRID_WORLD_LARGE * self.grid_factor
+    }
+
+    fn grid_step_medium_world(&self) -> f64 {
+        GRID_WORLD_MEDIUM * self.grid_factor
+    }
+
+    fn grid_step_small_world(&self) -> f64 {
+        GRID_WORLD_SMALL * self.grid_factor
+    }
+
+    fn grid_step_micro_world(&self) -> f64 {
+        GRID_WORLD_MICRO * self.grid_factor
+    }
+
+    fn lod_visible_grid_snap_step_world(&self) -> Option<f64> {
+        match self.draw_lod_for_frame() {
+            DagDrawLod::Minimap => None,
+            DagDrawLod::Overview | DagDrawLod::Compact => Some(self.grid_step_large_world()),
+            DagDrawLod::Normal => Some(self.grid_step_medium_world()),
+            DagDrawLod::Detail => Some(self.grid_step_small_world()),
+            DagDrawLod::Micro => Some(self.grid_step_micro_world()),
+        }
+    }
+
+    fn snap_world_scalar(&self, value: f64) -> f64 {
+        if !self.grid_snap_enabled {
+            return value;
+        }
+        let Some(step) = self.lod_visible_grid_snap_step_world() else {
+            return value;
+        };
+        (value / step).round() * step
+    }
+
+    fn snap_world_pair(&self, x: f64, y: f64) -> (f64, f64) {
+        (self.snap_world_scalar(x), self.snap_world_scalar(y))
+    }
+
+    fn stroke_world_step_grid(
+        &self,
+        scene: &mut cavas::Scene,
+        cam: &cavas::camera::Camera,
+        viewport: &cavas::camera::Viewport,
+        color: cavas::Color,
+        stroke_px: f64,
+        world_step: f64,
+        min_step_screen: f64,
+    ) {
+        use cavas::camera::world_to_screen;
+        use cavas::{Affine, Point, Stroke};
+        let step = world_step * cam.zoom;
+        if step < min_step_screen {
+            return;
+        }
+        let stroke = Stroke::new(stroke_px);
+        let w = viewport.width as f64;
+        let h = viewport.height as f64;
+        let origin = world_to_screen(cam, viewport, Point::new(0.0, 0.0));
+        let x_off = ((origin.x % step) + step) % step;
+        let y_off = ((origin.y % step) + step) % step;
+        let mut path = cavas::BezPath::new();
+        let mut x = x_off;
+        while x <= w {
+            path.move_to(Point::new(x, 0.0));
+            path.line_to(Point::new(x, h));
+            x += step;
+        }
+        let mut y = y_off;
+        while y <= h {
+            path.move_to(Point::new(0.0, y));
+            path.line_to(Point::new(w, y));
+            y += step;
+        }
+        scene.stroke(&stroke, Affine::IDENTITY, color, None, &path);
+    }
+
+    fn paint_lod_grid(&self, scene: &mut cavas::Scene, cam: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, lod: DagDrawLod) {
+        if !self.grid_visible || self.wheel_zoom_active || lod == DagDrawLod::Minimap {
+            return;
+        }
+        let grid_color = self.canvas_theme.grid_minor_stroke;
+        self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_LARGE, self.grid_step_large_world(), 0.0);
+        match lod {
+            DagDrawLod::Normal | DagDrawLod::Detail | DagDrawLod::Micro => {
+                self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MEDIUM, self.grid_step_medium_world(), 0.0);
+            }
+            DagDrawLod::Minimap | DagDrawLod::Overview | DagDrawLod::Compact => {}
+        }
+        if matches!(lod, DagDrawLod::Detail | DagDrawLod::Micro) {
+            self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_SMALL, self.grid_step_small_world(), 0.0);
+        }
+        if lod == DagDrawLod::Micro {
+            self.stroke_world_step_grid(scene, cam, viewport, grid_color, ui_styling::strokes::GRID_MICRO, self.grid_step_micro_world(), 0.0);
+        }
+    }
+
     /// 📶 Pins WASM draw LOD when {@link DagHost::set_automatic_lod} is false; pass an empty label to follow zoom bands.
     pub fn set_forced_draw_lod_label(&mut self, label: &str) {
         let trimmed = label.trim();
@@ -2776,9 +2914,20 @@ impl DagHost {
 
     fn sync_node_positions_from_engine(&mut self) {
         for (&nid, &idx) in &self.node_id_map {
-            if let Some(node) = self.engine.nodes.get(&nid) {
-                self.fixture.nodes[idx].x = node.center.x;
-                self.fixture.nodes[idx].y = node.center.y;
+            let Some(engine_node) = self.engine.nodes.get(&nid) else {
+                continue;
+            };
+            let (mut x, mut y) = (engine_node.center.x, engine_node.center.y);
+            if self.grid_snap_enabled {
+                (x, y) = self.snap_world_pair(x, y);
+            }
+            self.fixture.nodes[idx].x = x;
+            self.fixture.nodes[idx].y = y;
+            if self.grid_snap_enabled {
+                if let Some(engine_node) = self.engine.nodes.get_mut(&nid) {
+                    engine_node.center.x = x;
+                    engine_node.center.y = y;
+                }
             }
         }
     }
@@ -3580,7 +3729,7 @@ impl DagHost {
         if let Some(text) = Self::node_label_text(node, lod).map(str::to_string) {
             let (layout, x, y) = if lod.node_label_is_horizontal() {
                 ("horizontal", node.x, node.y)
-            } else if (uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. } | DagNodeKind::Stepper { .. }) && lod.shows_controls()) {
+            } else if (uses_computation_layout(&node.kind) && lod.shows_computation_layout()) || (matches!(node.kind, DagNodeKind::Slider { .. }) && lod.shows_controls()) {
                 let (lx, ly) = computation_name_world_center(node, &text, paint_px, zoom);
                 ("horizontal", lx, ly)
             } else {
@@ -3678,41 +3827,7 @@ impl DagHost {
         rows
     }
 
-    fn is_editable_input_port(port: &IoPortSpec) -> bool {
-        port.connected == Some(false) && matches!(port.value_type.as_deref(), Some("number" | "integer" | "text" | "boolean"))
-    }
-
-    fn param_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod) -> Vec<serde_json::Value> {
-        let inputs = match &node.kind {
-            DagNodeKind::Computation { inputs, .. } | DagNodeKind::Cluster { inputs, .. } | DagNodeKind::AppInstance { inputs, .. } => inputs,
-            _ => return Vec::new(),
-        };
-        let mut rows = Vec::new();
-        let hw = node.width * 0.5;
-        let editor_w = (hw - DAG_NODE_EDGE_INSET).max(24.0);
-        for (index, port) in inputs.iter().enumerate() {
-            if !Self::is_editable_input_port(port) {
-                continue;
-            }
-            let world_y = computation_port_center_y(node, index);
-            let world_x = node.x - hw + DAG_NODE_EDGE_INSET + editor_w * 0.5;
-            rows.push(serde_json::json!({
-                "nodeId": node.id,
-                "portId": port.id,
-                "label": port.display_label(lod),
-                "type": port.value_type,
-                "value": port.value,
-                "default": port.default,
-                "x": world_x,
-                "y": world_y,
-                "w": editor_w,
-                "h": DAG_CHANNEL_ROW_HEIGHT,
-            }));
-        }
-        rows
-    }
-
-    /// �️ Stepper widget field anchors for the HTML stepper overlay.
+    /// 🎚️ Slider track anchors for the HTML slider overlay.
     pub fn slider_overlay_state_json(&self) -> Result<String, DagError> {
         let cam = &self.fixture.camera;
         let mut sliders: Vec<serde_json::Value> = Vec::new();
@@ -3739,71 +3854,6 @@ impl DagHost {
             "width": self.width,
             "height": self.height,
             "sliders": sliders,
-        }))
-        .map_err(DagError::from)
-    }
-
-    pub fn stepper_overlay_state_json(&self) -> Result<String, DagError> {
-        let cam = &self.fixture.camera;
-        let mut steppers: Vec<serde_json::Value> = Vec::new();
-        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
-            let node = self.node_spec_for_paint(idx, fixture_node);
-            let DagNodeKind::Stepper { fields, .. } = &node.kind else {
-                continue;
-            };
-            if fields.is_empty() {
-                continue;
-            }
-            let editor_w = node.width - DAG_NODE_EDGE_INSET * 2.0;
-            let field_rows: Vec<serde_json::Value> = fields
-                .iter()
-                .enumerate()
-                .map(|(index, field)| {
-                    let world_y = channel_row_center_y(node.y, node.height, index);
-                    serde_json::json!({
-                        "key": field.key,
-                        "label": field.label,
-                        "value": field.value,
-                        "step": field.step,
-                        "x": node.x,
-                        "y": world_y,
-                        "w": editor_w,
-                        "h": DAG_CHANNEL_ROW_HEIGHT,
-                    })
-                })
-                .collect();
-            steppers.push(serde_json::json!({
-                "widgetId": fixture_node.id,
-                "fields": field_rows,
-            }));
-        }
-        serde_json::to_string(&serde_json::json!({
-            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
-            "width": self.width,
-            "height": self.height,
-            "steppers": steppers,
-        }))
-        .map_err(DagError::from)
-    }
-
-    /// �🎛️ Inline default editor anchors for unconnected primitive neuron inputs.
-    pub fn param_overlay_paint_state_json(&self) -> Result<String, DagError> {
-        let lod = self.draw_lod_for_frame();
-        let cam = &self.fixture.camera;
-        let mut editors = Vec::new();
-        for (idx, fixture_node) in self.fixture.nodes.iter().enumerate() {
-            let node = self.node_spec_for_paint(idx, fixture_node);
-            editors.extend(Self::param_overlay_rows_for_node(node.as_ref(), lod));
-        }
-        if let Some(ghost) = self.ghost_node.as_ref() {
-            editors.extend(Self::param_overlay_rows_for_node(ghost, lod));
-        }
-        serde_json::to_string(&serde_json::json!({
-            "camera": { "x": cam.x, "y": cam.y, "zoom": cam.zoom },
-            "lod": lod.label(),
-            "width": self.width,
-            "height": self.height,
-            "editors": editors,
         }))
         .map_err(DagError::from)
     }
@@ -4413,18 +4463,6 @@ impl DagHost {
                         }
                     }
                 }
-                DagNodeKind::Stepper { fields, .. } => {
-                    if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
-                        Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
-                    }
-                    if lod.shows_controls() {
-                        for row_index in 1..fields.len() {
-                            let divider_y = channel_row_divider_y(node.y, node.height, row_index);
-                            let divider = Line::new(Point::new(node.x - hw, divider_y), Point::new(node.x + hw, divider_y));
-                            scene.stroke(&Stroke::new(chrome_stroke), *aff, internal_chrome_stroke, None, &divider);
-                        }
-                    }
-                }
                 DagNodeKind::AppInstance { program_id, app_id, .. } => {
                     if let Some(label) = label_text.filter(|_| !caption_on_overlay) {
                         Self::paint_node_name_horizontal(scene, center_screen, label, paint_px, label_fill, label_halo);
@@ -4457,6 +4495,7 @@ impl DagHost {
             self.last_logged_lod.set(lod_index_i8);
             dag_debug_log(&format!("[DEBUG] dag draw lod={} zoom={:.3} icon={} label={:?}", lod.label(), cam.zoom, lod.node_icon_visible(), lod.node_label()));
         }
+        self.paint_lod_grid(scene, &cam, &viewport, lod);
         let snap = self.engine.render_snapshot();
         let edge_stroke = dag_world_stroke(lod.edge_stroke_screen_px(), cam.zoom);
         for &eid in self.engine.edges.keys() {
@@ -5567,6 +5606,45 @@ mod tests {
             break;
         }
         assert!(dragged, "expected at least one draggable node hit via screen coordinates");
+    }
+
+    #[test]
+    fn dag_host_grid_snap_aligns_dragged_node() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        host.set_grid_snap_enabled(true);
+        host.set_grid_factor(10.0).expect("grid factor");
+        let mut dragged = false;
+        for (nid, node) in host.engine.nodes.clone() {
+            let grab = cavas::Point::new(node.center.x - node.width * 0.4, node.center.y);
+            let (sx, sy) = world_to_screen_px(&host, grab);
+            host.pointer_down(sx, sy, false);
+            if !matches!(host.engine.interaction, InteractionMode::DragNode { node_id, .. } if node_id == nid) {
+                host.pointer_up(sx, sy);
+                continue;
+            }
+            host.pointer_move(sx + 37.0, sy + 23.0);
+            host.pointer_up(sx + 37.0, sy + 23.0);
+            let idx = *host.node_id_map.get(&nid).expect("fixture index");
+            let fixture = &host.fixture.nodes[idx];
+            let step = GRID_WORLD_MEDIUM * 10.0;
+            assert!(((fixture.x / step).round() * step - fixture.x).abs() < 1e-6);
+            assert!(((fixture.y / step).round() * step - fixture.y).abs() < 1e-6);
+            dragged = true;
+            break;
+        }
+        assert!(dragged, "expected draggable node for grid snap test");
+    }
+
+    #[test]
+    fn dag_host_focus_selection_camera_frames_selection() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(1280, 800, 1.0);
+        let ids: Vec<String> = host.fixture.nodes.iter().take(2).map(|node| node.id.clone()).collect();
+        host.set_selection(&ids);
+        let camera = host.focus_selection_camera(1.2).expect("camera");
+        assert!(camera.zoom > 0.0);
+        assert!(camera.x.is_finite() && camera.y.is_finite());
     }
 
     #[test]

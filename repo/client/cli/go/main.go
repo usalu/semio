@@ -19921,7 +19921,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Breach {
 	}
 	thirdPartyPackages := []string{
 		"react", "xstate", "@radix-client", "@dnd-kit", "zustand", "immer",
-		"framer-motion", "lucide-react", "clsx", "tailwind", "three", "@react-three",
+		"framer-motion", "clsx", "tailwind", "three", "@react-three",
 	}
 	createMachineCount := 0
 	for _, file := range files {
@@ -20333,7 +20333,7 @@ func composePolicy(ctx *PolicyContext) []Breach {
 		"clsx", "tailwind-merge", "tailwind", "tailwindcss",
 		"three", "@react-three",
 		"react", "react-dom",
-		"framer-motion", "lucide-react",
+		"framer-motion",
 		"@radix-ui", "@radix-client",
 		"@dnd-kit",
 		"zustand",

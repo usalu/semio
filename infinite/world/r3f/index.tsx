@@ -1190,9 +1190,11 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
     controls.target.set(target[0], target[1], target[2]);
     controls.update();
   }
-  if (camera instanceof ThreePerspectiveCamera || camera instanceof ThreeOrthographicCamera) {
-    camera.zoom = state.zoom;
-    camera.updateProjectionMatrix();
+  // Duck-type zoomable cameras — `instanceof` fails across duplicate `three` package copies.
+  const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom: number; updateProjectionMatrix: () => void };
+  if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
+    zoomable.zoom = state.zoom;
+    zoomable.updateProjectionMatrix();
   }
 }
 
@@ -1736,15 +1738,15 @@ export function shouldApplyOrbitCameraViewRigSeed(lastToken: string | null, next
 }
 
 function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; readonly seedKey: string | number }): null {
-  const { camera } = useThree();
-  const controls = useThree((s) => s.controls as OrbitControlsTarget | null);
+  const getThree = useThree((s) => s.get);
   const invalidate = useThree((s) => s.invalidate);
   const lastApplyToken = reactHostPort.useRef<string | null>(null);
   const stateRef = reactHostPort.useRef(props.state);
   stateRef.current = props.state;
   const projection = props.state.projection ?? "perspective";
-  const controlsReady = controls != null;
+  const controlsReady = useThree((s) => s.controls) != null;
   reactHostPort.useLayoutEffect(() => {
+    const { camera, controls } = getThree();
     if (!camera) {
       return;
     }
@@ -1753,9 +1755,9 @@ function WorldOrbitCameraViewRigSeed(props: { readonly state: WorldCameraState; 
       return;
     }
     lastApplyToken.current = token;
-    applyWorldCameraState(camera, stateRef.current, controls);
+    applyWorldCameraState(camera, stateRef.current, controls as OrbitControlsTarget | null);
     invalidate();
-  }, [camera, controls, controlsReady, invalidate, projection, props.seedKey]);
+  }, [controlsReady, getThree, invalidate, projection, props.seedKey]);
   return null;
 }
 // #endregion 📷OrbitCameraView
@@ -2436,9 +2438,11 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
 // #region 🎬WorldCanvas
 type OrbitControlsBinding = WorldOrbitControlsBinding;
 
-/** @emoji 🎞️ Kicks demand-frameloop renders across mount + orbit/grid setup frames. */
+/** @emoji 🎞️ Kicks demand-frameloop renders across mount + orbit/grid setup frames and whenever the
+ * store reports a pending invalidate (async GLB/texture commits after the initial kick). */
 export function DemandFrameloopKick(): null {
   const invalidate = useThree((state) => state.invalidate);
+  const gl = useThree((state) => state.gl);
   reactHostPort.useLayoutEffect(() => {
     invalidate();
     let frame = 0;
@@ -2451,6 +2455,28 @@ export function DemandFrameloopKick(): null {
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
   }, [invalidate]);
+  // 🎞️ Keep demand mode alive briefly while WebGL textures/meshes settle; loaders resolve after the
+  // mount kick and React commits without always scheduling `invalidate`, leaving transparent empty panes.
+  // Per-asset `invalidate` in reference/GLB loaders covers late arrivals; this pump only bridges the first half-second.
+  reactHostPort.useEffect(() => {
+    let cancelled = false;
+    let raf = 0;
+    let frames = 0;
+    const pump = () => {
+      if (cancelled) return;
+      invalidate();
+      frames += 1;
+      if (frames < 24) raf = requestAnimationFrame(pump);
+    };
+    raf = requestAnimationFrame(pump);
+    const onContextRestored = () => invalidate();
+    gl.domElement.addEventListener("webglcontextrestored", onContextRestored);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      gl.domElement.removeEventListener("webglcontextrestored", onContextRestored);
+    };
+  }, [gl, invalidate]);
   return null;
 }
 
@@ -2947,15 +2973,19 @@ const WorldReferencePlaneItem = reactHostPort.memo(function WorldReferencePlaneI
           prev?.texture.dispose();
           return loaded;
         });
-        console.log("[DEBUG] world reference texture loaded", props.reference.id, props.reference.source.url);
       })
-      .catch((error) => {
-        console.log("[DEBUG] world reference texture failed", props.reference.id, error);
+      .catch(() => {
+        // texture load failure — plane stays hidden
       });
     return () => {
       cancelled = true;
     };
   }, [props.reference.id, props.reference.source.url, props.reference.source.mediaKind, props.reference.source.page]);
+  const invalidate = useThree((state) => state.invalidate);
+  // 🎞️ `WorldCanvas` uses `frameloop="demand"` — async texture arrival must kick a draw or panes stay transparent.
+  reactHostPort.useLayoutEffect(() => {
+    if (media) invalidate();
+  }, [invalidate, media]);
   reactHostPort.useLayoutEffect(() => {
     if (groupRef.current) {
       applyWorldReferencePose(groupRef.current, props.reference);

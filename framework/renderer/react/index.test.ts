@@ -5,7 +5,9 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   deriveUtilityNodes,
   resolveWindowActions,
+  resolveModeTools,
   partitionWindowMeasures,
+  SET_ACTIVE_TOOL_ACTION_ID,
   type ActionArgDef,
   type ActionDefinition,
   type AppDefinition,
@@ -13,12 +15,13 @@ import {
   type AppWindowKindDefinition,
   type CommandDefinition,
   type UtilityDefinition,
+  type ToolDefinition,
   type WindowMeasure,
   type UtilityNode,
   type UiNode,
 } from "@semio-tech/framework-core";
 import { ENTWERFEN_MIT_BESTAND_BRAND } from "../../product/os/dev/brand/index.ts";
-import { Footer, navbarFillItem, SelectionMarquee } from "@semio-tech/ui-react";
+import { Footer, navbarFillItem, SelectionMarquee, type PanelTabNode, type TreeDataSection } from "@semio-tech/ui-react";
 import {
   aProjectOfLuhUdkFooterItem,
   fundedByZukunftBauFooterItem,
@@ -50,6 +53,8 @@ import {
   NodeGraphHost,
   catalogueGhostDescriptorJson,
   computeDagMarqueeOverlay,
+  flowCatalogueItemDescriptor,
+  flowRankCatalogueSuggestions,
   nodeGraphViewportActionArgs,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
@@ -134,6 +139,7 @@ import {
   createInFlightSkippingInterval,
   dispatchOsCommand,
   mergeShellLockSources,
+  resolveBootExampleId,
   resolveShellDefaults,
   resolveShellLocks,
   shouldPersistIntroductionSeen,
@@ -161,6 +167,7 @@ import {
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
   resolveFrameworkLayoutSeed,
+  buildToolTabs,
 } from "./index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -404,6 +411,19 @@ describe("shell store reducer", () => {
     expect(deactivated.actionPane.activeUtilityByWindowId["w1"]).toBeNull();
   });
 
+  it("actionPane slice: SET_ACTIVE_TOOL updates only activeToolId and preserves identity on no-ops (mode-scoped, not per-window)", () => {
+    const state = baseState();
+    expect(state.actionPane.activeToolId).toBeNull();
+
+    const activated = shellReducer(state, { type: "SET_ACTIVE_TOOL", toolId: "fill" });
+    expect(activated.actionPane.activeToolId).toBe("fill");
+    expect(activated.actionPane.activeUtilityByWindowId).toBe(state.actionPane.activeUtilityByWindowId);
+    expect(shellReducer(activated, { type: "SET_ACTIVE_TOOL", toolId: "fill" }).actionPane).toBe(activated.actionPane);
+
+    const deactivated = shellReducer(activated, { type: "SET_ACTIVE_TOOL", toolId: null });
+    expect(deactivated.actionPane.activeToolId).toBeNull();
+  });
+
   it("commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-ops (category active/fold state now lives in layout.panels['bottom-middle'], not this slice)", () => {
     const state = baseState();
 
@@ -587,6 +607,24 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     // Unchanged section: cache entry is untouched (still the old hash/value, not overwritten with nothing).
     expect(cache.get("window:detail")).toEqual({ hash: "old-hash", value: { type: "text", value: "stale-should-not-be-touched" } });
     expect(cache.get("engagements")).toEqual({ hash: "eng-hash", value: { overview: {} } });
+  });
+
+  it("buildUiRefreshRequest for a full scope also requests the mode-level tools section (keyed by tool id, not a window)", () => {
+    const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(request?.tools).toBeDefined();
+  });
+
+  it("buildUiRefreshRequest for a partial scope requests tools only when the scope's `tools` flag is set", () => {
+    const withTools = buildUiRefreshRequest({ kind: "partial" as const, tools: true }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(withTools?.tools).toBeDefined();
+    const withoutTools = buildUiRefreshRequest({ kind: "partial" as const, engagements: true }, windowKinds, panelTabLeaves, {}, new Map());
+    expect(withoutTools?.tools).toBeUndefined();
+  });
+
+  it("applyUiRefreshResponseToCache caches the tools section same as measures/engagements/labels", () => {
+    const cache: UiRefreshCache = new Map();
+    applyUiRefreshResponseToCache(cache, { tools: { key: "tools", hash: "tools-hash", value: { fill: [] } } });
+    expect(cache.get("tools")).toEqual({ hash: "tools-hash", value: { fill: [] } });
   });
 });
 
@@ -2013,6 +2051,22 @@ describe("dag marquee overlay", () => {
     expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "full" });
   });
 
+  // Regression: board rust publishes `[[x,y],…]` (not `{x,y}` objects). Object-only parsing yielded
+  // NaN bounds so the live select marquee never painted even though selection itself worked.
+  it("computes a rect overlay from the rust tuple-array wire format", () => {
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        [10, 20],
+        [30, 20],
+        [30, 50],
+        [10, 50],
+      ]),
+      true,
+      "rectangle",
+    );
+    expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "partial" });
+  });
+
   it("computes a lasso overlay carrying the raw points for the lasso method", () => {
     const points = [
       { x: 10, y: 20 },
@@ -2023,8 +2077,60 @@ describe("dag marquee overlay", () => {
     expect(overlay).toEqual({ kind: "lasso", points, coverage: "partial" });
   });
 
+  it("computes a lasso overlay from the rust tuple-array wire format", () => {
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        [10, 20],
+        [30, 50],
+        [15, 40],
+      ]),
+      false,
+      "lasso",
+    );
+    expect(overlay).toEqual({
+      kind: "lasso",
+      points: [
+        { x: 10, y: 20 },
+        { x: 30, y: 50 },
+        { x: 15, y: 40 },
+      ],
+      coverage: "full",
+    });
+  });
+
+  it("infers lasso from a non-rectangular path when method is omitted", () => {
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        [10, 20],
+        [30, 50],
+        [15, 40],
+      ]),
+      false,
+    );
+    expect(overlay?.kind).toBe("lasso");
+  });
+
+  it("infers rectangle from four axis-aligned corner points when method is omitted", () => {
+    const overlay = computeDagMarqueeOverlay(
+      JSON.stringify([
+        [10, 20],
+        [30, 20],
+        [30, 50],
+        [10, 50],
+      ]),
+      true,
+    );
+    expect(overlay).toEqual({ kind: "rect", x: 10, y: 20, width: 20, height: 30, coverage: "partial" });
+  });
+
   it("returns null for fewer than two points", () => {
     expect(computeDagMarqueeOverlay(JSON.stringify([{ x: 0, y: 0 }]), false, "rectangle")).toBeNull();
+    expect(computeDagMarqueeOverlay(JSON.stringify([[0, 0]]), false, "rectangle")).toBeNull();
+  });
+
+  it("returns null for malformed point entries", () => {
+    expect(computeDagMarqueeOverlay(JSON.stringify([[10], [20, 30]]), false, "rectangle")).toBeNull();
+    expect(computeDagMarqueeOverlay(JSON.stringify([{ x: 10 }, { x: 20, y: 30 }]), false, "rectangle")).toBeNull();
   });
 
   // Regression: node-graph-host.tsx used to pass `shape={{ shape: "polygon", points }}` (a single
@@ -2034,8 +2140,8 @@ describe("dag marquee overlay", () => {
   it("renders a rect overlay from a computeDagMarqueeOverlay rect result without crashing", () => {
     const overlay = computeDagMarqueeOverlay(
       JSON.stringify([
-        { x: 0, y: 0 },
-        { x: 40, y: 25 },
+        [0, 0],
+        [40, 25],
       ]),
       false,
       "rectangle",
@@ -2049,14 +2155,16 @@ describe("dag marquee overlay", () => {
       }),
     );
     expect(markup).toContain("<rect");
+    expect(markup).toContain('width="40"');
+    expect(markup).toContain('height="25"');
   });
 
   it("renders a polygon overlay from a computeDagMarqueeOverlay lasso result without crashing", () => {
     const overlay = computeDagMarqueeOverlay(
       JSON.stringify([
-        { x: 0, y: 0 },
-        { x: 40, y: 25 },
-        { x: 5, y: 30 },
+        [0, 0],
+        [40, 25],
+        [5, 30],
       ]),
       false,
       "lasso",
@@ -2064,6 +2172,7 @@ describe("dag marquee overlay", () => {
     if (!overlay || overlay.kind !== "lasso") throw new Error("expected lasso overlay");
     const markup = renderToStaticMarkup(createElement(SelectionMarquee, { coverage: overlay.coverage ?? "full", shape: "polygon", points: overlay.points ?? [] }));
     expect(markup).toContain("<polygon");
+    expect(markup).toContain("0,0 40,25 5,30");
   });
 });
 
@@ -2736,6 +2845,44 @@ describe("s media graph flow routing", () => {
     expect(JSON.parse(catalogueGhostDescriptorJson({ programId: "s.system", appId: "draw" }))).toEqual({ kind: "neuron", neuronKind: "draw" });
   });
 
+  it("builds addWidget descriptors from catalogue items", () => {
+    expect(JSON.parse(flowCatalogueItemDescriptor({ kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "" }))).toEqual({
+      kind: "neuron",
+      neuronKind: "math.add",
+    });
+    expect(JSON.parse(flowCatalogueItemDescriptor({ kind: "outputExport", format: "svg", name: "Export SVG", abbreviation: "SVG", icon: "emoji:📤", summary: "" }))).toEqual({
+      kind: "outputExport",
+      format: "svg",
+    });
+    expect(JSON.parse(flowCatalogueItemDescriptor({ kind: "inputSlider", name: "Slider", abbreviation: "Slider", icon: "emoji:🎚️", summary: "" }))).toEqual({ kind: "inputSlider" });
+  });
+
+  it("ranks catalogue suggestions by exact/prefix match with neurons first", () => {
+    const sections = [
+      {
+        id: "inputs",
+        title: "Inputs",
+        items: [
+          { kind: "inputSlider", name: "Slider", abbreviation: "Slider", icon: "emoji:🎚️", summary: "" },
+          { kind: "inputNote", name: "Note", abbreviation: "Note", icon: "emoji:📝", summary: "" },
+        ],
+      },
+      {
+        id: "math",
+        title: "Math",
+        items: [
+          { kind: "neuron", neuronKind: "math.add", name: "Add", abbreviation: "Add", icon: "emoji:➕", summary: "" },
+          { kind: "neuron", neuronKind: "math.subtract", name: "Subtract", abbreviation: "Sub", icon: "emoji:➖", summary: "" },
+        ],
+      },
+    ];
+    expect(flowRankCatalogueSuggestions(sections, "add").map((item) => item.neuronKind ?? item.kind)).toEqual(["math.add"]);
+    expect(flowRankCatalogueSuggestions(sections, "sl").map((item) => item.kind)).toEqual(["inputSlider"]);
+    const empty = flowRankCatalogueSuggestions(sections, "");
+    expect(empty[0]?.kind).toBe("neuron");
+    expect(empty.some((item) => item.kind === "inputSlider")).toBe(true);
+  });
+
   it("attaches a drag-and-drop controller to tree panels whose items carry drag data", () => {
     const config = uiNodeToTreePanelConfig(
       {
@@ -3169,6 +3316,62 @@ describe("resolveCommands / commandCategories (footer command panel registry)", 
   });
 });
 
+describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => {
+  const toolApp = {
+    tools: [
+      { id: "fill", label: "Fill", iconId: "fill" },
+      { id: "brush", label: "Brush", iconId: "brush" },
+    ] as ToolDefinition[],
+    modes: [
+      { id: "edit", label: "Edit", tools: ["fill", "brush"] },
+      { id: "view", label: "View", tools: [] },
+    ] as AppModeDefinition[],
+  };
+
+  it("resolves the active mode's tools in declared order", () => {
+    expect(resolveModeTools(toolApp, "edit").map((tool) => tool.id)).toEqual(["fill", "brush"]);
+  });
+
+  it("tools are opt-in per mode — no orphan fallback for a mode that declares none", () => {
+    expect(resolveModeTools(toolApp, "view")).toEqual([]);
+  });
+
+  it("resolves nothing for an app/mode that doesn't exist", () => {
+    expect(resolveModeTools(undefined, "edit")).toEqual([]);
+    expect(resolveModeTools(toolApp, "nonexistent")).toEqual([]);
+  });
+
+  it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
+    const activeToolIdRef = { current: "fill" as string | null };
+    const toolMeasuresByToolIdRef = { current: { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 3, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] } as Readonly<Record<string, readonly WindowMeasure[]>> };
+    const onAction = vi.fn();
+    const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
+    expect(tabs.map((tab) => tab.id)).toEqual(["tool.fill", "tool.brush"]);
+    const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
+    const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
+    const fillSections = fillTree.resolveTree().sections;
+    expect(fillSections).toHaveLength(2);
+    expect(fillSections[1]!.items).toHaveLength(1);
+
+    const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
+    const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
+    // brush is not the active tool — only the activation row renders, no options section.
+    expect(brushTree.resolveTree().sections).toHaveLength(1);
+  });
+
+  it("buildToolTabs' activation toggle dispatches setActiveTool with this tool's id", () => {
+    const activeToolIdRef = { current: null as string | null };
+    const toolMeasuresByToolIdRef = { current: {} as Readonly<Record<string, readonly WindowMeasure[]>> };
+    const onAction = vi.fn();
+    const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
+    const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
+    const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
+    const activateControl = fillTree.resolveTree().sections[0]!.items[0]!.control as ReactElement<{ onPressedChange: (pressed: boolean) => void }>;
+    activateControl.props.onPressedChange(true);
+    expect(onAction).toHaveBeenCalledWith({ controllerId: "puzzle3d-play", action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "fill" } });
+  });
+});
+
 describe("Introduce App command", () => {
   it("is available only for apps with an introduction", () => {
     expect(buildOsCommands([], [], true).find((command) => command.id === "os.introduceApp")).toMatchObject({ label: "Introduce App", scope: "os", category: "app", args: [] });
@@ -3228,6 +3431,19 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(state.layout.activeExampleId).toBe("concrete-forest");
     const locked = initialShellState({ plugins: [], locks: { exampleId: "nakagin-capsule-tower" }, defaults: { exampleId: "concrete-forest" } });
     expect(locked.layout.activeExampleId).toBe("nakagin-capsule-tower");
+  });
+
+  it("resolveBootExampleId seeds the first registered example when nothing is active or defaulted", () => {
+    const options = [
+      { id: "hexagonal-mushroom-column" },
+      { id: "rectangle-extrude-volume" },
+      { id: "sphere-cut-with-torus" },
+    ];
+    expect(resolveBootExampleId("", options)).toBe("hexagonal-mushroom-column");
+    expect(resolveBootExampleId("", options, "sphere-cut-with-torus")).toBe("sphere-cut-with-torus");
+    expect(resolveBootExampleId("rectangle-extrude-volume", options, "sphere-cut-with-torus")).toBe("rectangle-extrude-volume");
+    expect(resolveBootExampleId("missing", options)).toBe("hexagonal-mushroom-column");
+    expect(resolveBootExampleId("", [])).toBe("");
   });
 
   it("shouldReplayIntroductionOnLoad opts a brand into replaying its tour after every window refresh", () => {
@@ -3706,5 +3922,39 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
       { windowId: "puzzle3d-main-top", templateId: topTemplate },
       { windowId: "puzzle3d-main-perspective", templateId: perspectiveTemplate },
     ]);
+  });
+
+  it("treats instance-id panes as extras so the host fetches bodies keyed by instance id, not only by kind", () => {
+    const topTemplate = encodeWorldProjectionTemplateId({ kind: "orthographic", view: "top" });
+    const perspectiveTemplate = encodeWorldProjectionTemplateId({ kind: "threePoint", fov: 50 });
+    const seed = resolveFrameworkLayoutSeed(
+      {
+        root: {
+          kind: "row",
+          children: [
+            {
+              kind: "stack",
+              size: 100 / 3,
+              children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Top", instanceId: "puzzle3d-main-top", templateId: topTemplate }],
+            },
+            {
+              kind: "stack",
+              size: 200 / 3,
+              children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Perspective", instanceId: "puzzle3d-main-perspective", templateId: perspectiveTemplate }],
+            },
+          ],
+        },
+      },
+      [{ id: "puzzle3d-main", label: "Puzzle 3D" }],
+      emptyLabels,
+    );
+    // 🪟 A refresh that only knows the bare kind id would leave Top/Perspective as "Fehlendes Fenster".
+    // Live extras must be in the fetch list: base kind + each default-layout instance.
+    const windowInstances = [
+      { id: "puzzle3d-main", bodyKey: "puzzle3d.play.composite" },
+      ...seed.extraInstances.map((entry) => ({ id: entry.id, bodyKey: "puzzle3d.play.composite" })),
+    ];
+    const request = buildUiRefreshRequest({ kind: "full" }, windowInstances, [], {}, new Map());
+    expect(request?.windows?.map((window) => window.key)).toEqual(["puzzle3d-main", "puzzle3d-main-top", "puzzle3d-main-perspective"]);
   });
 });

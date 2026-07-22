@@ -23,7 +23,6 @@ fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
-        | Widget::InputStepper { id, .. }
         | Widget::InputNote { id, .. }
         | Widget::InputImage { id, .. }
         | Widget::Variable { id, .. }

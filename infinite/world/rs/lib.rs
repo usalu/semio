@@ -166,6 +166,8 @@ struct WorldSelectionRecord {
 struct WorldVortexRecord {
     full_id: String,
     position: Option<[f64; 3]>,
+    direction: Option<[f64; 3]>,
+    display_direction: Option<String>,
     radius: Option<f64>,
     color: Option<String>,
 }
@@ -658,7 +660,7 @@ fn append_lod_grid_lines(line_vertices: &mut Vec<LineVertex3d>, lod: f64, grid_f
 }
 
 fn sync_mesh_pool(state: &mut World3dState, needed_mesh_keys: &HashSet<String>, gpu: &mut GpuContext) {
-    const PINNED: &[&str] = &["vortex-marker", "reference-plane", "vertex-marker"];
+    const PINNED: &[&str] = &["vortex-marker", "cylinder", "cone", "reference-plane", "vertex-marker"];
     for key in needed_mesh_keys {
         if !state.mesh_pool.contains(key) {
             state.mesh_pool.acquire(key.clone());
@@ -1901,33 +1903,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         append_box_wireframe(&mut line_vertices, volume.origin.unwrap_or([0.0, 0.0, 0.0]), volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), volume.scale.unwrap_or([1.0, 1.0, 1.0]), parse_color(volume.color.as_deref().unwrap_or("#f472b6")));
     }
     let mut extra_draws = Vec::new();
-    let vortex_instances: Vec<Instance3d> = state
-        .vortices
-        .iter()
-        .map(|vortex| {
-            let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
-            let radius = vortex.radius.unwrap_or(0.36) as f32;
-            let hovered = state.hovered_vortex_id.as_deref() == Some(vortex.full_id.as_str());
-            Instance3d {
-                id: vortex.full_id.clone(),
-                model: Instance3d::model_from_trs([position[0] as f32, position[1] as f32, position[2] as f32], [0.0, 0.0, 0.0, 1.0], [radius, radius, radius]),
-                color: parse_color(vortex.color.as_deref().unwrap_or("#38bdf8")),
-                selected: false,
-                hovered,
-            }
-        })
-        .collect();
-    if !vortex_instances.is_empty() {
-        if !state.meshes.contains_key("vortex-marker") {
-            let primitive = mesh_from_kind("vortex-marker");
-            store_mesh(state, "vortex-marker".into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
-        }
-        let mesh_version = *state.mesh_versions.get("vortex-marker").unwrap_or(&0);
-        if let Some(mesh) = state.meshes.get("vortex-marker") {
-            gpu.ensure_mesh("vortex-marker", mesh_version, &mesh.positions, &mesh.normals, &mesh.indices);
-        }
-        extra_draws.push(SceneDraw3d { mesh_key: "vortex-marker".into(), mesh_version, instances: vortex_instances });
-    }
+    append_vortex_arrow_draws(state, gpu, &mut extra_draws);
     let vertex_instances = append_component_vertex_spheres(state);
     if !vertex_instances.is_empty() {
         let mesh_version = *state.mesh_versions.get(VERTEX_MARKER_MESH).unwrap_or(&0);
@@ -2821,6 +2797,130 @@ fn pick_instance_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Optio
     }
     best.map(|(_, id)| id)
 }
+
+//#region VortexArrow
+const VORTEX_ARROW_SHAFT_MESH: &str = "cylinder";
+const VORTEX_ARROW_HEAD_MESH: &str = "cone";
+
+struct VortexArrowLayout {
+    point_radius: f32,
+    shaft_radius: f32,
+    shaft_length: f32,
+    head_length: f32,
+    shaft_center: [f32; 3],
+    head_base: [f32; 3],
+    rotation: [f32; 4],
+}
+
+fn quat_normalize_f32(quat: [f32; 4]) -> [f32; 4] {
+    let len = (quat[0] * quat[0] + quat[1] * quat[1] + quat[2] * quat[2] + quat[3] * quat[3]).sqrt();
+    if len < 1e-9 {
+        [0.0, 0.0, 0.0, 1.0]
+    } else {
+        [quat[0] / len, quat[1] / len, quat[2] / len, quat[3] / len]
+    }
+}
+
+fn quat_from_unit_vectors(from: Vec3, to: Vec3) -> [f32; 4] {
+    let from = from.normalize();
+    let to = to.normalize();
+    let r = from.dot(to) + 1.0;
+    let quat = if r < 0.000_001 {
+        if from.x.abs() > from.z.abs() {
+            [-from.y, from.x, 0.0, r]
+        } else {
+            [0.0, -from.z, from.y, r]
+        }
+    } else {
+        let cross = from.cross(to);
+        [cross.x, cross.y, cross.z, r]
+    };
+    quat_normalize_f32(quat)
+}
+
+fn vortex_unit_direction(direction: Option<[f64; 3]>) -> Vec3 {
+    let dir = direction.map(|value| Vec3::new(value[0] as f32, value[1] as f32, value[2] as f32)).unwrap_or(Vec3::new(0.0, 0.0, -1.0));
+    if dir.length_squared() < 1e-12 {
+        Vec3::new(0.0, 0.0, -1.0)
+    } else {
+        dir.normalize()
+    }
+}
+
+fn vortex_arrow_layout(position: [f64; 3], direction: Option<[f64; 3]>, radius: f32, display_direction: Option<&str>) -> VortexArrowLayout {
+    let dir = vortex_unit_direction(direction);
+    let pos = Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32);
+    let arrow_length = radius;
+    let head_length = radius * 0.28;
+    let shaft_length = (arrow_length - head_length).max(radius * 0.2);
+    let shaft_radius = radius * 0.055;
+    let point_radius = radius * 0.18;
+    let outward = !display_direction.is_some_and(|mode| mode == "inwards");
+    let rotation = quat_from_unit_vectors(Vec3::new(0.0, 1.0, 0.0), dir);
+    let (shaft_center, head_base) = if outward {
+        (pos + dir * (shaft_length * 0.5), pos + dir * shaft_length)
+    } else {
+        (pos - dir * (head_length + shaft_length * 0.5), pos - dir * head_length)
+    };
+    VortexArrowLayout { point_radius, shaft_radius, shaft_length, head_length, shaft_center: shaft_center.to_array(), head_base: head_base.to_array(), rotation }
+}
+
+fn ensure_primitive_mesh(state: &mut World3dState, mesh_key: &str) {
+    if state.meshes.contains_key(mesh_key) {
+        return;
+    }
+    let primitive = mesh_from_kind(mesh_key);
+    store_mesh(state, mesh_key.into(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
+}
+
+fn append_vortex_arrow_draws(state: &mut World3dState, gpu: &mut GpuContext, extra_draws: &mut Vec<SceneDraw3d>) {
+    if state.vortices.is_empty() {
+        return;
+    }
+    let mut point_instances = Vec::new();
+    let mut shaft_instances = Vec::new();
+    let mut head_instances = Vec::new();
+    for vortex in &state.vortices {
+        let position = vortex.position.unwrap_or([0.0, 0.0, 0.0]);
+        let radius = vortex.radius.unwrap_or(0.36) as f32;
+        let layout = vortex_arrow_layout(position, vortex.direction, radius, vortex.display_direction.as_deref());
+        let color = parse_color(vortex.color.as_deref().unwrap_or("#38bdf8"));
+        let hovered = state.hovered_vortex_id.as_deref() == Some(vortex.full_id.as_str());
+        let id = vortex.full_id.clone();
+        point_instances.push(Instance3d {
+            id: format!("{id}:point"),
+            model: Instance3d::model_from_trs([position[0] as f32, position[1] as f32, position[2] as f32], [0.0, 0.0, 0.0, 1.0], [layout.point_radius, layout.point_radius, layout.point_radius]),
+            color,
+            selected: false,
+            hovered,
+        });
+        shaft_instances.push(Instance3d {
+            id: format!("{id}:shaft"),
+            model: Instance3d::model_from_trs(layout.shaft_center, layout.rotation, [layout.shaft_radius * 2.0, layout.shaft_length, layout.shaft_radius * 2.0]),
+            color,
+            selected: false,
+            hovered,
+        });
+        head_instances.push(Instance3d {
+            id: format!("{id}:head"),
+            model: Instance3d::model_from_trs(layout.head_base, layout.rotation, [layout.shaft_radius * 3.6, layout.head_length, layout.shaft_radius * 3.6]),
+            color,
+            selected: false,
+            hovered,
+        });
+    }
+    ensure_primitive_mesh(state, "vortex-marker");
+    ensure_primitive_mesh(state, VORTEX_ARROW_SHAFT_MESH);
+    ensure_primitive_mesh(state, VORTEX_ARROW_HEAD_MESH);
+    for (mesh_key, instances) in [("vortex-marker", point_instances), (VORTEX_ARROW_SHAFT_MESH, shaft_instances), (VORTEX_ARROW_HEAD_MESH, head_instances)] {
+        let mesh_version = *state.mesh_versions.get(mesh_key).unwrap_or(&0);
+        if let Some(mesh) = state.meshes.get(mesh_key) {
+            gpu.ensure_mesh(mesh_key, mesh_version, &mesh.positions, &mesh.normals, &mesh.indices);
+        }
+        extra_draws.push(SceneDraw3d { mesh_key: mesh_key.into(), mesh_version, instances });
+    }
+}
+//#endregion VortexArrow
 
 fn pick_vortex_at(state: &World3dState, x: f32, y: f32, _inner: Rect) -> Option<String> {
     let (local_x, local_y, viewport) = pointer_in_pick_rect(state, x, y)?;

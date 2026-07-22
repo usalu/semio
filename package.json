@@ -199,8 +199,6 @@
     "eslint-plugin-storybook": "10.4.0",
     "globals": "^16.4.0",
     "lint-staged": "^16.2.7",
-    "lucide": "0.536.0",
-    "lucide-static": "0.536.0",
     "nx": "21.6.11",
     "playwright": "^1.57.0",
     "react": "^19.2.3",

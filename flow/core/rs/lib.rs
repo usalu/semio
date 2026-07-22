@@ -9,7 +9,7 @@ use std::sync::OnceLock;
 
 use dag::{
     computation_node_height, computation_node_width, dag_fixture_execution_rows, dag_fixture_to_wire_literal, fit_node_size, image_widget_size, io_widget_height, io_widget_width, normalize_node_display, note_widget_size, preview_widget_size,
-    slider_widget_height, slider_widget_width, stepper_widget_height, stepper_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, DagStepperField, EdgeRouteStyle,
+    slider_widget_height, slider_widget_width, would_create_cycle, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodeSpec, DagPreviewContent, EdgeRouteStyle,
     IoPortSpec,
 };
 use mathematical_graph_manifest::{PropertyBag, PropertyValue};
@@ -20,15 +20,6 @@ use neural::{
 use serde::{Deserialize, Serialize};
 
 // #region 🔖Document
-/// 📏 One named numeric field inside a stepper input chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct StepperFieldSpec {
-    pub key: String,
-    #[serde(default)]
-    pub value: f64,
-}
-
 fn default_slider_value() -> f64 {
     3.0
 }
@@ -43,57 +34,6 @@ fn default_slider_max() -> f64 {
 
 fn default_slider_step() -> f64 {
     FLOW_SLIDER_STEP
-}
-
-fn default_stepper_schema() -> String {
-    "vector".into()
-}
-
-fn default_stepper_step() -> f64 {
-    0.1
-}
-
-/// 📐 Stepper schemas with a dedicated field layout / port shape (anything else falls back to a generic scalar port).
-enum StepperSchemaKind {
-    Vector,
-    Point,
-}
-
-impl StepperSchemaKind {
-    fn parse(schema: &str) -> Option<Self> {
-        match schema {
-            "vector" => Some(Self::Vector),
-            "point" => Some(Self::Point),
-            _ => None,
-        }
-    }
-}
-
-fn default_stepper_fields_for_schema(schema: &str) -> Vec<StepperFieldSpec> {
-    match StepperSchemaKind::parse(schema) {
-        Some(StepperSchemaKind::Vector | StepperSchemaKind::Point) => vec![StepperFieldSpec { key: "x".into(), value: 0.0 }, StepperFieldSpec { key: "y".into(), value: 0.0 }, StepperFieldSpec { key: "z".into(), value: 0.0 }],
-        None => vec![],
-    }
-}
-
-fn stepper_output_port(schema: &str) -> IoPortSpec {
-    match StepperSchemaKind::parse(schema) {
-        Some(StepperSchemaKind::Vector) => IoPortSpec::named("V", "Vec", "vector", "Vector"),
-        Some(StepperSchemaKind::Point) => IoPortSpec::named("P", "Pnt", "point", "Point"),
-        None => {
-            let code: String = schema.chars().take(1).map(|c| c.to_ascii_uppercase()).collect();
-            let abbrev: String = schema.chars().take(3).collect();
-            IoPortSpec::named(&code, &abbrev, schema, schema)
-        }
-    }
-}
-
-fn effective_stepper_fields(schema: &str, fields: &[StepperFieldSpec]) -> Vec<StepperFieldSpec> {
-    if fields.is_empty() {
-        default_stepper_fields_for_schema(schema)
-    } else {
-        fields.to_vec()
-    }
 }
 
 fn default_neuron_preview() -> bool {
@@ -171,11 +111,6 @@ pub enum NodeChrome {
         step: f64,
         #[serde(default = "default_slider_value")]
         value: f64,
-    },
-    Stepper {
-        schema: String,
-        fields: Vec<StepperFieldSpec>,
-        step: f64,
     },
     Note {
         #[serde(default)]
@@ -267,15 +202,6 @@ pub enum Widget {
         #[serde(default = "default_slider_max")]
         max: f64,
         #[serde(default = "default_slider_step")]
-        step: f64,
-    },
-    InputStepper {
-        id: String,
-        #[serde(default = "default_stepper_schema")]
-        schema: String,
-        #[serde(default)]
-        fields: Vec<StepperFieldSpec>,
-        #[serde(default = "default_stepper_step")]
         step: f64,
     },
     InputNote {
@@ -372,7 +298,6 @@ impl FlowFixture {
 fn widget_chrome(widget: &Widget) -> NodeChrome {
     match widget {
         Widget::InputSlider { value, min, max, step, .. } => NodeChrome::Slider { min: *min, max: *max, step: *step, value: *value },
-        Widget::InputStepper { schema, fields, step, .. } => NodeChrome::Stepper { schema: schema.clone(), fields: fields.clone(), step: *step },
         Widget::InputNote { text, .. } => NodeChrome::Note { text: text.clone() },
         Widget::InputImage { src, .. } => NodeChrome::Image { src: src.clone() },
         Widget::Variable { name, schema, .. } => NodeChrome::Variable { name: name.clone(), schema: schema.clone() },
@@ -397,14 +322,6 @@ fn tree_from_fixture(fixture: &FlowFixture, kind_infos: &HashMap<String, Operato
                 Some(Neuron { id: id.clone(), kind: neuron_kind.clone(), params, tree: None })
             }
             Widget::InputSlider { id, value, .. } => Some(Neuron { id: id.clone(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(*value))), tree: None }),
-            Widget::InputStepper { id, schema, fields, .. } => {
-                let effective = effective_stepper_fields(schema, fields);
-                let mut params = Dictionary::new();
-                for field in &effective {
-                    params = params.insert(&field.key, NeuralValue::Atom(Atom::Decimal(field.value)));
-                }
-                Some(Neuron { id: id.clone(), kind: "core.stepper".into(), params, tree: None })
-            }
             Widget::InputNote { id, text } => Some(Neuron { id: id.clone(), kind: "core.text".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::String(text.clone()))), tree: None }),
             Widget::InputImage { id, src } => Some(Neuron { id: id.clone(), kind: "core.image".into(), params: Dictionary::new().insert("dataUrl", NeuralValue::Atom(Atom::String(src.clone()))), tree: None }),
             Widget::Variable { id, name, schema } => {
@@ -457,7 +374,6 @@ fn widget_label(widget: &Widget) -> String {
     match widget {
         Widget::Neuron { neuron_kind, .. } => neuron_kind.clone(),
         Widget::InputSlider { .. } => "Slider".into(),
-        Widget::InputStepper { schema, .. } => schema.clone(),
         Widget::InputNote { .. } => "Note".into(),
         Widget::InputImage { .. } => "Image".into(),
         Widget::Variable { name, .. } => name.clone(),
@@ -481,11 +397,6 @@ fn widget_display_meta(widget: &Widget, kind_infos: &HashMap<String, OperatorInf
             (name, abbreviation, String::new())
         }),
         Widget::InputSlider { .. } => ("Slider".into(), "Slider".into(), "emoji:🎚️".into()),
-        Widget::InputStepper { schema, .. } => {
-            let title = if schema.is_empty() { "Stepper" } else { schema.as_str() };
-            let (name, abbreviation) = dag::normalize_node_display(title, title);
-            (name, abbreviation, "emoji:🎚️".into())
-        }
         Widget::InputNote { .. } => ("Note".into(), "Note".into(), "emoji:📝".into()),
         Widget::InputImage { .. } => ("Image".into(), "Image".into(), "emoji:🖼️".into()),
         Widget::Variable { name, .. } => (name.clone(), name.chars().take(3).collect::<String>(), "emoji:🔣".into()),
@@ -672,7 +583,6 @@ fn widget_io_ports(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &HashM
     match widget {
         Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, .. } => neuron_io_layout(id, neuron_kind, input_ports, output_ports, params, synapses, kind_infos),
         Widget::InputSlider { .. } => (vec![], vec![IoPortSpec::named("N", "Num", "number", "Number")], false, false),
-        Widget::InputStepper { schema, .. } => (vec![], vec![stepper_output_port(schema)], false, false),
         Widget::InputNote { .. } => (vec![], vec![IoPortSpec::named("T", "Txt", "text", "Text")], false, false),
         Widget::InputImage { .. } => (vec![], vec![IoPortSpec::named("I", "Img", "image", "Image")], false, false),
         Widget::Variable { name, schema, .. } => {
@@ -693,10 +603,6 @@ fn widget_node_size(widget: &Widget, synapses: &[SynapseSpec], kind_infos: &Hash
         Widget::InputSlider { .. } => {
             let output = IoPortSpec::named("N", "Num", "number", "Number");
             (slider_widget_width(&label, &output), slider_widget_height())
-        }
-        Widget::InputStepper { schema, fields, .. } => {
-            let count = if fields.is_empty() { default_stepper_fields_for_schema(schema).len() } else { fields.len() };
-            (stepper_widget_width(), stepper_widget_height(count))
         }
         Widget::InputNote { text, .. } => note_widget_size(text),
         Widget::OutputAction { .. } | Widget::OutputExport { .. } => (io_widget_width(&label), io_widget_height(&label)),
@@ -731,7 +637,6 @@ fn widget_operator_kind(widget: &Widget) -> Option<String> {
     match widget {
         Widget::Neuron { neuron_kind, .. } => Some(neuron_kind.clone()),
         Widget::InputSlider { .. } => Some("core.number".into()),
-        Widget::InputStepper { .. } => Some("core.stepper".into()),
         Widget::InputNote { .. } => Some("core.text".into()),
         Widget::InputImage { .. } => Some("core.image".into()),
         Widget::Variable { .. } => Some("core.variable".into()),
@@ -754,14 +659,6 @@ fn widget_properties(widget: &Widget, kind_infos: &HashMap<String, OperatorInfo>
         Widget::InputSlider { value, .. } => {
             let mut bag = PropertyBag::new();
             bag.insert("value".into(), PropertyValue::Number(*value));
-            bag
-        }
-        Widget::InputStepper { schema, fields, .. } => {
-            let effective = effective_stepper_fields(schema, fields);
-            let mut bag = PropertyBag::new();
-            for field in &effective {
-                bag.insert(field.key.clone(), PropertyValue::Number(field.value));
-            }
             bag
         }
         Widget::InputNote { text, .. } => {
@@ -796,7 +693,6 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
     let id = match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
-        | Widget::InputStepper { id, .. }
         | Widget::InputNote { id, .. }
         | Widget::InputImage { id, .. }
         | Widget::Variable { id, .. }
@@ -826,12 +722,6 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
             properties: PropertyBag::new(),
             kind: DagNodeKind::Slider { min: *min, max: *max, step: *step, value: *value, output: IoPortSpec::named("N", "Num", "number", "Number") },
         },
-        Widget::InputStepper { schema, fields, step, .. } => {
-            let effective = effective_stepper_fields(schema, fields);
-            let dag_fields = effective.iter().map(|f| DagStepperField { key: f.key.clone(), label: f.key.clone(), value: f.value, step: *step }).collect();
-            let output = stepper_output_port(schema);
-            DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Stepper { fields: dag_fields, output } }
-        }
         Widget::InputNote { text, .. } => {
             DagNodeSpec { id, name, abbreviation, icon, x, y, width, height, operator_kind: None, properties: PropertyBag::new(), kind: DagNodeKind::Note { text: text.clone(), output: IoPortSpec::named("T", "Txt", "text", "Text") } }
         }
@@ -1066,14 +956,6 @@ enum WidgetDescriptor {
         #[serde(default)]
         step: Option<f64>,
     },
-    InputStepper {
-        #[serde(default)]
-        id: Option<String>,
-        #[serde(default)]
-        schema: Option<String>,
-        #[serde(default)]
-        step: Option<f64>,
-    },
     InputNote {
         #[serde(default)]
         id: Option<String>,
@@ -1114,7 +996,6 @@ fn descriptor_explicit_id(descriptor: &WidgetDescriptor) -> Option<String> {
     let id = match descriptor {
         WidgetDescriptor::Neuron { id, .. }
         | WidgetDescriptor::InputSlider { id, .. }
-        | WidgetDescriptor::InputStepper { id, .. }
         | WidgetDescriptor::InputNote { id, .. }
         | WidgetDescriptor::InputImage { id }
         | WidgetDescriptor::OutputPreview { id }
@@ -1143,11 +1024,6 @@ fn widget_from_descriptor(descriptor: &WidgetDescriptor, id: String, kind_infos:
         WidgetDescriptor::InputSlider { value, min, max, step, .. } => {
             let (value, min, max, step) = resolve_input_slider_fields(*value, *min, *max, *step);
             Widget::InputSlider { id, value, min, max, step }
-        }
-        WidgetDescriptor::InputStepper { schema, step, .. } => {
-            let schema = schema.clone().filter(|s| !s.trim().is_empty()).unwrap_or_else(default_stepper_schema);
-            let step = step.unwrap_or_else(default_stepper_step);
-            Widget::InputStepper { id, fields: vec![], schema, step }
         }
         WidgetDescriptor::InputNote { text, .. } => Widget::InputNote { id, text: text.clone().unwrap_or_default() },
         WidgetDescriptor::InputImage { .. } => Widget::InputImage { id, src: String::new() },
@@ -1331,7 +1207,14 @@ pub struct FlowBackedNodeGraphExtras {
 }
 
 /// 🌊 Builds shared NodeGraphScene fields for flow-backed plugins.
-pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, proximity_distance: f64) -> FlowBackedNodeGraphExtras {
+pub fn flow_backed_node_graph_extras(
+    fixture: &FlowFixture,
+    lod_mode: &str,
+    proximity_distance: f64,
+    grid_visible: bool,
+    grid_snap_enabled: bool,
+    grid_factor: f64,
+) -> FlowBackedNodeGraphExtras {
     let automatic = lod_mode.is_empty() || lod_mode == FLOW_LOD_MODE_AUTOMATIC;
     FlowBackedNodeGraphExtras {
         fixture_json: serde_json::to_string(fixture).ok(),
@@ -1342,6 +1225,9 @@ pub fn flow_backed_node_graph_extras(fixture: &FlowFixture, lod_mode: &str, prox
                 "automatic": automatic,
                 "forcedLabel": if automatic { serde_json::Value::Null } else { serde_json::json!(lod_mode) },
                 "proximityDistance": proximity_distance,
+                "gridVisible": grid_visible,
+                "gridSnapEnabled": grid_snap_enabled,
+                "gridFactor": grid_factor,
             })
             .to_string(),
         ),
@@ -1884,7 +1770,6 @@ impl FlowHost {
             history: FlowHistory::default(),
         };
         host.rebuild_dag();
-        host.touch_channel_eval();
         host
     }
 
@@ -1912,7 +1797,6 @@ impl FlowHost {
             self.history = FlowHistory::default();
         }
         self.rebuild_dag();
-        self.touch_channel_eval();
     }
 
     pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, FlowCoreError> {
@@ -2054,7 +1938,6 @@ impl FlowHost {
         self.fixture.widgets.push(widget);
         self.fixture.layout.insert(id.clone(), WidgetLayout { x: world_x, y: world_y });
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(id)
     }
 
@@ -2068,7 +1951,6 @@ impl FlowHost {
         self.fixture.layout.remove(widget_id);
         self.fixture.synapses.retain(|s| s.from != widget_id && s.to != widget_id);
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2110,7 +1992,6 @@ impl FlowHost {
         let synapse_id = format!("s{}", self.next_synapse_serial);
         self.fixture.synapses.push(SynapseSpec { id: synapse_id.clone(), from: from_id.to_string(), to: to_id.to_string(), from_port: from_port.to_string(), to_port: to_port.to_string() });
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(synapse_id)
     }
 
@@ -2150,7 +2031,6 @@ impl FlowHost {
         }
         *input_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2192,7 +2072,6 @@ impl FlowHost {
         next_ports.remove(remove_index);
         *input_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2232,7 +2111,6 @@ impl FlowHost {
         }
         *output_ports = (0..ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2274,7 +2152,6 @@ impl FlowHost {
         next_ports.remove(remove_index);
         *output_ports = (0..next_ports.len()).map(|slot| slot.to_string()).collect();
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2286,7 +2163,6 @@ impl FlowHost {
             return Err(FlowCoreError::UnknownSynapse(synapse_id.to_string()));
         }
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2327,14 +2203,12 @@ impl FlowHost {
         }
         if self.fixture.synapses.iter().any(|synapse| synapse.from == anchor_id && synapse.from_port == anchor_out_port && synapse.to == mid_id && synapse.to_port == mid_in_port) {
             self.rebuild_dag();
-            self.touch_channel_eval();
             return Ok(());
         }
         self.next_synapse_serial += 1;
         let synapse_id = format!("s{}", self.next_synapse_serial);
         self.fixture.synapses.push(SynapseSpec { id: synapse_id, from: anchor_id.to_string(), to: mid_id.to_string(), from_port: anchor_out_port.to_string(), to_port: mid_in_port.to_string() });
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2362,7 +2236,6 @@ impl FlowHost {
         };
         *params = params.merge(&patch);
         self.sync_dag_display_from_widgets();
-        self.touch_channel_eval();
         Ok(())
     }
     // #endregion GumballEditing
@@ -2417,9 +2290,6 @@ impl FlowHost {
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
         self.dag.pointer_move_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
-        if self.dag.widget_drag_active() {
-            self.touch_channel_eval();
-        }
     }
 
     pub fn widget_drag_active(&self) -> bool {
@@ -2432,7 +2302,6 @@ impl FlowHost {
         self.dag.pointer_up_screen(sx, sy, shift, ctrl_or_meta, alt);
         self.sync_from_dag();
         self.commit_gesture_history();
-        self.touch_channel_eval();
     }
 
     pub fn set_selection_options(&mut self, method: &str, mode: &str) {
@@ -2474,7 +2343,6 @@ impl FlowHost {
         self.begin_change();
         self.dag.delete_selected();
         self.sync_from_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2532,10 +2400,6 @@ impl FlowHost {
         }
     }
 
-    /// 🧵 Recomputes channel outputs after graph edits.
-    fn touch_channel_eval(&mut self) {
-        self.evaluate_internal();
-    }
 
     fn build_tree(&self) -> Tree {
         let fixture = self.build_dag_fixture_v1();
@@ -2554,14 +2418,6 @@ impl FlowHost {
             match widget {
                 Widget::InputSlider { id, value, .. } => {
                     seeds.insert(id.clone(), channel_output("number", Dictionary::with_schema("number").insert("value", NeuralValue::Atom(Atom::Decimal(*value)))));
-                }
-                Widget::InputStepper { id, schema, fields, .. } => {
-                    let effective = effective_stepper_fields(schema, fields);
-                    let mut dict = Dictionary::with_schema(schema);
-                    for field in &effective {
-                        dict = dict.insert(&field.key, NeuralValue::Atom(Atom::Decimal(field.value)));
-                    }
-                    seeds.insert(id.clone(), channel_output(schema, dict));
                 }
                 Widget::InputNote { id, text } => {
                     seeds.insert(id.clone(), channel_output("text", Dictionary::with_schema("text").insert("value", NeuralValue::Atom(Atom::String(text.clone())))));
@@ -2625,13 +2481,6 @@ impl FlowHost {
             match (widget, &mut node.kind) {
                 (Widget::InputSlider { value, .. }, DagNodeKind::Slider { value: dag_value, .. }) => {
                     *dag_value = *value;
-                }
-                (Widget::InputStepper { schema, fields, step, .. }, DagNodeKind::Stepper { fields: dag_fields, .. }) => {
-                    let effective = effective_stepper_fields(schema, fields);
-                    for (dag_field, spec) in dag_fields.iter_mut().zip(effective.iter()) {
-                        dag_field.value = spec.value;
-                        dag_field.step = *step;
-                    }
                 }
                 (Widget::InputNote { text, .. }, DagNodeKind::Note { text: dag_text, .. }) => {
                     *dag_text = text.clone();
@@ -2724,7 +2573,6 @@ impl FlowHost {
         self.begin_change();
         self.dag.align_selection(mode)?;
         self.sync_from_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -2854,7 +2702,6 @@ impl FlowHost {
         let prefix = match descriptor {
             WidgetDescriptor::Neuron { neuron_kind, .. } => neuron_kind.replace('.', "_"),
             WidgetDescriptor::InputSlider { .. } => "slider".into(),
-            WidgetDescriptor::InputStepper { .. } => "stepper".into(),
             WidgetDescriptor::InputNote { .. } => "note".into(),
             WidgetDescriptor::InputImage { .. } => "image".into(),
             WidgetDescriptor::Variable { .. } => "variable".into(),
@@ -2882,29 +2729,6 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         let _ = self.evaluate();
-    }
-
-    pub fn set_stepper_field_value(&mut self, widget_id: &str, field_key: &str, value: f64) {
-        self.begin_change();
-        for widget in &mut self.fixture.widgets {
-            if let Widget::InputStepper { id, fields, schema, .. } = widget {
-                if id != widget_id {
-                    continue;
-                }
-                if fields.is_empty() {
-                    *fields = default_stepper_fields_for_schema(schema);
-                }
-                if let Some(field) = fields.iter_mut().find(|f| f.key == field_key) {
-                    field.value = value;
-                }
-            }
-        }
-        self.sync_dag_display_from_widgets();
-        let _ = self.evaluate();
-    }
-
-    pub fn stepper_overlay_state_json(&self) -> Result<String, FlowCoreError> {
-        Ok(self.dag.stepper_overlay_state_json()?)
     }
 
     pub fn slider_overlay_state_json(&self) -> Result<String, FlowCoreError> {
@@ -2937,7 +2761,6 @@ impl FlowHost {
             return;
         }
         self.sync_from_dag();
-        self.touch_channel_eval();
     }
 
     /// ✏️ Backspaces in the active note editor.
@@ -2946,7 +2769,6 @@ impl FlowHost {
             return;
         }
         self.sync_from_dag();
-        self.touch_channel_eval();
     }
 
     /// ✏️ Deletes forward in the active note editor.
@@ -2955,7 +2777,6 @@ impl FlowHost {
             return;
         }
         self.sync_from_dag();
-        self.touch_channel_eval();
     }
 
     /// ✏️ Moves the active note caret.
@@ -2971,7 +2792,6 @@ impl FlowHost {
         self.dag.note_commit_edit();
         self.sync_from_dag();
         self.commit_gesture_history();
-        self.touch_channel_eval();
     }
 
     /// ✏️ Toggles native caret visibility while editing a note.
@@ -2998,7 +2818,6 @@ impl FlowHost {
             }
         }
         self.rebuild_dag();
-        self.touch_channel_eval();
     }
 
     pub fn set_variable_schema(&mut self, widget_id: &str, schema: &str) {
@@ -3015,7 +2834,6 @@ impl FlowHost {
             }
         }
         self.rebuild_dag();
-        self.touch_channel_eval();
     }
 
     pub fn set_image_src(&mut self, widget_id: &str, src: &str) {
@@ -3067,16 +2885,29 @@ impl FlowHost {
         self.dag.set_forced_draw_lod_label(label);
     }
 
+    pub fn set_grid_visible(&mut self, visible: bool) {
+        self.dag.set_grid_visible(visible);
+    }
+
+    pub fn set_grid_snap_enabled(&mut self, enabled: bool) {
+        self.dag.set_grid_snap_enabled(enabled);
+    }
+
+    pub fn set_grid_factor(&mut self, factor: f64) -> Result<(), FlowCoreError> {
+        self.dag.set_grid_factor(factor)?;
+        Ok(())
+    }
+
+    pub fn focus_selection_camera(&self, pad: f64) -> Option<CameraJson> {
+        self.dag.focus_selection_camera(pad).map(|camera| CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom })
+    }
+
     pub fn draw_lod_label(&self) -> &'static str {
         self.dag.draw_lod_label()
     }
 
     pub fn label_overlay_paint_state_json(&self) -> Result<String, FlowCoreError> {
         Ok(self.dag.label_overlay_paint_state_json()?)
-    }
-
-    pub fn param_overlay_paint_state_json(&self) -> Result<String, FlowCoreError> {
-        Ok(self.dag.param_overlay_paint_state_json()?)
     }
 
     /// 💥 Returns and clears a pending cluster explode target from the last pointer hit.
@@ -3220,7 +3051,6 @@ impl FlowHost {
             }
         }
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(cluster_id)
     }
 
@@ -3309,7 +3139,6 @@ impl FlowHost {
         }
         self.fixture.synapses = next_synapses;
         self.rebuild_dag();
-        self.touch_channel_eval();
         Ok(())
     }
 
@@ -3344,7 +3173,6 @@ impl FlowHost {
         self.fixture = prev;
         self.fixture.camera = camera;
         self.rebuild_dag();
-        self.touch_channel_eval();
         true
     }
 
@@ -3358,7 +3186,6 @@ impl FlowHost {
         self.fixture = next;
         self.fixture.camera = camera;
         self.rebuild_dag();
-        self.touch_channel_eval();
         true
     }
 
@@ -3383,7 +3210,6 @@ fn widget_id_for(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
-        | Widget::InputStepper { id, .. }
         | Widget::InputNote { id, .. }
         | Widget::InputImage { id, .. }
         | Widget::Variable { id, .. }
@@ -3668,16 +3494,6 @@ impl FlowSession {
         self.state.borrow_mut().host.set_slider_value(widget_id, value);
     }
 
-    #[wasm_bindgen(js_name = setStepperFieldValue)]
-    pub fn set_stepper_field_value(&self, widget_id: &str, field_key: &str, value: f64) {
-        self.state.borrow_mut().host.set_stepper_field_value(widget_id, field_key, value);
-    }
-
-    #[wasm_bindgen(js_name = stepperOverlayStateJson)]
-    pub fn stepper_overlay_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.stepper_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
     #[wasm_bindgen(js_name = sliderOverlayStateJson)]
     pub fn slider_overlay_state_json(&self) -> Result<String, JsValue> {
         self.state.borrow().host.slider_overlay_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
@@ -3864,11 +3680,6 @@ impl FlowSession {
         self.state.borrow().host.label_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
-    #[wasm_bindgen(js_name = paramOverlayPaintStateJson)]
-    pub fn param_overlay_paint_state_json(&self) -> Result<String, JsValue> {
-        self.state.borrow().host.param_overlay_paint_state_json().map_err(|e| JsValue::from_str(&e.to_string()))
-    }
-
     #[wasm_bindgen(js_name = attachCanvas)]
     pub fn attach_canvas(&mut self, canvas: HtmlCanvasElement, logical_w: u32, logical_h: u32, dpr: f64) -> js_sys::Promise {
         let inner = self.state.clone();
@@ -3963,6 +3774,11 @@ impl FlowSession {
     #[wasm_bindgen(js_name = selectionPreviewCrossing)]
     pub fn selection_preview_crossing(&self) -> bool {
         self.state.borrow().host.selection_preview_crossing()
+    }
+
+    #[wasm_bindgen(js_name = selectionPreviewMethod)]
+    pub fn selection_preview_method(&self) -> String {
+        self.state.borrow().host.selection_preview_method().to_string()
     }
 
     #[wasm_bindgen(js_name = selectionUnionBoundsScreenJson)]
@@ -4111,7 +3927,6 @@ impl Identified<String> for Widget {
         match self {
             Widget::Neuron { id, .. }
             | Widget::InputSlider { id, .. }
-            | Widget::InputStepper { id, .. }
             | Widget::InputNote { id, .. }
             | Widget::InputImage { id, .. }
             | Widget::Variable { id, .. }
@@ -4367,8 +4182,8 @@ mod flow_vcs_wasm {
 
 // #region 🔖FormsBridge
 pub mod forms_bridge {
-    use super::{effective_stepper_fields, FlowFixture, Widget};
-    use protocol::{ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, ProtocolVectorField, PROTOCOL_DOCUMENT_SCHEMA};
+    use super::{FlowFixture, Widget};
+    use protocol::{ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, PROTOCOL_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
         let mut words = Vec::new();
@@ -4441,31 +4256,6 @@ pub mod forms_bridge {
                 params: None,
                 condition: None,
             }),
-            Widget::InputStepper { id, schema, fields, step, .. } => {
-                let effective = effective_stepper_fields(schema, fields);
-                Some(ProtocolBlock {
-                    id: id.clone(),
-                    label: humanize_widget_label(id),
-                    kind: "vector".into(),
-                    description: None,
-                    required: None,
-                    placeholder: None,
-                    default: None,
-                    min: None,
-                    max: None,
-                    step: Some(*step),
-                    unit: None,
-                    text: None,
-                    options: None,
-                    fields: Some(effective.iter().map(|field| ProtocolVectorField { key: field.key.clone(), label: Some(humanize_widget_label(&field.key)), value: Some(field.value) }).collect()),
-                    schema: Some(schema.clone()),
-                    src: None,
-                    accept: None,
-                    fixture_slug: None,
-                    params: None,
-                    condition: None,
-                })
-            }
             Widget::InputNote { id, text, .. } => Some(ProtocolBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
@@ -4545,34 +4335,9 @@ pub mod forms_bridge {
         ProtocolSpec { schema: PROTOCOL_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![ProtocolStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
     }
 
-    fn patch_stepper_fields(widget: &mut serde_json::Value, value: &serde_json::Value) {
-        let Some(fields) = widget.get_mut("fields").and_then(|entry| entry.as_array_mut()) else {
-            return;
-        };
-        if let Some(map) = value.as_object() {
-            for field in fields.iter_mut() {
-                let Some(key) = field.get("key").and_then(|entry| entry.as_str()) else {
-                    continue;
-                };
-                if let Some(number) = map.get(key).and_then(|entry| entry.as_f64()) {
-                    field["value"] = serde_json::json!(number);
-                }
-            }
-            return;
-        }
-        if let Some(numbers) = value.as_array() {
-            for (index, field) in fields.iter_mut().enumerate() {
-                if let Some(number) = numbers.get(index).and_then(|entry| entry.as_f64()) {
-                    field["value"] = serde_json::json!(number);
-                }
-            }
-        }
-    }
-
     /// 🏷️ Widget "kind" tags recognized when patching a single generation value into a raw fixture-JSON widget.
     enum WidgetPatchKind {
         InputSlider,
-        InputStepper,
         InputNote,
         InputImage,
         Variable,
@@ -4582,7 +4347,6 @@ pub mod forms_bridge {
         fn parse(kind: &str) -> Option<Self> {
             match kind {
                 "inputSlider" => Some(Self::InputSlider),
-                "inputStepper" => Some(Self::InputStepper),
                 "inputNote" => Some(Self::InputNote),
                 "inputImage" => Some(Self::InputImage),
                 "variable" => Some(Self::Variable),
@@ -4610,7 +4374,6 @@ pub mod forms_bridge {
                         widget["value"] = serde_json::json!(number);
                     }
                 }
-                Some(WidgetPatchKind::InputStepper) => patch_stepper_fields(widget, value),
                 Some(WidgetPatchKind::InputNote) => {
                     if let Some(text) = value.as_str() {
                         widget["text"] = serde_json::json!(text);
@@ -5267,7 +5030,7 @@ mod tests {
     #[test]
     fn flow_backed_node_graph_extras_include_fixture_and_flow_engine() {
         let host = host_with_test_bridge();
-        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0);
+        let extras = flow_backed_node_graph_extras(&host.fixture, FLOW_LOD_MODE_AUTOMATIC, 0.0, true, false, ui_styling::metrics::board::GRID_FACTOR_DEFAULT);
         assert!(extras.fixture_json.as_ref().is_some_and(|json| json.contains("flow.fixture")));
         assert!(extras.operators_json.as_ref().is_some_and(|json| json.contains("math.add")));
         assert!(extras.capabilities_json.as_ref().is_some_and(|json| json.contains(r#""engine":"flow""#)));

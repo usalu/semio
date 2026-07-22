@@ -1136,6 +1136,12 @@ impl NeuralCache {
         self.entries.lock().map_or(true, |entries| entries.is_empty())
     }
 
+    /// 🔎 Whether `key` has a cached entry (from any epoch) — a hit here means
+    /// [`NeuralCache::get_or_insert_with`] would return without calling `compute`.
+    pub fn contains(&self, key: u64) -> bool {
+        self.entries.lock().is_ok_and(|entries| entries.contains_key(&key))
+    }
+
     pub fn get_or_insert_with<F>(&self, key: u64, compute: F) -> Result<Dictionary, EvalError>
     where
         F: FnOnce() -> Result<Dictionary, EvalError>,
@@ -1330,6 +1336,14 @@ pub struct EvalChannels {
     pub inputs: HashMap<String, Dictionary>,
 }
 
+/// ⏳ Result of a budget-limited evaluation pass — `remaining` (in topo order) is empty once the
+/// whole dirty set has been walked; a non-empty `remaining` means resume with another budgeted call.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct BudgetedEval {
+    pub channels: EvalChannels,
+    pub remaining: Vec<String>,
+}
+
 /// 🔄 Topological evaluation over a neural tree.
 pub struct Evaluator<'a> {
     registry: &'a Registry,
@@ -1383,41 +1397,77 @@ impl<'a> Evaluator<'a> {
         dirty: &HashSet<String>,
         previous: Option<&EvalChannels>,
     ) -> Result<EvalChannels, EvalError> {
+        self.evaluate_channels_budgeted(tree, seeds, operator_infos, dispatch, cache, dirty, previous, usize::MAX).map(|budgeted| budgeted.channels)
+    }
+
+    /// ⏳ Sequential topo walk that stops after computing `budget` cache-missed (i.e. actually
+    /// dispatched) neurons, returning the not-yet-computed neuron ids as `remaining` so a caller can
+    /// resume with another budgeted call — used to spread a heavy evaluation across many cheap ticks
+    /// instead of blocking a thread for the whole graph. `budget = 0` is a pure probe: nothing is
+    /// dispatched, `remaining` reports every neuron that would still need work.
+    #[allow(clippy::too_many_arguments, reason = "mirrors evaluate_channels_sequential_cached's params plus a budget; see that method's reason")]
+    pub fn evaluate_channels_budgeted(
+        &self,
+        tree: &Tree,
+        seeds: &HashMap<String, Dictionary>,
+        operator_infos: &HashMap<String, OperatorInfo>,
+        dispatch: &mut dyn FnMut(&str, &Dictionary) -> Result<Dictionary, EvalError>,
+        cache: &NeuralCache,
+        dirty: &HashSet<String>,
+        previous: Option<&EvalChannels>,
+        budget: usize,
+    ) -> Result<BudgetedEval, EvalError> {
         let order = topo_order(tree)?;
         let mut outputs: HashMap<String, Dictionary> = seeds.clone();
         let mut inputs: HashMap<String, Dictionary> = HashMap::new();
-        for neuron_id in order {
-            if !dirty.contains(&neuron_id) {
+        let mut spent = 0usize;
+        for (index, neuron_id) in order.iter().enumerate() {
+            if !dirty.contains(neuron_id) {
                 if let Some(prev) = previous {
-                    if let (Some(out), Some(inp)) = (prev.outputs.get(&neuron_id), prev.inputs.get(&neuron_id)) {
+                    if let (Some(out), Some(inp)) = (prev.outputs.get(neuron_id), prev.inputs.get(neuron_id)) {
                         outputs.insert(neuron_id.clone(), out.clone());
-                        inputs.insert(neuron_id, inp.clone());
+                        inputs.insert(neuron_id.clone(), inp.clone());
                         continue;
                     }
                 }
             }
-            let neuron = tree.neurons.iter().find(|n| n.id == neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
+            let neuron = tree.neurons.iter().find(|n| n.id == *neuron_id).ok_or_else(|| EvalError::InvalidInput(format!("missing neuron {neuron_id}")))?;
             let operator_info = operator_info_for_neuron(neuron, operator_infos, self.registry.operator_info(&neuron.kind));
-            let input = collect_neuron_input(tree, &outputs, &neuron_id, operator_info)?;
+            let input = collect_neuron_input(tree, &outputs, neuron_id, operator_info)?;
             inputs.insert(neuron_id.clone(), input.clone());
-            if let Some(seed) = seeds.get(&neuron_id) {
+            if let Some(seed) = seeds.get(neuron_id) {
                 outputs.insert(neuron_id.clone(), seed.clone());
-                continue;
-            }
-            if let Some(sub_tree) = neuron.tree.as_deref() {
-                let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
-                outputs.insert(neuron_id.clone(), out);
                 continue;
             }
             if neuron.kind == INPUT_KIND || neuron.kind == OUTPUT_KIND {
                 outputs.insert(neuron_id.clone(), input.merge(&neuron.params));
                 continue;
             }
+            // 🚧 A budget-exhausted cache miss (cluster or operator) stops the walk here; this
+            // neuron and everything from `order[index..]` becomes `remaining`. Clusters have no
+            // single cache key of their own (their inner neurons are cached individually), so a
+            // cluster is conservatively always charged as a miss.
+            if let Some(sub_tree) = neuron.tree.as_deref() {
+                if spent >= budget {
+                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: order[index..].to_vec() });
+                }
+                let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
+                outputs.insert(neuron_id.clone(), out);
+                spent += 1;
+                continue;
+            }
             let merged = input.merge(&neuron.params);
+            let is_miss = !cache.contains(node_hash(&neuron.kind, &merged));
+            if is_miss && spent >= budget {
+                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: order[index..].to_vec() });
+            }
             let out = evaluate_cached_output(cache, &neuron.kind, &merged, || dispatch(&neuron.kind, &merged));
             outputs.insert(neuron_id.clone(), out);
+            if is_miss {
+                spent += 1;
+            }
         }
-        Ok(EvalChannels { outputs, inputs })
+        Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: Vec::new() })
     }
 
     pub fn evaluate_channels_with(

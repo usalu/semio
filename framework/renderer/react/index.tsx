@@ -231,6 +231,7 @@ import {
   selectionMergeIds,
   type SelectionMergeMode,
   floatingMenuSurfaceClass,
+  floatingMenuItemClass,
   type IconName,
   pickMostSpecificCanvasTarget,
   type IconRenderRequest,
@@ -291,10 +292,12 @@ import {
   normalizeAppLabelsOverlay,
   deriveUtilityNodes,
   resolveWindowActions,
+  resolveModeTools,
   partitionWindowMeasures,
   effectiveActionArgs,
   missingRequiredArgs,
   SET_ACTIVE_UTILITY_ACTION_ID,
+  SET_ACTIVE_TOOL_ACTION_ID,
   START_INTRODUCTION_ACTION_ID,
   type ActionArgControl,
   type ActionArgDef,
@@ -305,8 +308,10 @@ import {
   type CommandDefinition,
   type DerivedUtilitySpec,
   type UtilityDefinition,
+  type ToolDefinition,
   type AppPanelTabDefinition,
   type Canvas2dScene,
+  type ContextMenuItemSpec,
   type DialogDefinition,
   type IntroductionAnchor,
   type IntroductionDefinition,
@@ -1186,6 +1191,21 @@ export function resolveShellDefaults(brand: ShellBrand | undefined, defaults: Fr
   return { exampleId: defaults?.exampleId ?? brand?.defaults?.exampleId };
 }
 
+/**
+ * 🧪 Picks the example id announced on a fresh session: keep a still-valid active/default id,
+ * otherwise the first registered example (matches wgpu `sync_session_chrome`) so the navbar never
+ * boots on “No example” while the plugin’s default document is already that first fixture.
+ */
+export function resolveBootExampleId(
+  activeExampleId: string,
+  exampleOptions: readonly { readonly id: string }[],
+  defaultsExampleId?: string,
+): string {
+  if (activeExampleId && exampleOptions.some((option) => option.id === activeExampleId)) return activeExampleId;
+  if (defaultsExampleId && exampleOptions.some((option) => option.id === defaultsExampleId)) return defaultsExampleId;
+  return exampleOptions[0]?.id ?? "";
+}
+
 /** 🎓 Whether a brand's introduction should auto-start on every window load, ignoring any device-local seen flag. */
 export function shouldReplayIntroductionOnLoad(brand: ShellBrand | undefined): boolean {
   return isEphemeralShellBrand(brand) || brand?.replayIntroductionOnLoad === true;
@@ -1246,6 +1266,8 @@ type WindowUiState = {
   readonly windowUiByWindowId: Readonly<Record<string, UiNode>>;
   readonly windowEngagementsByWindowId: Readonly<Record<string, WindowEngagement>>;
   readonly windowMeasuresByWindowId: Readonly<Record<string, readonly WindowMeasure[]>>;
+  /** 🛠️ Mode-level tool measures, keyed by TOOL id (never a window id) — see `DocumentApp::tool_measures`. */
+  readonly toolMeasuresByToolId: Readonly<Record<string, readonly WindowMeasure[]>>;
   readonly panelUiByKey: Readonly<Record<string, UiNode>>;
   readonly appLabelsOverlay: PluginAppLabelsOverlay;
 };
@@ -1266,6 +1288,9 @@ type ActionPaneState = {
   readonly expandedByWindowId: Readonly<Record<string, string | null>>;
   readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
   readonly activeUtilityByWindowId: Readonly<Record<string, string | null>>;
+  /** 🛠️ Host-owned active tool of the active MODE (never per-window, never a document field/VCS op) —
+   * mutually exclusive with any window's active utility. See {@link ToolRegistry}. */
+  readonly activeToolId: string | null;
 };
 
 /** 🧰 Composite key into {@link ActionPaneState.stagedArgsByKey}. */
@@ -1375,6 +1400,8 @@ export type ShellAction =
   | { readonly type: "STAGE_ACTION_ARG"; readonly windowId: string; readonly actionId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_ACTION_ARGS"; readonly windowId: string; readonly actionId: string }
   | { readonly type: "SET_ACTIVE_UTILITY"; readonly windowId: string; readonly utilityId: string | null }
+  | { readonly type: "SET_ACTIVE_TOOL"; readonly toolId: string | null }
+  | { readonly type: "SET_TOOL_MEASURES_BY_TOOL_ID"; readonly value: Updatable<Readonly<Record<string, readonly WindowMeasure[]>>> }
   | { readonly type: "SET_COMMAND_EXPANDED"; readonly value: string | null }
   | { readonly type: "STAGE_COMMAND_ARG"; readonly commandId: string; readonly argId: string; readonly value: unknown }
   | { readonly type: "RESET_COMMAND_ARGS"; readonly commandId: string }
@@ -1433,6 +1460,8 @@ function windowUiReducer(state: WindowUiState, action: ShellAction): WindowUiSta
       return { ...state, windowEngagementsByWindowId: resolveUpdatable(action.value, state.windowEngagementsByWindowId) };
     case "SET_WINDOW_MEASURES_BY_WINDOW_ID":
       return { ...state, windowMeasuresByWindowId: resolveUpdatable(action.value, state.windowMeasuresByWindowId) };
+    case "SET_TOOL_MEASURES_BY_TOOL_ID":
+      return { ...state, toolMeasuresByToolId: resolveUpdatable(action.value, state.toolMeasuresByToolId) };
     case "SET_PANEL_UI_BY_KEY":
       return { ...state, panelUiByKey: resolveUpdatable(action.value, state.panelUiByKey) };
     case "SET_APP_LABELS_OVERLAY":
@@ -1483,6 +1512,9 @@ function actionPaneReducer(state: ActionPaneState, action: ShellAction): ActionP
       if ((state.activeUtilityByWindowId[action.windowId] ?? null) === action.utilityId) return state;
       return { ...state, activeUtilityByWindowId: { ...state.activeUtilityByWindowId, [action.windowId]: action.utilityId } };
     }
+    case "SET_ACTIVE_TOOL":
+      if (state.activeToolId === action.toolId) return state;
+      return { ...state, activeToolId: action.toolId };
     default:
       return state;
   }
@@ -1649,9 +1681,9 @@ export function initialShellState(_props: {
   const ephemeral = _props.ephemeral === true;
   return {
     pluginRuntime: { loadedPlugins: [], session: null, error: null },
-    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
+    windowUi: { windowUiByWindowId: {}, windowEngagementsByWindowId: {}, windowMeasuresByWindowId: {}, toolMeasuresByToolId: {}, panelUiByKey: {}, appLabelsOverlay: EMPTY_APP_LABELS_OVERLAY },
     spawnedWindow: { spawnedWindowUi: null, spawnedWindowEngagements: {}, spawnedWindowMeasures: {} },
-    actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {} },
+    actionPane: { foldedByWindowId: {}, expandedByWindowId: {}, stagedArgsByKey: {}, activeUtilityByWindowId: {}, activeToolId: null },
     commandPanel: { expandedCommandId: null, stagedArgsByCommandId: {} },
     layout: {
       panels: Object.fromEntries(ANCHORS.map((anchor) => [anchor, { visible: false, size: DEFAULT_PANEL_SIZES[anchor], path: [] }])) as Record<Anchor, PanelState>,
@@ -1707,6 +1739,9 @@ const DEFAULT_PANEL_SIZES: Record<Anchor, number> = {
 const FRAMEWORK_CATEGORY_DISPLAY_ID = "framework.category.display";
 /** @emoji 🎛 Root category id bundling every command-category leaf under one expandable Command toggle on bottom-middle (mirrors Display on bottom-left). */
 const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
+/** @emoji 🛠️ Root category id bundling every mode-level tool leaf under one expandable Tool toggle on
+ * bottom-middle, ordered left of the Command branch (mirrors Command's own bundling on the same anchor). */
+const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
 
 /** @emoji 🎛️ The four corner/top-middle/bottom-middle anchors' root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on the floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. The two side-middle anchors have no navbar/footer slot to host into, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar. */
 const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
@@ -3969,6 +4004,72 @@ export function buildCommandCategoryTabs(
 }
 //#endregion 🎛CommandRegistry
 
+//#region 🛠️ToolRegistry
+/**
+ * 🛠️ One tool's measure-tree content: an activation toggle row, followed — only while this tool is the
+ * active one — by its live measures (e.g. puzzle3d fill's count slider). Reuses `renderWindowMeasure`
+ * (the same control renderer as a window's utility-options rail) so a tool's controls look and behave
+ * identically to a utility's, without dispatching against a window (tool measures carry no `windowId`).
+ */
+function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[] } {
+  const iconName: IconName = tool.iconId in ICONS ? (tool.iconId as IconName) : "hammer";
+  const sections: TreeDataSection[] = [
+    {
+      id: `tool.${tool.id}.activate`,
+      label: "",
+      items: [
+        {
+          id: `tool.${tool.id}.activate.toggle`,
+          label: tool.label,
+          control: (
+            <Toggle
+              id={`tool.${tool.id}`}
+              pressed={isActive}
+              text={tool.label}
+              icon={<Icon icon={iconName} size="small" />}
+              onPressedChange={(pressed) => onAction({ controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: pressed ? tool.id : "" } })}
+            />
+          ),
+        },
+      ],
+    },
+  ];
+  if (isActive && measures && measures.length > 0) {
+    sections.push({
+      id: `tool.${tool.id}.options`,
+      label: "",
+      items: measures.map((measure) => ({ id: `tool.${tool.id}.options.${measure.id}`, label: "", control: renderWindowMeasure(measure, onAction) })),
+    });
+  }
+  return { sections };
+}
+
+/**
+ * 🛠️ One `PanelTabLeaf` per resolved mode tool — consumers wrap these under the Tool branch
+ * (`FRAMEWORK_CATEGORY_TOOL_ID`) on `defaultDock.anchors["bottom-middle"]`, ordered left of the Command
+ * branch, so the folded chrome shows a single Tool toggle. Content is a *lazy* `resolveTree` (mirrors
+ * `buildCommandCategoryTabs`'s windows tab) so this array — and therefore `defaultDock`'s own memo —
+ * never depends on `activeToolId`/`toolMeasuresByToolId`, which change on every activation/slider tick;
+ * `resolveTree` reads those fresh off refs at render time instead.
+ */
+export function buildToolTabs(
+  tools: readonly ToolDefinition[],
+  controllerId: string,
+  activeToolIdRef: React.RefObject<string | null>,
+  toolMeasuresByToolIdRef: React.RefObject<Readonly<Record<string, readonly WindowMeasure[]>>>,
+  onAction: (action: ActionDescriptor) => unknown,
+): PanelTabNode[] {
+  return tools.map((tool) =>
+    singleTreeLeaf({
+      id: `tool.${tool.id}`,
+      icon: shellTabIcon(tool.iconId),
+      name: tool.label,
+      tree: { resolveTree: () => buildToolTree(tool, controllerId, activeToolIdRef.current === tool.id, toolMeasuresByToolIdRef.current[tool.id], onAction) },
+    }),
+  );
+}
+//#endregion 🛠️ToolRegistry
+
 /** @emoji 🐢 Structural equality over plain JSON-shaped values (the shape every `UiNode`/`WindowEngagement`/`WindowMeasure` plugin payload takes) — no cycles, no non-JSON types. */
 function uiJsonDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -4031,7 +4132,7 @@ function uiRefreshWantsWindow(scope: UiDirtyScope, bodyKey: string): boolean {
 function uiRefreshWantsPanel(scope: UiDirtyScope, bodyKey: string): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && (scope.panelBodies ?? []).includes(bodyKey));
 }
-function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures" | "labels"): boolean {
+function uiRefreshWantsFlag(scope: UiDirtyScope, flag: "engagements" | "measures" | "tools" | "labels"): boolean {
   return scope.kind === "full" || (scope.kind === "partial" && scope[flag] === true);
 }
 
@@ -4076,9 +4177,10 @@ export function buildUiRefreshRequest(
     .map((tab) => ({ key: panelTabKindId(tab.kind), bodyKey: tab.bodyKey, hash: cache.get(`panel:${panelTabKindId(tab.kind)}`)?.hash }));
   const engagements = uiRefreshWantsFlag(scope, "engagements") ? { hash: cache.get("engagements")?.hash } : undefined;
   const measures = uiRefreshWantsFlag(scope, "measures") ? { hash: cache.get("measures")?.hash } : undefined;
+  const tools = uiRefreshWantsFlag(scope, "tools") ? { hash: cache.get("tools")?.hash } : undefined;
   const labels = uiRefreshWantsFlag(scope, "labels") ? { hash: cache.get("labels")?.hash } : undefined;
-  if (windows.length === 0 && panels.length === 0 && !engagements && !measures && !labels) return null;
-  return { viewState, windows, panels, engagements, measures, labels };
+  if (windows.length === 0 && panels.length === 0 && !engagements && !measures && !tools && !labels) return null;
+  return { viewState, windows, panels, engagements, measures, tools, labels };
 }
 
 /** @emoji 🐢 Writes every changed section (`value !== undefined`) from a `refresh-ui` response into `cache`; unchanged sections are left as-is since the cached value is still current. */
@@ -4093,6 +4195,7 @@ export function applyUiRefreshResponseToCache(cache: UiRefreshCache, response: P
   applyUiRefreshSectionsToCache(cache, "panel", response.panels);
   if (response.engagements?.value !== undefined) cache.set("engagements", { hash: response.engagements.hash, value: response.engagements.value });
   if (response.measures?.value !== undefined) cache.set("measures", { hash: response.measures.hash, value: response.measures.value });
+  if (response.tools?.value !== undefined) cache.set("tools", { hash: response.tools.hash, value: response.tools.value });
   if (response.labels?.value !== undefined) cache.set("labels", { hash: response.labels.hash, value: response.labels.value });
 }
 //#endregion UiRefresh
@@ -4173,9 +4276,9 @@ export function FrameworkOsShell({
   const hostControllerId = hostApp?.controllerId;
   const landingControllerId = landingApp?.controllerId;
   const hostCatalogueTabId = hostApp?.panelTabs[0] ? panelTabKindId(hostApp.panelTabs[0].kind) : undefined;
-  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
+  const { windowUiByWindowId, windowEngagementsByWindowId, windowMeasuresByWindowId, toolMeasuresByToolId, panelUiByKey, appLabelsOverlay } = shellState.windowUi;
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
-  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId } = shellState.actionPane;
+  const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
@@ -4188,6 +4291,12 @@ export function FrameworkOsShell({
   const layoutSeedKeyRef = useRef<string | null>(null);
   const noExampleResetInstanceIdRef = useRef<number | null>(null);
   const extraWindowCounterRef = useRef(0);
+  // 🪟 Live extra-window list, updated synchronously on every seed/split/drop — `refreshUi` reads this
+  // instead of the render-closure `extraWindowInstances` so a concurrent action refresh (e.g. boot
+  // `setActiveExample`) that starts after the session-switch refresh wrote extras but before React
+  // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
+  const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
+  extraWindowInstancesRef.current = extraWindowInstances;
   // 🐢 Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
   // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
   const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
@@ -4290,6 +4399,10 @@ export function FrameworkOsShell({
   // active window without re-creating those callbacks on every utility switch.
   const activeUtilityByWindowIdRef = useRef(activeUtilityByWindowId);
   activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
+  const activeToolIdRef = useRef(activeToolId);
+  activeToolIdRef.current = activeToolId;
+  const toolMeasuresByToolIdRef = useRef(toolMeasuresByToolId);
+  toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
   const activeWindowIdRef = useRef(activeWindowId);
   activeWindowIdRef.current = activeWindowId;
   const actionPaneExpandedByWindowIdRef = useRef(actionPaneExpandedByWindowId);
@@ -4307,12 +4420,20 @@ export function FrameworkOsShell({
   const commandStagedArgsByCommandIdRef = useRef(commandStagedArgsByCommandId);
   commandStagedArgsByCommandIdRef.current = commandStagedArgsByCommandId;
 
-  /** 🧰 Overlays the active window's host-owned `activeUtilityId` onto a view state at plugin-call time. */
+  /** 🛠️ Overlays the mode-level host-owned `activeToolId` onto a view state at plugin-call time —
+   * mirrors `injectActiveUtility` but is windowless (a tool is scoped to the active mode, not a window). */
+  const injectActiveTool = useCallback((viewState: ViewState): ViewState => {
+    const toolId = activeToolIdRef.current ?? undefined;
+    return viewState.activeToolId === toolId ? viewState : { ...viewState, activeToolId: toolId };
+  }, []);
+
+  /** 🧰 Overlays the active window's host-owned `activeUtilityId` (and the mode's `activeToolId`) onto a view state at plugin-call time. */
   const injectActiveUtility = useCallback((viewState: ViewState, windowId?: string | null): ViewState => {
     const key = windowId ?? activeWindowIdRef.current;
     const utilityId = key ? (activeUtilityByWindowIdRef.current[key] ?? undefined) : undefined;
-    return viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
-  }, []);
+    const withUtility = viewState.activeUtilityId === utilityId ? viewState : { ...viewState, activeUtilityId: utilityId };
+    return injectActiveTool(withUtility);
+  }, [injectActiveTool]);
 
   useEffect(() => {
     dispatch({ type: "SET_SYNC_BACKBONE_URI", value: null });
@@ -4386,8 +4507,15 @@ export function FrameworkOsShell({
             activeWindowKindId: sApp.windowKinds[0]?.id,
             panelJson: panelJsonFromState(panelState),
           };
+          // 🪟 Seed default-layout panes (Top/Perspective) before any effect can fire actions — otherwise
+          // boot `setActiveExample` races the session-switch refresh and wipes pane bodies.
+          const seeded = applyFrameworkLayoutSeed(sApp.defaultLayout, sApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
+          extraWindowInstancesRef.current = seeded.extraInstances;
+          extraWindowCounterRef.current = seeded.extraInstances.length;
           dispatch({ type: "SET_SESSION", value: { pluginId: sPlugin.handle.pluginId, instanceId, app: sApp, viewState } });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: sApp.windowKinds[0]?.id ?? null });
+          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+          dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? sApp.windowKinds[0]?.id ?? null });
           return;
         }
 
@@ -4405,6 +4533,9 @@ export function FrameworkOsShell({
             })();
         if (primary && primaryApp) {
           const instanceId = await primary.createApp(primaryApp.id);
+          const seeded = applyFrameworkLayoutSeed(primaryApp.defaultLayout, primaryApp.windowKinds, EMPTY_APP_LABELS_OVERLAY);
+          extraWindowInstancesRef.current = seeded.extraInstances;
+          extraWindowCounterRef.current = seeded.extraInstances.length;
           dispatch({
             type: "SET_SESSION",
             value: {
@@ -4417,7 +4548,9 @@ export function FrameworkOsShell({
               },
             },
           });
-          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: primaryApp.windowKinds[0]?.id ?? null });
+          dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+          dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+          dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? primaryApp.windowKinds[0]?.id ?? null });
         }
       } catch (bootError) {
         if (!cancelled) {
@@ -4463,7 +4596,9 @@ export function FrameworkOsShell({
       // this very first fetch already requests every default-layout pane's body/measures/engagements
       // instead of leaving newly-seeded panes to show "missing window" until some later, unrelated refresh.
       const layoutSeed = isSessionSwitch ? applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay) : undefined;
-      const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstances;
+      // 🪟 Prefer the override, then the just-computed session-switch seed, then the live ref (never the
+      // render-closure snapshot) so a concurrent refresh cannot drop default-layout panes.
+      const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
       const viewState: ViewState = injectActiveUtility({
@@ -4515,6 +4650,11 @@ export function FrameworkOsShell({
         type: "SET_WINDOW_MEASURES_BY_WINDOW_ID",
         value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicMeasures)),
       });
+      const dynamicToolMeasures = (cache.get("tools")?.value as Readonly<Record<string, readonly WindowMeasure[]>> | undefined) ?? {};
+      dispatch({
+        type: "SET_TOOL_MEASURES_BY_TOOL_ID",
+        value: (current) => mergeRecordPreservingIdentity(current, Object.entries(dynamicToolMeasures)),
+      });
       const freshAppLabelsOverlay = normalizeAppLabelsOverlay(cache.get("labels")?.value as Partial<PluginAppLabelsOverlay> | undefined);
       dispatch({ type: "SET_APP_LABELS_OVERLAY", value: (current) => preserveJsonIdentity(current, freshAppLabelsOverlay) });
       dispatch({
@@ -4529,14 +4669,15 @@ export function FrameworkOsShell({
       });
       if (isSessionSwitch && layoutSeed) {
         layoutSeedKeyRef.current = layoutSeedKey;
-        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
+        extraWindowInstancesRef.current = layoutSeed.extraInstances;
         extraWindowCounterRef.current = layoutSeed.extraInstances.length;
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: layoutSeed.extraInstances });
         dispatch({ type: "SET_SHELL_LAYOUT", value: layoutSeed.modeLayout });
         if (layoutSeed.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: layoutSeed.activeWindowId });
         else if (nextSession.app.windowKinds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: nextSession.app.windowKinds[0].id });
       }
     },
-    [appLabelsOverlay, extraWindowInstances, injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
+    [appLabelsOverlay, injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -4544,7 +4685,11 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current) });
     dispatch({
       type: "SET_EXTRA_WINDOW_INSTANCES",
-      value: (current) => current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.id, entry.title) })),
+      value: (current) => {
+        const next = current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.id, entry.title) }));
+        extraWindowInstancesRef.current = next;
+        return next;
+      },
     });
   }, [appLabelsOverlay]);
 
@@ -4662,8 +4807,9 @@ export function FrameworkOsShell({
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
       const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay);
-      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? app.windowKinds[0]?.id ?? null });
       if (appId === landingAppId) {
@@ -4746,7 +4892,23 @@ export function FrameworkOsShell({
           // when it targets the active window, into the view state fed to the follow-up refresh.
           const { windowId, utilityId } = effect.setActiveUtility;
           dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: utilityId || null });
-          if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined };
+          if (utilityId && activeToolIdRef.current) dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+          if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined, activeToolId: utilityId ? undefined : nextViewState.activeToolId };
+          continue;
+        }
+        if ("setActiveTool" in effect) {
+          // 🛠️ A plugin programmatically switched tools (e.g. puzzle3d fill via engagement text command):
+          // mirror it into the host-owned store slice, clear every window's active utility (mutual
+          // exclusion — a tool and a window utility never both claim the pointer), and fold it into the
+          // view state fed to the follow-up refresh.
+          const { toolId } = effect.setActiveTool;
+          dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
+          if (toolId) {
+            for (const windowId of Object.keys(activeUtilityByWindowIdRef.current)) {
+              if (activeUtilityByWindowIdRef.current[windowId]) dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
+            }
+          }
+          nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
           continue;
         }
         if ("openDialog" in effect) {
@@ -5089,16 +5251,46 @@ export function FrameworkOsShell({
         const requested = typeof args.utilityId === "string" ? args.utilityId : "";
         const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
         dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: next });
+        // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
+        // utility clears any active mode-level tool.
+        if (next && activeToolIdRef.current) dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
         if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
-          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, windowId };
+          const viewState: ViewState = { ...session.viewState, activeUtilityId: next ?? undefined, activeToolId: next ? undefined : activeToolIdRef.current ?? undefined, windowId };
           const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { utilityId: next } };
           void plugin
             .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
             .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
             .catch((utilityError) => console.error("[DEBUG] setActiveUtility failed", utilityError));
+        }
+        return;
+      }
+
+      // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document op.
+      // Re-clicking the active tool (or an empty toolId) deactivates. Mutually exclusive with every
+      // window's active utility — activating a tool clears them all, mirroring `SET_ACTIVE_UTILITY_ACTION_ID`.
+      if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown }) : {};
+        const requested = typeof args.toolId === "string" ? args.toolId : "";
+        const next = resolveUtilityActivation(activeToolIdRef.current, requested);
+        dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
+        if (next) {
+          for (const windowId of Object.keys(activeUtilityByWindowIdRef.current)) {
+            if (activeUtilityByWindowIdRef.current[windowId]) dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
+          }
+        }
+        if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
+        const pluginEntry = findPluginForAction(action);
+        const plugin = pluginEntry?.handle;
+        if (plugin) {
+          const viewState: ViewState = { ...session.viewState, activeToolId: next ?? undefined, activeUtilityId: next ? undefined : session.viewState.activeUtilityId };
+          const forwarded: ActionDescriptor = { controllerId: action.controllerId, action: action.action, args: { toolId: next } };
+          void plugin
+            .handleAction(session.instanceId, JSON.stringify(forwarded), viewState)
+            .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...session, viewState }, resolveUiDirtyScope(response.uiScope)))
+            .catch((toolError) => console.error("[DEBUG] setActiveTool failed", toolError));
         }
         return;
       }
@@ -5200,7 +5392,7 @@ export function FrameworkOsShell({
         {
           ...targetSession.viewState,
           windowId: dispatchWindowId,
-          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstances).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+          windowInstances: sessionWindowInstances(targetSession.app, extraWindowInstancesRef.current).map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
         },
         dispatchWindowId,
       );
@@ -5215,7 +5407,6 @@ export function FrameworkOsShell({
       applyHostEffects,
       attachSyncBackbone,
       detachSyncBackbone,
-      extraWindowInstances,
       findPluginForAction,
       injectActiveUtility,
       loadedPlugins,
@@ -5322,8 +5513,9 @@ export function FrameworkOsShell({
     (layout: WindowLayout) => {
       if (!session) return;
       const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay);
-      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      extraWindowInstancesRef.current = seeded.extraInstances;
       extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
       dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
       if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
       // 🪟 Hand the just-computed instance list straight to the fetch rather than reading `extraWindowInstances`
@@ -5336,16 +5528,20 @@ export function FrameworkOsShell({
 
   const applyModeChange = useCallback(
     (modeId: string) => {
+      // 🛠️ Tools are scoped to a mode — switching modes always clears the active tool (and every
+      // window's active utility), mirroring how a fresh mode starts with no utility pressed either.
+      dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
       dispatch({
         type: "SET_SESSION",
         value: (current) => {
           if (!current) return current;
           const layout = resolveLayoutForMode(current.app, modeId);
-          const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
+          const nextSession: ActiveSession = { ...current, viewState: { ...current.viewState, activeModeId: modeId, activeToolId: undefined } };
           if (layout) {
             const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay);
-            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+            extraWindowInstancesRef.current = seeded.extraInstances;
             extraWindowCounterRef.current = seeded.extraInstances.length;
+            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
             dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
             if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
             void refreshUi(nextSession, { kind: "full" }, seeded.extraInstances);
@@ -5367,7 +5563,8 @@ export function FrameworkOsShell({
       const projectionSpec = decodeWorldProjectionTemplateId(payload.templateId);
       if (projectionSpec) registerPendingWorldProjection(instanceId, projectionSpec);
       const title = projectionSpec ? worldProjectionSpecLabel(projectionSpec) : resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label);
-      const nextExtraInstances = [...extraWindowInstances, { id: instanceId, windowKindId: payload.windowKindId, title }];
+      const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId: payload.windowKindId, title }];
+      extraWindowInstancesRef.current = nextExtraInstances;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
       // 🪟 The new split pane is its own window instance — fetch its body/measures/engagement right away
       // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
@@ -5383,7 +5580,7 @@ export function FrameworkOsShell({
       });
       dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: instanceId });
     },
-    [appLabelsOverlay, extraWindowInstances, refreshUi, session],
+    [appLabelsOverlay, refreshUi, session],
   );
 
   const displayHostRef = useRef<DisplayHostApi | null>(null);
@@ -5645,12 +5842,18 @@ export function FrameworkOsShell({
     const actionById = new Map(session.app.actions.map((action) => [action.id, action]));
     const onKeyDown = (event: KeyboardEvent) => {
       if (isEditableTarget(event.target)) return;
-      // 🧰 Escape deactivates the active window's active utility (P5) when nothing is being typed.
+      // 🧰🛠️ Escape deactivates the active window's active utility (P5), or — when no utility is active —
+      // the active mode-level tool, when nothing is being typed.
       if (event.key === "Escape") {
         const windowId = activeWindowIdRef.current;
         if (windowId && activeUtilityByWindowIdRef.current[windowId]) {
           event.preventDefault();
           onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_UTILITY_ACTION_ID, args: { windowId, utilityId: "" } });
+          return;
+        }
+        if (activeToolIdRef.current) {
+          event.preventDefault();
+          onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
           return;
         }
       }
@@ -5870,6 +6073,13 @@ export function FrameworkOsShell({
 
   const commandCategoryTabs = useMemo(() => buildCommandCategoryTabs(resolvedCommands, commandCategoryList, expandedCommandIdRef, commandStagedArgsByCommandIdRef, onCommand, dispatch), [resolvedCommands, commandCategoryList, onCommand]);
 
+  const resolvedModeTools = useMemo(() => resolveModeTools(session?.app, activeModeId), [session?.app, activeModeId]);
+
+  const toolTabs = useMemo(
+    () => (session ? buildToolTabs(resolvedModeTools, session.app.controllerId, activeToolIdRef, toolMeasuresByToolIdRef, onActionStable) : []),
+    [resolvedModeTools, session?.app.controllerId, onActionStable],
+  );
+
   //#region 🧭DockAssembly — default four-corner arrangement (the two middle anchors start empty save the command palette in bottom-middle) + persisted-override reconciliation + drag-and-drop wiring.
   const defaultDock = useMemo((): PanelDock => {
     // 🧭 Top-left (Workbench: Document/Catalogue), top-right (Details: Inspection/Parameters) and bottom-right
@@ -5884,13 +6094,18 @@ export function FrameworkOsShell({
     const topRight: PanelTabNode[] = [...detailsRightTabs];
     const bottomRight: PanelTabNode[] = [...settingsRightTabs];
     if (frameworkUtilitiesHistoryTab) bottomRight.push(frameworkUtilitiesHistoryTab);
+    // 🛠️ Tool categories stay nested under one expandable Tool branch, exactly like Command categories,
+    // placed left of Command (order 0 vs 1) — like commands not being window-level, tools are not
+    // window-level either; both live only on this shared mode-scoped anchor.
     // 🎛 Command categories stay nested under one expandable Command branch (unlike flat Theme/Settings
     // footer toggles) so the folded bottom-middle chrome shows a single Command toggle, not every
     // category leaf inlined along the footer.
-    const bottomMiddle: PanelTabNode[] =
-      commandCategoryTabs.length > 0 ? [{ kind: "branch", id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 0, children: commandCategoryTabs }] : [];
+    const bottomMiddle: PanelTabNode[] = [
+      ...(toolTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_TOOL_ID, icon: categoryTabIcon(toolTabs, "hammer"), name: shellLabel("ui.panelToggle.tool"), order: 0, children: toolTabs }] : []),
+      ...(commandCategoryTabs.length > 0 ? [{ kind: "branch" as const, id: FRAMEWORK_CATEGORY_COMMAND_ID, icon: categoryTabIcon(commandCategoryTabs, "wrench"), name: shellLabel("ui.panelToggle.command"), order: 1, children: commandCategoryTabs }] : []),
+    ];
     return { anchors: { "top-left": topLeft, "top-middle": [], "top-right": topRight, "right-middle": [], "bottom-right": bottomRight, "bottom-middle": bottomMiddle, "bottom-left": bottomLeft, "left-middle": [] } };
-  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, uiLocale, workbenchLeftTabs]);
+  }, [commandCategoryTabs, detailsRightTabs, frameworkDisplayTabs, frameworkSyncTab, frameworkUtilitiesHistoryTab, settingsRightTabs, toolTabs, uiLocale, workbenchLeftTabs]);
 
   useEffect(() => {
     dispatch({ type: "SET_DOCK_OVERRIDE", value: dockLayoutStore.getSnapshot() });
@@ -6157,14 +6372,19 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: (current) => (!current || exampleOptions.some((option) => option.id === current) ? current : "") });
   }, [exampleOptions, session?.app.id, session?.pluginId]);
 
-  // 🎛️ Announces the boot example to the fresh session exactly once per instance — the same path
-  // whether the example is locked, defaulted, or absent (an empty id resets the plugin's default fixture).
+  // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
+  // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
+  // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
   useEffect(() => {
     if (exampleOptions.length === 0 || !session) return;
     if (noExampleResetInstanceIdRef.current === session.instanceId) return;
     noExampleResetInstanceIdRef.current = session.instanceId;
-    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId: activeExampleId || "" } });
-  }, [activeExampleId, exampleOptions, onAction, session]);
+    const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
+    if (exampleId !== activeExampleId) {
+      dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
+    }
+    onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
+  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session]);
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
@@ -6581,7 +6801,15 @@ export function FrameworkOsShell({
                   const nextSpawned = panel.spawnedApps.filter((entry) => entry.id !== windowId);
                   updateStudioPanel(buildStudioPanelState(panel.programs, nextSpawned, panel.activePanelTab, nextSpawned[0]?.id));
                 }
-                dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: (current) => current.filter((entry) => entry.id !== windowId) });
+                clearPendingWorldProjection(windowId);
+                dispatch({
+                  type: "SET_EXTRA_WINDOW_INSTANCES",
+                  value: (current) => {
+                    const next = current.filter((entry) => entry.id !== windowId);
+                    extraWindowInstancesRef.current = next;
+                    return next;
+                  },
+                });
                 dispatch({
                   type: "SET_SHELL_LAYOUT",
                   value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout,
@@ -6809,6 +7037,7 @@ export type FlowWasmSession = GraphWasmSession & {
   setSelection(json: string): void;
   setPreviewOff(json: string): void;
   setCatalogueJson(json: string): void;
+  catalogueJson(): string;
   setNeuronKindInfosJson(json: string): void;
   setComputingProgress(json: string): void;
   setAutomaticLod(enabled: boolean): void;
@@ -6820,12 +7049,11 @@ export type FlowWasmSession = GraphWasmSession & {
   pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
   labelOverlayPaintStateJson(): string;
-  paramOverlayPaintStateJson(): string;
-  stepperOverlayStateJson(): string;
   sliderOverlayStateJson(): string;
   selectionUnionBoundsScreenJson(): string;
   selectionPreviewPointsJson(): string;
   selectionPreviewCrossing(): boolean;
+  selectionPreviewMethod?(): string;
   selectedWidgetIds(): string;
   hoveredWidgetId(): string | undefined;
   hoveredChannelJson(): string;
@@ -6849,7 +7077,6 @@ export type FlowWasmSession = GraphWasmSession & {
   noteCommitEdit(): void;
   noteMoveCaret(direction: string, extend: boolean): void;
   setSliderValue(widgetId: string, value: number): void;
-  setStepperFieldValue(widgetId: string, fieldKey: string, value: number): void;
   setNeuronParams(widgetId: string, paramsJson: string): void;
   setHover?(widgetId: string | null): void;
   setHoverChannel?(widgetId: string | null, port?: string | null): void;
@@ -9418,12 +9645,7 @@ type WorldHoverComponent = {
   readonly id?: number;
 };
 
-type WorldContextMenuItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly action: string;
-  readonly args?: Record<string, unknown>;
-};
+type WorldContextMenuItem = ContextMenuItemSpec;
 
 type WorldSelectionRecord = {
   readonly method?: SelectionMarqueeMethod;
@@ -9451,6 +9673,8 @@ type WorldSuggestionCandidateRecord = {
   readonly index: number;
   readonly objectLabel: string;
   readonly vortexLabel: string;
+  readonly icon?: string;
+  readonly color?: string;
 };
 
 type WorldSuggestionMenuRecord = {
@@ -9493,6 +9717,7 @@ type WorldVortexRecord = {
   readonly vortexKind?: string;
   readonly position: readonly [number, number, number];
   readonly direction?: readonly [number, number, number];
+  readonly displayDirection?: "outwards" | "inwards";
   readonly radius?: number;
   readonly color?: string;
   readonly selected?: boolean;
@@ -9532,6 +9757,7 @@ type WorldBrushPreviewRecord = {
   readonly origin?: readonly [number, number, number];
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: readonly [number, number, number] | number;
+  readonly color?: string;
 };
 
 /** ☁️ One point-cloud rendering layer (`World3dScene.pointsJson` entries) — the cheap path for
@@ -9901,8 +10127,7 @@ function WorldProjectionContentFrame(props: {
   readonly onFramed: (state: WorldParsedCameraState) => void;
 }): null {
   const size = useThree((state) => state.size);
-  const camera = useThree((state) => state.camera);
-  const controls = useThree((state) => state.controls as { target: Vector3; update?: () => void } | null);
+  const getThree = useThree((state) => state.get);
   const invalidate = useThree((state) => state.invalidate);
   const appliedRef = useRef(false);
   const onFramedRef = useRef(props.onFramed);
@@ -9910,15 +10135,31 @@ function WorldProjectionContentFrame(props: {
   useLayoutEffect(() => {
     if (!props.enabled || !props.spec || !props.bounds || appliedRef.current) return;
     if (size.width < 1 || size.height < 1) return;
+    // 📷 Read the live store camera — render-time `useThree(s => s.camera)` is still the Canvas default
+    // PerspectiveCamera while sibling `OrthographicCamera makeDefault` runs in an earlier layout effect.
+    const { camera, controls: rawControls } = getThree();
+    const controls = rawControls as { target: Vector3; update?: () => void } | null;
     appliedRef.current = true;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
     const framed: WorldParsedCameraState = { ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true };
-    if (camera instanceof OrthographicCamera) {
-      camera.left = size.width / -2;
-      camera.right = size.width / 2;
-      camera.top = size.height / 2;
-      camera.bottom = size.height / -2;
-      camera.zoom = framed.zoom;
+    const ortho = camera as OrthographicCamera & { readonly isOrthographicCamera?: boolean };
+    if (ortho.isOrthographicCamera) {
+      ortho.left = size.width / -2;
+      ortho.right = size.width / 2;
+      ortho.top = size.height / 2;
+      ortho.bottom = size.height / -2;
+      ortho.zoom = framed.zoom;
+      ortho.position.set(framed.position[0], framed.position[1], framed.position[2]);
+      ortho.up.set(framed.up?.[0] ?? 0, framed.up?.[1] ?? 1, framed.up?.[2] ?? 0);
+      const target = controls?.target;
+      if (target) {
+        target.set(framed.target[0], framed.target[1], framed.target[2]);
+        controls?.update?.();
+      } else {
+        ortho.lookAt(framed.target[0], framed.target[1], framed.target[2]);
+      }
+      ortho.updateProjectionMatrix();
+    } else if (camera) {
       camera.position.set(framed.position[0], framed.position[1], framed.position[2]);
       camera.up.set(framed.up?.[0] ?? 0, framed.up?.[1] ?? 1, framed.up?.[2] ?? 0);
       const target = controls?.target;
@@ -9928,12 +10169,12 @@ function WorldProjectionContentFrame(props: {
       } else {
         camera.lookAt(framed.target[0], framed.target[1], framed.target[2]);
       }
-      camera.updateProjectionMatrix();
-      invalidate();
+      if ("zoom" in camera) (camera as OrthographicCamera).zoom = framed.zoom;
+      if ("updateProjectionMatrix" in camera) (camera as OrthographicCamera).updateProjectionMatrix();
     }
+    invalidate();
     onFramedRef.current(framed);
-    console.log("[DEBUG] world projection content frame", { width: size.width, height: size.height, zoom: pose.zoom, target: pose.target, left: camera instanceof OrthographicCamera ? camera.left : null });
-  }, [camera, controls, invalidate, props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
+  }, [getThree, invalidate, props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
   return null;
 }
 
@@ -9971,6 +10212,32 @@ function parseJsonArray<T>(json: string | undefined): readonly T[] {
   } catch {
     return [];
   }
+}
+
+/** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
+export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
+  return specs.map((spec) => ({
+    id: spec.id,
+    label: spec.label,
+    icon: spec.icon,
+    color: spec.color,
+    shortcut: spec.shortcut,
+    disabled: spec.disabled,
+    separator: spec.separator,
+    checked: spec.checked,
+    destructive: spec.destructive,
+    onSelect: spec.action
+      ? () => {
+          dispatch(spec.action!, spec.args);
+        }
+      : undefined,
+    onHover: spec.hoverAction
+      ? () => {
+          dispatch(spec.hoverAction!, spec.hoverArgs);
+        }
+      : undefined,
+    children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch) : undefined,
+  }));
 }
 
 function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
@@ -10266,6 +10533,7 @@ function GlbInstanceMesh({
   readonly revision: MeshStyleKind;
 }) {
   const gltf = useLoader(GLTFLoader, url);
+  const invalidate = useThree((state) => state.invalidate);
   // 🎨 Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
   // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
   const scene = useMemo(() => {
@@ -10287,6 +10555,10 @@ function GlbInstanceMesh({
     applyGlbMeshEdgeBorders(cloned, borderColor);
     return cloned;
   }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision]);
+  // 🎞️ Demand frameloop: useLoader / style remounts after the mount kick would otherwise leave transparent panes.
+  useLayoutEffect(() => {
+    invalidate();
+  }, [invalidate, scene]);
 
   return (
     <group rotation={[GLB_MESH_FRAME_ROTATION_X, 0, 0]}>
@@ -10347,7 +10619,7 @@ export function isWorldTransformGumballMode(mode: string | undefined): boolean {
   return mode === "move" || mode === "rotate" || mode === "scale" || mode === "transform";
 }
 
-function gumballToolForTransformMode(transformMode: string | undefined, handleKind?: GumballHandleKind): "translate" | "rotate" | "scale" {
+function gumballKindForTransformMode(transformMode: string | undefined, handleKind?: GumballHandleKind): "translate" | "rotate" | "scale" {
   if (transformMode === "transform" && handleKind != null) {
     return gumballHandleKindToTransformMode(handleKind);
   }
@@ -10366,8 +10638,8 @@ export function gumballTransformDeltaBetweenPoses(
   base: Record<string, unknown>,
   handleKind?: GumballHandleKind,
 ): { readonly action: string; readonly args: Record<string, unknown> } | null {
-  const tool = gumballToolForTransformMode(transformMode, handleKind);
-  if (tool === "translate") {
+  const kind = gumballKindForTransformMode(transformMode, handleKind);
+  if (kind === "translate") {
     const dx = after.position[0] - before.position[0];
     const dy = after.position[1] - before.position[1];
     const dz = after.position[2] - before.position[2];
@@ -10376,7 +10648,7 @@ export function gumballTransformDeltaBetweenPoses(
     }
     return { action: "translateSelection", args: { ...base, dx, dy, dz } };
   }
-  if (tool === "rotate") {
+  if (kind === "rotate") {
     const beforeQuat = new Quaternion(...before.quaternion);
     const afterQuat = new Quaternion(...after.quaternion);
     const delta = afterQuat.multiply(beforeQuat.invert());
@@ -11003,6 +11275,51 @@ export function worldVortexMaterialRevision(selected?: boolean, hovered?: boolea
   return selected ? "selected" : hovered ? "hovered" : "neutral";
 }
 
+const WORLD_VORTEX_Y_AXIS = new Vector3(0, 1, 0);
+const WORLD_VORTEX_DIRECTION_FALLBACK: readonly [number, number, number] = [0, 0, -1];
+
+function worldVortexUnitDirection(direction?: readonly [number, number, number]): Vector3 {
+  const vector = new Vector3(...(direction ?? WORLD_VORTEX_DIRECTION_FALLBACK));
+  if (vector.lengthSq() < 1e-12) {
+    return new Vector3(...WORLD_VORTEX_DIRECTION_FALLBACK);
+  }
+  return vector.normalize();
+}
+
+function worldVortexArrowLayout(
+  position: readonly [number, number, number],
+  direction: readonly [number, number, number] | undefined,
+  radius: number,
+  displayDirection: "outwards" | "inwards",
+): {
+  readonly pointRadius: number;
+  readonly shaftRadius: number;
+  readonly shaftLength: number;
+  readonly headLength: number;
+  readonly shaftCenter: [number, number, number];
+  readonly headCenter: [number, number, number];
+  readonly quaternion: Quaternion;
+} {
+  const dir = worldVortexUnitDirection(direction);
+  const arrowLength = radius;
+  const headLength = radius * 0.28;
+  const shaftLength = Math.max(arrowLength - headLength, radius * 0.2);
+  const shaftRadius = radius * 0.055;
+  const pointRadius = radius * 0.18;
+  const outward = displayDirection !== "inwards";
+  const shaftCenter = new Vector3(...position).addScaledVector(dir, outward ? shaftLength * 0.5 : -(headLength + shaftLength * 0.5));
+  const headCenter = new Vector3(...position).addScaledVector(dir, outward ? arrowLength - headLength * 0.5 : -headLength * 0.5);
+  return {
+    pointRadius,
+    shaftRadius,
+    shaftLength,
+    headLength,
+    shaftCenter: shaftCenter.toArray() as [number, number, number],
+    headCenter: headCenter.toArray() as [number, number, number],
+    quaternion: new Quaternion().setFromUnitVectors(WORLD_VORTEX_Y_AXIS, dir),
+  };
+}
+
 function WorldVortexMarkers({
   vortices,
   palette,
@@ -11043,67 +11360,83 @@ function WorldVortexMarkers({
     <group>
       {vortices.map((vortex) => {
         const radius = vortex.radius ?? 0.36;
+        const displayDirection = vortex.displayDirection ?? "outwards";
+        const layout = worldVortexArrowLayout(vortex.position, vortex.direction, radius, displayDirection);
         const isConnectSource = connectSourceFullId === vortex.fullId;
         const style = vortex.selected ? palette.selected : vortex.hovered ? palette.hovered : null;
         const color = isConnectSource ? "#f59e0b" : (style?.meshColor ?? vortex.color ?? "#38bdf8");
+        const materialKey = worldVortexMaterialRevision(vortex.selected, vortex.hovered);
+        const materialProps = {
+          color,
+          emissive: style?.meshColor ?? "#000000",
+          emissiveIntensity: style?.emissiveIntensity ?? 0,
+          transparent: true,
+          opacity: 0.88,
+        };
+        const pointerHandlers = {
+          onPointerOver: (event: { stopPropagation: () => void }) => {
+            event.stopPropagation();
+            onHover(vortex.fullId);
+            if (connectSourceFullId) onConnectDragHover(vortex.position);
+          },
+          onPointerOut: (event: { stopPropagation: () => void }) => {
+            event.stopPropagation();
+            onHover(null);
+          },
+          onPointerDown: (event: { stopPropagation: () => void; clientX: number; clientY: number; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+            event.stopPropagation();
+            if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {
+              onVortexSelect(vortex.fullId, event);
+              return;
+            }
+            onVortexPointerArm({
+              fullId: vortex.fullId,
+              position: vortex.position,
+              clientX: event.clientX,
+              clientY: event.clientY,
+              event,
+            });
+          },
+          onPointerMove: (event: { stopPropagation: () => void; clientX: number; clientY: number }) => {
+            if (brushMode) return;
+            event.stopPropagation();
+            onVortexPointerMove(vortex.fullId, event.clientX, event.clientY);
+            if (connectSourceFullId) onConnectDragHover(vortex.position);
+          },
+          onPointerUp: (event: { stopPropagation: () => void; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+            if (brushMode) return;
+            if (connectSourceFullId) {
+              event.stopPropagation();
+              onConnectDragDrop(vortex.fullId, event);
+              return;
+            }
+            event.stopPropagation();
+            onVortexPointerUp(vortex.fullId, event);
+          },
+          onClick: (event: { stopPropagation: () => void }) => {
+            event.stopPropagation();
+            if (brushMode) onBrushPlace();
+          },
+        };
         return (
-          <mesh
-            key={vortex.fullId}
-            position={vortex.position as [number, number, number]}
-            onPointerOver={(event) => {
-              event.stopPropagation();
-              onHover(vortex.fullId);
-              if (connectSourceFullId) onConnectDragHover(vortex.position);
-            }}
-            onPointerOut={(event) => {
-              event.stopPropagation();
-              onHover(null);
-            }}
-            onPointerDown={(event) => {
-              event.stopPropagation();
-              if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {
-                onVortexSelect(vortex.fullId, event);
-                return;
-              }
-              onVortexPointerArm({
-                fullId: vortex.fullId,
-                position: vortex.position,
-                clientX: event.clientX,
-                clientY: event.clientY,
-                event,
-              });
-            }}
-            onPointerMove={(event) => {
-              if (brushMode) return;
-              event.stopPropagation();
-              onVortexPointerMove(vortex.fullId, event.clientX, event.clientY);
-              if (connectSourceFullId) onConnectDragHover(vortex.position);
-            }}
-            onPointerUp={(event) => {
-              if (brushMode) return;
-              if (connectSourceFullId) {
-                event.stopPropagation();
-                onConnectDragDrop(vortex.fullId, event);
-                return;
-              }
-              event.stopPropagation();
-              onVortexPointerUp(vortex.fullId, event);
-            }}
-            onClick={(event) => {
-              event.stopPropagation();
-              if (brushMode) onBrushPlace();
-            }}
-          >
-            <sphereGeometry args={[radius, 16, 16]} />
-            <meshStandardMaterial
-              key={worldVortexMaterialRevision(vortex.selected, vortex.hovered)}
-              color={color}
-              emissive={style?.meshColor ?? "#000000"}
-              emissiveIntensity={style?.emissiveIntensity ?? 0}
-              transparent
-              opacity={0.88}
-            />
-          </mesh>
+          <group key={vortex.fullId}>
+            <mesh position={vortex.position as [number, number, number]} visible={false} {...pointerHandlers}>
+              <sphereGeometry args={[radius, 16, 16]} />
+              <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+            </mesh>
+            <mesh position={vortex.position as [number, number, number]}>
+              <sphereGeometry args={[layout.pointRadius, 12, 12]} />
+              <meshStandardMaterial key={materialKey} {...materialProps} />
+            </mesh>
+            <mesh position={layout.shaftCenter} quaternion={layout.quaternion}>
+              <cylinderGeometry args={[layout.shaftRadius, layout.shaftRadius, layout.shaftLength, 10]} />
+              <meshStandardMaterial key={materialKey} {...materialProps} />
+            </mesh>
+            <mesh position={layout.headCenter} quaternion={layout.quaternion}>
+              <coneGeometry args={[layout.shaftRadius * 1.8, layout.headLength, 12]} />
+              <meshStandardMaterial key={materialKey} {...materialProps} />
+            </mesh>
+          </group>
         );
       })}
     </group>
@@ -11182,6 +11515,7 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
 function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   if (!preview.origin) return null;
   const style = palette.highlighted;
+  const meshColor = preview.color ?? style.meshColor;
   const meshUrl = preview.meshUrl;
   const meshRecord = meshUrl ? meshes.find((mesh) => mesh.url === meshUrl) : undefined;
   const position = preview.origin as [number, number, number];
@@ -11192,12 +11526,12 @@ function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: Wor
     <group position={position} scale={scale} quaternion={quaternion}>
       {meshRecord?.url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={meshRecord.url} color={style.meshColor} emissive={style.meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} revision="highlighted" />
+          <GlbInstanceMesh url={meshRecord.url} color={meshColor} emissive={meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} revision="highlighted" />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
           <boxGeometry args={[1, 1, 1]} />
-          <meshBasicMaterial color={style.meshColor} transparent opacity={0.42} depthWrite={false} />
+          <meshBasicMaterial color={meshColor} transparent opacity={0.42} depthWrite={false} />
         </mesh>
       )}
     </group>
@@ -11262,73 +11596,24 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
 }
 
 /** @emoji 🧭 Floating per-vortex brush-candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — hovering a row previews it as the brush ghost, clicking places it. */
-function WorldSuggestionMenu({
-  menu,
-  activeIndex,
-  onHoverCandidate,
-  onAcceptCandidate,
-  onClose,
-}: {
-  readonly menu: WorldSuggestionMenuRecord;
-  readonly activeIndex: number;
-  readonly onHoverCandidate: (index: number) => void;
-  readonly onAcceptCandidate: (index: number) => void;
-  readonly onClose: () => void;
-}) {
-  const rootRef = useRef<HTMLDivElement | null>(null);
-  const checkingPlacementLabel = useLabel("ui.host.checkingPlacement");
-  const noPlacementLabel = useLabel("ui.host.noPlacement");
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (rootRef.current && !rootRef.current.contains(event.target as Node)) onClose();
-    };
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") onClose();
-    };
-    window.addEventListener("pointerdown", handlePointerDown, true);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDown, true);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [onClose]);
-  return (
-    <div
-      ref={rootRef}
-      className="semio-world-suggestion-menu"
-      style={{
-        position: "absolute",
-        left: menu.x,
-        top: menu.y,
-        zIndex: 50,
-        minWidth: "12rem",
-        borderRadius: "0.375rem",
-        border: "1px solid var(--border-normal-color)",
-        background: "var(--panel)",
-        padding: "0.25rem 0",
-        boxShadow: "0 4px 16px rgba(0, 0, 0, 0.24)",
-      }}
-    >
-      {menu.pending ? (
-        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>{checkingPlacementLabel}</div>
-      ) : menu.candidates.length === 0 ? (
-        <div style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", opacity: 0.7 }}>{noPlacementLabel}</div>
-      ) : (
-        menu.candidates.map((candidate) => (
-          <div
-            key={candidate.index}
-            className={menuListItemClassName}
-            data-selected={candidate.index === activeIndex}
-            style={{ padding: "0.375rem 0.75rem", fontSize: "0.8125rem", cursor: "pointer" }}
-            onMouseEnter={() => onHoverCandidate(candidate.index)}
-            onClick={() => onAcceptCandidate(candidate.index)}
-          >
-            {candidate.objectLabel} · {candidate.vortexLabel}
-          </div>
-        ))
-      )}
-    </div>
-  );
+function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
+  if (menu.pending) {
+    return [{ id: "pending", label: "Checking placement…", disabled: true }];
+  }
+  if (menu.candidates.length === 0) {
+    return [{ id: "empty", label: "No placement", disabled: true }];
+  }
+  return menu.candidates.map((candidate) => ({
+    id: `suggestion-${candidate.index}`,
+    label: `${candidate.objectLabel} · ${candidate.vortexLabel}`,
+    icon: candidate.icon ?? "box",
+    color: candidate.color,
+    checked: candidate.index === activeIndex,
+    action: "acceptSuggestion",
+    args: { index: candidate.index },
+    hoverAction: "hoverSuggestion",
+    hoverArgs: { index: candidate.index },
+  }));
 }
 
 const MARQUEE_DRAG_THRESHOLD_PX = 4;
@@ -11758,12 +12043,18 @@ function registerPendingWorldProjection(windowId: string, spec: WorldProjectionS
   pendingWorldProjectionByWindowId.set(windowId, spec);
 }
 
-/** @emoji 🪟 Consumes (reads + clears) the pending initial projection for `windowId`, if any. */
-function takePendingWorldProjection(windowId: string | null): WorldProjectionSpec | null {
+/** @emoji 🪟 Peeks the sticky initial projection for `windowId` — kept until the pane is closed so React
+ * Strict Mode's mount→unmount→remount pass still seeds both Top and Perspective (take-on-read / clear-on-apply
+ * left the second mount on the shared scene camera and empty transparent canvases). */
+function peekPendingWorldProjection(windowId: string | null): WorldProjectionSpec | null {
   if (!windowId) return null;
-  const spec = pendingWorldProjectionByWindowId.get(windowId);
-  if (spec) pendingWorldProjectionByWindowId.delete(windowId);
-  return spec ?? null;
+  return pendingWorldProjectionByWindowId.get(windowId) ?? null;
+}
+
+/** @emoji 🪟 Drops the initial projection seed when a pane is closed (not after first apply). */
+function clearPendingWorldProjection(windowId: string | null): void {
+  if (!windowId) return;
+  pendingWorldProjectionByWindowId.delete(windowId);
 }
 //#endregion WorldWindowInstance
 
@@ -11785,7 +12076,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const contentBounds = useMemo(() => worldSceneContentBounds(instances, references), [instances, references]);
   const pendingProjectionSpecRef = useRef<WorldProjectionSpec | null>(null);
   const [viewportCamera, setViewportCamera] = useState<WorldParsedCameraState | null>(() => {
-    const pendingSpec = takePendingWorldProjection(windowInstanceId);
+    const pendingSpec = peekPendingWorldProjection(windowInstanceId);
     if (!pendingSpec) return null;
     pendingProjectionSpecRef.current = pendingSpec;
     return seedPendingWorldProjectionCamera(pendingSpec, sceneCamera, instances, references);
@@ -12002,17 +12293,17 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     );
   }, [adoptViewportCamera, cameraState.projection, cameraState.up, cameraState.zoom, instances, selection.ids]);
 
-  const handleContextMenuSelect = useCallback(
-    (item: WorldContextMenuItem) => {
-      if (item.action === "zoomToSelection") {
+  const handleWorldMenuDispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      if (action === "zoomToSelection") {
         handleZoomToSelection();
         return;
       }
-      if (item.action === "openVortexSuggestions") {
-        dispatch(item.action, { ...item.args, x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 });
+      if (action === "openVortexSuggestions") {
+        dispatch(action, { ...args, x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 });
         return;
       }
-      dispatch(item.action, item.args);
+      dispatch(action, args);
     },
     [contextMenu, dispatch, handleZoomToSelection],
   );
@@ -12033,8 +12324,6 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
-  const handleSuggestionHover = useCallback((index: number) => dispatch("hoverSuggestion", { index }), [dispatch]);
-  const handleSuggestionAccept = useCallback((index: number) => dispatch("acceptSuggestion", { index }), [dispatch]);
   const handleSuggestionClose = useCallback(() => dispatch("closeVortexSuggestions"), [dispatch]);
 
   // 🐢 Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
@@ -12743,19 +13032,22 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         )
       ) : null}
       <ContextMenuController
-        open={contextMenu != null && contextMenuItems.length > 0}
+        open={contextMenu != null && contextMenuItems.length > 0 && !interaction.suggestionMenu?.open}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenuItems.map((item) => ({
-          id: item.id,
-          label: item.label,
-          onSelect: () => handleContextMenuSelect(item),
-        }))}
+        items={mapContextMenuSpecs(contextMenuItems, handleWorldMenuDispatch)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
       />
       {interaction.suggestionMenu?.open ? (
-        <WorldSuggestionMenu menu={interaction.suggestionMenu} activeIndex={interaction.brushCandidateIndex ?? 0} onHoverCandidate={handleSuggestionHover} onAcceptCandidate={handleSuggestionAccept} onClose={handleSuggestionClose} />
+        <ContextMenuController
+          open
+          position={{ x: interaction.suggestionMenu.x, y: interaction.suggestionMenu.y }}
+          items={mapContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0), dispatch)}
+          onOpenChange={(open) => {
+            if (!open) handleSuggestionClose();
+          }}
+        />
       ) : null}
     </div>
   );
@@ -12804,12 +13096,7 @@ type DiagramViewport = { readonly x: number; readonly y: number; readonly zoom: 
 
 type GraphFindItem = { readonly id: string; readonly label: string; readonly category?: string };
 
-type GraphContextMenuItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly action: string;
-  readonly args?: Record<string, unknown>;
-};
+type GraphContextMenuItem = ContextMenuItemSpec;
 
 type FrameworkGraphSession = GraphWasmSession & {
   syncFromSceneJson(json: string): void;
@@ -12818,12 +13105,11 @@ type FrameworkGraphSession = GraphWasmSession & {
   pointerUpScreen(sx: number, sy: number, shift: boolean, ctrlOrMeta: boolean, alt: boolean): void;
   wheelScreen(sx: number, sy: number, deltaX: number, deltaY: number, zoomGesture: boolean): void;
   labelOverlayPaintStateJson(): string;
-  paramOverlayPaintStateJson(): string;
-  stepperOverlayStateJson(): string;
   sliderOverlayStateJson(): string;
   selectionUnionBoundsScreenJson(): string;
   selectionPreviewPointsJson(): string;
   selectionPreviewCrossing(): boolean;
+  selectionPreviewMethod?(): string;
   selectedNodeIdsJson(): string;
   hoveredNodeId(): string | null | undefined;
   hoveredChannelJson(): string;
@@ -12888,6 +13174,211 @@ export function parseCatalogueAppDragPayload(raw: string): CatalogueAppDragPaylo
 export function catalogueGhostDescriptorJson(payload: CatalogueAppDragPayload): string {
   return JSON.stringify({ kind: "neuron", neuronKind: payload.label ?? payload.appId });
 }
+
+//#region FlowCatalogueSpotlight
+export type FlowCatalogueItem = {
+  readonly kind: string;
+  readonly neuronKind?: string;
+  readonly action?: string;
+  readonly format?: string;
+  readonly name: string;
+  readonly abbreviation: string;
+  readonly icon: string;
+  readonly summary: string;
+};
+
+export type FlowCatalogueGroup = {
+  readonly id: string;
+  readonly title: string;
+  readonly items?: readonly FlowCatalogueItem[];
+  readonly groups?: readonly FlowCatalogueGroup[];
+};
+
+export type FlowCatalogueSection = {
+  readonly id: string;
+  readonly title: string;
+  readonly items?: readonly FlowCatalogueItem[];
+  readonly groups?: readonly FlowCatalogueGroup[];
+};
+
+/** @emoji 🧩 Builds an addWidget/setGhostWidget descriptor JSON from a catalogue row. */
+export function flowCatalogueItemDescriptor(item: FlowCatalogueItem): string {
+  const descriptor: Record<string, string> = { kind: item.kind };
+  if (item.neuronKind) descriptor.neuronKind = item.neuronKind;
+  if (item.action) descriptor.action = item.action;
+  if (item.format) descriptor.format = item.format;
+  return JSON.stringify(descriptor);
+}
+
+function flattenFlowCatalogueItems(sections: readonly FlowCatalogueSection[]): FlowCatalogueItem[] {
+  const out: FlowCatalogueItem[] = [];
+  const walkGroup = (group: FlowCatalogueGroup) => {
+    for (const item of group.items ?? []) out.push(item);
+    for (const child of group.groups ?? []) walkGroup(child);
+  };
+  for (const section of sections) {
+    for (const item of section.items ?? []) out.push(item);
+    for (const group of section.groups ?? []) walkGroup(group);
+  }
+  return out;
+}
+
+function scoreFlowCatalogueItem(item: FlowCatalogueItem, query: string): number | null {
+  if (!query) return item.kind === "neuron" ? 1 : 2;
+  const q = query.toLowerCase();
+  const name = item.name.toLowerCase();
+  const neuron = (item.neuronKind ?? "").toLowerCase();
+  const abbr = item.abbreviation.toLowerCase();
+  if (name === q || neuron === q || abbr === q) return 0;
+  if (name.startsWith(q) || neuron.startsWith(q) || abbr.startsWith(q)) return 1;
+  if (name.includes(q) || neuron.includes(q) || abbr.includes(q)) return 2;
+  return null;
+}
+
+/** @emoji 🔎 Ranks catalogue items for the double-click spotlight (exact/prefix/substring; neurons first). */
+export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSection[], query: string, limit = 20): FlowCatalogueItem[] {
+  const scored = flattenFlowCatalogueItems(sections)
+    .map((item) => ({ item, score: scoreFlowCatalogueItem(item, query.trim()) }))
+    .filter((row): row is { item: FlowCatalogueItem; score: number } => row.score != null)
+    .sort((a, b) => {
+      if (a.score !== b.score) return a.score - b.score;
+      const aNeuron = a.item.kind === "neuron" ? 0 : 1;
+      const bNeuron = b.item.kind === "neuron" ? 0 : 1;
+      if (aNeuron !== bNeuron) return aNeuron - bNeuron;
+      return a.item.name.localeCompare(b.item.name);
+    });
+  return scored.slice(0, limit).map((row) => row.item);
+}
+
+function parseFlowCatalogueSections(json: string | undefined | null): FlowCatalogueSection[] {
+  if (!json) return [];
+  try {
+    const parsed = JSON.parse(json) as unknown;
+    return Array.isArray(parsed) ? (parsed as FlowCatalogueSection[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+type FlowSpotlightState = {
+  readonly screen: { readonly x: number; readonly y: number };
+  readonly world: { readonly x: number; readonly y: number };
+};
+
+/** @emoji 🔦 Inline catalogue search opened by double-clicking empty flow canvas; hover/top match drives highlighted ghost preview. */
+function FlowSpotlight({
+  state,
+  sections,
+  onPreview,
+  onCommit,
+  onClose,
+}: {
+  readonly state: FlowSpotlightState;
+  readonly sections: readonly FlowCatalogueSection[];
+  readonly onPreview: (item: FlowCatalogueItem | null) => void;
+  readonly onCommit: (item: FlowCatalogueItem) => void;
+  readonly onClose: () => void;
+}) {
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [query, setQuery] = useState("");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [previewArmed, setPreviewArmed] = useState(false);
+  const suggestions = useMemo(() => flowRankCatalogueSuggestions(sections, query), [query, sections]);
+  const activeItem = suggestions[activeIndex] ?? null;
+  const shouldPreview = query.trim().length > 0 || previewArmed;
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [query]);
+
+  useEffect(() => {
+    onPreview(shouldPreview ? activeItem : null);
+  }, [activeItem, onPreview, shouldPreview]);
+
+  useEffect(() => {
+    const onPointerDown = (event: PointerEvent) => {
+      const root = rootRef.current;
+      if (root?.contains(event.target as globalThis.Node)) return;
+      onClose();
+    };
+    window.addEventListener("pointerdown", onPointerDown, true);
+    return () => window.removeEventListener("pointerdown", onPointerDown, true);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={rootRef}
+      className={cn("pointer-events-auto absolute z-60 w-layout-floating-menu-sm max-h-layout-preview-md overflow-hidden p-single", floatingMenuSurfaceClass)}
+      style={{ left: state.screen.x, top: state.screen.y }}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <Input
+        autoFocus
+        value={query}
+        placeholder="Type to add…"
+        className="mb-single text-xs"
+        onChange={(event) => setQuery(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            onClose();
+            return;
+          }
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            if (suggestions.length === 0) return;
+            setPreviewArmed(true);
+            setActiveIndex((index) => Math.min(index + 1, suggestions.length - 1));
+            return;
+          }
+          if (event.key === "ArrowUp") {
+            event.preventDefault();
+            if (suggestions.length === 0) return;
+            setPreviewArmed(true);
+            setActiveIndex((index) => Math.max(index - 1, 0));
+            return;
+          }
+          if (event.key === "Enter") {
+            event.preventDefault();
+            if (activeItem) onCommit(activeItem);
+          }
+        }}
+      />
+      <div className="max-h-layout-preview-md overflow-y-auto" role="listbox">
+        {suggestions.length === 0 ? (
+          <div className="text-muted-foreground px-single py-half text-2xs">No matches</div>
+        ) : (
+          suggestions.map((item, index) => {
+            const active = index === activeIndex && shouldPreview;
+            const key = `${item.kind}:${item.neuronKind ?? item.action ?? item.format ?? item.name}`;
+            return (
+              <button
+                key={key}
+                type="button"
+                role="option"
+                aria-selected={active}
+                className={cn(floatingMenuItemClass, active && "bg-active-base text-emphasized")}
+                onPointerEnter={() => {
+                  setPreviewArmed(true);
+                  setActiveIndex(index);
+                }}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  onCommit(item);
+                }}
+              >
+                <span className="truncate">{item.name}</span>
+                {item.neuronKind ? <span className="text-muted-foreground truncate text-2xs">{item.neuronKind}</span> : null}
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+//#endregion FlowCatalogueSpotlight
 
 function portLabel(port: MediaGraphPort): string {
   if (port.label) return port.label;
@@ -13013,8 +13504,6 @@ function WasmGraphSurface({
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [overlaySize, setOverlaySize] = useState({ w: 0, h: 0 });
-  const [paramStateJson, setParamStateJson] = useState("{}");
-  const [stepperStateJson, setStepperStateJson] = useState("{}");
   const [sliderStateJson, setSliderStateJson] = useState("{}");
   const sceneJson = useMemo(() => sceneToSyncJson(scene), [scene]);
 
@@ -13043,10 +13532,8 @@ function WasmGraphSurface({
       /* gpu not ready */
     }
     setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
-    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), "rectangle"));
+    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.() ?? "rectangle"));
     try {
-      setParamStateJson(session.paramOverlayPaintStateJson());
-      setStepperStateJson(session.stepperOverlayStateJson());
       setSliderStateJson(session.sliderOverlayStateJson());
     } catch {
       /* session not ready */
@@ -13092,12 +13579,11 @@ function WasmGraphSurface({
       pointerUpScreen: () => {},
       wheelScreen: () => {},
       labelOverlayPaintStateJson: () => '{"labels":[]}',
-      paramOverlayPaintStateJson: () => "{}",
-      stepperOverlayStateJson: () => "{}",
       sliderOverlayStateJson: () => "{}",
       selectionUnionBoundsScreenJson: () => "{}",
       selectionPreviewPointsJson: () => "[]",
       selectionPreviewCrossing: () => false,
+      selectionPreviewMethod: () => "rectangle",
       selectedNodeIdsJson: () => "[]",
       hoveredNodeId: () => null,
       hoveredChannelJson: () => "{}",
@@ -13164,6 +13650,12 @@ function WasmGraphSurface({
       } else {
         session.setHover?.(target.id);
       }
+      try {
+        const hovered = session.hoveredNodeId();
+        dispatch(nodeGraphActions.hover, { hoverJson: hovered ? JSON.stringify({ nodeId: hovered }) : null });
+      } catch {
+        /* session not ready */
+      }
       session.renderFrame();
       paintOverlays();
     },
@@ -13188,9 +13680,9 @@ function WasmGraphSurface({
       {selectionBounds ? <div className="pointer-events-none absolute z-20 border-2 border-accent" style={{ left: selectionBounds.x, top: selectionBounds.y, width: selectionBounds.width, height: selectionBounds.height }} /> : null}
       {marquee ? (
         marquee.kind === "lasso" ? (
-          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
         ) : (
-          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
         )
       ) : null}
       <div
@@ -13251,24 +13743,12 @@ function WasmGraphSurface({
           }}
         />
       ) : null}
-      <GraphParamOverlays stateJson={paramStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onParamChange={(nodeId, portId, value) => dispatch(nodeGraphActions.edit, { op: "setParam", nodeId, portId, value })} />
-      <GraphStepperOverlays
-        stateJson={stepperStateJson}
-        logicalW={overlaySize.w}
-        logicalH={overlaySize.h}
-        editable={editable}
-        onStepperChange={(widgetId, fieldKey, value) => dispatch(nodeGraphActions.edit, { op: "setStepper", widgetId, fieldKey, value })}
-      />
       <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { op: "setSlider", widgetId, value })} />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenuItems.map((item) => ({
-          id: item.id,
-          label: item.label,
-          onSelect: () => dispatch(item.action, item.args),
-        }))}
+        items={mapContextMenuSpecs(contextMenuItems, dispatch)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -13410,11 +13890,7 @@ function DiagramGraphFallback({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenuItems.map((item) => ({
-          id: item.id,
-          label: item.label,
-          onSelect: () => dispatch(item.action, item.args),
-        }))}
+        items={mapContextMenuSpecs(contextMenuItems, dispatch)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -13549,35 +14025,6 @@ export type DagMarqueeOverlay = {
 };
 
 export type DagCameraState = { readonly x: number; readonly y: number; readonly zoom: number };
-
-export type DagParamEditorRow = {
-  readonly nodeId: string;
-  readonly portId: string;
-  readonly label: string;
-  readonly type?: string;
-  readonly value?: unknown;
-  readonly default?: unknown;
-  readonly x: number;
-  readonly y: number;
-  readonly w: number;
-  readonly h: number;
-};
-
-export type DagStepperFieldRow = {
-  readonly key: string;
-  readonly label: string;
-  readonly value: number;
-  readonly step?: number;
-  readonly x: number;
-  readonly y: number;
-  readonly w: number;
-  readonly h: number;
-};
-
-export type DagStepperOverlayRow = {
-  readonly widgetId: string;
-  readonly fields: readonly DagStepperFieldRow[];
-};
 
 export type DagSliderOverlayRow = {
   readonly widgetId: string;
@@ -13734,24 +14181,6 @@ function dagClampPortLabelFontPx(ctx: CanvasRenderingContext2D, text: string, ta
   return best;
 }
 
-export function parseDagParamEditors(stateJson: string): readonly DagParamEditorRow[] {
-  try {
-    const parsed = JSON.parse(stateJson) as { readonly editors?: DagParamEditorRow[] };
-    return parsed.editors ?? [];
-  } catch {
-    return [];
-  }
-}
-
-export function parseDagStepperOverlays(stateJson: string): readonly DagStepperOverlayRow[] {
-  try {
-    const parsed = JSON.parse(stateJson) as { readonly steppers?: DagStepperOverlayRow[] };
-    return parsed.steppers ?? [];
-  } catch {
-    return [];
-  }
-}
-
 export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOverlayRow[] {
   try {
     const parsed = JSON.parse(stateJson) as { readonly sliders?: DagSliderOverlayRow[] };
@@ -13848,16 +14277,46 @@ export function parseDagSelectionUnionBoundsScreen(json: string): DagSelectionBo
   }
 }
 
-export function computeDagMarqueeOverlay(pointsJson: string, crossing: boolean, method: string): DagMarqueeOverlay | null {
-  let points: { readonly x: number; readonly y: number }[] = [];
+/** @emoji 🧿 Normalizes one selection-preview point from the rust `[[x,y],…]` wire format or `{x,y}` objects. */
+function parseDagMarqueePoint(value: unknown): { readonly x: number; readonly y: number } | null {
+  if (Array.isArray(value) && value.length >= 2 && typeof value[0] === "number" && typeof value[1] === "number" && Number.isFinite(value[0]) && Number.isFinite(value[1])) {
+    return { x: value[0], y: value[1] };
+  }
+  if (value && typeof value === "object") {
+    const x = (value as { readonly x?: unknown }).x;
+    const y = (value as { readonly y?: unknown }).y;
+    if (typeof x === "number" && typeof y === "number" && Number.isFinite(x) && Number.isFinite(y)) return { x, y };
+  }
+  return null;
+}
+
+/** @emoji 🧿 Rectangle wire format is always four axis-aligned corners; anything else is a lasso path. */
+function inferDagMarqueeMethod(points: readonly { readonly x: number; readonly y: number }[]): "lasso" | "rectangle" {
+  if (points.length !== 4) return points.length >= 3 ? "lasso" : "rectangle";
+  const xs = new Set(points.map((point) => point.x));
+  const ys = new Set(points.map((point) => point.y));
+  return xs.size === 2 && ys.size === 2 ? "rectangle" : "lasso";
+}
+
+/** @emoji 🧿 Builds the shared `SelectionMarquee` overlay from board preview points (`[[x,y],…]` from rust). */
+export function computeDagMarqueeOverlay(pointsJson: string, crossing: boolean, method?: string): DagMarqueeOverlay | null {
+  let raw: unknown;
   try {
-    points = JSON.parse(pointsJson) as { readonly x: number; readonly y: number }[];
+    raw = JSON.parse(pointsJson);
   } catch {
     return null;
   }
+  if (!Array.isArray(raw)) return null;
+  const points: { readonly x: number; readonly y: number }[] = [];
+  for (const entry of raw) {
+    const point = parseDagMarqueePoint(entry);
+    if (!point) return null;
+    points.push(point);
+  }
   if (points.length < 2) return null;
   const coverage = crossing ? "partial" : "full";
-  if (method === "lasso") return { kind: "lasso", points, coverage };
+  const resolvedMethod = method === "lasso" || method === "rectangle" ? method : inferDagMarqueeMethod(points);
+  if (resolvedMethod === "lasso") return { kind: "lasso", points, coverage };
   const xs = points.map((point) => point.x);
   const ys = points.map((point) => point.y);
   const x = Math.min(...xs);
@@ -13870,86 +14329,6 @@ export function sceneToSyncJson(scene: NodeGraphScene): string {
 }
 
 //#region DagDomOverlays
-export function GraphParamOverlays({
-  stateJson,
-  logicalW,
-  logicalH,
-  editable,
-  onParamChange,
-}: {
-  readonly stateJson: string;
-  readonly logicalW: number;
-  readonly logicalH: number;
-  readonly editable: boolean;
-  readonly onParamChange: (nodeId: string, portId: string, value: unknown) => void;
-}) {
-  const camera = parseDagOverlayCamera(stateJson);
-  const editors = parseDagParamEditors(stateJson);
-  if (editors.length === 0) return null;
-  return (
-    <div className="pointer-events-none absolute inset-0 z-45">
-      {editors.map((editor) => {
-        const screen = dagWorldToScreen(camera, logicalW, logicalH, editor.x, editor.y);
-        const w = editor.w * camera.zoom;
-        const h = editor.h * camera.zoom;
-        return (
-          <input
-            key={`${editor.nodeId}:${editor.portId}`}
-            className="pointer-events-auto absolute rounded border border-border bg-panel px-1 font-mono text-[10px] text-foreground"
-            style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }}
-            defaultValue={String(editor.value ?? editor.default ?? "")}
-            readOnly={!editable}
-            onPointerDown={(event) => event.stopPropagation()}
-            onChange={(event) => onParamChange(editor.nodeId, editor.portId, event.target.value)}
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-export function GraphStepperOverlays({
-  stateJson,
-  logicalW,
-  logicalH,
-  editable,
-  onStepperChange,
-}: {
-  readonly stateJson: string;
-  readonly logicalW: number;
-  readonly logicalH: number;
-  readonly editable: boolean;
-  readonly onStepperChange: (widgetId: string, fieldKey: string, value: number) => void;
-}) {
-  const camera = parseDagOverlayCamera(stateJson);
-  const steppers = parseDagStepperOverlays(stateJson);
-  if (steppers.length === 0) return null;
-  return (
-    <div className="pointer-events-none absolute inset-0 z-45">
-      {steppers.flatMap((stepper) =>
-        stepper.fields.map((field) => {
-          const screen = dagWorldToScreen(camera, logicalW, logicalH, field.x, field.y);
-          const w = field.w * camera.zoom;
-          const h = field.h * camera.zoom;
-          return (
-            <input
-              key={`${stepper.widgetId}:${field.key}`}
-              type="number"
-              className="pointer-events-auto absolute rounded border border-border bg-panel px-1 font-mono text-[10px] text-foreground"
-              style={{ left: screen.x, top: screen.y - h / 2, width: w, height: h }}
-              defaultValue={field.value}
-              step={field.step ?? 1}
-              readOnly={!editable}
-              onPointerDown={(event) => event.stopPropagation()}
-              onChange={(event) => onStepperChange(stepper.widgetId, field.key, Number(event.target.value))}
-            />
-          );
-        }),
-      )}
-    </div>
-  );
-}
-
 export function GraphSliderOverlays({
   stateJson,
   logicalW,
@@ -14040,10 +14419,33 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 // reports its live camera back into the document (`cameraJson` is unimplemented, see the wheel
 // handler below), so `scene.viewportJson` is frozen at its initial value for the whole session —
 // applying it on every edit-triggered resync would snap the user's camera back on every commit.
+function applyNodeGraphHoverFromScene(session: FlowWasmSession, hoverJson: string | undefined): void {
+  if (hoverJson === undefined) return;
+  try {
+    const value = JSON.parse(hoverJson) as { readonly nodeId?: string; readonly widgetId?: string; readonly port?: string; readonly portId?: string } | null;
+    if (value === null) {
+      session.setHover?.(null);
+      return;
+    }
+    const widgetId = value.widgetId ?? value.nodeId;
+    const portId = value.port ?? value.portId;
+    if (widgetId && portId) {
+      session.setHoverChannel?.(widgetId, portId);
+    } else if (widgetId) {
+      session.setHover?.(widgetId);
+    } else {
+      session.setHover?.(null);
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
 function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
   if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);
   if (scene.fixtureJson) session.loadFixtureJson(scene.fixtureJson);
   if (scene.selectionJson) session.setSelection(scene.selectionJson);
+  applyNodeGraphHoverFromScene(session, scene.hoverJson);
   if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
   if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
   if (scene.computingJson) session.setComputingProgress(scene.computingJson);
@@ -14065,27 +14467,6 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
   }
 }
 //#endregion Sync
-
-//#region Spotlight
-function SpotlightOverlay({ previewText, onCommit, onDismiss }: { readonly previewText: string; readonly onCommit: () => void; readonly onDismiss: () => void }) {
-  const previewLabel = useLabel("ui.host.preview");
-  if (!previewText.trim()) return null;
-  return (
-    <div className="pointer-events-auto absolute inset-x-4 bottom-4 z-60 rounded border border-border bg-panel p-3 shadow-lg">
-      <div className="mb-2 text-xs font-medium text-muted-foreground">{previewLabel}</div>
-      <pre className="max-h-40 overflow-auto whitespace-pre-wrap font-mono text-xs text-foreground">{previewText}</pre>
-      <div className="mt-2 flex justify-end gap-2">
-        <button type="button" className="rounded px-2 py-1 text-xs hover:bg-active-base" onClick={onDismiss}>
-          Dismiss
-        </button>
-        <button type="button" className="rounded bg-accent px-2 py-1 text-xs text-accent-foreground" onClick={onCommit}>
-          Commit
-        </button>
-      </div>
-    </div>
-  );
-}
-//#endregion Spotlight
 
 //#region FlowGraphCanvasHost
 export function FlowGraphCanvasHost({
@@ -14111,12 +14492,10 @@ export function FlowGraphCanvasHost({
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
-  const [paramStateJson, setParamStateJson] = useState("{}");
-  const [stepperStateJson, setStepperStateJson] = useState("{}");
   const [sliderStateJson, setSliderStateJson] = useState("{}");
-  const [previewText, setPreviewText] = useState("");
   const [containerSize, setContainerSize] = useState({ w: 800, h: 600 });
   const [sessionReady, setSessionReady] = useState(false);
+  const [spotlight, setSpotlight] = useState<FlowSpotlightState | null>(null);
   const sceneSignature = useMemo(() => JSON.stringify(scene), [scene]);
   // Always holds the latest `scene` without forcing effects to depend on (and re-run per) it.
   const sceneRef = useRef(scene);
@@ -14217,19 +14596,12 @@ export function FlowGraphCanvasHost({
         preselect,
         dimmedIds,
       });
-      setParamStateJson(session.paramOverlayPaintStateJson());
-      setStepperStateJson(session.stepperOverlayStateJson());
       setSliderStateJson(session.sliderOverlayStateJson());
     } catch {
       /* gpu not ready */
     }
     setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
-    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), "rectangle"));
-    try {
-      setPreviewText(session.previewText());
-    } catch {
-      setPreviewText("");
-    }
+    setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.()));
   }, []);
 
   const emitInteractionState = useCallback(() => {
@@ -14357,6 +14729,13 @@ export function FlowGraphCanvasHost({
       } else {
         session.setHover?.(target.id);
       }
+      try {
+        const hovered = session.hoveredWidgetId();
+        const channelJson = session.hoveredChannelJson();
+        dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
+      } catch {
+        /* session not ready */
+      }
       session.renderFrame();
       paintOverlays();
     },
@@ -14411,6 +14790,70 @@ export function FlowGraphCanvasHost({
     session.renderFrame();
     paintOverlays();
   }, [paintOverlays]);
+
+  const closeSpotlight = useCallback(() => {
+    setSpotlight(null);
+    clearGhostPreview();
+  }, [clearGhostPreview]);
+
+  const previewSpotlightItem = useCallback(
+    (item: FlowCatalogueItem | null) => {
+      const session = sessionRef.current;
+      const open = spotlight;
+      if (!session || !open) return;
+      if (!item) {
+        session.clearGhostWidget();
+        session.renderFrame();
+        paintOverlays();
+        return;
+      }
+      console.log("[DEBUG] flow spotlight preview", item.kind, item.neuronKind ?? item.name, open.world);
+      session.setGhostWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y);
+      session.renderFrame();
+      paintOverlays();
+    },
+    [paintOverlays, spotlight],
+  );
+
+  const commitSpotlightItem = useCallback(
+    (item: FlowCatalogueItem) => {
+      const session = sessionRef.current;
+      const open = spotlight;
+      if (!session || !open) return;
+      console.log("[DEBUG] flow spotlight commit", item.kind, item.neuronKind ?? item.name, open.world);
+      try {
+        session.addWidget(flowCatalogueItemDescriptor(item), open.world.x, open.world.y);
+        commitFixture();
+        emitInteractionState();
+      } catch {
+        /* invalid descriptor */
+      }
+      setSpotlight(null);
+      clearGhostPreview();
+    },
+    [clearGhostPreview, commitFixture, emitInteractionState, spotlight],
+  );
+
+  const openSpotlightAtClient = useCallback(
+    (clientX: number, clientY: number, target: HTMLElement) => {
+      const session = sessionRef.current;
+      if (!session || !editable) return;
+      const rect = target.getBoundingClientRect();
+      const sx = clientX - rect.left;
+      const sy = clientY - rect.top;
+      let world = { x: sx, y: sy };
+      try {
+        const parsed = JSON.parse(session.worldFromScreen(sx, sy)) as { readonly x?: number; readonly y?: number };
+        world = { x: parsed.x ?? sx, y: parsed.y ?? sy };
+      } catch {
+        const camera = parseDagOverlayCamera(labelStateJson);
+        world = dagScreenToWorld(camera, rect.width, rect.height, sx, sy);
+      }
+      console.log("[DEBUG] flow spotlight open", { screen: { x: sx, y: sy }, world });
+      setSpotlight({ screen: { x: sx, y: sy }, world });
+    },
+    [editable, labelStateJson],
+  );
 
   const onDragOverCanvas = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
@@ -14479,14 +14922,37 @@ export function FlowGraphCanvasHost({
     [clearGhostPreview, commitFixture, dispatch, editable, emitInteractionState, labelStateJson],
   );
 
-  const openHoveredInstance = useCallback(() => {
-    const session = sessionRef.current;
-    if (!session) return;
-    const instanceId = resolveFixtureWidgetInstanceId(scene.fixtureJson, session.hoveredWidgetId());
-    if (instanceId) dispatch("openInstance", { instanceId });
-  }, [dispatch, scene.fixtureJson]);
+  const onCanvasDoubleClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!editable) return;
+      const session = sessionRef.current;
+      if (!session) return;
+      const hovered = session.hoveredWidgetId();
+      if (hovered) {
+        const instanceId = resolveFixtureWidgetInstanceId(scene.fixtureJson, hovered);
+        if (instanceId) {
+          dispatch("openInstance", { instanceId });
+          return;
+        }
+        return;
+      }
+      openSpotlightAtClient(event.clientX, event.clientY, event.currentTarget);
+    },
+    [dispatch, editable, openSpotlightAtClient, scene.fixtureJson],
+  );
 
   useEffect(() => clearGhostPreview, [clearGhostPreview]);
+
+  const spotlightSections = useMemo(() => {
+    if (!spotlight || !sessionReady) return [] as FlowCatalogueSection[];
+    const session = sessionRef.current;
+    if (!session) return parseFlowCatalogueSections(scene.catalogueJson);
+    try {
+      return parseFlowCatalogueSections(session.catalogueJson());
+    } catch {
+      return parseFlowCatalogueSections(scene.catalogueJson);
+    }
+  }, [scene.catalogueJson, sessionReady, spotlight]);
 
   return (
     <div
@@ -14506,30 +14972,6 @@ export function FlowGraphCanvasHost({
     >
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 z-40" />
-      <GraphParamOverlays
-        stateJson={paramStateJson}
-        logicalW={containerSize.w}
-        logicalH={containerSize.h}
-        editable={editable}
-        onParamChange={(nodeId, portId, value) => {
-          const session = sessionRef.current;
-          if (!session) return;
-          session.setNeuronParams(nodeId, JSON.stringify({ [portId]: value }));
-          commitFixture();
-          paintOverlays();
-        }}
-      />
-      <GraphStepperOverlays
-        stateJson={stepperStateJson}
-        logicalW={containerSize.w}
-        logicalH={containerSize.h}
-        editable={editable}
-        onStepperChange={(widgetId, fieldKey, value) => {
-          sessionRef.current?.setStepperFieldValue(widgetId, fieldKey, value);
-          commitFixture();
-          paintOverlays();
-        }}
-      />
       <GraphSliderOverlays
         stateJson={sliderStateJson}
         logicalW={containerSize.w}
@@ -14561,9 +15003,9 @@ export function FlowGraphCanvasHost({
       ) : null}
       {marquee ? (
         marquee.kind === "lasso" ? (
-          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="polygon" points={marquee.points ?? []} />
         ) : (
-          <SelectionMarquee coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
+          <SelectionMarquee className="z-50" coverage={marquee.coverage ?? "full"} shape="rect" rect={{ x: marquee.x ?? 0, y: marquee.y ?? 0, width: marquee.width ?? 0, height: marquee.height ?? 0 }} />
         )
       ) : null}
       <div
@@ -14601,7 +15043,7 @@ export function FlowGraphCanvasHost({
           emitInteractionState();
         }}
         onPointerLeave={() => pickInteraction.onCanvasPointerLeave()}
-        onDoubleClick={openHoveredInstance}
+        onDoubleClick={onCanvasDoubleClick}
         onWheel={(event) => {
           event.preventDefault();
           const session = sessionRef.current;
@@ -14616,15 +15058,15 @@ export function FlowGraphCanvasHost({
         }}
       />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
-      <SpotlightOverlay previewText={previewText} onCommit={() => dispatch(nodeGraphActions.spotlightCommit, {})} onDismiss={() => setPreviewText("")} />
+      {spotlight ? (
+        <FlowSpotlight state={spotlight} sections={spotlightSections} onPreview={previewSpotlightItem} onCommit={commitSpotlightItem} onClose={closeSpotlight} />
+      ) : null}
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={contextMenuItems.map((item) => ({
-          id: item.id,
-          label: item.label,
-          onSelect: () => dispatch(item.action, item.action === "openInstance" ? { ...item.args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : item.args),
-        }))}
+        items={mapContextMenuSpecs(contextMenuItems, (action, args) =>
+          dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args),
+        )}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -17143,14 +17585,7 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
 //#region Types
 type BoardCamera = { readonly x: number; readonly y: number; readonly zoom: number };
 type BoardEventRow = { readonly name: string; readonly payload?: unknown };
-type Puzzle2dSelectionMenuItem = {
-  readonly id: string;
-  readonly label: string;
-  readonly action: string;
-  readonly args?: Record<string, unknown>;
-  readonly destructive?: boolean;
-  readonly disabled?: boolean;
-};
+type Puzzle2dSelectionMenuItem = ContextMenuItemSpec;
 type Puzzle2dFixtureDropPayload = {
   readonly kindId: string;
   readonly catalogSlice: string;
@@ -17323,7 +17758,7 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   }
   const selected = parseSelectionIds(selectionJson);
   if (selected.length === 0) {
-    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), action: "selectAll" }];
+    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), icon: "maximize-2", action: "selectAll" }];
   }
 
   const selectedSet = new Set(selected);
@@ -17354,12 +17789,14 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   const anyUnlocked = selectedEntities.some((entity) => !puzzle2dEntityFlag(entity, "locked"));
 
   return [
-    { id: "toggleHidden", label: anyVisible ? hostLabel("ui.contextMenu.hide") : hostLabel("ui.contextMenu.show"), action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
-    { id: "toggleLocked", label: anyUnlocked ? hostLabel("ui.contextMenu.lock") : hostLabel("ui.contextMenu.unlock"), action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
-    { id: "duplicate", label: hostLabel("ui.contextMenu.duplicate"), action: "duplicateSelection", disabled: !hasSelectedNode },
-    { id: "selectSameKind", label: hostLabel("ui.contextMenu.selectSameKind"), action: "selectSameKind" },
-    { id: "focusSelection", label: hostLabel("ui.contextMenu.zoomToSelection"), action: "focusSelection" },
-    { id: "deleteSelection", label: hostLabel("ui.contextMenu.delete"), action: "deleteSelection", destructive: true },
+    { id: "toggleHidden", label: anyVisible ? hostLabel("ui.contextMenu.hide") : hostLabel("ui.contextMenu.show"), icon: anyVisible ? "eye-off" : "eye", action: "setSelectionFlag", args: { flag: "hidden", value: anyVisible } },
+    { id: "toggleLocked", label: anyUnlocked ? hostLabel("ui.contextMenu.lock") : hostLabel("ui.contextMenu.unlock"), icon: anyUnlocked ? "lock" : "lock-open", action: "setSelectionFlag", args: { flag: "locked", value: anyUnlocked } },
+    { id: "sep-selection", separator: true },
+    { id: "duplicate", label: hostLabel("ui.contextMenu.duplicate"), icon: "copy", action: "duplicateSelection", disabled: !hasSelectedNode },
+    { id: "selectSameKind", label: hostLabel("ui.contextMenu.selectSameKind"), icon: "layers", action: "selectSameKind" },
+    { id: "focusSelection", label: hostLabel("ui.contextMenu.zoomToSelection"), icon: "crosshair", action: "focusSelection" },
+    { id: "sep-delete", separator: true },
+    { id: "deleteSelection", label: hostLabel("ui.contextMenu.delete"), icon: "trash", action: "deleteSelection", destructive: true },
   ];
 }
 //#endregion SelectionMenu
@@ -18135,13 +18572,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={(contextMenu?.items ?? []).map((item) => ({
-          id: item.id,
-          label: item.label,
-          disabled: item.disabled,
-          destructive: item.destructive,
-          onSelect: () => dispatch(item.action, item.args),
-        }))}
+        items={mapContextMenuSpecs(contextMenu?.items ?? [], dispatch)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

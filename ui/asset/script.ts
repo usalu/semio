@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-/** @emoji 🖼 Vendors Lucide SVGs into `icons/` and codegen JS, C#, and Python bindings. */
+/** @emoji 🖼 Codegens JS, C#, and Python bindings from committed UI catalog SVGs in `icon/`. */
 // #region 🧲Header
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -9,178 +9,14 @@
 // #endregion 🧲Header
 
 // #region 🔌Adapters
-import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
-import { basename, join, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
+import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../repo/lib/js/index.ts";
 // #endregion 🔌Adapters
 
-//#region 🔖Constants
-const LUCIDE_VERSION = "0.536.0";
-
-/** @emoji 📋 Canonical icon ids (kebab-case) vendored from Lucide ISC assets. */
-const VENDORED_ICON_IDS = [
-  "alert-circle",
-  "align-left",
-  "app-window",
-  "arrow-down",
-  "arrow-left",
-  "arrow-right",
-  "arrow-right-left",
-  "arrow-up",
-  "award",
-  "bar-chart-3",
-  "book-open",
-  "box",
-  "camera",
-  "check",
-  "chevron-down",
-  "chevron-left",
-  "chevron-right",
-  "chevron-up",
-  "chevrons-up-down",
-  "circle",
-  "circle-dot",
-  "clipboard",
-  "clipboard-list",
-  "clock",
-  "cloud",
-  "code",
-  "combine",
-  "component",
-  "copy",
-  "crosshair",
-  "external-link",
-  "eye",
-  "file",
-  "file-archive",
-  "file-code",
-  "file-image",
-  "file-json",
-  "file-spreadsheet",
-  "file-text",
-  "file-type",
-  "file-video",
-  "filter",
-  "focus",
-  "folder",
-  "folder-open",
-  "globe",
-  "graduation-cap",
-  "grid-3x3",
-  "grip-vertical",
-  "hammer",
-  "hand",
-  "hard-drive",
-  "hash",
-  "home",
-  "image",
-  "image-plus",
-  "image-up",
-  "info",
-  "landmark",
-  "lasso",
-  "layers",
-  "layout",
-  "layout-grid",
-  "lightbulb",
-  "link",
-  "link-2-off",
-  "list-ordered",
-  "list-tree",
-  "loader-2",
-  "maximize-2",
-  "message-circle",
-  "message-square",
-  "minimize-2",
-  "minus",
-  "monitor",
-  "moon",
-  "more-horizontal",
-  "mouse-pointer",
-  "mouse-pointer-2",
-  "move-3d",
-  "network",
-  "panel-left",
-  "panel-right",
-  "panel-top",
-  "pause",
-  "play",
-  "plug",
-  "plus",
-  "puzzle",
-  "redo-2",
-  "rotate-ccw",
-  "save",
-  "scaling",
-  "search",
-  "settings",
-  "settings-2",
-  "shapes",
-  "sigma",
-  "skip-back",
-  "skip-forward",
-  "smartphone",
-  "smile",
-  "sparkles",
-  "square",
-  "square-dashed",
-  "sun",
-  "tablet",
-  "table-2",
-  "tags",
-  "text-cursor",
-  "text-search",
-  "triangle-alert",
-  "user",
-  "users",
-  "wrench",
-  "x",
-  "bell",
-  "calendar-days",
-  "check-circle-2",
-  "cylinder",
-  "download",
-  "edit-3",
-  "eraser",
-  "eye-off",
-  "flip-horizontal",
-  "flip-vertical",
-  "git-branch",
-  "git-commit",
-  "git-merge",
-  "hexagon",
-  "library",
-  "list",
-  "lock",
-  "lock-open",
-  "magnet",
-  "move",
-  "paint-bucket",
-  "paintbrush",
-  "pen-tool",
-  "pipette",
-  "redo",
-  "rotate-cw",
-  "scissors",
-  "triangle",
-  "trash-2",
-  "undo",
-  "undo-2",
-  "unlink",
-  "zoom-in",
-  "zoom-out",
-  "square-arrow-up-left",
-  "square-arrow-up-right",
-  "square-arrow-down-left",
-  "square-arrow-down-right",
-] as const;
-
-type VendoredIconId = (typeof VENDORED_ICON_IDS)[number];
-//#endregion 🔖Constants
-
 //#region 🔧SvgNormalize
-/** @emoji ✂️ Strips Lucide chrome and keeps stroke icons on `currentColor`. */
-export function normalizeLucideSvg(raw: string): string {
+/** @emoji ✂️ Strips root chrome and keeps stroke icons on `currentColor`. */
+export function normalizeCatalogSvg(raw: string): string {
   let svg = raw.replace(/<!--[\s\S]*?-->/g, "").trim();
   svg = svg.replace(/\sclass="[^"]*"/g, "");
   svg = svg.replace(/<svg\b([^>]*)>/, (_match, attrs: string) => {
@@ -211,39 +47,25 @@ export function iconIdToPythonConst(id: string): string {
 }
 //#endregion 🔧SvgNormalize
 
-//#region 📦Vendor
-function lucideStaticRoot(repoRoot: string): string {
-  return resolve(repoRoot, "node_modules/lucide-static/icons");
-}
-
-function vendorIcons(repoRoot: string, assetsDir: string): readonly VendoredIconId[] {
-  const sourceRoot = lucideStaticRoot(repoRoot);
-  const iconsDir = join(assetsDir, "icon");
-  mkdirSync(iconsDir, { recursive: true });
-  const vendored: VendoredIconId[] = [];
-  for (const id of VENDORED_ICON_IDS) {
-    const sourcePath = join(sourceRoot, `${id}.svg`);
-    if (!existsSync(sourcePath)) {
-      throw new Error(`Missing Lucide source icon: ${sourcePath}`);
-    }
-    const normalized = normalizeLucideSvg(readFileSync(sourcePath, "utf8"));
-    writeFileSync(join(iconsDir, `${id}.svg`), `${normalized}\n`, "utf8");
-    vendored.push(id);
+//#region 📦Catalog
+function readCatalogSvgs(iconsDir: string): Record<string, string> {
+  if (!existsSync(iconsDir)) {
+    throw new Error(`Missing UI icon catalog directory: ${iconsDir}`);
   }
-  return vendored;
-}
-//#endregion 📦Vendor
-
-//#region 🧬Codegen
-function readVendoredSvgs(iconsDir: string): Record<string, string> {
+  const svgFiles = readdirSync(iconsDir).filter((name) => name.endsWith(".svg"));
+  if (svgFiles.length === 0) {
+    throw new Error(`UI icon catalog is empty: ${iconsDir}`);
+  }
   const out: Record<string, string> = {};
-  for (const file of readdirSync(iconsDir).filter((name) => name.endsWith(".svg"))) {
+  for (const file of svgFiles) {
     const id = basename(file, ".svg");
-    out[id] = normalizeLucideSvg(readFileSync(join(iconsDir, file), "utf8"));
+    out[id] = normalizeCatalogSvg(readFileSync(join(iconsDir, file), "utf8"));
   }
   return out;
 }
+//#endregion 📦Catalog
 
+//#region 🧬Codegen
 function escapeTsString(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/\$/g, "\\$");
 }
@@ -323,21 +145,20 @@ ${literals}
   writeFileSync(join(generatedDir, "icons.py"), body, "utf8");
 }
 
-function writeVendoredReadme(assetsDir: string, ids: readonly string[]): void {
+function writeCatalogReadme(assetsDir: string, ids: readonly string[]): void {
   const sorted = [...ids].sort();
-  const list = sorted.map((id) => `- \`${id}\` (from Lucide \`${id}\`)`).join("\n");
+  const list = sorted.map((id) => `- \`${id}\``).join("\n");
   const body = `# UI assets
 
-Shared fonts, cursors, lists, and vendored UI icons served at \`/asset/*\`.
+Shared fonts, cursors, lists, and UI chrome icons served at \`/asset/*\`.
 
-## Icons (vendored from Lucide)
+## Icons
 
-Initial chrome icons were copied from [Lucide](https://lucide.dev) v${LUCIDE_VERSION} (\`lucide-static\`, **ISC License**).
-Source: https://github.com/lucide-icons/lucide
+Chrome icons are committed SVGs under \`icon/\`. Many were originally derived from [Lucide](https://lucide.dev) (**ISC License**); source: https://github.com/lucide-icons/lucide
 
-Do not edit files under \`icons/*.svg\` by hand — run **build ui assets** (\`bun ./script.ts generate all\`) after changing \`VENDORED_ICON_IDS\` in \`script.ts\`.
+Add or edit SVGs under \`icon/\`, then run **build ui assets** (\`bun ./script.ts generate all\`).
 
-### Vendored icon ids
+### Catalog icon ids
 
 ${list}
 `;
@@ -429,12 +250,11 @@ export function shortcodeCatalogKey(code: string): ShortcodeCatalogName | undefi
 //#region 🚀Commands
 function runGenerate(target: string): void {
   const assetsDir = import.meta.dir;
-  const repoRoot = getWorkspaceRoot();
-  const generatedDir = join(assetsDir, "icon", "generated");
+  const iconsDir = join(assetsDir, "icon");
+  const generatedDir = join(iconsDir, "generated");
   mkdirSync(generatedDir, { recursive: true });
-  const vendored = vendorIcons(repoRoot, assetsDir);
-  writeVendoredReadme(assetsDir, vendored);
-  const icons = readVendoredSvgs(join(assetsDir, "icon"));
+  const icons = readCatalogSvgs(iconsDir);
+  writeCatalogReadme(assetsDir, Object.keys(icons));
   if (target === "js" || target === "all") generateJs(icons, generatedDir);
   if (target === "net" || target === "all") generateCs(icons, generatedDir);
   if (target === "py" || target === "all") generatePy(icons, generatedDir);
@@ -443,12 +263,11 @@ function runGenerate(target: string): void {
 
 async function runGenerateAll(): Promise<void> {
   const assetsDir = import.meta.dir;
-  const repoRoot = getWorkspaceRoot();
-  const generatedDir = join(assetsDir, "icon", "generated");
+  const iconsDir = join(assetsDir, "icon");
+  const generatedDir = join(iconsDir, "generated");
   mkdirSync(generatedDir, { recursive: true });
-  const vendored = vendorIcons(repoRoot, assetsDir);
-  writeVendoredReadme(assetsDir, vendored);
-  const icons = readVendoredSvgs(join(assetsDir, "icon"));
+  const icons = readCatalogSvgs(iconsDir);
+  writeCatalogReadme(assetsDir, Object.keys(icons));
   generateJs(icons, generatedDir);
   generateCs(icons, generatedDir);
   generatePy(icons, generatedDir);
@@ -476,17 +295,17 @@ await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" 
 
 if (import.meta.vitest) {
   const { describe, expect, it } = import.meta.vitest;
-  describe("normalizeLucideSvg", () => {
+  describe("normalizeCatalogSvg", () => {
     it("strips root svg width/height and keeps currentColor stroke", () => {
       const raw = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" stroke="#000"><path d="M0 0"/></svg>`;
-      const out = normalizeLucideSvg(raw);
+      const out = normalizeCatalogSvg(raw);
       expect(out).not.toMatch(/<svg[^>]*width="/);
       expect(out).toContain('stroke="currentColor"');
     });
 
     it("preserves width/height on child shapes such as layout-grid rects", () => {
       const raw = `<svg width="24" height="24"><rect width="7" height="7" x="3" y="3" rx="1" /></svg>`;
-      const out = normalizeLucideSvg(raw);
+      const out = normalizeCatalogSvg(raw);
       expect(out).not.toMatch(/<svg[^>]*width="/);
       expect(out).toContain('width="7"');
       expect(out).toContain('height="7"');

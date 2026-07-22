@@ -1,0 +1,13 @@
+{
+  "title": "Remove Icon Dependencies",
+  "emoji": "🎫",
+  "status": "open",
+  "description": "Remove Lucide npm packages and make UI icon codegen read only committed SVGs under ui/asset/icon/. Clean stale lucide-react references.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2238"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯designapp",
+  "sessions": [
+    "⚪e7485fa886ee4096ac7fc1faf22716e9"
+  ]
+}

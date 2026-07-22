@@ -11,7 +11,7 @@ use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
     App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
+    UiSelectItem, UiSelectNode, UiTreeItemNode, UiTreeSectionNode, ViewState, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -37,6 +37,8 @@ const FLOW_PLAY_BODY_GENERATE_FORM: &str = "flow.play.generate-form";
 const FLOW_PLAY_BODY_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_PLAY_SURFACE_GENERATE_PREVIEW: &str = "flow.play.generate-preview";
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
+const FLOW_DEFAULT_PROXIMITY_DISTANCE: f64 = 48.0;
+const FLOW_DEFAULT_GRID_FACTOR: f64 = 10.0;
 
 /// 🧩 Built-in flow extensions: (id, name, actionId, actionTitle, effect).
 const FLOW_EXTENSIONS: &[(&str, &str, &str, &str, &str)] =
@@ -54,10 +56,28 @@ struct FlowPlayRuntime {
     camera: CameraJson,
     last_eval_json: String,
     lod_mode: String,
+    #[serde(default = "default_proximity_distance")]
     proximity_distance: f64,
+    #[serde(default = "default_grid_visible")]
+    grid_visible: bool,
+    grid_snap_enabled: bool,
+    #[serde(default = "default_grid_factor")]
+    grid_factor: f64,
     catalogue_sections_json: String,
     extension_enabled: HashMap<String, bool>,
     generation: GenerationPlayState,
+}
+
+fn default_proximity_distance() -> f64 {
+    FLOW_DEFAULT_PROXIMITY_DISTANCE
+}
+
+fn default_grid_factor() -> f64 {
+    FLOW_DEFAULT_GRID_FACTOR
+}
+
+fn default_grid_visible() -> bool {
+    true
 }
 
 fn default_flow_lod_mode() -> String {
@@ -75,7 +95,10 @@ impl Default for FlowPlayRuntime {
             camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
             last_eval_json: String::new(),
             lod_mode: default_flow_lod_mode(),
-            proximity_distance: 0.0,
+            proximity_distance: default_proximity_distance(),
+            grid_visible: default_grid_visible(),
+            grid_snap_enabled: false,
+            grid_factor: default_grid_factor(),
             catalogue_sections_json: default_catalogue_sections_json(),
             extension_enabled: HashMap::new(),
             generation: GenerationPlayState::default(),
@@ -129,7 +152,7 @@ fn seed_host_catalogue(host: &mut FlowHost, extra_sections_json: &str) {
     host.set_host_catalogue_json(&serde_json::to_string(&sections).unwrap_or_else(|_| "[]".into()));
 }
 
-fn apply_lod_and_proximity(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
+fn apply_canvas_options(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
     if runtime.lod_mode != FLOW_LOD_MODE_AUTOMATIC && DagDrawLod::from_id(&runtime.lod_mode).is_some() {
         host.dag.set_automatic_lod(false);
         host.dag.set_forced_draw_lod_label(&runtime.lod_mode);
@@ -137,12 +160,15 @@ fn apply_lod_and_proximity(host: &mut FlowHost, runtime: &FlowPlayRuntime) {
         host.dag.set_automatic_lod(true);
     }
     host.dag.set_proximity_distance(runtime.proximity_distance);
+    host.set_grid_visible(runtime.grid_visible);
+    host.set_grid_snap_enabled(runtime.grid_snap_enabled);
+    let _ = host.set_grid_factor(runtime.grid_factor);
 }
 
 fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHost {
     let mut host = FlowHost::from_fixture(fixture.clone());
     seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
-    apply_lod_and_proximity(&mut host, runtime);
+    apply_canvas_options(&mut host, runtime);
     host
 }
 
@@ -199,7 +225,6 @@ fn widget_kind_label(widget: &Widget) -> &'static str {
     match widget {
         Widget::Neuron { .. } => "neuron",
         Widget::InputSlider { .. } => "inputSlider",
-        Widget::InputStepper { .. } => "inputStepper",
         Widget::InputNote { .. } => "inputNote",
         Widget::InputImage { .. } => "inputImage",
         Widget::Variable { .. } => "variable",
@@ -225,7 +250,6 @@ fn widget_id(widget: &Widget) -> &str {
     match widget {
         Widget::Neuron { id, .. }
         | Widget::InputSlider { id, .. }
-        | Widget::InputStepper { id, .. }
         | Widget::InputNote { id, .. }
         | Widget::InputImage { id, .. }
         | Widget::Variable { id, .. }
@@ -263,7 +287,6 @@ semio_framework_plugin::app_labels! {
         components: &'static str = en: "Components", de: "Komponenten";
         sinks: &'static str = en: "Sinks", de: "Senken";
         catalogue_slider: &'static str = en: "Slider", de: "Schieberegler";
-        catalogue_stepper: &'static str = en: "Stepper", de: "Schrittregler";
         catalogue_note: &'static str = en: "Note", de: "Notiz";
         catalogue_add: &'static str = en: "Add", de: "Addieren";
         catalogue_and: &'static str = en: "And", de: "Und";
@@ -285,6 +308,14 @@ semio_framework_plugin::app_labels! {
         lod_mode: &'static str = en: "LOD Mode", de: "LOD-Modus";
         automatic: &'static str = en: "Automatic", de: "Automatisch";
         proximity_distance: &'static str = en: "Proximity Distance", de: "Näheabstand";
+        grid: &'static str = en: "Grid", de: "Raster";
+        grid_visible: &'static str = en: "Visible", de: "Sichtbar";
+        grid_snap: &'static str = en: "Snap", de: "Fang";
+        grid_factor: &'static str = en: "Factor", de: "Faktor";
+        select_all: &'static str = en: "Select All", de: "Alles auswählen";
+        zoom_to_selection: &'static str = en: "Zoom to Selection", de: "Auf Auswahl zoomen";
+        clear_selection: &'static str = en: "Clear Selection", de: "Auswahl aufheben";
+        no_selection: &'static str = en: "No selection", de: "Keine Auswahl";
         value: &'static str = en: "Value", de: "Wert";
         text: &'static str = en: "Text", de: "Text";
         kind: &'static str = en: "Kind", de: "Art";
@@ -338,6 +369,12 @@ fn flow_action_labels(is_de: bool) -> HashMap<String, String> {
         ("nodeGraphViewport", "Node Graph Viewport", "Knotengraph-Ansicht"),
         ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
         ("setProximityDistance", "Set Proximity Distance", "Näheabstand festlegen"),
+        ("setGridVisible", "Set Grid Visible", "Raster sichtbar"),
+        ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
+        ("setGridFactor", "Set Grid Factor", "Rasterfaktor festlegen"),
+        ("selectAll", "Select All", "Alles auswählen"),
+        ("focusSelection", "Zoom to Selection", "Auf Auswahl zoomen"),
+        ("clearSelection", "Clear Selection", "Auswahl aufheben"),
         ("setCatalogueSections", "Set Catalogue Sections", "Katalogabschnitte festlegen"),
         ("toggleExtension", "Toggle Extension", "Erweiterung umschalten"),
         ("addGeneration", "Add Generation", "Generation hinzufügen"),
@@ -430,7 +467,7 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
 }
 
 fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectionNode> {
-    let sources = [("inputSlider", labels.catalogue_slider), ("inputStepper", labels.catalogue_stepper), ("inputNote", labels.catalogue_note)];
+    let sources = [("inputSlider", labels.catalogue_slider), ("inputNote", labels.catalogue_note)];
     let components = [("math.add", labels.catalogue_add), ("logic.and", labels.catalogue_and), ("text.concat", labels.catalogue_concat)];
     let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
     vec![
@@ -476,53 +513,138 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
     ]
 }
 
-fn canvas_settings_field_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiInspectorFieldGroup {
-    let lod_items: Vec<UiSelectItem> = std::iter::once(UiSelectItem { value: FLOW_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() })
-        .chain(serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
-            let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
-            let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
-            Some(UiSelectItem { value: id, label: name })
-        }))
-        .collect();
-    UiInspectorFieldGroup {
-        id: "flow-play-inspector.canvas".into(),
-        label: labels.canvas.into(),
+//#region 🔖WindowMeasures
+fn window_instance_ids(view_state: &ViewState, kind_id: &str) -> Vec<String> {
+    let ids: Vec<String> = view_state.window_instances.iter().filter(|instance| instance.window_kind_id == kind_id).map(|instance| instance.id.clone()).collect();
+    if ids.is_empty() {
+        vec![kind_id.to_string()]
+    } else {
+        ids
+    }
+}
+
+fn flow_lod_measure(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> WindowMeasure {
+    let mut items = vec![MeasureSelectItem { id: FLOW_LOD_MODE_AUTOMATIC.into(), value: FLOW_LOD_MODE_AUTOMATIC.into(), label: labels.automatic.into() }];
+    items.extend(serde_json::from_str::<Vec<Value>>(&dag_lod_scale_json()).unwrap_or_default().into_iter().filter_map(|lod| {
+        let id = lod.get("id").and_then(|value| value.as_str())?.to_string();
+        let name = lod.get("name").and_then(|value| value.as_str()).unwrap_or(&id).to_string();
+        Some(MeasureSelectItem { id: id.clone(), value: id, label: name })
+    }));
+    WindowMeasure::Select {
+        id: "flow-play-measures.lod".into(),
+        label: Some(labels.lod_mode.into()),
+        value: runtime.lod_mode.clone(),
+        items,
+        on_change: flow_action("setLodMode", Some(json!({ "value": runtime.lod_mode }))),
+    }
+}
+
+fn flow_grid_measures_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> WindowMeasure {
+    WindowMeasure::Group {
+        id: "flow-play-measures.grid".into(),
+        label: labels.grid.into(),
         default_open: Some(true),
-        fields: vec![
-            UiNode::Field(UiFieldNode {
-                id: "flow-play-inspector.lod-mode".into(),
-                label: labels.lod_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode { id: "flow-play-inspector.lod-mode.select".into(), value: runtime.lod_mode.clone(), items: lod_items, placeholder: None, on_change: flow_action("setLodMode", None) })),
-                description: None,
-                required: None,
-                error: None,
-            }),
-            UiNode::Field(UiFieldNode {
-                id: "flow-play-inspector.proximity-distance".into(),
-                label: labels.proximity_distance.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
-                    id: "flow-play-inspector.proximity-distance.input".into(),
-                    input_kind: "number".into(),
-                    value: runtime.proximity_distance.to_string(),
-                    placeholder: None,
-                    commit: None,
-                    on_change: flow_action("setProximityDistance", None),
-                    min: None,
-                    max: None,
-                    step: None,
-                    accept: None,
-                })),
-                description: None,
-                required: None,
-                error: None,
-            }),
+        active_utility_id: None,
+        children: vec![
+            WindowMeasure::Toggle {
+                id: "flow-play-measures.grid-visible".into(),
+                icon_id: "layout-grid".into(),
+                label: Some(labels.grid_visible.into()),
+                pressed: runtime.grid_visible,
+                text: None,
+                on_change: flow_action("setGridVisible", None),
+            },
+            WindowMeasure::Toggle {
+                id: "flow-play-measures.grid-snap".into(),
+                icon_id: "magnet".into(),
+                label: Some(labels.grid_snap.into()),
+                pressed: runtime.grid_snap_enabled,
+                text: None,
+                on_change: flow_action("setGridSnapEnabled", None),
+            },
+            WindowMeasure::Slider {
+                id: "flow-play-measures.grid-factor".into(),
+                label: Some(format!("{} {:.1}", labels.grid_factor, runtime.grid_factor)),
+                value: runtime.grid_factor,
+                min: 0.5,
+                max: 50.0,
+                step: Some(0.5),
+                ready: None,
+                loading: None,
+                on_change: flow_action("setGridFactor", None),
+            },
         ],
     }
 }
 
+fn flow_window_measures(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
+    vec![
+        flow_lod_measure(runtime, labels),
+        WindowMeasure::Slider {
+            id: "flow-play-measures.proximity".into(),
+            label: Some(labels.proximity_distance.into()),
+            value: runtime.proximity_distance,
+            min: 0.0,
+            max: 240.0,
+            step: Some(4.0),
+            ready: None,
+            loading: None,
+            on_change: flow_action("setProximityDistance", None),
+        },
+        flow_grid_measures_group(runtime, labels),
+    ]
+}
+//#endregion 🔖WindowMeasures
+
+//#region 🔖Actions
+fn flow_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefinition {
+    ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, kind) }
+}
+
+fn flow_context_menu_json(selected: &[String], labels: &FlowPlayLabels) -> String {
+    if selected.is_empty() {
+        return json!([{
+            "id": "select-all",
+            "label": labels.select_all,
+            "action": "selectAll",
+        }])
+        .to_string();
+    }
+    json!([
+        {
+            "id": "focus-selection",
+            "label": labels.zoom_to_selection,
+            "action": "focusSelection",
+        },
+        {
+            "id": "delete-selection",
+            "label": labels.delete_selection,
+            "action": "nodeGraphEdit",
+            "args": { "ops": [{ "op": "deleteSelection" }] },
+        },
+    ])
+    .to_string()
+}
+
+fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> Option<CameraJson> {
+    if runtime.selected_node_ids.is_empty() {
+        return None;
+    }
+    let mut host = host_from_fixture(fixture, runtime);
+    host.dag.set_selection(&runtime.selected_node_ids);
+    host.focus_selection_camera(1.2)
+}
+//#endregion 🔖Actions
+
 fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
-        return ui_inspector_groups_to_tree(&[canvas_settings_field_group(runtime, labels)]);
+        return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
+            loading: None,
+            id: "flow-play-inspector.empty".into(),
+            label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
+            default_open: Some(true),
+            children: vec![ui_text(labels.no_selection)],
+        }]);
     }
     let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
     if widgets.is_empty() {
@@ -644,14 +766,15 @@ fn render_main_graph(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels: &
     let viewport_json = serde_json::to_string(&runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
     let fixture_json = serde_json::to_string(fixture).ok();
     let selection_json = if runtime.selected_node_ids.is_empty() { None } else { serde_json::to_string(&runtime.selected_node_ids).ok() };
-    let flow_extras = flow_backed_node_graph_extras(fixture, &runtime.lod_mode, runtime.proximity_distance);
-    let context_menu_json = json!([{
-        "id": "delete-selection",
-        "label": labels.delete_selection,
-        "action": "nodeGraphEdit",
-        "args": { "ops": [{ "op": "deleteSelection" }] },
-    }])
-    .to_string();
+    let flow_extras = flow_backed_node_graph_extras(
+        fixture,
+        &runtime.lod_mode,
+        runtime.proximity_distance,
+        runtime.grid_visible,
+        runtime.grid_snap_enabled,
+        runtime.grid_factor,
+    );
+    let context_menu_json = flow_context_menu_json(runtime.selected_node_ids.as_slice(), labels);
     build_node_graph_scene(
         FLOW_PLAY_SURFACE_MAIN,
         FLOW_PLAY_APP_ID,
@@ -741,7 +864,6 @@ impl FlowPlayApp {
                 match widget {
                     Widget::Neuron { id, .. }
                     | Widget::InputSlider { id, .. }
-                    | Widget::InputStepper { id, .. }
                     | Widget::InputNote { id, .. }
                     | Widget::InputImage { id, .. }
                     | Widget::Variable { id, .. }
@@ -848,6 +970,36 @@ impl DocumentApp for FlowPlayApp {
             "setProximityDistance" => {
                 if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
                     self.runtime.proximity_distance = value.max(0.0);
+                }
+                ActionEmit::default()
+            }
+            "setGridVisible" => {
+                let pressed = args.and_then(|value| value.get("pressed").or_else(|| value.get("enabled"))).and_then(|value| value.as_bool());
+                self.runtime.grid_visible = pressed.unwrap_or(!self.runtime.grid_visible);
+                ActionEmit::default()
+            }
+            "setGridSnapEnabled" => {
+                let pressed = args.and_then(|value| value.get("pressed").or_else(|| value.get("enabled"))).and_then(|value| value.as_bool());
+                self.runtime.grid_snap_enabled = pressed.unwrap_or(!self.runtime.grid_snap_enabled);
+                ActionEmit::default()
+            }
+            "setGridFactor" => {
+                if let Some(value) = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()) {
+                    self.runtime.grid_factor = value.clamp(0.5, 50.0);
+                }
+                ActionEmit::default()
+            }
+            "selectAll" => {
+                self.runtime.selected_node_ids = fixture.widgets.iter().map(widget_id).map(str::to_string).collect();
+                ActionEmit::default()
+            }
+            "clearSelection" => {
+                self.runtime.selected_node_ids.clear();
+                ActionEmit::default()
+            }
+            "focusSelection" => {
+                if let Some(camera) = focus_selection_camera(fixture, &self.runtime) {
+                    self.runtime.camera = camera;
                 }
                 ActionEmit::default()
             }
@@ -1083,6 +1235,14 @@ impl DocumentApp for FlowPlayApp {
             .action_labels(flow_action_labels(is_de))
             .example_labels(HashMap::from([("demo".to_string(), "Demo".to_string())]))
     }
+
+    fn window_measures(&self, _doc: &DocumentView<'_, FlowFixture>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        let labels = resolve_labels::<FlowPlayLabels>(view_state);
+        window_instance_ids(view_state, FLOW_PLAY_WINDOW_MAIN)
+            .into_iter()
+            .map(|window_id| (window_id, flow_window_measures(&self.runtime, labels)))
+            .collect()
+    }
 }
 //#endregion 🔖FlowPlayApp
 
@@ -1173,31 +1333,37 @@ fn create_flow_app() -> App {
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
             // 👁️ Ephemeral view/config actions — mutate runtime, emit no ops.
             .view_action("evaluate", "Evaluate")
-            .view_action("setSelection", "Set Selection")
-            .view_action("selectNode", "Select Node")
-            .view_action("nodeGraphSelect", "Node Graph Select")
-            .view_action("nodeGraphHover", "Node Graph Hover")
-            .view_action("graphPointerDown", "Graph Pointer Down")
-            .view_action("nodeGraphViewport", "Node Graph Viewport")
-            .view_action("setLodMode", "Set LOD Mode")
-            .view_action("setProximityDistance", "Set Proximity Distance")
-            .view_action("setCatalogueSections", "Set Catalogue Sections")
-            .view_action("toggleExtension", "Toggle Extension")
-            .view_action("addGeneration", "Add Generation")
-            .view_action("removeGeneration", "Remove Generation")
-            .view_action("selectGeneration", "Select Generation")
-            .view_action("renameGeneration", "Rename Generation")
-            .view_action("updateGenerationValues", "Update Generation Values")
+            .view_action("selectAll", "Select All")
+            .view_action("focusSelection", "Zoom to Selection")
+            .action_with(flow_internal_action("setSelection", "Set Selection", ActionKind::View))
+            .action_with(flow_internal_action("selectNode", "Select Node", ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphSelect", "Node Graph Select", ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphHover", "Node Graph Hover", ActionKind::View))
+            .action_with(flow_internal_action("graphPointerDown", "Graph Pointer Down", ActionKind::View))
+            .action_with(flow_internal_action("nodeGraphViewport", "Node Graph Viewport", ActionKind::View))
+            .action_with(flow_internal_action("setLodMode", "Set LOD Mode", ActionKind::View))
+            .action_with(flow_internal_action("setProximityDistance", "Set Proximity Distance", ActionKind::View))
+            .action_with(flow_internal_action("setGridVisible", "Set Grid Visible", ActionKind::View))
+            .action_with(flow_internal_action("setGridSnapEnabled", "Set Grid Snap Enabled", ActionKind::View))
+            .action_with(flow_internal_action("setGridFactor", "Set Grid Factor", ActionKind::View))
+            .action_with(flow_internal_action("clearSelection", "Clear Selection", ActionKind::View))
+            .action_with(flow_internal_action("setCatalogueSections", "Set Catalogue Sections", ActionKind::View))
+            .action_with(flow_internal_action("toggleExtension", "Toggle Extension", ActionKind::View))
+            .action_with(flow_internal_action("addGeneration", "Add Generation", ActionKind::View))
+            .action_with(flow_internal_action("removeGeneration", "Remove Generation", ActionKind::View))
+            .action_with(flow_internal_action("selectGeneration", "Select Generation", ActionKind::View))
+            .action_with(flow_internal_action("renameGeneration", "Rename Generation", ActionKind::View))
+            .action_with(flow_internal_action("updateGenerationValues", "Update Generation Values", ActionKind::View))
             // 📝 Staged argument form for the panel-visible create action (module operators stay catalogue-driven).
             .action_args("addWidget", vec![
                 ActionArgDef::select("kind", "Kind", vec![
                     ActionArgOption::new("inputSlider", "Slider"),
-                    ActionArgOption::new("inputStepper", "Stepper"),
                     ActionArgOption::new("inputNote", "Note"),
                 ]).default_value("inputSlider"),
             ])
             .keybinding("mod+z", "undo")
-            .keybinding("mod+shift+z", "redo"),
+            .keybinding("mod+shift+z", "redo")
+            .keybinding("mod+a", "selectAll"),
     )
     .example("demo", "Demo", serde_json::to_string(&FlowFixture::default()).expect("FlowFixture::default() has no non-finite floats or non-string map keys, so serialization cannot fail"))
     .program("flow", "Flow", "graph")
@@ -1335,6 +1501,59 @@ mod tests {
     /// 🤝 Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
     /// widget, the other adds a widget); after exchanging ops both converge — impossible under
     /// whole-fixture `setDocument` snapshots, which would clobber one side.
+    #[test]
+    fn default_runtime_enables_proximity_distance() {
+        let mut app = new_app::<FlowPlayApp>();
+        let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
+        assert!(json.contains("proximityDistance") && !json.contains(r#""proximityDistance":0"#));
+    }
+
+    #[test]
+    fn window_measures_surface_lod_proximity_and_grid() {
+        let mut app = new_app::<FlowPlayApp>();
+        let measures = app.window_measures(&ViewState::default());
+        let window_measures = measures.get(FLOW_PLAY_WINDOW_MAIN).expect("main window measures");
+        assert_eq!(window_measures.len(), 3);
+        assert!(window_measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { id, .. } if id == "flow-play-measures.proximity")));
+        assert!(window_measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "flow-play-measures.grid")));
+    }
+
+    #[test]
+    fn select_all_and_focus_selection_update_scene() {
+        let mut app = new_app::<FlowPlayApp>();
+        app.handle_action("selectAll", None, &ViewState::default(), &meta("local")).expect("selectAll");
+        let selected = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
+        assert!(selected.contains("slider"));
+        let before = selected.clone();
+        app.handle_action("focusSelection", None, &ViewState::default(), &meta("local")).expect("focusSelection");
+        let after = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
+        assert_ne!(before, after);
+    }
+
+    #[test]
+    fn set_proximity_distance_updates_scene_lod_json() {
+        let mut app = new_app::<FlowPlayApp>();
+        app.handle_action("setProximityDistance", Some(&json!({ "value": 96.0 })), &ViewState::default(), &meta("local")).expect("proximity");
+        let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
+        assert!(json.contains("96"));
+    }
+
+    #[test]
+    fn empty_inspector_no_longer_shows_canvas_settings() {
+        let mut app = new_app::<FlowPlayApp>();
+        let json = render(&mut app, FLOW_PLAY_BODY_INSPECTOR, &ViewState::default());
+        assert!(!json.contains("flow-play-inspector.lod-mode"));
+        assert!(json.contains("flow-play-inspector.empty"));
+    }
+
+    #[test]
+    fn context_menu_includes_select_all_when_empty() {
+        let mut app = new_app::<FlowPlayApp>();
+        let json = render(&mut app, FLOW_PLAY_BODY_MAIN, &ViewState::default());
+        assert!(json.contains("selectAll"));
+        assert!(json.contains("Select All") || json.contains("select-all"));
+    }
+
     #[test]
     fn two_instances_converge_on_disjoint_edits() {
         let (mut instance_a, mut instance_b) = paired_apps::<FlowPlayApp>("mem://flow-convergence");

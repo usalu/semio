@@ -1,0 +1,13 @@
+{
+  "title": "Channels Are Not UI Elements",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "flow: No channel should be a ui element. Parametric input is passed over e.g. sliders. e.g. codemo vector component is showing steppers that it shouldnt.\n\nRemove InputStepper (and channel param overlays) so components like math.vector expose only ports; numbers come from Slider sources.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2230"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪017b5584da9b462d8b2d5dce69f9d701"
+  ]
+}
