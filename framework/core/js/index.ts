@@ -17,6 +17,8 @@ import type {
   ActionArgOption as GeneratedActionArgOption,
   UtilityDefinition as GeneratedUtilityDefinition,
   UtilityRef as GeneratedUtilityRef,
+  ToolDefinition as GeneratedToolDefinition,
+  ToolRef as GeneratedToolRef,
   CommandScope as GeneratedCommandScope,
   CommandDefinition as GeneratedCommandDefinition,
   CommandRef as GeneratedCommandRef,
@@ -1329,6 +1331,12 @@ export type ActionArgOption = GeneratedActionArgOption;
 export type UtilityDefinition = GeneratedUtilityDefinition;
 export type UtilityRef = GeneratedUtilityRef;
 
+/** 🛠️ Generated from Rust `ToolDefinition`/`ToolRef` (`framework/core/rs/lib.rs`) — a mode-level,
+ * activatable capability (e.g. puzzle3d fill), distinct from a per-window `UtilityDefinition`. See
+ * `js/generated/manifest.ts`. */
+export type ToolDefinition = GeneratedToolDefinition;
+export type ToolRef = GeneratedToolRef;
+
 /** 🎛️ Generated from Rust `CommandScope`/`CommandDefinition`/`CommandRef` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type CommandScope = GeneratedCommandScope;
 export type CommandDefinition = GeneratedCommandDefinition;
@@ -1336,6 +1344,9 @@ export type CommandRef = GeneratedCommandRef;
 
 /** 🧰 The framework-owned action id apps dispatch to activate a utility — mirrors `SET_ACTIVE_UTILITY_ACTION_ID`. */
 export const SET_ACTIVE_UTILITY_ACTION_ID = "setActiveUtility";
+
+/** 🛠️ The framework-owned action id apps dispatch to activate a mode-level tool — mirrors Rust `SET_ACTIVE_TOOL_ACTION_ID`. */
+export const SET_ACTIVE_TOOL_ACTION_ID = "setActiveTool";
 
 /** 🎓 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette)
  * to (re)start an app's introduction — mirrors Rust `START_INTRODUCTION_ACTION_ID`. */
@@ -1411,6 +1422,9 @@ export type PluginViewState = {
   readonly activeWindowKindId?: string;
   /** 🧰 Host-owned active utility for the active window kind (never a document field, never a VCS op). */
   readonly activeUtilityId?: string;
+  /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS op) — mutually
+   * exclusive with `activeUtilityId`: activating one clears the other. */
+  readonly activeToolId?: string;
   readonly selectionJson?: string;
   readonly panelJson?: string;
   readonly contributionsJson?: string;
@@ -1587,6 +1601,8 @@ export type PluginUiRefreshRequest = {
   readonly panels?: readonly PluginUiRefreshSectionRequest[];
   readonly engagements?: { readonly hash?: string };
   readonly measures?: { readonly hash?: string };
+  /** 🛠️ Mode-level tool measures, keyed by tool id — see `DocumentApp::tool_measures`. */
+  readonly tools?: { readonly hash?: string };
   readonly labels?: { readonly hash?: string };
 };
 
@@ -1598,6 +1614,7 @@ export type PluginUiRefreshResponse = {
   readonly panels?: readonly PluginUiRefreshSectionResponse[];
   readonly engagements?: PluginUiRefreshSectionResponse;
   readonly measures?: PluginUiRefreshSectionResponse;
+  readonly tools?: PluginUiRefreshSectionResponse;
   readonly labels?: PluginUiRefreshSectionResponse;
 };
 //#endregion UiRefresh
@@ -1756,7 +1773,7 @@ export function resolveWindowActions(
   for (const kind of app.windowKinds) {
     for (const ref of kind.actions ?? []) referenced.add(ref);
   }
-  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_UTILITY_ACTION_ID;
+  const panelEligible = (action: ActionDefinition) => action.kind !== "history" && action.id !== SET_ACTIVE_UTILITY_ACTION_ID && action.id !== SET_ACTIVE_TOOL_ACTION_ID;
   const resolved: ActionDefinition[] = [];
   const seen = new Set<string>();
   for (const ref of windowKind.actions ?? []) {
@@ -1770,6 +1787,30 @@ export function resolveWindowActions(
     if (panelEligible(action) && !referenced.has(action.id) && !seen.has(action.id)) {
       seen.add(action.id);
       resolved.push(action);
+    }
+  }
+  return resolved;
+}
+
+/**
+ * 🛠️ Hand-written twin of Rust `resolve_mode_tools`: resolves the active mode's tools in declared
+ * order. Unlike `resolveWindowActions`, unresolvable or unreferenced tools have no orphan fallback —
+ * tools are opt-in per mode, never automatically shown everywhere.
+ */
+export function resolveModeTools(
+  app: { readonly tools?: readonly ToolDefinition[]; readonly modes: readonly { readonly id: string; readonly tools?: readonly ToolRef[] }[] } | undefined,
+  activeModeId: string | undefined,
+): ToolDefinition[] {
+  const tools = app?.tools ?? [];
+  const mode = app?.modes.find((entry) => entry.id === activeModeId);
+  if (!mode) return [];
+  const resolved: ToolDefinition[] = [];
+  const seen = new Set<string>();
+  for (const ref of mode.tools ?? []) {
+    const tool = tools.find((entry) => entry.id === ref);
+    if (tool && !seen.has(tool.id)) {
+      seen.add(tool.id);
+      resolved.push(tool);
     }
   }
   return resolved;
@@ -1926,6 +1967,9 @@ export type HostEffect =
   | { readonly spawnPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string; readonly label?: string; readonly documentJson?: string } }
   | { readonly openPluginInstance: { readonly programId: string; readonly appId: string; readonly osInstanceId?: string } }
   | { readonly setActiveUtility: { readonly windowId: string; readonly utilityId: string } }
+  /** 🛠️ Programmatically switches the host-owned active tool of the active mode — the effect form of
+   * `setActiveTool`. Empty `toolId` deactivates the current tool. */
+  | { readonly setActiveTool: { readonly toolId: string } }
   | { readonly openDialog: { readonly dialogId: string; readonly args?: Record<string, unknown> } }
   /** @emoji 🔁 Re-dispatches `action` onto the same plugin instance after `delayMs` — lets a plugin
    * advance staged/progressive work over several ticks without blocking the host; the response's own
@@ -1946,6 +1990,7 @@ export type UiDirtyScope =
       readonly windowBodies?: readonly string[];
       readonly panelBodies?: readonly string[];
       readonly utilities?: boolean;
+      readonly tools?: boolean;
       readonly engagements?: boolean;
       readonly measures?: boolean;
       readonly labels?: boolean;

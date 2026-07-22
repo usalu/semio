@@ -26,6 +26,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "gis2d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis2d", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["reuse"], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
   { variant: "gis3d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis3d", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["reuse"], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
   { variant: "imperative", pluginId: "imperative", cratePath: "imperative/plugin/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["default"], engines: [], assets: [] },
+  { variant: "iso16757", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-iso-16757-play", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
   { variant: "layout", pluginId: "layout", cratePath: "layout/plugin/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["sample"], engines: [], assets: [] },
   { variant: "lowpoly", pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["concrete-forest-left", "default"], engines: [], assets: [] },
   { variant: "mathematical", pluginId: "mathematical", cratePath: "mathematical/plugin/rs", app: "mathematical-play", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: [], engines: [], assets: [] },
@@ -47,6 +48,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "trinity-jack", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-jack-play", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-rewrite-play", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "vcs", pluginId: "vcs", cratePath: "vcs/plugin/rs", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: [], engines: [], assets: [] },
+  { variant: "vdi3805", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-vdi-3805-play", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: [], engines: [], assets: [] },
   { variant: "writer", pluginId: "writer", cratePath: "writer/plugin/rs", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["dag", "jack"], engines: [], assets: [] }
 ];
 
@@ -670,13 +672,13 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "lowpoly",
-  registryPluginId: "lowpoly",
-  defaultAppId: undefined,
+  variant: "procedural3d",
+  registryPluginId: "procedural",
+  defaultAppId: "procedural3d-play",
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "procedural", moduleUrl: "/plugin-modules/procedural/procedural_plugin.js", contributes: [], consumes: ["forms.questionKind"] }
   ]
 };
 

@@ -1317,7 +1317,7 @@ function coerceIconSource(source: IconSource): Icon {
 /** @emoji 🎛 Renders a control icon or a visible missing-icon placeholder. */
 export function renderControlIcon(icon: ControlIcon | undefined | null | false, size: number | IconSizeToken = "small"): React.ReactNode {
   if (icon === undefined || icon === null || icon === false) {
-    return <span data-missing-icon className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
+    return <span data-missing-icon data-icon-kind="missing" className="inline-flex size-small shrink-0 rounded-sm bg-destructive/30" aria-hidden />;
   }
   if (isIconSource(icon)) return <Icon icon={icon} size={size} />;
   return icon;
@@ -1363,18 +1363,19 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
   }
   if (normalized.kind === "node") {
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center", boxClass)} style={boxStyle} title={title}>
+      <span data-icon-kind="node" className={cn("inline-flex shrink-0 items-center justify-center", boxClass)} style={boxStyle} title={title}>
         {normalized.node}
       </span>
     );
   }
   if (normalized.kind === "url" || normalized.kind === "data") {
     const src = normalized.kind === "url" ? normalized.url : normalized.data;
-    return <img src={src} alt="" className={cn("shrink-0 object-contain", boxClass)} style={boxStyle} title={title} />;
+    return <img src={src} alt="" data-icon-kind="image" className={cn("shrink-0 object-contain", boxClass)} style={boxStyle} title={title} />;
   }
   if (normalized.kind === "emoji") {
     return (
       <span
+        data-icon-kind="emoji"
         className={cn("inline-flex shrink-0 items-center justify-center text-base leading-none", boxClass)}
         style={{ ...boxStyle, fontFamily: "'Noto Color Emoji','Segoe UI Emoji',sans-serif" }}
         title={title}
@@ -1387,7 +1388,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
   if (normalized.kind === "text" || normalized.kind === "typst") {
     const label = normalized.kind === "text" ? normalized.text : normalized.src;
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", boxClass)} style={boxStyle} title={title}>
+      <span data-icon-kind={normalized.kind} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-xs", boxClass)} style={boxStyle} title={title}>
         {label}
       </span>
     );
@@ -1395,7 +1396,12 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
   const svgMarkup = normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? ((ICONS as Record<string, string>)[normalized.key] ?? iconSvgMarkup(normalized.key)) : undefined;
   if (!svgMarkup) {
     return (
-      <span className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
+      <span
+        data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"}
+        className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)}
+        style={boxStyle}
+        title={title}
+      >
         {normalized.kind === "catalog" ? normalized.key.slice(0, 3) : "?"}
       </span>
     );
@@ -1406,6 +1412,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
       style={boxStyle}
       title={title}
       data-icon={normalized.kind === "catalog" ? normalized.key : undefined}
+      data-icon-kind={normalized.kind === "catalog" ? "catalog" : "svg"}
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
       aria-hidden={title ? undefined : true}
     />
@@ -25395,6 +25402,66 @@ if (import.meta.vitest) {
       expect(shortcodeCatalogKey("plus")).toBe("plus");
       expect(classifyIconSelectorMode("text:Hi")).toBe("text");
       expect(classifyIconSelectorMode("capsule_J")).toBe("vector");
+    });
+  });
+
+  describe("icon hover animations", () => {
+    const FULL_TURN_KEYFRAMES = new Set(["icon-rotate-ccw", "icon-rotate-cw", "icon-loader-2", "icon-flip-horizontal", "icon-flip-vertical", "icon-arrow-right-left", "icon-settings", "icon-globe"]);
+    const NON_CATALOG_KINDS = ["emoji", "text", "typst", "image", "svg", "node", "shortcode", "missing"];
+
+    async function readUiCss(): Promise<string> {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      return readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+    }
+
+    it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
+      const css = await readUiCss();
+      for (const name of Object.keys(ICONS as Record<string, string>)) {
+        expect(css).toContain(`@keyframes icon-${name} {`);
+        expect(css).toMatch(new RegExp(`\\[data-icon="${name}"\\][^\\n]*--icon-animation:\\s*icon-${name};`));
+      }
+      for (const kind of NON_CATALOG_KINDS) {
+        expect(css).toContain(`@keyframes icon-kind-${kind} {`);
+        expect(css).toMatch(new RegExp(`\\[data-icon-kind="${kind}"\\][^\\n]*--icon-animation:\\s*icon-kind-${kind};`));
+      }
+    });
+
+    it("keeps every icon keyframes block closed (identical 0% and 100% frames), except declared full-turn spins", async () => {
+      const css = await readUiCss();
+      const blockRe = /@keyframes\s+(icon-[\w-]+)\s*\{([\s\S]*?)\n\}/g;
+      let match: RegExpExecArray | null;
+      let checked = 0;
+      while ((match = blockRe.exec(css))) {
+        const [, name, body] = match;
+        checked++;
+        if (FULL_TURN_KEYFRAMES.has(name)) {
+          expect(body).toMatch(/0%\s*\{\s*transform:\s*(?:rotate|rotateX|rotateY)\(0deg\);/);
+          expect(body).toMatch(/100%\s*\{\s*transform:\s*(?:rotate|rotateX|rotateY)\(-?360deg\);/);
+          continue;
+        }
+        expect(body).toMatch(/0%,\s*\n\s*100%\s*\{/);
+      }
+      expect(checked).toBeGreaterThanOrEqual(Object.keys(ICONS as Record<string, string>).length + NON_CATALOG_KINDS.length);
+    });
+  });
+
+  describe("Icon hover animation attributes", () => {
+    it("stamps data-icon and data-icon-kind for catalog icons", () => {
+      const markup = renderToStaticMarkup(<Icon icon="bell" />);
+      expect(markup).toMatch(/data-icon="bell"/);
+      expect(markup).toMatch(/data-icon-kind="catalog"/);
+    });
+
+    it("stamps data-icon-kind for every non-catalog icon kind", () => {
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "emoji", emoji: "🙂" }} />)).toMatch(/data-icon-kind="emoji"/);
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "text", text: "Hi" }} />)).toMatch(/data-icon-kind="text"/);
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "typst", src: "$x^2$" }} />)).toMatch(/data-icon-kind="typst"/);
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "url", url: "https://example.com/a.png" }} />)).toMatch(/data-icon-kind="image"/);
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "svg", svg: "<svg></svg>" }} />)).toMatch(/data-icon-kind="svg"/);
+      expect(renderToStaticMarkup(<Icon icon={{ kind: "node", node: <span>x</span> }} />)).toMatch(/data-icon-kind="node"/);
+      expect(renderToStaticMarkup(<Icon icon="definitely-not-a-vendored-icon" />)).toMatch(/data-icon-kind="missing"/);
     });
   });
 

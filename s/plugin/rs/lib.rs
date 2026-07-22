@@ -3119,7 +3119,7 @@ pub mod app_studio {
                         modes: vec![ModeDefinition {
                             id: "edit".into(),
                             label: "Edit".into(),
-                            utilities: vec![],
+                            tools: vec![],
                             layout_id: None,
                             commands: vec![],
                         }],
@@ -3608,7 +3608,7 @@ pub mod app_studio {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
-                        utilities: vec![],
+                        tools: vec![],
                         layout_id: None,
                         commands: vec![],
                     }],
@@ -3630,7 +3630,7 @@ pub mod app_studio {
                         modes: vec![ModeDefinition {
                             id: "edit".into(),
                             label: "Edit".into(),
-                            utilities: vec![],
+                            tools: vec![],
                             layout_id: None,
                             commands: vec![],
                         }],
@@ -3652,7 +3652,7 @@ pub mod app_studio {
                     modes: vec![ModeDefinition {
                         id: "edit".into(),
                         label: "Edit".into(),
-                        utilities: vec![],
+                        tools: vec![],
                         layout_id: None,
                         commands: vec![],
                     }],
@@ -3674,7 +3674,7 @@ pub mod app_studio {
                         modes: vec![ModeDefinition {
                             id: "edit".into(),
                             label: "Edit".into(),
-                            utilities: vec![],
+                            tools: vec![],
                             layout_id: None,
                             commands: vec![],
                         }],

@@ -1716,9 +1716,9 @@ export function WorldOrbitCameraViewRig(props: { readonly state: WorldCameraStat
   return (
     <>
       {projection === "orthographic" ? (
-        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
+        <OrthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
       ) : (
-        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={props.perspectiveFov ?? 50} zoom={props.state.zoom} />
+        <PerspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={props.perspectiveFov ?? 50} zoom={props.state.zoom} />
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={props.seedKey} />
     </>
@@ -1819,7 +1819,7 @@ const WORLD_PROJECTION_DEFAULT_DISTANCE = 600;
 /** @emoji 📷 Fallback canvas size when framing a projection before the live viewport is known. */
 const WORLD_PROJECTION_FRAME_FALLBACK_VIEWPORT = 640;
 /** @emoji 📷 Default padding around content when framing a projection pane. */
-const WORLD_PROJECTION_FRAME_PADDING = 1.2;
+const WORLD_PROJECTION_FRAME_PADDING = 1.35;
 
 export type WorldSceneContentBounds = {
   readonly center: Vec3;
@@ -2019,9 +2019,9 @@ export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; 
   return (
     <>
       {family === "parallel" ? (
-        <orthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
+        <OrthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
       ) : (
-        <perspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={fov} zoom={props.state.zoom} />
+        <PerspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={fov} zoom={props.state.zoom} />
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={`${cameraKey}`} />
       {props.spec.kind === "oblique" || props.spec.kind === "twoPoint" ? <WorldProjectionMatrixDriver spec={props.spec} /> : null}
@@ -3511,14 +3511,14 @@ if (import.meta.vitest) {
     it("centers top orthographic on reference bounds and fits width in the viewport", () => {
       const bounds = worldSceneContentBounds([], [{ origin: [7, 0, 0.01], widthWorld: 50 }]);
       expect(bounds).toEqual({ center: [7, 0, 0.01], halfExtent: [25, 25, 0.5] });
-      const state = frameWorldProjectionPose({ kind: "orthographic", view: "top" }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.2 });
+      const state = frameWorldProjectionPose({ kind: "orthographic", view: "top" }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.35 });
       expect(state.target).toEqual([7, 0, 0.01]);
       expect(state.position[0]).toBe(7);
       expect(state.position[1]).toBe(0);
       expect(state.position[2]).toBeGreaterThan(0.01);
       expect(state.projection).toBe("orthographic");
-      // visible half-width = (viewportWidth/2) / zoom = 25 * 1.2 ⇒ zoom = 200 / 30
-      expect(state.zoom).toBeCloseTo(200 / 30, 5);
+      // visible half-width = (viewportWidth/2) / zoom = 25 * 1.35 ⇒ zoom = 200 / 33.75
+      expect(state.zoom).toBeCloseTo(200 / (25 * 1.35), 5);
     });
   });
 

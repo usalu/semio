@@ -1692,12 +1692,12 @@ pub mod app_3d {
         }
         let (source_x, source_y) = widget_layout_position(&host.fixture, selected_id);
         let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(op) }).to_string();
-        host.add_widget(&descriptor, source_x + 220.0, source_y)?;
+        host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
         let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
         if let Some(port) = outgoing_port {
-            host.insert_between(selected_id, &port, &transform_id, "geometry", "geometry")?;
+            host.insert_between(selected_id, &port, &transform_id, "geometry", "geometry").map_err(|err| err.to_string())?;
         } else {
-            host.connect(selected_id, &transform_id)?;
+            host.connect(selected_id, &transform_id).map_err(|err| err.to_string())?;
         }
         if let Some(Widget::Neuron { preview, .. }) = host.fixture.widgets.iter_mut().find(|widget| widget_id(widget) == selected_id) {
             *preview = false;

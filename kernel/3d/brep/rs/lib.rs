@@ -1835,7 +1835,13 @@ impl BrepKernel for BrepkitKernel {
 /// 🌉 Flattens a kernel `MeshTransfer` (position/normal/index/face_groups) into framework-core `MeshData`, reusing `mesh_from_indexed_with_face_groups` so picked triangles still resolve back to their B-Rep face id.
 pub fn mesh_data_from_mesh_transfer(transfer: &MeshTransfer) -> semio_framework_core::MeshData {
     let face_groups: Vec<(u32, u32, u32)> = transfer.face_groups.iter().map(|group| (group.entity_id.parse().unwrap_or(0), group.start, group.count)).collect();
-    semio_framework_core::mesh_from_indexed_with_face_groups(&transfer.position, &transfer.normal, &transfer.index, &face_groups)
+    let mut mesh = semio_framework_core::mesh_from_indexed_with_face_groups(&transfer.position, &transfer.normal, &transfer.index, &face_groups);
+    mesh.edge_positions = transfer.edges.clone();
+    if !mesh.edge_positions.is_empty() {
+        let edge_count = mesh.edge_positions.len() / 6;
+        mesh.edge_ids = (0..edge_count as u32).collect();
+    }
+    mesh
 }
 
 /// 🔌 Format-keyed solid export codec operating on `GeometryHandle`s directly (not tessellated `MeshData`) — thin wrappers around `BrepkitKernel`'s own STEP/STL/OBJ/GLB writers; no codec logic lives here.
@@ -2022,6 +2028,9 @@ mod tests {
         let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
         let mesh = kernel.tessellate_to_mesh_data_sync(&solid, 0.1).unwrap();
         assert_eq!(mesh.face_ids.len(), mesh.triangle_count());
+        assert!(mesh.edge_positions.len() >= 6);
+        assert_eq!(mesh.edge_positions.len() % 6, 0);
+        assert_eq!(mesh.edge_ids.len(), mesh.edge_positions.len() / 6);
     }
 
     type SolidCodec = (Box<dyn SolidExporter>, Box<dyn SolidImporter>, f64);

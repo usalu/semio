@@ -339,7 +339,7 @@
 \cs_new_protected:Npn \semio_window_vskip_stroke_hairline: {
   \group_begin:
   \ExplSyntaxOff
-  \vskip-\semio@stroke@hairline
+  \vskip\dimexpr-3\semio@stroke@hairline\relax
   \group_end:
 }
 
@@ -724,7 +724,7 @@
   },
   semio~window~table/.style={
     semio~window,
-    toprule=\semio@stroke@hairline,
+    toprule=0pt,
     top=0pt,
     left=0pt,
     right=0pt,

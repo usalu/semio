@@ -4,7 +4,7 @@ pub mod geometry_import {
     //! 📐 Fixture geometry import — builds kernel handles from authored spatial.model geometry.
 
     use cad_document::{CadEdge, CadFace, CadGeometry, CadObject, CadPrimitiveSlot, CadShell, CadSolid, CadWire};
-    use kernel_3d_brepkit::BrepkitKernel;
+    use kernel_3d_brepkit::{mesh_data_from_mesh_transfer, BrepkitKernel};
     use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, Vec3};
     use semio_framework_core::mesh_from_indexed;
     use semio_framework_plugin::MeshData;
@@ -52,31 +52,61 @@ pub mod geometry_import {
         [point[0], point[1], point[2]]
     }
 
-    fn wire_points(
-        wire: &CadWire,
-        edges: &HashMap<String, &CadEdge>,
-        vertices: &HashMap<String, [f64; 3]>,
-    ) -> Vec<Vec3> {
-        let mut points = Vec::new();
-        for edge_id in &wire.edge_ids {
+    fn wire_vertex_chain(wire: &CadWire, edges: &HashMap<String, &CadEdge>) -> Vec<String> {
+        let Some(first_edge_id) = wire.edge_ids.first() else {
+            return Vec::new();
+        };
+        let Some(first_edge) = edges.get(first_edge_id) else {
+            return Vec::new();
+        };
+        if first_edge.vertex_ids.len() < 2 {
+            return Vec::new();
+        }
+        let mut start = first_edge.vertex_ids[0].clone();
+        let mut end = first_edge.vertex_ids[1].clone();
+        if let Some(second_edge_id) = wire.edge_ids.get(1) {
+            if let Some(second_edge) = edges.get(second_edge_id) {
+                if second_edge.vertex_ids.len() >= 2 {
+                    let shares_start = second_edge.vertex_ids[0] == start || second_edge.vertex_ids[1] == start;
+                    let shares_end = second_edge.vertex_ids[0] == end || second_edge.vertex_ids[1] == end;
+                    if shares_start && !shares_end {
+                    } else if shares_end && !shares_start {
+                        std::mem::swap(&mut start, &mut end);
+                    }
+                }
+            }
+        }
+        let mut chain = vec![start];
+        let mut tip = end.clone();
+        chain.push(tip.clone());
+        for edge_id in wire.edge_ids.iter().skip(1) {
             let Some(edge) = edges.get(edge_id) else {
                 continue;
             };
             if edge.vertex_ids.len() < 2 {
                 continue;
-            };
-            let Some(start) = vertices.get(&edge.vertex_ids[0]) else {
-                continue;
-            };
-            let Some(end) = vertices.get(&edge.vertex_ids[1]) else {
-                continue;
-            };
-            if points.is_empty() {
-                points.push(to_vec3(*start));
             }
-            points.push(to_vec3(*end));
+            let (vertex_a, vertex_b) = (&edge.vertex_ids[0], &edge.vertex_ids[1]);
+            if vertex_a == &tip {
+                chain.push(vertex_b.clone());
+                tip = vertex_b.clone();
+            } else if vertex_b == &tip {
+                chain.push(vertex_a.clone());
+                tip = vertex_a.clone();
+            }
         }
-        points
+        chain
+    }
+
+    fn wire_points(
+        wire: &CadWire,
+        edges: &HashMap<String, &CadEdge>,
+        vertices: &HashMap<String, [f64; 3]>,
+    ) -> Vec<Vec3> {
+        wire_vertex_chain(wire, edges)
+            .iter()
+            .filter_map(|vertex_id| vertices.get(vertex_id).map(|position| to_vec3(*position)))
+            .collect()
     }
 
     fn face_boundary_points(
@@ -280,7 +310,7 @@ pub mod geometry_import {
             return curve_mesh_from_wire(kernel, &handle);
         }
         if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
-            return Some(mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index));
+            return Some(mesh_data_from_mesh_transfer(&mesh));
         }
         None
     }
@@ -293,7 +323,7 @@ pub mod geometry_import {
         let _ = kernel_3d_engine::block_on(kernel.dispose(&solid));
         let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_face));
         let _ = kernel_3d_engine::block_on(kernel.dispose(&profile_wire));
-        Some(mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index))
+        Some(mesh_data_from_mesh_transfer(&mesh))
     }
 
     //#region 🔖MeshImport
@@ -479,6 +509,61 @@ pub mod geometry_import {
     mod tests {
         use super::*;
 
+        fn mesh_triangle_area(mesh: &MeshData, triangle_index: usize) -> f32 {
+            let i0 = mesh.indices[triangle_index * 3] as usize;
+            let i1 = mesh.indices[triangle_index * 3 + 1] as usize;
+            let i2 = mesh.indices[triangle_index * 3 + 2] as usize;
+            let p0 = [
+                mesh.positions[i0 * 3],
+                mesh.positions[i0 * 3 + 1],
+                mesh.positions[i0 * 3 + 2],
+            ];
+            let p1 = [
+                mesh.positions[i1 * 3],
+                mesh.positions[i1 * 3 + 1],
+                mesh.positions[i1 * 3 + 2],
+            ];
+            let p2 = [
+                mesh.positions[i2 * 3],
+                mesh.positions[i2 * 3 + 1],
+                mesh.positions[i2 * 3 + 2],
+            ];
+            let e0 = [p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2]];
+            let e1 = [p2[0] - p0[0], p2[1] - p0[1], p2[2] - p0[2]];
+            let cross = [
+                e0[1] * e1[2] - e0[2] * e1[1],
+                e0[2] * e1[0] - e0[0] * e1[2],
+                e0[0] * e1[1] - e0[1] * e1[0],
+            ];
+            0.5
+                * (cross[0] * cross[0] + cross[1] * cross[1] + cross[2] * cross[2])
+                    .sqrt()
+        }
+
+        #[test]
+        fn forest_wire_chains_reversed_edges_by_vertex_id() {
+            let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+            let root: Value = serde_json::from_str(source).expect("fixture");
+            let geometry = parse_geometry(root.pointer("/models/0/model/geometry"));
+            let edges = edge_map(&geometry);
+            let wire = geometry
+                .wires
+                .iter()
+                .find(|wire| wire.id == "hexagonal-cut-concrete-forest-left-wire-103")
+                .expect("wire");
+            let chain = wire_vertex_chain(wire, &edges);
+            assert_eq!(
+                chain,
+                vec![
+                    "hexagonal-cut-concrete-forest-left-vertex-84".to_string(),
+                    "hexagonal-cut-concrete-forest-left-vertex-96".to_string(),
+                    "hexagonal-cut-concrete-forest-left-vertex-94".to_string(),
+                    "hexagonal-cut-concrete-forest-left-vertex-83".to_string(),
+                    "hexagonal-cut-concrete-forest-left-vertex-84".to_string(),
+                ]
+            );
+        }
+
         #[test]
         fn forest_shape_geometry_imports_solid_handle() {
             let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
@@ -497,9 +582,17 @@ pub mod geometry_import {
                 &mut kernel,
                 imported[0].solid_handle.as_ref().expect("handle"),
                 "solid",
-            );
-            assert!(mesh.is_some());
-            assert!(mesh.unwrap().positions.len() > 12);
+            )
+            .expect("mesh");
+            assert!(mesh.positions.len() > 12);
+            assert!(mesh.edge_positions.len() >= 6);
+            assert_eq!(mesh.edge_positions.len() % 6, 0);
+            for triangle_index in 0..mesh.triangle_count() {
+                assert!(
+                    mesh_triangle_area(&mesh, triangle_index) > 1e-10,
+                    "triangle {triangle_index} must not be degenerate"
+                );
+            }
         }
 
         #[test]
@@ -2283,7 +2376,7 @@ const CAD_TRANSFORMATION_SPECS: &[CadTransformationSpec] = &[
 //#endregion 🔖Constants
 
 //#region 🔖BrepMeshes
-use kernel_3d_brepkit::BrepkitKernel;
+use kernel_3d_brepkit::{mesh_data_from_mesh_transfer, BrepkitKernel};
 use kernel_3d_engine::{block_on, BrepKernel, GeometryHandle, MeshTransfer};
 use base64::Engine;
 use semio_framework_core::mesh_from_indexed;
@@ -2308,7 +2401,7 @@ fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Op
     if let Some(handle_id) = solid_handle {
         let handle = kernel_3d_engine::GeometryHandle(handle_id.into());
         if let Ok(mesh) = block_on(kernel.tessellate(&handle, 0.1)) {
-            return mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index);
+            return mesh_data_from_mesh_transfer(&mesh);
         }
     }
     let [ex, ey, ez] = extent.unwrap_or(CAD_DEFAULT_TYPOLOGY_EXTENT);
@@ -2332,7 +2425,7 @@ fn typology_brep_mesh(typology: &str, extent: Option<[f64; 3]>, solid_handle: Op
         }
     };
     let _ = block_on(kernel.dispose(&handle));
-    mesh_from_indexed(&mesh.position, &mesh.normal, &mesh.index)
+    mesh_data_from_mesh_transfer(&mesh)
 }
 
 /// @emoji 🗃️ Reads one pane's objects and geometry from the shared quad fixture.

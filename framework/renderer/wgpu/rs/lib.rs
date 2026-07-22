@@ -1827,7 +1827,7 @@ mod tests {
             modes: semio_framework_core::Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
-                utilities: vec![],
+                tools: vec![],
                 layout_id: None,
                 commands: vec![],
             }),
@@ -1863,6 +1863,7 @@ mod tests {
             keybindings: vec![],
             actions: vec![],
             utilities: vec![],
+            tools: vec![],
             commands: vec![],
             named_layouts: vec![],
             default_layout: layout,
@@ -20302,7 +20303,7 @@ mod command_registry_tests {
             modes: Modes::one(ModeDefinition {
                 id: "default".into(),
                 label: "Default".into(),
-                utilities: vec![],
+                tools: vec![],
                 layout_id: None,
                 commands: mode_commands,
             }),
@@ -20333,6 +20334,7 @@ mod command_registry_tests {
             keybindings: vec![],
             actions: vec![],
             utilities: vec![],
+            tools: vec![],
             commands,
             named_layouts: vec![],
             default_layout: None,

@@ -1,0 +1,13 @@
+{
+  "title": "Add Closed Hover Micro Animations to Every Icon",
+  "emoji": "🫨",
+  "status": "open",
+  "description": "Add a hover-triggered micro animation to every icon in the UI. Trigger on hovering the icon itself or its enclosing interactive control (button, link, menu item, tab, etc.). Play once per hover-enter. Every animation must be closed: first keyframe equals last keyframe (rest -\u003e motion -\u003e identical rest), so it ends seamlessly and is loopable. Give every one of the 144 vendored Lucide icons (plus 10 more to be vendored: app-window, square-dashed, redo-2, undo-2, edit-3, align-left, list-ordered, text-cursor, clipboard, file) a bespoke, semantically fitting closed keyframe animation, keyed off the existing data-icon attribute on the central Icon component (ui/js/react/index.tsx). Also add data-icon-kind to non-catalog icon kinds (emoji, text, typst, url/data image, raw svg, node, missing-placeholder) with their own closed animations so literally every icon animates. Remap the non-Lucide \"glb\" icon id to the vendored \"box\" icon via an alias. Extend ui.css with the keyframes, a single generic hover-trigger rule, and a prefers-reduced-motion guard. Extend the in-source vitest tests in ui/js/react/index.tsx to assert completeness (every icon id has a keyframes block + assignment) and closed-ness (0% frame equals 100% frame, except declared full-turn spin exceptions ending at +/-360deg). Extend the Icons storybook story with a hover-animation demo grid.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2224"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪90fa2f3949824a6d84649b3492344982"
+  ]
+}

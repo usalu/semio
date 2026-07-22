@@ -5,6 +5,6 @@ emoji: 📏
 
 # Norm
 
-Headless norm compliance computation for building standards: [norm/core](core/rs/lib.rs) shared kernel, [norm/din](din/) thermal and indoor-environment families, [norm/en](en/) Eurocode structural design families with German national annex, [norm/iso/16757](iso/16757/rs/lib.rs) building-services product catalogue exchange (ISO 16757 parts 1, 2, 4, 5).
+Headless norm compliance computation for building standards: [norm/core](core/rs/lib.rs) shared kernel, [norm/din](din/) thermal and indoor-environment families, [norm/en](en/) Eurocode structural design families with German national annex, [norm/iso/16757](iso/16757/rs/lib.rs) building-services product catalogue exchange (ISO 16757 parts 1, 2, 4, 5), [norm/vdi/3805](vdi/3805/rs/lib.rs) VDI 3805 manufacturer product data (Part 1 + sheets 2–100).
 
 Research pointers (non-runtime): [mit-bestand/recherche](../mit-bestand/recherche/).

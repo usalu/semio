@@ -412,6 +412,7 @@ import {
   LineSegments,
   Mesh,
   Object3D,
+  OrthographicCamera,
   PointsMaterial,
   Quaternion,
   TextureLoader,
@@ -9900,6 +9901,9 @@ function WorldProjectionContentFrame(props: {
   readonly onFramed: (state: WorldParsedCameraState) => void;
 }): null {
   const size = useThree((state) => state.size);
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls as { target: Vector3; update?: () => void } | null);
+  const invalidate = useThree((state) => state.invalidate);
   const appliedRef = useRef(false);
   const onFramedRef = useRef(props.onFramed);
   onFramedRef.current = props.onFramed;
@@ -9908,9 +9912,28 @@ function WorldProjectionContentFrame(props: {
     if (size.width < 1 || size.height < 1) return;
     appliedRef.current = true;
     const pose = frameWorldProjectionPose(props.spec, props.bounds, { viewportWidth: size.width, viewportHeight: size.height });
-    onFramedRef.current({ ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true });
-    console.log("[DEBUG] world projection content frame", { width: size.width, height: size.height, zoom: pose.zoom, target: pose.target });
-  }, [props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
+    const framed: WorldParsedCameraState = { ...pose, fov: "fov" in props.spec ? props.spec.fov : props.fov, explicitProjection: true };
+    if (camera instanceof OrthographicCamera) {
+      camera.left = size.width / -2;
+      camera.right = size.width / 2;
+      camera.top = size.height / 2;
+      camera.bottom = size.height / -2;
+      camera.zoom = framed.zoom;
+      camera.position.set(framed.position[0], framed.position[1], framed.position[2]);
+      camera.up.set(framed.up?.[0] ?? 0, framed.up?.[1] ?? 1, framed.up?.[2] ?? 0);
+      const target = controls?.target;
+      if (target) {
+        target.set(framed.target[0], framed.target[1], framed.target[2]);
+        controls?.update?.();
+      } else {
+        camera.lookAt(framed.target[0], framed.target[1], framed.target[2]);
+      }
+      camera.updateProjectionMatrix();
+      invalidate();
+    }
+    onFramedRef.current(framed);
+    console.log("[DEBUG] world projection content frame", { width: size.width, height: size.height, zoom: pose.zoom, target: pose.target, left: camera instanceof OrthographicCamera ? camera.left : null });
+  }, [camera, controls, invalidate, props.bounds, props.enabled, props.fov, props.spec, size.height, size.width]);
   return null;
 }
 
@@ -10606,7 +10629,7 @@ function WorldInstanceNode({
               onComponentHover(null);
             }}
           ></PaintTexturedMesh>
-          {borderGeometry && (showEdges ?? true) ? (
+          {borderGeometry && (showEdges ?? true) && !edgeGeometry ? (
             <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null}>
               <lineBasicMaterial color={palette.neutral.lineColor} />
             </lineSegments>

@@ -683,8 +683,13 @@ class TestScript extends BundleScript {
     assert.throws(() => resolveTemplates(["not-a-template"]));
     //#endregion
 
-    //#region Blockquote window layout
+    //#region Window layout
     const windowSource = readFileSync(join(texDir, "semio-window.sty"), "utf8");
+    const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
+    assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
+    assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
+    assert.match(tableSource, /\\semio_table_long_header_build:n #1 \{\s*\\seq_set_split:Nnn[\s\S]*?\\tl_clear:N \\l_semio_table_long_head_tl/);
+    assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
     assert.match(windowSource, /semio~window~blockquote\/\.style=\{\s*top=0pt,/);
     assert.match(windowSource, /\{ semioblockquote \} \{ \\tl_put_right:Nn \\l_semio_window_style_tl \{ , semio~window~blockquote \} \}/);
     //#endregion

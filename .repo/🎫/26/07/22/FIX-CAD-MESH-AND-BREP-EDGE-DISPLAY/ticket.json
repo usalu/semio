@@ -1,0 +1,18 @@
+{
+  "title": "Fix CAD Mesh and Brep Edge Display",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "CAD meshes display shredded with holes because fixture wires are imported with wrong edge orientation (54/57 forest wires). Lines are unclean because B-rep edge samples are dropped and World3d falls back to EdgesGeometry on bad mesh. Fix wire_points chaining, carry edge_positions through mesh_data_from_mesh_transfer, prefer B-rep edges over EdgesGeometry in World3d.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2225"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "plan": {
+    "client": "cursor",
+    "id": "158a37c4",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/fix_cad_mesh_display_158a37c4.plan.md"
+  },
+  "sessions": [
+    "⚪5cde0edc401b453290bc2ea83c8e0dc1"
+  ]
+}

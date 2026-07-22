@@ -909,13 +909,13 @@ impl AppBuilder {
                     command_ref.as_str()
                 );
             }
-            for utility_ref in &mode.utilities {
+            for tool_ref in &mode.tools {
                 assert!(
-                    declared_utility_ids.contains(utility_ref.as_str()),
-                    "app {} mode {} references undeclared utility {}",
+                    declared_tool_ids.contains(tool_ref.as_str()),
+                    "app {} mode {} references undeclared tool {}",
                     self.id,
                     mode.id,
-                    utility_ref.as_str()
+                    tool_ref.as_str()
                 );
             }
         }
@@ -930,6 +930,19 @@ impl AppBuilder {
                 "app {} mode-scope command {} is not referenced by any mode",
                 self.id,
                 id
+            );
+        }
+        let mode_referenced_tools: HashSet<&str> = self
+            .modes
+            .iter()
+            .flat_map(|mode| mode.tools.iter().map(|tool_ref| tool_ref.as_str()))
+            .collect();
+        for tool in &self.tools {
+            assert!(
+                mode_referenced_tools.contains(tool.id.as_str()),
+                "app {} tool {} is not referenced by any mode",
+                self.id,
+                tool.id
             );
         }
         if let Some(introduction) = &self.introduction {
@@ -1084,7 +1097,7 @@ impl AppBuilder {
                     .map(|mode| ModeDefinition {
                         id: mode.id,
                         label: mode.label,
-                        utilities: mode.utilities,
+                        tools: mode.tools,
                         layout_id: mode.layout_id,
                         commands: mode.commands,
                     })
@@ -1120,6 +1133,7 @@ impl AppBuilder {
             keybindings,
             actions,
             utilities: self.utilities,
+            tools: self.tools,
             commands: self.commands,
             named_layouts: self.named_layouts,
             default_layout: self.default_layout,
@@ -1994,7 +2008,7 @@ mod app_builder_tests {
             App::builder("bad-app", "Bad")
                 .document(["semio", "bad"])
                 .mode("edit", "Edit")
-                .mode_utilities("edit", vec![])
+                .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .build_definition();
@@ -2007,7 +2021,7 @@ mod app_builder_tests {
         let definition = App::builder("good-app", "Good")
             .document(["semio", "good"])
             .mode("edit", "Edit")
-            .mode_utilities("edit", vec![])
+            .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
@@ -2022,7 +2036,7 @@ mod app_builder_tests {
             App::builder("bad-terminology-app", "Bad")
                 .document(["semio", "bad"])
                 .mode("edit", "Edit")
-                .mode_utilities("edit", vec![])
+                .mode_tools("edit", vec![])
                 .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
@@ -2036,7 +2050,7 @@ mod app_builder_tests {
         let definition = App::builder("good-terminology-app", "Good")
             .document(["semio", "good"])
             .mode("edit", "Edit")
-            .mode_utilities("edit", vec![])
+            .mode_tools("edit", vec![])
             .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .terminology("reuse")
@@ -2145,6 +2159,68 @@ mod app_builder_tests {
         use semio_framework_core::SET_ACTIVE_UTILITY_ACTION_ID;
         let definition = minimal_app("no-utility-app").build_definition();
         assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID));
+    }
+
+    #[test]
+    fn build_definition_accepts_and_resolves_mode_tools() {
+        use semio_framework_core::ToolRef;
+        let definition = minimal_app("tool-app")
+            .tool_simple("fill", "Fill", "icon.fill")
+            .mode_tools("edit", vec![ToolRef::new("fill")])
+            .build_definition();
+        assert_eq!(definition.tools.len(), 1);
+        assert_eq!(definition.modes[0].tools, vec![ToolRef::new("fill")]);
+    }
+
+    #[test]
+    fn build_definition_rejects_mode_tool_ref_to_undeclared_tool() {
+        use semio_framework_core::ToolRef;
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("undeclared-mode-tool-app")
+                .mode_tools("edit", vec![ToolRef::new("missing")])
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_tool_referenced_by_no_mode() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("orphan-tool-app")
+                .tool_simple("fill", "Fill", "icon.fill")
+                .build_definition()
+        });
+        assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
+    }
+
+    #[test]
+    fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
+        use semio_framework_core::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
+        let definition = minimal_app("tool-keybinding-app")
+            .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", "Fill", "icon.fill") })
+            .mode_tools("edit", vec![ToolRef::new("fill")])
+            .build_definition();
+        let set_active_tool = definition
+            .actions
+            .iter()
+            .find(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID)
+            .expect("setActiveTool injected");
+        assert_eq!(set_active_tool.kind, ActionKind::View);
+        assert!(!set_active_tool.in_palette);
+        let binding = definition
+            .keybindings
+            .iter()
+            .find(|binding| binding.keys == "f")
+            .expect("tool keybinding auto-injected");
+        assert_eq!(binding.action.action, SET_ACTIVE_TOOL_ACTION_ID);
+        assert_eq!(binding.action.args, Some(serde_json::json!({ "toolId": "fill" })));
+    }
+
+    #[test]
+    fn no_tools_means_no_set_active_tool_action() {
+        use semio_framework_core::SET_ACTIVE_TOOL_ACTION_ID;
+        let definition = minimal_app("no-tool-app").build_definition();
+        assert!(!definition.actions.iter().any(|action| action.id == SET_ACTIVE_TOOL_ACTION_ID));
     }
 
     #[test]
@@ -3990,10 +4066,11 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
             response.panels.push(SectionResponse { key: entry.key.clone(), hash, value });
         }
         // 🚧 `utilities` intentionally unhandled here: `PluginApp`/`DocumentApp` currently expose no
-        // object-safe `utilities()` accessor (mid-refactor elsewhere toward a declarative `mode_utilities(...)`
-        // builder — unrelated to this ticket). No puzzle2d scope ever requests `utilities: true` (it uses
-        // static mode-level utilities only), so `request.utilities` is always empty in practice; wire this up
-        // once the utilities API refactor lands.
+        // object-safe `utilities()` accessor (mid-refactor elsewhere toward a declarative window-kind
+        // utility builder — unrelated to this ticket; see `tools`/`tool_measures` above for the analogous
+        // mode-level mechanism that IS wired up). No puzzle2d scope ever requests `utilities: true` (it
+        // uses static window-kind-scoped utilities only), so `request.utilities` is always empty in
+        // practice; wire this up once the utilities API refactor lands.
         let _ = &request.utilities;
         if let Some(requested) = &request.engagements {
             let engagements = instance.app.window_engagements(&request.view_state);
