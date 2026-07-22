@@ -2428,10 +2428,10 @@ export function resolveControlLabelId(id: string): string {
   if (id.startsWith("ui.ribbon.") && id.includes(".group.")) {
     return _controlLabelIdResolver(`ui.ribbon.parent.${id.slice(id.lastIndexOf(".group.") + ".group.".length)}`);
   }
-  if (id === "search-possibles-toggle" || id === "ui.windowSearch.suggestions") {
+  if (id === "ui.windowSearch.suggestions") {
     return _controlLabelIdResolver("ui.windowSearch.suggestions");
   }
-  if (id === "engagement-options" || id === "ui.engagement.actions") {
+  if (id === "ui.engagement.actions") {
     return _controlLabelIdResolver("ui.engagement.actions");
   }
   if (id === "search-input" || id === "ui.windowSearch.action") {
@@ -4914,34 +4914,51 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
  * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention. */
 export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
 
-/** @emoji 🎓 CSS selector for an `IntroductionAnchor` — reuses ids/data-attributes the shell already
- * stamps on navbar/footer/window/utility/action/panel chrome instead of adding new markup: utility leaf
- * buttons already carry `id={utilityId}`, action rows carry `id="${windowId}-action-${actionId}"` (or the
- * `-execute` suffix for staged-arg actions), visible panels carry `data-active-tab-id` for the selected
- * leaf (so a `panelTab` cutout is the uncollapsed panel, not the tab chip — see
- * {@link introductionPanelTabFallbackSelector} while the panel is still mounting), draggable tree rows
- * carry `data-draggable="true"` (so `panelFirstDraggable` resolves the first catalogue drag source), and
- * window bodies carry `data-window-kind-id`. `null` means "no specific element" (paired with `Screen`/`Center`). */
+/** @emoji 🎓 The canonical UI element id an `IntroductionAnchor` resolves to, mirroring
+ * `IntroductionAnchor::element_id` in `framework/core/rs/lib.rs` byte-for-byte — `null` for anchors that
+ * name a *class* of elements rather than one singular instance (`windowKind`/`action`: multiple window
+ * instances can share a kind, and the same action can be dispatched from more than one open window). */
+export function introductionAnchorElementId(anchor: IntroductionAnchor): string | null {
+  switch (anchor.kind) {
+    case "screen":
+    case "windowKind":
+    case "action":
+      return null;
+    case "navbar":
+      return "ui.navbar";
+    case "footer":
+      return "ui.footer";
+    case "utility":
+      return anchor.id;
+    case "panelTab":
+    case "panelFirstDraggable":
+      return `framework.panelTab.${anchor.id}`;
+    case "element":
+      return anchor.id;
+  }
+}
+
+/** @emoji 🎓 CSS selector for an `IntroductionAnchor`. Singular anchors resolve through
+ * {@link introductionAnchorElementId} to a plain `[id="…"]` match; the two class anchors resolve
+ * differently since more than one element can legitimately share them at once: window bodies carry
+ * `data-window-kind-id` (multiple window instances can share a kind), action rows carry a real
+ * hierarchical element id ending in `.action.${actionId}` (or `.action.${actionId}.execute` for
+ * staged-arg actions) — matched by suffix so any open window's row for that action qualifies, the same
+ * multiplicity the old hyphenated-id suffix match handled. Draggable tree rows carry
+ * `data-draggable="true"` (so `panelFirstDraggable` resolves the first catalogue drag source below the
+ * panel-tab element). `null` means "no specific element" (paired with `Screen`/`Center`). */
 export function introductionAnchorSelector(anchor: IntroductionAnchor): string | null {
   switch (anchor.kind) {
     case "screen":
       return null;
-    case "navbar":
-      return '[data-slot="navbar"]';
-    case "footer":
-      return '[data-slot="footer"]';
     case "windowKind":
       return `[data-window-kind-id="${anchor.id}"]`;
-    case "utility":
-      return `[id="${anchor.id}"]`;
     case "action":
-      return `[id$="-action-${anchor.id}"], [id$="-action-${anchor.id}-execute"]`;
-    case "panelTab":
-      return `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${anchor.id}"]`;
+      return `[id$=".action.${anchor.id}"], [id$=".action.${anchor.id}.execute"]`;
     case "panelFirstDraggable":
-      return `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${anchor.id}"] [data-slot="tree-item-row"][data-draggable="true"]`;
-    case "slot":
-      return `[data-slot="${anchor.id}"]`;
+      return `[id="${introductionAnchorElementId(anchor)}"] [data-slot="tree-item-row"][data-draggable="true"]`;
+    default:
+      return `[id="${introductionAnchorElementId(anchor)}"]`;
   }
 }
 
@@ -4953,12 +4970,12 @@ export function introductionPanelTabFallbackSelector(tabId: string): string {
 
 /** @emoji 🧰 CSS selector for a window's folded Utilities-rail unfold chip — used when a utility anchor is still hidden inside the folded utility bar. */
 export function introductionUtilityBarUnfoldSelector(windowId: string): string {
-  return `[id="${windowId}-utility-bar-unfold"]`;
+  return `[id="${childElementId("framework.window", windowId, "utilityBar", "unfold")}"]`;
 }
 
 /** @emoji 🎛 CSS selector for a window's folded top-left Actions toggle — used when an action anchor is still hidden inside the folded merged engagement/actions pane. */
 export function introductionWindowActionPaneUnfoldSelector(windowId: string): string {
-  return `[id="${windowId}-window-engagement-toggle"]`;
+  return `[id="${childElementId("framework.window", windowId, "engagement", "toggle")}"]`;
 }
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
@@ -7111,6 +7128,59 @@ export interface ElementBaseProps {
 }
 
 export interface ElementProps extends ElementBaseProps {}
+
+//#region 🆔ElementId
+/** 🆔 Renderer-agnostic UI element id grammar: dot-separated camelCase segments, each starting with a
+ * lowercase letter — e.g. `framework.window.main.action.addLayer`. Mirrors `is_element_id` in
+ * `framework/core/rs/lib.rs` byte-for-byte; this id is the single integration key across i18n, tooltips,
+ * hotkeys, command origin tracking, tutorials, E2E selectors, and introduction anchors. */
+export const ELEMENT_ID_PATTERN = /^[a-z][a-zA-Z0-9]*(\.[a-z][a-zA-Z0-9]*)*$/;
+
+/** 🆔 Whether `id` matches {@link ELEMENT_ID_PATTERN}. */
+export function isElementId(id: string): boolean {
+  return ELEMENT_ID_PATTERN.test(id);
+}
+
+/** 🆔 Normalizes arbitrary input (a domain object's own id, a free-text label) into a single camelCase
+ * element-id segment — mirrors `element_id_segment` in `framework/core/rs/lib.rs` byte-for-byte.
+ * Idempotent on input that is already a valid segment. Prefer a real semantic key first, this second,
+ * and a numeric index only as a last resort (see {@link childElementId}). */
+export function elementIdSegment(raw: string): string {
+  let segment = "";
+  let capitalizeNext = false;
+  for (const ch of raw) {
+    if (ch === "-" || ch === "_" || ch === " " || ch === ".") {
+      capitalizeNext = true;
+      continue;
+    }
+    if (!/[a-zA-Z0-9]/.test(ch)) continue;
+    if (segment.length === 0) {
+      segment += ch.toLowerCase();
+    } else if (capitalizeNext) {
+      segment += ch.toUpperCase();
+      capitalizeNext = false;
+    } else {
+      segment += ch;
+    }
+  }
+  return segment;
+}
+
+/** 🆔 Derives a child element id by suffixing `parent` with one or more segments, each normalized
+ * through {@link elementIdSegment} — the hierarchical mechanism every composite component uses to name
+ * its parts instead of a context/registry: `childElementId("ui.chat", "send")` → `"ui.chat.send"`. */
+export function childElementId(parent: string, ...segments: (string | number)[]): string {
+  return segments.reduce<string>((id, segment) => `${id}.${elementIdSegment(String(segment))}`, parent);
+}
+
+/** 🆔 Dev-only console warning when `id` violates {@link ELEMENT_ID_PATTERN} — called by base components
+ * so a malformed id surfaces immediately at the call site instead of silently breaking i18n/tooltip/
+ * introduction resolution downstream. No-op in production builds. */
+export function assertElementId(id: string, componentName: string): void {
+  if (process.env.NODE_ENV === "production") return;
+  if (!isElementId(id)) console.error(`${componentName} received id "${id}" which does not match the UI element id grammar (dot-separated camelCase, e.g. "framework.window.main.action.addLayer")`);
+}
+//#endregion 🆔ElementId
 
 // #endregion 🐹Element
 
@@ -10030,7 +10100,6 @@ function Slider({
   const _values = draftValues ?? externalValues;
 
   const displayValue = _values[0] ?? min;
-  const selectableMax = ready == null ? max : Math.min(max, Math.max(min, ready));
   const span = max - min;
   const readyExtent = ready == null || span <= 0 ? null : Math.min(max, Math.max(min, ready));
   const readyStartPct = span <= 0 ? 0 : ((displayValue - min) / span) * 100;
@@ -10055,12 +10124,11 @@ function Slider({
 
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
-      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
-      const nextValues = ready == null ? snapped : snapped.map((entry) => Math.min(entry, selectableMax));
+      const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
       setDraftValues(nextValues);
       onValueChange?.(nextValues);
     },
-    [snapValues, findNearestSnapValue, onValueChange, ready, selectableMax],
+    [snapValues, findNearestSnapValue, onValueChange],
   );
 
   const handleValueClick = () => {
@@ -10073,7 +10141,7 @@ function Slider({
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       const newValue = parseFloat(editValue);
-      if (!isNaN(newValue) && newValue >= min && newValue <= selectableMax) {
+      if (!isNaN(newValue) && newValue >= min && newValue <= max) {
         handleValueChange([newValue]);
       }
       setIsEditing(false);
@@ -10209,7 +10277,7 @@ function Slider({
             onBlur={handleEditBlur}
             className="w-large min-w-large border-0 px-0 text-end text-xs"
             min={min}
-            max={selectableMax}
+            max={max}
             autoFocus
             id={id}
           />
@@ -15726,13 +15794,13 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
   }, [id, createBasicChatMessages]);
 
   return (
-    <div data-testid="basic-chat-panel" className="flex h-full min-h-0 flex-col gap-single">
+    <div id={id} className="flex h-full min-h-0 flex-col gap-single">
       <HelperRow>{instructionsLabel}</HelperRow>
-      <div data-testid="basic-chat-feed" className={cn("min-h-0 flex-1 overflow-y-auto rounded-sm border", borderClass)}>
+      <div id={childElementId(id, "feed")} className={cn("min-h-0 flex-1 overflow-y-auto rounded-sm border", borderClass)}>
         <div className="flex min-w-0 flex-col p-single">
           {messages.map((message) => (
             <TreeRow key={message.id}>
-              <div data-testid="basic-chat-message" data-chat-role={message.role} className="flex min-w-0 flex-col gap-single">
+              <div id={childElementId(id, "message", message.id)} data-chat-role={message.role} className="flex min-w-0 flex-col gap-single">
                 <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{message.role}</span>
                 <p className="text-xs text-foreground whitespace-pre-wrap break-words">{message.body}</p>
               </div>
@@ -15742,8 +15810,7 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
       </div>
       <div className="flex shrink-0 flex-col gap-single">
         <Textarea
-          id={`${id}.draft`}
-          data-testid="basic-chat-draft"
+          id={childElementId(id, "draft")}
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={(event) => {
@@ -15757,8 +15824,8 @@ export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => 
           placeholder={placeholderLabel}
         />
         <div className="flex items-center justify-end gap-single">
-          <Button type="button" id={`${id}.clear`} data-testid="basic-chat-clear" text={clearLabel} icon="trash-2" onClick={clearMessages} />
-          <Button type="button" id={`${id}.send`} data-testid="basic-chat-send" text={sendLabel} icon="arrow-right" onClick={sendDraft} disabled={!draft.trim()} />
+          <Button type="button" id={childElementId(id, "clear")} text={clearLabel} icon="trash-2" onClick={clearMessages} />
+          <Button type="button" id={childElementId(id, "send")} text={sendLabel} icon="arrow-right" onClick={sendDraft} disabled={!draft.trim()} />
         </div>
       </div>
     </div>
@@ -16362,7 +16429,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
   if (folded) {
     return (
       <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-measures-unfold`} icon="chevron-left" text={windowOptionsLabel} className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+        <ActionGroupItem id={childElementId("framework.window", windowId, "measures", "unfold")} icon="chevron-left" text={windowOptionsLabel} className={windowRailChromeLabelActionClass} onClick={onUnfold} />
       </div>
     );
   }
@@ -16370,13 +16437,13 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
   return (
     <div data-slot="window-measures-chrome" data-expanded={expanded ? "true" : undefined} className={windowMeasuresChromeClass}>
       <ActionGroupItem
-        id={`${windowId}-window-measures-span`}
+        id={childElementId("framework.window", windowId, "measures", "span")}
         icon={expanded ? "minimize-2" : "maximize-2"}
         text={expanded ? unfocusLabel : focusLabel}
         className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <ActionGroupItem id={`${windowId}-window-measures-fold`} icon="chevron-right" text={windowOptionsLabel} className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
+      <ActionGroupItem id={childElementId("framework.window", windowId, "measures", "fold")} icon="chevron-right" text={windowOptionsLabel} className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
     </div>
   );
 };
@@ -16397,14 +16464,14 @@ const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowI
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-right" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <ActionGroupItem id={childElementId("framework.window", windowId, "engagement", "toggle")} icon="chevron-right" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-window-engagement-toggle`} icon="chevron-left" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <ActionGroupItem id={childElementId("framework.window", windowId, "engagement", "toggle")} icon="chevron-left" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
     </div>
   );
 };
@@ -16425,14 +16492,14 @@ const WindowSearchChrome: React.FC<WindowSearchChromeProps> = ({ windowId, expan
   if (!expanded) {
     return (
       <div data-slot="window-search-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-center border-b-0")}>
-        <ActionGroupItem id={`${windowId}-window-search-toggle`} icon="chevron-down" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <ActionGroupItem id={childElementId("framework.window", windowId, "search", "toggle")} icon="chevron-down" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-search-chrome" data-expanded="true" className={cn(windowMeasuresChromeClass, "justify-center")}>
-      <ActionGroupItem id={`${windowId}-window-search-toggle`} icon="chevron-up" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <ActionGroupItem id={childElementId("framework.window", windowId, "search", "toggle")} icon="chevron-up" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
     </div>
   );
 };
@@ -16455,14 +16522,14 @@ const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, d
   if (folded) {
     return (
       <div data-slot="utility-bar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={`${windowId}-utility-bar-unfold`} icon="chevron-right" text={utilitiesLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
+        <ActionGroupItem id={childElementId("framework.window", windowId, "utilityBar", "unfold")} icon="chevron-right" text={utilitiesLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
       </div>
     );
   }
 
   return (
     <div data-slot="utility-bar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={`${windowId}-utility-bar-fold`} icon="chevron-left" text={utilitiesLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
+      <ActionGroupItem id={childElementId("framework.window", windowId, "utilityBar", "fold")} icon="chevron-left" text={utilitiesLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
     </div>
   );
 };
@@ -17187,6 +17254,7 @@ const Panel: React.FC<PanelProps> = ({
         data-anchor={anchor}
         data-panel-visible={visible ? "true" : "false"}
         data-active-tab-id={activeNode?.id}
+        id={visible && activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground", isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
@@ -17440,7 +17508,7 @@ export const Pane: React.FC<PaneProps> = ({
             </span>
           ) : null}
           <ActionGroupItem
-            id={`${id}-pane-fold`}
+            id={childElementId(id, "pane", "fold")}
             icon={flowChevronIconName(flow.inline, effectiveFolded)}
             text={label ?? id}
             className={windowRailChromeLabelActionClass}
@@ -17503,6 +17571,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
         data-panel="mobilePanel"
         data-panel-visible="true"
         data-active-tab-id={activeNode?.id}
+        id={activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}
       >
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
@@ -18816,10 +18885,10 @@ const Window: React.FC<WindowProps> = ({
     <div data-dim className="flex items-stretch gap-single">
       {controls}
       {(showControls || onOpenInNewWindow || focusControl || onClose) && (
-        <ActionGroup id={`${id}-window-controls`}>
-          {onOpenInNewWindow && <ActionGroupItem id={`${id}-window-controls-external`} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
-          {focusControl && <ActionGroupItem id={`${id}-window-controls-maximize`} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
-          {onClose && <ActionGroupItem id={`${id}-window-controls-close`} onClick={onClose} icon={<CloseIcon />} text={closeLabel} />}
+        <ActionGroup id={childElementId("framework.window", id, "windowControls")}>
+          {onOpenInNewWindow && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "external")} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
+          {focusControl && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "maximize")} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
+          {onClose && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "close")} onClick={onClose} icon={<CloseIcon />} text={closeLabel} />}
         </ActionGroup>
       )}
     </div>
@@ -21771,7 +21840,7 @@ export const Scene: React.FC<SceneProps> = ({
   return (
     <div className={`relative h-full w-full ${className}`} style={{ minHeight: "100%", minWidth: "100%" }} onDoubleClick={onDoubleClickCapture}>
       <div className="absolute top-1 right-1 z-panel">
-        <ActionDropdown id="scene-projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
+        <ActionDropdown id="ui.scene.projection" options={projectionOptions} value={resolvedProjection} onValueChange={(value) => handleProjectionChange(value as SceneProjectionKind)} />
       </div>
       <HostThreeCanvas
         onPointerMissed={onPointerMissed}
@@ -22281,7 +22350,7 @@ export interface HistoryColumn {
   readonly alternativeIds: readonly string[];
 }
 
-export interface HistoryTableProps {
+export interface HistoryTableProps extends ElementProps {
   readonly columns: readonly HistoryColumn[];
   readonly className?: string;
   readonly laneWidth?: number;
@@ -22395,7 +22464,7 @@ function HistoryRowLabels({ column }: { readonly column: HistoryColumn }): React
  * SVG ancestor-graph history table: swimlane guides, elbow connectors between forked checkpoints,
  * commit nodes, per-row author avatars and alternative-name label chips.
  **/
-export const HistoryTable: React.FC<HistoryTableProps> = ({ columns, className, laneWidth, onSelectCheckpoint }) => {
+export const HistoryTable: React.FC<HistoryTableProps> = ({ id, columns, className, laneWidth, onSelectCheckpoint }) => {
   const sorted = React.useMemo(() => columns, [columns]);
   const laneCount = historyLaneCount(sorted);
   const graphWidth = historyGraphWidth(laneCount, laneWidth);
@@ -22408,7 +22477,7 @@ export const HistoryTable: React.FC<HistoryTableProps> = ({ columns, className, 
   }, [sorted.length]);
   const graphHeight = Math.max(sorted.length, 1) * rowHeight;
   return (
-    <div className={cn("text-xs", className)} data-testid="graph-timeline-table">
+    <div id={id} className={cn("text-xs", className)}>
       {sorted.length === 0 ? (
         <div className="px-single py-single text-muted-foreground">—</div>
       ) : (
@@ -24787,24 +24856,53 @@ if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
   const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
 
+  describe("element id grammar", () => {
+    it("isElementId accepts dotted camelCase and rejects everything else", () => {
+      expect(isElementId("framework.navbar")).toBe(true);
+      expect(isElementId("ui.window.main.action.addLayer")).toBe(true);
+      expect(isElementId("brush")).toBe(true);
+      expect(isElementId("")).toBe(false);
+      expect(isElementId("framework.display.save-label")).toBe(false);
+      expect(isElementId("Framework.navbar")).toBe(false);
+      expect(isElementId("framework..navbar")).toBe(false);
+      expect(isElementId("framework.navbar.")).toBe(false);
+    });
+
+    it("elementIdSegment normalizes arbitrary input and is idempotent", () => {
+      expect(elementIdSegment("world-orbit-projection")).toBe("worldOrbitProjection");
+      expect(elementIdSegment("Some Name")).toBe("someName");
+      expect(elementIdSegment("myUtilityId")).toBe("myUtilityId");
+      expect(elementIdSegment(elementIdSegment("addLayer"))).toBe(elementIdSegment("addLayer"));
+    });
+
+    it("childElementId suffixes and normalizes segments", () => {
+      expect(childElementId("ui.chat", "send")).toBe("ui.chat.send");
+      expect(childElementId("ui.chat", "message-row")).toBe("ui.chat.messageRow");
+      expect(childElementId("ui.tree", "row", 3)).toBe("ui.tree.row.3");
+    });
+  });
+
   describe("introductionAnchorSelector", () => {
-    it("maps every anchor kind to its reused selector, or null for Screen", () => {
+    it("resolves singular anchors to a plain id selector, or null for Screen", () => {
       expect(introductionAnchorSelector({ kind: "screen" })).toBeNull();
-      expect(introductionAnchorSelector({ kind: "navbar" })).toBe('[data-slot="navbar"]');
-      expect(introductionAnchorSelector({ kind: "footer" })).toBe('[data-slot="footer"]');
-      expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
+      expect(introductionAnchorSelector({ kind: "navbar" })).toBe('[id="ui.navbar"]');
+      expect(introductionAnchorSelector({ kind: "footer" })).toBe('[id="ui.footer"]');
       expect(introductionAnchorSelector({ kind: "utility", id: "brush" })).toBe('[id="brush"]');
-      expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$="-action-addLayer"], [id$="-action-addLayer-execute"]');
-      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="puzzle.catalogue"]');
+      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[id="framework.panelTab.puzzle.catalogue"]');
       expect(introductionAnchorSelector({ kind: "panelFirstDraggable", id: "puzzle.catalogue" })).toBe(
-        '[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="puzzle.catalogue"] [data-slot="tree-item-row"][data-draggable="true"]',
+        '[id="framework.panelTab.puzzle.catalogue"] [data-slot="tree-item-row"][data-draggable="true"]',
       );
-      expect(introductionAnchorSelector({ kind: "slot", id: "window-body" })).toBe('[data-slot="window-body"]');
+      expect(introductionAnchorSelector({ kind: "element", id: "ui.custom.thing" })).toBe('[id="ui.custom.thing"]');
+    });
+
+    it("resolves class anchors (windowKind/action) to a class attribute or id-suffix match, not a plain id", () => {
+      expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
+      expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$=".action.addLayer"], [id$=".action.addLayer.execute"]');
     });
 
     it("maps folded window chrome toggles for utility/action fallbacks", () => {
-      expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-utility-bar-unfold"]');
-      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="puzzle3d-main-window-engagement-toggle"]');
+      expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="framework.window.puzzle3dMain.utilityBar.unfold"]');
+      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="framework.window.puzzle3dMain.engagement.toggle"]');
       expect(introductionPanelTabFallbackSelector("puzzle.catalogue")).toBe('[data-tab-id="puzzle.catalogue"]');
     });
   });
@@ -24816,7 +24914,7 @@ if (import.meta.vitest) {
           <button type="button" data-tab-id="framework.panel.catalogue">
             Katalog
           </button>
-          <div data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
+          <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
           <UIIntroduction
             introduction={{
               title: "Welcome",
@@ -24848,7 +24946,7 @@ if (import.meta.vitest) {
     it("introduces the first draggable tree item inside the panel for panelFirstDraggable", async () => {
       const { container } = render(
         <div>
-          <div data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue">
+          <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue">
             <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:first" />
             <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:second" />
           </div>
@@ -24886,7 +24984,7 @@ if (import.meta.vitest) {
     it("highlights a fallback Utilities-rail unfold chip while the utility anchor is still hidden", async () => {
       const { container } = render(
         <div>
-          <button type="button" id="puzzle3d-main-utility-bar-unfold">
+          <button type="button" id={childElementId("framework.window", "puzzle3d-main", "utilityBar", "unfold")}>
             Utilities
           </button>
           <UIIntroduction
@@ -24913,7 +25011,7 @@ if (import.meta.vitest) {
         </div>,
       );
       await waitFor(() => {
-        expect(container.querySelector('[id="puzzle3d-main-utility-bar-unfold"]')?.getAttribute("data-introduced")).toBe("true");
+        expect(container.querySelector(`[id="${childElementId("framework.window", "puzzle3d-main", "utilityBar", "unfold")}"]`)?.getAttribute("data-introduced")).toBe("true");
       });
       expect(container.querySelector(".animate-pulse")).toBeNull();
     });
@@ -27428,7 +27526,7 @@ if (import.meta.vitest) {
         </div>
       );
       const { container } = render(<Harness />);
-      fireEvent.click(container.querySelector('[id="engagement-window-window-search-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       await waitFor(() => expect(screen.getByPlaceholderText("Action")).toBeTruthy());
       fireEvent.keyDown(container.querySelector('[data-slot="mode"]')!, { key: "Escape", bubbles: true });
       expect(aborted).toEqual(["abort"]);
@@ -27455,9 +27553,9 @@ if (import.meta.vitest) {
       expect(searchZone.className).toContain("flex-row");
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
-      fireEvent.click(container.querySelector('[id="engagement-window-window-engagement-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
       expect(screen.getByText("Idle")).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="engagement-window-window-search-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
       const chrome = container.querySelector('[data-slot="window-engagement-chrome"]');
       const body = container.querySelector('[data-slot="window-engagement-body"]');
@@ -27479,7 +27577,7 @@ if (import.meta.vitest) {
       );
       expect(container.querySelector('[data-slot="window-action-pane-overlay"]')).toBeNull();
       expect(container.querySelector('[data-testid="adhoc-actions"]')).toBeNull();
-      const toggle = container.querySelector('[id="merged-window-window-engagement-toggle"]') as HTMLElement;
+      const toggle = container.querySelector('[id="framework.window.mergedWindow.engagement.toggle"]') as HTMLElement;
       expect(toggle).toBeTruthy();
       fireEvent.click(toggle);
       expect(screen.getByText("Idle")).toBeTruthy();
@@ -27499,7 +27597,7 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       expect(overlay).toBeTruthy();
-      fireEvent.click(container.querySelector('[id="actions-only-window-window-engagement-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.actionsOnlyWindow.engagement.toggle"]')!);
       expect(screen.getByTestId("adhoc-actions")).toBeTruthy();
     });
 
@@ -27513,7 +27611,7 @@ if (import.meta.vitest) {
         );
       };
       const { container } = render(<Harness />);
-      const toggleBtn = container.querySelector('[id="engagement-window-window-search-toggle"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.search.toggle"]') as HTMLElement;
       expect(toggleBtn).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       fireEvent.click(toggleBtn);
@@ -27591,7 +27689,7 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-engagement-overlay"]');
       const zone = container.querySelector('[data-slot="window-engagement-zone"]');
-      const toggleBtn = container.querySelector('[id="engagement-window-window-engagement-toggle"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]') as HTMLElement;
       expect(overlay).toBeTruthy();
       expect(overlay?.className).toContain("pointer-events-none");
       expect(overlay?.className).toContain("top-0");
@@ -27614,7 +27712,7 @@ if (import.meta.vitest) {
       );
       const overlay = container.querySelector('[data-slot="window-search-overlay"]') as HTMLElement;
       const zone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
-      const toggleBtn = container.querySelector('[id="engagement-window-window-search-toggle"]') as HTMLElement;
+      const toggleBtn = container.querySelector('[id="framework.window.engagementWindow.search.toggle"]') as HTMLElement;
       fireEvent.click(toggleBtn);
       expect(zone.className).toContain("w-full");
       expect(overlay.style.width).toBe("min(28rem, 100%)");
@@ -27631,27 +27729,27 @@ if (import.meta.vitest) {
         </Window>,
       );
 
-      const newWindowBtn = container.querySelector('[id="labeled-window-window-controls-external"]');
+      const newWindowBtn = container.querySelector('[id="framework.window.labeledWindow.windowControls.external"]');
       expect(newWindowBtn?.textContent?.trim()).toBe("New Window");
 
-      const closeBtn = container.querySelector('[id="labeled-window-window-controls-close"]');
+      const closeBtn = container.querySelector('[id="framework.window.labeledWindow.windowControls.close"]');
       expect(closeBtn?.textContent?.trim()).toBe("Close");
 
-      const maximizeBtn = container.querySelector('[id="labeled-window-window-controls-maximize"]');
+      const maximizeBtn = container.querySelector('[id="framework.window.labeledWindow.windowControls.maximize"]');
       expect(maximizeBtn?.textContent?.trim()).toBe("Focus");
 
       // Verify folded state options label
-      const unfoldBtn = container.querySelector('[id="labeled-window-window-measures-unfold"]');
+      const unfoldBtn = container.querySelector('[id="framework.window.labeledWindow.measures.unfold"]');
       expect(unfoldBtn?.textContent?.trim()).toBe("Window Options");
 
       // Unfold it
       if (unfoldBtn) fireEvent.click(unfoldBtn);
 
       // Verify unfolded state option labels (Enlarge/Span button & Fold button)
-      const spanBtn = container.querySelector('[id="labeled-window-window-measures-span"]');
+      const spanBtn = container.querySelector('[id="framework.window.labeledWindow.measures.span"]');
       expect(spanBtn?.textContent?.trim()).toBe("Focus");
 
-      const foldBtn = container.querySelector('[id="labeled-window-window-measures-fold"]');
+      const foldBtn = container.querySelector('[id="framework.window.labeledWindow.measures.fold"]');
       expect(foldBtn?.textContent?.trim()).toBe("Window Options");
     });
 
@@ -27661,7 +27759,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      const maximizeBtn = container.querySelector('[id="labeled-window-min-window-controls-maximize"]');
+      const maximizeBtn = container.querySelector('[id="framework.window.labeledWindowMin.windowControls.maximize"]');
       expect(maximizeBtn?.textContent?.trim()).toBe("Unfocus");
     });
 
@@ -27673,9 +27771,9 @@ if (import.meta.vitest) {
           </Window>
         </UiMobileProvider>,
       );
-      expect(container.querySelector('[id="mobile-window-window-controls-maximize"]')).toBeNull();
-      expect(container.querySelector('[id="mobile-window-window-controls-external"]')).toBeTruthy();
-      expect(container.querySelector('[id="mobile-window-window-controls-close"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.maximize"]')).toBeNull();
+      expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.external"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.mobileWindow.windowControls.close"]')).toBeTruthy();
     });
 
     it("Window search max width shrinks when measures rail is present", () => {
@@ -27685,7 +27783,7 @@ if (import.meta.vitest) {
         </Window>,
       );
       const overlay = container.querySelector('[data-slot="window-search-overlay"]') as HTMLElement;
-      fireEvent.click(container.querySelector('[id="layout-window-window-search-toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.layoutWindow.search.toggle"]')!);
       expect(overlay.style.width).toContain("calc(100%");
       expect(overlay.style.width).toContain("min(28rem");
       expect(windowSearchZoneMaxWidthStyle(200, true).width).toContain("408px");
@@ -27715,14 +27813,14 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector('[id="measures-engagement-window-window-search-toggle"]')!);
-      fireEvent.click(container.querySelector("#measures-engagement-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.search.toggle"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.unfold"]')!);
       expect(screen.getByPlaceholderText("Action")).toBeTruthy();
-      fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.span"]')!);
       expect(container.querySelector('[data-slot="window-measures-overlay"]')?.getAttribute("data-expanded")).toBe("true");
       expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeNull();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
-      fireEvent.click(container.querySelector(`#measures-engagement-window-window-measures-span`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresEngagementWindow.measures.span"]')!);
       expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
     });
 
@@ -27755,7 +27853,7 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
       expect(overlay.className).toContain("top-0");
@@ -27773,18 +27871,18 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-fold-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      const span = container.querySelector(`#measures-fold-window-window-measures-span`) as HTMLElement;
-      const fold = container.querySelector(`#measures-fold-window-window-measures-fold`) as HTMLElement;
+      const span = container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]') as HTMLElement;
+      const fold = container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]') as HTMLElement;
       expect(span.compareDocumentPosition(fold) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
-      fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-fold`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.fold"]')!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeNull();
-      expect(container.querySelector(`#measures-fold-window-window-measures-span`)).toBeNull();
+      expect(container.querySelector('[id="framework.window.measuresFoldWindow.measures.span"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBe("true");
       expect(overlay.className).toContain("w-fit");
-      fireEvent.click(container.querySelector(`#measures-fold-window-window-measures-unfold`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldWindow.measures.unfold"]')!);
       expect(container.querySelector('[data-slot="window-measures-body"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-measures-stack"]')?.getAttribute("data-folded")).toBeNull();
       expect(overlay.style.width).toBe(`${windowMeasuresDefaultWidthPx}px`);
@@ -27798,15 +27896,15 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-span-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
-      fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
       expect(overlay.getAttribute("data-expanded")).toBe("true");
       expect(overlay.className).toContain("inset-0");
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeNull();
-      fireEvent.click(container.querySelector(`#measures-span-window-window-measures-span`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresSpanWindow.measures.span"]')!);
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(overlay.className).toContain("top-0");
       expect(container.querySelector('[data-slot="window-measures-resize-left"]')).toBeTruthy();
@@ -27818,12 +27916,12 @@ if (import.meta.vitest) {
           <div>Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-fold-expanded-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
-      fireEvent.click(container.querySelector(`#measures-fold-expanded-window-window-measures-span`)!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.span"]')!);
       expect(overlay.getAttribute("data-expanded")).toBe("true");
-      fireEvent.click(container.querySelector(`#measures-fold-expanded-window-window-measures-fold`)!);
-      expect(container.querySelector(`#measures-fold-expanded-window-window-measures-span`)).toBeNull();
+      fireEvent.click(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.fold"]')!);
+      expect(container.querySelector('[id="framework.window.measuresFoldExpandedWindow.measures.span"]')).toBeNull();
       expect(overlay.getAttribute("data-expanded")).toBeNull();
       expect(overlay.className).toContain("w-fit");
       expect(overlay.className).not.toContain("inset-0");
@@ -27835,7 +27933,7 @@ if (import.meta.vitest) {
           <div className="h-64 w-96">Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-resize-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresResizeWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const leftHandle = container.querySelector('[data-slot="window-measures-resize-left"]') as HTMLElement;
@@ -27864,7 +27962,7 @@ if (import.meta.vitest) {
           <div className="h-32 w-96">Body</div>
         </Window>,
       );
-      fireEvent.click(container.querySelector("#measures-content-window-window-measures-unfold")!);
+      fireEvent.click(container.querySelector('[id="framework.window.measuresContentWindow.measures.unfold"]')!);
       const overlay = container.querySelector('[data-slot="window-measures-overlay"]') as HTMLElement;
       const stack = container.querySelector('[data-slot="window-measures-stack"]') as HTMLElement;
       const body = container.querySelector('[data-slot="window-measures-body"]') as HTMLElement;
@@ -27890,13 +27988,13 @@ if (import.meta.vitest) {
       expect(strip.className).toContain("flex-row");
       expect(strip.className).toContain("w-fit");
       expect(screen.queryByText("Utility")).toBeNull();
-      fireEvent.click(container.querySelector('[id="utility-bar-window-utility-bar-unfold"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.unfold"]')!);
       expect(screen.getByText("Utility")).toBeTruthy();
       const chrome = container.querySelector('[data-slot="utility-bar-chrome"]');
       const body = container.querySelector('[data-slot="utility-bar-body"]');
       expect(chrome?.nextElementSibling).toBe(body);
       expect(chrome?.className).toContain("border-r");
-      fireEvent.click(container.querySelector('[id="utility-bar-window-utility-bar-fold"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.fold"]')!);
       expect(screen.queryByText("Utility")).toBeNull();
       rerender(
         <Window id="utility-bar-window">
@@ -27904,7 +28002,7 @@ if (import.meta.vitest) {
         </Window>,
       );
       expect(container.querySelector('[data-slot="utility-bar"]')).toBeTruthy();
-      expect((container.querySelector('[id="utility-bar-window-utility-bar-unfold"]') as HTMLButtonElement).disabled).toBe(true);
+      expect((container.querySelector('[id="framework.window.utilityBarWindow.utilityBar.unfold"]') as HTMLButtonElement).disabled).toBe(true);
     });
 
     it("Window utility bar anchors bottom-left and hides when measures span the window", () => {
@@ -27916,8 +28014,8 @@ if (import.meta.vitest) {
       const overlay = container.querySelector('[data-slot="utility-bar-overlay"]') as HTMLElement;
       expect(overlay.className).toContain("bottom-0");
       expect(overlay.className).toContain("left-0");
-      fireEvent.click(container.querySelector("#utility-bar-measures-window-window-measures-unfold")!);
-      fireEvent.click(container.querySelector("#utility-bar-measures-window-window-measures-span")!);
+      fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.unfold"]')!);
+      fireEvent.click(container.querySelector('[id="framework.window.utilityBarMeasuresWindow.measures.span"]')!);
       expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeNull();
     });
 
@@ -27934,8 +28032,8 @@ if (import.meta.vitest) {
             <div>Body</div>
           </Window>,
         );
-        fireEvent.click(container.querySelector('[id="utility-bar-clearance-window-window-engagement-toggle"]')!);
-        fireEvent.click(container.querySelector('[id="utility-bar-clearance-window-utility-bar-unfold"]')!);
+        fireEvent.click(container.querySelector('[id="framework.window.utilityBarClearanceWindow.engagement.toggle"]')!);
+        fireEvent.click(container.querySelector('[id="framework.window.utilityBarClearanceWindow.utilityBar.unfold"]')!);
         const body = container.querySelector('[data-slot="utility-bar-body"]') as HTMLElement;
         expect(body.className).toContain("overflow-y-auto");
         expect(Number.parseFloat(body.style.maxHeight)).toBe(400 - 120 - uiSpacingPx(1));
@@ -28917,6 +29015,17 @@ if (treeVitest) {
       expect(markup).toMatch(/width:\s*35%/);
       expect(markup).toContain('data-slot="slider-thumb"');
       expect(markup).toContain("group-hover:bg-emphasized");
+    });
+
+    it("keeps the full fixed range interactive beyond the ready extent", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const onValueChange = vi.fn();
+      const { container } = render(<Slider id="ui.slider.ready-interactive" value={[55]} min={0} max={100} ready={55} step={1} onValueChange={onValueChange} />);
+      const thumb = container.querySelector('[data-slot="slider-thumb"]');
+      expect(thumb).not.toBeNull();
+
+      fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+      expect(onValueChange).toHaveBeenLastCalledWith([56]);
     });
 
     it("puts the loading ring on the track wrap only so the knob and hover chrome stay visible", () => {
@@ -30094,8 +30203,8 @@ if (treeVitest) {
 
     it("maps internal engagement/search control ids to their ui.* i18n keys", () => {
       expect(isInternalChromeControlId("search-possibles-toggle")).toBe(true);
-      expect(resolveControlLabelId("search-possibles-toggle")).toBe("ui.windowSearch.suggestions");
-      expect(resolveControlLabelId("engagement-options")).toBe("ui.engagement.actions");
+      expect(resolveControlLabelId("ui.windowSearch.suggestions")).toBe("ui.windowSearch.suggestions");
+      expect(resolveControlLabelId("ui.engagement.actions")).toBe("ui.engagement.actions");
       expect(resolveControlLabelId("search-input")).toBe("ui.windowSearch.action");
     });
 
@@ -30691,8 +30800,8 @@ if (treeVitest) {
           alternativeIds: [],
         },
       ];
-      const markup = renderToStaticMarkup(<HistoryTable columns={columns} />);
-      expect(markup).toContain('data-testid="graph-timeline-table"');
+      const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={columns} />);
+      expect(markup).toContain('id="test.history.table"');
       expect(markup).toContain('d="M ');
       expect(markup.match(/<line /g)?.length ?? 0).toBeGreaterThanOrEqual(3);
       expect(markup.match(/<circle /g)?.length).toBe(3);
@@ -30703,8 +30812,8 @@ if (treeVitest) {
     });
 
     it("renders an em dash placeholder for an empty history", () => {
-      const markup = renderToStaticMarkup(<HistoryTable columns={[]} />);
-      expect(markup).toContain('data-testid="graph-timeline-table"');
+      const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={[]} />);
+      expect(markup).toContain('id="test.history.table"');
       expect(markup).toContain("—");
     });
 
@@ -30721,7 +30830,7 @@ if (treeVitest) {
           alternativeIds: [],
         },
       ];
-      const markup = renderToStaticMarkup(<HistoryTable columns={columns} />);
+      const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={columns} />);
       expect(markup).toContain("checkpoint");
     });
   });

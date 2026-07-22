@@ -41,6 +41,22 @@
         "command": "bun ./script.ts lint",
         "forwardAllArgs": true
       }
+    },
+    "generate": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/core",
+        "command": "bun ./script.ts generate",
+        "forwardAllArgs": true
+      }
+    },
+    "check": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/core",
+        "command": "bun ./script.ts check",
+        "forwardAllArgs": true
+      }
     }
   }
 }

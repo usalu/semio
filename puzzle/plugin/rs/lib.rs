@@ -2627,9 +2627,9 @@ pub mod d3 {
 
     use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
-        apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
+        apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
-        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         ActionRef, DialogDefinition,
@@ -2651,6 +2651,12 @@ pub mod d3 {
     const PUZZLE3D_PLAY_BODY_INSPECTOR: &str = "puzzle.3d.play.inspector";
     const PUZZLE3D_PLAY_BODY_SETTINGS: &str = "puzzle.3d.play.settings";
     const PUZZLE3D_PLAY_WINDOW_MAIN: &str = "puzzle3d-main";
+    const PUZZLE3D_PLAY_WINDOW_TOP: &str = "puzzle3d-main-top";
+    const PUZZLE3D_PLAY_WINDOW_PERSPECTIVE: &str = "puzzle3d-main-perspective";
+    /// 🪟 Display-template id for an orthographic top pane — mirrors `encodeWorldProjectionTemplateId({ kind: "orthographic", view: "top" })`.
+    const PUZZLE3D_TEMPLATE_TOP: &str = r#"world-projection:{"kind":"orthographic","view":"top"}"#;
+    /// 🪟 Display-template id for a three-point perspective pane — mirrors `encodeWorldProjectionTemplateId({ kind: "threePoint", fov: 50 })`.
+    const PUZZLE3D_TEMPLATE_PERSPECTIVE: &str = r#"world-projection:{"kind":"threePoint","fov":50}"#;
     const PUZZLE3D_FIXTURE_SCHEMA: &str = "puzzle.3d.fixture";
     const PUZZLE3D_EXAMPLE_CONCRETE_FOREST: &str = "concrete-forest";
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
@@ -5231,7 +5237,7 @@ pub mod d3 {
         WindowMeasure::Slider {
             id: "puzzle3d-fill-count".into(),
             label: Some(labels.count.into()),
-            value: envelope.runtime.fill_count.min(available_count) as f64,
+            value: envelope.runtime.fill_count.min(PUZZLE3D_FILL_COUNT_MAX) as f64,
             min: 0.0,
             max: PUZZLE3D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
@@ -5413,6 +5419,7 @@ pub mod d3 {
             let active_utility_initial = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY).to_string();
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
             let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
+            let mut effects = Vec::new();
             let preserve_fill_plan = matches!(action, "setFillCount" | "fillBuildTick");
             if !preserve_fill_plan {
                 sync_precompute_session(&mut self.precompute, &envelope);
@@ -5995,8 +6002,12 @@ pub mod d3 {
                     }
                 }
                 "setFillCount" => {
-                    let available_count = serde_json::from_str::<Value>(&self.precompute.fill_progress()).ok().and_then(|progress| progress.get("count").and_then(Value::as_u64)).unwrap_or(0) as u32;
-                    let count = args.and_then(|value| value.get("count").or_else(|| value.get("value"))).and_then(|value| value.as_f64()).map(|value| value.round().max(0.0) as u32).unwrap_or(0).min(available_count);
+                    let count = args
+                        .and_then(|value| value.get("count").or_else(|| value.get("value")))
+                        .and_then(|value| value.as_f64())
+                        .map(|value| value.round().max(0.0) as u32)
+                        .unwrap_or(0)
+                        .min(PUZZLE3D_FILL_COUNT_MAX);
                     envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
                 }
                 "setBrushPlacementOverlapBudget" => {
@@ -6078,6 +6089,12 @@ pub mod d3 {
                 }
                 "fillBuildTick" => {
                     self.precompute.precompute_step(8);
+                    let progress = serde_json::from_str::<Value>(&self.precompute.fill_progress()).unwrap_or(Value::Null);
+                    let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
+                    let applied_count = progress.get("appliedCount").and_then(Value::as_u64).unwrap_or(0) as u32;
+                    if envelope.runtime.fill_count > applied_count && available_count > applied_count {
+                        effects.push(HostEffect::DispatchAction { action: "setFillCount".into(), args: Some(json!({ "value": envelope.runtime.fill_count })), delay_ms: 0 });
+                    }
                     ui_scope = puzzle3d_fill_build_scope();
                 }
                 "registerBrushMesh" => {
@@ -6104,15 +6121,14 @@ pub mod d3 {
                 "translateSelection" => Some("gumball-translate".to_string()),
                 "rotateSelection" => Some("gumball-rotate".to_string()),
                 "scaleSelection" => Some("gumball-scale".to_string()),
+                "setFillCount" => Some("fill-count".to_string()),
                 _ => None,
             };
             // 🧰 Programmatic utility switches (engagement submit/abort, suggestions, fill) push the active utility
             // back into the host session; `setActiveUtility` itself never re-emits (the host already applied it).
-            let effects = if next_active_utility != active_utility_initial {
-                vec![HostEffect::SetActiveUtility { window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.into(), utility_id: next_active_utility }]
-            } else {
-                Vec::new()
-            };
+            if next_active_utility != active_utility_initial {
+                effects.push(HostEffect::SetActiveUtility { window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.into(), utility_id: next_active_utility });
+            }
             ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
@@ -6283,6 +6299,42 @@ pub mod d3 {
     }
     //#endregion 🔖CommandLabels
 
+    //#region 🔖DefaultLayout
+    /// 🪟 Top (left ⅓) + Perspective (right ⅔) — the default dual-pane workbench for Puzzle 3D and the Aggregator.
+    fn puzzle3d_default_layout() -> WindowLayout {
+        WindowLayout {
+            root: WindowLayoutRoot::Axis(WindowLayoutAxisNode {
+                kind: "row".into(),
+                size: None,
+                children: vec![
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: "stack".into(),
+                        size: Some(100.0 / 3.0),
+                        active_window_kind_id: None,
+                        children: vec![create_window_layout(
+                            PUZZLE3D_PLAY_WINDOW_MAIN,
+                            Some("Top".into()),
+                            Some(PUZZLE3D_PLAY_WINDOW_TOP.into()),
+                            Some(PUZZLE3D_TEMPLATE_TOP.into()),
+                        )],
+                    }),
+                    WindowLayoutChild::Stack(WindowLayoutStackNode {
+                        kind: "stack".into(),
+                        size: Some(200.0 / 3.0),
+                        active_window_kind_id: None,
+                        children: vec![create_window_layout(
+                            PUZZLE3D_PLAY_WINDOW_MAIN,
+                            Some("Perspective".into()),
+                            Some(PUZZLE3D_PLAY_WINDOW_PERSPECTIVE.into()),
+                            Some(PUZZLE3D_TEMPLATE_PERSPECTIVE.into()),
+                        )],
+                    }),
+                ],
+            }),
+        }
+    }
+    //#endregion 🔖DefaultLayout
+
     //#region 🔖Manifest
     pub fn create_puzzle3d_app() -> App {
         let envelope = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: PUZZLE3D_DEFAULT_UTILITY.into() };
@@ -6307,7 +6359,7 @@ pub mod d3 {
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
                 .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN))
-                .default_layout(create_default_layout(&[PUZZLE3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Puzzle 3D".into()])))
+                .default_layout(puzzle3d_default_layout())
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
                 .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE3D_PLAY_BODY_INSPECTOR)
@@ -6684,6 +6736,35 @@ pub mod d3 {
         }
 
         #[test]
+        fn default_layout_is_top_left_third_and_perspective_right_two_thirds() {
+            let app = create_puzzle3d_app();
+            let layout = app.definition.default_layout.as_ref().expect("default layout");
+            let WindowLayoutRoot::Axis(root) = &layout.root else {
+                panic!("default layout root must be a row axis");
+            };
+            assert_eq!(root.kind, "row");
+            assert_eq!(root.children.len(), 2);
+            let WindowLayoutChild::Stack(top) = &root.children[0] else {
+                panic!("left pane must be a stack");
+            };
+            let WindowLayoutChild::Stack(perspective) = &root.children[1] else {
+                panic!("right pane must be a stack");
+            };
+            assert!((top.size.unwrap() - 100.0 / 3.0).abs() < 1e-9);
+            assert!((perspective.size.unwrap() - 200.0 / 3.0).abs() < 1e-9);
+            let top_window = &top.children[0];
+            let perspective_window = &perspective.children[0];
+            assert_eq!(top_window.window_kind_id, PUZZLE3D_PLAY_WINDOW_MAIN);
+            assert_eq!(perspective_window.window_kind_id, PUZZLE3D_PLAY_WINDOW_MAIN);
+            assert_eq!(top_window.instance_id.as_deref(), Some(PUZZLE3D_PLAY_WINDOW_TOP));
+            assert_eq!(perspective_window.instance_id.as_deref(), Some(PUZZLE3D_PLAY_WINDOW_PERSPECTIVE));
+            assert_eq!(top_window.title.as_deref(), Some("Top"));
+            assert_eq!(perspective_window.title.as_deref(), Some("Perspective"));
+            assert_eq!(top_window.template_id.as_deref(), Some(PUZZLE3D_TEMPLATE_TOP));
+            assert_eq!(perspective_window.template_id.as_deref(), Some(PUZZLE3D_TEMPLATE_PERSPECTIVE));
+        }
+
+        #[test]
         fn app_definition_declares_the_add_object_dialog() {
             let app = create_puzzle3d_app();
             let dialog = app.definition.dialogs.iter().find(|entry| entry.id == "addObject").expect("addObject dialog declared");
@@ -6942,6 +7023,16 @@ pub mod d3 {
             assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
             app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("setFillCount");
             assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
+            let initial_fill_ids: HashSet<String> = app
+                .projection()
+                .expect("projection")
+                .get("objects")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .skip(object_count_before)
+                .filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string))
+                .collect();
             // 🪪 Incidental actions re-sync the applied document into the precompute session. That used to
             // rebuild `fill.base` around the materialized objects, after which the slider could neither
             // remove them nor replan — reproduce with a hover sync before clearing.
@@ -6950,6 +7041,35 @@ pub mod d3 {
             let reduced = (available_count / 2).max(0);
             app.handle_action("setFillCount", Some(&json!({ "value": reduced })), &fill_view, &testkit::meta("local")).expect("reduce fill count after sync");
             assert_eq!(object_count(&app), object_count_before + reduced as usize, "sliding down after an incidental sync must still remove fill objects");
+            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("request old count before replanning completes");
+            assert_eq!(object_count(&app), object_count_before + reduced as usize, "an above-ready target must remain non-blocking while its new tail is planned");
+            let target_measures = app.window_measures(&fill_view);
+            let target_window_measures = target_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            assert_eq!(find_measure_slider(target_window_measures, "puzzle3d-fill-count"), Some(available_count as f64), "the slider thumb must retain the requested target above its ready extent");
+
+            for _ in 0..500 {
+                let tick = app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick after reduction");
+                for effect in tick.requested_effects {
+                    if let HostEffect::DispatchAction { action, args, .. } = effect {
+                        app.handle_action(&action, args.as_ref(), &fill_view, &testkit::meta("local")).expect("apply planned fill target");
+                    }
+                }
+                if object_count(&app) >= object_count_before + available_count {
+                    break;
+                }
+            }
+            assert_eq!(object_count(&app), object_count_before + available_count, "restarted planning must materialize the requested count without another slider gesture");
+            let replanned_fill_ids: HashSet<String> = app
+                .projection()
+                .expect("projection")
+                .get("objects")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .skip(object_count_before)
+                .filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string))
+                .collect();
+            assert_ne!(replanned_fill_ids, initial_fill_ids, "up-down-up must replace the discarded tail with a newly planned result");
             app.handle_action("setFillCount", Some(&json!({ "value": 0 })), &fill_view, &testkit::meta("local")).expect("clear fill count");
             assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
         }

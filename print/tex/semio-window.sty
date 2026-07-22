@@ -1970,12 +1970,12 @@
   };%
 }
 
-% 🩹 Repaints page one's seam after the body fill so its flush top edge
-% cannot cover the header gap's closing hairline.
+% 🩹 Repaints only page one's gap seam after the body fill. Redrawing the
+% complete header would double the chip outlines now that both rows are flush.
 \newcommand{\semio@window@header@invoke@overlay}{%
-  \node[anchor=south, inner sep=0pt] at (frame.north) {%
-    \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
-  };%
+  \draw[draw=semio-chrome-border-normal, line width=\semio@stroke@hairline]
+    ([xshift=\semio@window@header@tab@w]frame.north west) --
+    ([xshift=-\semio@window@header@ctrl@w]frame.north east);%
 }
 
 \ExplSyntaxOff
@@ -2009,6 +2009,8 @@
 \newlength{\semio@window@gap@w}
 \newlength{\semio@window@cap@w}
 \newlength{\semio@window@cap@body@h}
+\newlength{\semio@window@header@tab@w}
+\newlength{\semio@window@header@ctrl@w}
 
 \newcommand{\semio@window@cap@body@h@set}{%
   \setlength{\semio@window@cap@body@h}{%
@@ -2531,8 +2533,10 @@
 
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
+  \global\semio@window@header@tab@w=\wd\semio@window@tab@box
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
+    \global\semio@window@header@ctrl@w=0pt
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth-\wd\semio@window@tab@box\relax
     }%
@@ -2544,6 +2548,7 @@
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
+    \global\semio@window@header@ctrl@w=\wd\semio@window@ctrl@box
     \setlength{\semio@window@gap@w}{%
       \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
     }%

@@ -77,6 +77,13 @@ import {
   world3dViewportCameraSeedKey,
   worldInstancePickBlocked,
   parseWorldTerrainStyle,
+  clearWorldCatalogueDropPreview,
+  getWorldCatalogueDropPreview,
+  pushPuzzle2dFixtureDropPreview,
+  registerWorldCatalogueDropHost,
+  setWorldCatalogueDropPreview,
+  subscribeWorldCatalogueDropPreview,
+  worldCatalogueDropHostContainsPoint,
   InkCanvasHost,
   inkItemBounds,
   eraseInkStrokePointsInItem,
@@ -123,6 +130,7 @@ import {
   buildCommandCategoryTabs,
   buildOsCommands,
   createLatestAsyncDispatcher,
+  createDirectionalAsyncDispatcher,
   createInFlightSkippingInterval,
   dispatchOsCommand,
   mergeShellLockSources,
@@ -152,8 +160,9 @@ import {
   runRequestMediaFrames,
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
+  resolveFrameworkLayoutSeed,
 } from "./index.tsx";
-import { decodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
+import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
 //#region 🔌jsdom polyfills
 // cmdk (used by UISearch/UIFind's CommandDialog) calls ResizeObserver on mount; jsdom does not implement it.
@@ -211,6 +220,32 @@ describe("live measure dispatch", () => {
 
     finishFirst();
     await vi.waitFor(() => expect(values).toEqual([1, 24]));
+  });
+
+  it("coalesces straight slider movement but preserves a down-up reversal", async () => {
+    const values: number[] = [];
+    const finishes: Array<() => void> = [];
+    const dispatch = createDirectionalAsyncDispatcher(
+      (value) =>
+        new Promise<void>((resolve) => {
+          values.push(value);
+          finishes.push(resolve);
+        }),
+    );
+
+    dispatch(20);
+    dispatch(18);
+    dispatch(12);
+    dispatch(8);
+    dispatch(14);
+    dispatch(20);
+    expect(values).toEqual([20]);
+
+    finishes.shift()?.();
+    await vi.waitFor(() => expect(values).toEqual([20, 8]));
+    finishes.shift()?.();
+    await vi.waitFor(() => expect(values).toEqual([20, 8, 20]));
+    finishes.shift()?.();
   });
 });
 
@@ -1379,7 +1414,7 @@ describe("framework renderer hosts", () => {
     const payload = parsePuzzle2dCatalogueDragPayload(encoded);
     expect(payload).toEqual({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24, width: undefined, height: undefined, iconKind: undefined });
     expect(payload).not.toBeNull();
-    expect(JSON.parse(puzzle2dFixtureDropPreviewJson(payload!, 100, 200))).toMatchObject({ nodeKind: "seed", screenX: 100, screenY: 200, shape: "circle", radius: 24 });
+    expect(JSON.parse(puzzle2dFixtureDropPreviewJson(payload!, 100, 200))).toMatchObject({ nodeKind: "seed", x: 100, y: 200, shape: "circle", radius: 24 });
   });
 
   it("rejects a catalogue drag payload without a kindId", () => {
@@ -1393,6 +1428,70 @@ describe("framework renderer hosts", () => {
     expect(snapWorldPointToGrid([1.2, 2.7, 0.0], true, 1)).toEqual([1, 3, 0]);
     expect(snapWorldPointToGrid([1.2, 2.7, 0.0], false, 1)).toEqual([1.2, 2.7, 0]);
     expect(parsePuzzle3dCatalogueDragPayload(JSON.stringify({ meshUrl: "puzzle3d://capsule" }))).toBeNull();
+  });
+
+  it("shares the world catalogue drop preview across all registered hosts", () => {
+    clearWorldCatalogueDropPreview("puzzle3d-play");
+    const notifications: Array<ReturnType<typeof getWorldCatalogueDropPreview>> = [];
+    const unsub = subscribeWorldCatalogueDropPreview(() => {
+      notifications.push(getWorldCatalogueDropPreview("puzzle3d-play"));
+    });
+    const unregisterA = registerWorldCatalogueDropHost("puzzle3d-play", "pane.a", (x, y) => x >= 0 && x < 100 && y >= 0 && y < 100);
+    const unregisterB = registerWorldCatalogueDropHost("puzzle3d-play", "pane.b", (x, y) => x >= 100 && x < 200 && y >= 0 && y < 100);
+
+    expect(worldCatalogueDropHostContainsPoint("puzzle3d-play", 50, 50)).toBe(true);
+    expect(worldCatalogueDropHostContainsPoint("puzzle3d-play", 150, 50)).toBe(true);
+    expect(worldCatalogueDropHostContainsPoint("puzzle3d-play", 250, 50)).toBe(false);
+    expect(worldCatalogueDropHostContainsPoint("other-controller", 50, 50)).toBe(false);
+
+    setWorldCatalogueDropPreview("puzzle3d-play", { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [1, 2, 0] });
+    expect(getWorldCatalogueDropPreview("puzzle3d-play")).toEqual({ objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [1, 2, 0] });
+    expect(getWorldCatalogueDropPreview("other-controller")).toBeNull();
+    setWorldCatalogueDropPreview("puzzle3d-play", { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [3, 4, 0] });
+    expect(getWorldCatalogueDropPreview("puzzle3d-play")?.origin).toEqual([3, 4, 0]);
+    clearWorldCatalogueDropPreview("puzzle3d-play");
+    expect(getWorldCatalogueDropPreview("puzzle3d-play")).toBeNull();
+    expect(notifications).toEqual([
+      { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [1, 2, 0] },
+      { objectKind: "Capsule", meshUrl: "puzzle3d://capsule", origin: [3, 4, 0] },
+      null,
+    ]);
+
+    unsub();
+    unregisterA();
+    unregisterB();
+  });
+
+  it("pushes fixture-drop previews to every board2d peer on the same controller", () => {
+    const calls: { pane: string; method: string; arg: string }[] = [];
+    const makePeer = (pane: string) => ({
+      session: {
+        setFixtureDropPreviewJson: (json: string) => calls.push({ pane, method: "setFixtureDropPreviewJson", arg: json }),
+        clearFixtureDropPreview: () => calls.push({ pane, method: "clearFixtureDropPreview", arg: "" }),
+        renderFrame: () => calls.push({ pane, method: "renderFrame", arg: "" }),
+      } as never,
+      onPeerGestureEnded: () => {},
+    });
+    registerBoard2dPeer("fixture-preview", "pane.source", makePeer("pane.source"));
+    registerBoard2dPeer("fixture-preview", "pane.sibling", makePeer("pane.sibling"));
+
+    const preview = puzzle2dFixtureDropPreviewJson({ kindId: "seed", catalogSlice: "nodes", shape: "circle", radius: 24 }, 10, 20);
+    pushPuzzle2dFixtureDropPreview("fixture-preview", preview);
+    pushPuzzle2dFixtureDropPreview("fixture-preview", null);
+
+    expect(calls).toEqual([
+      { pane: "pane.source", method: "setFixtureDropPreviewJson", arg: preview },
+      { pane: "pane.source", method: "renderFrame", arg: "" },
+      { pane: "pane.sibling", method: "setFixtureDropPreviewJson", arg: preview },
+      { pane: "pane.sibling", method: "renderFrame", arg: "" },
+      { pane: "pane.source", method: "clearFixtureDropPreview", arg: "" },
+      { pane: "pane.source", method: "renderFrame", arg: "" },
+      { pane: "pane.sibling", method: "clearFixtureDropPreview", arg: "" },
+      { pane: "pane.sibling", method: "renderFrame", arg: "" },
+    ]);
+
+    unregisterBoard2dPeer("fixture-preview", "pane.source");
+    unregisterBoard2dPeer("fixture-preview", "pane.sibling");
   });
 
   it("inverts the canonical screen-to-world transform for a fixture drop", () => {
@@ -1779,7 +1878,7 @@ describe("framework renderer hosts", () => {
       }),
     );
     expect(markup).toContain("semio-graph-timeline-host");
-    expect(markup).toContain("graph-timeline-table");
+    expect(markup).toContain('id="vcs.play.history.table"');
     expect(markup).toContain('d="M ');
     expect(markup.match(/<circle /g)?.length).toBe(3);
     expect(markup).toContain("branch b");
@@ -3519,5 +3618,62 @@ describe("Display Windows tab — projection drag templates", () => {
     const payload = JSON.parse(topLeaf.dragData["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(payload.windowKindId).toBe("puzzle3d-main");
     expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
+  });
+});
+
+describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
+  const emptyLabels = {
+    windowKindLabels: {},
+    panelTabLabels: {},
+    modeLabels: {},
+    actionLabels: {},
+    utilityLabels: {},
+    exampleLabels: {},
+    actionArgLabels: {},
+    dialogLabels: {},
+    introductionLabels: {},
+    groupLabels: {},
+  };
+
+  it("hydrates Top (1/3) + Perspective (2/3) instances and projection templates", () => {
+    const topTemplate = encodeWorldProjectionTemplateId({ kind: "orthographic", view: "top" });
+    const perspectiveTemplate = encodeWorldProjectionTemplateId({ kind: "threePoint", fov: 50 });
+    const seed = resolveFrameworkLayoutSeed(
+      {
+        root: {
+          kind: "row",
+          children: [
+            {
+              kind: "stack",
+              size: 100 / 3,
+              children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Top", instanceId: "puzzle3d-main-top", templateId: topTemplate }],
+            },
+            {
+              kind: "stack",
+              size: 200 / 3,
+              children: [{ kind: "window", windowKindId: "puzzle3d-main", title: "Perspective", instanceId: "puzzle3d-main-perspective", templateId: perspectiveTemplate }],
+            },
+          ],
+        },
+      },
+      [{ id: "puzzle3d-main", label: "Puzzle 3D" }],
+      emptyLabels,
+    );
+    expect(seed.modeLayout).toEqual({
+      kind: "row",
+      children: [
+        { kind: "stack", size: 100 / 3, children: [{ kind: "window", id: "puzzle3d-main-top", title: "Top" }] },
+        { kind: "stack", size: 200 / 3, children: [{ kind: "window", id: "puzzle3d-main-perspective", title: "Perspective" }] },
+      ],
+    });
+    expect(seed.extraInstances).toEqual([
+      { id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" },
+      { id: "puzzle3d-main-perspective", windowKindId: "puzzle3d-main", title: "Perspective" },
+    ]);
+    expect(seed.activeWindowId).toBe("puzzle3d-main-perspective");
+    expect(seed.pendingProjections).toEqual([
+      { windowId: "puzzle3d-main-top", templateId: topTemplate },
+      { windowId: "puzzle3d-main-perspective", templateId: perspectiveTemplate },
+    ]);
   });
 });

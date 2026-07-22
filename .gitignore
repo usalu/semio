@@ -22,6 +22,9 @@ print/template/**/*.panels
 print/dist/**/*.panels
 mit-bestand/bericht/**/.semio-panel-glass/
 mit-bestand/bericht/**/*.panels
+# Generated dark variants (canonical source is the light .tex only)
+**/.semio-dark/
+*-dark.tex
 #--------------------------------------MIT-BESTAND--------------------------------------
 mit-bestand/bericht/**/dist/
 #--------------------------------------REPO--------------------------------------

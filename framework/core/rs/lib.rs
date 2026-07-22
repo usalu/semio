@@ -3609,8 +3609,8 @@ impl IntroductionAnchor {
     pub fn element_id(&self) -> Option<String> {
         match self {
             IntroductionAnchor::Screen => None,
-            IntroductionAnchor::Navbar => Some("framework.navbar".to_string()),
-            IntroductionAnchor::Footer => Some("framework.footer".to_string()),
+            IntroductionAnchor::Navbar => Some("ui.navbar".to_string()),
+            IntroductionAnchor::Footer => Some("ui.footer".to_string()),
             IntroductionAnchor::WindowKind(_) => None,
             IntroductionAnchor::Utility(utility_ref) => Some(utility_ref.as_str().to_string()),
             IntroductionAnchor::Action(_) => None,
@@ -5478,8 +5478,8 @@ mod app_document_tests {
 
     #[test]
     fn introduction_anchor_element_id_resolves_singular_anchors() {
-        assert_eq!(IntroductionAnchor::Navbar.element_id(), Some("framework.navbar".to_string()));
-        assert_eq!(IntroductionAnchor::Footer.element_id(), Some("framework.footer".to_string()));
+        assert_eq!(IntroductionAnchor::Navbar.element_id(), Some("ui.navbar".to_string()));
+        assert_eq!(IntroductionAnchor::Footer.element_id(), Some("ui.footer".to_string()));
         assert_eq!(IntroductionAnchor::Utility(UtilityRef::new("brush")).element_id(), Some("brush".to_string()));
         assert_eq!(
             IntroductionAnchor::PanelTab("puzzle.catalogue".into()).element_id(),

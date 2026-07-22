@@ -36,6 +36,7 @@ const branchingColumns: HistoryColumn[] = [
 
 export const Default: Story = {
   args: {
+    id: "storybook.historyTable.default",
     columns: branchingColumns,
   },
   render: (args) => (
@@ -47,6 +48,7 @@ export const Default: Story = {
 
 export const Empty: Story = {
   args: {
+    id: "storybook.historyTable.empty",
     columns: [],
   },
   render: (args) => (
@@ -58,6 +60,7 @@ export const Empty: Story = {
 
 export const Selectable: Story = {
   args: {
+    id: "storybook.historyTable.selectable",
     columns: branchingColumns,
     onSelectCheckpoint: (checkpointId: string) => {
       // eslint-disable-next-line no-console

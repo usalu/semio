@@ -1,8 +1,9 @@
 {
   "title": "Get Lowpoly Working End to End",
   "emoji": "🔧",
-  "status": "open",
+  "status": "closed",
   "description": "Fix lowpoly plugin build and get it working end to end. Compile error: WindowMeasure::Slider missing fields `loading` and `ready` in lowpoly/plugin/rs/lib.rs. Dev command `dev:lowpoly` fails during plugin build.",
+  "summary": "Lowpoly plugin failed to compile because WindowMeasure::Slider gained required `ready` and `loading` fields (fill-slider loading ring work). Added `ready: None, loading: None` to both slider constructors in lowpoly/plugin/rs/lib.rs. Verified: plugin builds for wasm32-wasip2, `SEMIO_RENDERER=react bun run dev:lowpoly` serves at http://127.0.0.1:6078/, Playwright boot shows title `semio · lowpoly`, canvas present, Edit/Paint chrome, and a default lowpoly mesh with no page errors.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2214"
   },

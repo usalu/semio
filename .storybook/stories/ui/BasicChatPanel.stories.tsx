@@ -27,7 +27,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    id: "basic-chat-panel-story",
+    id: "storybook.basicChatPanel.default",
     title: "Design Assistant",
   },
   render: (args) => (
@@ -40,7 +40,7 @@ export const Default: Story = {
 export const Narrow: Story = {
   name: "Narrow Panel",
   args: {
-    id: "basic-chat-panel-story-narrow",
+    id: "storybook.basicChatPanel.narrow",
     title: "Notes",
   },
   render: (args) => (

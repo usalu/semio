@@ -1,7 +1,7 @@
 {
   "title": "Fix Puzzle 3d Fill Slider Add/Remove After Stall",
   "emoji": "🐛",
-  "status": "closed",
+  "status": "open",
   "description": "Puzzle 3d fill window utility starts filling then stops working after ~15s of waiting. Root-cause and fix: fillBuildTick fires every 120ms without coalescing into the serialized plugin WASM queue, and each tick defaults to a Full UiDirtyScope refresh — after ~15s the action queue backs up so the fill utility (and host) appear dead. Also demote fillBuildTick from Operation to View and emit a narrow window+measures ui_scope so background planning stays responsive.",
   "summary": "Fixed fill slider unable to remove/re-add after planning stopped. Root cause: after setFillCount materialized objects into the document, any incidental action (hover/pick/sync) re-fed that applied projection into set_scene, which rebuild_queue()'d and baked filled objects into fill.base — so the slider could no longer remove them or replan. Fix: set_scene now detects an applied-fill projection (base id-set plus fill-plan objects, tolerant of attraction pose drift), updates non-fixture scene fields, and keeps the fill session. Regression: set_scene_with_applied_fill_projection_preserves_slider_session (puzzle_3d, all 12 lib tests pass). Also extended the plugin fill slider test to hover-sync before reducing count (pending unrelated puzzle-plugin compile breakage elsewhere).",
   "github": {
@@ -10,6 +10,7 @@
   "goal": "🎯r2602",
   "sessions": [
     "⚪e67f48b2ad874d7b9e69258fb3a07457",
-    "⚪de0612df6ba9418cbbadd5c556d1d519"
+    "⚪de0612df6ba9418cbbadd5c556d1d519",
+    "⚪41602b2edb9f429d95c0574292f8d06b"
   ]
 }

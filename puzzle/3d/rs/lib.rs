@@ -393,6 +393,7 @@ pub struct BrushPlacePayload {
 #[serde(rename_all = "camelCase")]
 pub struct FillBuildProgress {
     count: usize,
+    applied_count: usize,
     max_count: usize,
     done: bool,
     #[serde(default)]
@@ -1187,6 +1188,7 @@ impl FillBuilder {
     fn progress(&self) -> FillBuildProgress {
         FillBuildProgress {
             count: self.sequence.len(),
+            applied_count: self.applied_count,
             max_count: self.max_count,
             done: self.stalled || self.sequence.len() >= self.max_count,
             appended_objects: self.appended_objects.clone(),
@@ -1696,7 +1698,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress(&self) -> String {
-        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
+        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 
@@ -2092,7 +2094,7 @@ impl Puzzle3dPrecomputeSession {
     }
 
     pub fn fill_progress(&self) -> String {
-        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
+        let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 

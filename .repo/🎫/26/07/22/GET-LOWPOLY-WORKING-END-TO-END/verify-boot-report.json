@@ -1,0 +1,23 @@
+{
+  "url": "http://127.0.0.1:6078/",
+  "title": "semio · lowpoly",
+  "pluginsLoaded": true,
+  "markers": {
+    "loadingPlugins": false,
+    "showEdges": false,
+    "selection": false,
+    "brush": true,
+    "hasCanvas": true
+  },
+  "canvasCount": 1,
+  "rootChildren": 3,
+  "rootHtmlLength": 47884,
+  "bodySnippet": "Document\nCatalogue\nLayers\nInspection\nFullscreen\nsemio · lowpoly\nExample\nNo example\nEdit\nPaint\nModel\nClose\nWindow Options\nActions\nSearch\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "screenshotPath": "/Users/ueli/Documents/semio/.repo/🎫/26/07/22/GET-LOWPOLY-WORKING-END-TO-END/boot.png",
+  "errors": [],
+  "logs": [
+    "[debug] [vite] connecting...",
+    "[debug] [vite] connected.",
+    "[debug] [vite] hot updated: /globals.css"
+  ]
+}

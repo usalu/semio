@@ -26,7 +26,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
       {
         id: "welcome",
         title: "Willkommen bei Entwerfen mit Bestand",
-        body: "Der Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit KI-Unterstützung und Leistungsbewertung entlang komplexer funktionaler und struktureller Abhängigkeiten.",
+        body: "Der Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
         anchor: { kind: "screen" },
         emphasis: "none",
         placement: "center",
@@ -36,7 +36,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
       {
         id: "prototype",
         title: "Früher Prototyp",
-        body: "Dieser Demonstrator befindet sich in aktiver Entwicklung. Viele Funktionen sind noch unvollständig oder nur als Platzhalter vorhanden — sie zeigen die Richtung des Projekts, nicht seinen finalen Stand.",
+        body: "Dieser Demonstrator befindet sich in aktiver Entwicklung. Viele Funktionen sind noch unvollständig oder nur als Platzhalter vorhanden — sie zeigen die Richtung des Projekts, nicht seinen finalen Stand. Wenn die Seite nicht mehr richtig funktioniert, können Sie sie neu laden.",
         anchor: { kind: "screen" },
         emphasis: "none",
         placement: "center",

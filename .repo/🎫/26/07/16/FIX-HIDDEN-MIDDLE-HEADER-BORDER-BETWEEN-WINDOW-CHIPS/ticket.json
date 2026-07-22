@@ -1,7 +1,7 @@
 {
   "title": "Fix Hidden Middle Header Border Between Window Chips",
   "emoji": "🎫",
-  "status": "closed",
+  "status": "open",
   "description": "In print report windows (e.g. figure/table windows like \"Generator-Pipeline\" / Abbildung chip), the horizontal border line that closes the transparent gap between the two header chips (title chip and hierarchy/number chip) is not visible. Root cause: the header row (title chip + gap + hierarchy chip) is typeset inline BEFORE the tcolorbox window opens, and \\semio_window_vskip_stroke_hairline pulls the box up by one hairline to overlap that closing stroke — but since the tcolorbox's own colback fill is painted later in the PDF stream, it paints over (hides) that hairline-thin border stroke in the gap area between the two chips. This only affects the \"unbroken\" (single page-part, the common case) and the first part of genuinely broken windows, since continuation-page headers already redraw via a tcolorbox `overlay` (drawn after/on top of the box fill, via \\semio@window@header@repeat) and are unaffected. Fix: redraw the header row via the same overlay mechanism for the unbroken/first case too (analogous to \\semio@window@header@repeat), so it paints on top of the box fill and the border is never covered.",
   "summary": "Removed the print-window header/body gap by ending the grouped header paragraph and applying nointerlineskip in the outer vertical list. Restored the first/unbroken overlay at frame.north so the flush body fill cannot hide the seam hairline. A non-cached Nx build produced both 100-page Zwischenbericht PDFs; 300 dpi checks confirm the Stützengenerator Figure and Netzwerk Table are flush.",
   "github": {
@@ -11,6 +11,7 @@
   "sessions": [
     "⚪ecade9c1cf6a48a3b7c441e17fc756f7",
     "⚪bd62deb87ed344d19f2bc95ccd0f4969",
-    "⚪6570dfb6d6194db0a2d19033e5ed79a2"
+    "⚪6570dfb6d6194db0a2d19033e5ed79a2",
+    "⚪a573b597f54f4e879b3ee7ec6c645201"
   ]
 }

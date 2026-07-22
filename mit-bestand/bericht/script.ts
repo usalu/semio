@@ -45,7 +45,7 @@ async function watchDocument(segments: string[]): Promise<void> {
     watch(root, { recursive: true }, (_event, file) => {
       if (!file) return;
       const abs = join(root, file);
-      if (/-dark\.tex$/i.test(abs)) return;
+      if (abs.includes(".semio-dark") || /-dark\.tex$/i.test(abs)) return;
       if (!/\.(tex|sty|cls|ttf|json)$/i.test(abs)) return;
       try {
         const mtime = statSync(abs).mtimeMs;

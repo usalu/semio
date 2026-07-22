@@ -1602,7 +1602,7 @@ export function createOrbitCameraViewLayoutDescriptors(): readonly OrbitCameraVi
     dualRow("view-dual-top-front", "Top | Front", "Plan + Elevation", [orbitLayoutPane("top"), orbitLayoutPane("front")]),
     dualRow("view-dual-front-right", "Front | Right", "Elevation", [orbitLayoutPane("front"), orbitLayoutPane("right")]),
     dualRow("view-dual-top-ne", "Top | NE", "Plan + Isometry", [orbitLayoutPane("top"), orbitLayoutPane("isometricNe")]),
-    dualRow("view-dual-plan-perspective", "Top | Perspective", "Plan + Perspective", [orbitLayoutPane("top"), orbitLayoutPane("perspective")]),
+    dualRow("view-dual-plan-perspective", "Top | Perspective", "Plan + Perspective", [orbitLayoutPane("top", undefined, 100 / 3), orbitLayoutPane("perspective", undefined, 200 / 3)]),
     dualRow("view-dual-front-back", "Front | Back", "Opposite Elevations", [orbitLayoutPane("front"), orbitLayoutPane("back")]),
     dualRow("view-dual-right-left", "Right | Left", "Side Elevations", [orbitLayoutPane("right"), orbitLayoutPane("left")]),
     {
@@ -2182,21 +2182,23 @@ export type WorldOrbitControlsBinding = {
   readonly update?: () => void;
 };
 
-/** @emoji 🖱️ Default orbit mouse map: orthographic middle orbit / alt+right pan; perspective middle pan / alt+right orbit. */
-export function resolveWorldOrbitMouseButtonsIdle(projection: OrbitCameraProjection = "perspective"): {
+/** @emoji 🖱️ Default orbit mouse map: orthographic middle orbit / alt+right pan; perspective middle pan / alt+right orbit —
+ * except when rotation is disabled entirely (e.g. a `plan`/oblique/one-point projection, see
+ * {@link worldProjectionOrbitConstraints}), where middle always pans since there is nothing to orbit. */
+export function resolveWorldOrbitMouseButtonsIdle(projection: OrbitCameraProjection = "perspective", rotateEnabled = true): {
   readonly LEFT: number | null;
   readonly MIDDLE: number;
   readonly RIGHT: number | null;
 } {
-  if (projection === "orthographic") {
+  if (rotateEnabled && projection === "orthographic") {
     return { LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null };
   }
   return { LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null };
 }
 
 /** @emoji 🖱️ Resets orbit mouse buttons to {@link resolveWorldOrbitMouseButtonsIdle}. */
-export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding, projection: OrbitCameraProjection = "perspective"): void {
-  const idle = resolveWorldOrbitMouseButtonsIdle(projection);
+export function applyWorldOrbitMouseButtonsIdle(controls: WorldOrbitControlsBinding, projection: OrbitCameraProjection = "perspective", rotateEnabled = true): void {
+  const idle = resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled);
   controls.mouseButtons.LEFT = idle.LEFT;
   controls.mouseButtons.MIDDLE = idle.MIDDLE;
   controls.mouseButtons.RIGHT = idle.RIGHT;
@@ -2219,6 +2221,7 @@ export function resolveWorldOrbitRightMouseAction(event: Pick<PointerEvent, "but
 
 export interface WorldOrbitRightMouseBindingsOptions {
   readonly projection?: OrbitCameraProjection;
+  readonly rotateEnabled?: boolean;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
   readonly onRightPointerDrag?: (event: PointerEvent, distancePx: number) => void;
   readonly onRightPointerUp?: (event: PointerEvent) => void;
@@ -2233,13 +2236,14 @@ export function shouldAssignWorldOrbitRightMouse(event: PointerEvent, onRightPoi
 /** @emoji 🖱️ Binds projection-aware Alt+right and Shift+right actions while leaving plain right click for context menus. */
 export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBinding | null, domElement: HTMLElement | undefined, options?: WorldOrbitRightMouseBindingsOptions): void {
   const projection = options?.projection ?? "perspective";
+  const rotateEnabled = options?.rotateEnabled ?? true;
   const optionsRef = reactHostPort.useRef(options);
   optionsRef.current = options;
   reactHostPort.useLayoutEffect(() => {
     if (controls) {
-      applyWorldOrbitMouseButtonsIdle(controls, projection);
+      applyWorldOrbitMouseButtonsIdle(controls, projection, rotateEnabled);
     }
-  }, [controls, projection]);
+  }, [controls, projection, rotateEnabled]);
   reactHostPort.useEffect(() => {
     if (!controls || !domElement) {
       return;
@@ -2250,11 +2254,11 @@ export function useWorldOrbitRightMouseBindings(controls: WorldOrbitControlsBind
       if (event.button !== 2) {
         return;
       }
-      controls.mouseButtons.RIGHT = resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective");
+      controls.mouseButtons.RIGHT = (optionsRef.current?.rotateEnabled ?? true) ? resolveWorldOrbitRightMouseAction(event, optionsRef.current?.projection ?? "perspective") : event.shiftKey ? MOUSE.PAN : null;
       controls.update?.();
     };
     const resetRightMouse = () => {
-      controls.mouseButtons.RIGHT = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective").RIGHT;
+      controls.mouseButtons.RIGHT = resolveWorldOrbitMouseButtonsIdle(optionsRef.current?.projection ?? "perspective", optionsRef.current?.rotateEnabled ?? true).RIGHT;
       controls.update?.();
     };
     const onPointerDown = (event: PointerEvent) => {
@@ -2407,8 +2411,9 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const { snapGate } = useWorldOrbitViewSnapGate();
   const invalidate = useThree((s) => s.invalidate);
   const projection = props.projection ?? (camera instanceof ThreeOrthographicCamera ? "orthographic" : "perspective");
-  const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection), [projection]);
-  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, onRightPointerDown: props.onRightPointerDown });
+  const rotateEnabled = props.constraints?.rotate ?? true;
+  const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled), [projection, rotateEnabled]);
+  useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
@@ -3189,6 +3194,11 @@ if (import.meta.vitest) {
       expect(resolveWorldOrbitMouseButtonsIdle("orthographic")).toEqual({ LEFT: null, MIDDLE: MOUSE.ROTATE, RIGHT: null });
       expect(resolveWorldOrbitMouseButtonsIdle("perspective")).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
     });
+
+    it("always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {
+      expect(resolveWorldOrbitMouseButtonsIdle("orthographic", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+      expect(resolveWorldOrbitMouseButtonsIdle("perspective", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    });
   });
 
   describe("resolveWorldOrbitRightMouseAction", () => {
@@ -3297,6 +3307,17 @@ if (import.meta.vitest) {
       const layouts = createOrbitCameraViewLayoutDescriptors();
       expect(layouts.some((row) => row.id === "view-quad-standard")).toBe(true);
       expect(layouts.find((row) => row.id === "view-single-top")?.groupPath).toEqual(["Single", "2D"]);
+    });
+
+    it("sizes Top | Perspective as one-third / two-thirds", () => {
+      const layout = createOrbitCameraViewLayoutDescriptors().find((row) => row.id === "view-dual-plan-perspective");
+      expect(layout?.arrangement).toEqual({
+        kind: "row",
+        panes: [
+          { view: "top", size: 100 / 3 },
+          { view: "perspective", size: 200 / 3 },
+        ],
+      });
     });
   });
 

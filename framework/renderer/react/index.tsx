@@ -56,6 +56,7 @@ import {
   borderElementClass,
   borderNormalTopClass,
   catalogueTreeDragController,
+  childElementId,
   classifyIconSelectorMode,
   cn,
   loadingBorderClass,
@@ -2431,19 +2432,65 @@ function panelAnchorForGroup(group: string): Anchor {
   return "top-right";
 }
 
+/** @emoji 🪟 One leaf in a framework layout tree, with optional instance/template binding for multi-pane world views. */
+type FrameworkLayoutWindowSeed = {
+  readonly windowId: string;
+  readonly windowKindId: string;
+  readonly title?: string;
+  readonly templateId?: string;
+  readonly size: number;
+};
+
+/** @emoji 🪟 Walks a framework layout and collects every window leaf, preferring `instanceId` as the live pane id. */
+function collectFrameworkLayoutWindowSeeds(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, parentSize = 100): FrameworkLayoutWindowSeed[] {
+  if (node.kind === "window") {
+    return [
+      {
+        windowId: node.instanceId ?? node.windowKindId,
+        windowKindId: node.windowKindId,
+        title: node.title,
+        templateId: node.templateId,
+        size: parentSize,
+      },
+    ];
+  }
+  if (node.kind === "stack") {
+    const size = node.size ?? parentSize;
+    return node.children.map((child) => ({
+      windowId: child.instanceId ?? child.windowKindId,
+      windowKindId: child.windowKindId,
+      title: child.title,
+      templateId: child.templateId,
+      size,
+    }));
+  }
+  const childSizes = node.children.map((child) => ("size" in child ? child.size : undefined));
+  const explicitTotal = childSizes.reduce<number>((sum, size) => sum + (size ?? 0), 0);
+  const unsetCount = childSizes.filter((size) => size === undefined).length;
+  const defaultEach = unsetCount > 0 ? Math.max(0, 100 - explicitTotal) / unsetCount : 0;
+  return node.children.flatMap((child, index) => {
+    const fraction = childSizes[index] ?? defaultEach;
+    return collectFrameworkLayoutWindowSeeds(child, parentSize * (fraction / 100));
+  });
+}
+
 function convertFrameworkLayoutNodeToModeLayout(node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode, appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
   if (node.kind === "window") {
-    return { kind: "window", id: node.windowKindId, title: resolveAppLabel(appLabelsOverlay, "windowKind", node.windowKindId, node.title ?? node.windowKindId) };
+    const id = node.instanceId ?? node.windowKindId;
+    return { kind: "window", id, title: resolveAppLabel(appLabelsOverlay, "windowKind", id, node.title ?? node.windowKindId) };
   }
   if (node.kind === "stack") {
     return {
       kind: "stack",
       size: node.size,
-      children: node.children.map((child) => ({
-        kind: "window" as const,
-        id: child.windowKindId,
-        title: resolveAppLabel(appLabelsOverlay, "windowKind", child.windowKindId, child.title ?? child.windowKindId),
-      })),
+      children: node.children.map((child) => {
+        const id = child.instanceId ?? child.windowKindId;
+        return {
+          kind: "window" as const,
+          id,
+          title: resolveAppLabel(appLabelsOverlay, "windowKind", id, child.title ?? child.windowKindId),
+        };
+      }),
     };
   }
   return {
@@ -2461,51 +2508,114 @@ function retitleWindowLayoutNode(node: WindowLayoutNode, appLabelsOverlay: Plugi
   return { ...node, children: node.children.map((child) => retitleWindowLayoutNode(child, appLabelsOverlay)) } as WindowLayoutNode;
 }
 
-function convertFrameworkLayoutToModeLayout(layout: WindowLayout | undefined, windowIds: readonly string[], appLabelsOverlay: PluginAppLabelsOverlay): WindowLayoutNode {
-  if (!layout?.root) return createEvenWindowLayout(windowIds.length ? windowIds : ["main"]);
-  return convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay);
+/** @emoji 🪟 Resolves a framework layout into the live mode tree, extra instances, active pane, and pending projection templates (no side effects). */
+export function resolveFrameworkLayoutSeed(
+  layout: WindowLayout | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: string }[],
+  appLabelsOverlay: PluginAppLabelsOverlay,
+): {
+  readonly modeLayout: WindowLayoutNode;
+  readonly extraInstances: readonly ExtraWindowInstance[];
+  readonly activeWindowId: string | null;
+  readonly pendingProjections: readonly { readonly windowId: string; readonly templateId: string }[];
+} {
+  const windowIds = windowKinds.map((kind) => kind.id);
+  if (!layout?.root) {
+    return {
+      modeLayout: createEvenWindowLayout(windowIds.length ? windowIds : ["main"]),
+      extraInstances: [],
+      activeWindowId: windowIds[0] ?? null,
+      pendingProjections: [],
+    };
+  }
+  const seeds = collectFrameworkLayoutWindowSeeds(layout.root);
+  const kindById = new Map(windowKinds.map((kind) => [kind.id, kind] as const));
+  const extraInstances: ExtraWindowInstance[] = [];
+  const pendingProjections: { readonly windowId: string; readonly templateId: string }[] = [];
+  let activeWindowId: string | null = null;
+  let activeSize = -1;
+  for (const seed of seeds) {
+    const kind = kindById.get(seed.windowKindId);
+    if (!kind) continue;
+    if (seed.windowId !== seed.windowKindId) {
+      extraInstances.push({
+        id: seed.windowId,
+        windowKindId: seed.windowKindId,
+        title: resolveAppLabel(appLabelsOverlay, "windowKind", seed.windowId, seed.title ?? kind.label),
+      });
+    }
+    if (seed.templateId) pendingProjections.push({ windowId: seed.windowId, templateId: seed.templateId });
+    if (seed.size > activeSize) {
+      activeSize = seed.size;
+      activeWindowId = seed.windowId;
+    }
+  }
+  return {
+    modeLayout: convertFrameworkLayoutNodeToModeLayout(layout.root, appLabelsOverlay),
+    extraInstances,
+    activeWindowId: activeWindowId ?? windowIds[0] ?? null,
+    pendingProjections,
+  };
 }
 
-function modeLayoutNodeToFramework(node: WindowLayoutNode): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
+/** @emoji 🪟 Applies a resolved framework layout seed: registers one-shot world projections, then returns the live layout payload. */
+function applyFrameworkLayoutSeed(
+  layout: WindowLayout | undefined,
+  windowKinds: readonly { readonly id: string; readonly label: string }[],
+  appLabelsOverlay: PluginAppLabelsOverlay,
+): {
+  readonly modeLayout: WindowLayoutNode;
+  readonly extraInstances: readonly ExtraWindowInstance[];
+  readonly activeWindowId: string | null;
+} {
+  const seed = resolveFrameworkLayoutSeed(layout, windowKinds, appLabelsOverlay);
+  for (const pending of seed.pendingProjections) {
+    const projectionSpec = decodeWorldProjectionTemplateId(pending.templateId);
+    if (projectionSpec) registerPendingWorldProjection(pending.windowId, projectionSpec);
+  }
+  return { modeLayout: seed.modeLayout, extraInstances: seed.extraInstances, activeWindowId: seed.activeWindowId };
+}
+
+function modeLayoutNodeToFramework(node: WindowLayoutNode, kindByInstanceId: ReadonlyMap<string, string>): WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode {
   if (node.kind === "window") {
-    return { kind: "window", windowKindId: node.id, ...(node.title ? { title: node.title } : {}) };
+    const windowKindId = kindByInstanceId.get(node.id) ?? node.id;
+    const instanceId = kindByInstanceId.has(node.id) ? node.id : undefined;
+    return {
+      kind: "window",
+      windowKindId,
+      ...(node.title ? { title: node.title } : {}),
+      ...(instanceId ? { instanceId } : {}),
+    };
   }
   if (node.kind === "stack") {
     return {
       kind: "stack",
       ...(node.size !== undefined ? { size: node.size } : {}),
-      children: node.children.map((child) => ({
-        kind: "window" as const,
-        windowKindId: child.id,
-        ...(child.title ? { title: child.title } : {}),
-      })),
+      children: node.children.map((child) => {
+        const windowKindId = kindByInstanceId.get(child.id) ?? child.id;
+        const instanceId = kindByInstanceId.has(child.id) ? child.id : undefined;
+        return {
+          kind: "window" as const,
+          windowKindId,
+          ...(child.title ? { title: child.title } : {}),
+          ...(instanceId ? { instanceId } : {}),
+        };
+      }),
     };
   }
   return {
     kind: node.kind,
     ...(node.size !== undefined ? { size: node.size } : {}),
-    children: node.children.map((child) => modeLayoutNodeToFramework(child) as WindowLayoutStackNode | WindowLayoutAxisNode),
+    children: node.children.map((child) => modeLayoutNodeToFramework(child, kindByInstanceId) as WindowLayoutStackNode | WindowLayoutAxisNode),
   };
 }
 
-function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, fallback?: WindowLayout): WindowLayout | undefined {
+function captureCurrentFrameworkLayout(shellLayout: WindowLayoutNode | null, extraWindowInstances: readonly ExtraWindowInstance[], fallback?: WindowLayout): WindowLayout | undefined {
   if (!shellLayout) return fallback;
-  const root = modeLayoutNodeToFramework(shellLayout);
+  const kindByInstanceId = new Map(extraWindowInstances.map((entry) => [entry.id, entry.windowKindId] as const));
+  const root = modeLayoutNodeToFramework(shellLayout, kindByInstanceId);
   if (root.kind === "window") return { root: { kind: "stack", children: [root] } };
   return { root };
-}
-
-function findDefaultActiveWindowKindId(layout: WindowLayout | undefined, windowKinds: readonly { readonly id: string }[]): string | null {
-  const collectWindowIds = (node: WindowLayoutAxisNode | WindowLayoutStackNode | WindowLayoutWindowNode): string[] => {
-    if (node.kind === "window") return [node.windowKindId];
-    if (node.kind === "stack") return node.children.map((child) => child.windowKindId);
-    return node.children.flatMap((child) => collectWindowIds(child));
-  };
-  const ordered = layout?.root ? collectWindowIds(layout.root) : windowKinds.map((kind) => kind.id);
-  for (const id of ordered) {
-    if (windowKinds.some((kind) => kind.id === id)) return id;
-  }
-  return windowKinds[0]?.id ?? null;
 }
 
 function windowEngagementControlToSpec(control: WindowEngagementControl | undefined, onAction: (action: ActionDescriptor) => void): EngagementControl | undefined {
@@ -2937,6 +3047,42 @@ export function createLatestAsyncDispatcher<T>(dispatchValue: (value: T) => unkn
   return dispatchLatest;
 }
 
+/** @emoji ↕️ Serializes numeric slider updates while retaining every direction change and coalescing movement within one direction. */
+export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) => unknown): (value: number) => void {
+  let running = false;
+  let active = 0;
+  const queued: number[] = [];
+  const dispatchNext = (value: number) => {
+    running = true;
+    active = value;
+    void Promise.resolve(dispatchValue(value)).finally(() => {
+      const next = queued.shift();
+      if (next === undefined) {
+        running = false;
+        return;
+      }
+      dispatchNext(next);
+    });
+  };
+  return (value) => {
+    if (!running) {
+      dispatchNext(value);
+      return;
+    }
+    const previous = queued.at(-1);
+    if (previous === undefined) {
+      if (value !== active) queued.push(value);
+      return;
+    }
+    const anchor = queued.at(-2) ?? active;
+    const direction = Math.sign(previous - anchor);
+    const nextDirection = Math.sign(value - previous);
+    if (nextDirection === 0) return;
+    if (direction === 0 || nextDirection === direction) queued[queued.length - 1] = value;
+    else queued.push(value);
+  };
+}
+
 /**
  * @emoji 🚦 Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
  * in flight are dropped (not queued). Used by World3dHost's `suggestionsTick`/`fillBuildTick` loops so a
@@ -2961,7 +3107,10 @@ export function createInFlightSkippingInterval(run: () => unknown, delayMs: numb
 
 /** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
 function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "slider" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
-  const dispatchLatest = useMemo(() => createLatestAsyncDispatcher(onAction), [onAction]);
+  const dispatchValue = useMemo(
+    () => createDirectionalAsyncDispatcher((value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })),
+    [measure.onChange, onAction],
+  );
 
   return (
     <Slider
@@ -2972,7 +3121,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       ready={measure.ready}
       loading={measure.loading === true}
       step={measure.step}
-      onValueChange={(values) => dispatchLatest({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
+      onValueChange={(values) => dispatchValue(values[0] ?? measure.value)}
     />
   );
 }
@@ -3376,14 +3525,14 @@ export function buildActionCategoryTree(
         ),
         actions: [
           {
-            id: `${windowId}-action-${expandedAction.id}-execute`,
+            id: childElementId("framework.window", windowId, "action", expandedAction.id, "execute"),
             icon: <Icon icon="check" size="small" />,
             text: shellLabel("ui.common.execute"),
             disabled: disabled || missing.length > 0,
             onClick: () => onExecute({ controllerId, action: expandedAction.id, args: effective }),
           },
           {
-            id: `${windowId}-action-${expandedAction.id}-reset`,
+            id: childElementId("framework.window", windowId, "action", expandedAction.id, "reset"),
             icon: <Icon icon="undo" size="small" />,
             text: shellLabel("ui.common.reset"),
             disabled,
@@ -4329,15 +4478,14 @@ export function FrameworkOsShell({
               .map((tab) => [panelTabKindId(tab.kind), (cache.get(`panel:${panelTabKindId(tab.kind)}`)?.value as UiNode | undefined) ?? current[panelTabKindId(tab.kind)] ?? { type: "text", value: shellLabel("ui.common.loading") }] as const),
           ),
       });
-      const windowIds = nextSession.app.windowKinds.map((kind) => kind.id);
       if (layoutSeedKeyRef.current !== layoutSeedKey) {
         layoutSeedKeyRef.current = layoutSeedKey;
-        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
-        extraWindowCounterRef.current = 0;
-        dispatch({ type: "SET_SHELL_LAYOUT", value: convertFrameworkLayoutToModeLayout(nextSession.app.defaultLayout, windowIds, appLabelsOverlay) });
-        const defaultWindowId = findDefaultActiveWindowKindId(nextSession.app.defaultLayout, nextSession.app.windowKinds);
-        if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
-        else if (windowIds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: windowIds[0] });
+        const seeded = applyFrameworkLayoutSeed(nextSession.app.defaultLayout, nextSession.app.windowKinds, appLabelsOverlay);
+        dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+        extraWindowCounterRef.current = seeded.extraInstances.length;
+        dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+        if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
+        else if (nextSession.app.windowKinds[0]) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: nextSession.app.windowKinds[0].id });
       }
     },
     [injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
@@ -4348,7 +4496,7 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_SHELL_LAYOUT", value: (current) => (current ? retitleWindowLayoutNode(current, appLabelsOverlay) : current) });
     dispatch({
       type: "SET_EXTRA_WINDOW_INSTANCES",
-      value: (current) => current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.windowKindId, entry.title) })),
+      value: (current) => current.map((entry) => ({ ...entry, title: resolveAppLabel(appLabelsOverlay, "windowKind", entry.id, entry.title) })),
     });
   }, [appLabelsOverlay]);
 
@@ -4462,15 +4610,11 @@ export function FrameworkOsShell({
       };
       const nextSession: ActiveSession = { pluginId: sPlugin.handle.pluginId, instanceId, app, viewState: nextViewState };
       dispatch({ type: "SET_SESSION", value: nextSession });
-      dispatch({
-        type: "SET_SHELL_LAYOUT",
-        value: convertFrameworkLayoutToModeLayout(
-          app.defaultLayout,
-          app.windowKinds.map((kind) => kind.id),
-          appLabelsOverlay,
-        ),
-      });
-      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: findDefaultActiveWindowKindId(app.defaultLayout, app.windowKinds) ?? app.windowKinds[0]?.id ?? null });
+      const seeded = applyFrameworkLayoutSeed(app.defaultLayout, app.windowKinds, appLabelsOverlay);
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId ?? app.windowKinds[0]?.id ?? null });
       if (appId === landingAppId) {
         openStudioIdRef.current = null;
         openInstanceIdRef.current = null;
@@ -5113,12 +5257,11 @@ export function FrameworkOsShell({
   const applyNamedLayout = useCallback(
     (layout: WindowLayout) => {
       if (!session) return;
-      const windowIds = session.app.windowKinds.map((kind) => kind.id);
-      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
-      extraWindowCounterRef.current = 0;
-      dispatch({ type: "SET_SHELL_LAYOUT", value: convertFrameworkLayoutToModeLayout(layout, windowIds, appLabelsOverlay) });
-      const defaultWindowId = findDefaultActiveWindowKindId(layout, session.app.windowKinds);
-      if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
+      const seeded = applyFrameworkLayoutSeed(layout, session.app.windowKinds, appLabelsOverlay);
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+      extraWindowCounterRef.current = seeded.extraInstances.length;
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+      if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
     },
     [session, appLabelsOverlay],
   );
@@ -5131,18 +5274,11 @@ export function FrameworkOsShell({
           if (!current) return current;
           const layout = resolveLayoutForMode(current.app, modeId);
           if (layout) {
-            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: [] });
-            extraWindowCounterRef.current = 0;
-            dispatch({
-              type: "SET_SHELL_LAYOUT",
-              value: convertFrameworkLayoutToModeLayout(
-                layout,
-                current.app.windowKinds.map((kind) => kind.id),
-                appLabelsOverlay,
-              ),
-            });
-            const defaultWindowId = findDefaultActiveWindowKindId(layout, current.app.windowKinds);
-            if (defaultWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: defaultWindowId });
+            const seeded = applyFrameworkLayoutSeed(layout, current.app.windowKinds, appLabelsOverlay);
+            dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seeded.extraInstances });
+            extraWindowCounterRef.current = seeded.extraInstances.length;
+            dispatch({ type: "SET_SHELL_LAYOUT", value: seeded.modeLayout });
+            if (seeded.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seeded.activeWindowId });
           }
           return { ...current, viewState: { ...current.viewState, activeModeId: modeId } };
         },
@@ -5169,11 +5305,7 @@ export function FrameworkOsShell({
         value: (current) => {
           const base =
             current ??
-            convertFrameworkLayoutToModeLayout(
-              session.app.defaultLayout,
-              session.app.windowKinds.map((entry) => entry.id),
-              appLabelsOverlay,
-            );
+            resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout;
           return insertWindowAtDropZone(base, instanceId, target);
         },
       });
@@ -5187,7 +5319,7 @@ export function FrameworkOsShell({
     appId: session?.app.id ?? "framework-os",
     windowKinds: session?.app.windowKinds.map((kind) => ({ ...kind, label: resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label) })) ?? [],
     builtinLayouts: session?.app.namedLayouts ?? [],
-    currentLayout: captureCurrentFrameworkLayout(shellLayout, session?.app.defaultLayout),
+    currentLayout: captureCurrentFrameworkLayout(shellLayout, extraWindowInstances, session?.app.defaultLayout),
     onApplyLayout: applyNamedLayout,
     namedLayoutStore,
   });
@@ -5837,7 +5969,7 @@ export function FrameworkOsShell({
       if (activeIntroductionStepAnchor?.kind === "panelFirstDraggable") {
         return [
           introductionPanelTabFallbackSelector(introductionPanelTabId),
-          `[data-slot="panel"][data-panel-visible="true"][data-active-tab-id="${introductionPanelTabId}"]`,
+          `[id="framework.panelTab.${introductionPanelTabId}"]`,
         ];
       }
       return [introductionPanelTabFallbackSelector(introductionPanelTabId)];
@@ -6236,7 +6368,7 @@ export function FrameworkOsShell({
         actionsFolded: actionsFoldedFor(kind.id, actions),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         children: (
-          <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
+          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
             </WindowInstanceIdContext.Provider>
@@ -6265,7 +6397,7 @@ export function FrameworkOsShell({
           actionsFolded: actionsFoldedFor(instance.id, actions),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
-            <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
+            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", instance.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <InterpretedUiNode node={windowUiByKind[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
               </WindowInstanceIdContext.Provider>
@@ -6302,14 +6434,8 @@ export function FrameworkOsShell({
   const effectiveModeLayout = useMemo(
     () =>
       shellLayout ??
-      (session
-        ? convertFrameworkLayoutToModeLayout(
-            session.app.defaultLayout,
-            modeWindows.map((window) => window.id),
-            appLabelsOverlay,
-          )
-        : { kind: "stack" as const, children: [] }),
-    [appLabelsOverlay, modeWindows, session, shellLayout],
+      (session ? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout : { kind: "stack" as const, children: [] }),
+    [appLabelsOverlay, session, shellLayout],
   );
 
   const canvas = useMemo(() => {
@@ -6383,13 +6509,7 @@ export function FrameworkOsShell({
                 dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: (current) => current.filter((entry) => entry.id !== windowId) });
                 dispatch({
                   type: "SET_SHELL_LAYOUT",
-                  value: (current) =>
-                    current ??
-                    convertFrameworkLayoutToModeLayout(
-                      session.app.defaultLayout,
-                      modeWindows.map((window) => window.id),
-                      appLabelsOverlay,
-                    ),
+                  value: (current) => current ?? resolveFrameworkLayoutSeed(session.app.defaultLayout, session.app.windowKinds, appLabelsOverlay).modeLayout,
                 });
               }}
             />
@@ -7729,7 +7849,7 @@ function buildDisplayLayoutTree(host: DisplayHostApi): TreePanelConfig {
           {
             id: "framework.display.layout.save.label",
             label: shellLabel("ui.common.name"),
-            control: <Input id="framework.display.save-label" value={host.layoutSaveLabel} onChange={(event) => host.setLayoutSaveLabel(event.target.value)} placeholder={shellLabel("ui.display.saveLayoutPlaceholder")} />,
+            control: <Input id="framework.display.saveLabel" value={host.layoutSaveLabel} onChange={(event) => host.setLayoutSaveLabel(event.target.value)} placeholder={shellLabel("ui.display.saveLayoutPlaceholder")} />,
           },
           {
             id: "framework.display.layout.save.action",
@@ -8139,7 +8259,7 @@ function buildSettingsThemeTree(host: SettingsHostApi): TreePanelConfig {
             id: "framework.settings.theme.save.label",
             label: shellLabel("ui.common.name"),
             control: (
-              <Input id="framework.settings.theme.save-label" value={host.themeSaveLabel} onChange={(event) => host.setThemeSaveLabel(event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />
+              <Input id="framework.settings.theme.saveLabel" value={host.themeSaveLabel} onChange={(event) => host.setThemeSaveLabel(event.target.value)} placeholder={shellLabel("ui.settings.theme.savePlaceholder")} className="h-small w-32" />
             ),
           },
           {
@@ -11352,6 +11472,73 @@ function clientPointOverHost(clientX: number, clientY: number, hostRect: DOMRect
   return clientX >= hostRect.left && clientX <= hostRect.right && clientY >= hostRect.top && clientY <= hostRect.bottom;
 }
 
+//#region WorldCatalogueDropPreviewStore
+/** @emoji 👻 Shared world-space catalogue-drop ghosts keyed by controller — every {@link World3dHost} pane of that controller subscribes so the preview is never clipped to the hovered window. */
+const worldCatalogueDropPreviewByController = new Map<string, Puzzle3dCatalogueDropPreview>();
+const worldCatalogueDropPreviewListeners = new Set<() => void>();
+const worldCatalogueDropHostHitTests = new Map<string, { readonly controllerId: string; readonly hitTest: (clientX: number, clientY: number) => boolean }>();
+
+function worldCatalogueDropPreviewsEqual(a: Puzzle3dCatalogueDropPreview | null | undefined, b: Puzzle3dCatalogueDropPreview | null | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  return a.objectKind === b.objectKind && a.meshUrl === b.meshUrl && a.origin[0] === b.origin[0] && a.origin[1] === b.origin[1] && a.origin[2] === b.origin[2];
+}
+
+function notifyWorldCatalogueDropPreviewListeners(): void {
+  for (const listener of worldCatalogueDropPreviewListeners) listener();
+}
+
+/** @emoji 👻 Subscribe to shared world-space catalogue-drop previews (all open World3d panes). */
+export function subscribeWorldCatalogueDropPreview(listener: () => void): () => void {
+  worldCatalogueDropPreviewListeners.add(listener);
+  return () => {
+    worldCatalogueDropPreviewListeners.delete(listener);
+  };
+}
+
+/** @emoji 👻 Current shared world-space catalogue-drop preview for `controllerId`, or `null` when no catalogue drag is live. */
+export function getWorldCatalogueDropPreview(controllerId: string): Puzzle3dCatalogueDropPreview | null {
+  return worldCatalogueDropPreviewByController.get(controllerId) ?? null;
+}
+
+/** @emoji 👻 SSR snapshot for {@link useSyncExternalStore} — catalogue drops never hydrate with a live ghost. */
+export function getWorldCatalogueDropPreviewServerSnapshot(_controllerId: string): Puzzle3dCatalogueDropPreview | null {
+  return null;
+}
+
+/** @emoji 👻 Publish a world-space catalogue-drop ghost visible in every World3d pane of `controllerId`. */
+export function setWorldCatalogueDropPreview(controllerId: string, preview: Puzzle3dCatalogueDropPreview | null): void {
+  const previous = worldCatalogueDropPreviewByController.get(controllerId) ?? null;
+  if (worldCatalogueDropPreviewsEqual(previous, preview)) return;
+  if (preview) worldCatalogueDropPreviewByController.set(controllerId, preview);
+  else worldCatalogueDropPreviewByController.delete(controllerId);
+  notifyWorldCatalogueDropPreviewListeners();
+}
+
+/** @emoji 👻 Clears the shared catalogue-drop ghost across all World3d panes of `controllerId`. */
+export function clearWorldCatalogueDropPreview(controllerId: string): void {
+  setWorldCatalogueDropPreview(controllerId, null);
+}
+
+/** @emoji 🎯 Registers a World3d pane's hit-test so shared clear logic can tell whether the pointer is over *any* pane of that controller. */
+export function registerWorldCatalogueDropHost(controllerId: string, hostId: string, hitTest: (clientX: number, clientY: number) => boolean): () => void {
+  const key = `${controllerId}\0${hostId}`;
+  worldCatalogueDropHostHitTests.set(key, { controllerId, hitTest });
+  return () => {
+    worldCatalogueDropHostHitTests.delete(key);
+  };
+}
+
+/** @emoji 🎯 True when any registered World3d pane of `controllerId` contains the client point. */
+export function worldCatalogueDropHostContainsPoint(controllerId: string, clientX: number, clientY: number): boolean {
+  for (const entry of worldCatalogueDropHostHitTests.values()) {
+    if (entry.controllerId !== controllerId) continue;
+    if (entry.hitTest(clientX, clientY)) return true;
+  }
+  return false;
+}
+//#endregion WorldCatalogueDropPreviewStore
+
 function CatalogueDropGhost({ preview, meshes, palette }: { readonly preview: Puzzle3dCatalogueDropPreview; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   const style = palette.highlighted;
   const meshRecord = preview.meshUrl ? meshes.find((mesh) => mesh.url === preview.meshUrl) : undefined;
@@ -11400,7 +11587,7 @@ function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { re
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const projectionLabel = useLabel("ui.host.projection");
   return usePaneSlot(
-    <Pane id="world-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label={projectionLabel}>
+    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} label={projectionLabel}>
       <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
     </Pane>,
   );
@@ -11521,7 +11708,11 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   } | null>(null);
   const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
   const [paintStrokeActive, setPaintStrokeActive] = useState(false);
-  const [catalogueDropPreview, setCatalogueDropPreview] = useState<Puzzle3dCatalogueDropPreview | null>(null);
+  const catalogueDropPreview = useSyncExternalStore(
+    subscribeWorldCatalogueDropPreview,
+    () => getWorldCatalogueDropPreview(node.controllerId),
+    () => getWorldCatalogueDropPreviewServerSnapshot(node.controllerId),
+  );
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
@@ -12078,10 +12269,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   const clearCatalogueDrop = useCallback(() => {
-    setCatalogueDropPreview(null);
     catalogueDragEncodedRef.current = null;
     catalogueDragDepthRef.current = 0;
-  }, []);
+    clearWorldCatalogueDropPreview(node.controllerId);
+  }, [node.controllerId]);
 
   const readCatalogueDragEncoded = useCallback((): string | null => {
     return getActiveCatalogueDragPayload() ?? catalogueDragEncodedRef.current;
@@ -12091,24 +12282,18 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     (clientX: number, clientY: number) => {
       const encoded = readCatalogueDragEncoded();
       const payload = parsePuzzle3dCatalogueDragPayload(encoded);
-      if (!payload || !hostRef.current || !cameraRef.current) {
-        setCatalogueDropPreview(null);
-        return;
-      }
+      if (!payload || !hostRef.current || !cameraRef.current) return;
       const rect = hostRef.current.getBoundingClientRect();
       if (!clientPointOverHost(clientX, clientY, rect)) {
-        setCatalogueDropPreview(null);
+        if (!worldCatalogueDropHostContainsPoint(node.controllerId, clientX, clientY)) clearWorldCatalogueDropPreview(node.controllerId);
         return;
       }
       const origin = resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor);
-      if (!origin) {
-        setCatalogueDropPreview(null);
-        return;
-      }
+      if (!origin) return;
       if (encoded) catalogueDragEncodedRef.current = encoded;
-      setCatalogueDropPreview({ ...payload, origin });
+      setWorldCatalogueDropPreview(node.controllerId, { ...payload, origin });
     },
-    [gridFactor, gridSnapEnabled, readCatalogueDragEncoded],
+    [gridFactor, gridSnapEnabled, node.controllerId, readCatalogueDragEncoded],
   );
 
   const commitCatalogueDropAt = useCallback(
@@ -12137,9 +12322,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     (_event: DragEvent<HTMLDivElement>) => {
       if (!scene) return;
       catalogueDragDepthRef.current = Math.max(0, catalogueDragDepthRef.current - 1);
-      if (catalogueDragDepthRef.current === 0) clearCatalogueDrop();
     },
-    [clearCatalogueDrop, scene],
+    [scene],
   );
 
   const onCatalogueDragOver = useCallback(
@@ -12168,9 +12352,21 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   );
 
   useEffect(() => {
+    const hostId = windowInstanceId ?? node.surfaceId;
+    return registerWorldCatalogueDropHost(node.controllerId, hostId, (clientX, clientY) => {
+      const host = hostRef.current;
+      if (!host) return false;
+      return clientPointOverHost(clientX, clientY, host.getBoundingClientRect());
+    });
+  }, [node.controllerId, node.surfaceId, windowInstanceId]);
+
+  useEffect(() => {
     const onPointerMove = (event: PointerEvent) => {
       const encoded = getActiveCatalogueDragPayload();
-      if (!encoded) return;
+      if (!encoded) {
+        if (getWorldCatalogueDropPreview(node.controllerId)) clearWorldCatalogueDropPreview(node.controllerId);
+        return;
+      }
       if (!parsePuzzle3dCatalogueDragPayload(encoded)) return;
       catalogueDragEncodedRef.current = encoded;
       updateCatalogueDropPreviewAt(event.clientX, event.clientY);
@@ -12183,21 +12379,29 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       const host = hostRef.current;
       if (!host) return;
       const rect = host.getBoundingClientRect();
-      if (!clientPointOverHost(event.clientX, event.clientY, rect)) {
+      if (clientPointOverHost(event.clientX, event.clientY, rect)) {
+        commitCatalogueDropAt(event.clientX, event.clientY, encoded);
         clearCatalogueDrop();
         return;
       }
-      commitCatalogueDropAt(event.clientX, event.clientY, encoded);
-      clearCatalogueDrop();
+      if (!worldCatalogueDropHostContainsPoint(node.controllerId, event.clientX, event.clientY)) clearCatalogueDrop();
+    };
+
+    const onDragEnd = () => {
+      queueMicrotask(() => {
+        if (!getActiveCatalogueDragPayload()) clearCatalogueDrop();
+      });
     };
 
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp, true);
+    window.addEventListener("dragend", onDragEnd);
     return () => {
       window.removeEventListener("pointermove", onPointerMove);
       window.removeEventListener("pointerup", onPointerUp, true);
+      window.removeEventListener("dragend", onDragEnd);
     };
-  }, [clearCatalogueDrop, commitCatalogueDropAt, updateCatalogueDropPreviewAt]);
+  }, [clearCatalogueDrop, commitCatalogueDropAt, node.controllerId, updateCatalogueDropPreviewAt]);
 
   if (!scene) return <div className="semio-world-3d-empty">{emptySceneLabel}</div>;
 
@@ -17000,8 +17204,9 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
 //#endregion SelectionMenu
 
 //#region FixtureDrop
-export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPayload, screenX: number, screenY: number): string {
-  return JSON.stringify({ nodeKind: payload.kindId, screenX, screenY, shape: payload.shape, radius: payload.radius, width: payload.width, height: payload.height, iconKind: payload.iconKind });
+/** @emoji 👻 Builds a world-space fixture-drop preview so every peer pane shares the same ghost (screen coords would desync under different cameras). */
+export function puzzle2dFixtureDropPreviewJson(payload: Puzzle2dFixtureDropPayload, worldX: number, worldY: number): string {
+  return JSON.stringify({ nodeKind: payload.kindId, x: worldX, y: worldY, shape: payload.shape, radius: payload.radius, width: payload.width, height: payload.height, iconKind: payload.iconKind });
 }
 
 /** @emoji 📐 Inverse of the canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across board renderers. */
@@ -17115,6 +17320,21 @@ export function notifyPuzzle2dPeersGestureEnded(controllerId: string, surfaceId:
   for (const peer of board2dPeers(controllerId, surfaceId)) {
     try {
       peer.onPeerGestureEnded(flushed);
+    } catch {
+      /* peer session not ready */
+    }
+  }
+}
+
+/** @emoji 👻 Pushes a world-space catalogue fixture-drop ghost into every pane of `controllerId` (including the source). */
+export function pushPuzzle2dFixtureDropPreview(controllerId: string, previewJson: string | null): void {
+  const peers = board2dPeerRegistry.get(controllerId);
+  if (!peers) return;
+  for (const peer of peers.values()) {
+    try {
+      if (previewJson) peer.session.setFixtureDropPreviewJson?.(previewJson);
+      else peer.session.clearFixtureDropPreview?.();
+      peer.session.renderFrame?.();
     } catch {
       /* peer session not ready */
     }
@@ -17688,15 +17908,17 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       if (!session?.setFixtureDropPreviewJson) return;
       const payload = parsePuzzle2dCatalogueDragPayload(getActiveCatalogueDragPayload());
       if (!payload) return;
-      event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
-      applyToSession(session, (s) => s.setFixtureDropPreviewJson?.(puzzle2dFixtureDropPreviewJson(payload, event.clientX - rect.left, event.clientY - rect.top)));
+      const world = puzzle2dScreenToWorld(session.cameraJson(), readContainerSize(), { x: event.clientX - rect.left, y: event.clientY - rect.top });
+      if (!world) return;
+      event.preventDefault();
+      pushPuzzle2dFixtureDropPreview(node.controllerId, puzzle2dFixtureDropPreviewJson(payload, world.x, world.y));
     },
-    [scene?.interactive],
+    [node.controllerId, readContainerSize, scene?.interactive],
   );
 
   const onDragLeave = useCallback((): void => {
-    applyToSession(sessionRef.current, (session) => session.clearFixtureDropPreview?.());
+    /* Keep the shared peer ghost while the pointer moves between panes of the same controller. */
   }, []);
 
   const onDrop = useCallback(
@@ -17705,7 +17927,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       const encoded = event.dataTransfer.getData(CATALOGUE_DRAG_MIME) || getActiveCatalogueDragPayload();
       const payload = parsePuzzle2dCatalogueDragPayload(encoded);
       const session = sessionRef.current;
-      applyToSession(session, (s) => s.clearFixtureDropPreview?.());
+      pushPuzzle2dFixtureDropPreview(node.controllerId, null);
       if (!payload || !session) return;
       event.preventDefault();
       const rect = event.currentTarget.getBoundingClientRect();
@@ -17721,8 +17943,18 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
         iconKind: payload.iconKind,
       });
     },
-    [dispatch, readContainerSize, scene?.interactive],
+    [dispatch, node.controllerId, readContainerSize, scene?.interactive],
   );
+
+  useEffect(() => {
+    const onDragEnd = (): void => {
+      queueMicrotask(() => {
+        if (!getActiveCatalogueDragPayload()) pushPuzzle2dFixtureDropPreview(node.controllerId, null);
+      });
+    };
+    window.addEventListener("dragend", onDragEnd);
+    return () => window.removeEventListener("dragend", onDragEnd);
+  }, [node.controllerId]);
   //#endregion FixtureDropHandlers
 
   if (!scene) return <div className="semio-board-2d-empty text-muted-foreground p-2 text-xs">{emptySceneLabel}</div>;
@@ -19316,6 +19548,7 @@ export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
   return (
     <div className="semio-graph-timeline-host h-full min-h-0 w-full overflow-auto p-single" data-surface-id={node.surfaceId}>
       <HistoryTable
+        id={childElementId(node.surfaceId, "table")}
         columns={columns}
         onSelectCheckpoint={(checkpointId) =>
           onAction({
