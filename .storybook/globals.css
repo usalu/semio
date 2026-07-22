@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: AGPL-3.0-only */
-@import "../ui/react/globals.css";
-@source "../ui/react";
+@import "../ui/js/react/globals.css";
+@source "../ui/js/react";
 @source "./";
 @source "./stories";
 @source "../compose/client/lib/js";

@@ -2656,7 +2656,7 @@ pub mod d3 {
     const PUZZLE3D_EXAMPLE_NAKAGIN: &str = "nakagin-capsule-tower";
     const PUZZLE3D_FALLBACK_MESH_KIND: &str = "box";
     /// 🧰 Host-owned active utility (`view_state.active_utility_id`) when the host hasn't set one yet — none.
-    /// Transform gumball utilities (`move`/`rotate`/`scale`) must be pressed explicitly; an unset/cleared utility must not fall back to `move` or the gumball appears without an active transform tool.
+    /// Transform gumball utility (`transform`) must be pressed explicitly; an unset/cleared utility must not fall back to `transform` or the gumball appears without an active transform tool.
     const PUZZLE3D_DEFAULT_UTILITY: &str = "";
     const PUZZLE3D_FILL_COUNT_MAX: u32 = 1000;
     /// 🌀 Window option: emit every object's vortices into the 3D scene.
@@ -3023,11 +3023,10 @@ pub mod d3 {
 
     /// 🎚️ The gumball handle the world engine draws when a transform utility is active.
     fn puzzle3d_transform_handle(active_utility: &str) -> Option<&'static str> {
-        match active_utility {
-            "move" => Some("move"),
-            "rotate" => Some("rotate"),
-            "scale" => Some("scale"),
-            _ => None,
+        if active_utility == "transform" {
+            Some("transform")
+        } else {
+            None
         }
     }
 
@@ -6067,6 +6066,7 @@ pub mod d3 {
                                     puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                                     envelope.runtime.suggestion_menu = None;
+                                    envelope.active_utility = PUZZLE3D_DEFAULT_UTILITY.into();
                                 }
                             }
                         }
@@ -6274,9 +6274,7 @@ pub mod d3 {
     fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         const ENTRIES: &[(&str, &str, &str)] = &[
             ("select", "Select", "Auswählen"),
-            ("move", "Move", "Verschieben"),
-            ("rotate", "Rotate", "Drehen"),
-            ("scale", "Scale", "Skalieren"),
+            ("transform", "Transform", "Transformieren"),
             ("brush", "Brush", "Pinsel"),
             ("fill", "Fill", "Füllen"),
             ("worldRelocate", "Relocate", "Verlagern"),
@@ -6401,14 +6399,12 @@ pub mod d3 {
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
-                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — transform gumball requires move/rotate/scale explicitly.
-                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
-                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
-                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
+                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together.
+                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("transform", "Transform", "move-3d") })
                 .utility(UtilityDefinition::new("brush", "Brush", "brush"))
                 .utility(UtilityDefinition::new("fill", "Fill", "fill"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
+                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
                 // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
                 // of the viewport, the catalogue panel, adding an object, and the Move utility.
@@ -6444,12 +6440,12 @@ pub mod d3 {
                         .advance_on(IntroductionAdvance::Action("addObjectKind".into()))
                         .cutouts(vec![IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into())]),
                         IntroductionStepDefinition::new(
-                            "move-utility",
-                            "Move Objects",
-                            "Activate the Move utility to reposition objects in the scene.",
-                            IntroductionAnchor::Utility("move".into()),
+                            "transform-utility",
+                            "Transform Objects",
+                            "Activate the Transform utility to move and rotate objects in the scene.",
+                            IntroductionAnchor::Utility("transform".into()),
                         )
-                        .advance_on(IntroductionAdvance::Utility("move".into())),
+                        .advance_on(IntroductionAdvance::Utility("transform".into())),
                     ],
                 })
                 // 🗨️ Reference dialog (proof of the framework's Dialog mechanism, see `DialogDefinition`
@@ -6871,10 +6867,16 @@ pub mod d3 {
             let object_count_before = object_count(&app);
             let vortex = first_vortex_full_id(&app);
             app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
-            app.handle_action("acceptSuggestion", None, &ViewState::default(), &testkit::meta("local")).expect("acceptSuggestion");
+            let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
+            let result = app.handle_action("acceptSuggestion", None, &brush_view, &testkit::meta("local")).expect("acceptSuggestion");
             assert_eq!(object_count(&app), object_count_before + 1);
+            assert!(
+                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_kind_id, utility_id }] if window_kind_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id.is_empty()),
+                "accepting a context-menu suggestion restores the host-owned default selection mode",
+            );
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
+            assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
         }
 
         #[test]
@@ -7106,15 +7108,16 @@ pub mod d3 {
         }
 
         #[test]
-        fn main_window_utilities_lead_with_move_without_select_tool_and_no_default_utility() {
+        fn main_window_utilities_lead_with_transform_without_select_tool_and_no_default_utility() {
             let definition = create_puzzle3d_app().definition;
             let utility_ids: Vec<&str> = definition.utilities.iter().map(|utility| utility.id.as_str()).collect();
             assert!(!utility_ids.contains(&"select"), "puzzle 3d must not declare a select utility");
+            assert!(!utility_ids.contains(&"scale"), "puzzle 3d must not declare a scale utility");
             let main = definition.window_kinds.iter().find(|window| window.id == PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window");
             let main_utilities: Vec<&str> = main.utilities.iter().map(|utility| utility.as_str()).collect();
-            assert_eq!(main_utilities.first().copied(), Some("move"));
+            assert_eq!(main_utilities.first().copied(), Some("transform"));
             assert!(!main_utilities.contains(&"select"));
-            assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "", "unset/cleared host utility must not impersonate move");
+            assert_eq!(PUZZLE3D_DEFAULT_UTILITY, "", "unset/cleared host utility must not impersonate transform");
         }
 
         #[test]
@@ -7253,18 +7256,10 @@ pub mod d3 {
             let idle_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap());
             assert_eq!(idle_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "selection alone must not show the gumball");
             assert!(idle_selection.get("transformMode").is_none(), "non-transform utility must not emit transformMode");
-            let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };
-            let move_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &move_view).expect("render")).unwrap());
-            assert_eq!(move_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
-            assert_eq!(move_selection.get("transformMode").and_then(Value::as_str), Some("move"));
-            let rotate_view = ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() };
-            let rotate_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &rotate_view).expect("render")).unwrap());
-            assert_eq!(rotate_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
-            assert_eq!(rotate_selection.get("transformMode").and_then(Value::as_str), Some("rotate"));
-            let scale_view = ViewState { active_utility_id: Some("scale".into()), ..ViewState::default() };
-            let scale_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &scale_view).expect("render")).unwrap());
-            assert_eq!(scale_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
-            assert_eq!(scale_selection.get("transformMode").and_then(Value::as_str), Some("scale"));
+            let transform_view = ViewState { active_utility_id: Some("transform".into()), ..ViewState::default() };
+            let transform_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &transform_view).expect("render")).unwrap());
+            assert_eq!(transform_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
+            assert_eq!(transform_selection.get("transformMode").and_then(Value::as_str), Some("transform"));
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let brush_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render")).unwrap());
             assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
@@ -7273,7 +7268,7 @@ pub mod d3 {
 
         #[test]
         fn transform_engagement_does_not_block_background_deselect() {
-            let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "move".into() };
+            let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "transform".into() };
             let engagement = puzzle3d_engagement(&scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert_eq!(engagement.session_active, Some(false));
         }
@@ -7290,7 +7285,7 @@ pub mod d3 {
             };
             let start = origin_before(&app);
             for dx in [1.0, 2.0, 3.0] {
-                app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &ViewState { active_utility_id: Some("move".into()), ..ViewState::default() }, &testkit::meta("local")).expect("drag tick");
+                app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": dx, "dy": 0.0, "dz": 0.0 })), &ViewState { active_utility_id: Some("transform".into()), ..ViewState::default() }, &testkit::meta("local")).expect("drag tick");
             }
             let dragged = origin_before(&app);
             assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "three ticks accumulate 1+2+3 on x");

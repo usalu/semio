@@ -1041,9 +1041,11 @@ async function buildEngineWasm(variant: string, renderer: string): Promise<void>
 
 class DevScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    const filterPlugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
     if (process.env.SKIP_PLUGIN_BUILD !== "1") {
-      const filterPlugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";
       await buildPlugins(filterPlugin);
+    } else {
+      await ensurePluginRegistry(filterPlugin);
     }
     const renderer = process.env.SEMIO_RENDERER ?? "react";
     const plugin = process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? "s";

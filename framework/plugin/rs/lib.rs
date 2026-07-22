@@ -155,7 +155,7 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    effective_action_args, history_action_definitions, missing_required_args, kernel::{
+    effective_action_args, history_action_definitions, is_element_id, missing_required_args, kernel::{
         ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
@@ -905,7 +905,15 @@ impl AppBuilder {
                     step.id
                 );
                 let validate_anchor = |anchor: &IntroductionAnchor, role: &str| match anchor {
-                    IntroductionAnchor::Screen | IntroductionAnchor::Navbar | IntroductionAnchor::Footer | IntroductionAnchor::Slot(_) => {}
+                    IntroductionAnchor::Screen | IntroductionAnchor::Navbar | IntroductionAnchor::Footer => {}
+                    IntroductionAnchor::Element(id) => assert!(
+                        is_element_id(id),
+                        "app {} introduction step {} {} element id {} does not match the UI element id grammar",
+                        self.id,
+                        step.id,
+                        role,
+                        id
+                    ),
                     IntroductionAnchor::WindowKind(id) => assert!(
                         window_kind_ids.contains(id),
                         "app {} introduction step {} {} undeclared window kind {}",
@@ -2272,6 +2280,38 @@ mod app_builder_tests {
                 .build_definition()
         });
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_introduction_step_anchoring_malformed_element_id() {
+        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-anchor-element-app")
+                .introduction(IntroductionDefinition {
+                    title: "Welcome".into(),
+                    steps: vec![IntroductionStepDefinition::new(
+                        "step",
+                        "A",
+                        "a",
+                        IntroductionAnchor::Element("not-camel-case".into()),
+                    )],
+                })
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_accepts_introduction_anchored_at_well_formed_element_id() {
+        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+        let definition = minimal_app("good-anchor-element-app")
+            .introduction(IntroductionDefinition {
+                title: "Welcome".into(),
+                steps: vec![IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Element("ui.custom.thing".into()))],
+            })
+            .build_definition();
+        let introduction = definition.introduction.expect("introduction present");
+        assert_eq!(introduction.steps.len(), 1);
     }
 
     #[test]

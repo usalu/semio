@@ -8,12 +8,14 @@ export type { PluginBuildTarget } from "../../../../plugin/registry/generated/pl
 export { PLUGIN_BUILD_TARGETS, PLUGIN_TARGETS, pluginModuleUrl } from "../../../../plugin/registry/generated/plugins.ts";
 export { PLAYGROUND_SESSION } from "../generated/session.ts";
 
+import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
 import { PLAYGROUND_SESSION } from "../generated/session.ts";
 import { resolveShellBrandById } from "../brand/index.ts";
 
 const renderer = import.meta.env.VITE_SEMIO_RENDERER ?? import.meta.env.SEMIO_RENDERER ?? "react";
-const pluginFilter = PLAYGROUND_SESSION.variant;
-const appId = import.meta.env.VITE_SEMIO_APP_ID ?? PLAYGROUND_SESSION.defaultAppId;
+const boot = resolvePlaygroundBoot(import.meta.env.VITE_SEMIO_PLUGIN || PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+const pluginFilter = boot.variant;
+const appId = import.meta.env.VITE_SEMIO_APP_ID ?? boot.defaultAppId;
 
 /** @emoji 🏷️ Baked-in shell brand for this artifact (registry `brand` column or `SEMIO_BRAND`); no `?query=` override. */
 const brand = resolveShellBrandById(import.meta.env.VITE_SEMIO_BRAND || undefined);
@@ -33,7 +35,7 @@ const defaults = {
 };
 
 if (typeof document !== "undefined" && document.getElementById("root") != null && !import.meta.vitest) {
-  const plugins = PLAYGROUND_SESSION.plugins;
+  const plugins = boot.plugins;
   if (renderer !== "wgpu") {
     const { bootFrameworkOs } = await import("@semio-tech/framework-renderer-react");
     void bootFrameworkOs({ plugin: pluginFilter, plugins, appId, locks, defaults, brand }).catch((error) => {

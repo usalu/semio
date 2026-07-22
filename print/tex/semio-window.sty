@@ -684,7 +684,8 @@
     % rendered into into so the *next* compile pass can show the ":<N>"
     % suffix on page 1 too (see \semio@window@break@record and the
     % `.window-breaks` aux file loaded by \semio_window_break_aux_load:).
-    overlay~unbroken={\semio@window@break@record{1}},
+    overlay~unbroken={\semio@window@break@record{1}\semio@window@header@invoke@overlay},
+    overlay~first={\semio@window@header@invoke@overlay},
     overlay~middle={\semio@window@header@repeat},
     overlay~last={\semio@window@header@repeat\semio@window@break@record{\arabic{tcbbreakpart}}},
   },
@@ -1076,6 +1077,10 @@
   \semio@window@header@invoke
   \makeatother
   \group_end:
+  % 🧲 Keep the next vertical-list item flush with the header outside the
+  % rendering group; a grouped \nointerlineskip restores \prevdepth on exit.
+  \par
+  \nointerlineskip
 }
 
 \cs_new_protected:Npn \semio_window_kind_number_set:n #1 {
@@ -1962,6 +1967,14 @@
   \edef\semio@window@header@part@num{\arabic{tcbbreakpart}}%
   \node[anchor=south, inner sep=0pt, yshift=\semio@stroke@hairline] at (frame.north) {%
     \semio@window@header@muted{\semio@window@header@number:\semio@window@header@part@num}{\semio@window@header@title}%
+  };%
+}
+
+% 🩹 Repaints page one's seam after the body fill so its flush top edge
+% cannot cover the header gap's closing hairline.
+\newcommand{\semio@window@header@invoke@overlay}{%
+  \node[anchor=south, inner sep=0pt] at (frame.north) {%
+    \semio@window@header@muted{\semio@window@header@number@page1}{\semio@window@header@title}%
   };%
 }
 

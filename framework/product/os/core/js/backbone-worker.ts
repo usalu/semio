@@ -15,11 +15,20 @@ type RustWorkerHost = {
 
 let rustHost: RustWorkerHost | null = null;
 
+// 🧵 Built as a variable rather than a string literal so Rollup's static import analysis — including
+// the separate sub-build `vite:worker-import-meta-url` runs for this very file — can't see a resolvable
+// specifier at all and leaves the `import()` genuinely dynamic; a real bundler-visible specifier here
+// (even `@vite-ignore`d) still gets probed by that sub-build and, since the package is never actually
+// published, either fails the build outright or emits a phantom `__vite-browser-external-*.js` chunk
+// reference that 404s in production. Left dynamic, the browser's native module loader simply rejects
+// the unresolvable bare specifier at runtime, which the `catch` below already treats as "unavailable".
+const RUST_SYNC_WORKER_MODULE_SPECIFIER = "@semio-tech/framework-sync-worker";
+
 async function ensureRustHost(): Promise<RustWorkerHost | null> {
   if (rustHost) return rustHost;
   if (typeof WebAssembly === "undefined") return null;
   try {
-    const module = await import("@semio-tech/framework-sync-worker");
+    const module = await import(RUST_SYNC_WORKER_MODULE_SPECIFIER);
     await module.default();
     rustHost = new module.BackboneWorkerHost() as RustWorkerHost;
     return rustHost;

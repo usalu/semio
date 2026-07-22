@@ -616,13 +616,38 @@ export type ShellBrandHostChrome = {
   readonly windowTitle: string;
   readonly logoSvg?: string;
   readonly faviconIcoPath?: string;
+  /** 🌐 Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
+  readonly cnameHost?: string;
 };
 
-/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle` and serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one); no brand ⇒ canonical semio favicons untouched. */
+/** @emoji 🚫 Vite: writes `dist/.nojekyll` on every build (unconditionally — any static host that runs
+ * Jekyll, e.g. GitHub Pages, silently drops files/dirs starting with `_` otherwise, breaking Vite's own
+ * `__vite-browser-external-*.js` shim chunk) and `dist/CNAME` when a brand declares `cnameHost`. */
+function staticDeployMarkerVitePlugins(cnameHost: string | undefined): Plugin[] {
+  let outDir = resolve(process.cwd(), "dist");
+  return [
+    {
+      name: "static-deploy-markers",
+      apply: "build",
+      enforce: "pre",
+      configResolved(config) {
+        outDir = resolve(config.root, config.build.outDir);
+      },
+      closeBundle() {
+        mkdirSync(outDir, { recursive: true });
+        writeFileSync(resolve(outDir, ".nojekyll"), "");
+        if (cnameHost) writeFileSync(resolve(outDir, "CNAME"), `${cnameHost}\n`);
+      },
+    },
+  ];
+}
+
+/** @emoji 🏷️ Vite: brand-aware host chrome — rewrites the `<title>` to the brand's `windowTitle`, serves/copies the brand mark at `/favicon.svg` (ICO only when the brand provides one), and writes the static-deploy markers above; no brand ⇒ canonical semio favicons (still with `.nojekyll`). */
 export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHostChrome | undefined): Plugin[] {
-  if (!brand) return semioFaviconVitePlugin(repoRoot);
+  if (!brand) return [...semioFaviconVitePlugin(repoRoot), ...staticDeployMarkerVitePlugins(undefined)];
   return [
     ...faviconVitePlugins({ svgMarkup: brand.logoSvg, icoPath: brand.faviconIcoPath ? resolve(repoRoot, brand.faviconIcoPath) : undefined }),
+    ...staticDeployMarkerVitePlugins(brand.cnameHost),
     {
       name: "semio-brand-html",
       transformIndexHtml: {
@@ -1322,6 +1347,15 @@ export function createWorkspaceViteResolveConfig(repoRoot: string, extraAliases:
 
 //#region 🔖StaticDirAssetPlugin
 function contentTypeForStaticDirAsset(filePath: string): string | undefined {
+  if (filePath.endsWith(".js") || filePath.endsWith(".mjs")) {
+    return "text/javascript";
+  }
+  if (filePath.endsWith(".wasm")) {
+    return "application/wasm";
+  }
+  if (filePath.endsWith(".json")) {
+    return "application/json";
+  }
   if (filePath.endsWith(".png")) {
     return "image/png";
   }
@@ -1561,6 +1595,14 @@ if (import.meta.vitest) {
       ];
       const plugins = playgroundAssetVitePlugins(repoRoot, specs);
       expect(plugins.filter((plugin) => plugin.name === "static-dir-serve/cad-fixture")).toHaveLength(1);
+    });
+  });
+
+  describe("contentTypeForStaticDirAsset", () => {
+    it("assigns module script mime types for wasm plugin artifacts", () => {
+      expect(contentTypeForStaticDirAsset("/plugin-modules/sourcing/sourcing_plugin.js")).toBe("text/javascript");
+      expect(contentTypeForStaticDirAsset("/plugin-modules/_vendor/@bytecodealliance/preview2-shim/cli.js")).toBe("text/javascript");
+      expect(contentTypeForStaticDirAsset("/plugin-modules/puzzle/puzzle_plugin.wasm")).toBe("application/wasm");
     });
   });
 

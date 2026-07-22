@@ -1,0 +1,13 @@
+{
+  "title": "Universal UI Element Id System",
+  "emoji": "🪪",
+  "status": "open",
+  "description": "Give every UI element a consistent, dot-separated camelCased id (e.g. framework.navbar, ui.introduction.next). Ids are logical/renderer-abstract (core contract derives them; each renderer maps to its own element — React DOM id attribute, wgpu hit-target control_id). Normalize existing hyphenated/kebab stragglers (framework.display.save-label, world-orbit-projection, ${windowId}-action-${actionId}), remove the competing kebab data-testid convention, make id required across all ui/js/react component props (ElementBaseProps), and redesign IntroductionAnchor (framework/core/rs/lib.rs) so every anchor variant derives a canonical logical element id — replacing the current mixed [data-slot]/[id$=...]/[data-active-tab-id] selector resolution in introductionAnchorSelector (ui/js/react/index.tsx) with uniform [id=\"...\"] resolution, and letting the introduction (\"glass\") system name which elements are above the glass and visible via the existing label pipeline (useIdLabel/humanizeControlId). Dynamic rows (chat messages, tree rows) use semantic keys when available, else label-normalized segments, else index fallback. Full plan at /Users/ueli/.claude/plans/ui-every-single-ui-melodic-wirth.md. Prior analysis: .repo/🎫/25/11/24/UI-ID-SYSTEM-ANALYSIS/ticket.md (compose/sketchpad scoped — reference only, not reopened).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2213"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪2e372afe93bc45a58b617ad8128612ef"
+  ]
+}

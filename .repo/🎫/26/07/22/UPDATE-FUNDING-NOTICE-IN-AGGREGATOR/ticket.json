@@ -1,0 +1,11 @@
+{
+  "title": "Update Funding Notice in Aggregator",
+  "emoji": "🏷️",
+  "status": "closed",
+  "description": "Update the funding notice (Förderhinweis) in the aggregator introduction brand info to state that it is being funded (wird gefördert) instead of was funded (wurde gefördert).",
+  "summary": "Updated the funding notice (Förderhinweis) in mit-bestand/aggregator/brand.ts to use 'wird gefördert' instead of 'wurde gefördert', and fixed resolveShellLocks to accept any non-empty terminology id verbatim to restore clean vitest suite passes.",
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪a6e71274d45e4cdabb72fc1bd2f03189"
+  ]
+}

@@ -115,6 +115,7 @@ import {
   resolveKeybindingIntent,
   resolveUtilityActivation,
   isWorldTransformGumballMode,
+  gumballTransformDeltaBetweenPoses,
   WindowActionPane,
   resolveCommands,
   commandCategories,
@@ -2929,13 +2930,67 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(findPressedUtilityLeafId([{ id: "brush", kind: "toggle", iconId: "brush", pressed: false, onChange: { controllerId: "x", action: "setActiveUtility", args: { utilityId: "brush" } } }])).toBeUndefined();
   });
 
-  it("isWorldTransformGumballMode requires an explicit move/rotate/scale mode", () => {
+  it("isWorldTransformGumballMode requires an explicit move/rotate/scale/transform mode", () => {
     expect(isWorldTransformGumballMode("move")).toBe(true);
     expect(isWorldTransformGumballMode("rotate")).toBe(true);
     expect(isWorldTransformGumballMode("scale")).toBe(true);
+    expect(isWorldTransformGumballMode("transform")).toBe(true);
     expect(isWorldTransformGumballMode(undefined)).toBe(false);
     expect(isWorldTransformGumballMode("brush")).toBe(false);
     expect(isWorldTransformGumballMode("")).toBe(false);
+  });
+
+  it("gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args", () => {
+    const base = { mode: "mesh", ids: ["obj-1"] };
+    expect(
+      gumballTransformDeltaBetweenPoses(
+        "move",
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [2, -1, 0.5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        base,
+      ),
+    ).toEqual({ action: "translateSelection", args: { ...base, dx: 2, dy: -1, dz: 0.5 } });
+    expect(
+      gumballTransformDeltaBetweenPoses(
+        "move",
+        { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        base,
+      ),
+    ).toBeNull();
+    const rotate = gumballTransformDeltaBetweenPoses(
+      "rotate",
+      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] },
+      base,
+    );
+    expect(rotate?.action).toBe("rotateSelection");
+    expect(rotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
+    const scale = gumballTransformDeltaBetweenPoses(
+      "scale",
+      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 3, 4] },
+      base,
+    );
+    expect(scale).toEqual({ action: "scaleSelection", args: { ...base, sx: 2, sy: 3, sz: 4 } });
+    expect(
+      gumballTransformDeltaBetweenPoses(
+        "transform",
+        { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [1, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        base,
+        "moveX",
+      ),
+    ).toEqual({ action: "translateSelection", args: { ...base, dx: 1, dy: 0, dz: 0 } });
+    const transformRotate = gumballTransformDeltaBetweenPoses(
+      "transform",
+      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] },
+      base,
+      "rotateY",
+    );
+    expect(transformRotate?.action).toBe("rotateSelection");
+    expect(transformRotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
   });
 
   it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryUtilityNodes derives History buttons", () => {
@@ -3104,7 +3159,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "move-utility"]);
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility"]);
     expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       anchor: { kind: "panelFirstDraggable", id: "framework.panel.catalogue" },

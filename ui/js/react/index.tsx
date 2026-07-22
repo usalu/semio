@@ -9988,6 +9988,7 @@ function Slider({
   min = 0,
   max = 100,
   ready,
+  loading = false,
   showLabel,
   onValueChange,
   onPointerDown,
@@ -10001,6 +10002,8 @@ function Slider({
   ElementProps & {
     /** @emoji 🎚 Absolute value along the fixed `[min, max]` range that is already preloaded/ready; drawn as a highlight to the right of the knob. */
     ready?: number;
+    /** @emoji 🌀 Spinning loading ring around the track only — never the row, so the knob and hover chrome stay visible. */
+    loading?: boolean;
     showLabel?: boolean;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
@@ -10176,13 +10179,15 @@ function Slider({
       )}
       {...props}
     >
-      <SliderPrimitive.Track
-        data-slot="slider-track"
-        className={cn("bg-muted relative grow overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=horizontal]:w-full data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
-      >
-        <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
-        {readyWidthPct > 0 ? <div data-slot="slider-ready" data-orientation="horizontal" className={sliderReadyClassName} style={{ left: `${readyStartPct}%`, width: `${readyWidthPct}%` }} /> : null}
-      </SliderPrimitive.Track>
+      <div data-slot="slider-track-wrap" data-loading={loading ? "true" : undefined} className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading))}>
+        <SliderPrimitive.Track
+          data-slot="slider-track"
+          className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
+        >
+          <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
+          {readyWidthPct > 0 ? <div data-slot="slider-ready" data-orientation="horizontal" className={sliderReadyClassName} style={{ left: `${readyStartPct}%`, width: `${readyWidthPct}%` }} /> : null}
+        </SliderPrimitive.Track>
+      </div>
       {Array.from({ length: _values.length }, (_, index) => (
         <SliderPrimitive.Thumb data-slot="slider-thumb" data-dragging={isDragging ? "true" : undefined} key={index} className={sliderThumbClassName} />
       ))}
@@ -25899,11 +25904,11 @@ if (import.meta.vitest) {
           tree: { sections: [{ id: "sec", label: "Section", defaultOpen: true, items: [{ id: "leaf", label: "Leaf row", control: <FlowProbe /> }] }] },
         }),
       ];
-      const { container: leftContainer } = render(<Panel anchor="top-left" visible tabs={tabs} />);
+      const { container: leftContainer } = render(<Panel anchor="top-left" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(leftContainer.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBeNull();
       expect(leftContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("ltr");
 
-      const { container: rightContainer } = render(<Panel anchor="top-right" visible tabs={tabs} />);
+      const { container: rightContainer } = render(<Panel anchor="top-right" visible tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(rightContainer.querySelector('[data-slot="panel"]')?.getAttribute("dir")).toBe("rtl");
       expect(rightContainer.querySelector('[data-slot="panel-content"]')?.getAttribute("dir")).toBeNull();
       expect(rightContainer.querySelector('[data-testid="flow-probe"]')?.textContent).toBe("rtl");
@@ -28898,6 +28903,8 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="slider-value"');
       expect(markup).toContain("text-element");
       expect(markup).not.toContain('data-slot="slider-ready"');
+      expect(markup).toContain('data-slot="slider-track-wrap"');
+      expect(markup).not.toContain("border-loading");
     });
 
     it("renders a ready extent highlight to the right of the knob on a fixed range", () => {
@@ -28908,6 +28915,26 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="slider-ready" class="bg-emphasized');
       expect(markup).toMatch(/left:\s*20%/);
       expect(markup).toMatch(/width:\s*35%/);
+      expect(markup).toContain('data-slot="slider-thumb"');
+      expect(markup).toContain("group-hover:bg-emphasized");
+    });
+
+    it("puts the loading ring on the track wrap only so the knob and hover chrome stay visible", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.loading" value={[10]} min={0} max={100} ready={40} loading />);
+
+      expect(markup).toContain('data-slot="slider-track-wrap"');
+      expect(markup).toContain('data-loading="true"');
+      expect(markup).toContain("border-loading");
+      expect(markup).toContain('data-slot="slider-thumb"');
+      expect(markup).toContain("group-hover:bg-emphasized");
+      expect(markup).toContain("hover:bg-emphasized");
+      expect(markup).toContain('data-slot="slider-ready"');
+      const trackWrapIdx = markup.indexOf('data-slot="slider-track-wrap"');
+      const thumbIdx = markup.indexOf('data-slot="slider-thumb"');
+      expect(trackWrapIdx).toBeGreaterThan(-1);
+      expect(thumbIdx).toBeGreaterThan(trackWrapIdx);
+      expect(markup.indexOf("border-loading")).toBeGreaterThan(trackWrapIdx);
+      expect(markup.indexOf("border-loading")).toBeLessThan(thumbIdx);
     });
 
     it("renders shared field roots that stretch within the property value column", () => {
@@ -29738,6 +29765,28 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="tree-section-row"');
     });
 
+    it("keeps measure-row hover fill and puts slider loading on the track wrap only", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+            <WindowMeasureTreeLeaf label="Count">
+              <Slider id="puzzle3d-fill-count" value={[0]} min={0} max={1000} ready={120} loading />
+            </WindowMeasureTreeLeaf>
+          </WindowMeasureTreeGroup>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toContain('data-slot="window-measure-tree-row"');
+      expect(markup).toContain("hover:bg-hover-interactive-fill");
+      expect(markup).toContain('data-slot="slider-thumb"');
+      expect(markup).toContain("group-hover:bg-emphasized");
+      expect(markup).toContain('data-slot="slider-track-wrap"');
+      expect(markup).toContain('data-loading="true"');
+      expect(markup).toContain("border-loading");
+      expect(markup).not.toMatch(/data-slot="window-measure-tree-row"[^>]*border-loading/);
+      expect(markup).toContain('data-tree-guide-line=""');
+      expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/);
+    });
+
     it("renders nested measure groups with branch guide lines", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
@@ -30505,7 +30554,8 @@ if (treeVitest) {
       expect(onSizeChange).toHaveBeenCalledWith(350);
     });
 
-    it("edge-middle panels (left-middle, right-middle) grow from a single inner handle, clamp to the region, and mirror dir on the right", () => {
+    it("edge-middle panels (left-middle, right-middle) grow from a single inner handle, clamp to the region, and mirror dir on the right", async () => {
+      const { render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
 

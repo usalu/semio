@@ -93,6 +93,7 @@ var PLUGIN_TARGETS = PLUGIN_BUILD_TARGETS.map((target) => ({
   pluginId: target.pluginId,
   moduleUrl: `/plugin-modules/${target.pluginId}/${target.wasmOut.replace(/\.wasm$/, ".js")}`
 }));
+var pluginModuleUrl = (pluginId, fileName) => `/plugin-modules/${pluginId}/${fileName.replace(/\.wasm$/, ".js")}`;
 
 // ../../core/js/index.ts
 class Store {
@@ -296,6 +297,15 @@ function createMemoryStoragePort() {
     }
   };
 }
+var UI_CONTROL_NODE_TYPES = new Set(["input", "select", "toggle", "button", "keyValue", "slider", "numberStepper", "ring", "iconSelect"]);
+function expandPluginRegistry(plugins, primaryPluginId, studioMode = false) {
+  if (studioMode || !primaryPluginId)
+    return plugins;
+  const primaryEntries = plugins.filter((entry) => entry.pluginId === primaryPluginId);
+  const consumes = new Set(primaryEntries.flatMap((entry) => entry.consumes ?? []));
+  const contributorEntries = plugins.filter((entry) => entry.pluginId !== primaryPluginId && (entry.contributes ?? []).some((tag) => consumes.has(tag)));
+  return [...primaryEntries, ...contributorEntries];
+}
 var EMPTY_INVOCATION_RESPONSE = {
   output: null,
   operations: [],
@@ -416,6 +426,28 @@ function findPlaygroundVariant(playgroundPluginId) {
 }
 function resolvePluginRegistryId(playgroundPluginId) {
   return findPlaygroundVariant(playgroundPluginId)?.pluginId ?? playgroundPluginId;
+}
+function resolvePlaygroundDefaultAppId(playgroundPluginId) {
+  return findPlaygroundVariant(playgroundPluginId)?.app;
+}
+function resolvePlaygroundBoot(variant, session) {
+  const defaultAppId = resolvePlaygroundDefaultAppId(variant);
+  if (session?.variant === variant) {
+    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
+  }
+  const registryPluginId = resolvePluginRegistryId(variant);
+  const studioMode = resolvePluginHostConfig(variant) !== undefined;
+  const catalogPlugins = PLUGIN_BUILD_TARGETS.map((target) => ({
+    pluginId: target.pluginId,
+    moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
+    contributes: target.contributes,
+    consumes: target.consumes
+  }));
+  return {
+    variant,
+    defaultAppId,
+    plugins: expandPluginRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode)
+  };
 }
 function resolvePluginHostConfig(playgroundPluginId) {
   const registryId = resolvePluginRegistryId(playgroundPluginId);
@@ -623,18 +655,28 @@ if (import.meta.vitest) {
       expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
       expect(resolvePluginRegistryId("3d")).toBe("puzzle");
     });
+    it("rebuilds plugin rows when the generated session variant is stale", () => {
+      const boot = resolvePlaygroundBoot("aggregator", {
+        variant: "sourcing",
+        defaultAppId: "sourcing-curate",
+        plugins: [{ pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js" }]
+      });
+      expect(boot.variant).toBe("aggregator");
+      expect(boot.defaultAppId).toBe("puzzle3d-play");
+      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }]);
+    });
   });
 }
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "aggregator",
-  registryPluginId: "puzzle",
-  defaultAppId: "puzzle3d-play",
+  variant: "lowpoly",
+  registryPluginId: "lowpoly",
+  defaultAppId: undefined,
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js", contributes: [], consumes: [] }
   ]
 };
 
@@ -823,13 +865,14 @@ function pluginHandleForBridge(handle) {
     windowMeasures: (instanceId, viewStateJson) => handle.windowMeasures(instanceId, JSON.parse(viewStateJson)).then((measures) => JSON.stringify(measures))
   };
 }
-var pluginTargets = PLAYGROUND_SESSION.plugins.map((entry) => ({
+var boot = resolvePlaygroundBoot(PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+var pluginTargets = boot.plugins.map((entry) => ({
   pluginId: entry.pluginId,
   moduleUrl: entry.moduleUrl,
   contributes: entry.contributes,
   consumes: entry.consumes
 }));
-var pluginFilter = PLAYGROUND_SESSION.variant;
+var pluginFilter = boot.variant;
 async function pluginModuleAvailable(moduleUrl) {
   try {
     const response = await fetch(moduleUrl, { method: "HEAD" });

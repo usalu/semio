@@ -3,6 +3,25 @@
 @import "./palette.css";
 @plugin "@tailwindcss/typography";
 
+/* 🩹 Tailwind v4's production CSS pass silently drops `@layer base` custom properties it decides are
+   "unused" (its content scan only credits a property as used through a Tailwind-generated utility class,
+   never through a plain hand-authored rule elsewhere in this file that reads it via `var()`) — these six
+   are exactly that case (border/scrollbar/hover-fill colors consumed by plain selectors like
+   `[data-slot="navbar"]`, never through a matching utility class), so their `@layer base :root` originals
+   below get pruned in production while every rule that reads them keeps working in dev. Re-declaring them
+   here, outside any `@layer`, sidesteps the pruning: unlayered CSS is always the highest-priority layer
+   in the cascade, so this wins regardless of textual order and regardless of whether Tailwind also keeps
+   or drops the `@layer base` copy. Values must stay in lockstep with the originals in the `:root` block
+   under `@layer base` further down this file. */
+:root {
+  --border-normal-color: var(--color-gray);
+  --border-emphasized-color: var(--foreground);
+  --border-color: var(--border-normal-color);
+  --hover-interactive-fill: var(--border-normal-color);
+  --scrollbar-thumb: var(--border-color);
+  --scrollbar-thumb-hover: var(--muted-foreground);
+}
+
 #navbar,
 #compose\.sketchpad\.navbar,
 [data-slot="navbar"],
@@ -895,6 +914,43 @@
   syntax: "<angle>";
   inherits: false;
   initial-value: 0deg;
+}
+
+/* ⏱️ `@property`-registers the two `animation-duration` tokens below for the same reason the angle above
+   is registered: an unregistered custom property that's only ever read via `var()` inside another
+   hand-authored rule (never through a Tailwind-generated utility class Tailwind's content scan can see)
+   gets silently dropped from `@layer base` by Tailwind v4's production CSS pass, invalidating the
+   `animation`/`animation-duration` declaration that reads it and killing the animation outright — a plain
+   `:root` custom property isn't enough insurance against that pruning; `@property` is. */
+@property --loading-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 1.6s;
+}
+
+/* Same pruning risk as above, but these two are plain static keywords (never theme/appearance-reactive,
+   just like the angle/duration tokens), so `@property` is a complete fix on its own. The six *color*
+   tokens below it (`--border-normal-color` and friends) need a different fix — see the unlayered `:root`
+   re-declaration near the top of this file: their real value is a `var()` chain into theme colors that
+   legitimately differs per light/dark appearance, and `@property`'s `initial-value` must be a single
+   static fallback, so registering them here would have silently locked every border/scrollbar/hover-fill
+   color to one guessed shade regardless of theme — wrong in exactly the way this bug already was. */
+@property --cursor-help {
+  syntax: "*";
+  inherits: false;
+  initial-value: help;
+}
+
+@property --cursor-text {
+  syntax: "*";
+  inherits: false;
+  initial-value: text;
+}
+
+@property --introduced-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 1.6s;
 }
 
 @keyframes loading-border-spin {

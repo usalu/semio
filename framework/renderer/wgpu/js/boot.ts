@@ -3,6 +3,7 @@
 // #endregion 🧲Header
 
 import { parseInvocationResponse, type PluginRegistryEntry } from "@semio-tech/framework-core";
+import { resolvePlaygroundBoot } from "@semio-tech/framework-core";
 import { PLAYGROUND_SESSION } from "../../../product/os/dev/generated/session.ts";
 
 await new Promise<void>((resolve) => {
@@ -235,13 +236,14 @@ function pluginHandleForBridge(handle: PluginModuleHandle) {
   };
 }
 
-const pluginTargets: PluginRegistryEntry[] = PLAYGROUND_SESSION.plugins.map((entry) => ({
+const boot = resolvePlaygroundBoot(PLAYGROUND_SESSION.variant, PLAYGROUND_SESSION);
+const pluginTargets: PluginRegistryEntry[] = boot.plugins.map((entry) => ({
   pluginId: entry.pluginId,
   moduleUrl: entry.moduleUrl,
   contributes: entry.contributes,
   consumes: entry.consumes,
 }));
-const pluginFilter = PLAYGROUND_SESSION.variant;
+const pluginFilter = boot.variant;
 
 async function pluginModuleAvailable(moduleUrl: string): Promise<boolean> {
   try {

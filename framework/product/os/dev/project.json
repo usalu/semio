@@ -16,7 +16,8 @@
         "cwd": "framework/product/os/dev",
         "command": "bun ./script.ts build",
         "forwardAllArgs": true
-      }
+      },
+      "dependsOn": ["@semio-tech/ui-asset:build"]
     },
     "test": {
       "executor": "nx:run-commands",

@@ -3411,6 +3411,68 @@ impl From<String> for CommandRef {
 }
 //#endregion 🔖Commands
 
+//#region 🆔ElementId
+/// @emoji 🆔 Whether `id` matches the renderer-agnostic UI element id grammar: dot-separated segments,
+/// each starting with a lowercase letter and continuing with letters/digits only (camelCase, no
+/// hyphens/underscores) — e.g. `framework.window.main.action.addLayer`. This id is the single
+/// integration key across i18n, tooltips, hotkeys, command origin tracking, tutorials, E2E selectors,
+/// and introduction anchors; each renderer maps it onto its own element (React → DOM `id` attribute,
+/// wgpu → hit-target `control_id`), so no renderer-specific shape leaks into the grammar itself.
+pub fn is_element_id(id: &str) -> bool {
+    if id.is_empty() {
+        return false;
+    }
+    id.split('.').all(|segment| {
+        let mut chars = segment.chars();
+        match chars.next() {
+            Some(first) if first.is_ascii_lowercase() => chars.all(|c| c.is_ascii_alphanumeric()),
+            _ => false,
+        }
+    })
+}
+
+/// @emoji 🆔 Normalizes arbitrary input (a domain object's own id, a free-text label, an already
+/// grammar-safe word) into a single camelCase element-id segment: splits on `-`/`_`/` `/`.`, lowercases
+/// the very first character, capitalizes the first character after each separator, and drops any other
+/// non-alphanumeric character. Idempotent on input that is already a valid segment. Used as the last
+/// resort by `child_element_id` when a child id is derived from something not already grammar-safe (e.g.
+/// a runtime label) — prefer a real semantic key first, then this, then a numeric index.
+pub fn element_id_segment(raw: &str) -> String {
+    let mut segment = String::new();
+    let mut capitalize_next = false;
+    for ch in raw.chars() {
+        if ch == '-' || ch == '_' || ch == ' ' || ch == '.' {
+            capitalize_next = true;
+            continue;
+        }
+        if !ch.is_ascii_alphanumeric() {
+            continue;
+        }
+        if segment.is_empty() {
+            segment.push(ch.to_ascii_lowercase());
+        } else if capitalize_next {
+            segment.push(ch.to_ascii_uppercase());
+            capitalize_next = false;
+        } else {
+            segment.push(ch);
+        }
+    }
+    segment
+}
+
+/// @emoji 🆔 Derives a child element id by suffixing `parent` with one or more segments, each normalized
+/// through `element_id_segment` — the hierarchical mechanism every composite element uses to name its
+/// parts instead of a context/registry: `child_element_id("ui.chat", &["send"])` → `"ui.chat.send"`.
+pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
+    let mut id = parent.to_string();
+    for segment in segments {
+        id.push('.');
+        id.push_str(&element_id_segment(segment));
+    }
+    id
+}
+//#endregion 🆔ElementId
+
 //#region 🔖Introduction
 /// @emoji 🎓 A first-run walkthrough an app declares to introduce its UI, utilities, and actions to a
 /// first-time user. Rendered as an ordered sequence of `IntroductionStepDefinition`s over a full-screen
@@ -3532,8 +3594,33 @@ pub enum IntroductionAnchor {
     /// 🌲 First draggable tree-item row inside the named panel tab (document order within that
     /// uncollapsed panel) — used to teach catalogue drag-and-drop without hardcoding a kind id.
     PanelFirstDraggable(String),
-    /// 🪝 Escape hatch: a well-known `data-slot` name, unvalidated.
-    Slot(String),
+    /// 🪝 Escape hatch: a raw UI element id (must satisfy `is_element_id`), for anchors none of the
+    /// other variants name.
+    Element(String),
+}
+
+impl IntroductionAnchor {
+    /// @emoji 🎯 The single logical element id this anchor resolves to, or `None` for anchors that name a
+    /// *class* of elements rather than one singular instance. `Screen` has no element at all;
+    /// `WindowKind`/`Action` are deliberately class references — multiple window instances can share a
+    /// kind, and the same action can be dispatched from more than one open window — so renderers resolve
+    /// those two via a dedicated class attribute (`data-window-kind-id` / `data-action-id`) instead of a
+    /// single `id`. Every other variant names exactly one element.
+    pub fn element_id(&self) -> Option<String> {
+        match self {
+            IntroductionAnchor::Screen => None,
+            IntroductionAnchor::Navbar => Some("framework.navbar".to_string()),
+            IntroductionAnchor::Footer => Some("framework.footer".to_string()),
+            IntroductionAnchor::WindowKind(_) => None,
+            IntroductionAnchor::Utility(utility_ref) => Some(utility_ref.as_str().to_string()),
+            IntroductionAnchor::Action(_) => None,
+            // 📑 `id` is already a dotted `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended
+            // directly rather than through `child_element_id`, which would collapse its dots into camelCase.
+            IntroductionAnchor::PanelTab(id) => Some(format!("framework.panelTab.{id}")),
+            IntroductionAnchor::PanelFirstDraggable(id) => Some(format!("framework.panelTab.{id}")),
+            IntroductionAnchor::Element(id) => Some(id.clone()),
+        }
+    }
 }
 
 /// @emoji 🔦 How a step's anchor is treated against the full-screen glass veil.
@@ -5157,7 +5244,8 @@ mod app_document_tests {
 
     //#region 🔖ActionArgsAndUtilitiesTests
     use crate::ui::{
-        effective_action_args, missing_required_args, resolve_window_actions, ActionArgControl, ActionArgDef,
+        child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args, resolve_window_actions,
+        ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
         CommandScope, DialogDefinition, IntroductionAdvance,
         IntroductionAnchor, Modes, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
@@ -5345,13 +5433,64 @@ mod app_document_tests {
             IntroductionAnchor::Action(ActionRef::new("add")),
             IntroductionAnchor::PanelTab("puzzle.catalogue".into()),
             IntroductionAnchor::PanelFirstDraggable("puzzle.catalogue".into()),
-            IntroductionAnchor::Slot("navbar".into()),
+            IntroductionAnchor::Element("framework.navbar".into()),
         ] {
             let json = serde_json::to_string(&anchor).unwrap();
             assert!(json.contains("\"kind\":"), "tagged with kind: {json}");
             let round: IntroductionAnchor = serde_json::from_str(&json).unwrap();
             assert_eq!(round, anchor);
         }
+    }
+
+    #[test]
+    fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
+        assert!(is_element_id("framework.navbar"));
+        assert!(is_element_id("ui.window.main.action.addLayer"));
+        assert!(is_element_id("brush"));
+        assert!(!is_element_id(""));
+        assert!(!is_element_id("framework.display.save-label"));
+        assert!(!is_element_id("Framework.navbar"));
+        assert!(!is_element_id("framework..navbar"));
+        assert!(!is_element_id("framework.navbar."));
+    }
+
+    #[test]
+    fn element_id_segment_normalizes_and_is_idempotent() {
+        assert_eq!(element_id_segment("world-orbit-projection"), "worldOrbitProjection");
+        assert_eq!(element_id_segment("Some Name"), "someName");
+        assert_eq!(element_id_segment("myUtilityId"), "myUtilityId");
+        assert_eq!(element_id_segment("addLayer"), element_id_segment(&element_id_segment("addLayer")));
+    }
+
+    #[test]
+    fn child_element_id_suffixes_and_normalizes_segments() {
+        assert_eq!(child_element_id("ui.chat", &["send"]), "ui.chat.send");
+        assert_eq!(child_element_id("ui.chat", &["message-row"]), "ui.chat.messageRow");
+        assert_eq!(child_element_id("ui.tree", &["row", "3"]), "ui.tree.row.3");
+    }
+
+    #[test]
+    fn introduction_anchor_element_id_is_none_for_class_references() {
+        assert_eq!(IntroductionAnchor::Screen.element_id(), None);
+        assert_eq!(IntroductionAnchor::WindowKind("main".into()).element_id(), None);
+        assert_eq!(IntroductionAnchor::Action(ActionRef::new("add")).element_id(), None);
+    }
+
+    #[test]
+    fn introduction_anchor_element_id_resolves_singular_anchors() {
+        assert_eq!(IntroductionAnchor::Navbar.element_id(), Some("framework.navbar".to_string()));
+        assert_eq!(IntroductionAnchor::Footer.element_id(), Some("framework.footer".to_string()));
+        assert_eq!(IntroductionAnchor::Utility(UtilityRef::new("brush")).element_id(), Some("brush".to_string()));
+        assert_eq!(
+            IntroductionAnchor::PanelTab("puzzle.catalogue".into()).element_id(),
+            Some("framework.panelTab.puzzle.catalogue".to_string())
+        );
+        assert_eq!(
+            IntroductionAnchor::PanelFirstDraggable("puzzle.catalogue".into()).element_id(),
+            Some("framework.panelTab.puzzle.catalogue".to_string())
+        );
+        assert_eq!(IntroductionAnchor::Element("ui.custom.thing".into()).element_id(), Some("ui.custom.thing".to_string()));
+        assert!(is_element_id(&IntroductionAnchor::Navbar.element_id().unwrap()));
     }
 
     #[test]

@@ -1139,6 +1139,8 @@ fn lowpoly_utility_param_slider(
         min,
         max,
         step: Some(step),
+        ready: None,
+        loading: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
     }
 }
@@ -1223,6 +1225,8 @@ fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLab
         min,
         max,
         step: Some(step),
+        ready: None,
+        loading: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
     };
     WindowMeasure::Group {
@@ -2064,7 +2068,9 @@ impl DocumentApp for LowpolyPlayApp {
         let projection = doc.projection;
         let labels = resolve_labels::<LowpolyLabels>(view_state);
         let active_utility = view_state.active_utility_id.as_deref().unwrap_or(LOWPOLY_TRANSFORM_UTILITY_DEFAULT);
-        let view = self.view(projection);
+        let scratch_projection = self.transform.as_ref().map(|session| session.doc.projection().clone());
+        let render_projection = scratch_projection.as_ref().unwrap_or(projection);
+        let view = LowpolyView { projection: render_projection, runtime: &self.runtime };
         if matches!(body_key, LOWPOLY_PLAY_BODY_MAIN | LOWPOLY_PLAY_BODY_UV) {
             self.refresh_texture_cache(projection);
         }

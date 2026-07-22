@@ -1138,7 +1138,7 @@
       "command": "bun run dev:sourcing",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SOURCING_PLAY_PORT": "6081",
+        "S_OS_PORT": "6081",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -1158,7 +1158,7 @@
       "command": "bun run dev:sourcing",
       "cwd": "${workspaceFolder}",
       "env": {
-        "SOURCING_PLAY_PORT": "6181",
+        "S_OS_PORT": "6181",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {

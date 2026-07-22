@@ -208,6 +208,7 @@ import {
   type GumballConfig,
   type GumballHandleKind,
   type GumballPose,
+  gumballHandleKindToTransformMode,
   type SelectionMarqueeCoverage,
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
@@ -1136,11 +1137,8 @@ export function resolveShellLocks(locks: FrameworkOsLocks | undefined): Resolved
     }
   }
   if (locks.terminology !== undefined) {
-    if ((SHELL_TERMINOLOGIES as readonly string[]).includes(locks.terminology)) {
+    if (locks.terminology !== "") {
       resolved.terminology = locks.terminology as ShellTerminology;
-    } else {
-      console.warn(`[os] invalid SEMIO_LOCKED_TERMINOLOGY ${JSON.stringify(locks.terminology)}, falling back to "native"`);
-      resolved.terminology = "native";
     }
   }
   if (locks.themeId !== undefined) {
@@ -2972,6 +2970,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       min={measure.min}
       max={measure.max}
       ready={measure.ready}
+      loading={measure.loading === true}
       step={measure.step}
       onValueChange={(values) => dispatchLatest({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value: values[0] ?? measure.value } })}
     />
@@ -3006,7 +3005,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   }
   if (measure.kind === "slider") {
     return (
-      <WindowMeasureTreeLeaf key={measure.id} label={measure.label} loading={measure.loading === true}>
+      <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
         <WindowMeasureSlider measure={measure} onAction={onAction} />
       </WindowMeasureTreeLeaf>
     );
@@ -10074,12 +10073,63 @@ function BrushMeshRegistrar({ url, onRegister }: { readonly url: string; readonl
   return null;
 }
 
-/** 🎛 True when `mode` is an explicit transform-gumball utility (`move`/`rotate`/`scale`) — never treat a missing/unknown mode as move. */
+/** 🎛 True when `mode` is an explicit transform-gumball utility (`move`/`rotate`/`scale`/`transform`) — never treat a missing/unknown mode as move. */
 export function isWorldTransformGumballMode(mode: string | undefined): boolean {
-  return mode === "move" || mode === "rotate" || mode === "scale";
+  return mode === "move" || mode === "rotate" || mode === "scale" || mode === "transform";
+}
+
+function gumballToolForTransformMode(transformMode: string | undefined, handleKind?: GumballHandleKind): "translate" | "rotate" | "scale" {
+  if (transformMode === "transform" && handleKind != null) {
+    return gumballHandleKindToTransformMode(handleKind);
+  }
+  if (transformMode === "rotate") return "rotate";
+  if (transformMode === "scale") return "scale";
+  return "translate";
+}
+
+const GUMBALL_TRANSFORM_EPSILON = 1e-6;
+
+/** @emoji 🎛 Builds one incremental `translateSelection` / `rotateSelection` / `scaleSelection` dispatch from consecutive gumball poses. */
+export function gumballTransformDeltaBetweenPoses(
+  transformMode: string | undefined,
+  before: GumballPose,
+  after: GumballPose,
+  base: Record<string, unknown>,
+  handleKind?: GumballHandleKind,
+): { readonly action: string; readonly args: Record<string, unknown> } | null {
+  const tool = gumballToolForTransformMode(transformMode, handleKind);
+  if (tool === "translate") {
+    const dx = after.position[0] - before.position[0];
+    const dy = after.position[1] - before.position[1];
+    const dz = after.position[2] - before.position[2];
+    if (Math.abs(dx) < GUMBALL_TRANSFORM_EPSILON && Math.abs(dy) < GUMBALL_TRANSFORM_EPSILON && Math.abs(dz) < GUMBALL_TRANSFORM_EPSILON) {
+      return null;
+    }
+    return { action: "translateSelection", args: { ...base, dx, dy, dz } };
+  }
+  if (tool === "rotate") {
+    const beforeQuat = new Quaternion(...before.quaternion);
+    const afterQuat = new Quaternion(...after.quaternion);
+    const delta = afterQuat.multiply(beforeQuat.invert());
+    const angle = 2 * Math.acos(Math.min(1, Math.max(-1, delta.w)));
+    if (angle < GUMBALL_TRANSFORM_EPSILON) return null;
+    const sinHalfAngle = Math.sqrt(Math.max(0, 1 - delta.w * delta.w));
+    const axis = sinHalfAngle < 1e-6 ? { x: 0, y: 0, z: 1 } : { x: delta.x / sinHalfAngle, y: delta.y / sinHalfAngle, z: delta.z / sinHalfAngle };
+    return { action: "rotateSelection", args: { ...base, ax: axis.x, ay: axis.y, az: axis.z, angle } };
+  }
+  const sx = after.scale[0] / Math.max(before.scale[0], GUMBALL_TRANSFORM_EPSILON);
+  const sy = after.scale[1] / Math.max(before.scale[1], GUMBALL_TRANSFORM_EPSILON);
+  const sz = after.scale[2] / Math.max(before.scale[2], GUMBALL_TRANSFORM_EPSILON);
+  if (Math.abs(sx - 1) < GUMBALL_TRANSFORM_EPSILON && Math.abs(sy - 1) < GUMBALL_TRANSFORM_EPSILON && Math.abs(sz - 1) < GUMBALL_TRANSFORM_EPSILON) {
+    return null;
+  }
+  return { action: "scaleSelection", args: { ...base, sx, sy, sz } };
 }
 
 function gumballConfigForTransformMode(mode: string): GumballConfig {
+  if (mode === "transform") {
+    return { moveAxes: true, movePlanes: true, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
+  }
   if (mode === "rotate") {
     return { moveAxes: false, movePlanes: false, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
   }
@@ -10094,12 +10144,16 @@ function SceneGumball({
   config,
   active,
   onDraggingChanged,
+  onDragStart,
+  onDrag,
   onDragEnd,
 }: {
   readonly target?: readonly [number, number, number];
   readonly config: GumballConfig;
   readonly active: boolean;
   readonly onDraggingChanged: (dragging: boolean) => void;
+  readonly onDragStart?: (kind: GumballHandleKind, before: GumballPose) => void;
+  readonly onDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
   readonly onDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
 }) {
   const pivotRef = useRef<Object3D>(new Object3D());
@@ -10120,6 +10174,8 @@ function SceneGumball({
         target={pivotRef.current}
         config={config}
         onDraggingChanged={onDraggingChanged}
+        onDragStart={onDragStart}
+        onDrag={onDrag}
         onDragEnd={(kind, before, after) => {
           onDragEnd(kind, before, after);
           pivotRef.current.position.set(target[0], target[1], target[2]);
@@ -10472,6 +10528,8 @@ function WorldInstancesLayer({
   onPaintAt,
   gumballDragActive,
   onGumballDraggingChanged,
+  onGumballDragStart,
+  onGumballDrag,
   onGumballDragEnd,
   onFaceDragStart,
   mergedComponentIds,
@@ -10490,6 +10548,8 @@ function WorldInstancesLayer({
   readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
   readonly gumballDragActive: boolean;
   readonly onGumballDraggingChanged: (dragging: boolean) => void;
+  readonly onGumballDragStart?: (kind: GumballHandleKind, before: GumballPose) => void;
+  readonly onGumballDrag?: (kind: GumballHandleKind, pose: GumballPose) => void;
   readonly onGumballDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
   readonly onFaceDragStart?: (args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => void;
   /** Live drag-preview merged component id set (null when no marquee drag is in progress). */
@@ -10607,7 +10667,15 @@ function WorldInstancesLayer({
           );
         })}
       </group>
-      <SceneGumball target={selection.gumballTarget} config={gumballConfig} active={gumballVisible} onDraggingChanged={onGumballDraggingChanged} onDragEnd={onGumballDragEnd} />
+      <SceneGumball
+        target={selection.gumballTarget}
+        config={gumballConfig}
+        active={gumballVisible}
+        onDraggingChanged={onGumballDraggingChanged}
+        onDragStart={onGumballDragStart}
+        onDrag={onGumballDrag}
+        onDragEnd={onGumballDragEnd}
+      />
     </WorldLayerStack>
   );
 }
@@ -11462,6 +11530,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
+  const gumballDragLastPoseRef = useRef<GumballPose | null>(null);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   const gridFactor = lod.gridFactor ?? interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR;
@@ -11853,42 +11922,44 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     return { mergedComponentIds: mergeIdSet(marqueeMergeMode, selection.componentIds ?? [], hits), mergedInstanceIds: null };
   }, [instances, marqueeCoverage, marqueeDragActive, marqueeMergeMode, marqueePath, meshes, method, selection.activeObjectId, selection.componentIds, selection.ids, selectionMode]);
 
-  const handleGumballDragEnd = useCallback(
-    (_kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      const tool = selection.transformMode === "rotate" ? "rotate" : selection.transformMode === "scale" ? "scale" : "translate";
-      const base = selectionArgs();
-      if (tool === "translate") {
-        dispatch("translateSelection", {
-          ...base,
-          dx: after.position[0] - before.position[0],
-          dy: after.position[1] - before.position[1],
-          dz: after.position[2] - before.position[2],
-        });
-        return;
-      }
-      if (tool === "rotate") {
-        const beforeQuat = new Quaternion(...before.quaternion);
-        const afterQuat = new Quaternion(...after.quaternion);
-        const delta = afterQuat.multiply(beforeQuat.invert());
-        // Quaternion.w = cos(angle/2); clamp for asin/acos precision at the identity boundary.
-        const angle = 2 * Math.acos(Math.min(1, Math.max(-1, delta.w)));
-        const sinHalfAngle = Math.sqrt(Math.max(0, 1 - delta.w * delta.w));
-        const axis = sinHalfAngle < 1e-6 ? { x: 0, y: 0, z: 1 } : { x: delta.x / sinHalfAngle, y: delta.y / sinHalfAngle, z: delta.z / sinHalfAngle };
-        dispatch("rotateSelection", {
-          ...base,
-          ax: axis.x,
-          ay: axis.y,
-          az: axis.z,
-          angle,
-        });
-        return;
-      }
-      const sx = after.scale[0] / Math.max(before.scale[0], 1e-6);
-      const sy = after.scale[1] / Math.max(before.scale[1], 1e-6);
-      const sz = after.scale[2] / Math.max(before.scale[2], 1e-6);
-      dispatch("scaleSelection", { ...base, sx, sy, sz });
+  const dispatchGumballPoseDelta = useCallback(
+    (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+      const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, selectionArgs(), kind);
+      if (!payload) return;
+      dispatch(payload.action, payload.args);
     },
     [dispatch, selection.transformMode, selectionArgs],
+  );
+
+  const handleGumballDragStart = useCallback(
+    (kind: GumballHandleKind, before: GumballPose) => {
+      gumballDragLastPoseRef.current = before;
+      dispatch("transformBegin");
+    },
+    [dispatch],
+  );
+
+  const handleGumballDrag = useCallback(
+    (kind: GumballHandleKind, pose: GumballPose) => {
+      const lastPose = gumballDragLastPoseRef.current;
+      if (!lastPose) {
+        gumballDragLastPoseRef.current = pose;
+        return;
+      }
+      dispatchGumballPoseDelta(kind, lastPose, pose);
+      gumballDragLastPoseRef.current = pose;
+    },
+    [dispatchGumballPoseDelta],
+  );
+
+  const handleGumballDragEnd = useCallback(
+    (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+      const lastPose = gumballDragLastPoseRef.current ?? before;
+      dispatchGumballPoseDelta(kind, lastPose, after);
+      gumballDragLastPoseRef.current = null;
+      dispatch("transformEnd");
+    },
+    [dispatch, dispatchGumballPoseDelta],
   );
 
   const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
@@ -12229,6 +12300,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 onPaintAt={paintMode ? handlePaintAt : undefined}
                 gumballDragActive={gumballDragActive}
                 onGumballDraggingChanged={setGumballDragActive}
+                onGumballDragStart={handleGumballDragStart}
+                onGumballDrag={handleGumballDrag}
                 onGumballDragEnd={handleGumballDragEnd}
                 onFaceDragStart={handleFaceDragStart}
                 mergedComponentIds={marqueePreview.mergedComponentIds}

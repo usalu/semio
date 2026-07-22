@@ -4,7 +4,7 @@
 // #endregion 🧲Header
 
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../plugin/registry/generated/playgrounds.ts";
-import { PLUGIN_HOST_CONFIGS } from "../../plugin/registry/generated/plugins.ts";
+import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../plugin/registry/generated/plugins.ts";
 
 // #region 🧬GeneratedMirror
 /** 🧬 Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -1397,6 +1397,8 @@ export type ShellBrand = {
   readonly assetsDir?: string;
   /** 📦 Repo-root-relative directory this brand's build output lands in instead of the shared playground `dist/` — keeps a brand's specialization (including its build artifact) self-contained. */
   readonly distDir?: string;
+  /** 🌐 Custom domain this brand's static build deploys to (e.g. GitHub Pages) — written verbatim into a `CNAME` file at the build root. */
+  readonly cnameHost?: string;
 };
 //#endregion 🏷️ShellBrand
 
@@ -2391,6 +2393,41 @@ export function resolvePlaygroundDefaultAppId(playgroundPluginId: string): strin
   return findPlaygroundVariant(playgroundPluginId)?.app;
 }
 
+export type PlaygroundBootSession = {
+  readonly variant: string;
+  readonly defaultAppId?: string;
+  readonly plugins: readonly PluginRegistryEntry[];
+};
+
+export type PlaygroundBoot = {
+  readonly variant: string;
+  readonly defaultAppId?: string;
+  readonly plugins: readonly PluginRegistryEntry[];
+};
+
+/** @emoji 🎮 Resolves the wasm plugin list and default app for one playground variant; when the on-disk
+ * `generated/session.ts` was overwritten by another concurrent dev variant, rebuilds from the generated
+ * plugin catalog instead of trusting the stale plugin rows. */
+export function resolvePlaygroundBoot(variant: string, session?: PlaygroundBootSession): PlaygroundBoot {
+  const defaultAppId = resolvePlaygroundDefaultAppId(variant);
+  if (session?.variant === variant) {
+    return { variant, defaultAppId: session.defaultAppId ?? defaultAppId, plugins: session.plugins };
+  }
+  const registryPluginId = resolvePluginRegistryId(variant);
+  const studioMode = resolvePluginHostConfig(variant) !== undefined;
+  const catalogPlugins: PluginRegistryEntry[] = PLUGIN_BUILD_TARGETS.map((target) => ({
+    pluginId: target.pluginId,
+    moduleUrl: pluginModuleUrl(target.pluginId, target.wasmOut),
+    contributes: target.contributes,
+    consumes: target.consumes,
+  }));
+  return {
+    variant,
+    defaultAppId,
+    plugins: expandPluginRegistry(catalogPlugins, studioMode ? undefined : registryPluginId, studioMode),
+  };
+}
+
 //#region 🏠🧳PluginHostConfig
 /** 🏠🧳 Declares, for a plugin whose manifest offers a host-style multi-app experience (one app is the
  * landing/default view, another hosts other apps as spawned sub-instances — e.g. "s"'s home/studio
@@ -2648,6 +2685,17 @@ if (import.meta.vitest) {
     it("resolves playground aliases to registry plugin ids", () => {
       expect(resolvePluginRegistryId("aggregator")).toBe("puzzle");
       expect(resolvePluginRegistryId("3d")).toBe("puzzle");
+    });
+
+    it("rebuilds plugin rows when the generated session variant is stale", () => {
+      const boot = resolvePlaygroundBoot("aggregator", {
+        variant: "sourcing",
+        defaultAppId: "sourcing-curate",
+        plugins: [{ pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js" }],
+      });
+      expect(boot.variant).toBe("aggregator");
+      expect(boot.defaultAppId).toBe("puzzle3d-play");
+      expect(boot.plugins).toEqual([{ pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }]);
     });
   });
 }
