@@ -74,6 +74,9 @@ import {
   raycastGroundPoint,
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
+  semanticColorsFromPalette,
+  isCurveOnlyWorldMesh,
+  meshBoundsCorners,
   resolveVortexPointerDownIntent,
   worldMeshMaterialRevision,
   worldVortexMaterialRevision,
@@ -166,6 +169,7 @@ import {
   useUIFind,
   interpretUiNode,
   dagOverlayLabelFill,
+  dagOverlayLabelFillHex,
   dispatchOpenedFiles,
   scheduleDispatchAction,
   sampleMediaFrameTimestampsMs,
@@ -839,14 +843,22 @@ describe("declarative forms parity", () => {
     expect(emphasized).toContain("font-semibold");
   });
 
-  it("dag overlay label fills use CSS appearance variables", () => {
+  it("dag overlay label fills resolve to Canvas2D-safe hex for appearance", () => {
     const chrome = { selectedIds: new Set<string>(["sel"]), highlightedIds: new Set<string>(["hi"]) };
     expect(dagOverlayLabelFill("plain", false, null, chrome)).toBe("var(--color-muted-foreground)");
     expect(dagOverlayLabelFill("sel", false, null, chrome)).toBe("var(--color-foreground)");
-    expect(dagOverlayLabelFill("hi", false, null, chrome)).toBe("var(--color-secondary)");
-    expect(dagOverlayLabelFill("plain", false, "plain", chrome)).toBe("var(--color-foreground)");
-    expect(dagOverlayLabelFill("ghost", true, null, chrome)).toBe("var(--color-secondary)");
-    expect(dagOverlayLabelFill("plain", false, null, chrome, ["plain"])).toBe("var(--color-border)");
+    const muted = dagOverlayLabelFillHex("plain", false, null, chrome);
+    const selected = dagOverlayLabelFillHex("sel", false, null, chrome);
+    const highlighted = dagOverlayLabelFillHex("hi", false, null, chrome);
+    const hovered = dagOverlayLabelFillHex("plain", false, "plain", chrome);
+    const ghost = dagOverlayLabelFillHex("ghost", true, null, chrome);
+    const dimmed = dagOverlayLabelFillHex("plain", false, null, chrome, ["plain"]);
+    for (const hex of [muted, selected, highlighted, hovered, ghost, dimmed]) {
+      expect(hex).toMatch(/^#[0-9a-f]{6}$/iu);
+      expect(hex).not.toBe("#000000");
+    }
+    expect(selected).toBe(hovered);
+    expect(highlighted).toBe(ghost);
   });
 
   it("renders field description, required marker and inline error", () => {
@@ -1759,9 +1771,10 @@ describe("framework renderer hosts", () => {
     });
   });
 
-  it("blocks instance picking for fill and brush engagements but not move", () => {
+  it("blocks instance picking for fill, brush, and volume brush engagements but not move", () => {
     expect(worldInstancePickBlocked("brush")).toBe(true);
     expect(worldInstancePickBlocked("fill")).toBe(true);
+    expect(worldInstancePickBlocked("volumeBrush")).toBe(true);
     expect(worldInstancePickBlocked("move")).toBe(false);
     expect(worldInstancePickBlocked(undefined)).toBe(false);
   });
@@ -1805,6 +1818,38 @@ describe("framework renderer hosts", () => {
     expect(resolveMeshStyle({ highlighted: true, selected: true })).toBe("selected");
     expect(resolveMeshStyle({ selected: true, disabled: true })).toBe("disabled");
     expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true })).toBe("disabled");
+  });
+
+  it("maps edge hover to line paint so coplanar edges stay distinct from face hover fill", () => {
+    const palette = {
+      neutral: { meshColor: "#111111", lineColor: "#222222", emissiveIntensity: 0, opacity: 1 },
+      hovered: { meshColor: "#aaaaaa", lineColor: "#333333", emissiveIntensity: 0.08, opacity: 1 },
+      selected: { meshColor: "#0000ff", lineColor: "#0000ff", emissiveIntensity: 0.35, opacity: 1 },
+      highlighted: { meshColor: "#00ff00", lineColor: "#00ff00", emissiveIntensity: 0.2, opacity: 1 },
+      disabled: { meshColor: "#999999", lineColor: "#888888", emissiveIntensity: 0, opacity: 0.45 },
+    } as Parameters<typeof semanticColorsFromPalette>[0];
+    const colors = semanticColorsFromPalette(palette);
+    expect(colors.hover).toBe("#aaaaaa");
+    expect(colors.edgeHover).toBe("#333333");
+    expect(colors.edgeHover).not.toBe(colors.hover);
+    expect(colors.select).toBe("#0000ff");
+  });
+
+  it("treats centerline meshes without shaded triangles as curve-only instances", () => {
+    expect(isCurveOnlyWorldMesh({ indices: [], edgePositions: [0, 0, 0, 1, 0, 0] })).toBe(true);
+    expect(isCurveOnlyWorldMesh({ indices: [0, 1, 2], edgePositions: [0, 0, 0, 1, 0, 0] })).toBe(false);
+    expect(isCurveOnlyWorldMesh({ indices: [], edgePositions: [] })).toBe(false);
+  });
+
+  it("derives marquee bounds from edge samples when positions are empty", () => {
+    const corners = meshBoundsCorners({
+      positions: [],
+      normals: [],
+      indices: [],
+      edgePositions: [0, 0, 0, 2, 4, 6],
+    } as Parameters<typeof meshBoundsCorners>[0]);
+    expect(corners).toContainEqual([0, 0, 0]);
+    expect(corners).toContainEqual([2, 4, 6]);
   });
 
   it("renders the new group selection as active and only objects leaving the old selection as highlighted", () => {

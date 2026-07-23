@@ -896,7 +896,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -919,7 +919,7 @@ fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, value
     UiNode::Field(UiFieldNode {
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -967,7 +967,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.boolean-op".into(),
                 label: labels.boolean_op.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.boolean-op.select".into(),
                     value: op_mixed.value,
                     placeholder: op_mixed.placeholder,
@@ -989,7 +989,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 labels.children,
                 if child_labels.is_empty() { "—".into() } else { child_labels },
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.boolean".into(),
                 label: labels.kind_boolean.into(),
                 default_open: None,
@@ -1016,7 +1016,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-threshold".into(),
                 label: labels.trace_threshold.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.trace-threshold.slider".into(),
                     value: if threshold_mixed.uniform { threshold_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1032,7 +1032,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
             fields.push(UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.trace-simplify".into(),
                 label: labels.simplify.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.trace-simplify.slider".into(),
                     value: if simplify_mixed.uniform { simplify_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1050,7 +1050,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 labels.source_key,
                 trace.source_key.clone(),
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.trace".into(),
                 label: labels.kind_trace.into(),
                 default_open: None,
@@ -1078,7 +1078,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 }).collect::<Vec<_>>(),
                 "rectHeight",
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.rect".into(),
                 label: labels.kind_rectangle.into(),
                 default_open: None,
@@ -1112,7 +1112,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                     .collect::<Vec<_>>(),
                 "textSize",
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.text".into(),
                 label: labels.kind_text.into(),
                 default_open: None,
@@ -1125,7 +1125,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 labels.segment_count,
                 path.segments.len().to_string(),
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.path".into(),
                 label: labels.kind_path.into(),
                 default_open: None,
@@ -1138,7 +1138,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 labels.children_count,
                 group.children.len().to_string(),
             ));
-            return Some(UiInspectorFieldGroup {
+            return Some(UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "draw-play-inspector.kind.group".into(),
                 label: labels.kind_group.into(),
                 default_open: None,
@@ -1189,12 +1189,13 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlay
         id: "draw-play-inspector.appearance".into(),
         label: labels.appearance.into(),
         default_open: None,
+        presence: UiPresence::default(),
         fields: vec![
             inspector_text_field(&layer_ids, "draw-play-inspector.fill", labels.fill, &fill_colors, "fillColor"),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.fill-alpha".into(),
                 label: labels.fill_alpha.into(),
-                child: Box::new(UiNode::Slider(UiSliderNode {
+                child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.fill-alpha.slider".into(),
                     value: if fill_alpha_mixed.uniform { fill_alpha_mixed.value } else { 0.0 },
                     min: 0.0,
@@ -1226,13 +1227,14 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
         id: "draw-play-inspector.layer".into(),
         label: labels.layer.into(),
         default_open: None,
+        presence: UiPresence::default(),
         fields: vec![
             inspector_text_field(&layer_ids, "draw-play-inspector.name", labels.name, &names, "name"),
             inspector_number_field(&layer_ids, "draw-play-inspector.opacity", labels.opacity, &opacities, "opacity"),
             UiNode::Field(UiFieldNode {
                 id: "draw-play-inspector.blend-mode".into(),
                 label: labels.blend_mode.into(),
-                child: Box::new(UiNode::Select(UiSelectNode {
+                child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "draw-play-inspector.blend-mode.select".into(),
                     value: blend_mixed.value,
                     placeholder: blend_mixed.placeholder,
@@ -1246,29 +1248,29 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
                 required: None,
                 error: None,
             }),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode { presence: UiPresence::default(),
                 id: "draw-play-inspector.visible".into(),
                 label: labels.visible.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.visible.toggle".into(),
                     icon_id: "eye".into(),
-                    pressed: visible_mixed.uniform && visible_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&layer_ids, "visible"),
+                    presence: UiPresence::selected(visible_mixed.uniform && visible_mixed.pressed),
                 })),
                 description: None,
                 required: None,
                 error: None,
             }),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode { presence: UiPresence::default(),
                 id: "draw-play-inspector.locked".into(),
                 label: labels.locked.into(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "draw-play-inspector.locked.toggle".into(),
                     icon_id: "lock".into(),
-                    pressed: locked_mixed.uniform && locked_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&layer_ids, "locked"),
+                    presence: UiPresence::selected(locked_mixed.uniform && locked_mixed.pressed),
                 })),
                 description: None,
                 required: None,
@@ -1284,6 +1286,7 @@ fn inspector_orientation_group(layers: &[&draw::DrawLayerNode], labels: &DrawPla
         id: "draw-play-inspector.orientation".into(),
         label: labels.orientation.into(),
         default_open: None,
+        presence: UiPresence::default(),
         fields: vec![
             inspector_number_field(
                 &layer_ids,

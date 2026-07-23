@@ -2017,6 +2017,9 @@ export type HostEffect =
   | { readonly closeWindow: { readonly window: number } }
   | { readonly notify: { readonly message: string } }
   | { readonly navigate: { readonly uri: string } }
+  /** @emoji 📂 Replaces the active app instance's document with a VCS envelope JSON — host-owned
+   * counterpart of `loadAppDocument` for catalog/example studio opens. */
+  | { readonly loadDocument: { readonly documentJson: string } }
   | { readonly openExternalUrl: { readonly url: string } }
   | { readonly setPanel: { readonly panelJson: string } }
   | { readonly downloadMediaExport: { readonly filename: string; readonly mimeType: string; readonly data: string; readonly encoding?: string } }

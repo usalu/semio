@@ -168,9 +168,10 @@ use semio_framework_core::{
     UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
 };
 use ui_wgpu::{
-    collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ActionDescriptor, NamedLayout, UiButtonNode,
-    UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiSectionNode, UiTreeItemNode, UiTreeNode,
-    UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout, WindowMeasure, WindowOptions, SurfaceKind,
+    collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionDescriptor,
+    NamedLayout, UiButtonNode, UiControlNode, UiFieldNode, UiInputNode, UiKeyValueEntry, UiKeyValueNode, UiNode, UiPresence,
+    UiSectionNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, WindowEngagement, WindowEngagementSlot, WindowLayout,
+    WindowMeasure, WindowOptions, SurfaceKind,
 };
 use serde::{Deserialize, Serialize};
 use serde::de::DeserializeOwned;
@@ -1241,7 +1242,13 @@ impl PanelTreeBuilder {
 
     /// 🌳 Adds a section verbatim.
     pub fn section(mut self, id: impl Into<String>, label: Option<String>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
-        self.sections.push(UiTreeSectionNode { id: id.into(), label, default_open: Some(default_open), items, loading: None, waiting: None });
+        self.sections.push(UiTreeSectionNode {
+            id: id.into(),
+            label,
+            default_open: Some(default_open),
+            presence: UiPresence::default(),
+            items,
+        });
         self
     }
 
@@ -1257,7 +1264,13 @@ impl PanelTreeBuilder {
     ) -> Self {
         let id = id.into();
         let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
-        self.sections.push(UiTreeSectionNode { id, label, default_open: Some(default_open), items, loading: None, waiting: None });
+        self.sections.push(UiTreeSectionNode {
+            id,
+            label,
+            default_open: Some(default_open),
+            presence: UiPresence::default(),
+            items,
+        });
         self
     }
 
@@ -1281,13 +1294,19 @@ impl PanelTreeBuilder {
         self
     }
 
-    pub fn build(self) -> UiNode {
+    pub fn build(mut self) -> UiNode {
+        let selected = self
+            .selected_ids
+            .map(|ids| ids.into_iter().collect::<HashSet<_>>())
+            .unwrap_or_default();
+        let highlighted = self
+            .highlighted_ids
+            .map(|ids| ids.into_iter().collect::<HashSet<_>>())
+            .unwrap_or_default();
+        ui_tree_stamp_presence(&mut self.sections, &selected, &highlighted);
         UiNode::Tree(UiTreeNode {
             sections: self.sections,
-            loading: None,
-            waiting: None,
-            selected_ids: self.selected_ids,
-            highlighted_ids: self.highlighted_ids,
+            presence: UiPresence::default(),
             selection_change: self.selection_change,
             drop_action: self.drop_action,
         })
@@ -1385,6 +1404,7 @@ impl FormPanelBuilder {
             required: None,
             error: None,
             child: Box::new(ui_control_to_node(control)),
+            presence: UiPresence::default(),
         }));
         self
     }
@@ -1414,6 +1434,7 @@ impl FormPanelBuilder {
                 step: None,
                 accept: None,
                 on_change: on_change.clone(),
+                presence: UiPresence::default(),
             });
             self = self.field(id, &label, description, control);
         }
@@ -1428,9 +1449,7 @@ impl FormPanelBuilder {
             label: label.into(),
             action,
             style: None,
-            disabled: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
         });
         self
     }
@@ -1441,7 +1460,13 @@ impl FormPanelBuilder {
         if let Some(submit) = self.submit {
             children.push(UiNode::Button(submit));
         }
-        UiNode::Section(UiSectionNode { id: self.namespace, label: None, default_open: Some(true), loading: None, waiting: None, children })
+        UiNode::Section(UiSectionNode {
+            id: self.namespace,
+            label: None,
+            default_open: Some(true),
+            presence: UiPresence::default(),
+            children,
+        })
     }
 }
 
@@ -1453,7 +1478,10 @@ pub fn entity_detail(title: &str, subtitle: Option<&str>, entries: Vec<UiKeyValu
     if let Some(subtitle) = subtitle {
         children.push(ui_text(subtitle));
     }
-    children.push(UiNode::KeyValue(UiKeyValueNode { entries }));
+    children.push(UiNode::KeyValue(UiKeyValueNode {
+        entries,
+        presence: UiPresence::default(),
+    }));
     children.extend(actions.into_iter().map(UiNode::Button));
     ui_stack_vertical(children)
 }
@@ -1482,6 +1510,7 @@ mod form_kit_tests {
                     step: None,
                     accept: None,
                     on_change,
+                    presence: UiPresence::default(),
                 }),
             )
             .submit("Submit", submit_action)
@@ -1520,7 +1549,14 @@ mod form_kit_tests {
             "Widget",
             Some("A widget"),
             vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into() }],
-            vec![UiButtonNode { id: None, icon_id: "edit".into(), label: "Edit".into(), action, style: None, disabled: None, loading: None, waiting: None }],
+            vec![UiButtonNode {
+                id: None,
+                icon_id: "edit".into(),
+                label: "Edit".into(),
+                action,
+                style: None,
+                presence: UiPresence::default(),
+            }],
         );
         let UiNode::Stack(stack) = node else { panic!("expected a Stack node") };
         assert_eq!(stack.children.len(), 4);

@@ -23,7 +23,7 @@
 \NewDocumentCommand \SemioTableHeaderRow { m } {
   \semio_table_header_row:n {#1}
   \\
-  \hline
+  \semio@table@row@sep
   \global\semio@table@row@startedfalse
 }
 \cs_new_protected:Npn \semio_table_dot_count_int:n #1 {
@@ -190,7 +190,7 @@
 }
 
 \newcommand{\semio@table@row@sep}{%
-  \noalign{\hrule height\arrayrulewidth}%
+  \noalign{\hrule height\arrayrulewidth width\linewidth}%
 }
 
 %region LongTableHeader

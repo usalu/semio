@@ -7,7 +7,7 @@ use infinite_board_port_directed_dag::{
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
     ActionArgOption, ActionDescriptor, ActionEmit, App, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use serde::{Deserialize, Serialize};
@@ -256,8 +256,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         label: label.into(),
         description: None,
         icon_id: None,
-        selected: None,
-        loading: None,
+        presence: UiPresence::default(),
         default_open: None,
         action: None,
         hover_action: None,
@@ -267,11 +266,8 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         drag_data: None,
         items: None,
         control: None,
-        is_hidden: None,
-    
- 
-    waiting: None,
-}
+        dimmed: None,
+    }
 }
 
 fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, description: impl Into<String>) -> UiTreeItemNode {
@@ -280,8 +276,7 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         label: label.into(),
         description: Some(description.into()),
         icon_id: None,
-        selected: None,
-        loading: None,
+        presence: UiPresence::default(),
         default_open: None,
         action: None,
         hover_action: None,
@@ -291,11 +286,8 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         drag_data: None,
         items: None,
         control: None,
-        is_hidden: None,
-    
- 
-    waiting: None,
-}
+        dimmed: None,
+    }
 }
 
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
@@ -304,8 +296,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         label: label.into(),
         description,
         icon_id: None,
-        selected: None,
-        loading: None,
+        presence: UiPresence::default(),
         default_open: None,
         action: Some(action),
         hover_action: None,
@@ -315,11 +306,8 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         drag_data: None,
         items: None,
         control: None,
-        is_hidden: None,
-    
- 
-    waiting: None,
-}
+        dimmed: None,
+    }
 }
 //#endregion 🔖DocumentHelpers
 
@@ -456,29 +444,27 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
         })
         .collect();
     let edge_items: Vec<UiTreeItemNode> = document.edges.iter().map(|edge| tree_item_with_description(format!("dag-play-document.edge.{}", edge.id), format!("{} → {}", edge.source, edge.target), edge.id.clone())).collect();
+    let mut sections = vec![
+        UiTreeSectionNode {
+            id: "dag-play-document.nodes".into(),
+            label: Some(labels.nodes.into()),
+            default_open: Some(true),
+            presence: UiPresence::default(),
+            items: if node_items.is_empty() { vec![tree_item("dag-play-document.nodes.empty", labels.empty)] } else { node_items },
+        },
+        UiTreeSectionNode {
+            id: "dag-play-document.edges".into(),
+            label: Some(labels.edges.into()),
+            default_open: Some(false),
+            presence: UiPresence::default(),
+            items: if edge_items.is_empty() { vec![tree_item("dag-play-document.edges.empty", labels.empty)] } else { edge_items },
+        },
+    ];
+    let selected_ids: std::collections::HashSet<String> = selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect();
+    semio_framework_plugin::ui_tree_stamp_presence(&mut sections, &selected_ids, &std::collections::HashSet::new());
     UiNode::Tree(UiTreeNode {
-        loading: None,
-        waiting: None,
-        sections: vec![
-            UiTreeSectionNode {
-                id: "dag-play-document.nodes".into(),
-                label: Some(labels.nodes.into()),
-                default_open: Some(true),
-                loading: None,
-                waiting: None,
-                items: if node_items.is_empty() { vec![tree_item("dag-play-document.nodes.empty", labels.empty)] } else { node_items },
-            },
-            UiTreeSectionNode {
-                id: "dag-play-document.edges".into(),
-                label: Some(labels.edges.into()),
-                default_open: Some(false),
-                loading: None,
-                waiting: None,
-                items: if edge_items.is_empty() { vec![tree_item("dag-play-document.edges.empty", labels.empty)] } else { edge_items },
-            },
-        ],
-        selected_ids: Some(selected.iter().map(|id| format!("dag-play-document.node.{id}")).collect()),
-        highlighted_ids: None,
+        sections,
+        presence: UiPresence::default(),
         selection_change: None,
         drop_action: None,
     })
@@ -494,14 +480,11 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
         ("preview", labels.kind_preview),
     ];
     UiNode::Tree(UiTreeNode {
-        loading: None,
-        waiting: None,
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             items: kinds
                 .iter()
                 .map(|(kind, label)| {
@@ -514,8 +497,7 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
                 })
                 .collect(),
         }],
-        selected_ids: Some(vec![]),
-        highlighted_ids: None,
+        presence: UiPresence::default(),
         selection_change: None,
         drop_action: None,
     })
@@ -523,10 +505,10 @@ fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
 
 fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
-    UiNode::Field(UiFieldNode {
+    UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
             id: format!("{field_id}.input"),
             input_kind: "number".into(),
             value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -546,10 +528,10 @@ fn inspector_number_field(node_ids: &[String], field_id: &str, label: &str, valu
 
 fn inspector_text_field(node_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
-    UiNode::Field(UiFieldNode {
+    UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
         id: field_id.into(),
         label: label.into(),
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
             id: format!("{field_id}.input"),
             input_kind: "text".into(),
             value: mixed.value,
@@ -573,11 +555,9 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             id: "dag-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None,
+            presence: UiPresence::default(),
             children: vec![ui_text(labels.select_a_node)],
-        
-            waiting: None,
-}]);
+        }]);
     }
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| document.nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
@@ -585,16 +565,14 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             id: "dag-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None,
+            presence: UiPresence::default(),
             children: vec![ui_text(labels.node_not_found)],
-        
-            waiting: None,
-}]);
+        }]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let mut groups: Vec<UiInspectorFieldGroup> = Vec::new();
     if nodes.iter().all(|node| matches!(node.kind, DagNodeKind::Slider { .. })) {
-        groups.push(UiInspectorFieldGroup {
+        groups.push(UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "dag-play-inspector.kind.slider".into(),
             label: labels.slider_group.into(),
             default_open: None,
@@ -652,10 +630,10 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     if node_ids.len() == 1 {
         base_fields.insert(
             0,
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "dag-play-inspector.id".into(),
                 label: labels.field_id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "dag-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: node_ids[0].clone(),
@@ -675,7 +653,7 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
     } else {
         base_fields.insert(0, ui_inspector_readonly_field("dag-play-inspector.id", labels.field_id, format!("{} {}", node_ids.len(), labels.selected_suffix)));
     }
-    groups.push(UiInspectorFieldGroup { id: "dag-play-inspector.base".into(), label: labels.node_group.into(), default_open: None, fields: base_fields });
+    groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: "dag-play-inspector.base".into(), label: labels.node_group.into(), default_open: None, fields: base_fields });
     ui_inspector_groups_to_tree(&groups)
 }
 //#endregion 🔖Panels

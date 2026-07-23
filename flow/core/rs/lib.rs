@@ -1779,7 +1779,7 @@ impl FlowHost {
         host
     }
 
-    /// 📥 Replaces fixture content while keeping catalogue, operator metadata, and eval bridge.
+    /// 📥 Replaces fixture content while keeping catalogue, operator metadata, eval bridge, and the live camera.
     pub fn replace_fixture(&mut self, fixture: FlowFixture) {
         self.apply_fixture(fixture, true);
     }
@@ -1791,6 +1791,10 @@ impl FlowHost {
 
     fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool) {
         dedupe_fixture_widgets(&mut fixture);
+        // 🎥 Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
+        // scene resync reloads fixture content (hover, eval tick, remote ops, …).
+        let camera = self.fixture.camera.clone();
+        fixture.camera = camera;
         self.fixture = fixture;
         self.outputs.clear();
         self.export_payloads.clear();
@@ -3736,6 +3740,11 @@ impl FlowSession {
         self.state.borrow_mut().host.set_camera(x, y, zoom);
     }
 
+    #[wasm_bindgen(js_name = cameraJson)]
+    pub fn camera_json(&self) -> String {
+        serde_json::to_string(&self.state.borrow().host.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into())
+    }
+
     #[wasm_bindgen(js_name = wheelScreen)]
     pub fn wheel_screen(&self, sx: f64, sy: f64, delta_x: f64, delta_y: f64, zoom_gesture: bool) {
         self.state.borrow_mut().host.wheel_screen(sx, sy, delta_x, delta_y, zoom_gesture);
@@ -5294,6 +5303,23 @@ mod tests {
         assert_eq!(host.fixture.camera.y, camera_before.y - 30.0);
         assert!((host.fixture.camera.zoom - camera_before.zoom * 1.5).abs() < 1e-9);
         assert!(!host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
+    }
+
+    #[test]
+    fn replace_fixture_preserves_live_camera() {
+        let mut host = host_with_test_bridge();
+        host.set_camera(120.0, -45.0, 1.75);
+        host.replace_fixture(FlowFixture {
+            schema: "flow.fixture".into(),
+            camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
+            widgets: vec![Widget::InputNote { id: "note".into(), text: "hello".into() }],
+            synapses: vec![],
+            layout: BTreeMap::new(),
+        });
+        assert_eq!(host.fixture.camera.x, 120.0);
+        assert_eq!(host.fixture.camera.y, -45.0);
+        assert!((host.fixture.camera.zoom - 1.75).abs() < 1e-9);
+        assert!(host.fixture.widgets.iter().any(|w| widget_id_for(w) == "note"));
     }
 
     fn test_dictionary_merge_bridge(kind: &str, input: &Dictionary) -> Result<Dictionary, EvalError> {

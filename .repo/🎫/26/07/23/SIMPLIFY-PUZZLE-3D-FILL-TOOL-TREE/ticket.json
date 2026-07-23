@@ -1,9 +1,9 @@
 {
   "title": "Simplify Puzzle 3D Fill Tool Tree",
   "emoji": "🧩",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 3D: The fill tool tree is totally wrong, ugly and unnecessarily complicated. When pressing on Fill toggle, it should directly show the tree with the slider, the distributions for objects and vortices — no nested Fill group, no fill/edit-volumes mode picker cluttering the primary tree. Keep edit-volumes reachable as a simple secondary toggle with voxel dims when active. Share object/vortex distribution measures with brush (same kind weights).",
-  "summary": "Flattened Puzzle 3D Fill tool measures so activating Fill directly shows the count slider plus object/vortex distribution trees (no nested Fill group, no mode Select). Edit Volumes is a secondary toggle with voxel dims when on. Shared distribution measures with brush. Updated fill/brush measure tests (2 passed).",
+  "summary": "Removed the extra Fill nesting: tool trees are now a single headerless section (no sortable empty folders, no nested Fill toggle row). Selecting the Fill footer tab activates the tool so count + object/vortex distributions show immediately. buildToolTabs tests pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2242"
   },

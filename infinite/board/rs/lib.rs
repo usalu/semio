@@ -814,6 +814,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
     }
 
     /// 🖱️ Flat pointer-event fields (screen/world coords, button, modifiers) mirror this repo's shared WASM host-bridge pointer contract, matched by every sibling board/editor/layout crate's `pointer_*_screen` — not bundled into a struct, to keep the JS-callable surface a plain positional arg list.
+    /// Primary (`button == 0`) selects and may start drag / marquee / edge-draw. Secondary (`button == 2`) only updates selection/hover for context menus — never moves nodes.
     #[allow(clippy::too_many_arguments, reason = "flat args mirror the shared WASM host-bridge pointer-event contract used across all `pointer_*_screen` methods in this repo")]
     pub fn pointer_down_screen(&mut self, screen_x: f64, screen_y: f64, world_x: f64, world_y: f64, button: u8, shift: bool, ctrl_or_meta: bool, _alt: bool) {
         self.proximity_connection = None;
@@ -823,6 +824,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
         let screen = Point::new(screen_x, screen_y);
         let merge_mode = pick_merge_mode_for_modifiers(ctrl_or_meta, shift, self.selection_options.mode.as_str());
         let merge_from_modifiers = ctrl_or_meta || shift;
+        let primary = button == 0;
         match self.hit_test(point) {
             Some(HitObject::Node(node_id)) => {
                 let members_before: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
@@ -831,22 +833,26 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 if !drag_group_before || force_pick_merge {
                     self.apply_pick_with_mode(HitObject::Node(node_id), merge_mode.as_str());
                 }
-                if let Some(node) = self.nodes.get(&node_id) {
-                    if node.draggable {
-                        let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
-                        let drag_group = members.contains(&node_id) && members.len() > 1;
-                        self.drag_start_positions.clear();
-                        for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
-                            if let Some(n) = self.nodes.get(id) {
-                                self.drag_start_positions.insert(*id, n.center);
+                if primary {
+                    if let Some(node) = self.nodes.get(&node_id) {
+                        if node.draggable {
+                            let members: Vec<NodeId> = self.selection.node_ids.iter().copied().filter(|id| self.nodes.get(id).is_some_and(|n| n.draggable)).collect();
+                            let drag_group = members.contains(&node_id) && members.len() > 1;
+                            self.drag_start_positions.clear();
+                            for id in if drag_group { members.as_slice() } else { std::slice::from_ref(&node_id) } {
+                                if let Some(n) = self.nodes.get(id) {
+                                    self.drag_start_positions.insert(*id, n.center);
+                                }
+                            }
+                            if drag_group {
+                                self.interaction = InteractionMode::DragNodes { primary_id: node_id, offset: point - node.center };
+                            } else {
+                                self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
                             }
                         }
-                        if drag_group {
-                            self.interaction = InteractionMode::DragNodes { primary_id: node_id, offset: point - node.center };
-                        } else {
-                            self.interaction = InteractionMode::DragNode { node_id, offset: point - node.center };
-                        }
                     }
+                } else {
+                    self.interaction = InteractionMode::Idle;
                 }
                 self.update_hover(Some(node_id));
             }
@@ -854,7 +860,7 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.apply_pick_with_mode(HitObject::Endpoint(ep), merge_mode.as_str());
                 let hid = P::endpoint_as_u64(ep);
                 self.update_hover(Some(hid));
-                if P::HAS_PORTS {
+                if primary && P::HAS_PORTS {
                     self.begin_draw_edge_from_handle(hid, point);
                 } else {
                     self.interaction = InteractionMode::Idle;
@@ -865,14 +871,13 @@ impl<P: GraphPortModel, D: Directedness> GraphEngine<P, D> {
                 self.update_hover(Some(edge_id));
                 self.interaction = InteractionMode::Idle;
             }
-            None if button == 0 => {
+            None if primary => {
                 self.area_initial = self.selection.clone();
                 self.interaction = InteractionMode::SelectionPending { start: point, start_screen: screen };
                 self.update_hover(None);
             }
             None => {
-                self.selection = Selection::default();
-                self.push_selection_event();
+                // 🖱️ Secondary/middle empty presses must not clear selection — context menus and pan gestures own those buttons.
                 self.update_hover(None);
                 self.interaction = InteractionMode::Idle;
             }
@@ -1746,6 +1751,30 @@ mod tests {
         let rectangle = vec![start, Point::new(80.0, 100.0)];
         assert!(!selection_drag_enclosing("rectangle", start, &rectangle));
         assert!(!selection_drag_enclosing_rectangle(start, Point::new(80.0, 100.0)));
+    }
+
+    #[test]
+    fn secondary_pointer_down_on_node_selects_without_dragging() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 100.0, 50.0, 160.0, 72.0, true);
+        let before = engine.nodes.get(&1).unwrap().center;
+        engine.pointer_down_screen(100.0, 50.0, 100.0, 50.0, 2, false, false, false);
+        assert!(engine.selection.node_ids.contains(&1), "secondary click should select the node");
+        assert!(matches!(engine.interaction, InteractionMode::Idle), "secondary click must not start a drag");
+        engine.pointer_move_screen(140.0, 80.0, 140.0, 80.0, false, false, false);
+        engine.pointer_up_screen(140.0, 80.0, 140.0, 80.0, false, false, false);
+        let after = engine.nodes.get(&1).unwrap().center;
+        assert!((after.x - before.x).abs() < 1e-9 && (after.y - before.y).abs() < 1e-9, "secondary click must not move the node");
+    }
+
+    #[test]
+    fn secondary_pointer_down_on_empty_keeps_selection() {
+        let mut engine = GraphEngine::<Ported, Directed>::new();
+        engine.create_rect_node(1, 100.0, 50.0, 160.0, 72.0, true);
+        engine.selection.node_ids.insert(1);
+        engine.pointer_down_screen(400.0, 400.0, 400.0, 400.0, 2, false, false, false);
+        assert!(engine.selection.node_ids.contains(&1), "secondary empty click must keep selection for context menus");
+        assert!(matches!(engine.interaction, InteractionMode::Idle));
     }
 
     #[test]

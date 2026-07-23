@@ -1422,31 +1422,26 @@ pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStat
 //#endregion 🔖Action
 
 //#region 🔖Primitives
+// 🚧 NOT typegen-derived: `children: Vec<UiNode>` makes this recursive through `UiNode`, which isn't
+// itself typegen-derived yet (blocked on the `ComponentScene` scene family — see 🔖Manifest in
+// framework/core/rs/lib.rs). Hand-mirrored in framework/core/js/index.ts until that lands.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiStackNode {
     pub direction: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub gap: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub padding: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub id: Option<String>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_overlay: Option<UiDropOverlaySpec>,
     pub children: Vec<UiNode>,
 }
@@ -1596,17 +1591,16 @@ pub struct UiToggleNode {
  * level (`Plane > Origin > X/Y/Z`). Unlike `UiSectionNode` (top-level tree sections only, see
  * `assertNoNestedTreeSections` on the TS side), a `Group` may itself appear as another `Group`'s or
  * `UiFieldNode`'s child. */
+// 🚧 NOT typegen-derived: `children: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
+// doc comment on this same gap).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiGroupNode {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
     pub children: Vec<UiNode>,
 }
@@ -1734,40 +1728,35 @@ impl UiControlNode {
     }
 }
 
+// 🚧 NOT typegen-derived: `child: Box<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
+// doc comment on this same gap).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiFieldNode {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub error: Option<String>,
     pub child: Box<UiNode>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
 }
 
+// 🚧 NOT typegen-derived: `children: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
+// doc comment on this same gap).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSectionNode {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
     pub children: Vec<UiNode>,
 }
@@ -1916,17 +1905,16 @@ pub fn ui_tree_stamp_presence(
     }
 }
 
+// 🚧 NOT typegen-derived: `fields: Vec<UiNode>` is recursive through `UiNode` (see `UiStackNode`'s
+// doc comment on this same gap).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiInspectorFieldGroup {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
-    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
     pub fields: Vec<UiNode>,
 }
@@ -3333,6 +3321,7 @@ pub fn ui_image(id: impl Into<String>, src: impl Into<String>, alt: Option<Strin
         id: id.into(),
         src: src.into(),
         alt,
+        presence: UiPresence::default(),
     })
 }
 
@@ -3378,6 +3367,7 @@ pub fn ui_text(value: impl Into<String>) -> UiNode {
         value: value.into(),
         emphasize: None,
         data_attributes: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -3393,6 +3383,7 @@ pub fn ui_external_slot(
         app_id: app_id.into(),
         body_key: body_key.into(),
         params_json: params_json.into(),
+        presence: UiPresence::default(),
     })
 }
 
@@ -3419,6 +3410,7 @@ fn component_scene(
         component_kind,
         pane_id,
         binding_id,
+        presence: UiPresence::default(),
         canvas_2d,
         world_3d,
         node_graph,
@@ -3837,7 +3829,12 @@ pub fn build_event_feed_scene(
 /** @emoji 🗂️ Builds an empty-state placeholder: a centered title, optional description text, and an
  * optional call-to-action button. */
 pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: Option<UiButtonNode>) -> UiNode {
-    let mut children = vec![UiNode::Text(UiTextNode { value: title.into(), emphasize: Some(true), data_attributes: None })];
+    let mut children = vec![UiNode::Text(UiTextNode {
+        value: title.into(),
+        emphasize: Some(true),
+        data_attributes: None,
+        presence: UiPresence::default(),
+    })];
     if let Some(description) = description {
         children.push(ui_text(description));
     }
@@ -3859,7 +3856,12 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
 
 /** @emoji ⚠️ Builds an error-state placeholder: an emphasized message and an optional retry button. */
 pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) -> UiNode {
-    let mut children = vec![UiNode::Text(UiTextNode { value: message.into(), emphasize: Some(true), data_attributes: None })];
+    let mut children = vec![UiNode::Text(UiTextNode {
+        value: message.into(),
+        emphasize: Some(true),
+        data_attributes: None,
+        presence: UiPresence::default(),
+    })];
     if let Some(retry) = retry {
         children.push(UiNode::Button(UiButtonNode {
             id: Some(format!("{id}.retry")),
@@ -3908,7 +3910,12 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
         drop_action: None,
         drop_overlay: None,
         children: vec![
-            UiNode::Text(UiTextNode { value: title.into(), emphasize: Some(true), data_attributes: None }),
+            UiNode::Text(UiTextNode {
+                value: title.into(),
+                emphasize: Some(true),
+                data_attributes: None,
+                presence: UiPresence::default(),
+            }),
             ui_text(message),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.restartApp".into()),
@@ -3986,6 +3993,7 @@ mod ui_node_wire_format_tests {
                     value: "Hello".into(),
                     emphasize: Some(true),
                     data_attributes: None,
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Button(UiButtonNode {
                     id: Some("btn1".into()),
@@ -3995,7 +4003,9 @@ mod ui_node_wire_format_tests {
                     style: None,
                     presence: UiPresence::default(),
                 }),
-                UiNode::Separator(UiSeparatorNode {}),
+                UiNode::Separator(UiSeparatorNode {
+                    presence: UiPresence::default(),
+                }),
                 UiNode::Input(UiInputNode {
                     id: "inp1".into(),
                     input_kind: "text".into(),
@@ -4865,10 +4875,10 @@ impl UiTree {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiNode, UiTextNode};
+    use crate::component::ui::{UiNode, UiPresence, UiTextNode};
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn leaf(discriminant: u32, ordinal: u32, value: &str) -> Node {
@@ -4969,7 +4979,7 @@ use std::collections::{HashMap, HashSet};
 use crate::arena::NodeId;
 use crate::component::layout::ActionDescriptor;
 use crate::component::ui::{
-    ui_control_to_node, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
+    ui_control_to_node, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode,
     UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
 };
 use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
@@ -5029,9 +5039,11 @@ fn node_key(node: &UiNode, ordinal: u32) -> NodeKey {
 /// 🌿 The keyed-diffable children of `node`: `Stack`/`Section`'s own `children`, `Field`'s single
 /// `child`, borrowed straight from `node` (no allocation); `Select`/`Tree`'s *synthesized* rows (see
 /// `🔖CompositeExpansion`), freshly built each call since they're derived from non-`UiNode` payload.
-/// Everything else has no nested `UiNode` payload to recurse into.
+/// Everything else has no nested `UiNode` payload to recurse into. `presence.state == Hidden`
+/// children are dropped here — hidden means not rendered at all, so they get no retained node, no
+/// layout, no paint, no hit-test; this is the one choke point every caller goes through.
 fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
-    match node {
+    let children = match node {
         UiNode::Stack(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Section(n) => n.children.iter().map(Cow::Borrowed).collect(),
         UiNode::Group(n) => n.children.iter().map(Cow::Borrowed).collect(),
@@ -5039,7 +5051,8 @@ fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
         UiNode::Select(select) => select.items.iter().map(|item| Cow::Owned(select_item_row(select, item))).collect(),
         UiNode::Tree(tree_node) => tree_node.sections.iter().map(|section| Cow::Owned(tree_section_row(tree_node, section))).collect(),
         _ => Vec::new(),
-    }
+    };
+    children.into_iter().filter(|child: &Cow<'_, UiNode>| child.presence().visible()).collect()
 }
 
 //#region 🔖CompositeExpansion
@@ -5149,24 +5162,30 @@ fn own_fields_equal(previous: &UiNode, next: &UiNode) -> bool {
                 && p.gap == n.gap
                 && p.padding == n.padding
                 && p.id == n.id
-                && p.selected == n.selected
+                && p.presence == n.presence
                 && p.activate == n.activate
                 && p.drop_action == n.drop_action
                 && p.children.len() == n.children.len()
         }
         (UiNode::Section(p), UiNode::Section(n)) => {
-            p.id == n.id && p.label == n.label && p.default_open == n.default_open && p.children.len() == n.children.len()
+            p.id == n.id && p.label == n.label && p.default_open == n.default_open && p.presence == n.presence && p.children.len() == n.children.len()
         }
         (UiNode::Field(p), UiNode::Field(n)) => {
-            p.id == n.id && p.label == n.label && p.description == n.description && p.required == n.required && p.error == n.error
+            p.id == n.id && p.label == n.label && p.description == n.description && p.required == n.required && p.error == n.error && p.presence == n.presence
         }
         _ => previous == next,
     }
 }
 
 /// 📐 Whether the field(s) that differ between `previous` and `next` affect measurement/layout (as
-/// opposed to paint-only state like `selected`/`pressed`/`disabled`).
+/// opposed to paint-only state like `selected`/`status`/`disabled`). `presence.visible()` flipping
+/// (i.e. `state` crossing into/out of `Hidden`) always counts — a hidden element occupies no layout
+/// space at all, so becoming hidden/unhidden must re-run layout for its parent, unlike every other
+/// `presence` change (selected/status/hover/previewed/disabled), which is paint-only.
 fn layout_affecting_change(previous: &UiNode, next: &UiNode) -> bool {
+    if previous.presence().visible() != next.presence().visible() {
+        return true;
+    }
     match (previous, next) {
         (UiNode::Stack(p), UiNode::Stack(n)) => {
             p.direction != n.direction || p.gap != n.gap || p.padding != n.padding || p.children.len() != n.children.len()
@@ -5282,7 +5301,7 @@ impl UiTree {
 mod tests {
     use super::*;
     use crate::component::layout::ActionDescriptor;
-    use crate::component::ui::{UiButtonNode, UiControlNode, UiStackNode, UiTextNode, UiToggleNode};
+    use crate::component::ui::{UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode, ui_tree_stamp_presence};
     use crate::tree::NodeFlags;
 
     fn action() -> ActionDescriptor {
@@ -5290,7 +5309,7 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn button(id: &str, label: &str) -> UiNode {
@@ -5411,6 +5430,7 @@ mod tests {
             items: items.into_iter().map(|(value, label)| UiSelectItem { value: value.into(), label: label.into() }).collect(),
             placeholder: None,
             on_change: action(),
+            presence: UiPresence::default(),
         })
     }
 
@@ -5436,8 +5456,8 @@ mod tests {
 
     fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
         if let Some(ids) = selected_ids {
-            let selected: std::collections::HashSet<String> = ids.into_iter().collect();
-            ui_tree_stamp_presence(&mut sections, &selected, &std::collections::HashSet::new());
+            let selected: HashSet<String> = ids.into_iter().collect();
+            ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
         }
         UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
     }
@@ -5926,6 +5946,7 @@ fn winit_cursor_icon(cursor: SemioCursor) -> winit::window::CursorIcon {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::component::ui::UiPresence;
     use crate::geometry::Rect;
     use std::collections::HashMap;
 
@@ -6023,6 +6044,7 @@ mod tests {
             step: None,
             accept: None,
             on_change: ActionDescriptor { controller_id: "c".into(), action: "a".into(), args: None },
+            presence: UiPresence::default(),
         }));
         assert_eq!(resolve_semio_cursor_from_tree(&tree, Some(id), None), SemioCursor::Text);
     }
@@ -6046,14 +6068,14 @@ mod tests {
 
     #[test]
     fn an_active_drag_capture_overrides_whatever_is_merely_hovered() {
-        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None }));
+        let (tree, dragged) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((dragged, CaptureKind::Drag)));
         assert_eq!(cursor, SemioCursor::Grabbing);
     }
 
     #[test]
     fn a_vertical_scroll_thumb_capture_uses_the_ns_resize_cursor() {
-        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None }));
+        let (tree, scrollable) = leaf(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }));
         let cursor = resolve_semio_cursor_from_tree(&tree, None, Some((scrollable, CaptureKind::ScrollThumb(ScrollAxis::Vertical))));
         assert_eq!(cursor, SemioCursor::NsResize);
     }
@@ -10792,10 +10814,10 @@ impl LayoutEngine {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiFieldNode, UiSectionNode, UiStackNode, UiTextNode};
+    use crate::component::ui::{UiFieldNode, UiPresence, UiSectionNode, UiStackNode, UiTextNode};
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn stack(direction: &str, children: Vec<UiNode>) -> UiNode {
@@ -10836,9 +10858,9 @@ mod tests {
     fn horizontal_stack_distributes_equal_leftover_width_across_children() {
         let mut tree = UiTree::new();
         let children = vec![
-            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
-            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
-            UiNode::Separator(crate::component::ui::UiSeparatorNode {}),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
+            UiNode::Separator(crate::component::ui::UiSeparatorNode { presence: UiPresence::default() }),
         ];
         tree.apply_tree(&stack("horizontal", children));
         let root = tree.root.unwrap();
@@ -10896,7 +10918,7 @@ mod tests {
     #[test]
     fn field_child_grows_to_fill_the_label_adjusted_remainder() {
         let mut tree = UiTree::new();
-        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")) });
+        let field = UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: None, required: None, error: None, child: Box::new(text("child")), presence: UiPresence::default() });
         tree.apply_tree(&field);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -10917,7 +10939,7 @@ mod tests {
     #[test]
     fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
         let mut tree = UiTree::new();
-        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), loading: None, waiting: None, children: vec![text("a"), text("a longer line of text")] });
+        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), presence: UiPresence::default(), children: vec![text("a"), text("a longer line of text")] });
         tree.apply_tree(&section);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -12340,8 +12362,8 @@ use crate::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push
 use crate::component::ui::{
     UiButtonNode, UiComponentSceneNode, UiControlNode, UiExternalSlotNode, UiFieldNode, UiGroupNode,
     UiIconSelectNode, UiImageNode, UiInputNode, UiKeyValueNode, UiNode, UiNumberStepperNode,
-    UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode,
-    UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
+    UiPresence, UiRingNode, UiSectionNode, UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode,
+    UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
@@ -12500,7 +12522,7 @@ fn sync_tree_row_layout(tree: &mut UiTree, tree_id: NodeId) {
 /// `events::is_plain_stack_container`/`set_drag_payload` for the two consumers of that bit). Returns
 /// the total height (own row + any expanded nested rows) consumed, for the caller's own cursor.
 fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNode, y_offset: f32, width: f32) -> f32 {
-    if item.is_hidden.unwrap_or(false) {
+    if !item.presence.visible() {
         return 0.0;
     }
     let Some(item_id) = find_child_by_key(tree, parent, &NodeKey::Explicit(item.id.clone())) else {
@@ -13145,7 +13167,7 @@ mod tests {
     }
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn stack(children: Vec<UiNode>) -> UiNode {
@@ -13208,7 +13230,7 @@ mod tests {
 
     #[test]
     fn painting_a_stack_recurses_into_every_child() {
-        let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode {}), text("b")]);
+        let ui = stack(vec![text("a"), UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }), text("b")]);
         let (mut tree, root, theme, mut atlas) = setup(&ui);
         let mut draw = DrawList::default();
 
@@ -13397,7 +13419,7 @@ mod tests {
     }
 
     fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
-        UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action() })
+        UiNode::NumberStepper(UiNumberStepperNode { id: id.into(), value, step: 1.0, uniform, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })
     }
 
     #[test]
@@ -13432,7 +13454,7 @@ mod tests {
     }
 
     fn slider(id: &str, unit: Option<&str>) -> UiNode {
-        UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action() })
+        UiNode::Slider(UiSliderNode { id: id.into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: unit.map(String::from), on_change: action(), presence: UiPresence::default() })
     }
 
     #[test]
@@ -13451,7 +13473,7 @@ mod tests {
     }
 
     fn field(description: Option<&str>, required: bool, error: Option<&str>) -> UiNode {
-        UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: description.map(String::from), required: Some(required), error: error.map(String::from), child: Box::new(text("child")) })
+        UiNode::Field(UiFieldNode { id: "f".into(), label: "Label".into(), description: description.map(String::from), required: Some(required), error: error.map(String::from), child: Box::new(text("child")), presence: UiPresence::default() })
     }
 
     #[test]
@@ -13519,6 +13541,7 @@ mod tests {
             items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
             placeholder: None,
             on_change: action(),
+            presence: UiPresence::default(),
         })
     }
 
@@ -13562,7 +13585,7 @@ mod tests {
     }
 
     fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, waiting: None, activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), presence: UiPresence::default(), activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -13579,7 +13602,7 @@ mod tests {
     }
 
     fn activatable_stack(selected: bool) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, waiting: None, activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::selected(selected), activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -14927,7 +14950,7 @@ impl EventRouter {
 mod tests {
     use super::*;
     use crate::component::ui::{
-        UiButtonNode, UiInputNode, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode,
+        UiButtonNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode,
         UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
     use crate::tree::{Node, NodeKey, WidgetSpec};
@@ -14989,6 +15012,7 @@ mod tests {
             step: None,
             accept: None,
             on_change: action(),
+            presence: UiPresence::default(),
         })
     }
 
@@ -15007,15 +15031,15 @@ mod tests {
     }
 
     fn text_ui(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn separator_ui() -> UiNode {
-        UiNode::Separator(UiSeparatorNode {})
+        UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() })
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None, loading: None, waiting: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, presence: UiPresence::default() })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -15541,7 +15565,7 @@ mod tests {
     }
 
     fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, waiting: None, activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), presence: UiPresence::default(), activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
     }
 
     #[test]
@@ -15685,13 +15709,13 @@ fn collect_scene_slots_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiComponentSceneNode, UiStackNode, UiTextNode};
+    use crate::component::ui::{UiComponentSceneNode, UiPresence, UiStackNode, UiTextNode};
     use crate::flex::LayoutEngine;
     use crate::text::FontAtlas;
     use crate::theme::Theme;
 
     fn text(value: &str) -> UiNode {
-        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None })
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
     }
 
     fn scene(surface_id: &str) -> UiNode {
@@ -15701,6 +15725,7 @@ mod tests {
             component_kind: SurfaceKind::World3d,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -15799,7 +15824,7 @@ use crate::component::layout::{
     ActionDescriptor, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
     WindowLayoutStackNode, WindowLayoutWindowNode,
 };
-use crate::component::ui::{UiButtonNode, UiNode, UiStackNode};
+use crate::component::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
 use crate::events::{hit_test, UiEvent};
 use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
 
@@ -16288,8 +16313,8 @@ mod tests {
     use crate::component::ui::{
         ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode,
         UiExternalSlotNode, UiFieldNode, UiIconSelectNode, UiImageNode, UiInputNode,
-        UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiRingNode, UiSectionNode,
-        UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiTextNode,
+        UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode,
+        UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode,
         UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
     use crate::events::PointerButton;
@@ -16321,14 +16346,14 @@ mod tests {
     }
 
     fn button_ui(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, disabled: None, loading: None, waiting: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, presence: UiPresence::default() })
     }
 
     #[test]
     fn apply_tree_then_frame_produces_a_non_empty_draw_list() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]));
+        ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
         let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None).expect("frame must produce a draw list once a tree was applied");
@@ -16347,7 +16372,7 @@ mod tests {
     fn needs_frame_is_false_once_a_stable_tree_has_been_framed() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None })]);
+        let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]);
         ui.apply_tree("main", &ui_node);
         ui.frame("main", 400.0, 400.0, &mut atlas, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
@@ -16580,7 +16605,7 @@ mod tests {
     /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
     /// instead of an artifact of divergent layout math.
     fn leaf(child: UiNode) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, waiting: None, activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
     }
 
     fn assert_equivalent(kind: &str, node: &UiNode) {
@@ -16603,8 +16628,8 @@ mod tests {
             drop_action: None,
             drop_overlay: None,
             children: vec![
-                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None }),
-                UiNode::Separator(UiSeparatorNode {}),
+                UiNode::Text(UiTextNode { value: "hello".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }),
+                UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }),
             ],
         });
         assert_equivalent("Stack", &node);
@@ -16612,24 +16637,24 @@ mod tests {
 
     #[test]
     fn golden_text() {
-        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None })));
+        assert_equivalent("Text", &leaf(UiNode::Text(UiTextNode { value: "hello world".into(), emphasize: Some(true), data_attributes: None, presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_button() {
-        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, disabled: None, loading: None, waiting: None })));
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_separator() {
-        assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode {})));
+        assert_equivalent("Separator", &leaf(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_input() {
         assert_equivalent(
             "Input",
-            &leaf(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action() })),
+            &leaf(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })),
         );
     }
 
@@ -16643,23 +16668,43 @@ mod tests {
                 items: vec![UiSelectItem { value: "a".into(), label: "Alpha".into() }, UiSelectItem { value: "b".into(), label: "Beta".into() }],
                 placeholder: None,
                 on_change: action(),
+                presence: UiPresence::default(),
             })),
         );
     }
 
     #[test]
     fn golden_toggle() {
-        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), pressed: true, text: Some("On".into()), on_change: action() })));
+        // 🚫 `presence.selected` is intentionally NOT exercised here: the shared `presence_overlay`
+        // now draws an outset accent ring for ANY selected element (see
+        // `selected_presence_draws_an_outset_ring_on_any_element`, below) — a deliberate new
+        // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
+        // against) never had, so a selected fixture would fail this equivalence check for the wrong
+        // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
+        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::default() })));
+    }
+
+    /// ✨ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
+    /// non-`Stack` variant, since `selected` used to be a `UiStackNode`-only field. Instance count
+    /// grows vs. the unselected fixture (the extra `push_chrome_border` edges), confirming the ring
+    /// is now a shared channel every element gets for free from `presence_overlay`.
+    #[test]
+    fn selected_presence_draws_an_outset_ring_on_any_element() {
+        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::default() });
+        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true) });
+        let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
+        let (selected_instances, _, _) = retained_stats(&leaf(selected));
+        assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
     }
 
     #[test]
     fn golden_key_value() {
-        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into() }] })));
+        assert_equivalent("KeyValue", &leaf(UiNode::KeyValue(UiKeyValueNode { entries: vec![UiKeyValueEntry { label: "Name".into(), value: "Semio".into() }], presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_slider() {
-        assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action() })));
+        assert_equivalent("Slider", &leaf(UiNode::Slider(UiSliderNode { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, unit: None, on_change: action(), presence: UiPresence::default() })));
     }
 
     /// KNOWN GAP: `widgets::render_number_stepper` renders its center value segment via a full
@@ -16675,7 +16720,7 @@ mod tests {
     /// façade's scope), not something to paper over here.
     #[test]
     fn golden_number_stepper_known_gap() {
-        let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action() })));
+        let (instances, _, _) = retained_stats(&leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: false, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })));
         assert!(instances > 0, "NumberStepper should paint its minus/value/plus segments");
     }
 
@@ -16688,17 +16733,17 @@ mod tests {
     /// instead, per this workstream's "don't modify existing tests" rule.
     #[test]
     fn golden_number_stepper() {
-        assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action() })));
+        assert_equivalent("NumberStepper", &leaf(UiNode::NumberStepper(UiNumberStepperNode { id: "ns".into(), value: 2.0, step: 1.0, uniform: true, on_absolute: action(), on_delta: action(), presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_ring() {
-        assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, disabled: Some(false), on_change: action() })));
+        assert_equivalent("Ring", &leaf(UiNode::Ring(UiRingNode { id: "ring".into(), orb_id: "orb".into(), t: 0.25, on_change: action(), presence: UiPresence::default() })));
     }
 
     #[test]
     fn golden_icon_select() {
-        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: "star".into(), uniform: false, classifier_kind: "kind".into(), on_change: action() })));
+        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: "star".into(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
     }
 
     #[test]
@@ -16749,7 +16794,8 @@ mod tests {
             description: None,
             required: None,
             error: None,
-            child: Box::new(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action() })),
+            child: Box::new(UiNode::Input(UiInputNode { id: "in".into(), input_kind: "text".into(), value: "abc".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })),
+            presence: UiPresence::default(),
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "Field should paint its label plus its child control");
@@ -16762,7 +16808,7 @@ mod tests {
             label: Some("Section".into()),
             default_open: Some(true),
             presence: UiPresence::default(),
-            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None })],
+            children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })],
         });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "Section should paint its header label plus its children");
@@ -16777,7 +16823,7 @@ mod tests {
     /// promise, not equivalence with anything immediate-mode.
     #[test]
     fn golden_image_known_gap() {
-        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()) });
+        let node = UiNode::Image(UiImageNode { id: "img".into(), src: String::new(), alt: Some("alt text".into()), presence: UiPresence::default() });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "an empty-src Image should still paint its alt text");
     }
@@ -16790,6 +16836,7 @@ mod tests {
             component_kind: SurfaceKind::World3d,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -16812,7 +16859,7 @@ mod tests {
 
     #[test]
     fn golden_external_slot_known_gap() {
-        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into() });
+        let node = UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "plug".into(), app_id: "app".into(), body_key: "body".into(), params_json: "{}".into(), presence: UiPresence::default() });
         let (instances, _, _) = retained_stats(&node);
         assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
     }
@@ -17872,7 +17919,7 @@ fn measure_tree_item_width<E>(
     collapsed: &HashMap<String, bool>,
     depth: u32,
 ) -> f32 {
-    if item.is_hidden {
+    if item.dimmed {
         return 0.0;
     }
     let mut w = tree_gutter_width(depth)
@@ -17924,7 +17971,7 @@ fn measure_tree_sections_state<E>(sections: &[TreeSection<E>], collapsed: &HashM
 }
 
 fn measure_tree_item_height<E>(item: &TreeItem<E>, collapsed: &HashMap<String, bool>) -> f32 {
-    if item.is_hidden {
+    if item.dimmed {
         return 0.0;
     }
     let mut height = TREE_ROW_HEIGHT;
@@ -18032,7 +18079,7 @@ fn render_tree_item<E: Clone>(
     highlighted_ids: &[String],
     is_last_at_level: &[bool],
 ) -> f32 {
-    if item.is_hidden {
+    if item.dimmed {
         return 0.0;
     }
     let key = format!("tree.{}", item.id);
@@ -18082,7 +18129,7 @@ fn render_tree_item<E: Clone>(
         ctx.theme.active_foreground
     } else if hovered {
         ctx.theme.border_emphasized
-    } else if item.is_hidden {
+    } else if item.dimmed {
         ctx.theme.text_muted
     } else {
         ctx.theme.text_element

@@ -1,0 +1,15 @@
+{
+  "title": "Fix CAD Edge Hover and Selection Display",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "CAD lines/edges are not showing hover effect or visually selectable. They must also remain visible when on a surface (currently they share the same color as surface hover). Wire CAD plugin selection/hover for edge components like lowpoly, and fix World3d edge overlay colors/depth so edges are distinct from face hover fill.",
+  "summary": "CAD B-rep edges now hover and select visually. Wired CAD play runtime to round-trip hoveredComponent, selectionMode/componentIds, and edge worldPick (with objectId), matching lowpoly. World3d edge overlays use hovered.lineColor (not face hover fill), draw with depthTest=false, and base edges follow instance line paint so they stay visible on hovered surfaces.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2265"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪e55839f802f14dc5a009347782e40a93",
+    "⚪4e0f5e0a808446f1a3ac2f0bead72379"
+  ]
+}

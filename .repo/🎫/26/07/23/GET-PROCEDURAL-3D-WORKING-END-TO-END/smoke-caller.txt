@@ -1,0 +1,43 @@
+stack count 37
+==== ARGS
+Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+==== CALLER
+Error: trace
+    at console.error (<anonymous>:5:17)
+    at getRootForUpdatedFiber (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3261:143)
+    at enqueueConcurrentHookUpdate (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3242:16)
+    at dispatchSetStateInternal (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6564:20)
+    at dispatchSetState (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6535:9)
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13209:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13314:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx:1914:5
+    at Object.react_stack_bottom_frame (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:18299:20)
+    at runWithFiberInDEV (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:729:72)
+==== ARGS
+Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+==== CALLER
+Error: trace
+    at console.error (<anonymous>:5:17)
+    at getRootForUpdatedFiber (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3261:143)
+    at enqueueConcurrentHookUpdate (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3242:16)
+    at dispatchSetStateInternal (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6564:20)
+    at dispatchSetState (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6535:9)
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13209:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13314:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx:1914:5
+    at Object.react_stack_bottom_frame (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:18299:20)
+    at runWithFiberInDEV (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:729:72)
+==== ARGS
+Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render.
+==== CALLER
+Error: trace
+    at console.error (<anonymous>:5:17)
+    at getRootForUpdatedFiber (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3261:143)
+    at enqueueConcurrentHookUpdate (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:3242:16)
+    at dispatchSetStateInternal (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6564:20)
+    at dispatchSetState (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:6535:9)
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13209:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx:13314:5
+    at http://localhost:6018/@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx:1914:5
+    at Object.react_stack_bottom_frame (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:18299:20)
+    at runWithFiberInDEV (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=445e8d40:729:72)

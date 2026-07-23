@@ -7,7 +7,7 @@ pub mod d2 {
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
-        ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, ResourceKindSpec, Board2dScene, SurfaceKind, ToolRef, UiInspectorFieldGroup, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, ResourceKindSpec, Board2dScene, SurfaceKind, ToolRef, UiInspectorFieldGroup, UiPresence, UtilityCategory, UtilityDefinition, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
         WindowEngagementInput, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
         is_de_locale, tree_item, tree_item_with_action,
     };
@@ -1366,12 +1366,11 @@ pub mod d2 {
                 let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
                 let draggable = slice == "nodes";
                 UiTreeItemNode {
-                    loading: None, waiting: None,
+                    presence: UiPresence::default(),
                     id: format!("{section_id}.{index}.{kind_id}"),
                     label: catalog_kind_label(entry),
                     description: Some(kind_id.into()),
                     icon_id: None,
-                    selected: None,
                     default_open: None,
                     action: Some(puzzle2d_action("addNode", Some(json!({ "kind": kind_id })))),
                     hover_action: None,
@@ -1381,12 +1380,12 @@ pub mod d2 {
                     drag_data: draggable.then(|| puzzle2d_catalog_item_drag_data(slice, kind_id, entry)),
                     items: None,
                     control: None,
-                    is_hidden: None,
+                    dimmed: None,
                 }
             })
             .collect();
         UiTreeSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(true),
@@ -1402,14 +1401,12 @@ pub mod d2 {
         let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
         let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
         UiNode::Tree(UiTreeNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             sections: vec![
                 kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", labels.nodes, &node_entries, labels),
                 kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, &handle_entries, labels),
                 kind_catalog_section("puzzle2d-play-kinds.edges", "edges", labels.edges, &edge_entries, labels),
             ],
-            selected_ids: None,
-            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -1438,6 +1435,7 @@ pub mod d2 {
             id: "puzzle2d-play-inspector".into(),
             label: labels.node_kind.into(),
             default_open: Some(true),
+            presence: UiPresence::default(),
             fields: vec![
                 ui_inspector_readonly_field("puzzle2d-play-inspector.id", labels.id, id_text),
                 ui_inspector_readonly_field("puzzle2d-play-inspector.node-kind", labels.node_kind, ui_inspector_mixed_text(&kinds).value),
@@ -2695,7 +2693,7 @@ pub mod d3 {
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
-        SurfaceKind, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        SurfaceKind, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
@@ -4745,12 +4743,11 @@ pub mod d3 {
     //#region 🔖Panels
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
         UiTreeItemNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: id.into(),
             label: label.into(),
             description: None,
             icon_id: icon_id.map(str::to_string),
-            selected: None,
             default_open: None,
             action: Some(action),
             hover_action: None,
@@ -4760,7 +4757,7 @@ pub mod d3 {
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         }
     }
 
@@ -4795,12 +4792,11 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None, waiting: None,
+                    presence: UiPresence::selected(envelope.runtime.selection.object_ids.contains(&object.id)),
                     id: format!("puzzle3d-object:{}", object.id),
                     label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
                     description: None,
                     icon_id: Some("box".into()),
-                    selected: Some(envelope.runtime.selection.object_ids.contains(&object.id)),
                     default_open: Some(false),
                     action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [object.id], "vortexIds": [], "attractionIds": [] } })))),
                     hover_action: Some(puzzle3d_action("setHover", Some(json!({ "objectId": object.id })))),
@@ -4810,7 +4806,7 @@ pub mod d3 {
                     drag_data: None,
                     items: if vortex_items.is_empty() { None } else { Some(vortex_items) },
                     control: None,
-                    is_hidden: Some(object.hidden),
+                    dimmed: Some(object.hidden),
                 }
             })
             .collect();
@@ -4824,12 +4820,11 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None, waiting: None,
+                    presence: UiPresence::selected(envelope.runtime.selection.reference_ids.contains(&reference.id)),
                     id: format!("puzzle3d-reference:{}", reference.id),
                     label: reference.id.clone(),
                     description: Some(reference.source.url.clone()),
                     icon_id: Some("globe".into()),
-                    selected: Some(envelope.runtime.selection.reference_ids.contains(&reference.id)),
                     default_open: None,
                     action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "referenceIds": [reference.id] } })))),
                     hover_action: None,
@@ -4839,7 +4834,7 @@ pub mod d3 {
                     drag_data: None,
                     items: None,
                     control: None,
-                    is_hidden: Some(reference.hidden),
+                    dimmed: Some(reference.hidden),
                 }
             })
             .collect();
@@ -4853,12 +4848,11 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None, waiting: None,
+                    presence: UiPresence::selected(envelope.runtime.selection.target_volume_ids.contains(&volume.id)),
                     id: format!("puzzle3d-target-volume:{}", volume.id),
                     label: volume.id.clone(),
                     description: None,
                     icon_id: Some("cylinder".into()),
-                    selected: Some(envelope.runtime.selection.target_volume_ids.contains(&volume.id)),
                     default_open: None,
                     action: Some(puzzle3d_action("setSelection", Some(json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "targetVolumeIds": [volume.id] } })))),
                     hover_action: None,
@@ -4868,7 +4862,7 @@ pub mod d3 {
                     drag_data: None,
                     items: None,
                     control: None,
-                    is_hidden: Some(volume.hidden),
+                    dimmed: Some(volume.hidden),
                 }
             })
             .collect();
@@ -4886,15 +4880,13 @@ pub mod d3 {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, waiting: None, items: object_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), loading: None, waiting: None, items: reference_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), loading: None, waiting: None, items: target_volume_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, waiting: None, items: attraction_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), presence: UiPresence::default(), items: reference_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), presence: UiPresence::default(), items: target_volume_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_items },
             ],
-            selected_ids: None,
-            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -4923,12 +4915,11 @@ pub mod d3 {
                         let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
                         let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
                         UiTreeItemNode {
-                            loading: None, waiting: None,
+                            presence: UiPresence::default(),
                             id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
                             label: vortex_kind.into(),
                             description: Some(position.to_string()),
                             icon_id: Some("circle-dot".into()),
-                            selected: None,
                             default_open: None,
                             action: None,
                             hover_action: None,
@@ -4938,7 +4929,7 @@ pub mod d3 {
                             drag_data: None,
                             items: None,
                             control: None,
-                            is_hidden: None,
+                            dimmed: None,
                         }
                     })
                     .collect()
@@ -4951,12 +4942,11 @@ pub mod d3 {
         let mesh_url = entry.get("meshUrl").and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(str::to_string);
         let draggable = mesh_url.is_some();
         UiTreeItemNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: format!("puzzle3d-kind:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id.clone()),
             icon_id: Some("box".into()),
-            selected: None,
             default_open: Some(false),
             action: Some(puzzle3d_action("addObjectKind", Some(json!({ "objectKind": kind_id.clone() })))),
             hover_action: Some(puzzle3d_action("setKindHover", Some(json!({ "kindId": kind_id.clone() })))),
@@ -4972,19 +4962,18 @@ pub mod d3 {
             }),
             items: Some(puzzle3d_object_kind_vortex_items(entry)),
             control: None,
-            is_hidden: None,
+            dimmed: None,
         }
     }
 
     fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
         UiTreeItemNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: format!("puzzle3d-kind-entry:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id),
             icon_id: Some(icon_id.into()),
-            selected: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -4994,7 +4983,7 @@ pub mod d3 {
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         }
     }
 
@@ -5004,15 +4993,13 @@ pub mod d3 {
         let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
         let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
         UiNode::Tree(UiTreeNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, waiting: None, items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), loading: None, waiting: None, items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), loading: None, waiting: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, waiting: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), presence: UiPresence::default(), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), presence: UiPresence::default(), items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
             ],
-            selected_ids: None,
-            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -5034,10 +5021,12 @@ pub mod d3 {
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         })
     }
 
@@ -5055,6 +5044,7 @@ pub mod d3 {
             id: id.into(),
             label: label.into(),
             default_open: Some(true),
+            presence: UiPresence::default(),
             children: vec![component(0, "x", "X"), component(1, "y", "Y"), component(2, "z", "Z"), component(3, "w", "W")],
         })
     }
@@ -5062,7 +5052,7 @@ pub mod d3 {
     fn inspector_header_and_delete(count: usize, noun: &str) -> Vec<UiNode> {
         vec![
             ui_text(format!("{count} {noun} selected")),
-            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None, waiting: None }),
+            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, presence: UiPresence::default() }),
         ]
     }
 
@@ -5093,7 +5083,7 @@ pub mod d3 {
                 fields.push(inspector_text_field("puzzle3d-play-inspector.object.mesh-url", "Mesh Url", semio_framework_plugin::ui_inspector_mixed_text(&mesh_urls), patch_cmd("meshUrl")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.object.hidden", "Hidden", "eye-off", &hidden, patch_cmd("hidden")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.object.locked", "Locked", "lock", &locked, patch_cmd("locked")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.object".into(), label: term_labels.object.into(), default_open: None, fields }]);
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.object".into(), label: term_labels.object.into(), default_open: None, presence: UiPresence::default(), fields }]);
             }
         }
         if !selection.vortex_ids.is_empty() {
@@ -5125,7 +5115,7 @@ pub mod d3 {
                 fields.push(ui_inspector_stepper_field("puzzle3d-play-inspector.vortex.radius", "Radius", &radii, 0.05, patch_cmd("radius")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.vortex.hidden", "Hidden", "eye-off", &hidden, patch_cmd("hidden")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.vortex.locked", "Locked", "lock", &locked, patch_cmd("locked")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.vortex".into(), label: term_labels.vortex.into(), default_open: None, fields }]);
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.vortex".into(), label: term_labels.vortex.into(), default_open: None, presence: UiPresence::default(), fields }]);
             }
         }
         if !selection.attraction_ids.is_empty() {
@@ -5150,7 +5140,7 @@ pub mod d3 {
                 fields.push(ui_inspector_stepper_field("puzzle3d-play-inspector.attraction.rotation", "Rotation (°)", &rotations, 1.0, patch_cmd("rotation")));
                 fields.push(ui_inspector_stepper_field("puzzle3d-play-inspector.attraction.turn", "Turn (°)", &turns, 1.0, patch_cmd("turn")));
                 fields.push(ui_inspector_stepper_field("puzzle3d-play-inspector.attraction.tilt", "Tilt (°)", &tilts, 1.0, patch_cmd("tilt")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: "Attraction".into(), default_open: None, fields }]);
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.attraction".into(), label: "Attraction".into(), default_open: None, presence: UiPresence::default(), fields }]);
             }
         }
         if !selection.reference_ids.is_empty() {
@@ -5171,7 +5161,7 @@ pub mod d3 {
                 fields.push(ui_inspector_stepper_field("puzzle3d-play-inspector.reference.width", "Width", &widths, 0.1, patch_cmd("widthWorld")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.reference.hidden", "Hidden", "eye-off", &hidden, patch_cmd("hidden")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.reference.locked", "Locked", "lock", &locked, patch_cmd("locked")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.reference".into(), label: "Reference".into(), default_open: None, fields }]);
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.reference".into(), label: "Reference".into(), default_open: None, presence: UiPresence::default(), fields }]);
             }
         }
         if !selection.target_volume_ids.is_empty() {
@@ -5190,7 +5180,7 @@ pub mod d3 {
                 fields.push(ui_inspector_vec3_group("puzzle3d-play-inspector.target-volume.scale", "Scale", &scales, 0.1, |axis| patch_cmd(&format!("scale.{axis}"))));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.target-volume.hidden", "Hidden", "eye-off", &hidden, patch_cmd("hidden")));
                 fields.push(ui_inspector_toggle_field("puzzle3d-play-inspector.target-volume.locked", "Locked", "lock", &locked, patch_cmd("locked")));
-                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: "Target Volume".into(), default_open: None, fields }]);
+                return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "puzzle3d-play-inspector.target-volume".into(), label: "Target Volume".into(), default_open: None, presence: UiPresence::default(), fields }]);
             }
         }
         ui_stack_vertical(vec![ui_text(format!("Schema: {}", envelope.fixture.schema)), ui_text(format!("Domain: {}", envelope.fixture.domain)), ui_text(format!("Objects: {}", envelope.fixture.objects.len()))])
@@ -5212,15 +5202,18 @@ pub mod d3 {
                 ],
                 placeholder: None,
                 on_change: puzzle3d_action("setSelectionModeDefault", None),
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         });
         ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
             id: "puzzle3d-play-settings".into(),
             label: "Settings".into(),
             default_open: Some(true),
+            presence: UiPresence::default(),
             fields: vec![
                 selection_mode_field,
                 ui_inspector_stepper_field("puzzle3d-play-settings.overlap-budget", "Brush Overlap Budget (m³)", &[runtime.overlap_budget], 0.05, puzzle3d_action("setBrushPlacementOverlapBudget", None)),
@@ -8057,7 +8050,7 @@ pub mod d5 {
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement,
+        ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, ui_tree_stamp_presence,
         WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
@@ -9733,26 +9726,27 @@ pub mod d5 {
             .iter()
             .map(|fastener| tree_item_with_action(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_action("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
             .collect();
+        let mut sections = vec![
+            UiTreeSectionNode {
+                presence: UiPresence::default(),
+                id: "puzzle5d-play-document.parts".into(),
+                label: Some(labels.parts.into()),
+                default_open: Some(true),
+                items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", labels.none, None)] } else { part_items },
+            },
+            UiTreeSectionNode {
+                presence: UiPresence::default(),
+                id: "puzzle5d-play-document.fasteners".into(),
+                label: Some(labels.fasteners.into()),
+                default_open: Some(false),
+                items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", labels.none, None)] } else { fastener_items },
+            },
+        ];
+        let selected: HashSet<String> = document_tree_selected_ids(envelope).into_iter().collect();
+        ui_tree_stamp_presence(&mut sections, &selected, &HashSet::new());
         UiNode::Tree(UiTreeNode {
-            loading: None, waiting: None,
-            sections: vec![
-                UiTreeSectionNode {
-                    loading: None, waiting: None,
-                    id: "puzzle5d-play-document.parts".into(),
-                    label: Some(labels.parts.into()),
-                    default_open: Some(true),
-                    items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", labels.none, None)] } else { part_items },
-                },
-                UiTreeSectionNode {
-                    loading: None, waiting: None,
-                    id: "puzzle5d-play-document.fasteners".into(),
-                    label: Some(labels.fasteners.into()),
-                    default_open: Some(false),
-                    items: if fastener_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.fasteners.empty", labels.none, None)] } else { fastener_items },
-                },
-            ],
-            selected_ids: Some(document_tree_selected_ids(envelope)),
-            highlighted_ids: None,
+            presence: UiPresence::default(),
+            sections,
             selection_change: Some(puzzle5d_action("setSelection", None)),
             drop_action: None,
         })
@@ -9803,7 +9797,7 @@ pub mod d5 {
             })
             .collect();
         UiTreeSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(!items.is_empty()),
@@ -9822,15 +9816,13 @@ pub mod d5 {
             part_entries = ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect();
         }
         UiNode::Tree(UiTreeNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             sections: vec![
                 kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind"), labels.none),
                 kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None, labels.none),
                 kind_catalog_section("puzzle5d-play-kinds.fasteners", labels.fasteners, &slice("fasteners"), None, labels.none),
                 kind_catalog_section("puzzle5d-play-kinds.ropes", labels.ropes, &slice("ropes"), None, labels.none),
             ],
-            selected_ids: None,
-            highlighted_ids: None,
             selection_change: None,
             drop_action: None,
         })
@@ -9854,7 +9846,9 @@ pub mod d5 {
                 step: None,
                 accept: None,
                 on_change: action,
+                presence: UiPresence::default(),
             })),
+            presence: UiPresence::default(),
         })
     }
 
@@ -9865,6 +9859,7 @@ pub mod d5 {
             id: "puzzle5d-play-inspector.part".into(),
             label: labels.part.into(),
             default_open: None,
+            presence: UiPresence::default(),
             fields: vec![
                 ui_inspector_readonly_field("puzzle5d-play-inspector.part.id", labels.id, &part.id),
                 inspector_text_field("puzzle5d-play-inspector.part.kind", labels.kind, part.part_kind.clone(), patch_cmd("partKind")),
@@ -9886,6 +9881,7 @@ pub mod d5 {
             id: "puzzle5d-play-inspector.grip".into(),
             label: labels.grip.into(),
             default_open: None,
+            presence: UiPresence::default(),
             fields: vec![
                 ui_inspector_readonly_field("puzzle5d-play-inspector.grip.id", labels.id, &full_id),
                 inspector_text_field("puzzle5d-play-inspector.grip.kind", labels.kind, grip.grip_kind.clone(), patch_cmd("gripKind")),
@@ -10661,7 +10657,7 @@ pub mod d5 {
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
             let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
+            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
             let labels = puzzle5d_labels(view_state);
             match body_key {
                 PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),

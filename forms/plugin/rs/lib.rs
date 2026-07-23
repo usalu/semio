@@ -11,7 +11,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionKind, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
     DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
-    UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode,
+    UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
     ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -868,10 +868,12 @@ fn inspector_text_field(question_ids: &[String], field_id: &str, label: &str, va
             max: None,
             step: None,
             accept: None,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -887,10 +889,12 @@ fn inspector_number_field(question_ids: &[String], field_id: &str, label: &str, 
             uniform: mixed.uniform,
             on_absolute: inspector_patch(question_ids, field),
             on_delta: inspector_patch(question_ids, field),
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -956,12 +960,13 @@ fn question_kind_editor_fields(
                 description: None,
                 required: None,
                 error: None,
+                presence: UiPresence::default(),
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: fid("default.toggle"),
                     icon_id: "check".into(),
-                    pressed,
                     text: Some(if pressed { labels.yes.into() } else { labels.no.into() }),
                     on_change: inspector_patch(question_ids, "default"),
+                    presence: UiPresence::selected(pressed),
                 })),
             }));
         }
@@ -974,6 +979,7 @@ fn question_kind_editor_fields(
                         description: None,
                         required: None,
                         error: None,
+                        presence: UiPresence::default(),
                         child: Box::new(UiNode::Input(UiInputNode {
                             id: fid(&format!("option.{}.input", option.value)),
                             input_kind: "text".into(),
@@ -988,10 +994,10 @@ fn question_kind_editor_fields(
                             max: None,
                             step: None,
                             accept: None,
+                            presence: UiPresence::default(),
                         })),
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
-                        loading: None,
                         id: Some(fid(&format!("option.{}.remove", option.value))),
                         icon_id: "trash-2".into(),
                         label: labels.remove_option.into(),
@@ -1000,23 +1006,18 @@ fn question_kind_editor_fields(
                             Some(json!({ "questionId": question.id, "optionValue": option.value })),
                         ),
                         style: None,
-                        disabled: None,
-                    
-                        waiting: None,
-}));
+                        presence: UiPresence::default(),
+                    }));
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
-                loading: None,
                 id: Some(fid("option.add")),
                 icon_id: "plus".into(),
                 label: labels.add_option.into(),
                 action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
                 style: None,
-                disabled: None,
-            
-                waiting: None,
-}));
+                presence: UiPresence::default(),
+            }));
         }
         "date" | "color" => {
             fields.push(inspector_text_field(
@@ -1044,6 +1045,7 @@ fn question_kind_editor_fields(
                         description: None,
                         required: None,
                         error: None,
+                        presence: UiPresence::default(),
                         child: Box::new(UiNode::Input(UiInputNode {
                             id: fid(&format!("vector.{}.label.input", field.key)),
                             input_kind: "text".into(),
@@ -1058,6 +1060,7 @@ fn question_kind_editor_fields(
                             max: None,
                             step: None,
                             accept: None,
+                            presence: UiPresence::default(),
                         })),
                     }));
                     fields.push(UiNode::Field(UiFieldNode {
@@ -1066,6 +1069,7 @@ fn question_kind_editor_fields(
                         description: None,
                         required: None,
                         error: None,
+                        presence: UiPresence::default(),
                         child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                             id: fid(&format!("vector.{}.value.stepper", field.key)),
                             value: field.value.unwrap_or(0.0),
@@ -1079,10 +1083,10 @@ fn question_kind_editor_fields(
                                 "patchVectorField",
                                 Some(json!({ "questionId": question.id, "fieldKey": field.key, "field": "value" })),
                             ),
+                            presence: UiPresence::default(),
                         })),
                     }));
                     fields.push(UiNode::Button(UiButtonNode {
-                        loading: None,
                         id: Some(fid(&format!("vector.{}.remove", field.key))),
                         icon_id: "trash-2".into(),
                         label: format!("{} {}", labels.remove, field.key),
@@ -1091,14 +1095,11 @@ fn question_kind_editor_fields(
                             Some(json!({ "questionId": question.id, "fieldKey": field.key })),
                         ),
                         style: None,
-                        disabled: None,
-                    
-                        waiting: None,
-}));
+                        presence: UiPresence::default(),
+                    }));
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
-                loading: None,
                 id: Some(fid("vector.add")),
                 icon_id: "plus".into(),
                 label: labels.add_vector_field.into(),
@@ -1107,10 +1108,8 @@ fn question_kind_editor_fields(
                     Some(json!({ "questionId": question.id, "fieldKey": "field" })),
                 ),
                 style: None,
-                disabled: None,
-            
-                waiting: None,
-}));
+                presence: UiPresence::default(),
+            }));
         }
         "note" => {
             fields.push(inspector_text_field(
@@ -1193,10 +1192,12 @@ fn build_inspector_tree(
                 placeholder: kind_mixed.placeholder,
                 items: kind_items,
                 on_change: inspector_patch(&question_ids, "kind"),
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
         ui_inspector_readonly_field(
             "forms-play-inspector.id",
@@ -1213,23 +1214,24 @@ fn build_inspector_tree(
             child: Box::new(UiNode::Toggle(UiToggleNode {
                 id: "forms-play-inspector.required.toggle".into(),
                 icon_id: "check".into(),
-                pressed: required_mixed.uniform && required_mixed.pressed,
                 text: if required_mixed.uniform {
                     Some(if required_mixed.pressed { term_labels.yes.into() } else { term_labels.no.into() })
                 } else {
                     Some(UI_INSPECTOR_MIXED_PLACEHOLDER.into())
                 },
                 on_change: inspector_patch(&question_ids, "required"),
+                presence: UiPresence::selected(required_mixed.uniform && required_mixed.pressed),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
     ];
     if questions.len() == 1 {
         base_fields.extend(question_kind_editor_fields(&questions[0], &question_ids, contributions, "forms-play-inspector", term_labels));
     }
-    let groups = vec![UiInspectorFieldGroup {
+    let groups = vec![UiInspectorFieldGroup { presence: UiPresence::default(),
         id: "forms-play-inspector.base".into(),
         label: term_labels.question.into(),
         default_open: None,
@@ -1298,6 +1300,7 @@ fn ui_text_emphasized(value: impl Into<String>) -> UiNode {
         value: value.into(),
         emphasize: Some(true),
         data_attributes: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -1307,9 +1310,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         gap: Some("tight".into()),
         padding: Some("none".into()),
         id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -1325,6 +1326,7 @@ fn try_field(question: &FormQuestion, error: Option<&str>, child: UiNode) -> UiN
         required: question.required.filter(|required| *required),
         error: error.map(str::to_string),
         child: Box::new(child),
+        presence: UiPresence::default(),
     })
 }
 
@@ -1352,6 +1354,7 @@ fn render_try_question(
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             }),
         ),
         "number" => try_field(
@@ -1368,6 +1371,7 @@ fn render_try_question(
                 max: question.max,
                 step: question.step,
                 accept: None,
+                presence: UiPresence::default(),
             }),
         ),
         "slider" => try_field(
@@ -1381,6 +1385,7 @@ fn render_try_question(
                 step: question.step.unwrap_or(1.0),
                 unit: question.unit.clone(),
                 on_change: try_value_action(&key),
+                presence: UiPresence::default(),
             }),
         ),
         "boolean" => try_field(
@@ -1389,9 +1394,9 @@ fn render_try_question(
             UiNode::Toggle(UiToggleNode {
                 id: format!("forms-try.{key}.toggle"),
                 icon_id: "check".into(),
-                pressed: value.as_bool().unwrap_or(false),
                 text: Some(if value.as_bool().unwrap_or(false) { labels.yes.into() } else { labels.no.into() }),
                 on_change: try_value_action(&key),
+                presence: UiPresence::selected(value.as_bool().unwrap_or(false)),
             }),
         ),
         "single" => {
@@ -1417,6 +1422,7 @@ fn render_try_question(
                     placeholder: None,
                     items,
                     on_change: try_value_action(&key),
+                    presence: UiPresence::default(),
                 }),
             )
         }
@@ -1435,12 +1441,12 @@ fn render_try_question(
                             UiNode::Toggle(UiToggleNode {
                                 id: format!("forms-try.{key}.{}.toggle", option.value),
                                 icon_id: "hash".into(),
-                                pressed: selected.contains(&option.value),
                                 text: Some(option.label.clone()),
                                 on_change: forms_action(
                                     "setTryValue",
                                     Some(json!({ "key": key, "optionValue": option.value })),
                                 ),
+                                presence: UiPresence::selected(selected.contains(&option.value)),
                             })
                         })
                         .collect()
@@ -1462,6 +1468,7 @@ fn render_try_question(
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             }),
         ),
         "vector" => {
@@ -1478,6 +1485,7 @@ fn render_try_question(
                         description: None,
                         required: None,
                         error: None,
+                        presence: UiPresence::default(),
                         child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
                             id: format!("forms-try.{key}.{}.stepper", field.key),
                             value: json_f64_value(&field_value),
@@ -1491,6 +1499,7 @@ fn render_try_question(
                                 "setTryValue",
                                 Some(json!({ "key": key, "vectorIndex": index })),
                             ),
+                            presence: UiPresence::default(),
                         })),
                     })
                 })
@@ -1513,6 +1522,7 @@ fn render_try_question(
                 max: None,
                 step: None,
                 accept: question.accept.clone(),
+                presence: UiPresence::default(),
             }),
         ),
         kind if is_extension_question_kind(kind) => {
@@ -1555,37 +1565,31 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
     }
     let nav = vec![
         UiNode::Button(UiButtonNode {
-            loading: None,
             id: Some("forms-try.back".into()),
             icon_id: "chevron-left".into(),
             label: labels.back.into(),
             action: forms_action("previousStep", None),
             style: None,
-            disabled: Some(step_index == 0).filter(|disabled| *disabled),
-
-            waiting: None,}),
+            presence: UiPresence::disabled_if(step_index == 0),
+        }),
         if step_index + 1 < spec.steps.len() {
             UiNode::Button(UiButtonNode {
-                loading: None,
                 id: Some("forms-try.next".into()),
                 icon_id: "chevron-right".into(),
                 label: labels.next.into(),
                 action: forms_action("nextStep", None),
                 style: None,
-                disabled: Some(!advance).filter(|disabled| *disabled),
-
-                waiting: None,})
+                presence: UiPresence::disabled_if(!advance),
+            })
         } else {
             UiNode::Button(UiButtonNode {
-                loading: None,
                 id: Some("forms-try.submit".into()),
                 icon_id: "check".into(),
                 label: labels.submit.into(),
                 action: forms_action("submit", None),
                 style: None,
-                disabled: Some(!advance).filter(|disabled| *disabled),
-
-                waiting: None,})
+                presence: UiPresence::disabled_if(!advance),
+            })
         },
     ];
     children.push(ui_stack_horizontal(nav));

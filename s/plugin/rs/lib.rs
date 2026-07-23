@@ -76,7 +76,7 @@ pub mod app_home {
     use super::{ensure_studio_fixtures_registered, parse_demo_studio_document};
     use semio_framework_os::{
         create_os_studio, delete_os_studio, document_backbone_ref, import_os_studio_from_json,
-        list_os_studio_catalog_entries, load_os_studio_document, os_document_to_json,
+        list_os_studio_catalog_entries, load_os_studio_document, os_document_to_envelope_json, os_document_to_json,
         seed_os_studio_catalog_if_empty, MemoryBackbonePort, OsBackbonePort, OsDocument, OS_HOME_VFS_ROOT_ID,
         OS_STUDIO_BACKBONE_URI_PREFIX, VcsError,
     };
@@ -189,6 +189,33 @@ pub mod app_home {
         if let Ok(mut guard) = STUDIO_PORTS.lock() {
             guard.insert(studio_id.into(), port);
         }
+    }
+
+    /// @emoji 📂 Resolves a studio id against registered ports, then the ephemeral and persistent catalogs.
+    pub(crate) fn resolve_studio_document(studio_id: &str) -> Option<OsDocument> {
+        if let Ok(guard) = STUDIO_PORTS.lock() {
+            if let Some(port) = guard.get(studio_id) {
+                if let Ok(document) = load_os_studio_document(studio_id, port.clone()) {
+                    return Some(document);
+                }
+            }
+        }
+        for port in [temp_catalog_port(), catalog_port()] {
+            if let Ok(document) = load_os_studio_document(studio_id, port) {
+                return Some(document);
+            }
+        }
+        None
+    }
+
+    /// @emoji 📦 Envelope JSON for `HostEffect::LoadDocument` / host `loadAppDocument`.
+    pub(crate) fn studio_document_envelope_json(document: &OsDocument) -> Option<String> {
+        os_document_to_envelope_json(document).ok()
+    }
+
+    #[cfg(test)]
+    pub(crate) fn register_studio_port_for_test(studio_id: &str, port: Arc<dyn OsBackbonePort>) {
+        register_studio_port(studio_id, port);
     }
 
     fn list_all_studio_catalog_entries() -> Vec<semio_framework_os::OsStudioCatalogEntry> {
@@ -381,10 +408,14 @@ pub mod app_home {
                     let kind = args
                         .and_then(|value| value.get("kind"))
                         .and_then(|value| value.as_str())
-                        .unwrap_or("file");
+                        .unwrap_or("catalog");
+                    // 🆕 Create writes an empty studio to the chosen catalog and navigates to it —
+                    // never downloads a file (export/save is a separate action).
                     match kind {
                         "temporary" => {
                             if let Ok(entry) = create_os_studio(name, temp_catalog_port()) {
+                                register_studio_port(&entry.id, temp_catalog_port());
+                                eprintln!("[DEBUG] createStudio temporary id={}", entry.id);
                                 return created_studio_emit(generation, &entry.id);
                             }
                         }
@@ -396,6 +427,7 @@ pub mod app_home {
                                     .and_then(|value| value.as_str())
                                 {
                                     if let Ok(entry) = create_folder_studio(name, folder_path) {
+                                        eprintln!("[DEBUG] createStudio folder id={}", entry.id);
                                         return created_studio_emit(generation, &entry.id);
                                     }
                                 }
@@ -406,22 +438,10 @@ pub mod app_home {
                             }
                         }
                         _ => {
+                            // 📁 "file" / "catalog" / default — persist in the studio catalog only.
                             if let Ok(entry) = create_os_studio(name, port.clone()) {
-                                let mut emit = created_studio_emit(generation, &entry.id);
-                                if let Ok(studio_document) = load_os_studio_document(&entry.id, port.clone()) {
-                                    if let Ok(json) = os_document_to_json(&studio_document) {
-                                        emit.effects.insert(
-                                            0,
-                                            HostEffect::DownloadMediaExport {
-                                                filename: format!("{}.studio.json", entry.name.replace(' ', "-")),
-                                                mime_type: "application/json".into(),
-                                                data: json,
-                                                encoding: None,
-                                            },
-                                        );
-                                    }
-                                }
-                                return emit;
+                                eprintln!("[DEBUG] createStudio catalog id={}", entry.id);
+                                return created_studio_emit(generation, &entry.id);
                             }
                         }
                     }
@@ -609,6 +629,56 @@ pub mod app_home {
         }
 
         #[test]
+        fn create_studio_navigates_without_download_and_opens_empty() {
+            let mut home = HomeApp;
+            let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+            let history = empty_history();
+            let doc = DocumentView { projection: &projection, history: &history };
+            let emit = home.handle_action(
+                "createStudio",
+                Some(&json!({ "name": "Fresh Studio" })),
+                &doc,
+                &ViewState::default(),
+            );
+            assert!(
+                !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
+                "create must not download a file"
+            );
+            let uri = emit
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::Navigate { uri } => Some(uri.as_str()),
+                    _ => None,
+                })
+                .expect("navigate");
+            assert!(uri.starts_with("/studios/"), "uri={uri}");
+            assert!(!uri.ends_with("/demo") && !uri.ends_with("/default"), "uri={uri}");
+            let studio_id = uri.trim_start_matches("/studios/");
+            let document = resolve_studio_document(studio_id).expect("created studio");
+            assert_eq!(document.name, "Fresh Studio");
+            assert!(document.vcs.initial_projection.app_instances.is_empty());
+
+            let mut studio = super::super::app_studio::StudioApp::new();
+            let empty = semio_framework_os::default_os_projection();
+            let studio_doc = DocumentView { projection: &empty, history: &history };
+            let open = studio.handle_action(
+                "openStudio",
+                Some(&json!({ "studioId": studio_id })),
+                &studio_doc,
+                &ViewState::default(),
+            );
+            assert!(
+                open.effects
+                    .iter()
+                    .any(|effect| matches!(effect, HostEffect::LoadDocument { .. })),
+                "openStudio must load the created studio"
+            );
+            assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+            assert!(!open.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })));
+        }
+
+        #[test]
         fn studio_document_persists_through_backbone_port() {
             let port: Arc<dyn OsBackbonePort> = Arc::new(LocalStorageBackbonePort::new());
             let mut demo = parse_demo_studio_document();
@@ -650,11 +720,11 @@ pub mod app_studio {
     //! 🎛️ S Studio — the media-graph composition app hosting spawned app instances, parameters, and
     //! their compiled DAG.
 
-    use super::{demo_studio_projection, ensure_studio_fixtures_registered};
+    use super::{demo_studio_projection, ensure_studio_fixtures_registered, parse_demo_studio_document};
     use semio_framework_os::{
         apply_flow_fixture_to_os_media_graph, build_os_media_flow_operator_infos, create_default_os_parameter,
-        create_os_document_id, create_os_id, list_os_media_graph_vfs_children, list_os_programs,
-        materialize_os_app_instance_document_json, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
+        create_os_document_id, create_os_id, default_os_projection, list_os_media_graph_vfs_children, list_os_programs,
+        materialize_os_app_instance_document_json, materialize_os_projection, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
         os_app_registration, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
         os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
         patch_os_parameter, MediaGraphPosition, OsAppInstance, OsDocumentRef, OsMediaGraphCamera,
@@ -667,7 +737,7 @@ pub mod app_studio {
         ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, MeasureSelectItem, WindowEngagementStatus,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
         AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup,
-        PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode,
+        PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
         UiNumberStepperNode, UiSectionNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemNode, ViewState,
         VirtualFileSystemScene, WindowEngagement, WindowEngagementInput, WindowEngagementSlot, WindowLayout,
         WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1346,7 +1416,7 @@ pub mod app_studio {
 
     fn parameter_value_control(parameter: &OsParameter, labels: &SStudioLabels) -> UiNode {
         match parameter {
-            OsParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {
+            OsParameter::Numeric { id, value, step, .. } => UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(), 
                 id: format!("s-play-parameters.{id}.value"),
                 value: *value,
                 step: step.unwrap_or(1.0),
@@ -1360,7 +1430,7 @@ pub mod app_studio {
                     Some(json!({ "parameterId": id, "field": "value" })),
                 ),
             }),
-            OsParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {
+            OsParameter::Categorical { id, value, options, .. } => UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                 id: format!("s-play-parameters.{id}.value"),
                 value: value.clone(),
                 items: options
@@ -1379,14 +1449,14 @@ pub mod app_studio {
             OsParameter::Toggle { id, value, .. } => UiNode::Toggle(UiToggleNode {
                 id: format!("s-play-parameters.{id}.value"),
                 icon_id: "toggle-left".into(),
-                pressed: *value,
+                presence: UiPresence::selected(*value),
                 text: Some(if *value { labels.toggle_on.into() } else { labels.toggle_off.into() }),
                 on_change: s_play_action(
                     "patchParameter",
                     Some(json!({ "parameterId": id, "field": "value" })),
                 ),
             }),
-            OsParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {
+            OsParameter::Text { id, value, .. } => UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: format!("s-play-parameters.{id}.value"),
                 input_kind: "text".into(),
                 value: value.clone(),
@@ -1413,10 +1483,10 @@ pub mod app_studio {
                 step,
                 ..
             } => vec![
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{id}.min"),
                     label: labels.min.into(),
-                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(), 
                         id: format!("s-play-parameters.{id}.min.stepper"),
                         value: min.unwrap_or(0.0),
                         step: 1.0,
@@ -1434,10 +1504,10 @@ pub mod app_studio {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{id}.max"),
                     label: labels.max.into(),
-                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(), 
                         id: format!("s-play-parameters.{id}.max.stepper"),
                         value: max.unwrap_or(0.0),
                         step: 1.0,
@@ -1455,10 +1525,10 @@ pub mod app_studio {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{id}.step"),
                     label: labels.step.into(),
-                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {
+                    child: Box::new(UiNode::NumberStepper(UiNumberStepperNode {presence: UiPresence::default(), 
                         id: format!("s-play-parameters.{id}.step.stepper"),
                         value: step.unwrap_or(0.0),
                         step: 0.1,
@@ -1484,6 +1554,7 @@ pub mod app_studio {
                         UiNode::Field(UiFieldNode {
                             id: format!("s-play-parameters.{id}.option.{option}"),
                             label: option.clone(),
+                            presence: UiPresence::default(),
                             child: Box::new(UiNode::Button(UiButtonNode {
                                 id: Some(format!("s-play-parameters.{id}.option.{option}.remove")),
                                 icon_id: "trash-2".into(),
@@ -1493,9 +1564,7 @@ pub mod app_studio {
                                     Some(json!({ "parameterId": id, "field": "removeOption", "value": option })),
                                 ),
                                 style: None,
-                                disabled: None,
-                                loading: None,
-                                waiting: None,
+                                presence: UiPresence::default(),
                             })),
                             description: None,
                             required: None,
@@ -1503,10 +1572,10 @@ pub mod app_studio {
                         })
                     })
                     .collect();
-                fields.push(UiNode::Field(UiFieldNode {
+                fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{id}.add-option"),
                     label: labels.add_option.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                         id: format!("s-play-parameters.{id}.add-option.input"),
                         input_kind: "text".into(),
                         value: String::new(),
@@ -1536,8 +1605,7 @@ pub mod app_studio {
             id: "s-play-parameters.header".into(),
             label: Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL.into()),
             default_open: Some(true),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             children: vec![
                 UiNode::Button(UiButtonNode {
                     id: Some("s-play-parameters.add".into()),
@@ -1545,9 +1613,7 @@ pub mod app_studio {
                     label: labels.add_parameter.into(),
                     action: s_play_action("addParameter", Some(json!({ "type": "numeric" }))),
                     style: None,
-                    disabled: None,
-                    loading: None,
-                    waiting: None,
+                    presence: UiPresence::default(),
                 }),
                 ui_text(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix)),
             ],
@@ -1555,10 +1621,10 @@ pub mod app_studio {
         for parameter in &projection.parameters {
             let parameter_id = parameter_entity_id(parameter).to_string();
             let mut parameter_children = vec![
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{parameter_id}.name"),
                     label: labels.name.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                         id: format!("s-play-parameters.{parameter_id}.name.input"),
                         input_kind: "text".into(),
                         value: match parameter {
@@ -1582,7 +1648,7 @@ pub mod app_studio {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("s-play-parameters.{parameter_id}.value-field"),
                     label: labels.value.into(),
                     child: Box::new(parameter_value_control(parameter, labels)),
@@ -1601,9 +1667,7 @@ pub mod app_studio {
                     Some(json!({ "parameterId": parameter_id })),
                 ),
                 style: None,
-                disabled: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
             }));
             children.push(UiSectionNode {
                 id: format!("s-play-parameters.{parameter_id}"),
@@ -1614,8 +1678,7 @@ pub mod app_studio {
                     | OsParameter::Text { name, .. } => name.clone(),
                 }),
                 default_open: Some(true),
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
                 children: parameter_children,
             });
         }
@@ -1629,8 +1692,7 @@ pub mod app_studio {
             id: "s-play-inspector.header".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             children: vec![ui_text(format!(
                 "{} {} · {} {}",
                 media_node_ids.len(),
@@ -1650,10 +1712,10 @@ pub mod app_studio {
             let y_uniform = ui_inspector_all_equal(&ys.iter().map(|v| v.to_string()).collect::<Vec<_>>());
             let mut node_fields = Vec::new();
             if media_node_ids.len() == 1 {
-                node_fields.push(UiNode::Field(UiFieldNode {
+                node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "s-play-inspector.media-node.id".into(),
                     label: term_labels.node_id.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                         id: "s-play-inspector.media-node.id.input".into(),
                         input_kind: "text".into(),
                         value: media_node_ids[0].clone(),
@@ -1670,10 +1732,10 @@ pub mod app_studio {
                     error: None,
                 }));
             }
-            node_fields.push(UiNode::Field(UiFieldNode {
+            node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "s-play-inspector.media-node.x".into(),
                 label: "X".into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "s-play-inspector.media-node.x.input".into(),
                     input_kind: "number".into(),
                     value: if x_uniform {
@@ -1696,10 +1758,10 @@ pub mod app_studio {
                 required: None,
                 error: None,
             }));
-            node_fields.push(UiNode::Field(UiFieldNode {
+            node_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "s-play-inspector.media-node.y".into(),
                 label: "Y".into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "s-play-inspector.media-node.y.input".into(),
                     input_kind: "number".into(),
                     value: if y_uniform {
@@ -1730,8 +1792,7 @@ pub mod app_studio {
                     format!("{} ({})", term_labels.media_graph_nodes, media_node_ids.len())
                 }),
                 default_open: Some(true),
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
                 children: node_fields,
             });
         }
@@ -1765,10 +1826,10 @@ pub mod app_studio {
                         term_labels.mixed_placeholder.into()
                     }
                 )),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "s-play-inspector.app-instance.label".into(),
                     label: term_labels.label.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                         id: "s-play-inspector.app-instance.label.input".into(),
                         input_kind: "text".into(),
                         value: if label_uniform {
@@ -1832,10 +1893,10 @@ pub mod app_studio {
                                     },
                                 });
                             }
-                            instance_fields.push(UiNode::Field(UiFieldNode {
+                            instance_fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                                 id: format!("s-play-inspector.app-parameter.{}", field_spec.field_path),
                                 label: field_spec.label.clone(),
-                                child: Box::new(UiNode::Select(UiSelectNode {
+                                child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                                     id: format!(
                                         "s-play-inspector.app-parameter.{}.select",
                                         field_spec.field_path
@@ -1882,8 +1943,7 @@ pub mod app_studio {
                     format!("{} ({})", term_labels.app_instances, instance_ids.len())
                 }),
                 default_open: Some(true),
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
                 children: instance_fields,
             });
         }
@@ -1996,17 +2056,11 @@ pub mod app_studio {
     }
 
     impl StudioApp {
-        /// @emoji 🎬 Seeds the studio app with the demo's first instance pre-selected (matching the old
-        /// `initial_studio_envelope` runtime) so the media-graph measure dropdown opens on a live app.
+        /// @emoji 🎬 Empty studio runtime — the host loads the target catalog/example document via
+        /// `openStudio` → `HostEffect::LoadDocument`; demo content is no longer the silent default.
         pub fn new() -> Self {
             Self {
-                runtime: StudioRuntimeState {
-                    active_instance_id: demo_studio_projection()
-                        .app_instances
-                        .first()
-                        .map(|instance| instance.id.clone()),
-                    ..StudioRuntimeState::default()
-                },
+                runtime: StudioRuntimeState::default(),
             }
         }
     }
@@ -2024,7 +2078,7 @@ pub mod app_studio {
         }
 
         fn initial_projection(&self) -> OsProjection {
-            demo_studio_projection()
+            default_os_projection()
         }
 
         fn handle_action(
@@ -2719,9 +2773,38 @@ pub mod app_studio {
                         .and_then(|value| value.get("studioId"))
                         .and_then(|value| value.as_str())
                     {
-                        // 🧭 Switching studios navigates the shell; the host loads the target document by
-                        // its `OsDocumentRef` (no in-place envelope swap on the plugin side).
-                        return ActionEmit::effect(HostEffect::Navigate { uri: format!("/studios/{studio_id}") });
+                        self.runtime.studio_id = Some(studio_id.into());
+                        self.runtime.focused_instance_id = None;
+                        self.runtime.selected_media_node_ids.clear();
+                        self.runtime.selected_app_instance_ids.clear();
+                        self.runtime.clipboard_instance_ids.clear();
+                        let document = super::app_home::resolve_studio_document(studio_id).or_else(|| {
+                            S_STUDIO_EXAMPLES
+                                .iter()
+                                .find(|(id, _, _)| *id == studio_id)
+                                .map(|_| parse_demo_studio_document())
+                        });
+                        if let Some(document) = document {
+                            if let Ok(projection) = materialize_os_projection(&document, &[]) {
+                                self.runtime.active_instance_id =
+                                    projection.app_instances.first().map(|instance| instance.id.clone());
+                            } else {
+                                self.runtime.active_instance_id = None;
+                            }
+                            if let Some(document_json) = super::app_home::studio_document_envelope_json(&document) {
+                                eprintln!(
+                                    "[DEBUG] openStudio id={} instances={}",
+                                    studio_id,
+                                    document.vcs.initial_projection.app_instances.len()
+                                );
+                                // 📂 Host owns the store swap via `loadAppDocument`; this action only
+                                // binds runtime + emits the envelope (no Navigate — applyShellUri already
+                                // routed here).
+                                return ActionEmit::effect(HostEffect::LoadDocument { document_json });
+                            }
+                        }
+                        eprintln!("[DEBUG] openStudio missing document id={studio_id}");
+                        self.runtime.active_instance_id = None;
                     }
                     return ActionEmit::default();
                 }
@@ -3108,6 +3191,33 @@ pub mod app_studio {
             ops.iter().fold(projection.clone(), |current, op| apply_os_operation(&current, op))
         }
         //#endregion 🔧Harness
+
+        #[test]
+        fn initial_projection_is_empty_not_demo() {
+            let app = StudioApp::new();
+            assert!(app.initial_projection().app_instances.is_empty());
+            assert!(app.runtime.active_instance_id.is_none());
+        }
+
+        #[test]
+        fn open_studio_loads_created_empty_catalog_studio() {
+            use semio_framework_os::{create_os_studio, MemoryBackbonePort};
+            use std::sync::Arc;
+            let port: Arc<dyn semio_framework_os::OsBackbonePort> = Arc::new(MemoryBackbonePort::new());
+            let entry = create_os_studio("Opened Empty", port.clone()).expect("create");
+            super::super::app_home::register_studio_port_for_test(&entry.id, port);
+            let mut app = StudioApp::new();
+            let empty = default_os_projection();
+            let emit = studio_emit(&mut app, &empty, "openStudio", json!({ "studioId": entry.id }));
+            assert_eq!(app.runtime.studio_id.as_deref(), Some(entry.id.as_str()));
+            assert!(app.runtime.active_instance_id.is_none());
+            assert!(
+                emit.effects
+                    .iter()
+                    .any(|effect| matches!(effect, HostEffect::LoadDocument { .. }))
+            );
+            assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+        }
 
         fn seed_draw_program() {
             let mut resources = HashMap::new();

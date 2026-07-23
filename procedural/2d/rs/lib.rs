@@ -210,8 +210,9 @@ impl Operation<Procedural2dDocument> for Procedural2dOp {
 }
 
 /// 🔀 Diffs two fixtures into a minimal, invertible, mergeable op set: removed/added/patched widgets
-/// and synapses (keyed by id), layout entries, and the scalar canvas camera and schema. Lets action
-/// handlers keep computing the target fixture via `FlowHost` while emitting granular ops.
+/// and synapses (keyed by id), layout entries, and the fixture schema. The canvas camera is ephemeral
+/// view state (plugin runtime), never a document op. Lets action handlers keep computing the target
+/// fixture via `FlowHost` while emitting granular ops.
 pub fn procedural2d_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural2dOp> {
     let mut ops = Vec::new();
     for widget in &before.widgets {
@@ -245,9 +246,6 @@ pub fn procedural2d_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Ve
         if before.layout.get(id) != Some(layout) {
             ops.push(Procedural2dOp::SetLayout { id: id.clone(), layout: layout.clone() });
         }
-    }
-    if before.camera != after.camera {
-        ops.push(Procedural2dOp::SetCamera { camera: after.camera.clone() });
     }
     if before.schema != after.schema {
         ops.push(Procedural2dOp::SetSchema { schema: after.schema.clone() });
@@ -316,7 +314,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
+    use vcs::apply_operation;
 
     fn round_trip(projection: &Procedural2dDocument, op: &Procedural2dOp) -> Procedural2dDocument {
         let forward = apply_operation(projection, op);
@@ -329,10 +327,12 @@ mod tests {
     }
 
     #[test]
-    fn store_applies_camera_op() {
-        let mut store = Procedural2dStore::new(create_document_vcs_envelope(PROCEDURAL_2D_SCHEMA, "procedural2d", empty_procedural2d_projection(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Procedural2dOp::SetCamera { camera: CameraJson { x: 7.0, y: 8.0, zoom: 2.0 } }], description: None }).expect("apply");
-        assert_eq!(store.projection().expect("projection").fixture.camera.zoom, 2.0);
+    fn fixture_ops_ignore_camera() {
+        let before = FlowFixture::default();
+        let mut after = before.clone();
+        after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
+        let ops = procedural2d_fixture_ops(&before, &after);
+        assert!(ops.iter().all(|op| !matches!(op, Procedural2dOp::SetCamera { .. })));
     }
 
     #[test]

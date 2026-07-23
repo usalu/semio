@@ -1,7 +1,7 @@
 {
-  "title": "Rich Context Menus Across Apps",
+  "title": "Fix Flow Context Menu",
   "emoji": "🖱️",
-  "status": "closed",
+  "status": "open",
   "description": "Unify declarative context-menu specs end-to-end (icons, colors, hover previews, full item sets), fix host mapping that strips richness, and fill incomplete menus in flow, puzzle, and every other app.",
   "summary": "Unified declarative ContextMenuItemSpec end-to-end: UI supports color swatches, hover, and submenus; hosts map full specs; suggestions use the same controller with per-kind colors on candidates and brush ghosts; flow emits rich menus (add/select-all/reorganize/hide-show preview/delete) with preview_off runtime; puzzle 2d/3d/5d and other node-graph apps emit icons, separators, and destructive delete; vortex menus include suggest plus zoom/delete. Verified via vitest and cargo tests; [DEBUG] logs on menu open and hoverSuggestion.",
   "github": {
@@ -14,6 +14,7 @@
     "local": "rich_context_menus_fda2b32d.plan.md"
   },
   "sessions": [
-    "⚪761aef9e059c4d4088bef3299e97e049"
+    "⚪761aef9e059c4d4088bef3299e97e049",
+    "⚪473a5a8ce3ae44bb839de3c56ba26fde"
   ]
 }

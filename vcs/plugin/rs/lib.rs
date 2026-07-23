@@ -4,7 +4,7 @@ use semio_framework_plugin::{SurfaceKind,
     build_graph_timeline_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
     tree_item_with_action, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionEmit, App, ActionDescriptor,
     AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HistoryView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder,
-    ResourceKindSpec, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiStackNode,
+    ResourceKindSpec, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiStackNode,
     UiTreeItemNode, GraphTimelineScene, ViewState, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -488,10 +488,10 @@ fn build_document_tree(history: &HistoryView, selected: &[String], labels: &VcsL
 
 fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> UiNode {
     ui_stack_vertical(vec![
-        UiNode::Field(UiFieldNode {
+        UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
             id: "vcs-play-inspector.title".into(),
             label: labels.title.into(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: "vcs-play-inspector.title.input".into(),
                 input_kind: "text".into(),
                 value: projection.title.clone(),
@@ -507,10 +507,10 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
             required: None,
             error: None,
         }),
-        UiNode::Field(UiFieldNode {
+        UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
             id: "vcs-play-inspector.counter".into(),
             label: labels.counter.into(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: "vcs-play-inspector.counter.input".into(),
                 input_kind: "number".into(),
                 value: projection.counter.to_string(),
@@ -526,10 +526,10 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
             required: None,
             error: None,
         }),
-        UiNode::Field(UiFieldNode {
+        UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
             id: "vcs-play-inspector.status".into(),
             label: labels.status.into(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: "vcs-play-inspector.status.input".into(),
                 input_kind: "text".into(),
                 value: projection.status.clone(),
@@ -545,10 +545,10 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
             required: None,
             error: None,
         }),
-        UiNode::Field(UiFieldNode {
+        UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
             id: "vcs-play-inspector.notes".into(),
             label: labels.notes.into(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: "vcs-play-inspector.notes.input".into(),
                 input_kind: "text".into(),
                 value: projection.notes.clone(),
@@ -576,9 +576,7 @@ fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
         gap: Some("tight".into()),
         padding: Some("none".into()),
         id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -593,9 +591,7 @@ fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
         label: label.into(),
         action: vcs_action(action, None),
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     })
 }
 

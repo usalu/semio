@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_border, push_chrome_group_border,
     push_window_cap_border, even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
-    HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, WindowLayout, WindowLayoutChild,
+    HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, UiPresence, WindowLayout, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
 
@@ -3183,6 +3183,50 @@ pub fn node_graph_clear_wheel_zoom_active() {
 }
 
 const FLOW_WIDGET_DRAG_MIME: &str = "application/x-flow-widget";
+const CATALOGUE_DRAG_MIME: &str = "application/x-semio-catalogue-item";
+
+/// 👻 Ghost descriptor JSON for a catalogue app drag (mirrors React `catalogueGhostDescriptorJson`).
+pub fn catalogue_ghost_descriptor_json(raw: &str) -> Option<String> {
+    let payload: Value = serde_json::from_str(raw).ok()?;
+    let program_id = payload.get("programId").and_then(|value| value.as_str())?;
+    let app_id = payload.get("appId").and_then(|value| value.as_str())?;
+    if program_id.is_empty() || app_id.is_empty() {
+        return None;
+    }
+    let neuron_kind = payload
+        .get("label")
+        .and_then(|value| value.as_str())
+        .filter(|label| !label.is_empty())
+        .unwrap_or(app_id);
+    Some(json!({ "kind": "neuron", "neuronKind": neuron_kind }).to_string())
+}
+
+fn node_graph_drag_ghost_descriptor(drag_data: &HashMap<String, String>) -> Option<String> {
+    if let Some(raw) = drag_data.get(FLOW_WIDGET_DRAG_MIME) {
+        return Some(raw.clone());
+    }
+    drag_data
+        .get(CATALOGUE_DRAG_MIME)
+        .and_then(|raw| catalogue_ghost_descriptor_json(raw))
+}
+
+fn node_graph_world_at(
+    surface_id: &str,
+    bounds: &Rect,
+    x: f32,
+    y: f32,
+) -> Option<(f64, f64)> {
+    let sx = (x - bounds.x) as f64;
+    let sy = (y - bounds.y) as f64;
+    ENGINE_SURFACES.with(|cell| {
+        cell.borrow().get(surface_id).and_then(|entry| {
+            let NodeGraphEngine::Flow(host) = entry.node_graph.as_ref()? else {
+                return None;
+            };
+            Some(dag_screen_to_world(&host.dag, sx, sy))
+        })
+    })
+}
 
 pub fn node_graph_clear_all_ghost_widgets() {
     ENGINE_SURFACES.with(|cell| {
@@ -3200,7 +3244,7 @@ pub fn node_graph_sync_flow_widget_ghost(
     drag_data: &HashMap<String, String>,
     surfaces: &[(&str, Rect)],
 ) {
-    let Some(raw) = drag_data.get(FLOW_WIDGET_DRAG_MIME) else {
+    let Some(descriptor) = node_graph_drag_ghost_descriptor(drag_data) else {
         node_graph_clear_all_ghost_widgets();
         return;
     };
@@ -3215,7 +3259,7 @@ pub fn node_graph_sync_flow_widget_ghost(
             if let Some(entry) = cell.borrow_mut().get_mut(*surface_id) {
                 if let Some(NodeGraphEngine::Flow(host)) = entry.node_graph.as_mut() {
                     let (world_x, world_y) = dag_screen_to_world(&host.dag, sx, sy);
-                    let _ = host.set_ghost_widget(raw, world_x, world_y);
+                    let _ = host.set_ghost_widget(&descriptor, world_x, world_y);
                     over_graph = true;
                 }
             }
@@ -3239,16 +3283,7 @@ pub fn node_graph_flow_widget_drop_action(
         if !bounds.contains(x, y) {
             continue;
         }
-        let sx = (x - bounds.x) as f64;
-        let sy = (y - bounds.y) as f64;
-        let world = ENGINE_SURFACES.with(|cell| {
-            cell.borrow().get(*surface_id).and_then(|entry| {
-                let NodeGraphEngine::Flow(host) = entry.node_graph.as_ref()? else {
-                    return None;
-                };
-                Some(dag_screen_to_world(&host.dag, sx, sy))
-            })
-        })?;
+        let world = node_graph_world_at(surface_id, bounds, x, y)?;
         return Some(ActionDescriptor {
             controller_id: (*controller_id).to_string(),
             action: "addWidget".into(),
@@ -3261,6 +3296,161 @@ pub fn node_graph_flow_widget_drop_action(
         });
     }
     None
+}
+
+/// 📦 `spawnApp` action when a catalogue app is dropped on a flow node-graph surface.
+pub fn node_graph_catalogue_drop_action(
+    x: f32,
+    y: f32,
+    drag_data: &HashMap<String, String>,
+    surfaces: &[(&str, Rect, &str)],
+) -> Option<ActionDescriptor> {
+    let raw = drag_data.get(CATALOGUE_DRAG_MIME)?;
+    let payload: Value = serde_json::from_str(raw).ok()?;
+    let program_id = payload.get("programId").and_then(|value| value.as_str())?;
+    let app_id = payload.get("appId").and_then(|value| value.as_str())?;
+    if program_id.is_empty() || app_id.is_empty() {
+        return None;
+    }
+    for (surface_id, bounds, controller_id) in surfaces {
+        if !bounds.contains(x, y) {
+            continue;
+        }
+        let world = node_graph_world_at(surface_id, bounds, x, y).unwrap_or_else(|| {
+            ((x - bounds.x) as f64, (y - bounds.y) as f64)
+        });
+        eprintln!(
+            "[DEBUG] catalogue media-graph drop surface={surface_id} controller={controller_id} program={program_id} app={app_id} world=({:.1},{:.1})",
+            world.0, world.1
+        );
+        return Some(ActionDescriptor {
+            controller_id: (*controller_id).to_string(),
+            action: "spawnApp".into(),
+            args: Some(json!({
+                "programId": program_id,
+                "appId": app_id,
+                "position": { "x": world.0, "y": world.1 },
+            })),
+        });
+    }
+    None
+}
+
+#[cfg(test)]
+mod catalogue_media_graph_drop_tests {
+    use super::*;
+
+    #[test]
+    fn catalogue_ghost_prefers_label_then_app_id() {
+        let with_label = catalogue_ghost_descriptor_json(
+            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#,
+        )
+        .unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&with_label).unwrap(),
+            json!({ "kind": "neuron", "neuronKind": "Draw" })
+        );
+        let without_label =
+            catalogue_ghost_descriptor_json(r#"{"programId":"draw","appId":"draw"}"#).unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&without_label).unwrap(),
+            json!({ "kind": "neuron", "neuronKind": "draw" })
+        );
+    }
+
+    #[test]
+    fn catalogue_ghost_rejects_incomplete_payloads() {
+        assert!(catalogue_ghost_descriptor_json(r#"{"appId":"draw"}"#).is_none());
+        assert!(catalogue_ghost_descriptor_json(r#"{"kind":"neuron"}"#).is_none());
+        assert!(catalogue_ghost_descriptor_json("not-json").is_none());
+    }
+
+    #[test]
+    fn drag_ghost_descriptor_accepts_flow_widget_and_catalogue_mimes() {
+        let mut flow = HashMap::new();
+        flow.insert(
+            FLOW_WIDGET_DRAG_MIME.into(),
+            r#"{"kind":"inputSlider"}"#.into(),
+        );
+        assert_eq!(
+            node_graph_drag_ghost_descriptor(&flow).as_deref(),
+            Some(r#"{"kind":"inputSlider"}"#)
+        );
+        let mut catalogue = HashMap::new();
+        catalogue.insert(
+            CATALOGUE_DRAG_MIME.into(),
+            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#.into(),
+        );
+        let ghost = node_graph_drag_ghost_descriptor(&catalogue).unwrap();
+        assert_eq!(
+            serde_json::from_str::<Value>(&ghost).unwrap(),
+            json!({ "kind": "neuron", "neuronKind": "Draw" })
+        );
+        assert!(node_graph_drag_ghost_descriptor(&HashMap::new()).is_none());
+    }
+
+    #[test]
+    fn catalogue_drop_spawns_app_over_node_graph_bounds_with_surface_local_position() {
+        let mut drag_data = HashMap::new();
+        drag_data.insert(
+            CATALOGUE_DRAG_MIME.into(),
+            r#"{"programId":"draw","appId":"draw","label":"Draw"}"#.into(),
+        );
+        let bounds = Rect {
+            x: 100.0,
+            y: 50.0,
+            w: 400.0,
+            h: 300.0,
+        };
+        let action = node_graph_catalogue_drop_action(
+            140.0,
+            90.0,
+            &drag_data,
+            &[("s.play.media-graph", bounds, "s-play")],
+        )
+        .expect("drop over media graph");
+        assert_eq!(action.controller_id, "s-play");
+        assert_eq!(action.action, "spawnApp");
+        let args = action.args.unwrap();
+        assert_eq!(args["programId"], "draw");
+        assert_eq!(args["appId"], "draw");
+        assert_eq!(args["position"]["x"], 40.0);
+        assert_eq!(args["position"]["y"], 40.0);
+    }
+
+    #[test]
+    fn catalogue_drop_ignores_pointer_outside_node_graph_and_wrong_mime() {
+        let bounds = Rect {
+            x: 100.0,
+            y: 50.0,
+            w: 400.0,
+            h: 300.0,
+        };
+        let mut catalogue = HashMap::new();
+        catalogue.insert(
+            CATALOGUE_DRAG_MIME.into(),
+            r#"{"programId":"draw","appId":"draw"}"#.into(),
+        );
+        assert!(node_graph_catalogue_drop_action(
+            10.0,
+            10.0,
+            &catalogue,
+            &[("s.play.media-graph", bounds, "s-play")],
+        )
+        .is_none());
+        let mut flow = HashMap::new();
+        flow.insert(
+            FLOW_WIDGET_DRAG_MIME.into(),
+            r#"{"kind":"inputSlider"}"#.into(),
+        );
+        assert!(node_graph_catalogue_drop_action(
+            140.0,
+            90.0,
+            &flow,
+            &[("s.play.media-graph", bounds, "s-play")],
+        )
+        .is_none());
+    }
 }
 
 pub fn node_graph_wheel(
@@ -4935,7 +5125,7 @@ pub mod interpreter {
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{queue_canvas_image_upload, decode_canvas_image, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
-use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiPresence, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
 use serde_json::Value;
 use ui_wgpu::{
     draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
@@ -5994,7 +6184,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         UiNode::Toggle(toggle) => WidgetNode::Toggle {
             id: toggle.id.clone(),
             icon_id: toggle.icon_id.clone(),
-            pressed: toggle.pressed,
+            pressed: toggle.presence.selected,
             text: toggle.text.clone(),
             on_change: Some(toggle.on_change.clone()),
         },
@@ -6021,7 +6211,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
         UiNode::Ring(ring) => WidgetNode::Ring {
             id: ring.id.clone(),
             t: ring.t,
-            disabled: ring.disabled.unwrap_or(false),
+            disabled: ring.presence.state == UiState::Disabled,
             on_change: Some(ring.on_change.clone()),
         },
         UiNode::IconSelect(icon) => WidgetNode::IconSelect {
@@ -6057,9 +6247,11 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             children: group.children.iter().map(ui_node_to_widget).collect(),
         },
         UiNode::Tree(tree) => WidgetNode::Tree {
+            // 🧭 Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
+            // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
             sections: tree.sections.iter().map(tree_section_to_widget).collect(),
-            selected_ids: tree.selected_ids.clone().unwrap_or_default(),
-            highlighted_ids: tree.highlighted_ids.clone().unwrap_or_default(),
+            selected_ids: Vec::new(),
+            highlighted_ids: Vec::new(),
             selection_change: tree.selection_change.clone(),
         },
         UiNode::ComponentScene(_) => WidgetNode::Text {
@@ -6103,7 +6295,7 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
         UiControlNode::Toggle(n) => ControlNode::Toggle {
             id: n.id.clone(),
             icon_id: n.icon_id.clone(),
-            pressed: n.pressed,
+            pressed: n.presence.selected,
             text: n.text.clone(),
             on_change: Some(n.on_change.clone()),
         },
@@ -6130,7 +6322,7 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
         UiControlNode::Ring(n) => ControlNode::Ring {
             id: n.id.clone(),
             t: n.t,
-            disabled: n.disabled.unwrap_or(false),
+            disabled: n.presence.state == UiState::Disabled,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::IconSelect(n) => ControlNode::IconSelect {
@@ -6167,10 +6359,10 @@ fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
         label: item.label.clone(),
         description: item.description.clone(),
         icon_id: item.icon_id.clone(),
-        selected: item.selected.unwrap_or(false),
-        highlighted: false,
+        selected: item.presence.selected,
+        highlighted: item.presence.state == UiState::Previewed,
         default_open: item.default_open.unwrap_or(false),
-        is_hidden: item.is_hidden.unwrap_or(false),
+        dimmed: item.dimmed.unwrap_or(false),
         event: item.action.clone(),
         hover_event: item.hover_action.clone(),
         unhover_event: item.unhover_action.clone(),
@@ -7959,6 +8151,7 @@ mod render_entry_tests {
             component_kind: kind,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -8752,6 +8945,7 @@ mod table_tests {
             component_kind: SurfaceKind::Table,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -9144,6 +9338,7 @@ mod block_list_tests {
             component_kind: SurfaceKind::BlockList,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -9203,12 +9398,13 @@ mod block_list_tests {
 
     #[test]
     fn missing_scene_renders_placeholder_without_panicking() {
-        let node = UiComponentSceneNode {
+        let node = UiComponentSceneNode { presence: UiPresence::default(),
             surface_id: "s1".into(),
             controller_id: "controller".into(),
             component_kind: SurfaceKind::BlockList,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -12102,6 +12298,7 @@ mod raster_frame_cost_tests {
 #[cfg(test)]
 mod ink_canvas_tests {
     use super::*;
+    use ui_wgpu::UiPresence;
 
     fn sample_block(id: &str, x: f64, y: f64, w: f64, h: f64) -> Value {
         json!({
@@ -13022,7 +13219,7 @@ fn render_icon_render(
     );
     synthetic_world.environment_json = Some(icon_render_environment_json(&request));
 
-    let synthetic_scene = UiComponentSceneNode {
+    let synthetic_scene = UiComponentSceneNode { presence: UiPresence::default(),
         surface_id: scene.surface_id.clone(),
         controller_id: scene.controller_id.clone(),
         component_kind: SurfaceKind::World3d,
@@ -14195,6 +14392,7 @@ fn render_text_editor(
 #[cfg(test)]
 mod text_editor_tests {
     use super::*;
+    use ui_wgpu::UiPresence;
     use crate::interpreter::framework_widget_context;
 
     fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
@@ -14204,6 +14402,7 @@ mod text_editor_tests {
             component_kind: kind,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,
@@ -15350,6 +15549,7 @@ impl ShellState {
                 window_id: None,
                 window_instances: Vec::new(),
                 active_tool_id: None,
+                active_utility_by_window_id: std::collections::HashMap::new(),
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
@@ -15383,6 +15583,7 @@ impl ShellState {
                     window_id: None,
                     window_instances: Vec::new(),
                     active_tool_id: None,
+                    active_utility_by_window_id: std::collections::HashMap::new(),
                 },
             });
         }
@@ -15573,7 +15774,7 @@ impl ShellState {
                     .await?;
                 let ui = match validate_window_body_surface(kind, &resolved) {
                     Ok(()) => resolved,
-                    Err(message) => UiNode::Text(UiTextNode {
+                    Err(message) => UiNode::Text(UiTextNode { presence: UiPresence::default(),
                         value: format!("Framework rejected render plan: {message}"),
                         emphasize: Some(true),
                         data_attributes: None,
@@ -15638,6 +15839,7 @@ impl ShellState {
                                 window_id: None,
                                 window_instances: Vec::new(),
                                 active_tool_id: None,
+                                active_utility_by_window_id: std::collections::HashMap::new(),
                             };
                             self.spawned_ui = Some(
                                 spawn_plugin
@@ -15672,7 +15874,7 @@ impl ShellState {
             .window_kinds
             .iter()
             .map(|kind| {
-                UiNode::Text(UiTextNode {
+                UiNode::Text(UiTextNode { presence: UiPresence::default(),
                     value: format!("{} — {}", kind.label, kind.id),
                     emphasize: None,
                     data_attributes: None,
@@ -15680,7 +15882,7 @@ impl ShellState {
             })
             .collect();
         if items.is_empty() {
-            return UiNode::Text(UiTextNode {
+            return UiNode::Text(UiTextNode { presence: UiPresence::default(),
                 value: "—".into(),
                 emphasize: None,
                 data_attributes: None,
@@ -15722,7 +15924,7 @@ impl ShellState {
             })
             .collect();
         if items.is_empty() {
-            return UiNode::Text(UiTextNode {
+            return UiNode::Text(UiTextNode { presence: UiPresence::default(),
                 value: "No saved layouts".into(),
                 emphasize: None,
                 data_attributes: None,
@@ -15749,12 +15951,12 @@ impl ShellState {
             padding: None,
             id: None,
             children: vec![
-                UiNode::Text(UiTextNode {
+                UiNode::Text(UiTextNode { presence: UiPresence::default(),
                     value: "General".into(),
                     emphasize: Some(true),
                     data_attributes: None,
                 }),
-                UiNode::Select(UiSelectNode {
+                UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.appearance".into(),
                     value: self.appearance_id.clone(),
                     items: vec![
@@ -15778,7 +15980,7 @@ impl ShellState {
                         args: None,
                     },
                 }),
-                UiNode::Select(UiSelectNode {
+                UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.expertise".into(),
                     value: "standard".into(),
                     items: vec![
@@ -15798,7 +16000,7 @@ impl ShellState {
                         args: None,
                     },
                 }),
-                UiNode::Select(UiSelectNode {
+                UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.language".into(),
                     value: self.locale_id.clone(),
                     items: vec![
@@ -15818,7 +16020,7 @@ impl ShellState {
                         args: None,
                     },
                 }),
-                UiNode::Select(UiSelectNode {
+                UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: "framework.settings.terminology".into(),
                     value: self.terminology_id.clone(),
                     items: self
@@ -16519,6 +16721,24 @@ impl ShellState {
                 semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
                     self.apply_set_active_utility(window_id, utility_id);
                 }
+                semio_framework_core::kernel::HostEffect::Navigate { uri } => {
+                    self.push_uri(uri.clone());
+                    if let Err(error) = self.apply_shell_uri(uri).await {
+                        eprintln!("[DEBUG] wgpu shell navigate effect failed: {error}");
+                    }
+                }
+                semio_framework_core::kernel::HostEffect::LoadDocument { document_json } => {
+                    if let Some(session) = self.session.clone() {
+                        if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
+                            if let Some(runtime) = plugin.wasm_runtime() {
+                                match runtime.load_app_document(session.instance_id, document_json) {
+                                    Ok(()) => {}
+                                    Err(error) => eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}"),
+                                }
+                            }
+                        }
+                    }
+                }
                 // 🔁 Self re-dispatch (D2): queues `action` onto the same `deferred_actions` mechanism
                 // tree-hover/selection follow-ups already use, which `flush_deferred_actions` drains every
                 // event-loop tick — so, natively, any `delay_ms` collapses to "next tick" (no timer wheel
@@ -16811,6 +17031,7 @@ impl ShellState {
             window_id: None,
             window_instances: Vec::new(),
             active_tool_id: None,
+            active_utility_by_window_id: std::collections::HashMap::new(),
         });
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         if app_id == cfg.landing_app_id {
@@ -16842,11 +17063,14 @@ impl ShellState {
             return Ok(());
         }
         let studio_id = studio_id.expect("studio id");
+        let studio_changed = self.open_studio_id.as_deref() != Some(studio_id.as_str());
+        // 🧭 Pin before the async switch so a concurrent chrome sync cannot boot the demo example over
+        // an explicit `/studios/:id` route.
+        self.open_studio_id = Some(studio_id.clone());
         self.switch_to_managed_app(cfg.host_app_id, None).await?;
-        if self.open_studio_id.as_deref() == Some(studio_id.as_str()) {
+        if !studio_changed {
             return Ok(());
         }
-        self.open_studio_id = Some(studio_id.clone());
         let session = self.session.clone().ok_or("studio session missing")?;
         let plugin = self
             .plugins
@@ -16859,9 +17083,18 @@ impl ShellState {
             args: Some(serde_json::json!({ "studioId": studio_id })),
         };
         let action_json = serde_json::to_string(&action).map_err(|err| err.to_string())?;
-        let _ops = plugin
+        let result = plugin
             .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
+        for effect in &result.requested_effects {
+            if let semio_framework_core::kernel::HostEffect::LoadDocument { document_json } = effect {
+                if let Some(runtime) = plugin.wasm_runtime() {
+                    runtime
+                        .load_app_document(session.instance_id, document_json)
+                        .map_err(|error| error.to_string())?;
+                }
+            }
+        }
         self.sync_session_chrome();
         self.refresh_ui().await
     }
@@ -18069,48 +18302,31 @@ impl ShellState {
         &mut self,
         x: f32,
         y: f32,
-        input: &InputState<ActionDescriptor>,
+        _input: &InputState<ActionDescriptor>,
     ) -> Result<(), String> {
         let Some(drag) = self.tree_drag.take() else {
             return Ok(());
         };
-        if let Some(action) = crate::engine_canvas::node_graph_flow_widget_drop_action(
-            x,
-            y,
-            &drag.drag_data,
-            &self
-                .node_graph_states
-                .iter()
-                .map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str()))
-                .collect::<Vec<_>>(),
-        ) {
+        let surfaces = self
+            .node_graph_states
+            .iter()
+            .map(|(id, surface)| (id.as_str(), surface.bounds, surface.controller_id.as_str()))
+            .collect::<Vec<_>>();
+        if let Some(action) =
+            crate::engine_canvas::node_graph_flow_widget_drop_action(x, y, &drag.drag_data, &surfaces)
+        {
+            crate::engine_canvas::node_graph_clear_all_ghost_widgets();
+            self.dispatch_action(action).await?;
+            return Ok(());
+        }
+        if let Some(action) =
+            crate::engine_canvas::node_graph_catalogue_drop_action(x, y, &drag.drag_data, &surfaces)
+        {
             crate::engine_canvas::node_graph_clear_all_ghost_widgets();
             self.dispatch_action(action).await?;
             return Ok(());
         }
         crate::engine_canvas::node_graph_clear_all_ghost_widgets();
-        if let Some(hit) = input.hit_at(x, y) {
-            if hit.kind == HitKind::World3d || hit.kind == HitKind::Window {
-                if let Some(raw) = drag.drag_data.get("application/x-semio-catalogue-item") {
-                    if let Ok(payload) = serde_json::from_str::<serde_json::Value>(raw) {
-                        let program_id = payload.get("programId").and_then(|v| v.as_str());
-                        let app_id = payload.get("appId").and_then(|v| v.as_str());
-                        if let (Some(program_id), Some(app_id)) = (program_id, app_id) {
-                            self.dispatch_action(ActionDescriptor {
-                                controller_id: self.host_controller_id().unwrap_or_default(),
-                                action: "spawnApp".into(),
-                                args: Some(serde_json::json!({
-                                    "programId": program_id,
-                                    "appId": app_id,
-                                    "position": { "x": x, "y": y },
-                                })),
-                            })
-                            .await?;
-                        }
-                    }
-                }
-            }
-        }
         Ok(())
     }
 
@@ -18832,6 +19048,7 @@ impl ShellState {
 #[cfg(test)]
 mod shell_input_tests {
     use super::*;
+    use ui_wgpu::UiPresence;
 
     /// 🧪 `dock_window_order` is a `Self`-less associated fn, so it's callable without constructing a
     /// full `ShellState` fixture (impractically large: 90+ fields, several without `Default`).
@@ -20168,7 +20385,7 @@ impl ShellState {
         let categories = command_categories(&resolved);
         let mut sections: Vec<UiNode> = Vec::new();
         for (category_id, category_label) in categories {
-            let mut rows: Vec<UiNode> = vec![UiNode::Text(UiTextNode {
+            let mut rows: Vec<UiNode> = vec![UiNode::Text(UiTextNode { presence: UiPresence::default(),
                 value: category_label,
                 emphasize: Some(true),
                 data_attributes: None,
@@ -20185,11 +20402,10 @@ impl ShellState {
                 padding: None,
                 id: Some(format!("shell.commands.category.{category_id}")),
                 children: rows,
-                selected: None,
                 activate: None,
                 drop_action: None,
                 drop_overlay: None,
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
 }));
         }
         UiNode::Stack(UiStackNode {
@@ -20198,11 +20414,10 @@ impl ShellState {
             padding: None,
             id: Some("shell.commands.panel".into()),
             children: sections,
-            selected: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
 })
     }
 
@@ -20228,7 +20443,7 @@ impl ShellState {
                     "os.setTerminology" => "setTerminology",
                     other => other,
                 };
-                return UiNode::Select(UiSelectNode {
+                return UiNode::Select(UiSelectNode { presence: UiPresence::default(),
                     id: format!("shell.commands.{}", definition.id),
                     value,
                     items: options
@@ -20255,11 +20470,10 @@ impl ShellState {
                     args: Some(serde_json::json!({ "value": !self.compact_mode })),
                 },
                 style: None,
-                disabled: None,
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
 });
         }
-        UiNode::Text(UiTextNode {
+        UiNode::Text(UiTextNode { presence: UiPresence::default(),
             value: if definition.id == "os.resetDock" {
                 format!("{} — available via ⌘K command search", definition.label)
             } else {

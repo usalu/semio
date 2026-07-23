@@ -1,0 +1,14 @@
+{
+  "title": "Window Pane Icons and Drag Handle",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "All window panes must show icons instead of chevron and have a drag handle. Same as panel toggles.",
+  "summary": "Window pane chrome now matches panel toggles: fixed semantic icons (settings-2 / play / search / hammer) instead of fold-direction chevrons, plus a trailing DragHandle. Added shared WindowPaneChromeToggle; Pane requires an icon prop and always shows the drag handle (wired when onAnchorChange is set). DragHandle forwards full usePointerDrag pointer handlers.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2262"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪fcba29f353b642319968e2d2a006b2ac"
+  ]
+}

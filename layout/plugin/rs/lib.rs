@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
     ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
     Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
+    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -886,10 +886,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
     if let Some(page) = doc.pages.iter().find(|page| page.id == *selected_id) {
         let mut fields = vec![
             ui_inspector_readonly_field("layout-play-inspector.page-id", labels.id, page.id.clone()),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "layout-play-inspector.page-name".into(),
                 label: labels.name.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "layout-play-inspector.page-name.input".into(),
                     input_kind: "text".into(),
                     value: page.name.clone(),
@@ -915,10 +915,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
             ("marginLeft", labels.margin_left, page.margins.left),
             ("columnsGutter", labels.gutter, page.columns.gutter),
         ] {
-            fields.push(UiNode::Field(UiFieldNode {
+            fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: format!("layout-play-inspector.page-{field}"),
                 label: label.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: format!("layout-play-inspector.page-{field}.input"),
                     input_kind: "number".into(),
                     value: format!("{value}"),
@@ -935,10 +935,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                 error: None,
             }));
         }
-        fields.push(UiNode::Field(UiFieldNode {
+        fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
             id: "layout-play-inspector.page-columnsCount".into(),
             label: labels.columns.into(),
-            child: Box::new(UiNode::Input(UiInputNode {
+            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                 id: "layout-play-inspector.page-columnsCount.input".into(),
                 input_kind: "number".into(),
                 value: format!("{}", page.columns.count),
@@ -954,7 +954,7 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
             required: None,
             error: None,
         }));
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "layout-play-inspector.page".into(),
             label: labels.group_page.into(),
             default_open: Some(true),
@@ -978,10 +978,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                 ("width", labels.width, bounds.width),
                 ("height", labels.height, bounds.height),
             ] {
-                fields.push(UiNode::Field(UiFieldNode {
+                fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("layout-play-inspector.frame-{field}"),
                     label: label.into(),
-                    child: Box::new(UiNode::Input(UiInputNode {
+                    child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                         id: format!("layout-play-inspector.frame-{field}.input"),
                         input_kind: "number".into(),
                         value: format!("{}", value as i64),
@@ -1004,10 +1004,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
             match frame {
                 Frame::Rect { fill, stroke, .. } => {
                     for (field, label, value) in [("fill", labels.fill, fill), ("stroke", labels.stroke, stroke)] {
-                        fields.push(UiNode::Field(UiFieldNode {
+                        fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                             id: format!("layout-play-inspector.frame-{field}"),
                             label: label.into(),
-                            child: Box::new(UiNode::Input(UiInputNode {
+                            child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                                 id: format!("layout-play-inspector.frame-{field}.input"),
                                 input_kind: "text".into(),
                                 value: rgba_to_text(value),
@@ -1029,10 +1029,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                     }
                 }
                 Frame::Text { story_id, wrap_mode, columns, .. } => {
-                    fields.push(UiNode::Field(UiFieldNode {
+                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "layout-play-inspector.frame-story".into(),
                         label: labels.story.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                             id: "layout-play-inspector.frame-story.input".into(),
                             input_kind: "text".into(),
                             value: story_full_content(doc, story_id),
@@ -1051,10 +1051,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                         required: None,
                         error: None,
                     }));
-                    fields.push(UiNode::Field(UiFieldNode {
+                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "layout-play-inspector.frame-wrapMode".into(),
                         label: labels.wrap_mode.into(),
-                        child: Box::new(UiNode::Select(UiSelectNode {
+                        child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                             id: "layout-play-inspector.frame-wrapMode.select".into(),
                             value: wrap_mode.clone(),
                             items: vec![
@@ -1072,10 +1072,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                         required: None,
                         error: None,
                     }));
-                    fields.push(UiNode::Field(UiFieldNode {
+                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "layout-play-inspector.frame-columns".into(),
                         label: labels.columns.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                             id: "layout-play-inspector.frame-columns.input".into(),
                             input_kind: "number".into(),
                             value: format!("{columns}"),
@@ -1096,10 +1096,10 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                     }));
                 }
                 Frame::Image { link_id, .. } => {
-                    fields.push(UiNode::Field(UiFieldNode {
+                    fields.push(UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "layout-play-inspector.frame-linkPath".into(),
                         label: labels.link_path.into(),
-                        child: Box::new(UiNode::Input(UiInputNode {
+                        child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                             id: "layout-play-inspector.frame-linkPath.input".into(),
                             input_kind: "text".into(),
                             value: link_path(doc, link_id),
@@ -1121,7 +1121,7 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
                 }
             }
             let _ = name_mixed;
-            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+            return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "layout-play-inspector.frame".into(),
                 label: labels.group_frame.into(),
                 default_open: Some(true),
@@ -1134,7 +1134,7 @@ fn build_inspector_tree(doc: &LayoutDocument, runtime: &LayoutPlayRuntime, label
         label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
         default_open: Some(true),
         children: vec![ui_text(labels.selection_not_found)],
-        loading: None, waiting: None,
+        presence: UiPresence::default(),
 }])
 }
 

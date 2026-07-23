@@ -1,7 +1,20 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { clearColorResolveCache, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme, STYLING_BOARD_PALETTES } from "./index.ts";
+import {
+  clearColorResolveCache,
+  resolveColorHex,
+  resolveColorRgba,
+  resolveSemanticColorHex,
+  serializeCanvasThemeJson,
+  syncSessionCanvasTheme,
+  STYLING_BOARD_PALETTES,
+  STYLING_TOKENS,
+  elementStateAttributes,
+  elementStateHidden,
+  resolveElementFillKind,
+  resolveElementState,
+} from "./index.ts";
 import { meshCollectionVitePlugin, type PlaygroundAssetSpec } from "../vite-elements-assets.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
@@ -24,6 +37,49 @@ describe("styling resolve", () => {
     expect(light.labelFill).toEqual(STYLING_BOARD_PALETTES.light.labelFill);
     expect(dark.labelFill).toEqual(STYLING_BOARD_PALETTES.dark.labelFill);
     expect(dark.labelFill).not.toEqual(light.labelFill);
+  });
+
+  it("resolveColorHex foreground flips with html.dark appearance", () => {
+    clearColorResolveCache();
+    const previousDocument = globalThis.document;
+    const classSet = new Set<string>();
+    globalThis.document = {
+      documentElement: {
+        get className() {
+          return [...classSet].join(" ");
+        },
+        set className(value: string) {
+          classSet.clear();
+          for (const part of value.split(/\s+/u).filter(Boolean)) classSet.add(part);
+        },
+        classList: {
+          contains: (name: string) => classSet.has(name),
+          add: (...names: string[]) => {
+            for (const name of names) classSet.add(name);
+          },
+          remove: (...names: string[]) => {
+            for (const name of names) classSet.delete(name);
+          },
+        },
+      },
+      createElement: () => {
+        throw new Error("css probe unavailable in this test");
+      },
+    } as unknown as Document;
+    try {
+      document.documentElement.classList.remove("dark");
+      clearColorResolveCache();
+      const lightFg = resolveColorHex("var(--color-foreground)", "dark");
+      document.documentElement.classList.add("dark");
+      clearColorResolveCache();
+      const darkFg = resolveColorHex("var(--color-foreground)", "light");
+      expect(lightFg).toBe(STYLING_TOKENS.dark);
+      expect(darkFg).toBe(STYLING_TOKENS.light);
+      expect(darkFg).not.toBe(lightFg);
+    } finally {
+      globalThis.document = previousDocument;
+      clearColorResolveCache();
+    }
   });
 
   it("syncSessionCanvasTheme pushes serialized palette into a session", () => {
@@ -56,5 +112,73 @@ describe("puzzle3d mesh-collection asset spec", () => {
   it("registers a generic mesh-collection serve/build plugin pair", () => {
     const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
     expect(plugins.map((plugin) => plugin.name)).toEqual(["mesh-collection-serve/mesh", "mesh-collection-build/mesh"]);
+  });
+});
+
+describe("elementState", () => {
+  it("resolveElementState defaults every axis to inert", () => {
+    expect(resolveElementState()).toEqual({ state: "normal", status: "idle", hover: false, selected: false });
+    expect(resolveElementState({ selected: true })).toEqual({ state: "normal", status: "idle", hover: false, selected: true });
+  });
+
+  it("elementStateHidden is true only for state === hidden", () => {
+    expect(elementStateHidden({ state: "hidden" })).toBe(true);
+    for (const state of ["introducing", "previewed", "normal", "disabled"] as const) {
+      expect(elementStateHidden({ state })).toBe(false);
+    }
+  });
+
+  it("elementStateAttributes omits every axis at default", () => {
+    expect(elementStateAttributes(resolveElementState())).toEqual({});
+  });
+
+  it("elementStateAttributes returns {} for hidden regardless of other axes", () => {
+    expect(elementStateAttributes({ state: "hidden", status: "loading", hover: true, selected: true })).toEqual({});
+  });
+
+  it("elementStateAttributes stamps data-ui-state plus data-introduced for introducing", () => {
+    expect(elementStateAttributes(resolveElementState({ state: "introducing" }))).toEqual({
+      "data-ui-state": "introducing",
+      "data-introduced": "true",
+    });
+  });
+
+  it("elementStateAttributes stamps data-ui-state for previewed/disabled without data-introduced", () => {
+    expect(elementStateAttributes(resolveElementState({ state: "previewed" }))).toEqual({ "data-ui-state": "previewed" });
+    expect(elementStateAttributes(resolveElementState({ state: "disabled" }))).toEqual({ "data-ui-state": "disabled" });
+  });
+
+  it("elementStateAttributes stamps data-ui-status for non-idle status", () => {
+    expect(elementStateAttributes(resolveElementState({ status: "loading" }))).toEqual({ "data-ui-status": "loading" });
+    expect(elementStateAttributes(resolveElementState({ status: "waiting" }))).toEqual({ "data-ui-status": "waiting" });
+    expect(elementStateAttributes(resolveElementState({ status: "finished" }))).toEqual({ "data-ui-status": "finished" });
+  });
+
+  it("elementStateAttributes stamps data-ui-hover and data-ui-selected independently", () => {
+    expect(elementStateAttributes(resolveElementState({ hover: true }))).toEqual({ "data-ui-hover": "true" });
+    expect(elementStateAttributes(resolveElementState({ selected: true }))).toEqual({ "data-ui-selected": "true" });
+  });
+
+  it("elementStateAttributes composes all four axes simultaneously", () => {
+    expect(elementStateAttributes(resolveElementState({ state: "previewed", status: "waiting", hover: true, selected: true }))).toEqual({
+      "data-ui-state": "previewed",
+      "data-ui-status": "waiting",
+      "data-ui-hover": "true",
+      "data-ui-selected": "true",
+    });
+  });
+
+  it("resolveElementFillKind follows disabled > selected > previewed > hovered > neutral precedence", () => {
+    expect(resolveElementFillKind(resolveElementState())).toBe("neutral");
+    expect(resolveElementFillKind(resolveElementState({ hover: true }))).toBe("hovered");
+    expect(resolveElementFillKind(resolveElementState({ state: "previewed" }))).toBe("previewed");
+    expect(resolveElementFillKind(resolveElementState({ state: "previewed", hover: true }))).toBe("previewed");
+    expect(resolveElementFillKind(resolveElementState({ selected: true, hover: true }))).toBe("selected");
+    expect(resolveElementFillKind(resolveElementState({ selected: true, state: "previewed" }))).toBe("selected");
+    expect(resolveElementFillKind(resolveElementState({ state: "disabled", selected: true }))).toBe("disabled");
+  });
+
+  it("resolveElementFillKind returns null for hidden", () => {
+    expect(resolveElementFillKind({ state: "hidden", status: "idle", hover: true, selected: true })).toBeNull();
   });
 });

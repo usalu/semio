@@ -6,7 +6,7 @@ use protocol::{visible_blocks, ProtocolBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, Contribution, DocumentApp,
-    DocumentView, PluginBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
+    DocumentView, PluginBundle, SurfaceKind, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSliderNode, UiToggleNode, ViewState, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
@@ -355,9 +355,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         label: format!("Export {}", format.to_uppercase()),
         action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -368,9 +366,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         label: format!("Import {}", format.to_uppercase()),
         action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -416,10 +412,12 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
         "number" => UiNode::Field(UiFieldNode {
             id: format!("protocol-module.{key}"),
@@ -435,10 +433,12 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
         "slider" => UiNode::Field(UiFieldNode {
             id: format!("protocol-module.{key}"),
@@ -451,18 +451,21 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
                 step: question.step.unwrap_or(1.0),
                 on_change: patch_cmd(key),
                 unit: None,
+                presence: UiPresence::default(),
             })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
         "boolean" => UiNode::Field(UiFieldNode {
             id: format!("protocol-module.{key}"),
             label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("protocol-module.{key}.toggle"), icon_id: "check".into(), pressed: value.as_bool().unwrap_or(false), text: None, on_change: patch_cmd(key) })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("protocol-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) })),
             description: None,
             required: None,
             error: None,
+            presence: UiPresence::default(),
         }),
         _ => ui_text(format!("Unsupported param kind: {}", question.kind)),
     }

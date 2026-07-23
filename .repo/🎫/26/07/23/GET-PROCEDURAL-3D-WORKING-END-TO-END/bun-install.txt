@@ -1,0 +1,8 @@
+bun install v1.3.14 (0d9b296a)
+Resolving dependencies
+Resolved, downloaded and extracted [141]
+Saved lockfile
+
+$ bun ./script.ts setup postinstall
+
+14 packages installed [5.03s]

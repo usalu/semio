@@ -1,0 +1,82 @@
+{
+  "hasRenderError": false,
+  "stillBroken": false,
+  "canvasBoxes": [
+    {
+      "w": 964,
+      "h": 806,
+      "cw": 964,
+      "ch": 806
+    },
+    {
+      "w": 964,
+      "h": 806,
+      "cw": 964,
+      "ch": 806
+    },
+    {
+      "w": 449,
+      "h": 806,
+      "cw": 449,
+      "ch": 806
+    }
+  ],
+  "sliderCount": 3,
+  "sliderInteracted": true,
+  "windowTitles": [
+    "60.56Window Options Actions Utilities ",
+    "Window Options Actions Utilities "
+  ],
+  "depthErrorCount": 0,
+  "consoleSample": [
+    {
+      "type": "log",
+      "text": "[DEBUG] FlowGraphCanvasHost mounted {surfaceId: procedural.play, controllerId: procedural3d-play}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] attachCanvas effect: attaching (should log ONCE per session)"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] resync effect: APPLYING syncFlowSessionFromScene, sceneSignature len= 162849 fixtureJson len= 1800"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] attachCanvas effect: attached OK, applying initial camera"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] FlowGraphCanvasHost mounted {surfaceId: procedural.play, controllerId: procedural3d-play}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] attachCanvas effect: attaching (should log ONCE per session)"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] resync effect: APPLYING syncFlowSessionFromScene, sceneSignature len= 162849 fixtureJson len= 1800"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] attachCanvas effect: attached OK, applying initial camera"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] dag draw lod=detail zoom=1.784 icon=false label=Abbreviation"
+    }
+  ],
+  "bodyStart": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\n6\n0.5\n6\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}

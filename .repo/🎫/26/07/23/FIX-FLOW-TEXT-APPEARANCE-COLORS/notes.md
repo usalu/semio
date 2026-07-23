@@ -1,15 +1,19 @@
 # Fix Flow Text Appearance Colors
 
 ## Problem
-Flow text stayed dark on dark appearance (hard to read).
+Flow node/port labels stayed dark (black) on dark appearance.
 
-## Root cause
-WASM canvas hosts did not reliably push the active board palette into sessions:
+## Real root cause
+Node names and port labels are painted on an **HTML Canvas 2D overlay**, not the WASM GPU canvas.
+`paintDagLabelOverlays` set `ctx.fillStyle = "var(--color-…)"`. Canvas 2D does **not** resolve CSS variables — invalid values are ignored and text paints as `#000000`.
 
-1. `FlowGraphCanvasHost` synced theme on appearance mutation but not after `attachCanvas`, so the first sync often ran while `sessionRef` was still null.
-2. `WasmEditorSurface` (DSL / generate preview) never synced theme — editor defaulted to `BOARD_LIGHT` dark `label_fill`.
-3. `WasmGraphSurface` had the same missing sync.
-4. Declarative `interpretUiNode` `text` nodes lacked `text-foreground`.
+The earlier WASM `syncSessionCanvasTheme` fix only affected GPU-painted text (notes, previews, sliders). Captions are deliberately delegated to the JS overlay.
 
 ## Fix
-Align with puzzle/note hosts: `syncSessionCanvasTheme` on session ready/attach + `useCanvasAppearanceSync` → sync + `renderFrame()` (+ overlays for graph hosts). Declarative text uses `text-foreground`.
+1. Added `dagOverlayLabelFillHex` — resolves overlay fill expressions via `resolveColorHex` with appearance-aware fallbacks before `fillStyle`.
+2. `paintDagLabelOverlays` uses the resolved hex.
+3. Color resolve cache keys now include appearance; headless `var(--color-foreground)` flips with `html.dark`.
+
+## Validation
+- Overlay / styling unit tests pass.
+- Canvas2D ignores `var()` fillStyle (validated in ticket log).

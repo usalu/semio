@@ -1,0 +1,16 @@
+captured 2
+====
+[
+  "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+]
+====
+[
+  "%o\n\n%s\n\n%s\n",
+  {
+    "__error": true,
+    "message": "Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.",
+    "stack": "Error: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.\n    at getRootForUpdatedFiber (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=31f0b9f9:3258:128)\n    at enqueueConcurrentHookUpdate (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=31f0b9f9:3242:16)\n    at dispatchSetStateInternal (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=31f0b9f9:6564:20)\n    at dispatchSetState (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-IY7F3FO5.js?v=31f0b9f9:6535:9)\n    at http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/@radix-ui_react-slider.js?v=31f0b9f9:426:66\n    at setRef (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-ZXUQUQGP.js?v=31f0b9f9:35:12)\n    at http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-ZXUQUQGP.js?v=31f0b9f9:44:23\n    at Array.map (<anonymous>)\n    at http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-ZXUQUQGP.js?v=31f0b9f9:43:27\n    at setRef (http://localhost:6018/@fs/Users/ueli/Documents/semio/node_modules/.vite-os-dev/procedural3d-react/deps/chunk-ZXUQUQGP.js?v=31f0b9f9:35:12)"
+  },
+  "The above error occurred in the <span> component.",
+  "React will try to recreate this component tree from scratch using the error boundary you provided, ShellRenderErrorBoundary."
+]

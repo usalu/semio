@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed | 226 skipped (233)
+   Start at  13:29:36
+   Duration  15.72s (transform 6.49s, setup 0ms, import 12.80s, tests 16ms, environment 2.00s)
+

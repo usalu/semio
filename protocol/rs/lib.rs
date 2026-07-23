@@ -496,7 +496,7 @@ pub mod generation_forms {
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
-        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
+        build_text_editor_scene, ui_stack_vertical, ui_text, ActionDescriptor, TextEditorScene, UiControlNode, UiFieldNode, UiInputNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode,
         UiTreeSectionNode,
     };
 
@@ -711,7 +711,7 @@ pub mod generation_forms {
                     label: generation.name.clone(),
                     description: Some(format!("{} values", generation.values.len())),
                     icon_id: Some("layers".into()),
-                    selected: Some(selected_id == Some(generation.id.as_str())),
+                    presence: UiPresence::selected(selected_id == Some(generation.id.as_str())),
                     default_open: None,
                     action: Some(generation_action(controller_id, "selectGeneration", Some(json!({ "id": generation.id })))),
                     hover_action: None,
@@ -721,9 +721,7 @@ pub mod generation_forms {
                     drag_data: None,
                     items: None,
                     control: None,
-                    is_hidden: None,
-                    loading: None,
-                    waiting: None,
+                    dimmed: None,
                 }
             })
             .collect();
@@ -737,7 +735,7 @@ pub mod generation_forms {
                     label: "(no generations)".into(),
                     description: None,
                     icon_id: None,
-                    selected: None,
+                    presence: UiPresence::default(),
                     default_open: None,
                     action: None,
                     hover_action: None,
@@ -747,15 +745,12 @@ pub mod generation_forms {
                     drag_data: None,
                     items: None,
                     control: None,
-                    is_hidden: None,
-                    loading: None,
-                    waiting: None,
+                    dimmed: None,
                 }]
             } else {
                 items
             },
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
         }];
         sections.push(UiTreeSectionNode {
             id: format!("{surface_prefix}.actions"),
@@ -766,7 +761,7 @@ pub mod generation_forms {
                 label: "Add Generation".into(),
                 description: None,
                 icon_id: Some("plus".into()),
-                selected: None,
+                presence: UiPresence::default(),
                 default_open: None,
                 action: Some(generation_action(controller_id, "addGeneration", None)),
                 hover_action: None,
@@ -776,19 +771,13 @@ pub mod generation_forms {
                 drag_data: None,
                 items: None,
                 control: None,
-                is_hidden: None,
-                loading: None,
-                waiting: None,
+                dimmed: None,
             }],
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
         });
         UiNode::Tree(UiTreeNode {
             sections,
-            loading: None,
-            waiting: None,
-            selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
-            highlighted_ids: None,
+            presence: UiPresence::default(),
             selection_change: Some(generation_action(controller_id, "selectGeneration", None)),
             drop_action: None,
         })
@@ -822,6 +811,7 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             }),
             "number" => UiControlNode::Input(UiInputNode {
                 id: format!("{field_id}.input"),
@@ -834,6 +824,7 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             }),
             "slider" => UiControlNode::Slider(UiSliderNode {
                 id: format!("{field_id}.slider"),
@@ -843,11 +834,12 @@ pub mod generation_forms {
                 step: question.step.unwrap_or(1.0),
                 on_change: on_change(),
                 unit: None,
+                presence: UiPresence::default(),
             }),
-            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), pressed: value.as_bool().unwrap_or(false), text: Some(question.label.clone()), on_change: on_change() }),
+            "boolean" => UiControlNode::Toggle(UiToggleNode { id: format!("{field_id}.toggle"), icon_id: "toggle-left".into(), text: Some(question.label.clone()), on_change: on_change(), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) }),
             "single" => {
                 let items = question.options.as_ref().map(|options| options.iter().map(|option| UiSelectItem { value: option.value.clone(), label: option.label.clone() }).collect()).unwrap_or_default();
-                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone(), on_change: on_change() })
+                UiControlNode::Select(UiSelectNode { id: format!("{field_id}.select"), value: value.as_str().unwrap_or_default().to_string(), items, placeholder: question.placeholder.clone(), on_change: on_change(), presence: UiPresence::default() })
             }
             "vector" => {
                 let numbers = value.as_array().cloned().unwrap_or_else(|| question.fields.as_ref().map(|fields| fields.iter().map(|field| json!(field.value.unwrap_or(0.0))).collect()).unwrap_or_default());
@@ -883,10 +875,12 @@ pub mod generation_forms {
                                 max: None,
                                 step: None,
                                 accept: None,
+                                presence: UiPresence::default(),
                             })),
                             description: None,
                             required: None,
                             error: None,
+                            presence: UiPresence::default(),
                         })
                     })
                     .collect();
@@ -905,9 +899,10 @@ pub mod generation_forms {
                 max: None,
                 step: None,
                 accept: None,
+                presence: UiPresence::default(),
             }),
         };
-        Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None }))
+        Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default() }))
     }
 
     pub fn render_generation_form_body(form_spec: &ProtocolSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
@@ -1005,7 +1000,7 @@ pub mod builder_kit {
 
     use super::{ProtocolBlock, ProtocolOp, ProtocolSpec, ProtocolStep};
     use serde_json::Value;
-    use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode};
+    use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖Config
     #[derive(Clone, Debug)]
@@ -1085,6 +1080,7 @@ pub mod builder_kit {
             component_kind: SurfaceKind::BlockList,
             pane_id: None,
             binding_id: None,
+            presence: UiPresence::default(),
             canvas_2d: None,
             world_3d: None,
             node_graph: None,

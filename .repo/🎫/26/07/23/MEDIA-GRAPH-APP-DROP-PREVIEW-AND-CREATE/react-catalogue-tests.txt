@@ -1,0 +1,21 @@
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: > nx run @semio-tech/framework-renderer-react:test --run -t s media graph flow routing
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: > bun ./script.ts test --run -t "s media graph flow routing"
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test:  RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test:  Test Files  1 passed (1)
+@semio-tech/framework-renderer-react test:       Tests  12 passed | 222 skipped (234)
+@semio-tech/framework-renderer-react test:    Start at  14:05:11
+@semio-tech/framework-renderer-react test:    Duration  9.04s (transform 2.79s, setup 0ms, import 6.56s, tests 26ms, environment 2.00s)
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test:  NX   Successfully ran target test for project @semio-tech/framework-renderer-react
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: 
+@semio-tech/framework-renderer-react test: Exited with code 0

@@ -110,7 +110,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
-    DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiSectionNode,
+    DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
     UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -310,7 +310,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         label: node.label.clone(),
         description: Some(node.kind.clone()),
         icon_id: jack_ast_tree_icon(&node.kind).map(str::to_string),
-        selected: None,
+        presence: UiPresence::default(),
         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
         action: Some(play_action(
             WRITER_PLAY_CONTROLLER_ID,
@@ -324,8 +324,7 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         drag_data: None,
         items: if children.is_empty() { None } else { Some(children) },
         control: None,
-        is_hidden: None,
-        loading: None, waiting: None,
+        dimmed: None,
 }
 }
 //#endregion 🔖JackAst
@@ -837,7 +836,7 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
             label: Some(labels.document.into()),
             default_open: Some(true),
             children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
 }]);
     }
     let root = parse_jack_ast(&document.text);
@@ -865,7 +864,7 @@ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
         label: Some(labels.language.into()),
         default_open: Some(true),
         children: vec![ui_text(labels.jack_description)],
-        loading: None, waiting: None,
+        presence: UiPresence::default(),
 }])
 }
 
@@ -882,7 +881,7 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 ui_text(format!("Uri: {}", document.uri)),
                 ui_text(format!("Lines: {}", document.text.lines().count())),
             ],
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
 },
         UiSectionNode {
             id: "writer-inspector.camera".into(),
@@ -893,7 +892,7 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 ui_text(format!("y: {}", document.camera.y)),
                 ui_text(format!("zoom: {}", document.camera.zoom)),
             ],
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
 },
     ];
     if document.language_id == "jack" {
@@ -905,7 +904,7 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 label: Some(labels.diagnostics.into()),
                 default_open: Some(true),
                 children: messages.into_iter().map(ui_text).collect(),
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
 });
         }
     }

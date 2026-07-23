@@ -18,7 +18,7 @@ use semio_framework_plugin::{
     ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt,
     Canvas2dScene, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
-    ResourceKindSpec, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode,
+    ResourceKindSpec, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
     UiToggleNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -907,10 +907,10 @@ fn build_layers_tree(view: LowpolyView, labels: &LowpolyLabels) -> UiNode {
 }
 
 fn inspector_utility_param_field(id: &str, label: &str, key: &str, value: &Value) -> UiNode {
-    UiNode::Field(UiFieldNode {
+    UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
         id: format!("lowpoly-play-inspector.{id}"),
         label: label.into(),
-        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+        child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
             id: format!("lowpoly-play-inspector.{id}.input"),
             input_kind: "number".into(),
             value: value.get(key).map(|entry| entry.to_string()).unwrap_or_else(|| "0".into()),
@@ -942,10 +942,10 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
             label: labels.object.into(),
             default_open: None,
             fields: vec![
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "lowpoly-play-inspector.object.name".into(),
                     label: labels.name.into(),
-                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                    child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                         id: "lowpoly-play-inspector.object.name.input".into(),
                         input_kind: "text".into(),
                         value: object.name.clone(),
@@ -961,13 +961,13 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "lowpoly-play-inspector.object.smooth".into(),
                     label: labels.smooth_shading.into(),
                     child: Box::new(UiNode::Toggle(UiToggleNode {
                         id: "lowpoly-play-inspector.object.smooth.toggle".into(),
                         icon_id: "sun".into(),
-                        pressed: object.smooth_shading,
+                        presence: UiPresence::selected(object.smooth_shading),
                         text: None,
                         on_change: lowpoly_action("patchObject", Some(json!({ "objectId": object.id, "field": "smoothShading" }))),
                     })),
@@ -992,7 +992,7 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
                 ),
             ],
         },
-        UiInspectorFieldGroup {
+        UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "lowpoly-play-inspector.transform".into(),
             label: labels.transform.into(),
             default_open: None,
@@ -1002,7 +1002,7 @@ fn build_inspector_tree(view: LowpolyView, active_utility: &str, labels: &Lowpol
                 active_utility,
             )],
         },
-        UiInspectorFieldGroup {
+        UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "lowpoly-play-inspector.utility-params".into(),
             label: labels.utility_params.into(),
             default_open: Some(true),

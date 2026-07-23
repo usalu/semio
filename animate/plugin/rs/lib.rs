@@ -6,7 +6,7 @@ use animate_present::{
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
-    ActionDescriptor, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+    ActionDescriptor, ActionEmit, App, Canvas2dScene, DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
     UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -223,7 +223,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         label: label.into(),
         description: None,
         icon_id: None,
-        selected: None,
+        presence: UiPresence::default(),
         default_open: None,
         action: None,
         hover_action: None,
@@ -233,8 +233,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         drag_data: None,
         items: None,
         control: None,
-        is_hidden: None,
-        loading: None, waiting: None,
+        dimmed: None,
     }
 }
 
@@ -247,7 +246,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
             label: tile.name.clone(),
             description: Some(format!("x={:.3} y={:.3} w={:.3} h={:.3}", tile.crop.x, tile.crop.y, tile.crop.width, tile.crop.height)),
             icon_id: None,
-            selected: Some(selected.contains(&tile.id)),
+            presence: UiPresence::selected(selected.contains(&tile.id)),
             default_open: None,
             action: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [tile.id] })))),
             hover_action: None,
@@ -257,25 +256,20 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
-            loading: None, waiting: None,
+            dimmed: None,
         })
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "animate-present-play.tiles".into(),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             label: Some(labels.tiles_section.into()),
             default_open: Some(true),
             items: if items.is_empty() { vec![tree_item("empty", labels.no_tiles)] } else { items },
         }],
-        selected_ids: Some(selected.to_vec()),
-        highlighted_ids: None,
+        presence: UiPresence::default(),
         selection_change: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [] })))),
         drop_action: None,
-        loading: None,
-        waiting: None,
     })
 }
 
@@ -295,10 +289,12 @@ fn inspector_crop_field(tile_ids: &[String], field: &str, label: &str, values: &
             max: None,
             step: None,
             accept: None,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -306,7 +302,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.empty".into(),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_select_tile)],
@@ -316,7 +312,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.not-found".into(),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_tile_not_found)],
@@ -338,10 +334,12 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
             max: None,
             step: None,
             accept: None,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })];
     identity_fields.push(ui_inspector_readonly_field("animate.present.play.tile.id", labels.field_id, if tile_ids.len() == 1 { tile_ids.first().cloned().unwrap_or_default() } else { format!("{} {}", tile_ids.len(), labels.selected_suffix) }));
     if tile_ids.len() == 1 {
@@ -351,8 +349,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
             label: labels.delete_tile.into(),
             action: animate_present_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
-            disabled: None,
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
         }));
     }
     identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
@@ -361,14 +358,14 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         label: labels.delete_selection.into(),
         action: animate_present_action("deleteSelection", None),
         style: None,
-        disabled: None,
-        loading: None, waiting: None,
+        presence: UiPresence::default(),
     }));
     let groups = vec![
         UiInspectorFieldGroup {
             id: "animate.present.play.details.crop".into(),
             label: labels.group_crop.into(),
             default_open: None,
+            presence: UiPresence::default(),
             fields: vec![
                 inspector_crop_field(&tile_ids, "x", labels.field_x, &tiles.iter().map(|tile| tile.crop.x).collect::<Vec<_>>()),
                 inspector_crop_field(&tile_ids, "y", labels.field_y, &tiles.iter().map(|tile| tile.crop.y).collect::<Vec<_>>()),
@@ -376,13 +373,13 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
                 inspector_crop_field(&tile_ids, "height", labels.field_height, &tiles.iter().map(|tile| tile.crop.height).collect::<Vec<_>>()),
             ],
         },
-        UiInspectorFieldGroup { id: "animate.present.play.details.identity".into(), label: labels.group_identity.into(), default_open: None, fields: identity_fields },
+        UiInspectorFieldGroup { id: "animate.present.play.details.identity".into(), label: labels.group_identity.into(), default_open: None, presence: UiPresence::default(), fields: identity_fields },
     ];
     ui_inspector_groups_to_tree(&groups)
 }
 
 fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> UiNode {
-    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, disabled: None, loading: None, waiting: None,
+    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, presence: UiPresence::default(),
 })
 }
 
@@ -390,7 +387,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "animate.present.play.catalogue.templates".into(),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             label: Some(labels.catalogue_tile_templates.into()),
             default_open: Some(true),
             children: vec![
@@ -403,7 +400,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
         },
         UiSectionNode {
             id: "animate.present.play.catalogue.figure".into(),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
@@ -422,10 +419,12 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
                         max: None,
                         step: None,
                         accept: None,
+                        presence: UiPresence::default(),
                     })),
                     description: None,
                     required: None,
                     error: None,
+                    presence: UiPresence::default(),
                 }),
                 ui_text(format!("{}: {}", labels.catalogue_media_kind, deck.source.kind)),
             ],

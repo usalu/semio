@@ -1,0 +1,14 @@
+{
+  "title": "Fix Procedural 3D Hover Resetting Flow Camera",
+  "emoji": "🎥",
+  "status": "closed",
+  "description": "Bug in procedural 3d: hovering over 3d elements resets the camera on the flow. Likely the hover-driven scene rebuild re-applies fixture/default viewport onto the flow graph instead of preserving the live pan/zoom. Fix at the root so hover (and other ephemeral view updates) never reset the flow camera.",
+  "summary": "Hovering procedural 3D meshes re-rendered the flow graph and loadFixtureJson replaced the live camera with the stale document camera. FlowHost::apply_fixture now preserves camera (like undo/redo), FlowSession exposes cameraJson, procedural 2d/3d keep graph camera in runtime as a view action, and fixture diffs no longer emit SetCamera. Vitest viewport helper passed; cargo unit tests blocked by unrelated concurrent protocol UI-node field breakage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2263"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪7602d506327741e6b40d10fb9f7b36d9"
+  ]
+}

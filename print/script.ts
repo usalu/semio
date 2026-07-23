@@ -688,8 +688,10 @@ class TestScript extends BundleScript {
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
     assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
     assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
-    assert.match(windowSource, /\\semio_window_table_border_overlay: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
-    assert.match(windowSource, /semio~window~table\/\.style=\{[\s\S]*?overlay~app=\{\\semio_window_table_border_overlay:\}/);
+    assert.match(windowSource, /\\semio_window_table_border_finish: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
+    assert.match(windowSource, /semio~window~table\/\.style=\{[\s\S]*?finish=\{\\semio_window_table_border_finish:\}/);
+    assert.match(tableSource, /\\NewDocumentCommand \\SemioTableHeaderRow \{ m \} \{[\s\S]*?\\semio@table@row@sep/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@row@sep\}\{[\s\S]*?\\hrule height\\arrayrulewidth width\\linewidth/);
     assert.match(tableSource, /\\newcommand\{\\semio@table@long@header@left@cell\}\[2\]\{[\s\S]*?\\multicolumn\{1\}\{\|/);
     assert.match(tableSource, /\\semio_table_long_header_build:nn #1#2 \{[\s\S]*?\\semio@table@long@header@left@cell[\s\S]*?\\clist_item:nn \{#1\} \{1\}/);
     assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);

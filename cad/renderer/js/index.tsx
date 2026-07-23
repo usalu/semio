@@ -4715,7 +4715,7 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
 function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   return usePaneSlot(
-    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} label="Projection">
+    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label="Projection">
       <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
     </Pane>,
   );

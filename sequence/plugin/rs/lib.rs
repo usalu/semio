@@ -4,7 +4,7 @@ use infinite_board_port_directed_dag::{DagFixture, DagLayoutOptions, DagLayoutOr
 use semio_framework_plugin::{
     app_labels, build_node_graph_scene, build_text_editor_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids as sdk_selection_ids, tree_item_desc, tree_item_with_action, ui_declarative_sections_to_tree,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup,
-    PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use sequence_core::{default_fixture, sequence_fixture_ops, SequenceFixture, SequenceHost, SequenceOp, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
@@ -142,7 +142,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
         item.control = Some(UiControlNode::Toggle(UiToggleNode {
             id: format!("sequence-play-document.collapse.{}", step.id),
             icon_id: if step.collapsed { "chevron-right" } else { "chevron-down" }.into(),
-            pressed: !step.collapsed,
+            presence: UiPresence::selected(!step.collapsed),
             text: None,
             on_change: sequence_action("setStepCollapsed", Some(json!({ "id": step.id }))),
         }));
@@ -155,8 +155,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     label: slot_label(slot_name, labels).into(),
                     description: Some(format!("{} {}", step.id, labels.slot)),
                     icon_id: Some("folder".into()),
-                    selected: None,
-                    loading: None, waiting: None,
+                    presence: UiPresence::default(),
                     default_open: Some(true),
                     action: None,
                     hover_action: None,
@@ -166,7 +165,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     drag_data: None,
                     items: if nested.is_empty() { None } else { Some(nested) },
                     control: None,
-                    is_hidden: if step.collapsed { Some(true) } else { None },
+                    dimmed: if step.collapsed { Some(true) } else { None },
                 }
             })
             .collect();
@@ -295,7 +294,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             children: vec![ui_text(labels.select_prompt)],
         }]);
     }
@@ -305,7 +304,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             children: vec![ui_text(labels.step_not_found)],
         }]);
     }
@@ -317,7 +316,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
     if step_ids.len() == 1 {
         fields.insert(0, ui_inspector_readonly_field("sequence-play-inspector.id", labels.id, step_ids[0].clone()));
     }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "sequence-play-inspector.step".into(), label: labels.step.into(), default_open: None, fields }])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "sequence-play-inspector.step".into(), label: labels.step.into(), default_open: None, fields }])
 }
 //#endregion 🔖Panels
 

@@ -455,7 +455,7 @@ import {
   type OrbitCameraProjection,
   type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
-import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex } from "@semio-tech/ui-styling";
+import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName } from "@semio-tech/ui-styling";
 
 //#region 🔖UiInterpreter
 //#region ComponentSceneHostRegistry
@@ -4734,7 +4734,7 @@ export function FrameworkOsShell({
     // added to this array) avoids a temporal-dead-zone reference-before-init; safe because this callback
     // is only ever invoked after render completes, by which point `applyHostEffects` is initialized.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [appLabelsOverlay, injectActiveUtility, loadedPlugins, uiLocale, uiTerminology],
+    [appLabelsOverlay, injectActiveTool, loadedPlugins, uiLocale, uiTerminology],
   );
 
   /** @emoji 🗣️ Keeps already-built window titles (workbench layout, extra spawned windows) in sync with the app-labels overlay on every locale/terminology switch — `refreshUi` only rebuilds `shellLayout` from scratch on a session change, so an existing session's baked-in titles would otherwise go stale. */
@@ -4972,6 +4972,16 @@ export function FrameworkOsShell({
           navigateHistory(effect.navigate.uri);
           continue;
         }
+        if ("loadDocument" in effect) {
+          const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === baseSession.pluginId);
+          if (pluginEntry?.handle.loadAppDocument) {
+            console.log("[DEBUG] loadDocument for instance", baseSession.instanceId, "bytes", effect.loadDocument.documentJson.length);
+            await pluginEntry.handle.loadAppDocument(baseSession.instanceId, effect.loadDocument.documentJson);
+          } else {
+            console.error("[os-shell] loadDocument: plugin has no loadAppDocument", baseSession.pluginId);
+          }
+          continue;
+        }
         if ("openExternalUrl" in effect) {
           window.open(effect.openExternalUrl.url, "_blank", "noopener,noreferrer");
           continue;
@@ -5132,14 +5142,18 @@ export function FrameworkOsShell({
         return;
       }
       const { studioId, instanceId } = studioPath;
+      // 🧭 Pin the route studio id before the async app switch so the boot example effect cannot
+      // race-navigate to `/studios/demo` while `switchToManagedApp` is still awaiting.
+      const studioChanged = openStudioIdRef.current !== studioId;
+      openStudioIdRef.current = studioId;
       const studioSession = currentSession.app.id === hostConfig.hostAppId ? currentSession : await switchToManagedApp(hostConfig.hostAppId, preservedViewState);
       if (!studioSession) return;
       const studioControllerId = studioSession.app.controllerId;
-      if (openStudioIdRef.current !== studioId) {
-        openStudioIdRef.current = studioId;
+      if (studioChanged) {
         openInstanceIdRef.current = null;
-        await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openStudio", args: { studioId } }), studioSession.viewState);
-        await refreshUi(studioSession);
+        console.log("[DEBUG] applyShellUri openStudio", studioId);
+        const openResponse = await sPlugin.handleAction(studioSession.instanceId, JSON.stringify({ controllerId: studioControllerId, action: "openStudio", args: { studioId } }), studioSession.viewState);
+        await applyHostEffects(openResponse.requestedEffects ?? [], studioSession, resolveUiDirtyScope(openResponse.uiScope));
       }
       if (openInstanceIdRef.current === (instanceId ?? null)) return;
       openInstanceIdRef.current = instanceId ?? null;
@@ -6424,8 +6438,13 @@ export function FrameworkOsShell({
   // 🎛️ Announces the boot example to the fresh session exactly once per instance. When nothing is
   // locked/defaulted, seed the first registered example so the dropdown matches the plugin default
   // document (e.g. procedural3d hexagonal column) — same rule as wgpu `sync_session_chrome`.
+  // Studio-mode routes load documents via `applyShellUri`/`openStudio`; never boot-override those.
   useEffect(() => {
     if (exampleOptions.length === 0 || !session) return;
+    if (studioMode) {
+      noExampleResetInstanceIdRef.current = session.instanceId;
+      return;
+    }
     if (noExampleResetInstanceIdRef.current === session.instanceId) return;
     noExampleResetInstanceIdRef.current = session.instanceId;
     const exampleId = resolveBootExampleId(activeExampleId, exampleOptions, defaults.exampleId);
@@ -6433,7 +6452,7 @@ export function FrameworkOsShell({
       dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: exampleId });
     }
     onAction({ controllerId: session.app.controllerId, action: "setActiveExample", args: { exampleId } });
-  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session]);
+  }, [activeExampleId, defaults.exampleId, exampleOptions, onAction, session, studioMode]);
 
   //#region 🎛️PanelTabBarHosting — `buildPanelSelectionProps` is the single source of an anchor's tab
   // selection state, shared by the chrome-hosted `PanelChromeTabBar` (below, for anchors in
@@ -7977,7 +7996,10 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
   const [activePath, setActivePath] = useState<readonly string[]>([]);
 
   useEffect(() => {
-    setActivePath((previousPath) => reconcileUtilityPath(utilities, previousPath));
+    setActivePath((previousPath) => {
+      const next = reconcileUtilityPath(utilities, previousPath);
+      return previousPath.length === next.length && previousPath.every((entry, index) => entry === next[index]) ? previousPath : next;
+    });
   }, [utilities]);
 
   useEffect(() => {
@@ -9951,19 +9973,22 @@ export function resolveMeshSelectionPreviewStyle(instance: Pick<WorldInstanceRec
 }
 
 /** 🎨 Slim alias over {@link MeshStylePalette} for call sites that only need the four legacy semantic colors (face/edge/vertex component overlays, markers). */
-type SemanticColors = {
+export type SemanticColors = {
   readonly mesh: string;
   readonly edge: string;
   readonly select: string;
   readonly hover: string;
+  readonly edgeHover: string;
 };
 
-function semanticColorsFromPalette(palette: MeshStylePalette): SemanticColors {
+/** 🎨 Maps mesh style palette fills/lines onto World3d semantic overlay colors — edge hover uses line paint so coplanar edges stay distinct from face hover fill. */
+export function semanticColorsFromPalette(palette: MeshStylePalette): SemanticColors {
   return {
     mesh: palette.neutral.meshColor,
     edge: palette.neutral.lineColor,
     select: palette.selected.lineColor,
     hover: palette.hovered.meshColor,
+    edgeHover: palette.hovered.lineColor,
   };
 }
 //#endregion WorldMeshPaint
@@ -10326,6 +10351,45 @@ export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispa
   }));
 }
 
+/** @emoji 🕸️ Rewrites node-graph context-menu rows for the effective right-click selection so preview/zoom/clear/delete enable immediately without waiting for a plugin round-trip. */
+export function enrichNodeGraphContextMenuItems(
+  specs: readonly ContextMenuItemSpec[],
+  options: { readonly selectedIds: readonly string[]; readonly previewOffIds?: readonly string[] },
+): ContextMenuItemSpec[] {
+  const selectedIds = options.selectedIds;
+  const previewOffIds = options.previewOffIds ?? [];
+  const hasSelection = selectedIds.length > 0;
+  const allPreviewOff = hasSelection && selectedIds.every((id) => previewOffIds.includes(id));
+  return specs.map((spec) => {
+    if (spec.separator) return spec;
+    switch (spec.id) {
+      case "toggle-preview":
+        return {
+          ...spec,
+          disabled: !hasSelection,
+          checked: hasSelection ? !allPreviewOff : undefined,
+          icon: allPreviewOff ? "eye" : "eye-off",
+          label: allPreviewOff ? (spec.label?.toLowerCase().includes("show") ? spec.label : spec.label?.replace(/hide/i, "Show") ?? "Show preview") : (spec.label?.toLowerCase().includes("hide") ? spec.label : spec.label?.replace(/show/i, "Hide") ?? "Hide preview"),
+          action: "setPreviewOff",
+          args: { ids: [...selectedIds], value: !allPreviewOff },
+        };
+      case "zoom-to-selection":
+        return { ...spec, disabled: !hasSelection, action: spec.action ?? "focusSelection" };
+      case "clear-selection":
+        return { ...spec, disabled: !hasSelection, action: spec.action ?? "clearSelection" };
+      case "delete-selection":
+        return {
+          ...spec,
+          disabled: !hasSelection,
+          action: spec.action ?? "nodeGraphEdit",
+          args: spec.args ?? { ops: [{ op: "deleteSelection" }] },
+        };
+      default:
+        return spec;
+    }
+  });
+}
+
 function parseInteraction(interactionJson: string | undefined): WorldInteractionRecord {
   if (!interactionJson) return {};
   try {
@@ -10435,6 +10499,11 @@ function buildEdgeGeometry(mesh: WorldMeshData): BufferGeometry | null {
   const geometry = new BufferGeometry();
   geometry.setAttribute("position", new BufferAttribute(new Float32Array(mesh.edgePositions), 3));
   return geometry;
+}
+
+/** @emoji 🧵 Curve/centerline meshes have edge samples but no shaded triangles — pick/hover must treat them as whole instances. */
+export function isCurveOnlyWorldMesh(mesh: Pick<WorldMeshData, "indices" | "edgePositions">): boolean {
+  return Boolean(mesh.edgePositions?.length) && !(mesh.indices?.length > 0);
 }
 
 function buildFaceOverlayGeometry(mesh: WorldMeshData, faceIds: ReadonlySet<number>): BufferGeometry | null {
@@ -10882,7 +10951,7 @@ function WorldInstanceNode({
   readonly flatShading?: boolean;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
-  readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
+  readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly mergeMode: (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => string;
   /** 🖱️➡️ When true, pointer-down on an already-selected face starts a push/pull drag instead of falling through to selection/orbit. */
@@ -10923,6 +10992,8 @@ function WorldInstanceNode({
   const vertexHoveredOverlay = meshData && hoveredVertexId != null ? buildVertexOverlayGeometry(meshData, new Set([hoveredVertexId])) : null;
 
   const hasShadedMesh = Boolean(meshData && geometry && meshData.indices.length > 0);
+  const isCurveOnly = Boolean(meshData && isCurveOnlyWorldMesh(meshData));
+  const curveLineWidth = styleKind === "neutral" ? 2 : 4;
 
   return (
     <group position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
@@ -10967,6 +11038,7 @@ function WorldInstanceNode({
                   granularity: "face",
                   id: meshData.faceIds[event.faceIndex]!,
                   merge: mergeMode(event),
+                  objectId: instance.id,
                 });
               } else if (targets.mesh) {
                 onInstancePointerDown(instance.id, index, event);
@@ -10996,13 +11068,14 @@ function WorldInstanceNode({
           ></PaintTexturedMesh>
           ) : null}
           {hasShadedMesh && borderGeometry && (showEdges ?? true) && !edgeGeometry ? (
-            <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null}>
-              <lineBasicMaterial color={palette.neutral.lineColor} />
+            <lineSegments geometry={borderGeometry} scale={1.001} raycast={() => null} renderOrder={2}>
+              <lineBasicMaterial color={style.lineColor} depthTest={false} />
             </lineSegments>
           ) : null}
-          {(targets.edge || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
+          {(targets.edge || isCurveOnly || (showEdges ?? true) || (selectionMode === "mesh" && selectedComponentIds.size > 0)) && edgeGeometry ? (
             <lineSegments
               geometry={edgeGeometry}
+              renderOrder={2}
               onClick={(event) => {
                 if (lockedClickClears) {
                   event.stopPropagation();
@@ -11011,11 +11084,16 @@ function WorldInstanceNode({
                 }
                 if (!instancePickEnabled) return;
                 event.stopPropagation();
+                // 🧵 Centerline/curve objects are the model-definition instances — never decompose into edge components.
+                if (isCurveOnly && targets.mesh) {
+                  onInstancePointerDown(instance.id, index, event);
+                  return;
+                }
                 if (meshData.edgeIds?.length) {
                   const edgeIndex = Math.floor((event.index ?? 0) / 2);
                   const edgeId = meshData.edgeIds[edgeIndex];
                   if (edgeId != null) {
-                    onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event) });
+                    onWorldPick({ granularity: "edge", id: edgeId, merge: mergeMode(event), objectId: instance.id });
                     return;
                   }
                 }
@@ -11024,16 +11102,24 @@ function WorldInstanceNode({
                 }
               }}
               onPointerMove={(event) => {
-                if (!instancePickEnabled || !meshData?.edgeIds?.length) return;
+                if (!instancePickEnabled) return;
                 event.stopPropagation();
+                if (isCurveOnly) {
+                  onInstancePointerMove(instance.id);
+                  return;
+                }
+                if (!meshData?.edgeIds?.length) return;
                 const edgeIndex = Math.floor((event.index ?? 0) / 2);
                 const edgeId = meshData.edgeIds[edgeIndex];
                 if (edgeId == null) return;
                 onComponentHover({ objectId: instance.id, mode: "edge", id: edgeId });
               }}
-              onPointerOut={() => onComponentHover(null)}
+              onPointerOut={() => {
+                if (isCurveOnly) onInstancePointerMove(null);
+                onComponentHover(null);
+              }}
             >
-              <lineBasicMaterial color={colors.edge} linewidth={1} />
+              <lineBasicMaterial color={style.lineColor} linewidth={isCurveOnly ? curveLineWidth : 1} depthTest={false} />
             </lineSegments>
           ) : null}
           {targets.vertex && vertexPick ? (
@@ -11050,7 +11136,7 @@ function WorldInstanceNode({
                 const idx = event.index ?? 0;
                 const vertexId = vertexPick.vertexIds[idx];
                 if (vertexId == null) return;
-                onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event) });
+                onWorldPick({ granularity: "vertex", id: vertexId, merge: mergeMode(event), objectId: instance.id });
               }}
               onPointerMove={(event) => {
                 if (!instancePickEnabled) return;
@@ -11081,18 +11167,18 @@ function WorldInstanceNode({
             </mesh>
           ) : null}
           {edgeSelectedOverlay ? (
-            <lineSegments geometry={edgeSelectedOverlay} raycast={() => null}>
-              <lineBasicMaterial color={colors.select} linewidth={3} />
+            <lineSegments geometry={edgeSelectedOverlay} raycast={() => null} renderOrder={3}>
+              <lineBasicMaterial color={colors.select} linewidth={3} depthTest={false} />
             </lineSegments>
           ) : null}
           {edgeHoveredOverlay ? (
-            <lineSegments geometry={edgeHoveredOverlay} raycast={() => null}>
-              <lineBasicMaterial color={colors.hover} linewidth={3} />
+            <lineSegments geometry={edgeHoveredOverlay} raycast={() => null} renderOrder={4}>
+              <lineBasicMaterial color={colors.edgeHover} linewidth={3} depthTest={false} />
             </lineSegments>
           ) : null}
           {edgePreviewOverlay ? (
-            <lineSegments geometry={edgePreviewOverlay} raycast={() => null}>
-              <lineBasicMaterial color={colors.hover} linewidth={2} />
+            <lineSegments geometry={edgePreviewOverlay} raycast={() => null} renderOrder={3}>
+              <lineBasicMaterial color={colors.edgeHover} linewidth={2} depthTest={false} />
             </lineSegments>
           ) : null}
           {vertexSelectedOverlay ? (
@@ -11187,7 +11273,7 @@ function WorldInstancesLayer({
   readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
-  readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
+  readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
   readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
   readonly gumballDragActive: boolean;
@@ -11871,18 +11957,19 @@ function resolveMarqueeComponentIds(
   return [...hits];
 }
 
-/** @emoji 📦 Local-space AABB corners of a mesh's vertex positions (fallback: origin only). */
-function meshBoundsCorners(meshData: WorldMeshData): readonly (readonly [number, number, number])[] {
+/** @emoji 📦 Local-space AABB corners of a mesh's vertex positions (or edge samples for curve-only meshes; fallback: origin). */
+export function meshBoundsCorners(meshData: WorldMeshData): readonly (readonly [number, number, number])[] {
   let minX = Infinity;
   let minY = Infinity;
   let minZ = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
   let maxZ = -Infinity;
-  for (let index = 0; index < meshData.positions.length; index += 3) {
-    const x = meshData.positions[index]!;
-    const y = meshData.positions[index + 1]!;
-    const z = meshData.positions[index + 2]!;
+  const source = meshData.positions.length >= 3 ? meshData.positions : (meshData.edgePositions ?? []);
+  for (let index = 0; index < source.length; index += 3) {
+    const x = source[index]!;
+    const y = source[index + 1]!;
+    const z = source[index + 2]!;
     if (x < minX) minX = x;
     if (x > maxX) maxX = x;
     if (y < minY) minY = y;
@@ -11949,8 +12036,8 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
 function RaycasterPickTuning() {
   const raycaster = useThree((state) => state.raycaster);
   useEffect(() => {
-    raycaster.params.Line = { threshold: 0.05 };
-    raycaster.params.Points = { threshold: 0.05 };
+    raycaster.params.Line = { threshold: 0.12 };
+    raycaster.params.Points = { threshold: 0.08 };
   }, [raycaster]);
   return null;
 }
@@ -12147,7 +12234,7 @@ function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { re
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const projectionLabel = useLabel("ui.host.projection");
   return usePaneSlot(
-    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} label={projectionLabel}>
+    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label={projectionLabel}>
       <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
     </Pane>,
   );
@@ -12683,7 +12770,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   }, [brushPreview, dispatch]);
 
   const handleWorldPick = useCallback(
-    (args: { granularity: string; id: number; merge: string }) => {
+    (args: { granularity: string; id: number; merge: string; objectId?: string }) => {
       dispatch("worldPick", args);
     },
     [dispatch],
@@ -13733,11 +13820,12 @@ function WasmGraphSurface({
     setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
     setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.() ?? "rectangle"));
     try {
-      setSliderStateJson(session.sliderOverlayStateJson());
+      const nextSliderJson = session.sliderOverlayStateJson();
+      setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
     } catch {
       /* session not ready */
     }
-    setOverlaySize({ w: rect.width, h: rect.height });
+    setOverlaySize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
   }, []);
 
   useEffect(() => {
@@ -14418,6 +14506,15 @@ export function dagOverlayLabelFill(nodeId: string, ghost: boolean, hoveredId: s
   return "var(--color-muted-foreground)";
 }
 
+/** @emoji 🎨 Resolves {@link dagOverlayLabelFill} to a Canvas2D-safe `#rrggbb` — CSS `var()` strings are not valid `fillStyle` values and silently paint as black. */
+export function dagOverlayLabelFillHex(nodeId: string, ghost: boolean, hoveredId: string | null, chrome: { readonly selectedIds: Set<string>; readonly highlightedIds: Set<string> }, dimmedIds: readonly string[] = []): string {
+  const expression = dagOverlayLabelFill(nodeId, ghost, hoveredId, chrome, dimmedIds);
+  const appearanceFallback = currentStylingAppearanceName() === "dark" ? "light" : "dark";
+  if (expression === "var(--color-secondary)") return resolveColorHex(expression, "secondary");
+  if (expression === "var(--color-border)" || expression === "var(--color-muted-foreground)") return resolveColorHex(expression, "gray");
+  return resolveColorHex(expression, appearanceFallback);
+}
+
 export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasElement, logicalW: number, logicalH: number, dpr: number, interaction: DagLabelOverlayInteraction): void {
   let state: { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number; readonly labels?: readonly DagLabelOverlayRow[] };
   try {
@@ -14458,7 +14555,7 @@ export function paintDagLabelOverlays(stateJson: string, canvas: HTMLCanvasEleme
     const targetPx = Number.isFinite(fontScreenPx) && fontScreenPx > 0 ? fontScreenPx : DAG_LABEL_SCREEN_PX;
     const fontPx = isPort ? dagClampPortLabelFontPx(ctx, row.text, targetPx, maxW, maxH) : dagClampLabelFontPx(ctx, row.text, targetPx, maxW, maxH);
     ctx.font = `${fontPx}px ${DAG_LABEL_FONT_FAMILY}`;
-    ctx.fillStyle = dagOverlayLabelFill(row.id, row.ghost === true, interaction.hoveredId, chrome, dimmedIds);
+    ctx.fillStyle = dagOverlayLabelFillHex(row.id, row.ghost === true, interaction.hoveredId, chrome, dimmedIds);
     ctx.globalAlpha = row.ghost ? 0.85 : dimmedIds.includes(row.id) ? 0.5 : 1;
     if (row.layout === "vertical") {
       ctx.save();
@@ -14626,10 +14723,10 @@ export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: Dag
 //#region 🔖flow-graph-canvas-host
 
 //#region Sync
-// @emoji 🎥 `applyCamera` must stay false for every resync after the first: FlowWasmSession never
-// reports its live camera back into the document (`cameraJson` is unimplemented, see the wheel
-// handler below), so `scene.viewportJson` is frozen at its initial value for the whole session —
-// applying it on every edit-triggered resync would snap the user's camera back on every commit.
+// @emoji 🎥 `applyCamera` must stay false for every resync after the first: live pan/zoom lives in the
+// FlowWasmSession (and plugin runtime via `nodeGraphViewport`), while `scene.viewportJson` often lags.
+// Applying it on hover/eval/edit-triggered resync would snap the camera; `loadFixtureJson` also
+// preserves the live camera so fixture content reloads never reset the view.
 function applyNodeGraphHoverFromScene(session: FlowWasmSession, hoverJson: string | undefined): void {
   if (hoverJson === undefined) return;
   try {
@@ -14805,10 +14902,10 @@ export function FlowGraphCanvasHost({
     if (!session || !labelCanvas || !container) return;
     const rect = container.getBoundingClientRect();
     const dpr = globalThis.devicePixelRatio || 1;
-    setContainerSize({ w: rect.width, h: rect.height });
+    setContainerSize((prev) => (prev.w === rect.width && prev.h === rect.height ? prev : { w: rect.width, h: rect.height }));
     try {
       const labelJson = session.labelOverlayPaintStateJson();
-      setLabelStateJson(labelJson);
+      setLabelStateJson((prev) => (prev === labelJson ? prev : labelJson));
       const selectedIds = parseDagNodeIdArray(session.selectedWidgetIds());
       const preselect = parseDagPreselectJson(session.preselectWidgetIdsJson());
       const dimmedIds = parseDagNodeIdArray(session.previewOffWidgetIds());
@@ -14818,7 +14915,8 @@ export function FlowGraphCanvasHost({
         preselect,
         dimmedIds,
       });
-      setSliderStateJson(session.sliderOverlayStateJson());
+      const nextSliderJson = session.sliderOverlayStateJson();
+      setSliderStateJson((prev) => (prev === nextSliderJson ? prev : nextSliderJson));
     } catch {
       /* gpu not ready */
     }
@@ -14835,6 +14933,8 @@ export function FlowGraphCanvasHost({
       const hovered = session.hoveredWidgetId();
       const channelJson = session.hoveredChannelJson();
       dispatch(nodeGraphActions.hover, { hoverJson: hovered ? channelJson : null });
+      const cameraJson = session.cameraJson?.();
+      if (cameraJson) dispatch(nodeGraphActions.viewport, nodeGraphViewportActionArgs(cameraJson));
     } catch {
       /* session not ready */
     }

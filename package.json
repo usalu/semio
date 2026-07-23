@@ -250,6 +250,7 @@
   },
   "overrides": {
     "@radix-ui/react-slot": "^1.2.5",
+    "@radix-ui/react-slider": "^1.4.5",
     "@semio-tech/semio-asset": "workspace:*",
     "@semio-tech/compose-js": "workspace:*",
     "diff": "^8.0.3",

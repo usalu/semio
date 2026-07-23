@@ -679,7 +679,7 @@ use semio_framework_plugin::{SurfaceKind,
     AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
     Paint2dScene, ResourceKindSpec, UtilityCategory, UtilityDefinition, WindowMeasure, is_de_locale, localized_label_map, resolve_labels,
     selection_ids, tree_item_with_action,
-    UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode, ViewState,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     create_default_layout, SET_ACTIVE_UTILITY_ACTION_ID,
@@ -1012,7 +1012,7 @@ fn layer_tree_item(layer: &RasterLayerNode) -> UiTreeItemNode {
         default_open: Some(matches!(layer, RasterLayerNode::Group { .. })),
         draggable: Some(true),
         items: nested,
-        is_hidden: if layer_visible(layer) { None } else { Some(true) },
+        dimmed: if layer_visible(layer) { None } else { Some(true) },
         ..tree_item_with_action(
             layer_row_id(layer),
             layer_name(layer),
@@ -1105,15 +1105,13 @@ fn render_catalogue_panel(labels: &RasterPlayLabels) -> UiNode {
         id: "raster-catalogue".into(),
         label: Some(labels.layer_kinds.into()),
         default_open: Some(true),
-        loading: None,
+        presence: UiPresence::default(),
         children: vec![
             ui_text(labels.catalogue_pixel),
             ui_text(labels.catalogue_group),
             ui_text(labels.catalogue_adjustment),
         ],
-    
-        waiting: None,
-}])
+    }])
 }
 
 fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
@@ -1132,7 +1130,7 @@ fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntim
     let opacities: Vec<f64> = layers.iter().map(|layer| crate::domain::layer_opacity(layer) as f64).collect();
     let mixed_name = ui_inspector_mixed_text(&names);
     let mixed_opacity = ui_inspector_mixed_number(&opacities);
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
         id: "raster-properties.layer".into(),
         label: labels.layer.into(),
         default_open: Some(true),

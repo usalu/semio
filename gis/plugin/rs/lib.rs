@@ -398,7 +398,7 @@ pub mod app_2d {
         MeasureSelectItem, ui_inspector_groups_to_tree, ui_inspector_mixed_toggle,
         ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt,
         DocumentApp, DocumentView, DwgDrawing, DwgGeometry, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec, TiledMapScene,
-        UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSelectItem, UiSelectNode, UiSliderNode,
+        UiControlNode, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiSliderNode,
         UiToggleNode, UiTreeItemNode, ViewState, WindowMeasure,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -663,10 +663,10 @@ pub mod app_2d {
         layer_weight_entries(runtime, labels)
             .into_iter()
             .map(|(layer_id, label, value)| {
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: format!("gis2d-play-inspector.weight.{layer_id}"),
                     label: format!("{label} {}", labels.weight_suffix),
-                    child: Box::new(UiNode::Slider(UiSliderNode {
+                    child: Box::new(UiNode::Slider(UiSliderNode {presence: UiPresence::default(), 
                         id: format!("gis2d-play-inspector.weight.{layer_id}.slider"),
                         value,
                         min: 0.25,
@@ -960,10 +960,10 @@ pub mod app_2d {
         let selected_count = selection.get("positions").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
             + selection.get("routes").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0);
         let mut fields = vec![
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "gis2d-play-inspector.render-mode".into(),
                     label: labels.render_mode.into(),
-                    child: Box::new(UiNode::Select(UiSelectNode {
+                    child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                         id: "gis2d-play-inspector.render-mode.select".into(),
                         value: runtime.render_mode.clone(),
                         items: vec![
@@ -978,10 +978,10 @@ pub mod app_2d {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "gis2d-play-inspector.vector-style".into(),
                     label: labels.vector_style.into(),
-                    child: Box::new(UiNode::Select(UiSelectNode {
+                    child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                         id: "gis2d-play-inspector.vector-style.select".into(),
                         value: runtime.vector_style.clone(),
                         items: vec![
@@ -996,10 +996,10 @@ pub mod app_2d {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "gis2d-play-inspector.lod-mode".into(),
                     label: labels.lod_mode.into(),
-                    child: Box::new(UiNode::Select(UiSelectNode {
+                    child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                         id: "gis2d-play-inspector.lod-mode.select".into(),
                         value: runtime.lod_mode.clone(),
                         items: lod_items,
@@ -1010,10 +1010,10 @@ pub mod app_2d {
                     required: None,
                     error: None,
                 }),
-                UiNode::Field(UiFieldNode {
+                UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                     id: "gis2d-play-inspector.selection-method".into(),
                     label: labels.selection_method.into(),
-                    child: Box::new(UiNode::Select(UiSelectNode {
+                    child: Box::new(UiNode::Select(UiSelectNode {presence: UiPresence::default(), 
                         id: "gis2d-play-inspector.selection-method.select".into(),
                         value: runtime.selection_method.clone(),
                         items: vec![
@@ -1047,7 +1047,7 @@ pub mod app_2d {
                 .count();
             return ui_inspector_groups_to_tree(&[
                 map_view_group,
-                UiInspectorFieldGroup {
+                UiInspectorFieldGroup { presence: UiPresence::default(),
                     id: "gis2d-play-inspector.summary".into(),
                     label: labels.map_layer.into(),
                     default_open: Some(true),
@@ -1075,13 +1075,13 @@ pub mod app_2d {
                 fields: vec![
                     ui_inspector_readonly_field("gis2d-play-inspector.id", labels.field_id, layer_id.clone()),
                     ui_inspector_readonly_field("gis2d-play-inspector.label", labels.field_label, label.to_string()),
-                    UiNode::Field(UiFieldNode {
+                    UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "gis2d-play-inspector.visible".into(),
                         label: labels.field_visible.into(),
                         child: Box::new(UiNode::Toggle(UiToggleNode {
                             id: "gis2d-play-inspector.visible.toggle".into(),
                             icon_id: "eye".into(),
-                            pressed: mixed.uniform && mixed.pressed,
+                            presence: UiPresence::selected(mixed.uniform && mixed.pressed),
                             text: None,
                             on_change: gis2d_action("toggleLayerVisibility", Some(json!({ "layerId": layer_id }))),
                         })),

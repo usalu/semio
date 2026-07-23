@@ -131,7 +131,7 @@ app_labels! {
 
 //#region 🔖Panels
 fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labels: &SourcingLabels) -> UiNode {
-    let mut children = vec![UiNode::Input(UiInputNode {
+    let mut children = vec![UiNode::Input(UiInputNode { presence: UiPresence::default(),
         id: "sourcing-filter-query".into(),
         input_kind: "text".into(),
         value: document.filters.query.clone(),
@@ -159,8 +159,8 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
             typology_items.push(UiSelectItem { value: path.join("/"), label });
         }
     }
-    children.push(UiNode::Select(UiSelectNode { id: "sourcing-filter-typology".into(), value: document.filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None) }));
-    children.push(UiNode::NumberStepper(UiNumberStepperNode {
+    children.push(UiNode::Select(UiSelectNode { presence: UiPresence::default(), id: "sourcing-filter-typology".into(), value: document.filters.typology_path.join("/"), items: typology_items, placeholder: None, on_change: sourcing_action("setFilterTypology", None) }));
+    children.push(UiNode::NumberStepper(UiNumberStepperNode { presence: UiPresence::default(),
         id: "sourcing-filter-min-availability".into(),
         value: document.filters.min_availability as f64,
         step: 1.0,

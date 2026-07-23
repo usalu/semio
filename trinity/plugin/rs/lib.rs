@@ -9,7 +9,7 @@ pub mod app_jack {
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_text,
         ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
         DocumentView, MeasureSelectItem, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec,
-        TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+        TableScene, TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
         ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild,
         WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -541,7 +541,7 @@ pub mod app_jack {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -555,7 +555,7 @@ pub mod app_jack {
                 id: "trinity-inspector.missing".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
                 children: vec![ui_text("Piece not found")],
             }]);
         }
@@ -577,7 +577,7 @@ pub mod app_jack {
         let u_mixed = ui_inspector_mixed_text(&u_values);
         let v_mixed = ui_inspector_mixed_text(&v_values);
         ui_inspector_groups_to_tree(&[
-            UiInspectorFieldGroup {
+            UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "trinity-inspector.geometry".into(),
                 label: term_labels.geometry.into(),
                 default_open: None,
@@ -616,10 +616,10 @@ pub mod app_jack {
                 label: term_labels.identity.into(),
                 default_open: None,
                 fields: vec![
-                    semio_framework_plugin::UiNode::Field(UiFieldNode {
+                    semio_framework_plugin::UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "trinity-inspector.name".into(),
                         label: "Name".into(),
-                        child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
+                        child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                             id: "trinity-inspector.name.input".into(),
                             input_kind: "text".into(),
                             value: name_mixed.value,
@@ -1421,7 +1421,7 @@ pub mod app_rewrite {
         ui_declarative_sections_to_tree, ui_inspector_groups_to_tree,
         ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt,
         DocumentApp, DocumentView, MeasureSelectItem, NodeGraphScene, PanelTreeBuilder,
-        TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiSectionNode, UiTreeItemNode,
+        TextEditorScene, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiTreeItemNode,
         ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot,
         WindowLayoutStackNode, WindowLayoutWindowNode, WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -2281,7 +2281,7 @@ pub mod app_rewrite {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None, waiting: None,
+                presence: UiPresence::default(),
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -2309,7 +2309,7 @@ pub mod app_rewrite {
         let u_mixed = ui_inspector_mixed_text(&u_values);
         let v_mixed = ui_inspector_mixed_text(&v_values);
         ui_inspector_groups_to_tree(&[
-            UiInspectorFieldGroup {
+            UiInspectorFieldGroup { presence: UiPresence::default(),
                 id: "trinity-inspector.geometry".into(),
                 label: term_labels.geometry.into(),
                 default_open: None,
@@ -2331,10 +2331,10 @@ pub mod app_rewrite {
                 label: term_labels.identity.into(),
                 default_open: None,
                 fields: vec![
-                    semio_framework_plugin::UiNode::Field(UiFieldNode {
+                    semio_framework_plugin::UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                         id: "trinity-inspector.name".into(),
                         label: "Name".into(),
-                        child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
+                        child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                             id: "trinity-inspector.name.input".into(),
                             input_kind: "text".into(),
                             value: name_mixed.value,
@@ -2381,10 +2381,10 @@ pub mod app_rewrite {
                 PropertyValue::Bool(flag) => flag.to_string(),
                 _ => String::new(),
             };
-            children.push(semio_framework_plugin::UiNode::Field(UiFieldNode {
+            children.push(semio_framework_plugin::UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: format!("trinity-rewrite.param.{}", param.name),
                 label: param.name.clone(),
-                child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(semio_framework_plugin::UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: format!("trinity-rewrite.param.{}.input", param.name),
                     input_kind: match param.kind {
                         ParameterKind::Number => "number",
@@ -2413,7 +2413,7 @@ pub mod app_rewrite {
             id: "trinity-rewrite.parameters".into(),
             label: Some(labels.parameters.into()),
             default_open: Some(true),
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             children,
         }])
     }

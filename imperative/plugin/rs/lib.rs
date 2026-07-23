@@ -5,7 +5,7 @@ use imperative_engine::Step;
 use semio_framework_plugin::{
     build_table_scene, build_text_editor_scene, create_stack_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TableScene, TextEditorScene,
-    UiNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
+    UiNode, UiPresence, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::{Deserialize, Serialize};
@@ -159,7 +159,7 @@ fn build_inspector_tree(document: &ImperativeDocument, selected: &[String], labe
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.inspector_empty_hint)],
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
 }]);
     }
     let steps: Vec<&Step> = selected.iter().filter_map(|id| document.path.steps.iter().find(|step| &step.id == id)).collect();

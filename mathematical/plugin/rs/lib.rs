@@ -2,7 +2,7 @@
 
 use semio_framework_plugin::{
     app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, DocumentApp,
-    DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, ViewState,
+    DocumentView, NodeGraphScene, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence, ViewState,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -320,6 +320,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         component_kind,
         pane_id: None,
         binding_id: None,
+        presence: UiPresence::default(),
         canvas_2d: None,
         world_3d: None,
         node_graph: None,

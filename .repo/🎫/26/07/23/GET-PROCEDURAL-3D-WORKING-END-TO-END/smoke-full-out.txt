@@ -1,0 +1,35 @@
+{
+  "hasRenderError": false,
+  "canvasCount": 3,
+  "windowSlots": 2,
+  "errCount": 53,
+  "bodyStart": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\n6\n0.5\n6\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nWindow Options\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+====
+{
+  "kind": "console.error",
+  "args": [
+    "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+  ]
+}
+====
+{
+  "kind": "console.error",
+  "args": [
+    "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+  ]
+}
+====
+{
+  "kind": "console.error",
+  "args": [
+    "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+  ]
+}
+====
+{
+  "kind": "console.error",
+  "args": [
+    "Maximum update depth exceeded. This can happen when a component calls setState inside useEffect, but useEffect either doesn't have a dependency array, or one of the dependencies changes on every render."
+  ]
+}

@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: tests
     content: Add cross-window transform/gumball + refresh map tests; run puzzle + framework tests
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

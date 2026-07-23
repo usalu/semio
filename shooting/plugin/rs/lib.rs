@@ -8,7 +8,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     world3d_selection_json, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind,
     App, ActionDescriptor, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp,
     DocumentView, IconRenderScene, MeasureSelectItem, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup,
-    UiNode, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
+    UiNode, UiPresence, UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementPossible, WindowEngagementStatus, WindowMeasure, World3dScene,
     WorldSunConfig, SET_ACTIVE_UTILITY_ACTION_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
@@ -528,11 +528,12 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
         id: "shooting-play-inspector.shot".into(),
         label: labels.shot.into(),
         default_open: None,
+        presence: UiPresence::default(),
         fields: vec![
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "shooting-play-inspector.shot.label".into(),
                 label: labels.field_label.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: "shooting-play-inspector.shot.label.input".into(),
                     input_kind: "text".into(),
                     value: shot.label.clone(),
@@ -553,10 +554,10 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
             }),
             ui_inspector_readonly_field("shooting-play-inspector.shot.format", labels.field_format, &shot.format),
             ui_inspector_readonly_field("shooting-play-inspector.shot.shape", labels.field_shape, &shot.shape),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "shooting-play-inspector.shot.width".into(),
                 label: labels.field_width.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: "shooting-play-inspector.shot.width.input".into(),
                     input_kind: "number".into(),
                     value: width_mixed.value.to_string(),
@@ -575,10 +576,10 @@ fn shot_inspector_group(shot: &ShootingShot, labels: &ShootingLabels) -> UiInspe
                 required: None,
                 error: None,
             }),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "shooting-play-inspector.shot.height".into(),
                 label: labels.field_height.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: "shooting-play-inspector.shot.height.input".into(),
                     input_kind: "number".into(),
                     value: height_mixed.value.to_string(),
@@ -606,11 +607,12 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
         id: "shooting-play-inspector.asset".into(),
         label: labels.asset.into(),
         default_open: None,
+        presence: UiPresence::default(),
         fields: vec![
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "shooting-play-inspector.asset.name".into(),
                 label: labels.field_name.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: "shooting-play-inspector.asset.name.input".into(),
                     input_kind: "text".into(),
                     value: asset.name.clone(),
@@ -629,10 +631,10 @@ fn asset_inspector_group(asset: &ShootingAsset, labels: &ShootingLabels) -> UiIn
                 required: None,
                 error: None,
             }),
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "shooting-play-inspector.asset.url".into(),
                 label: labels.field_url.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {presence: UiPresence::default(), 
                     id: "shooting-play-inspector.asset.url.input".into(),
                     input_kind: "text".into(),
                     value: asset.url.clone(),

@@ -672,13 +672,13 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "puzzle3d",
-  registryPluginId: "puzzle",
-  defaultAppId: "puzzle3d-play",
+  variant: "procedural3d",
+  registryPluginId: "procedural",
+  defaultAppId: "procedural3d-play",
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "procedural", moduleUrl: "/plugin-modules/procedural/procedural_plugin.js", contributes: [], consumes: ["forms.questionKind"] }
   ]
 };
 

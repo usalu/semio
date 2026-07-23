@@ -32,9 +32,12 @@ import {
   activeUiTheme,
   builtinUiThemes,
   domSizePx,
+  elementStateAttributes,
   parseUiTheme,
   readSizeVarPx,
   resolveColorHex,
+  resolveElementFillKind,
+  resolveElementState,
   resolveSemanticColorHex,
   semanticVar,
   semioTheme,
@@ -47,6 +50,10 @@ import {
   themeColorVar,
   tokenVar,
   uiSpacingPx,
+  type ElementFillKind,
+  type UiElementState,
+  type UiState,
+  type UiStatus,
   type UiTheme,
 } from "@semio-tech/ui-styling";
 import {
@@ -2161,16 +2168,21 @@ export function useElementsSurfaceChrome({ appearance, device, expertise, compac
 
 /**
  * @emoji 🌓 Observes document appearance attributes and runs `sync` on mount and whenever the root appearance changes.
+ * Holds `sync` in a ref so callers can pass an inline arrow without retriggering the effect every render
+ * (React 19: unstable `sync` identity → effect → `paintOverlays`/`setState` → re-render → Maximum update depth).
  */
 export function useCanvasAppearanceSync(sync: () => void, enabled = true): void {
+  const syncRef = reactHostPort.useRef(sync);
+  syncRef.current = sync;
   reactHostPort.useEffect(() => {
     if (!enabled || typeof document === "undefined" || typeof MutationObserver === "undefined") return;
-    sync();
+    const run = () => syncRef.current();
+    run();
     const root = document.documentElement;
-    const observer = new MutationObserver(() => sync());
+    const observer = new MutationObserver(run);
     observer.observe(root, { attributes: true, attributeFilter: ["class", "style", "data-ui-appearance", "data-ui-theme"] });
     return () => observer.disconnect();
-  }, [enabled, sync]);
+  }, [enabled]);
 }
 
 /** @emoji 🧪 Clears surface-chrome leases and DOM overrides between vitest cases. */
@@ -5599,15 +5611,18 @@ export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border 
 
 //#region 🫳DragAffordance
 
-/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags, spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. `emphasized` mirrors the ambient active/ready state of the element it belongs to, so the grip reads as clearly as the label/icon beside it. */
+/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. `emphasized` mirrors the ambient active/ready state of the element it belongs to, so the grip reads as clearly as the label/icon beside it. */
 export const DragHandle: React.FC<{
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
+  readonly onPointerMove?: React.PointerEventHandler<HTMLSpanElement>;
+  readonly onPointerUp?: React.PointerEventHandler<HTMLSpanElement>;
+  readonly onPointerCancel?: React.PointerEventHandler<HTMLSpanElement>;
   readonly attributes?: object;
   readonly listeners?: Record<string, unknown>;
   readonly onClick?: React.MouseEventHandler<HTMLSpanElement>;
   readonly className?: string;
   readonly emphasized?: boolean;
-}> = ({ onPointerDown, attributes, listeners, onClick, className, emphasized = false }) => (
+}> = ({ onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => (
   <span
     data-slot="drag-handle"
     className={cn(
@@ -5616,6 +5631,9 @@ export const DragHandle: React.FC<{
       className,
     )}
     onPointerDown={onPointerDown}
+    onPointerMove={onPointerMove}
+    onPointerUp={onPointerUp}
+    onPointerCancel={onPointerCancel}
     onClick={onClick}
     onPointerEnter={(event) => {
       event.currentTarget.closest(`[${HANDLE_HOVER_SCOPE_ATTR}]`)?.setAttribute("data-handle-hovered", "true");
@@ -7004,6 +7022,22 @@ ChromeAwareWindowScrollSurface.displayName = "ChromeAwareWindowScrollSurface";
 /** @emoji 📐 Labelled icon action in window rail chrome bars (options + action). */
 export const windowRailChromeLabelActionClass = cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent text-element px-single gap-single", interactiveHoverClass);
 
+/** @emoji 🪟 Pane chrome toggle — same layout as {@link panelAnchorTabButtonClass}: leading semantic icon, label, trailing {@link DragHandle}. */
+export const windowPaneChromeToggleClass = cn(
+  "inline-flex min-h-0 h-medium w-auto shrink-0 items-center gap-tiny border-0 bg-transparent p-0 px-single",
+  "cursor-pointer whitespace-nowrap text-xs leading-none text-element transition-colors",
+  "outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-active-base",
+  "disabled:pointer-events-none disabled:opacity-50",
+  hoverExcludingHandleBgFillClass,
+  hoverExcludingHandleTextEmphasizedClass,
+);
+
+/** @emoji 🪟 Built-in window pane icons — fixed semantic affordances (never fold-direction chevrons). */
+export const WINDOW_PANE_MEASURES_ICON = "settings-2" as const satisfies IconName;
+export const WINDOW_PANE_ACTIONS_ICON = "play" as const satisfies IconName;
+export const WINDOW_PANE_SEARCH_ICON = "search" as const satisfies IconName;
+export const WINDOW_PANE_UTILITIES_ICON = "hammer" as const satisfies IconName;
+
 /** @emoji 📐 Compact title bar on top of the window options stack. */
 export const windowMeasuresChromeClass = `pointer-events-auto flex h-medium shrink-0 items-stretch justify-between gap-0 border-b ${borderElementClass}/40 px-0 py-0`;
 
@@ -7112,6 +7146,36 @@ export interface ElementBaseProps {
 }
 
 export interface ElementProps extends ElementBaseProps {}
+
+//#region 🧭ElementState
+/** @emoji 🧭 The shared, compile-time-enforced state model every rendered UI element carries — explicit
+ * re-export from `@semio-tech/ui-styling` (this package must not leak types from outside the codebase).
+ * `state`/`status`/`hover`/`selected` mirror the Rust `UiState`/`UiStatus`/`UiPresence` model in `ui_wgpu`
+ * (see `ui/wgpu/rs/lib.rs`'s 🔖Presence region) byte-for-byte. */
+export type { UiState, UiStatus, UiElementState, ElementFillKind };
+export interface UiElementStateProps {
+  /** @default "normal" */
+  state?: UiState;
+  /** @default "idle" */
+  status?: UiStatus;
+  /** Authored render-hovered flag; composes with (never replaces) live CSS `:hover`. @default false */
+  hover?: boolean;
+  selected?: boolean;
+}
+
+/** @emoji 🧭 Resolves `props` against the shared defaults and returns everything a component needs to
+ * apply the model: whether it must render `null` (`state === "hidden"`), the `data-ui-*` attribute
+ * spread for CSS-driven components, and the fill-kind for 3D/canvas components that can't use CSS. */
+export function useElementState(props: UiElementStateProps): {
+  state: UiElementState;
+  hidden: boolean;
+  attrs: ReturnType<typeof elementStateAttributes>;
+  fillKind: ElementFillKind | null;
+} {
+  const state = resolveElementState(props);
+  return { state, hidden: state.state === "hidden", attrs: elementStateAttributes(state), fillKind: resolveElementFillKind(state) };
+}
+//#endregion 🧭ElementState
 
 //#region 🆔ElementId
 /** 🆔 Renderer-agnostic UI element id grammar: dot-separated camelCase segments, each starting with a
@@ -16477,6 +16541,55 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
 
 // #endregion 🌳WindowMeasuresTree
 
+// #region 🪟WindowPaneChromeToggle
+
+/** @emoji 🪟 Props for {@link WindowPaneChromeToggle} — the panel-toggle twin for every window pane header. */
+export interface WindowPaneChromeToggleProps {
+  readonly id: string;
+  readonly icon: IconName;
+  readonly label: string;
+  readonly onClick?: () => void;
+  readonly disabled?: boolean;
+  readonly className?: string;
+  /** @emoji 🫳 Pointer-drag props forwarded to the trailing {@link DragHandle} (omit when the pane is not re-anchorable yet). */
+  readonly dragPointerProps?: Pick<React.HTMLAttributes<HTMLSpanElement>, "onPointerCancel" | "onPointerDown" | "onPointerMove" | "onPointerUp">;
+  readonly showDragHandle?: boolean;
+  readonly emphasized?: boolean;
+}
+
+/** @emoji 🪟 Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
+export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
+  id,
+  icon,
+  label,
+  onClick,
+  disabled,
+  className,
+  dragPointerProps,
+  showDragHandle = true,
+  emphasized = false,
+}) => {
+  const accessibleLabel = useControlAccessibleLabel(id, label);
+  return (
+    <button
+      type="button"
+      id={id}
+      data-slot="window-pane-chrome-toggle"
+      data-hover-scope
+      title={accessibleLabel}
+      disabled={disabled}
+      onClick={onClick}
+      className={cn(windowPaneChromeToggleClass, className)}
+    >
+      <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
+      <span className={panelTabLabelClass}>{label}</span>
+      {showDragHandle ? <DragHandle {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
+    </button>
+  );
+};
+
+// #endregion 🪟WindowPaneChromeToggle
+
 // #region 🪟WindowMeasuresChrome
 
 interface WindowMeasuresChromeProps {
@@ -16489,7 +16602,7 @@ interface WindowMeasuresChromeProps {
   onCollapseExpand: () => void;
 }
 
-/** @emoji 🪟 Title bar for the window options rail (span left corner, label center, fold right corner). */
+/** @emoji 🪟 Title bar for the window options rail (span left corner, fold toggle with icon + drag handle right). */
 const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, folded, expanded, onFold, onUnfold, onExpand, onCollapseExpand }) => {
   const windowOptionsLabel = useLabel("ui.common.windowOptions");
   const focusLabel = useLabel("ui.common.focus");
@@ -16497,7 +16610,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
   if (folded) {
     return (
       <div data-slot="window-measures-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={childElementId("framework.window", windowId, "measures", "unfold")} icon="chevron-left" text={windowOptionsLabel} className={windowRailChromeLabelActionClass} onClick={onUnfold} />
+        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "measures", "unfold")} icon={WINDOW_PANE_MEASURES_ICON} label={windowOptionsLabel} onClick={onUnfold} />
       </div>
     );
   }
@@ -16511,7 +16624,13 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <ActionGroupItem id={childElementId("framework.window", windowId, "measures", "fold")} icon="chevron-right" text={windowOptionsLabel} className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerRightClass)} onClick={onFold} />
+      <WindowPaneChromeToggle
+        id={childElementId("framework.window", windowId, "measures", "fold")}
+        icon={WINDOW_PANE_MEASURES_ICON}
+        label={windowOptionsLabel}
+        className={windowMeasuresChromeCornerRightClass}
+        onClick={onFold}
+      />
     </div>
   );
 };
@@ -16526,20 +16645,20 @@ interface WindowEngagementChromeProps {
   onToggle: () => void;
 }
 
-/** @emoji ⌨️ Title bar for the merged top-left Actions pane (active engagement plus the categorized ad-hoc actions tree): single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+/** @emoji ⌨️ Title bar for the merged top-left Actions pane (active engagement plus the categorized ad-hoc actions tree): single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowEngagementChrome: React.FC<WindowEngagementChromeProps> = ({ windowId, expanded, onToggle }) => {
   const actionLabel = useLabel("ui.common.actions");
   if (!expanded) {
     return (
       <div data-slot="window-engagement-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={childElementId("framework.window", windowId, "engagement", "toggle")} icon="chevron-right" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "engagement", "toggle")} icon={WINDOW_PANE_ACTIONS_ICON} label={actionLabel} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-engagement-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={childElementId("framework.window", windowId, "engagement", "toggle")} icon="chevron-left" text={actionLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "engagement", "toggle")} icon={WINDOW_PANE_ACTIONS_ICON} label={actionLabel} onClick={onToggle} />
     </div>
   );
 };
@@ -16554,20 +16673,20 @@ interface WindowSearchChromeProps {
   onToggle: () => void;
 }
 
-/** @emoji 🔎 Title bar for the top-middle window search pane: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. */
+/** @emoji 🔎 Title bar for the top-middle window search pane: single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. */
 const WindowSearchChrome: React.FC<WindowSearchChromeProps> = ({ windowId, expanded, onToggle }) => {
   const searchLabel = useLabel(UI_WINDOW_SEARCH.title);
   if (!expanded) {
     return (
       <div data-slot="window-search-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-center border-b-0")}>
-        <ActionGroupItem id={childElementId("framework.window", windowId, "search", "toggle")} icon="chevron-down" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "search", "toggle")} icon={WINDOW_PANE_SEARCH_ICON} label={searchLabel} onClick={onToggle} />
       </div>
     );
   }
 
   return (
     <div data-slot="window-search-chrome" data-expanded="true" className={cn(windowMeasuresChromeClass, "justify-center")}>
-      <ActionGroupItem id={childElementId("framework.window", windowId, "search", "toggle")} icon="chevron-up" text={searchLabel} className={windowRailChromeLabelActionClass} onClick={onToggle} />
+      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "search", "toggle")} icon={WINDOW_PANE_SEARCH_ICON} label={searchLabel} onClick={onToggle} />
     </div>
   );
 };
@@ -16584,20 +16703,26 @@ interface UtilityBarChromeProps {
   onUnfold: () => void;
 }
 
-/** @emoji 🧰 Title bar for the window utility bar: single fold/unfold toggle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no utilities, so every window carries the bottom-left panel. */
+/** @emoji 🧰 Title bar for the window utility bar: single fold/unfold toggle with icon + drag handle, same height and surface as {@link WindowMeasuresChrome}. Always rendered, even with no utilities, so every window carries the bottom-left panel. */
 const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, disabled, onFold, onUnfold }) => {
   const utilitiesLabel = useLabel("ui.common.utilities");
   if (folded) {
     return (
       <div data-slot="utility-bar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <ActionGroupItem id={childElementId("framework.window", windowId, "utilityBar", "unfold")} icon="chevron-right" text={utilitiesLabel} className={windowRailChromeLabelActionClass} disabled={disabled} onClick={onUnfold} />
+        <WindowPaneChromeToggle
+          id={childElementId("framework.window", windowId, "utilityBar", "unfold")}
+          icon={WINDOW_PANE_UTILITIES_ICON}
+          label={utilitiesLabel}
+          disabled={disabled}
+          onClick={onUnfold}
+        />
       </div>
     );
   }
 
   return (
     <div data-slot="utility-bar-chrome" data-expanded="true" className={windowRailChromeAsideClass}>
-      <ActionGroupItem id={childElementId("framework.window", windowId, "utilityBar", "fold")} icon="chevron-left" text={utilitiesLabel} className={windowRailChromeLabelActionClass} onClick={onFold} />
+      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "utilityBar", "fold")} icon={WINDOW_PANE_UTILITIES_ICON} label={utilitiesLabel} onClick={onFold} />
     </div>
   );
 };
@@ -17474,10 +17599,12 @@ function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange }: { read
 export interface PaneProps {
   readonly id: string;
   readonly anchor: Anchor;
-  /** @emoji 🧭 Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (no drag handle rendered). */
+  /** @emoji 🧭 Fires while dragging the pane's handle, once per anchor crossed — omit to make the pane fixed (drag handle still renders as a pure affordance, matching panel toggles). */
   readonly onAnchorChange?: (anchor: Anchor) => void;
   readonly folded?: boolean;
   readonly onFoldToggle?: () => void;
+  /** @emoji 🖼 Fixed semantic icon for the pane chrome toggle — never a fold-direction chevron. */
+  readonly icon: IconName;
   readonly label?: string;
   readonly size?: number;
   readonly onSizeChange?: (size: number) => void;
@@ -17498,13 +17625,14 @@ const PANE_DEFAULT_MAX_SIZE = 600;
  * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable on its inner edge,
  * and (given `onAnchorChange`) draggable by its handle to any of the eight anchors via {@link nearestAnchor} —
  * dropped anywhere inside the enclosing {@link PaneHost}, not just on the target slot, since the box is the only
- * drop target there is. */
+ * drop target there is. Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}. */
 export const Pane: React.FC<PaneProps> = ({
   id,
   anchor,
   onAnchorChange,
   folded = false,
   onFoldToggle,
+  icon,
   label,
   size,
   onSizeChange,
@@ -17526,14 +17654,18 @@ export const Pane: React.FC<PaneProps> = ({
   lastAnchorRef.current = anchor;
 
   const dragPointerProps = usePointerDrag<HTMLSpanElement>({
-    onStart: () => setDragging(true),
+    onStart: () => {
+      if (!onAnchorChange) return;
+      setDragging(true);
+    },
     onMove: (event) => {
+      if (!onAnchorChange) return;
       const hostRect = host?.containerRef.current?.getBoundingClientRect();
       if (!hostRect) return;
       const next = nearestAnchor(event.clientX, event.clientY, hostRect);
       if (next !== lastAnchorRef.current) {
         lastAnchorRef.current = next;
-        onAnchorChange?.(next);
+        onAnchorChange(next);
       }
     },
     onEnd: () => setDragging(false),
@@ -17562,21 +17694,14 @@ export const Pane: React.FC<PaneProps> = ({
       <FlowProvider inline={flow.inline} block={flow.block}>
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
         <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
-          {onAnchorChange && !mobile ? (
-            <span
-              data-slot="pane-drag-handle"
-              className="inline-flex shrink-0 cursor-grab touch-none items-center justify-center text-muted-foreground transition-colors hover:text-emphasized active:cursor-grabbing mx-half"
-              {...dragPointerProps}
-            >
-              <GripVerticalIcon size={12} />
-            </span>
-          ) : null}
-          <ActionGroupItem
+          <WindowPaneChromeToggle
             id={childElementId(id, "pane", "fold")}
-            icon={flowChevronIconName(flow.inline, effectiveFolded)}
-            text={label ?? id}
-            className={windowRailChromeLabelActionClass}
+            icon={icon}
+            label={label ?? id}
             onClick={mobile ? undefined : onFoldToggle}
+            dragPointerProps={mobile ? undefined : dragPointerProps}
+            showDragHandle={!mobile}
+            emphasized={dragging}
           />
         </div>
         {!effectiveFolded ? (
@@ -18874,10 +18999,10 @@ const Window: React.FC<WindowProps> = ({
   const measuresOverlaySizeStyle = measuresUnfolded ? ({ width: measuresWidthPx, maxWidth: "calc(100% - 0.5rem)", maxHeight: "100%" } satisfies React.CSSProperties) : undefined;
   const engagementZoneSizeStyle = windowEngagementZoneMaxWidthStyle(measuresReservePx, !!measures);
   const engagementZoneRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const engagementVisible = active && !measuresExpanded && !!(engagement || actionPane);
+  const engagementVisible = !measuresExpanded && !!(engagement || actionPane);
   const engagementExpanded = engagementVisible && !actionsFolded;
   const searchZoneSizeStyle = windowSearchZoneMaxWidthStyle(measuresReservePx, !!measures || !!engagement || !!actionPane);
-  const searchVisible = active && !measuresExpanded && !!search;
+  const searchVisible = !measuresExpanded && !!search;
   const searchExpanded = searchVisible && !searchFolded;
 
   reactHostPort.useEffect(() => {
@@ -18912,13 +19037,6 @@ const Window: React.FC<WindowProps> = ({
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [active, search, searchExpanded]);
-
-  reactHostPort.useEffect(() => {
-    if (!active) {
-      setActionsFolded(true);
-      setSearchFolded(true);
-    }
-  }, [active, onActionsFoldedChange, actionsFoldedProp]);
 
   reactHostPort.useLayoutEffect(() => {
     const body = windowBodyRef.current;
@@ -28123,16 +28241,47 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
     });
 
-    it("Window hides engagement and search overlays entirely while inactive", () => {
+    it("Window keeps engagement and search pane toggles visible while inactive, like window options", () => {
       const { container } = render(
-        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }}>
+        <Window id="engagement-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>}>
           <div>Body</div>
         </Window>,
       );
-      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeNull();
-      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-active")).toBeNull();
+      expect(container.querySelector('[data-slot="window-engagement-overlay"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-search-overlay"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-measures-overlay"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="utility-bar-overlay"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')).toBeTruthy();
+      expect(container.querySelector('[id="framework.window.engagementWindow.measures.unfold"]')).toBeTruthy();
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.engagement.toggle"]')!);
+      expect(screen.getByText("Idle")).toBeTruthy();
+      fireEvent.click(container.querySelector('[id="framework.window.engagementWindow.search.toggle"]')!);
+      expect(screen.getByPlaceholderText("Action")).toBeTruthy();
+    });
+
+    it("Window pane chrome uses semantic icons and trailing drag handles like panel toggles, never fold chevrons", () => {
+      const { container } = render(
+        <Window id="pane-chrome-window" engagement={{ status: [{ id: "s", content: "Idle" }] }} search={{ input: { placeholder: "Action" } }} measures={<div data-testid="measure-slot">LOD</div>} utilityBar={<button type="button">Utility</button>}>
+          <div>Body</div>
+        </Window>,
+      );
+      const toggles = Array.from(container.querySelectorAll('[data-slot="window-pane-chrome-toggle"]'));
+      expect(toggles.length).toBeGreaterThanOrEqual(4);
+      expect(container.querySelector('[data-slot="window-measures-chrome"] [data-icon="settings-2"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-engagement-chrome"] [data-icon="play"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-search-chrome"] [data-icon="search"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="utility-bar-chrome"] [data-icon="hammer"]')).toBeTruthy();
+      expect(container.querySelectorAll('[data-slot="window-measures-chrome"] [data-slot="drag-handle"]').length).toBe(1);
+      expect(container.querySelectorAll('[data-slot="window-engagement-chrome"] [data-slot="drag-handle"]').length).toBe(1);
+      expect(container.querySelectorAll('[data-slot="window-search-chrome"] [data-slot="drag-handle"]').length).toBe(1);
+      expect(container.querySelectorAll('[data-slot="utility-bar-chrome"] [data-slot="drag-handle"]').length).toBe(1);
+      expect(container.querySelector('[data-slot="window-measures-chrome"] [data-icon="chevron-left"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-engagement-chrome"] [data-icon="chevron-right"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-search-chrome"] [data-icon="chevron-down"]')).toBeNull();
     });
 
     it("Window panel overlays use the window frame inset without adding a second edge gap", () => {
@@ -28361,7 +28510,7 @@ if (import.meta.vitest) {
     it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
       const { container, rerender } = render(
         <PaneHost>
-          <Pane id="test-pane" anchor="top-right" label="Test">
+          <Pane id="test-pane" anchor="top-right" icon="box" label="Test">
             <div data-testid="pane-content">Content</div>
           </Pane>
         </PaneHost>,
@@ -28373,7 +28522,7 @@ if (import.meta.vitest) {
       expect(screen.getByTestId("pane-content")).toBeTruthy();
       rerender(
         <PaneHost>
-          <Pane id="test-pane" anchor="top-right" label="Test" folded>
+          <Pane id="test-pane" anchor="top-right" icon="box" label="Test" folded>
             <div data-testid="pane-content">Content</div>
           </Pane>
         </PaneHost>,
@@ -28384,7 +28533,7 @@ if (import.meta.vitest) {
     it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
       const { container, rerender } = render(
         <PaneHost>
-          <Pane id="direction-pane" anchor="top-left" label="Direction">
+          <Pane id="direction-pane" anchor="top-left" icon="box" label="Direction">
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28398,7 +28547,7 @@ if (import.meta.vitest) {
 
       rerender(
         <PaneHost>
-          <Pane id="direction-pane" anchor="bottom-left" label="Direction">
+          <Pane id="direction-pane" anchor="bottom-left" icon="box" label="Direction">
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28408,7 +28557,7 @@ if (import.meta.vitest) {
 
       rerender(
         <PaneHost>
-          <Pane id="direction-pane" anchor="left-middle" label="Direction">
+          <Pane id="direction-pane" anchor="left-middle" icon="box" label="Direction">
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28424,21 +28573,21 @@ if (import.meta.vitest) {
       });
       const { container, rerender } = render(
         <PaneHost>
-          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} label="Drag">
+          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
             <div>Content</div>
           </Pane>
         </PaneHost>,
       );
       const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
       host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-      const handle = container.querySelector('[data-slot="pane-drag-handle"]') as HTMLElement;
+      const handle = container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]') as HTMLElement;
       fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
       fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
       expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
       fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
       rerender(
         <PaneHost>
-          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} label="Drag">
+          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28446,15 +28595,16 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
     });
 
-    it("Pane without onAnchorChange renders no drag handle (fixed pane)", () => {
+    it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
       const { container } = render(
         <PaneHost>
-          <Pane id="fixed-pane" anchor="bottom-left" label="Fixed">
+          <Pane id="fixed-pane" anchor="bottom-left" icon="box" label="Fixed">
             <div>Content</div>
           </Pane>
         </PaneHost>,
       );
-      expect(container.querySelector('[data-slot="pane-drag-handle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="pane-chrome"] [data-icon="box"]')).toBeTruthy();
     });
 
     it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {
@@ -28464,7 +28614,7 @@ if (import.meta.vitest) {
       });
       const { container, rerender } = render(
         <PaneHost>
-          <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+          <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28476,7 +28626,7 @@ if (import.meta.vitest) {
       expect(onSizeChange).toHaveBeenCalledWith(350);
       rerender(
         <PaneHost>
-          <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+          <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28487,7 +28637,7 @@ if (import.meta.vitest) {
     it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
       function DeepChild() {
         return usePaneSlot(
-          <Pane id="slotted-pane" anchor="bottom-right" label="Slotted">
+          <Pane id="slotted-pane" anchor="bottom-right" icon="box" label="Slotted">
             <div data-testid="slotted-content">Slotted</div>
           </Pane>,
         );
@@ -28502,7 +28652,7 @@ if (import.meta.vitest) {
 
       function OrphanDeepChild() {
         return usePaneSlot(
-          <Pane id="orphan-pane" anchor="top-left">
+          <Pane id="orphan-pane" anchor="top-left" icon="box">
             {null}
           </Pane>,
         );
@@ -28515,21 +28665,21 @@ if (import.meta.vitest) {
       const { container } = render(
         <UiMobileProvider mobile>
           <PaneHost>
-            <Pane id="mobile-pane" anchor="bottom-right" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
+            <Pane id="mobile-pane" anchor="bottom-right" icon="box" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
               <div data-testid="mobile-pane-content">Content</div>
             </Pane>
           </PaneHost>
         </UiMobileProvider>,
       );
-      expect(container.querySelector('[data-slot="pane-drag-handle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
       expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
     });
 
-    it("mirrors dir=rtl and the fold chevron for right anchors, while the body carries no dir override", () => {
+    it("mirrors dir=rtl for right anchors with a fixed semantic icon and trailing drag handle, while the body carries no dir override", () => {
       const { container: leftContainer } = render(
         <PaneHost>
-          <Pane id="left-pane" anchor="top-left" label="Left">
+          <Pane id="left-pane" anchor="top-left" icon="box" label="Left">
             <div data-testid="left-pane-content">Content</div>
           </Pane>
         </PaneHost>,
@@ -28538,11 +28688,12 @@ if (import.meta.vitest) {
       expect(leftContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
       expect(leftContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
       expect(leftContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
-      expect(leftContainer.querySelector('[data-icon="chevron-right"]')).toBeTruthy();
+      expect(leftContainer.querySelector('[data-icon="box"]')).toBeTruthy();
+      expect(leftContainer.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
 
       const { container: rightContainer } = render(
         <PaneHost>
-          <Pane id="right-pane" anchor="top-right" label="Right">
+          <Pane id="right-pane" anchor="top-right" icon="camera" label="Right">
             <div data-testid="right-pane-content">Content</div>
           </Pane>
         </PaneHost>,
@@ -28551,13 +28702,14 @@ if (import.meta.vitest) {
       expect(rightContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
       expect(rightContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
       expect(rightContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
-      expect(rightContainer.querySelector('[data-icon="chevron-left"]')).toBeTruthy();
+      expect(rightContainer.querySelector('[data-icon="camera"]')).toBeTruthy();
+      expect(rightContainer.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
     });
 
     it("centers a middle anchor with items-center instead of items-start", () => {
       const { container } = render(
         <PaneHost>
-          <Pane id="middle-pane" anchor="top-middle" label="Middle">
+          <Pane id="middle-pane" anchor="top-middle" icon="box" label="Middle">
             <div>Content</div>
           </Pane>
         </PaneHost>,
@@ -28902,7 +29054,7 @@ if (treeVitest) {
         <GhostProvider>
           <GhostRegionShell>
             <PaneHost>
-              <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+              <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
                 <div>Content</div>
               </Pane>
             </PaneHost>
@@ -30179,6 +30331,25 @@ if (treeVitest) {
       expect(document.documentElement.dataset.uiDevice).toBe("desktop");
       release();
       resetElementsSurfaceChromeForTests();
+    });
+
+    it("useCanvasAppearanceSync does not re-run sync when the callback identity changes each render", async () => {
+      const { render } = await import("@testing-library/react");
+      const sync = vi.fn();
+      function Harness({ n }: { readonly n: number }) {
+        useCanvasAppearanceSync(() => {
+          sync(n);
+        });
+        return <span data-testid="harness">{n}</span>;
+      }
+      const { rerender } = render(<Harness n={1} />);
+      expect(sync).toHaveBeenCalledTimes(1);
+      rerender(<Harness n={2} />);
+      rerender(<Harness n={3} />);
+      expect(sync).toHaveBeenCalledTimes(1);
+      document.documentElement.dataset.uiAppearance = "dark";
+      await vi.waitFor(() => expect(sync.mock.calls.length).toBeGreaterThan(1));
+      delete document.documentElement.dataset.uiAppearance;
     });
   });
 

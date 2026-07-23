@@ -1,0 +1,7 @@
+{
+  "hasRenderError": false,
+  "canvasCount": 3,
+  "windowSlots": 2,
+  "errCount": 0,
+  "bodyStart": "Document\nCatalogue\nInspection\nFullscreen\nsemio · procedural · 3d\nExample\nHexagonal Mushroom Column\nEdit\nGenerate\nFlow\nFocus\nClose\nWindow Options\nActions\nUtilities\nPreview\nFocus\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}

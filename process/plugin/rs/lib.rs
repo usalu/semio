@@ -9,7 +9,7 @@ use semio_framework_plugin::{
     app_labels, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_indexed_with_face_groups, mesh_from_kind, resolve_labels, tree_item_desc, tree_item_with_action,
     ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_text, world3d_camera_json, world3d_mesh_id_from_url, world3d_scene, world3d_selection_json, world3d_sun_measures, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor,
     ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, MeshData, MeshExporter, MeshImporter, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementStatus, WindowMeasure, WorldSunConfig,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::{Deserialize, Serialize};
@@ -961,7 +961,7 @@ fn number_field(id: impl Into<String>, label: impl Into<String>, value: f64, tar
         description: None,
         required: None,
         error: None,
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
             id: format!("{id}.input"),
             input_kind: "number".into(),
             value: value.to_string(),
@@ -984,7 +984,7 @@ fn text_field(id: impl Into<String>, label: impl Into<String>, value: &str, targ
         description: None,
         required: None,
         error: None,
-        child: Box::new(UiNode::Input(UiInputNode {
+        child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
             id: format!("{id}.input"),
             input_kind: "text".into(),
             value: value.into(),
@@ -1003,7 +1003,7 @@ fn build_document_tree(fixture: &process_3d::Process3dDocument, runtime: &Proces
     let stock = &fixture.stock;
     let stock_item = UiTreeItemNode {
         icon_id: Some("box".into()),
-        selected: Some(runtime.selected_id.as_deref() == Some(stock.id.as_str())),
+        presence: UiPresence::selected(runtime.selected_id.as_deref() == Some(stock.id.as_str())),
         action: Some(process3d_action("setSelection", Some(json!({ "id": stock.id })))),
         ..UiTreeItemNode::base(stock.id.clone(), stock.label.clone())
     };
@@ -1015,7 +1015,7 @@ fn build_document_tree(fixture: &process_3d::Process3dDocument, runtime: &Proces
         .map(|(index, step)| UiTreeItemNode {
             description: if index >= cursor { Some("pending".into()) } else { None },
             icon_id: Some(process3d_measure_icon(&step.measure).into()),
-            selected: Some(runtime.selected_id.as_deref() == Some(step.id.as_str())),
+            presence: UiPresence::selected(runtime.selected_id.as_deref() == Some(step.id.as_str())),
             action: Some(process3d_action("setSelection", Some(json!({ "id": step.id })))),
             hover_action: Some(process3d_action("setHover", Some(json!({ "id": step.id })))),
             unhover_action: Some(process3d_action("setHover", None)),
@@ -1028,7 +1028,7 @@ fn build_document_tree(fixture: &process_3d::Process3dDocument, runtime: &Proces
                 },
                 UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: process3d_action("removeStep", Some(json!({ "id": step.id }))), reveal_on_hover: Some(true) },
             ]),
-            is_hidden: Some(!step.enabled),
+            dimmed: Some(!step.enabled),
             ..UiTreeItemNode::base(step.id.clone(), step.label.clone())
         })
         .collect();
@@ -1097,7 +1097,7 @@ fn build_stock_inspector(stock: &Stock, fixture: &process_3d::Process3dDocument,
     if let Some(volume) = processed_volume(fixture) {
         fields.push(ui_inspector_readonly_field("process3d-inspector.volume", labels.volume, format!("{volume:.4} m³")));
     }
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "process3d-inspector.stock".into(), label: labels.stock.into(), default_open: Some(true), fields }])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.stock".into(), label: labels.stock.into(), default_open: Some(true), fields }])
 }
 
 fn build_step_inspector(step: &ProcessStep, stock: &Stock, labels: &Process3dLabels) -> UiNode {
@@ -1138,7 +1138,7 @@ fn build_step_inspector(step: &ProcessStep, stock: &Stock, labels: &Process3dLab
     fields.push(number_field("process3d-inspector.posY", labels.field_pos_y, pose.position[1], &target, "posY"));
     fields.push(number_field("process3d-inspector.posZ", labels.field_pos_z, pose.position[2], &target, "posZ"));
     fields.push(number_field("process3d-inspector.angle", labels.field_angle, pose.angle, &target, "angle"));
-    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "process3d-inspector.step".into(), label: process3d_measure_label(&step.measure, labels).into(), default_open: Some(true), fields }])
+    ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(), id: "process3d-inspector.step".into(), label: process3d_measure_label(&step.measure, labels).into(), default_open: Some(true), fields }])
 }
 
 fn build_inspector_tree(fixture: &process_3d::Process3dDocument, runtime: &Process3dRuntime, labels: &Process3dLabels) -> UiNode {

@@ -7,7 +7,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup,
     ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_stack_vertical, ui_text, App, MediaClass, MediaForm, MediaType, OsMediaCapability, ResourceKindSpec,
     InkCanvasScene, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, DwgDrawing, DwgGeometry,
     HostEffect, PanelTreeBuilder, UiFieldNode, UiInputNode,
-    UiInspectorFieldGroup, UiNode, UiSectionNode, UiToggleNode, UiTreeItemNode, ViewState,
+    UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiToggleNode, UiTreeItemNode, ViewState,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
     UI_INSPECTOR_MIXED_PLACEHOLDER, create_default_layout,
@@ -1124,7 +1124,7 @@ fn block_tree_item(block: &NoteBlockNode) -> UiTreeItemNode {
         default_open: Some(matches!(block, NoteBlockNode::Group { .. })),
         draggable: Some(true),
         items: nested,
-        is_hidden: if block_visible(block) { None } else { Some(true) },
+        dimmed: if block_visible(block) { None } else { Some(true) },
         ..tree_item_with_action(
             block_tree_row_id(block),
             block_name(block),
@@ -1177,7 +1177,7 @@ fn render_catalogue_panel(labels: &NotePlayLabels) -> UiNode {
         id: "note-catalogue".into(),
         label: Some(labels.catalogue_title.into()),
         default_open: Some(true),
-        loading: None,
+        presence: UiPresence::default(),
         children: vec![
             ui_text(labels.catalogue_text),
             ui_text(labels.catalogue_image),
@@ -1186,9 +1186,7 @@ fn render_catalogue_panel(labels: &NotePlayLabels) -> UiNode {
             ui_text(labels.catalogue_ink),
             ui_text(labels.catalogue_group),
         ],
-    
-        waiting: None,
-}])
+    }])
 }
 
 fn inspector_patch(block_ids: &[String], field: &str) -> ActionDescriptor {
@@ -1218,7 +1216,9 @@ fn inspector_text_field(block_ids: &[String], field_id: &str, label: &str, value
             step: None,
             accept: None,
             on_change: inspector_patch(block_ids, field),
+            presence: UiPresence::default(),
         })),
+        presence: UiPresence::default(),
     })
 }
 
@@ -1249,7 +1249,9 @@ fn inspector_number_field(block_ids: &[String], field_id: &str, label: &str, val
             step: None,
             accept: None,
             on_change: inspector_patch(block_ids, field),
+            presence: UiPresence::default(),
         })),
+        presence: UiPresence::default(),
     })
 }
 
@@ -1298,6 +1300,7 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
         id: "note-properties.block".into(),
         label: labels.inspector_block.into(),
         default_open: Some(true),
+        presence: UiPresence::default(),
         fields: vec![
             inspector_text_field(&block_ids, "note-properties.name", labels.field_name, &names, "name"),
             inspector_number_field(&block_ids, "note-properties.x", labels.field_x, &xs, "x"),
@@ -1313,10 +1316,11 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "note-properties.visible.toggle".into(),
                     icon_id: "eye".into(),
-                    pressed: visible_mixed.uniform && visible_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&block_ids, "visible"),
+                    presence: UiPresence::selected(visible_mixed.uniform && visible_mixed.pressed),
                 })),
+                presence: UiPresence::default(),
             }),
             UiNode::Field(UiFieldNode {
                 id: "note-properties.locked".into(),
@@ -1327,10 +1331,11 @@ fn render_properties_panel(document: &NoteDocument, selected_ids: &[String], vie
                 child: Box::new(UiNode::Toggle(UiToggleNode {
                     id: "note-properties.locked.toggle".into(),
                     icon_id: "lock".into(),
-                    pressed: locked_mixed.uniform && locked_mixed.pressed,
                     text: None,
                     on_change: inspector_patch(&block_ids, "locked"),
+                    presence: UiPresence::selected(locked_mixed.uniform && locked_mixed.pressed),
                 })),
+                presence: UiPresence::default(),
             }),
         ],
     }])

@@ -3,7 +3,7 @@
 pub mod app_2d {
     //! 🎲 Procedural 2D plugin — procedural flow play app bundled as a hot-swappable WASM component.
 
-    use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, FlowEvalDriver, FlowFixture, FlowHost, Widget};
+    use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_ops, Procedural2dDocument, Procedural2dOp, PROCEDURAL_2D_SCHEMA};
     use protocol::{
@@ -47,11 +47,12 @@ pub mod app_2d {
 
     //#region 🔖Types
     /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, the
-    /// active show mode, the off-main-thread eval driver, and the derived generation preview all
-    /// live here on the app struct, out of the VCS document.
+    /// graph camera, the active show mode, the off-main-thread eval driver, and the derived generation
+    /// preview all live here on the app struct, out of the VCS document.
     #[derive(Clone, Debug)]
     struct Procedural2dPlayRuntime {
         selected_ids: Vec<String>,
+        camera: CameraJson,
         show_mode: String,
         eval_driver: FlowEvalDriver,
         selected_generation_id: Option<String>,
@@ -62,6 +63,7 @@ pub mod app_2d {
         fn default() -> Self {
             Self {
                 selected_ids: Vec::new(),
+                camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
                 show_mode: default_show_mode(),
                 eval_driver: FlowEvalDriver::default(),
                 selected_generation_id: None,
@@ -587,7 +589,7 @@ pub mod app_2d {
                 ui_text(format!("{} {}", labels.show_mode_prefix, play.runtime.show_mode)),
             ]);
         }
-        ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "procedural2d-play-inspector.selection".into(),
             label: labels.selection.into(),
             default_open: Some(true),
@@ -604,7 +606,7 @@ pub mod app_2d {
     fn render_main_graph(play: &Procedural2dPlayView, labels: &Procedural2dLabels) -> UiNode {
         let host = host_from_fixture(&play.fixture);
         let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
-        let viewport_json = serde_json::to_string(&play.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+        let viewport_json = serde_json::to_string(&play.runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
         let selection_json = if play.runtime.selected_ids.is_empty() {
             None
         } else {
@@ -641,9 +643,9 @@ pub mod app_2d {
             PROCEDURAL2D_PLAY_SURFACE_PREVIEW,
             PROCEDURAL2D_PLAY_APP_ID,
             Canvas2dScene {
-                camera_x: play.fixture.camera.x,
-                camera_y: play.fixture.camera.y,
-                zoom: play.fixture.camera.zoom,
+                camera_x: play.runtime.camera.x,
+                camera_y: play.runtime.camera.y,
+                zoom: play.runtime.camera.zoom,
                 layers_json: eval_preview_layers(play, true),
             },
         )
@@ -694,9 +696,9 @@ pub mod app_2d {
             PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW,
             PROCEDURAL2D_PLAY_APP_ID,
             Canvas2dScene {
-                camera_x: play.fixture.camera.x,
-                camera_y: play.fixture.camera.y,
-                zoom: play.fixture.camera.zoom,
+                camera_x: play.runtime.camera.x,
+                camera_y: play.runtime.camera.y,
+                zoom: play.runtime.camera.zoom,
                 layers_json: layers,
             },
         )
@@ -816,18 +818,14 @@ pub mod app_2d {
                     ActionEmit { effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() }, ..ActionEmit::default() }
                 }
                 "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
-                // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+                // 📷 Graph camera — ephemeral view state (never a document op), same model as flow-play.
                 "nodeGraphViewport" => {
                     if let Some(camera) = args
                         .and_then(|value| value.get("viewportJson"))
                         .and_then(|value| value.as_str())
                         .and_then(|json| serde_json::from_str(json).ok())
                     {
-                        return ActionEmit {
-                            ops: vec![Procedural2dOp::SetCamera { camera }],
-                            coalesce_key: Some("camera".into()),
-                            ..Default::default()
-                        };
+                        self.runtime.camera = camera;
                     }
                     ActionEmit::default()
                 }
@@ -1065,7 +1063,6 @@ pub mod app_2d {
                     PROCEDURAL2D_PLAY_BODY_INSPECTION,
                 )
                 // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
-                .operation("nodeGraphViewport", "Set Viewport")
                 .operation("nodeGraphEdit", "Edit Graph")
                 .operation("moveMediaNode", "Move Node")
                 .operation("addWidget", "Add Widget")
@@ -1076,7 +1073,8 @@ pub mod app_2d {
                 .operation("removeGeneration", "Remove Generation")
                 .operation("renameGeneration", "Rename Generation")
                 .operation("updateGenerationValues", "Update Generation Values")
-                // 👁️ Ephemeral view actions — selection, hover, the show-mode display toggle, and evaluation scratch (emit no ops).
+                // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no ops).
+                .view_action("nodeGraphViewport", "Set Viewport")
                 .view_action("setSelection", "Set Selection")
                 .view_action("selectNode", "Select Node")
                 .view_action("nodeGraphSelect", "Node Graph Select")
@@ -1306,7 +1304,7 @@ pub mod app_3d {
         dag::DagFixture,
         flow_backed_node_graph_extras,
         forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-        FlowEvalDriver, FlowFixture, FlowHost, Widget,
+        CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget,
     };
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_ops, Procedural3dDocument, Procedural3dOp, PROCEDURAL_3D_SCHEMA};
@@ -1424,8 +1422,8 @@ pub mod app_3d {
     }
 
     /// 👁️ Ephemeral per-session view state — never part of the persisted document. Selection, hover,
-    /// preview camera, sun/LOD display options, the derived mesh preview caches, and the active
-    /// generation selection/preview all live here on the app struct, out of the VCS document.
+    /// graph camera, preview camera, sun/LOD display options, the derived mesh preview caches, and the
+    /// active generation selection/preview all live here on the app struct, out of the VCS document.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Procedural3dRuntime {
@@ -1434,6 +1432,7 @@ pub mod app_3d {
         show_mode: String,
         selection_method: String,
         hovered_node_id: Option<String>,
+        camera: CameraJson,
         preview_camera: Procedural3dPreviewCamera,
         preview_cache: Option<Procedural3dPreviewCache>,
         generation_preview_cache: Option<Procedural3dPreviewCache>,
@@ -1452,6 +1451,7 @@ pub mod app_3d {
                 show_mode: default_show_mode(),
                 selection_method: default_selection_method(),
                 hovered_node_id: None,
+                camera: CameraJson { x: 0.0, y: 0.0, zoom: 1.0 },
                 preview_camera: Procedural3dPreviewCamera::default(),
                 preview_cache: None,
                 generation_preview_cache: None,
@@ -2241,7 +2241,7 @@ pub mod app_3d {
             fields.push(UiNode::Field(UiFieldNode {
                 id: "procedural-play-inspector.value".into(),
                 label: labels.value_field.into(),
-                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode {
+                child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode { presence: UiPresence::default(),
                     id: "procedural-play-inspector.value.input".into(),
                     input_kind: "number".into(),
                     value: mixed.value.to_string(),
@@ -2266,7 +2266,7 @@ pub mod app_3d {
                 &format!("{min}..{max}"),
             ));
         }
-        ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
+        ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { presence: UiPresence::default(),
             id: "procedural-play-inspector.widget".into(),
             label: labels.widget_group.into(),
             default_open: None,
@@ -2507,18 +2507,14 @@ pub mod app_3d {
                     }
                     ActionEmit::default()
                 }
-                // 📷 Canvas camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+                // 📷 Graph camera — ephemeral view state (never a document op), same model as flow-play.
                 "nodeGraphViewport" => {
                     if let Some(camera) = args
                         .and_then(|value| value.get("viewportJson"))
                         .and_then(|value| value.as_str())
                         .and_then(|json| serde_json::from_str(json).ok())
                     {
-                        return ActionEmit {
-                            ops: vec![Procedural3dOp::SetCamera { camera }],
-                            coalesce_key: Some("camera".into()),
-                            ..Default::default()
-                        };
+                        self.runtime.camera = camera;
                     }
                     ActionEmit::default()
                 }
@@ -2534,7 +2530,8 @@ pub mod app_3d {
                         .map(|generation| Procedural3dOp::Generation(GenerationOp::Remove { id: generation.id.clone() }))
                         .collect();
                     ops.extend(procedural3d_fixture_ops(fixture, &target.fixture));
-                    self.runtime = Procedural3dRuntime::default();
+                    let camera = target.fixture.camera.clone();
+                    self.runtime = Procedural3dRuntime { camera, ..Procedural3dRuntime::default() };
                     ActionEmit::ops(ops)
                 }
                 "nodeGraphEdit" => {
@@ -2730,7 +2727,7 @@ pub mod app_3d {
                 PROCEDURAL_3D_PLAY_BODY_MAIN => {
                     let (nodes_json, edges_json) = fixture_to_media_graph(&host.dag.fixture);
                     let viewport_json =
-                        serde_json::to_string(&envelope.fixture.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
+                        serde_json::to_string(&envelope.runtime.camera).unwrap_or_else(|_| r#"{"x":0,"y":0,"zoom":1}"#.into());
                     let selection_json = if envelope.runtime.selected_node_ids.is_empty() {
                         None
                     } else {
@@ -2971,7 +2968,6 @@ pub mod app_3d {
                     PROCEDURAL_3D_PLAY_BODY_INSPECTION,
                 )
                 // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
-                .operation("nodeGraphViewport", "Set Viewport")
                 .operation("setActiveExample", "Set Active Example")
                 .operation("nodeGraphEdit", "Edit Graph")
                 .operation("deleteSelection", "Delete Selection")
@@ -2987,7 +2983,8 @@ pub mod app_3d {
                 .operation("removeGeneration", "Remove Generation")
                 .operation("renameGeneration", "Rename Generation")
                 .operation("updateGenerationValues", "Update Generation Values")
-                // 👁️ Ephemeral view actions — selection, hover, world picking, sun/LOD/show-mode display toggles, preview camera (emit no ops).
+                // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera (emit no ops).
+                .view_action("nodeGraphViewport", "Set Viewport")
                 .view_action("setSelection", "Set Selection")
                 .view_action("selectNode", "Select Node")
                 .view_action("nodeGraphSelect", "Node Graph Select")

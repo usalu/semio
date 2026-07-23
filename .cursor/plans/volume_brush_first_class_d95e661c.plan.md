@@ -16,10 +16,10 @@ todos:
     status: completed
   - id: tests-verify
     content: Update/extend puzzle-plugin tests and verify fill vs volume-brush measures
-    status: in_progress
+    status: completed
   - id: ticket-close
     content: Close ticket with summary and touched files
-    status: pending
+    status: completed
 isProject: false
 ---
 

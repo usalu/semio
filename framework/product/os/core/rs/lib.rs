@@ -903,6 +903,18 @@ pub mod host {
         serde_json::to_string_pretty(document).map_err(|error| VcsError::Serialize(error.to_string()))
     }
 
+    /// @emoji 📦 Serializes an `OsDocument` as the bare `DocumentVcsEnvelope` JSON `loadAppDocument` expects.
+    pub fn os_document_to_envelope_json(document: &OsDocument) -> Result<String, VcsError> {
+        let envelope = OsEnvelope {
+            schema: document.schema.clone(),
+            id: document.id.clone(),
+            vcs: document.vcs.clone(),
+            backbone: document.backbone.clone(),
+            active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone(),
+        };
+        serde_json::to_string(&envelope).map_err(|error| VcsError::Serialize(error.to_string()))
+    }
+
     pub fn os_document_from_json(json: &str) -> Result<OsDocument, VcsError> {
         let document: OsDocument = serde_json::from_str(json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         if document.schema != OS_STUDIO_SCHEMA {
@@ -4471,7 +4483,7 @@ pub mod registry {
 pub use backbone::{open_file_studio_backbone, open_folder_studio_backbone};
 pub use host::{
     apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection, delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_document_from_json,
-    os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
+    os_document_to_envelope_json, os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
     OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{

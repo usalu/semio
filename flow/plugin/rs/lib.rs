@@ -10,7 +10,7 @@ use protocol::{handle_generation_action, render_generation_form_body, render_gen
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
-    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
+    App, AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence,
     UiTreeItemNode, UiTreeSectionNode, ViewState, WindowMeasure, MeasureSelectItem, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
@@ -289,6 +289,8 @@ fn flow_widget_drag_json(descriptor: &Value) -> Value {
 }
 
 /// 🖱️ Selection-aware graph context menu shared by flow-backed node-graph apps.
+/// Always emits the full item set (preview / zoom / clear / delete) so hosts can open the menu
+/// immediately on right-click; selection-scoped rows are `disabled` when nothing is selected.
 fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowFixture, labels: &FlowPlayLabels) -> String {
     let selected = &runtime.selected_node_ids;
     let has_selection = !selected.is_empty();
@@ -302,42 +304,44 @@ fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowF
         json!({ "id": "add-node", "label": labels.add_node, "icon": "plus", "action": "openSpotlight" }),
         json!({ "id": "select-all", "label": labels.select_all, "icon": "maximize-2", "action": "selectAll" }),
         json!({ "id": "reorganize", "label": labels.reorganize, "icon": "layout-grid", "action": "reorganize" }),
-    ];
-    if has_selection {
-        items.push(json!({ "id": "sep-selection", "separator": true }));
-        items.push(json!({
+        json!({ "id": "sep-selection", "separator": true }),
+        json!({
             "id": "toggle-preview",
             "label": if all_preview_off { labels.show_preview } else { labels.hide_preview },
             "icon": if all_preview_off { "eye" } else { "eye-off" },
-            "checked": !all_preview_off,
+            "checked": if has_selection { Some(!all_preview_off) } else { None::<bool> },
+            "disabled": !has_selection,
             "action": "setPreviewOff",
             "args": { "ids": selected, "value": !all_preview_off },
-        }));
-        items.push(json!({ "id": "clear-selection", "label": labels.clear_selection, "icon": "square-dashed", "action": "clearSelection" }));
-        if is_image {
-            items.push(json!({ "id": "replace-image", "label": labels.replace_image, "icon": "image", "action": "replaceImage", "args": { "id": &selected[0] } }));
-        }
-        items.push(json!({ "id": "sep-delete", "separator": true }));
-        items.push(json!({
-            "id": "delete-selection",
-            "label": labels.delete_selection,
-            "icon": "trash",
-            "action": "nodeGraphEdit",
-            "args": { "ops": [{ "op": "deleteSelection" }] },
-            "destructive": true,
-        }));
-    } else {
-        items.push(json!({ "id": "sep-delete", "separator": true }));
-        items.push(json!({
-            "id": "delete-selection",
-            "label": labels.delete_selection,
-            "icon": "trash",
-            "action": "nodeGraphEdit",
-            "args": { "ops": [{ "op": "deleteSelection" }] },
-            "destructive": true,
-            "disabled": true,
-        }));
+        }),
+        json!({
+            "id": "zoom-to-selection",
+            "label": labels.zoom_to_selection,
+            "icon": "scan-search",
+            "disabled": !has_selection,
+            "action": "focusSelection",
+        }),
+        json!({
+            "id": "clear-selection",
+            "label": labels.clear_selection,
+            "icon": "square-dashed",
+            "disabled": !has_selection,
+            "action": "clearSelection",
+        }),
+    ];
+    if is_image {
+        items.push(json!({ "id": "replace-image", "label": labels.replace_image, "icon": "image", "action": "replaceImage", "args": { "id": &selected[0] } }));
     }
+    items.push(json!({ "id": "sep-delete", "separator": true }));
+    items.push(json!({
+        "id": "delete-selection",
+        "label": labels.delete_selection,
+        "icon": "trash",
+        "action": "nodeGraphEdit",
+        "args": { "ops": [{ "op": "deleteSelection" }] },
+        "destructive": true,
+        "disabled": !has_selection,
+    }));
     serde_json::to_string(&items).unwrap_or_else(|_| "[]".into())
 }
 //#endregion 🔖DocumentHelpers
@@ -499,9 +503,7 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode { loading: None, id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items, 
- waiting: None,
-})
+            Some(UiTreeSectionNode { presence: UiPresence::default(), id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items })
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
@@ -533,13 +535,9 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
             tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
         })
         .collect();
-    let mut sections = vec![UiTreeSectionNode { loading: None, id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed, 
- waiting: None,
-}];
+    let mut sections = vec![UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode { loading: None, id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions, 
- waiting: None,
-});
+        sections.push(UiTreeSectionNode { presence: UiPresence::default(), id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
     }
     sections
 }
@@ -550,7 +548,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
     let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
     vec![
         UiTreeSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: "flow-play-catalogue.sources".into(),
             label: Some(labels.sources.into()),
             default_open: Some(true),
@@ -563,7 +561,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: "flow-play-catalogue.components".into(),
             label: Some(labels.components.into()),
             default_open: Some(true),
@@ -576,7 +574,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: "flow-play-catalogue.sinks".into(),
             label: Some(labels.sinks.into()),
             default_open: Some(false),
@@ -697,7 +695,7 @@ fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> O
 fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: "flow-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
@@ -707,7 +705,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
     let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
     if widgets.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            loading: None, waiting: None,
+            presence: UiPresence::default(),
             id: "flow-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
@@ -730,10 +728,10 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
             id: "flow-play-inspector.kind.inputSlider".into(),
             label: "inputSlider".into(),
             default_open: None,
-            fields: vec![UiNode::Field(UiFieldNode {
+            fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "flow-play-inspector.slider-value".into(),
                 label: labels.value.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "flow-play-inspector.slider-value.input".into(),
                     input_kind: "number".into(),
                     value: if mixed.uniform { mixed.value.to_string() } else { String::new() },
@@ -765,10 +763,10 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
             id: "flow-play-inspector.kind.inputNote".into(),
             label: "inputNote".into(),
             default_open: None,
-            fields: vec![UiNode::Field(UiFieldNode {
+            fields: vec![UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "flow-play-inspector.note-text".into(),
                 label: labels.text.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "flow-play-inspector.note-text.input".into(),
                     input_kind: "text".into(),
                     value: mixed.value,
@@ -791,10 +789,10 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
     if widget_ids.len() == 1 {
         base_fields.insert(
             0,
-            UiNode::Field(UiFieldNode {
+            UiNode::Field(UiFieldNode {presence: UiPresence::default(), 
                 id: "flow-play-inspector.id".into(),
                 label: labels.id.into(),
-                child: Box::new(UiNode::Input(UiInputNode {
+                child: Box::new(UiNode::Input(UiInputNode {presence: UiPresence::default(), 
                     id: "flow-play-inspector.id.input".into(),
                     input_kind: "text".into(),
                     value: widget_ids[0].clone(),
@@ -812,7 +810,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
             }),
         );
     }
-    groups.push(UiInspectorFieldGroup { id: "flow-play-inspector.base".into(), label: labels.widget.into(), default_open: None, fields: base_fields });
+    groups.push(UiInspectorFieldGroup { presence: UiPresence::default(), id: "flow-play-inspector.base".into(), label: labels.widget.into(), default_open: None, fields: base_fields });
     ui_inspector_groups_to_tree(&groups)
 }
 //#endregion 🔖Panels
@@ -1699,6 +1697,9 @@ mod tests {
         assert!(menu_json.contains(r#""icon":"plus""#), "add-node icon: {menu_json}");
         assert!(menu_json.contains(r#""icon":"trash""#), "delete icon: {menu_json}");
         assert!(menu_json.contains(r#""destructive":true"#), "delete destructive: {menu_json}");
+        assert!(menu_json.contains("setPreviewOff"), "empty menu still lists preview: {menu_json}");
+        assert!(menu_json.contains("focusSelection"), "empty menu still lists zoom: {menu_json}");
+        assert!(menu_json.contains(r#""disabled":true"#), "selection actions disabled when empty: {menu_json}");
     }
 
     #[test]
@@ -1708,11 +1709,29 @@ mod tests {
         let menu = context_menu_items(&mut app, &ViewState::default()).to_string();
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
+        assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
+        assert!(!menu.contains(r#""id":"toggle-preview","label":"Hide preview","icon":"eye-off","checked":true,"disabled":true"#), "preview must be enabled with selection: {menu}");
         app.handle_action("setPreviewOff", Some(&json!({ "ids": ["slider"], "value": true })), &ViewState::default(), &meta("local")).expect("setPreviewOff");
         let after_menu = context_menu_items(&mut app, &ViewState::default()).to_string();
         let preview_off = preview_off_ids(&mut app, &ViewState::default());
         assert_eq!(preview_off, json!(["slider"]), "preview_off should land on scene: {preview_off}");
         assert!(after_menu.contains("Show preview") || after_menu.contains(r#""icon":"eye""#), "menu should offer show preview: {after_menu}");
+    }
+
+    #[test]
+    fn context_menu_at_selects_target_and_enables_preview() {
+        let mut app = new_app::<FlowPlayApp>();
+        let before = context_menu_items(&mut app, &ViewState::default()).to_string();
+        assert!(before.contains(r#""disabled":true"#), "preview starts disabled: {before}");
+        app.handle_action("contextMenuAt", Some(&json!({ "id": "slider" })), &ViewState::default(), &meta("local")).expect("contextMenuAt");
+        let after = context_menu_items(&mut app, &ViewState::default()).to_string();
+        assert!(after.contains("setPreviewOff"), "menu keeps preview: {after}");
+        assert!(after.contains(r#""ids":["slider"]"#) || after.contains("slider"), "preview args target the clicked node: {after}");
+        let toggle = after
+            .split("\"id\":\"toggle-preview\"")
+            .nth(1)
+            .unwrap_or("");
+        assert!(!toggle.contains("\"disabled\":true"), "preview enabled after contextMenuAt: {after}");
     }
 
     #[test]

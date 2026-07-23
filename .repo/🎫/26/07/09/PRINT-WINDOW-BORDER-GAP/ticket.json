@@ -1,9 +1,9 @@
 {
   "title": "Print Window Border Gap",
   "emoji": "🪟",
-  "status": "open",
+  "status": "closed",
   "description": "Print windows have a small gap between the title bar first line and the window content box; borders should touch seamlessly.",
-  "summary": "Fixed the missing left edge in long-table header rows by making the first header cell explicitly own and render the left vertical rule. Applied the same header construction to generic, register, glossary, and abbreviation long tables; added source-layout regression assertions; removed obsolete blockquote assertions; verified a five-column reproduction at 300 dpi; and passed the uncached full 12-PDF light/dark print suite.",
+  "summary": "Completed the table window border repair: short-table headers and body rows now share a separator spanning the full window width, while the final hook restores the west frame. Added source regressions, verified the exact five-column table at 300 DPI in light and dark, and passed the quick and full 12-PDF Nx print suites.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/1870"
   },
@@ -15,6 +15,7 @@
     "⚪7736f27fdaad49d38c819acfcea66098",
     "⚪594dd641b8f049aba6e5486bff7e1ed5",
     "⚪d41afe299e6043f7a53df49443d73afd",
-    "⚪2b56ade0865e4215a478c36fb7b47e53"
+    "⚪2b56ade0865e4215a478c36fb7b47e53",
+    "⚪7c0485a71c7642929a290176e66253fa"
   ]
 }

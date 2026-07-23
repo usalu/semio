@@ -210,8 +210,9 @@ impl Operation<Procedural3dDocument> for Procedural3dOp {
 }
 
 /// 🔀 Diffs two fixtures into a minimal, invertible, mergeable op set: removed/added/patched widgets
-/// and synapses (keyed by id), layout entries, and the scalar canvas camera and schema. Lets action
-/// handlers keep computing the target fixture via `FlowHost` while emitting granular ops.
+/// and synapses (keyed by id), layout entries, and the fixture schema. The canvas camera is ephemeral
+/// view state (plugin runtime), never a document op. Lets action handlers keep computing the target
+/// fixture via `FlowHost` while emitting granular ops.
 pub fn procedural3d_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dOp> {
     let mut ops = Vec::new();
     for widget in &before.widgets {
@@ -245,9 +246,6 @@ pub fn procedural3d_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Ve
         if before.layout.get(id) != Some(layout) {
             ops.push(Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() });
         }
-    }
-    if before.camera != after.camera {
-        ops.push(Procedural3dOp::SetCamera { camera: after.camera.clone() });
     }
     if before.schema != after.schema {
         ops.push(Procedural3dOp::SetSchema { schema: after.schema.clone() });
@@ -348,5 +346,14 @@ mod tests {
         let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dOp::Generation(GenerationOp::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
+    }
+
+    #[test]
+    fn fixture_ops_ignore_camera() {
+        let before = FlowFixture::default();
+        let mut after = before.clone();
+        after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
+        let ops = procedural3d_fixture_ops(&before, &after);
+        assert!(ops.iter().all(|op| !matches!(op, Procedural3dOp::SetCamera { .. })));
     }
 }

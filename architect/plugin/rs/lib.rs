@@ -7,15 +7,15 @@ use architect_program::{
     Stakeholder, StakeholderPatch, TextField, TraceChain, TraceKind, TraceLink, UserCategory, UserProfile, ValidationStatus, ARCHITECT_PROGRAM_SCHEMA,
 };
 use semio_framework_plugin::{
-    create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition,
-    ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode,
-    UiNumberStepperNode, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
-    FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
+    create_default_layout, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ui_tree_stamp_presence, ActionArgDef, ActionArgOption,
+    ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, BlockListScene, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup, SurfaceKind, UiComponentSceneNode, UiFieldNode, UiInputNode,
+    UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence, UiStackNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
+    FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use vcs::CollectionOp;
 
 //#region 🔖Constants
@@ -158,55 +158,22 @@ fn architect_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 
 fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description: None,
-        icon_id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
-        default_open: None,
-        action: None,
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
+    UiTreeItemNode::base(id, label)
 }
 
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
-    UiTreeItemNode {
-        id: id.into(),
-        label: label.into(),
-        description,
-        icon_id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
-        default_open: None,
-        action: Some(action),
-        hover_action: None,
-        unhover_action: None,
-        actions: None,
-        draggable: None,
-        drag_data: None,
-        items: None,
-        control: None,
-        is_hidden: None,
-    }
+    UiTreeItemNode { description, action: Some(action), ..UiTreeItemNode::base(id, label) }
 }
 
 fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), loading: None, waiting: None, items }
+    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), presence: UiPresence::default(), items }
 }
 
-fn tree_node(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
+fn tree_node(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
+    if let Some(ids) = selected_ids {
+        ui_tree_stamp_presence(&mut sections, &ids.into_iter().collect::<HashSet<_>>(), &HashSet::new());
+    }
+    UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
@@ -878,10 +845,12 @@ fn inspector_text_field(register_id: &str, entity_id: &str, field_id: &str, labe
             max: None,
             step: None,
             accept: None,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -898,10 +867,12 @@ fn inspector_number_field(register_id: &str, entity_id: &str, field_id: &str, la
             uniform: mixed.uniform,
             on_absolute: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
             on_delta: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -914,13 +885,14 @@ fn inspector_toggle_field(register_id: &str, entity_id: &str, field_id: &str, la
         child: Box::new(UiNode::Toggle(UiToggleNode {
             id: format!("{field_id}.toggle"),
             icon_id: "check".into(),
-            pressed: mixed.pressed,
             text: Some(if mixed.pressed { "Yes".into() } else { "No".into() }),
             on_change: inspector_patch_action(register_id, entity_id, &json!({ key: patch_value })),
+            presence: UiPresence::selected(mixed.pressed),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -931,6 +903,7 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         component_kind,
         pane_id: None,
         binding_id: None,
+        presence: UiPresence::default(),
         canvas_2d: None,
         world_3d: None,
         node_graph: None,
@@ -1147,9 +1120,7 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
         gap: Some("0.5rem".into()),
         padding: None,
         id: Some("architect-adjacency.matrix".into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -1374,7 +1345,7 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             inspector_text_field(register, &entity_id, "architect-inspection.element.level", "Level", &[element.level.clone().unwrap_or_default()], "level"),
             ui_inspector_readonly_field("architect-inspection.element.kind", "Kind", format!("{:?}", element.kind)),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.element".into(), label: "Element".into(), default_open: Some(true), fields }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.element".into(), label: "Element".into(), default_open: Some(true), presence: UiPresence::default(), fields }]);
     }
     if let Some(stakeholder) = program.stakeholders.iter().find(|row| row.header.id == id) {
         let fields = vec![
@@ -1383,7 +1354,7 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.role", "Role", std::slice::from_ref(&stakeholder.role), "role"),
             inspector_text_field(register, &entity_id, "architect-inspection.stakeholder.organization", "Organization", std::slice::from_ref(&stakeholder.organization), "organization"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.stakeholder".into(), label: "Stakeholder".into(), default_open: Some(true), fields }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.stakeholder".into(), label: "Stakeholder".into(), default_open: Some(true), presence: UiPresence::default(), fields }]);
     }
     if let Some(adjacency) = program.adjacencies.iter().find(|row| row.header.id == id) {
         let fields = vec![
@@ -1396,7 +1367,7 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             inspector_text_field(register, &entity_id, "architect-inspection.adjacency.internalExternalAccess", "Internal/External Access", &[adjacency.internal_external_access.clone().unwrap_or_default()], "internalExternalAccess"),
             inspector_toggle_field(register, &entity_id, "architect-inspection.adjacency.sharedWall", "Shared Wall", &[adjacency.shared_wall], "sharedWall"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.adjacency".into(), label: "Adjacency".into(), default_open: Some(true), fields }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.adjacency".into(), label: "Adjacency".into(), default_open: Some(true), presence: UiPresence::default(), fields }]);
     }
     if let Some(requirement) = program.requirements.iter().find(|row| row.header.id == id) {
         let fields = vec![
@@ -1405,7 +1376,7 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             inspector_text_field(register, &entity_id, "architect-inspection.requirement.code", "Code", std::slice::from_ref(&requirement.code), "code"),
             inspector_text_field(register, &entity_id, "architect-inspection.requirement.statement", "Statement", std::slice::from_ref(&requirement.statement.text), "statement"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.requirement".into(), label: "Requirement".into(), default_open: Some(true), fields }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.requirement".into(), label: "Requirement".into(), default_open: Some(true), presence: UiPresence::default(), fields }]);
     }
     if let Some(risk) = program.risks.iter().find(|row| row.header.id == id) {
         let fields = vec![
@@ -1413,13 +1384,14 @@ fn build_inspection_tree(program: &Program, runtime: &ArchitectPlayRuntime) -> U
             inspector_text_field(register, &entity_id, "architect-inspection.risk.name", "Name", std::slice::from_ref(&risk.header.name), "name"),
             inspector_text_field(register, &entity_id, "architect-inspection.risk.statement", "Statement", std::slice::from_ref(&risk.risk_statement.text), "riskStatement"),
         ];
-        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.risk".into(), label: "Risk".into(), default_open: Some(true), fields }]);
+        return ui_inspector_groups_to_tree(&[UiInspectorFieldGroup { id: "architect-inspection.risk".into(), label: "Risk".into(), default_open: Some(true), presence: UiPresence::default(), fields }]);
     }
     let generic_name = register_entities(program, register).into_iter().find(|entity| entity_id_from_json(entity).as_deref() == Some(entity_id.as_str())).map_or_else(|| entity_id.clone(), |entity| entity_name_from_json(&entity));
     ui_inspector_groups_to_tree(&[UiInspectorFieldGroup {
         id: "architect-inspection.generic".into(),
         label: format!("{register} entity"),
         default_open: Some(true),
+        presence: UiPresence::default(),
         fields: vec![ui_inspector_readonly_field("architect-inspection.generic.id", "Id", entity_id.clone()), inspector_text_field(register, &entity_id, "architect-inspection.generic.name", "Name", &[generic_name], "name")],
     }])
 }

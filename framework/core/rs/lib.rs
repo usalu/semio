@@ -4645,6 +4645,10 @@ pub enum HostEffect {
     RequestSync,
     /// @emoji 🧭 Navigates the shell to a URI (studio/instance/document route).
     Navigate { uri: String },
+    /// @emoji 📂 Replaces the active app instance's document with a VCS envelope JSON — the host-owned
+    /// counterpart of `loadAppDocument`, used when the plugin resolves a catalog/example studio and
+    /// needs the shell to swap the live store without going through a persistence binding.
+    LoadDocument { document_json: String },
     /// @emoji 🌐 Opens an external URL in a new browser tab — the host-bridge substitute for a plugin
     /// reaching into `web-sys`/`window()` directly, which the plugin capability lint forbids.
     OpenExternalUrl { url: String },
@@ -5881,6 +5885,39 @@ mod app_document_tests {
         ui_wgpu::WindowOptions::export().unwrap();
         ui_wgpu::SurfaceKind::export().unwrap();
         ui_wgpu::UtilityCategory::export().unwrap();
+        // 🧭 The shared element-state model + every `UiNode` variant struct (closing the gap that used
+        // to leave these hand-mirrored in `framework/core/js/index.ts` — see 🔖Presence/🔖UiNode).
+        // `UiNode`/`UiComponentSceneNode` themselves are NOT yet typegen-derived: the enum's
+        // `ComponentScene` variant nests ~15 scene payload types (`Canvas2dScene`, `World3dScene`, …)
+        // that would each need their own `ts_rs::TS` derive first — a large, separate mechanical pass,
+        // out of scope here. `framework/core/js/index.ts` hand-writes the `UiNode` union stitching
+        // these generated variant interfaces together until that follow-up lands.
+        ui_wgpu::UiState::export().unwrap();
+        ui_wgpu::UiStatus::export().unwrap();
+        ui_wgpu::UiPresence::export().unwrap();
+        ui_wgpu::UiDropOverlaySpec::export().unwrap();
+        ui_wgpu::UiTextNode::export().unwrap();
+        ui_wgpu::UiButtonNode::export().unwrap();
+        ui_wgpu::UiSeparatorNode::export().unwrap();
+        ui_wgpu::UiImageNode::export().unwrap();
+        ui_wgpu::UiInputNode::export().unwrap();
+        ui_wgpu::UiSelectItem::export().unwrap();
+        ui_wgpu::UiSelectNode::export().unwrap();
+        ui_wgpu::UiToggleNode::export().unwrap();
+        ui_wgpu::UiKeyValueEntry::export().unwrap();
+        ui_wgpu::UiKeyValueNode::export().unwrap();
+        ui_wgpu::UiSliderNode::export().unwrap();
+        ui_wgpu::UiNumberStepperNode::export().unwrap();
+        ui_wgpu::UiRingNode::export().unwrap();
+        ui_wgpu::UiIconSelectNode::export().unwrap();
+        ui_wgpu::UiControlNode::export().unwrap();
+        ui_wgpu::UiTreeItemAction::export().unwrap();
+        ui_wgpu::UiTreeItemNode::export().unwrap();
+        ui_wgpu::UiTreeSectionNode::export().unwrap();
+        ui_wgpu::UiTreeNode::export().unwrap();
+        ui_wgpu::UiExternalSlotNode::export().unwrap();
+        // NOT exported (recursive through `UiNode`, itself not yet typegen-derived — see comment
+        // above): UiStackNode, UiGroupNode, UiFieldNode, UiSectionNode, UiInspectorFieldGroup.
         crate::ui::Keybinding::export().unwrap();
         crate::ui::ActionKind::export().unwrap();
         crate::ui::ActionArgOption::export().unwrap();
