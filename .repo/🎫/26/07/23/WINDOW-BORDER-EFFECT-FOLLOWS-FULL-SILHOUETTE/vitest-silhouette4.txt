@@ -1,0 +1,27 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern elevates the mode-dock-stack|windowSilhouettePath|resolveWindowSilhouette
+
+> bun ./script.ts test --testNamePattern "elevates the mode-dock-stack|windowSilhouettePath|resolveWindowSilhouette"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  3 passed | 337 skipped (340)
+   Start at  17:04:56
+   Duration  11.75s (transform 4.24s, setup 288ms, import 10.05s, tests 110ms, environment 1.05s)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+
+
+ NX   Nx detected a flaky task
+
+  @semio-tech/ui-react:test
+
+Flaky tasks can disrupt your CI pipeline. Automatically retry them with Nx Cloud. Learn more at https://nx.dev/ci/features/flaky-tasks
+

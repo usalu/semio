@@ -1,0 +1,14 @@
+{
+  "title": "Fix German Translations for Context",
+  "emoji": "📝",
+  "status": "closed",
+  "description": "German UI translations are not accurate for the architectural/AEC context. Make them all perfect. Example: \"Struktur Klassisch\" must be \"Tragwerk Klassisch\". Audit and fix all German locale display strings in CAD and related UI so terminology matches professional German AEC usage.",
+  "summary": "Reworked German UI strings for professional AEC/context accuracy instead of English calques. CAD: Struktur Klassisch → Tragwerk Klassisch; Balken → Träger; Box → Quader; Primitiv → Grundkörper; Steckplatz → Platz; plus clearer action labels (Überfahren, Rohdaten, Punkt in der Welt). Puzzle native DE: Concrete Forest → Betonwald. Aligned Hover translations across plugins. Fixed schliessen/ausschliessen → schließen/ausschließen and zulaessige → zulässige in UI/compose/s. CAD German label tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2273"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪3741601ed95f467ab05b02fcfd866825"
+  ]
+}

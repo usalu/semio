@@ -1,14 +1,18 @@
 {
   "nodes": [
-    { "id": "n1", "x": 0.0, "y": 0.0 },
-    { "id": "n2", "x": 6.0, "y": 0.0 },
+    { "id": "n1", "x": 0.0, "y": -4.0 },
+    { "id": "n2", "x": 0.0, "y": 0.0 },
+    { "id": "n3", "x": 3.0, "y": 0.0 },
+    { "id": "n4", "x": 6.0, "y": 0.0 },
     { "id": "rc0", "x": 10.0, "y": 0.0 },
     { "id": "rc1", "x": 12.0, "y": 0.0 },
     { "id": "rc2", "x": 12.0, "y": 1.0 },
     { "id": "rc3", "x": 10.0, "y": 1.0 }
   ],
   "elements": [
-    { "kind": "beam", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "ipe300" }
+    { "kind": "beam", "id": "e1", "start": "n2", "end": "n3", "materialId": "steel", "sectionId": "ipe300" },
+    { "kind": "beam", "id": "e2", "start": "n3", "end": "n4", "materialId": "steel", "sectionId": "ipe300" },
+    { "kind": "beam", "id": "e3", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "chs76" }
   ],
   "regions": [
     {
@@ -25,11 +29,12 @@
     { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "nu": 0.3, "rho": 7850.0 }
   ],
   "sections": [
-    { "id": "ipe300", "name": "IPE 300", "area": 0.005381, "iy": 0.00008356 }
+    { "id": "ipe300", "name": "IPE 300", "area": 0.005381, "iy": 0.00008356 },
+    { "id": "chs76", "name": "CHS 76 Column", "area": 0.001, "iy": 0.000001 }
   ],
   "supports": [
     { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty"] },
-    { "id": "s2", "nodeId": "n2", "fixed": ["Ty"] },
+    { "id": "s2", "nodeId": "n4", "fixed": ["Ty"] },
     { "id": "s3", "nodeId": "rc0", "fixed": ["Tx", "Ty"] },
     { "id": "s4", "nodeId": "rc1", "fixed": ["Tx", "Ty"] }
   ],
@@ -38,15 +43,17 @@
       "id": "dead",
       "name": "Dead Load",
       "loads": [
-        { "kind": "memberUdl", "id": "l1", "elementId": "e1", "wx": 0.0, "wy": -10000.0 }
+        { "kind": "memberUdl", "id": "l1", "elementId": "e1", "wx": 0.0, "wy": -10000.0 },
+        { "kind": "memberUdl", "id": "l2", "elementId": "e2", "wx": 0.0, "wy": -10000.0 },
+        { "kind": "area", "id": "l3", "regionId": "r1", "pressure": 5000.0 }
       ],
-      "selfWeight": false
+      "selfWeight": true
     },
     {
       "id": "live",
       "name": "Live Load",
       "loads": [
-        { "kind": "nodal", "id": "l2", "nodeId": "n1", "dof": "Ty", "value": -2000.0 }
+        { "kind": "nodal", "id": "l4", "nodeId": "n3", "dof": "Ty", "value": -20000.0 }
       ],
       "selfWeight": false
     }
@@ -54,6 +61,6 @@
   "combinations": [
     { "id": "uls", "name": "ULS", "terms": [["dead", 1.35], ["live", 1.5]] }
   ],
-  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 50.0 },
+  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 300.0 },
   "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }
 }

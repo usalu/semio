@@ -12,7 +12,7 @@ use serde::de::Error as DeError;
 use serde::Deserialize;
 use serde_json::json;
 use std::collections::{HashMap, HashSet};
-use ui_wgpu::{draw_text, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
+use ui_wgpu::{draw_text, draw_text_overlay, mesh_content_version, paint_selection_marquee, ActionDescriptor, GpuContext, HitKind, HitTarget, PointerModifiers, Rect, Rgba, UiComponentSceneNode, WidgetContext};
 
 //#region SceneRecords
 fn deserialize_optional_string_vec<'de, D>(deserializer: D) -> Result<Option<Vec<String>>, D::Error>
@@ -1996,11 +1996,86 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         let crossing = marquee_is_crossing_from_path(&state.marquee_points, state.selection_method == "lasso");
         paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
     }
+    paint_world_orbit_view_gizmo(ctx, &camera, inner);
     if scene.world_3d.is_none() {
         draw_text(ctx, "world-3d (empty)", inner.x + 12.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(state.surface_id.clone()), kind: HitKind::World3d, drag_axis: None, drag_data: None });
 }
+
+//#region 🧭WorldOrbitViewGizmo
+/** 🧭 Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset that stays visible on small panes. */
+pub fn world_orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
+    let margin_x = (viewport.w / 5.0).floor().clamp(26.0, 56.0);
+    let margin_y = (viewport.h / 7.0).floor().clamp(18.0, 40.0);
+    (margin_x, margin_y)
+}
+
+/** 🧭 Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`). */
+fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect) {
+    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
+    let origin_x = viewport.x + viewport.w - margin_x;
+    let origin_y = viewport.y + viewport.h - margin_y;
+    let axis_len = (viewport.w.min(viewport.h) * 0.06).clamp(18.0, 36.0);
+    let forward = camera.position.sub(camera.target);
+    let forward_len = forward.length();
+    if forward_len < 1e-5 {
+        return;
+    }
+    let forward = forward.scale(1.0 / forward_len);
+    let right = forward.cross(camera.up);
+    let right_len = right.length();
+    if right_len < 1e-5 {
+        return;
+    }
+    let right = right.scale(1.0 / right_len);
+    let up = right.cross(forward).normalize();
+    let axes = [
+        (Vec3::new(1.0, 0.0, 0.0), "X", Rgba::new(0.92, 0.28, 0.28, 1.0)),
+        (Vec3::new(-1.0, 0.0, 0.0), "", Rgba::new(0.92, 0.28, 0.28, 0.65)),
+        (Vec3::new(0.0, 1.0, 0.0), "Y", Rgba::new(0.28, 0.78, 0.36, 1.0)),
+        (Vec3::new(0.0, -1.0, 0.0), "", Rgba::new(0.28, 0.78, 0.36, 0.65)),
+        (Vec3::new(0.0, 0.0, 1.0), "Z", Rgba::new(0.28, 0.48, 0.95, 1.0)),
+        (Vec3::new(0.0, 0.0, -1.0), "", Rgba::new(0.28, 0.48, 0.95, 0.65)),
+    ];
+    let corners = [
+        (Vec3::new(0.72, 0.72, 0.72), "NE"),
+        (Vec3::new(-0.72, 0.72, 0.72), "NW"),
+        (Vec3::new(0.72, -0.72, 0.72), "SE"),
+        (Vec3::new(-0.72, -0.72, 0.72), "SW"),
+    ];
+    let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool)> = axes
+        .into_iter()
+        .map(|(axis, label, color)| {
+            let sx = axis.dot(right);
+            let sy = -axis.dot(up);
+            let depth = axis.dot(forward);
+            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, false)
+        })
+        .chain(corners.into_iter().map(|(axis, label)| {
+            let sx = axis.dot(right);
+            let sy = -axis.dot(up);
+            let depth = axis.dot(forward);
+            let color = Rgba::new(0.75, 0.75, 0.78, 0.9);
+            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, true)
+        }))
+        .collect();
+    ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
+    for (depth, tip_x, tip_y, label, color, is_corner) in ordered {
+        let fade = if depth > 0.05 { 0.45 } else { 1.0 };
+        let stroke = Rgba::new(color.r, color.g, color.b, color.a * fade);
+        if is_corner {
+            let r = 3.0;
+            ctx.draw.push_solid_overlay([tip_x - r, tip_y - r, tip_x + r, tip_y + r], stroke);
+        } else {
+            ctx.draw.push_line_overlay(origin_x, origin_y, tip_x, tip_y, stroke, 2.0);
+        }
+        if !label.is_empty() {
+            draw_text_overlay(ctx, label, tip_x + 3.0, tip_y - 4.0, ctx.theme.font_size_small, stroke);
+        }
+    }
+}
+//#endregion 🧭WorldOrbitViewGizmo
 
 pub fn world3d_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarget<ActionDescriptor> {
     HitTarget { rect: bounds, event: None, control_id: Some(scene.surface_id.clone()), kind: HitKind::World3d, drag_axis: None, drag_data: None }
@@ -3234,7 +3309,14 @@ pub async fn fetch_pending_terrain_tiles(states: &mut HashMap<String, World3dSta
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ui_wgpu::{SurfaceKind, UiComponentSceneNode, World3dScene};
+    use ui_wgpu::{SurfaceKind, UiComponentSceneNode, UiPresence, World3dScene};
+
+    #[test]
+    fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (56.0, 40.0));
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (26.0, 22.0));
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (26.0, 18.0));
+    }
 
     fn topology_mesh() -> Mesh3d {
         let mut mesh = Mesh3d::from_buffers(vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0], vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0], vec![0, 1, 2, 1, 3, 2]);
@@ -3247,6 +3329,7 @@ mod tests {
 
     fn scene_with_selection(selection_json: &str) -> UiComponentSceneNode {
         UiComponentSceneNode {
+            presence: UiPresence::default(),
             surface_id: "surface-1".into(),
             controller_id: "controller-1".into(),
             component_kind: SurfaceKind::World3d,

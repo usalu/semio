@@ -3173,6 +3173,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.store.projection_with_conflicts().map_err(|error| error.to_string())
     }
 
+    /// @emoji 🔗 The store's current backbone descriptor, `None` when unattached (the default).
+    pub fn backbone_ref(&self) -> Option<&vcs::DocumentBackboneRef> {
+        self.store.backbone_ref()
+    }
+
     fn build_history_view(&self) -> HistoryView {
         HistoryView {
             columns: build_history_columns(self.store.envelope()),
@@ -3626,7 +3631,10 @@ impl PluginBundle {
         })
     }
 
-    pub fn register_app(
+    /// @emoji 🔒 Private: every app must be state-backed by a `DocumentVcsStore`, so the only
+    /// public entry point is {@link register_document_app}, which wraps `factory` in a
+    /// `VcsDocumentApp` before calling this.
+    fn register_app(
         mut self,
         app: App,
         factory: impl Fn() -> Box<dyn PluginApp> + Send + 'static,
@@ -3647,7 +3655,8 @@ impl PluginBundle {
 
     /// @emoji 🧬 Registers a typed {@link DocumentApp}, wrapping each instance in a
     /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
-    /// a persistent op store. Sibling to {@link register_app}, which takes a pre-boxed `PluginApp`.
+    /// a persistent op store. The only public app-registration entry point — this structurally
+    /// guarantees every app's state lives in a `DocumentVcsStore`.
     pub fn register_document_app<A>(
         self,
         app: App,
@@ -4544,6 +4553,33 @@ mod semio_plugin_macro_tests {
         receiver.ingest_operations(&operations_json).expect("ingest once");
         receiver.ingest_operations(&operations_json).expect("ingest twice");
         assert_eq!(receiver.test_projection().count, 1, "feeding the same op twice must not double-apply");
+    }
+
+    #[test]
+    fn attach_detach_reattach_resumes_backbone_convergence() {
+        let mut app = VcsDocumentApp::new(TestApp::default());
+        assert!(app.backbone_ref().is_none(), "default is unattached");
+
+        let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach");
+        app.attach_backbone(Box::new(near)).expect("attach");
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment while attached");
+        assert!(!far.receive().expect("receive after attach").is_empty(), "attached edits reach the peer");
+
+        app.detach_backbone();
+        assert!(app.backbone_ref().is_none());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment while detached");
+        assert_eq!(app.test_projection().count, 2, "detached edits still land on the in-memory graph");
+        assert!(far.receive().expect("receive while detached").is_empty(), "detached edits never reach the peer");
+
+        let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2");
+        app.attach_backbone(Box::new(near_again)).expect("re-attach");
+        assert!(app.backbone_ref().is_some());
+        app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment after re-attach");
+        assert_eq!(app.test_projection().count, 3);
+        assert!(
+            !far_again.receive().expect("receive after re-attach").is_empty(),
+            "re-attaching resumes outbound convergence on the new backbone"
+        );
     }
 
     #[test]

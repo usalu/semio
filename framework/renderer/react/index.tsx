@@ -434,10 +434,12 @@ import {
   WorldLodBridge,
   WorldOrbitGated,
   WorldOrbitProjectionSwitch,
+  WorldProjectionKindSwitch,
   WorldProjectionRig,
   worldProjectionFamily,
   worldProjectionGumballPlane,
   worldProjectionOrbitConstraints,
+  orbitCameraDistance,
   createWorldProjectionTemplates,
   decodeWorldProjectionTemplateId,
   encodeWorldProjectionTemplateId,
@@ -448,6 +450,7 @@ import {
   type WorldProjectionSpec,
   type WorldProjectionTemplateDescriptor,
   type WorldSceneContentBounds,
+  WorldOrbitViewControls,
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
@@ -4198,6 +4201,22 @@ function sessionWindowInstances(
   return [...base, ...extra];
 }
 
+/** 🎓 Kind-level introduction targets must also match live window *instances* of that kind
+ * (`puzzle3d-main-top` / `puzzle3d-main-perspective` for kind `puzzle3d-main`) — otherwise force-unfold
+ * of the utility bar / Actions rail never reaches the panes the user actually sees. `targetKindId` is a
+ * raw window-kind id; `targetSegment` is an already-normalized `elementIdSegment` (e.g. from a
+ * `framework.window.{segment}.action.*` introduce id). */
+export function introductionTargetsWindow(
+  windowId: string,
+  windowKindId: string,
+  targetKindId: string | null,
+  targetSegment: string | null = null,
+): boolean {
+  if (targetKindId && (elementIdSegment(windowId) === elementIdSegment(targetKindId) || elementIdSegment(windowKindId) === elementIdSegment(targetKindId))) return true;
+  if (targetSegment && (elementIdSegment(windowId) === targetSegment || elementIdSegment(windowKindId) === targetSegment)) return true;
+  return false;
+}
+
 /** @emoji 🧰 Materializes the shell's per-window utility map for batched `refresh-ui` — omits null entries. */
 export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<Record<string, string | null>>): Record<string, string> {
   return Object.fromEntries(Object.entries(activeUtilityByWindowId).flatMap(([windowId, utilityId]) => (utilityId ? [[windowId, utilityId]] : [])));
@@ -6318,7 +6337,8 @@ export function FrameworkOsShell({
    * otherwise hide the target from ever mounting (see `useIntroductionAnchorRect`), leaving the step
    * centered with no cutout and no way for the user to find what to do. Ids are matched, never
    * reconstructed: a `framework.window.{segment}` id's segment is `elementIdSegment(windowId)`, a lossy
-   * camelCase normalization — comparing `elementIdSegment(windowId) === segment` is the only safe check. */
+   * camelCase normalization — comparing `elementIdSegment(windowId) === segment` OR the same for the
+   * instance's window-kind id is the only safe check (Top/Perspective instances share a kind). */
   const activeIntroductionStep = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex] ?? null) : null;
   const introductionElementIds = useMemo(
     (): readonly string[] => (activeIntroductionStep ? [activeIntroductionStep.introduce, ...activeIntroductionStep.show].filter((id): id is string => Boolean(id)) : []),
@@ -6699,12 +6719,13 @@ export function FrameworkOsShell({
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
-    const actionsFoldedFor = (windowId: string) =>
-      introductionActionWindowSegment && elementIdSegment(windowId) === introductionActionWindowSegment ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
-    // 🎓 `undefined` keeps the Window's own internal fold state — only the introduction's target window is
-    // force-controlled to `false` while its utility step is active.
-    const utilityBarFoldedFor = (windowId: string): boolean | undefined =>
-      introductionUtilityWindowId && elementIdSegment(windowId) === elementIdSegment(introductionUtilityWindowId) ? false : undefined;
+    const actionsFoldedFor = (windowId: string, windowKindId: string = windowId) =>
+      introductionTargetsWindow(windowId, windowKindId, null, introductionActionWindowSegment) ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
+    // 🎓 `undefined` keeps the Window's own internal fold state — only windows of the introduction's
+    // target kind (including every open instance) are force-controlled to `false` while its utility step
+    // is active.
+    const utilityBarFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
+      introductionTargetsWindow(windowId, windowKindId, introductionUtilityWindowId) ? false : undefined;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
@@ -6729,9 +6750,9 @@ export function FrameworkOsShell({
             engagement: chrome?.engagement,
             search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
-            utilityBarFolded: utilityBarFoldedFor(spawned.id),
+            utilityBarFolded: utilityBarFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
-            actionsFolded: actionsFoldedFor(spawned.id),
+            actionsFolded: actionsFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
@@ -6756,9 +6777,9 @@ export function FrameworkOsShell({
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
-        utilityBarFolded: utilityBarFoldedFor(kind.id),
+        utilityBarFolded: utilityBarFoldedFor(kind.id, kind.id),
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-        actionsFolded: actionsFoldedFor(kind.id),
+        actionsFolded: actionsFoldedFor(kind.id, kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         children: (
           <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
@@ -6790,9 +6811,9 @@ export function FrameworkOsShell({
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
-          utilityBarFolded: utilityBarFoldedFor(instance.id),
+          utilityBarFolded: utilityBarFoldedFor(instance.id, instance.windowKindId),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-          actionsFolded: actionsFoldedFor(instance.id),
+          actionsFolded: actionsFoldedFor(instance.id, instance.windowKindId),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
             <ChromeAwareWindowScrollSurface
@@ -12269,13 +12290,13 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
-/** @emoji 🔀 Portals the world's orthographic/perspective switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane, instead of the fixed corner it used to be hardcoded to. */
-function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane. */
+function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const projectionLabel = useLabel("ui.host.projection");
   return usePaneSlot(
     <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label={projectionLabel}>
-      <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
+      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>,
   );
 }
@@ -12833,19 +12854,18 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [adoptViewportCamera],
   );
 
-  const handleProjectionChange = useCallback(
-    (projection: OrbitCameraProjection) => {
-      adoptViewportCamera(
-        {
-          position: cameraState.position,
-          target: cameraState.target,
-          zoom: cameraState.zoom,
-          up: cameraState.up,
-          projection,
-          projectionSpec: projection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: cameraState.fov },
-        },
-        true,
-      );
+  const handleGizmoCameraChange = useCallback(
+    (state: WorldCameraState) => {
+      adoptViewportCamera(state, true);
+    },
+    [adoptViewportCamera],
+  );
+
+  const handleProjectionKindChange = useCallback(
+    (spec: WorldProjectionSpec) => {
+      const distance = orbitCameraDistance(cameraState, Math.hypot(cameraState.position[0] - cameraState.target[0], cameraState.position[1] - cameraState.target[1], cameraState.position[2] - cameraState.target[2]) || 600);
+      const pose = computeWorldProjectionPose(spec, { target: cameraState.target, distance, zoom: cameraState.zoom });
+      adoptViewportCamera({ ...pose, projectionSpec: spec }, true);
     },
     [adoptViewportCamera, cameraState],
   );
@@ -13168,6 +13188,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       ref={hostRef}
       className="semio-world-3d-host relative h-full min-h-[24rem] w-full"
       data-surface-id={node.surfaceId}
+      data-orbit-view-gizmo=""
       data-puzzle3d-fixture-drag-active={catalogueDropPreview ? "" : undefined}
       onContextMenu={(event) => {
         if (event.altKey) return;
@@ -13197,7 +13218,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           frame || cameraState.explicitProjection || computing ? (
             <>
               {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
-              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitchPane projection={cameraState.projection ?? "perspective"} onProjectionChange={handleProjectionChange} /> : null}
+              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} /> : null}
               {computing ? (
                 <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded bg-panel/90 px-2 py-1 text-xs shadow-sm" role="status" aria-busy="true">
                   <Spinner size="small" />
@@ -13221,6 +13242,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             constraints={worldOrbitConstraints}
             onRightPointerDown={handleWorldOrbitRightPointerDown}
           />
+          <WorldOrbitViewControls projectionSpec={worldProjectionSpec} onCameraChange={handleGizmoCameraChange} />
           <WorldLodBridge
             lodRef={lodRef}
             distanceReference={100}

@@ -884,14 +884,16 @@ function backboneInboundQueues() {
 const backboneAttached = new Set();
 
 /** @emoji 📤 Enqueues an outbound message to the main thread, which relays it into \`backbone-worker.ts\`
- * (the sync actor). A plugin worker can't own the socket/fetch itself, so this is postMessage-only. */
+ * (the sync actor). Inside a dedicated worker this is postMessage-only (a worker can't own the
+ * socket/fetch itself); when this component is instead loaded directly on the main thread (the
+ * no-\`Worker\`/component-model-load fallback in \`framework/core/js/index.ts\`), it reaches the same
+ * relay through the well-known \`__semioMainThreadPluginBackboneOutbound\` global instead. */
 export function backboneSend(uri, messageJson) {
   backboneAttached.add(uri);
-  // Only a worker's \`postMessage\` takes a single argument and reaches the parent; on the main thread
-  // \`window.postMessage\` needs a targetOrigin, so the relay is a no-op there (WorkerGlobalScope is
-  // defined in both classic and module workers, undefined on the main thread).
   if (typeof WorkerGlobalScope !== "undefined" && typeof self !== "undefined" && typeof self.postMessage === "function") {
     self.postMessage({ type: "backboneOutbound", uri, message: messageJson });
+  } else if (typeof globalThis.__semioMainThreadPluginBackboneOutbound === "function") {
+    globalThis.__semioMainThreadPluginBackboneOutbound(uri, messageJson);
   }
 }
 
@@ -988,6 +990,20 @@ class PluginBuildScript extends BundleScript {
   }
 }
 
+/** @emoji 👀 A plugin crate's edits alone don't cover every source that feeds its build: multi-crate
+ * app families (e.g. `fem/plugin/rs` depending on `fem/2d/rs`/`fem/3d/rs`/`fem/core/rs`, or an
+ * example fixture under `fem/2d/example`) live as SIBLING directories under the same top-level app
+ * folder, not inside the plugin crate itself. Watching just `target.cratePath` misses them, so a
+ * schema or fixture edit never triggers a hot-swap rebuild. Framework-hosted plugin crates
+ * (`framework/...`) keep the narrow crate-only watch instead — widening to all of `framework/` would
+ * watch the entire monorepo's shared core. Cargo's own `target/` output lives at the repo root and
+ * built wasm lands in `framework/product/os/dev/plugin-modules`, so widening the watch root here
+ * cannot cause a rebuild to re-trigger itself. */
+function pluginWatchRoot(target: PluginRegistryEntry): string {
+  const topLevel = target.cratePath.split("/")[0];
+  return join(repoRoot, topLevel === "framework" ? target.cratePath : topLevel);
+}
+
 class PluginWatchScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const filterPlugin = segments[0] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND;
@@ -996,8 +1012,7 @@ class PluginWatchScript extends BundleScript {
     const catalogEntries = generatePluginRegistry(repoRoot, filterPluginId ? { filterPlaygroundPlugin: filterPluginId } : {});
     const targets = resolvePluginBuildTargets(catalogEntries, filterPlugin || undefined);
     for (const target of targets) {
-      const watchRoot = join(repoRoot, target.cratePath);
-      watch(watchRoot, { recursive: true }, () => {
+      watch(pluginWatchRoot(target), { recursive: true }, () => {
         void buildPlugin(target).catch((error) => {
           console.error("[DEBUG] plugin watch rebuild failed", error);
         });

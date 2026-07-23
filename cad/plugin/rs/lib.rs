@@ -2461,6 +2461,10 @@ const CAD_MODEL_DEFINITION_ENERGY: &str = "aec.building.energy";
 const CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC: &str = "aec.building.structure.classic";
 
 const CAD_CONCRETE_FOREST_REFERENCE_URL: &str = "/cad-fixture/concrete-forest-reference.png";
+const CAD_FOREST_REFERENCE_WIDTH_WORLD: f64 = 22.0;
+const CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX: f64 = 1430.0;
+const CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX: f64 = 692.0;
+const CAD_FOREST_REFERENCE_BASE_ORIGIN_XY: [f64; 2] = [-24.0, -18.0];
 
 struct CadTransformationSpec {
     id: &'static str,
@@ -2613,6 +2617,16 @@ fn forest_reference_plane_z(source_json: &str) -> f64 {
     0.01
 }
 
+/// @emoji 🖼️ Centers the concrete-forest reference after a +½-width right / +½-depth front nudge from the authored base corner.
+fn forest_reference_origin(reference_z: f64) -> [f64; 3] {
+    let height_world = CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX;
+    [
+        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[0] + CAD_FOREST_REFERENCE_WIDTH_WORLD * 0.5,
+        CAD_FOREST_REFERENCE_BASE_ORIGIN_XY[1] + height_world * 0.5,
+        reference_z,
+    ]
+}
+
 fn translate_mesh_positions(mesh: &mut MeshData, offset: [f32; 3]) {
     for vertex in mesh.positions.chunks_exact_mut(3) {
         vertex[0] += offset[0];
@@ -2662,10 +2676,10 @@ fn forest_references_for_model_definitions(reference_z: f64) -> HashMap<String, 
                     id: "ref-concrete-forest".into(),
                     source_url: CAD_CONCRETE_FOREST_REFERENCE_URL.into(),
                     media_kind: "image".into(),
-                    origin: [-24.0, -18.0, reference_z],
+                    origin: forest_reference_origin(reference_z),
                     orientation: None,
                     scale: None,
-                    width_world: 22.0,
+                    width_world: CAD_FOREST_REFERENCE_WIDTH_WORLD,
                     hidden: false,
                     locked: true,
                     opacity: Some(1.0),
@@ -3852,18 +3866,18 @@ const CAD_LABELS_NATIVE_EN: CadLabels = CadLabels {
 const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
     object: "Objekt",
     objects: "Objekte",
-    primitive: "Primitiv",
+    primitive: "Grundkörper",
     pane_shape: "Form",
     pane_building: "Gebäude",
     pane_energy: "Energie",
-    pane_structure_classic: "Struktur Klassisch",
+    pane_structure_classic: "Tragwerk Klassisch",
     references: "Referenzen",
     nodes: "Knoten",
     typologies: "Typologien",
-    typology_box: "Box",
+    typology_box: "Quader",
     typology_slab: "Platte",
     typology_column: "Stütze",
-    typology_beam: "Balken",
+    typology_beam: "Träger",
     typology_wall: "Wand",
     typology_external_wall: "Außenwand",
     reference: "Referenz",
@@ -3880,12 +3894,12 @@ const CAD_LABELS_NATIVE_DE: CadLabels = CadLabels {
     locked: "Gesperrt",
     position: "Position",
     scale: "Skalierung",
-    rotation: "Rotation",
-    slot: "Steckplatz",
+    rotation: "Drehung",
+    slot: "Platz",
     kind: "Art",
     id: "Id",
     source: "Quelle",
-    width_world: "Breite (Welt)",
+    width_world: "Breite (Weltkoordinaten)",
     none_placeholder: "(keine)",
     schema: "Schema",
     utility: "Werkzeug",
@@ -3966,12 +3980,12 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setNodeSelection", "Set Node Selection", "Knotenauswahl festlegen"),
         ("worldSelect", "World Select", "Welt auswählen"),
-        ("worldHover", "World Hover", "Welt-Hover"),
-        ("setHover", "Set Hover", "Hover festlegen"),
-        ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+        ("worldHover", "World Hover", "Überfahren (Welt)"),
+        ("setHover", "Set Hover", "Überfahren festlegen"),
+        ("worldPick", "World Pick", "Punkt in der Welt wählen"),
         ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
         ("setReferenceSelection", "Set Reference Selection", "Referenzauswahl festlegen"),
-        ("referenceHover", "Reference Hover", "Referenz-Hover"),
+        ("referenceHover", "Reference Hover", "Überfahren (Referenz)"),
         ("engagementInput", "Engagement Input", "Eingabe"),
         ("engagementPossibleSelect", "Engagement Possible Select", "Eingabeoption auswählen"),
         ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
@@ -3979,7 +3993,7 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
         ("worldPointerMove", "World Pointer Move", "Welt-Zeiger bewegt"),
         ("engagementPointerDown", "Engagement Pointer Down", "Eingabe-Zeiger gedrückt"),
-        ("setPrimitiveSelection", "Set Primitive Selection", "Primitivauswahl festlegen"),
+        ("setPrimitiveSelection", "Set Primitive Selection", "Grundkörperauswahl festlegen"),
         ("toggleSun", "Toggle Sun", "Sonne umschalten"),
         ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
         ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
@@ -3987,7 +4001,7 @@ fn cad_action_labels(is_de: bool) -> HashMap<String, String> {
         ("saveSelected", "Save Selected", "Auswahl speichern"),
         ("saveInPlay", "Save In Play", "Im Play speichern"),
         ("saveCurrent", "Save Current", "Aktuelles speichern"),
-        ("loadRawRequest", "Load Raw Request", "Rohanfrage laden"),
+        ("loadRawRequest", "Load Raw Request", "Rohdaten laden"),
     ])
 }
 
@@ -5742,7 +5756,7 @@ impl DocumentApp for CadPlayApp {
             .action_labels(cad_action_labels(is_de))
             .utility_labels(cad_utility_labels(is_de))
             .example_labels(HashMap::from([
-                (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig Geschnittener Betonwald Links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
+                (CAD_EXAMPLE_FOREST_LEFT.to_string(), (if is_de { "Sechseckig geschnittener Betonwald links" } else { "Hexagonal Cut Concrete Forest Left" }).to_string()),
             ]))
     }
 }
@@ -6125,7 +6139,19 @@ mod tests {
             "reference z {} should match slab elevation",
             reference.origin[2]
         );
+        assert!(
+            (reference.origin[0] - (-13.0)).abs() < 1e-9,
+            "reference x {} should be base + 50% width (right)",
+            reference.origin[0]
+        );
+        let expected_y = -18.0 + CAD_FOREST_REFERENCE_WIDTH_WORLD * CAD_FOREST_REFERENCE_IMAGE_HEIGHT_PX / CAD_FOREST_REFERENCE_IMAGE_WIDTH_PX * 0.5;
+        assert!(
+            (reference.origin[1] - expected_y).abs() < 1e-9,
+            "reference y {} should be base + 50% depth (front)",
+            reference.origin[1]
+        );
         assert!(reference.locked, "example references default locked like puzzle 3d");
+        assert_eq!(reference.width_world, CAD_FOREST_REFERENCE_WIDTH_WORLD);
     }
 
     #[test]
@@ -6256,7 +6282,7 @@ mod tests {
             .flat_map(|section| section.items.iter())
             .find(|item| item.id.contains("cad-object:") && item.label == "U2")
             .expect("named object tree item in German");
-        assert_eq!(de_object_item.description.as_deref(), Some("Balken"));
+        assert_eq!(de_object_item.description.as_deref(), Some("Träger"));
     }
 
     #[test]
@@ -6628,10 +6654,11 @@ mod tests {
         assert!(json.contains("\"Form\""));
         assert!(json.contains("Gebäude"));
         assert!(json.contains("Energie"));
-        assert!(json.contains("Struktur Klassisch"));
+        assert!(json.contains("Tragwerk Klassisch"));
         assert!(json.contains("Referenzen"));
         assert!(json.contains("\"Knoten\""));
         assert!(!json.contains("\"Shape\""));
+        assert!(!json.contains("Struktur Klassisch"));
     }
 
     #[test]
@@ -6644,12 +6671,14 @@ mod tests {
         let node = app.render(CAD_PLAY_BODY_CATALOGUE, &doc, &view_state);
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Typologien"));
+        assert!(json.contains("Quader"));
         assert!(json.contains("Platte"));
         assert!(json.contains("Stütze"));
-        assert!(json.contains("Balken"));
+        assert!(json.contains("Träger"));
         assert!(json.contains("Wand"));
         assert!(json.contains("Außenwand"));
         assert!(!json.contains("\"Slab\""));
+        assert!(!json.contains("\"Balken\""));
     }
     //#endregion 🔖Terminology
 

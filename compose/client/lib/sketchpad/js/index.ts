@@ -343,8 +343,8 @@ const composeSketchpadTranslationBundles = {
           },
           "close": {
             "label": {
-              "normal": "Suche schliessen",
-              "beginner": "Klicken, um den Suchdialog zu schliessen"
+              "normal": "Suche schließen",
+              "beginner": "Klicken, um den Suchdialog zu schließen"
             },
             "manual": "navigation#search",
             "tutorial": "getting-started/intro#search",
@@ -389,8 +389,8 @@ const composeSketchpadTranslationBundles = {
           },
           "close": {
             "label": {
-              "normal": "Finden schliessen",
-              "beginner": "Klicken, um den Finden-Dialog zu schliessen"
+              "normal": "Finden schließen",
+              "beginner": "Klicken, um den Finden-Dialog zu schließen"
             },
             "hotkey": "Escape"
           },
@@ -4776,24 +4776,24 @@ const composeSketchpadTranslationBundles = {
           "min": {
             "label": {
               "normal": "Minimum",
-              "beginner": "Der minimal zulaessige Wert"
+              "beginner": "Der minimal zulässige Wert"
             }
           },
           "isMinExcluded": {
             "label": {
-              "normal": "Minimum ausschliessen",
+              "normal": "Minimum ausschließen",
               "beginner": "Ob der Minimalwert ausgeschlossen ist"
             }
           },
           "max": {
             "label": {
               "normal": "Maximum",
-              "beginner": "Der maximal zulaessige Wert"
+              "beginner": "Der maximal zulässige Wert"
             }
           },
           "isMaxExcluded": {
             "label": {
-              "normal": "Maximum ausschliessen",
+              "normal": "Maximum ausschließen",
               "beginner": "Ob der Maximalwert ausgeschlossen ist"
             }
           },

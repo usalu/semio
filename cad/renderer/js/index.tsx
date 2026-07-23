@@ -78,9 +78,13 @@ import {
   WorldOrbitProjectionSwitch,
   WorldOrbitViewControls,
   WorldOrbitViewSnapGateProvider,
+  WorldProjectionKindSwitch,
   applyOrbitProjectionToCameraState,
+  computeWorldProjectionPose,
+  orbitCameraDistance,
   orbitCameraViewGumballPlane,
   type OrbitCameraProjection,
+  type WorldProjectionSpec,
   WorldReferenceLayer,
   applyWorldReferenceTransform,
   type WorldReferenceProps,
@@ -3706,8 +3710,10 @@ export interface InteractionSpatialViewProps {
   readonly cameraView?: OrbitCameraViewId;
   readonly cameraViewSeedKey?: string | number;
   readonly orbitProjection?: OrbitCameraProjection;
+  readonly projectionSpec?: WorldProjectionSpec;
   readonly showOrbitViewGizmo?: boolean;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
+  readonly onProjectionSpecChange?: (spec: WorldProjectionSpec) => void;
   readonly onOrbitCameraChange?: (state: import("@semio-tech/infinite-world-r3f").WorldCameraState) => void;
   /** @emoji 🖼️ Grid reference planes persisted beside the CAD model. */
   readonly worldReferences?: readonly WorldReferenceProps[];
@@ -3779,8 +3785,10 @@ export function InteractionSpatialView({
   cameraView,
   cameraViewSeedKey,
   orbitProjection,
+  projectionSpec,
   showOrbitViewGizmo = true,
   onOrbitProjectionChange,
+  onProjectionSpecChange,
   onOrbitCameraChange,
   worldReferences = [],
   selectedReferenceIds,
@@ -3871,7 +3879,7 @@ export function InteractionSpatialView({
           )}
           {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} /> : null}
           <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
-          {showOrbitViewGizmo ? <WorldOrbitViewControls onCameraChange={onOrbitCameraChange} onProjectionChange={onOrbitProjectionChange} /> : null}
+          {showOrbitViewGizmo ? <WorldOrbitViewControls projectionSpec={projectionSpec} onCameraChange={onOrbitCameraChange} /> : null}
           <WorldLayer order={0} name="cad.grid">
             <WorldLodGridHelper gridDatum={[0, 0, 0]} />
           </WorldLayer>
@@ -4711,12 +4719,12 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
-/** @emoji 🔀 Portals the world's orthographic/perspective switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane, instead of the fixed corner it used to be hardcoded to. */
-function WorldOrbitProjectionSwitchPane({ projection, onProjectionChange }: { readonly projection: OrbitCameraProjection; readonly onProjectionChange: (projection: OrbitCameraProjection) => void }) {
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). */
+function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   return usePaneSlot(
     <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label="Projection">
-      <WorldOrbitProjectionSwitch projection={projection} onProjectionChange={onProjectionChange} />
+      <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>,
   );
 }
@@ -5949,7 +5957,13 @@ export function InteractionRepl({
           frameloop={canvasFrameloop}
           className={cn("bg-canvas", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
-          overlay={spatialViewOverrides?.onOrbitProjectionChange ? <WorldOrbitProjectionSwitch projection={spatialViewOverrides.orbitProjection ?? "perspective"} onProjectionChange={spatialViewOverrides.onOrbitProjectionChange} /> : null}
+          overlay={
+            spatialViewOverrides?.onProjectionSpecChange && spatialViewOverrides.projectionSpec ? (
+              <WorldOrbitProjectionSwitchPane spec={spatialViewOverrides.projectionSpec} onSpecChange={spatialViewOverrides.onProjectionSpecChange} />
+            ) : spatialViewOverrides?.onOrbitProjectionChange ? (
+              <WorldOrbitProjectionSwitch projection={spatialViewOverrides.orbitProjection ?? "perspective"} onProjectionChange={spatialViewOverrides.onOrbitProjectionChange} />
+            ) : null
+          }
         >
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView

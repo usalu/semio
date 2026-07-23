@@ -1,0 +1,2327 @@
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+   Compiling flow_module_brep v0.1.0 (/Users/ueli/Documents/semio/flow/module/brep/rs)
+   Compiling flow_module_draw v0.1.0 (/Users/ueli/Documents/semio/flow/module/draw/rs)
+   Compiling flow_module_math v0.1.0 (/Users/ueli/Documents/semio/flow/module/math/rs)
+   Compiling flow_module_text v0.1.0 (/Users/ueli/Documents/semio/flow/module/text/rs)
+   Compiling flow_module_bim v0.1.0 (/Users/ueli/Documents/semio/flow/module/bim/rs)
+   Compiling flow_module_list v0.1.0 (/Users/ueli/Documents/semio/flow/module/list/rs)
+   Compiling flow_module_dictionary v0.1.0 (/Users/ueli/Documents/semio/flow/module/dictionary/rs)
+   Compiling flow_module_core v0.1.0 (/Users/ueli/Documents/semio/flow/module/core/rs)
+   Compiling flow_module_logic v0.1.0 (/Users/ueli/Documents/semio/flow/module/logic/rs)
+   Compiling semio-framework-renderer-wgpu v0.1.0 (/Users/ueli/Documents/semio/framework/renderer/wgpu/rs)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+   Compiling protocol v0.1.0 (/Users/ueli/Documents/semio/protocol/rs)
+   Compiling semio-framework-plugin-host v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/host/rs)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+   Compiling semio-framework-sync v0.1.0 (/Users/ueli/Documents/semio/framework/sync/rs)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3816:17
+     |
+3816 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3816 -     let action: serde_json::Value =
+3816 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3818:18
+     |
+3818 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3818 -     let context: serde_json::Value =
+3818 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3846:18
+     |
+3846 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3846 -     let command: serde_json::Value =
+3846 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3848:18
+     |
+3848 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3848 -     let context: serde_json::Value =
+3848 +     let context: Value =
+     |
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:187:16
+    |
+187 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+187 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+187 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:188:17
+    |
+188 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+188 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+188 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:198:16
+    |
+198 |     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    |                ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+198 -     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+198 +     P: Clone + Serialize + serde::de::DeserializeOwned,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:199:17
+    |
+199 |     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |                 ^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+199 +     Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:251:41
+    |
+251 |     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+251 -     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+251 +     pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    |
+
+warning: unnecessary qualification
+   --> framework/sync/rs/lib.rs:855:37
+    |
+855 |     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |                                     ^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+855 -     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+855 +     fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    |
+
+warning: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling framework_surface_tiled_map v0.1.0 (/Users/ueli/Documents/semio/framework/surface/tiled-map/rs)
+   Compiling framework_editor v0.1.0 (/Users/ueli/Documents/semio/framework/editor/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+warning: unnecessary qualification
+  --> framework/editor/rs/lib.rs:52:9
+   |
+52 |         cavas::theme::merge_color_field(next, v, key);
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+52 -         cavas::theme::merge_color_field(next, v, key);
+52 +         theme::merge_color_field(next, v, key);
+   |
+
+warning: unnecessary qualification
+    --> framework/editor/rs/lib.rs:1090:9
+     |
+1090 |         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1090 -         cavas::render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+1090 +         render::scale_scene_for_device_pixel_ratio(scene, self.viewport.dpr)
+     |
+
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: `framework_editor` (lib) generated 2 warnings (run `cargo fix --lib -p framework_editor` to apply 2 suggestions)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:73
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:63
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:73
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:66
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:91
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:80
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:68
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: cavas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1088:6
+     |
+1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1354:17
+     |
+1354 |     pub camera: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: cavas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1355:19
+     |
+1355 |     pub viewport: cavas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: cavas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1382:17
+     |
+1382 |         origin: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: cavas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1501:24
+     |
+1501 |         let viewport = cavas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = cavas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2496:17
+     |
+2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2710:13
+     |
+2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2820:21
+     |
+2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2855:6
+     |
+2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: `framework_surface_tiled_map` (lib) generated 31 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 31 suggestions)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+   Compiling infinite_board_port_directed_dag v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:262:25
+    |
+262 |     pub default: Option<serde_json::Value>,
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+262 -     pub default: Option<serde_json::Value>,
+262 +     pub default: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:264:23
+    |
+264 |     pub value: Option<serde_json::Value>,
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+264 -     pub value: Option<serde_json::Value>,
+264 +     pub value: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:376:15
+    |
+376 |         json: serde_json::Value,
+    |               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+376 -         json: serde_json::Value,
+376 +         json: Value,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:434:43
+    |
+434 | fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+434 - fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+434 + fn preview_tree_collapsed_summary(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:436:9
+    |
+436 |         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+436 -         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+436 +         Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:437:9
+    |
+437 |         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+437 -         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+437 +         Value::Array(arr) => format!("[{} items]", arr.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:438:9
+    |
+438 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+438 -         serde_json::Value::String(s) => format!("\"{s}\""),
+438 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:439:9
+    |
+439 |         serde_json::Value::Number(n) => n.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+439 -         serde_json::Value::Number(n) => n.to_string(),
+439 +         Value::Number(n) => n.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:440:9
+    |
+440 |         serde_json::Value::Bool(b) => b.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -         serde_json::Value::Bool(b) => b.to_string(),
+440 +         Value::Bool(b) => b.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:441:9
+    |
+441 |         serde_json::Value::Null => "null".into(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+441 -         serde_json::Value::Null => "null".into(),
+441 +         Value::Null => "null".into(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:445:40
+    |
+445 | fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+    |                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+445 - fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+445 + fn preview_tree_scalar_display(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:447:9
+    |
+447 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+447 -         serde_json::Value::String(s) => format!("\"{s}\""),
+447 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:508:29
+    |
+508 | fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+508 - fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+508 + fn preview_tree_rows(json: &Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:511:9
+    |
+511 |         serde_json::Value::Object(map) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+511 -         serde_json::Value::Object(map) => {
+511 +         Value::Object(map) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:50
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:81
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:523:9
+    |
+523 |         serde_json::Value::Array(arr) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+523 -         serde_json::Value::Array(arr) => {
+523 +         Value::Array(arr) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:50
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:81
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:593:56
+    |
+593 | fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+593 - fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+593 + fn preview_tree_row_layouts(node: &DagNodeSpec, json: &Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1656:40
+     |
+1656 | fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+     |                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1656 - fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+1656 + fn lod_max_zoom_json(max_zoom: f64) -> Value {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1666:19
+     |
+1666 |     let rows: Vec<serde_json::Value> = DAG_LODS
+     |                   ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1666 -     let rows: Vec<serde_json::Value> = DAG_LODS
+1666 +     let rows: Vec<Value> = DAG_LODS
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3717:92
+     |
+3717 |     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                                                            ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3717 -     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+3717 +     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3724:122
+     |
+3724 | ...wLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                           ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3724 -     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+3724 +     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3752:48
+     |
+3752 |                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3752 -                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+3752 +                     obj.insert("ghost".into(), Value::Bool(ghost));
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3760:105
+     |
+3760 |     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+     |                                                                                                         ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3760 -     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+3760 +     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3831:30
+     |
+3831 |         let mut sliders: Vec<serde_json::Value> = Vec::new();
+     |                              ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3831 -         let mut sliders: Vec<serde_json::Value> = Vec::new();
+3831 +         let mut sliders: Vec<Value> = Vec::new();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+   Compiling puzzle_2d v0.1.0 (/Users/ueli/Documents/semio/puzzle/2d/rs)
+warning: `infinite_board_port_directed_dag` (lib) generated 27 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 27 suggestions)
+   Compiling framework_surface_node_graph v0.1.0 (/Users/ueli/Documents/semio/framework/surface/node-graph/rs)
+   Compiling flow_core v0.1.0 (/Users/ueli/Documents/semio/flow/core/rs)
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:20:18
+   |
+20 |     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |                  ^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+20 -     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+20 +     let fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unused imports: `DagLayoutOptions` and `dag_take_pending_open_instance_id`
+ --> framework/surface/node-graph/rs/lib.rs:6:32
+  |
+6 | ..._world, dag_take_pending_open_instance_id, fit_node_size, DagCamera, DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNod...
+  |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                                 ^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:22:15
+   |
+22 |     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |               ^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+22 -     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+22 +     let opts: Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   |
+
+warning: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`
+  --> puzzle/2d/rs/lib.rs:51:88
+   |
+51 | ...icon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   |                                      ^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> puzzle/2d/rs/lib.rs:84:6
+   |
+84 | impl graph::GraphExtension for Puzzle2dExtension {}
+   |      ^^^^^^^^^^^^^^^^^^^^^
+   |
+help: remove the unnecessary path segments
+   |
+84 - impl graph::GraphExtension for Puzzle2dExtension {}
+84 + impl GraphExtension for Puzzle2dExtension {}
+   |
+
+warning: function `resolve_node_icon_svg_from_encoding` is never used
+  --> puzzle/2d/rs/lib.rs:35:4
+   |
+35 | fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `board_resolve_icon_kind` is never used
+  --> puzzle/2d/rs/lib.rs:52:12
+   |
+52 |     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   |            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:396:40
+    |
+396 |             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+396 -             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+396 +             let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:406:40
+    |
+406 |             let (name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             let (name, abbreviation) = dag::normalize_node_display(title, title);
+406 +             let (name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:412:48
+    |
+412 |             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+412 +             let (display_name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1176:45
+     |
+1176 |     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+     |                                             ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1176 -     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+1176 +     let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1737:24
+     |
+1737 |     ghost_node: Option<dag::DagNodeSpec>,
+     |                        ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1737 -     ghost_node: Option<dag::DagNodeSpec>,
+1737 +     ghost_node: Option<DagNodeSpec>,
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4198:27
+     |
+4198 |     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4198 -     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+4198 +     let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4213:28
+     |
+4213 |     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4213 -     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+4213 +     let after_synapse_ids: BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |
+
+warning: `framework_surface_node_graph` (lib) generated 1 warning (run `cargo fix --lib -p framework_surface_node_graph` to apply 1 suggestion)
+warning: `puzzle_2d` (lib) generated 6 warnings (run `cargo fix --lib -p puzzle_2d` to apply 4 suggestions)
+warning: `flow_core` (lib) generated 7 warnings (run `cargo fix --lib -p flow_core` to apply 7 suggestions)
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> framework/renderer/wgpu/rs/lib.rs:8153:23
+     |
+8153 |             presence: UiPresence::default(),
+     |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+8143 +     use semio_framework_plugin::UiPresence;
+     |
+8143 +     use ui_wgpu::UiPresence;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> framework/renderer/wgpu/rs/lib.rs:8947:23
+     |
+8947 |             presence: UiPresence::default(),
+     |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+8937 +     use semio_framework_plugin::UiPresence;
+     |
+8937 +     use ui_wgpu::UiPresence;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> framework/renderer/wgpu/rs/lib.rs:9340:23
+     |
+9340 |             presence: UiPresence::default(),
+     |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+9330 +     use semio_framework_plugin::UiPresence;
+     |
+9330 +     use ui_wgpu::UiPresence;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> framework/renderer/wgpu/rs/lib.rs:9400:53
+     |
+9400 |         let node = UiComponentSceneNode { presence: UiPresence::default(),
+     |                                                     ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+9330 +     use semio_framework_plugin::UiPresence;
+     |
+9330 +     use ui_wgpu::UiPresence;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+    --> framework/renderer/wgpu/rs/lib.rs:9406:23
+     |
+9406 |             presence: UiPresence::default(),
+     |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+     |
+     = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+     |
+9330 +     use semio_framework_plugin::UiPresence;
+     |
+9330 +     use ui_wgpu::UiPresence;
+     |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:13221:60
+      |
+13221 |     let synthetic_scene = UiComponentSceneNode { presence: UiPresence::default(),
+      |                                                            ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+ 7157 + use semio_framework_plugin::UiPresence;
+      |
+ 7157 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15776:73
+      |
+15776 |                     Err(message) => UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                                         ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15876:53
+      |
+15876 |                 UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                     ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15884:56
+      |
+15884 |             return UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                        ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15896:23
+      |
+15896 |             presence: UiPresence::default(),
+      |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15919:31
+      |
+15919 |                     presence: UiPresence::default(),
+      |                               ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15924:56
+      |
+15924 |             return UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                        ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15936:23
+      |
+15936 |             presence: UiPresence::default(),
+      |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15950:53
+      |
+15950 |                 UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                     ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15955:57
+      |
+15955 |                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+      |                                                         ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15979:57
+      |
+15979 |                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+      |                                                         ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:15999:57
+      |
+15999 |                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+      |                                                         ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:16019:57
+      |
+16019 |                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+      |                                                         ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:16038:23
+      |
+16038 |             presence: UiPresence::default(),
+      |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20383:82
+      |
+20383 |             let mut rows: Vec<UiNode> = vec![UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                                                                  ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20403:27
+      |
+20403 |                 presence: UiPresence::default(),
+      |                           ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20415:23
+      |
+20415 |             presence: UiPresence::default(),
+      |                       ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20441:64
+      |
+20441 |                 return UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+      |                                                                ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20468:27
+      |
+20468 |                 presence: UiPresence::default(),
+      |                           ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+error[E0433]: cannot find type `UiPresence` in this scope
+     --> framework/renderer/wgpu/rs/lib.rs:20471:45
+      |
+20471 |         UiNode::Text(UiTextNode { presence: UiPresence::default(),
+      |                                             ^^^^^^^^^^ use of undeclared type `UiPresence`
+      |
+      = note: struct `crate::interpreter::render_plan_validator_tests::UiPresence` exists but is inaccessible
+help: consider importing one of these structs
+      |
+14786 + use semio_framework_plugin::UiPresence;
+      |
+14786 + use ui_wgpu::UiPresence;
+      |
+
+warning: unused import: `UiPresence`
+  --> framework/renderer/wgpu/rs/lib.rs:19:67
+   |
+19 |     HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, UiPresence, WindowLayout, WindowLayoutChild,
+   |                                                                   ^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+  --> framework/renderer/wgpu/rs/lib.rs:67:28
+   |
+67 |     pub window_labels: &'a std::collections::HashMap<String, String>,
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+67 -     pub window_labels: &'a std::collections::HashMap<String, String>,
+67 +     pub window_labels: &'a HashMap<String, String>,
+   |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:1790:22
+     |
+1790 |     let mut scroll = std::collections::HashMap::new();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1790 -     let mut scroll = std::collections::HashMap::new();
+1790 +     let mut scroll = HashMap::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:1791:25
+     |
+1791 |     let mut collapsed = std::collections::HashMap::new();
+     |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1791 -     let mut collapsed = std::collections::HashMap::new();
+1791 +     let mut collapsed = HashMap::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:1792:23
+     |
+1792 |     let mut selects = std::collections::HashMap::new();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1792 -     let mut selects = std::collections::HashMap::new();
+1792 +     let mut selects = HashMap::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:1871:36
+     |
+1871 |             terminology_documents: std::collections::HashMap::new(),
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1871 -             terminology_documents: std::collections::HashMap::new(),
+1871 +             terminology_documents: HashMap::new(),
+     |
+
+warning: unused import: `SurfaceKind`
+    --> framework/renderer/wgpu/rs/lib.rs:2601:33
+     |
+2601 | use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+     |                                 ^^^^^^^^^^^
+
+warning: unused import: `draw_text`
+    --> framework/renderer/wgpu/rs/lib.rs:2605:15
+     |
+2605 | use ui_wgpu::{draw_text, draw_text_overlay, FontAtlas, GpuContext, HitKind, HitTarget, KeyAction, PointerModifiers, Rect, Rgba, Th...
+     |               ^^^^^^^^^
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:3098:37
+     |
+3098 | fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+     |                                     ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3098 - fn note_widget_hit_at_screen(host: &flow_core::FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+3098 + fn note_widget_hit_at_screen(host: &FlowHost, sx: f64, sy: f64) -> Option<(String, f64, f64)> {
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4848:10
+     |
+4848 |     key: ui_wgpu::KeyAction,
+     |          ^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4848 -     key: ui_wgpu::KeyAction,
+4848 +     key: KeyAction,
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4849:17
+     |
+4849 |     modifiers: &ui_wgpu::PointerModifiers,
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4849 -     modifiers: &ui_wgpu::PointerModifiers,
+4849 +     modifiers: &PointerModifiers,
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4860:13
+     |
+4860 |             ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4860 -             ui_wgpu::KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+4860 +             KeyAction::Char(ch) if !(modifiers.meta || modifiers.ctrl) => {
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4863:13
+     |
+4863 |             ui_wgpu::KeyAction::Backspace => host.backspace(),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4863 -             ui_wgpu::KeyAction::Backspace => host.backspace(),
+4863 +             KeyAction::Backspace => host.backspace(),
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4864:13
+     |
+4864 |             ui_wgpu::KeyAction::Delete => host.delete_forward(),
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4864 -             ui_wgpu::KeyAction::Delete => host.delete_forward(),
+4864 +             KeyAction::Delete => host.delete_forward(),
+     |
+
+warning: unnecessary qualification
+    --> framework/renderer/wgpu/rs/lib.rs:4865:13
+     |
+4865 |             ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4865 -             ui_wgpu::KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+4865 +             KeyAction::Char(ch) if (modifiers.meta || modifiers.ctrl) && ch.eq_ignore_ascii_case("a") => {
+     |
+
+warning: unused doc comment
+    --> framework/renderer/wgpu/rs/lib.rs:5505:1
+     |
+5505 | / /** 🧵 The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
+5506 | |  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
+5507 | |  * One process-wide `Ui` façade (its own internal `HashMap<window_id, UiWindow>` already partitions
+5508 | |  * per-window retained state — see `report-w0-engine-facade.md`) lives in a `thread_local!`, mirroring
+...    |
+5530 | |  * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w3-interpreter-cutover.md`'s "CRITICAL FINDING"
+5531 | |  * for the original gap and the follow-up ticket work that closed it. */
+     | |________________________________________________________________________^ rustdoc does not generate documentation for macro invocations
+     |
+     = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+     = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `UtilityNode`
+    --> framework/renderer/wgpu/rs/lib.rs:6670:15
+     |
+6670 | use ui_wgpu::{UtilityNode, UiNode, WindowEngagement, WindowMeasure};
+     |               ^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:10406:13
+      |
+10406 |     theme: &ui_wgpu::Theme,
+      |             ^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+10406 -     theme: &ui_wgpu::Theme,
+10406 +     theme: &Theme,
+      |
+
+warning: unused import: `ui_wgpu::UiPresence`
+     --> framework/renderer/wgpu/rs/lib.rs:12300:9
+      |
+12300 |     use ui_wgpu::UiPresence;
+      |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `dock_from_window_layout`
+     --> framework/renderer/wgpu/rs/lib.rs:14787:29
+      |
+14787 |     compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
+      |                             ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `seed_vfs_expanded`
+     --> framework/renderer/wgpu/rs/lib.rs:14793:117
+      |
+14793 | ...tiled_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, Til...
+      |                                                          ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ModeDefinition`
+     --> framework/renderer/wgpu/rs/lib.rs:14809:5
+      |
+14809 |     ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
+      |     ^^^^^^^^^^^^^^
+
+warning: unused import: `ui_wgpu::component::layout::WindowEngagementPossible`
+     --> framework/renderer/wgpu/rs/lib.rs:14811:5
+      |
+14811 | use ui_wgpu::component::layout::WindowEngagementPossible;
+      |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `WindowEngagementOption`
+     --> framework/renderer/wgpu/rs/lib.rs:14814:83
+      |
+14814 |     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
+      |                                                                                   ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:15551:46
+      |
+15551 |                 active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15551 -                 active_utility_by_window_id: std::collections::HashMap::new(),
+15551 +                 active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:15585:50
+      |
+15585 |                     active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15585 -                     active_utility_by_window_id: std::collections::HashMap::new(),
+15585 +                     active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:15841:62
+      |
+15841 | ...                   active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+15841 -                                 active_utility_by_window_id: std::collections::HashMap::new(),
+15841 +                                 active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:17029:42
+      |
+17029 |             active_utility_by_window_id: std::collections::HashMap::new(),
+      |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+17029 -             active_utility_by_window_id: std::collections::HashMap::new(),
+17029 +             active_utility_by_window_id: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:18671:21
+      |
+18671 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18671 -         modifiers: &ui_wgpu::PointerModifiers,
+18671 +         modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:18897:21
+      |
+18897 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18897 -         modifiers: &ui_wgpu::PointerModifiers,
+18897 +         modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:18946:21
+      |
+18946 |         modifiers: &ui_wgpu::PointerModifiers,
+      |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+18946 -         modifiers: &ui_wgpu::PointerModifiers,
+18946 +         modifiers: &PointerModifiers,
+      |
+
+warning: unused import: `ui_wgpu::UiPresence`
+     --> framework/renderer/wgpu/rs/lib.rs:19046:9
+      |
+19046 |     use ui_wgpu::UiPresence;
+      |         ^^^^^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:19751:14
+      |
+19751 |     app: &'a semio_framework_core::AppDefinition,
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19751 -     app: &'a semio_framework_core::AppDefinition,
+19751 +     app: &'a AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:19780:11
+      |
+19780 |     app: &semio_framework_core::AppDefinition,
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19780 -     app: &semio_framework_core::AppDefinition,
+19780 +     app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:19824:80
+      |
+19824 | pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+      |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19824 - pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> bool {
+19824 + pub(crate) fn is_reserved_shell_chord(action: &ui_wgpu::KeyAction, modifiers: &PointerModifiers) -> bool {
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:19841:17
+      |
+19841 |     modifiers: &ui_wgpu::PointerModifiers,
+      |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19841 -     modifiers: &ui_wgpu::PointerModifiers,
+19841 +     modifiers: &PointerModifiers,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:19981:15
+      |
+19981 |         app: &semio_framework_core::AppDefinition,
+      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+19981 -         app: &semio_framework_core::AppDefinition,
+19981 +         app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20508:11
+      |
+20508 |     app: &semio_framework_core::AppDefinition,
+      |           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20508 -     app: &semio_framework_core::AppDefinition,
+20508 +     app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20672:36
+      |
+20672 |             terminology_documents: std::collections::HashMap::new(),
+      |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20672 -             terminology_documents: std::collections::HashMap::new(),
+20672 +             terminology_documents: HashMap::new(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20709:25
+      |
+20709 |             view_state: semio_framework_core::ViewState::default(),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20709 -             view_state: semio_framework_core::ViewState::default(),
+20709 +             view_state: ViewState::default(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20796:25
+      |
+20796 |             view_state: semio_framework_core::ViewState::default(),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20796 -             view_state: semio_framework_core::ViewState::default(),
+20796 +             view_state: ViewState::default(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20824:25
+      |
+20824 |             view_state: semio_framework_core::ViewState::default(),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20824 -             view_state: semio_framework_core::ViewState::default(),
+20824 +             view_state: ViewState::default(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20838:25
+      |
+20838 |             view_state: semio_framework_core::ViewState::default(),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20838 -             view_state: semio_framework_core::ViewState::default(),
+20838 +             view_state: ViewState::default(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:20861:25
+      |
+20861 |             view_state: semio_framework_core::ViewState::default(),
+      |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+20861 -             view_state: semio_framework_core::ViewState::default(),
+20861 +             view_state: ViewState::default(),
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:23443:22
+      |
+23443 |         engagement: &ui_wgpu::WindowEngagement,
+      |                      ^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+23443 -         engagement: &ui_wgpu::WindowEngagement,
+23443 +         engagement: &WindowEngagement,
+      |
+
+warning: unused import: `ControlNode`
+     --> framework/renderer/wgpu/rs/lib.rs:23756:47
+      |
+23756 |         use ui_wgpu::widgets::{render_widget, ControlNode, WidgetNode};
+      |                                               ^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:24273:15
+      |
+24273 |         app: &semio_framework_core::AppDefinition,
+      |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+24273 -         app: &semio_framework_core::AppDefinition,
+24273 +         app: &AppDefinition,
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:26068:30
+      |
+26068 | ...   let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+26068 -         let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+26068 +         let possibles = vec![WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:26075:30
+      |
+26075 | ...   let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+26075 -         let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+26075 +         let possibles = vec![WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None }];
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:26085:13
+      |
+26085 |             ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+26085 -             ui_wgpu::WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
+26085 +             WindowEngagementPossible { id: "boat".into(), label: "Boat".into(), detail: None, action: None },
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:26086:13
+      |
+26086 |             ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+26086 -             ui_wgpu::WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
+26086 +             WindowEngagementPossible { id: "box".into(), label: "Box".into(), detail: None, action: None },
+      |
+
+warning: unnecessary qualification
+     --> framework/renderer/wgpu/rs/lib.rs:26094:30
+      |
+26094 | ...   let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, acti...
+      |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+help: remove the unnecessary path segments
+      |
+26094 -         let possibles = vec![ui_wgpu::WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+26094 +         let possibles = vec![WindowEngagementPossible { id: "muenster".into(), label: "Münster".into(), detail: None, action: None }];
+      |
+
+error[E0062]: field `presence` specified more than once
+    --> framework/renderer/wgpu/rs/lib.rs:9406:13
+     |
+9400 |         let node = UiComponentSceneNode { presence: UiPresence::default(),
+     |                                           ------------------------------- first use of `presence`
+...
+9406 |             presence: UiPresence::default(),
+     |             ^^^^^^^^ used more than once
+
+warning: variable does not need to be mutable
+     --> framework/renderer/wgpu/rs/lib.rs:26776:9
+      |
+26776 |     let mut response = ureq::get(&resolved).call().ok()?;
+      |         ----^^^^^^^^
+      |         |
+      |         help: remove this `mut`
+      |
+      = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: irrefutable `if let` pattern
+     --> framework/renderer/wgpu/rs/lib.rs:27646:12
+      |
+27646 |         if let HostUserEvent::RuntimeReady { runtime, callbacks } = event {
+      |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: this pattern will always match, so the `if let` is useless
+      = help: consider replacing the `if let` with a `let`
+      = note: `#[warn(irrefutable_let_patterns)]` on by default
+
+warning: value assigned to `x` is never read
+     --> framework/renderer/wgpu/rs/lib.rs:21664:13
+      |
+21664 |             x += fixture_rect.w + theme.gap_standard;
+      |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = help: maybe it is overwritten before being read?
+      = note: `#[warn(unused_assignments)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `surface_id`
+    --> framework/renderer/wgpu/rs/lib.rs:2778:38
+     |
+2778 | fn graph_action(controller_id: &str, surface_id: &str, action: &str, args: Value) -> ActionDescriptor {
+     |                                      ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_surface_id`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+    --> framework/renderer/wgpu/rs/lib.rs:3724:9
+     |
+3724 |     let mut px = target_px.max(4.0).round();
+     |         ----^^
+     |         |
+     |         help: remove this `mut`
+
+warning: variable does not need to be mutable
+    --> framework/renderer/wgpu/rs/lib.rs:3746:9
+     |
+3746 |     let mut px = target_px.max(8.0).round();
+     |         ----^^
+     |         |
+     |         help: remove this `mut`
+
+warning: unused variable: `x`
+    --> framework/renderer/wgpu/rs/lib.rs:7993:5
+     |
+7993 |     x: f32,
+     |     ^ help: if this is intentional, prefix it with an underscore: `_x`
+
+warning: unreachable pattern
+    --> framework/renderer/wgpu/rs/lib.rs:8079:9
+     |
+8079 |         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
+     |         ^ no value can reach this
+     |
+note: multiple earlier patterns match some of the same values
+    --> framework/renderer/wgpu/rs/lib.rs:8079:9
+     |
+8059 |         SurfaceKind::Paint2d => render_paint_2d(scene, bounds, ctx, gpu),
+     |         -------------------- matches some of the same values
+8060 |         SurfaceKind::Table => render_table(scene, bounds, ctx),
+     |         ------------------ matches some of the same values
+8061 |         SurfaceKind::Canvas2d => render_canvas_2d(scene, bounds, ctx),
+     |         --------------------- matches some of the same values
+8062 |         SurfaceKind::NodeGraph => render_node_graph(scene, bounds, ctx, gpu, node_graph_states),
+     |         ---------------------- matches some of the same values
+...
+8079 |         _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
+     |         ^ ...and 11 other patterns collectively make this unreachable
+     = note: `#[warn(unreachable_patterns)]` (part of `#[warn(unused)]`) on by default
+
+Some errors have detailed explanations: E0062, E0433.
+For more information about an error, try `rustc --explain E0062`.
+warning: `semio-framework-renderer-wgpu` (lib test) generated 60 warnings
+error: could not compile `semio-framework-renderer-wgpu` (lib test) due to 26 previous errors; 60 warnings emitted

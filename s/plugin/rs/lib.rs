@@ -1373,7 +1373,7 @@ pub mod app_studio {
             ("importMediaPayload", "Import Media Payload", "Medien-Payload importieren"),
             ("openStudio", "Open Studio", "Studio öffnen"),
             ("openInstance", "Open Instance", "Instanz öffnen"),
-            ("closeFocusedInstance", "Close Focused Instance", "Fokussierte Instanz schliessen"),
+            ("closeFocusedInstance", "Close Focused Instance", "Fokussierte Instanz schließen"),
             ("goHome", "Go Home", "Zur Startseite"),
             ("navigateVirtualFileSystemNode", "Navigate File System Node", "Dateisystemknoten navigieren"),
         ])

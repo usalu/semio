@@ -2327,8 +2327,28 @@ export function relayPluginBackboneOutbound(uri: string, messageJson: string): v
   pluginBackboneOutboundRelay?.(uri, messageJson);
 }
 
+/** @emoji 🌉 A direct-import (main-thread, no-worker) plugin's generated `host-shim.js` runs in this
+ * same realm but can't import from this module, so it reaches the outbound relay through this
+ * well-known global instead — the same relay a worker-backed plugin reaches via `postMessage`. */
+(globalThis as unknown as { __semioMainThreadPluginBackboneOutbound?: (uri: string, messageJson: string) => void }).__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
+
+/** @emoji 🌉 Inbound counterpart: pushes straight into the same global queue a direct-import plugin's
+ * `host-shim.js` `backbonePoll` drains, keyed by `uri` (globally unique per document, so no pluginId
+ * scoping is needed even though several plugins may share this realm). */
+function pushMainThreadPluginBackboneInbound(uri: string, messages: readonly string[]): void {
+  const bridge = globalThis as unknown as { __semioBackboneInbound?: Map<string, string[]> };
+  const queue = bridge.__semioBackboneInbound ?? new Map<string, string[]>();
+  queue.set(uri, [...(queue.get(uri) ?? []), ...messages]);
+  bridge.__semioBackboneInbound = queue;
+}
+
 export function postPluginBackboneInbound(pluginId: string, uri: string, messages: readonly string[]): void {
-  pluginWorkerClients.get(pluginId)?.postBackboneInbound(uri, messages);
+  const client = pluginWorkerClients.get(pluginId);
+  if (client) {
+    client.postBackboneInbound(uri, messages);
+    return;
+  }
+  pushMainThreadPluginBackboneInbound(uri, messages);
 }
 
 let pluginBackboneOutboundRelay: ((uri: string, messageJson: string) => void) | null = null;

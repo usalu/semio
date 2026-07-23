@@ -1,20 +1,23 @@
 {
   "nodes": [
     { "id": "n1", "x": 0.0, "y": 0.0, "z": 0.0 },
-    { "id": "n2", "x": 3.0, "y": 0.0, "z": 0.0 },
+    { "id": "n2", "x": 0.0, "y": 0.0, "z": 3.0 },
+    { "id": "n3", "x": 3.0, "y": 0.0, "z": 3.0 },
     { "id": "sc0", "x": 5.0, "y": 0.0, "z": 0.0 },
     { "id": "sc1", "x": 6.0, "y": 0.0, "z": 0.0 },
     { "id": "sc2", "x": 6.0, "y": 1.0, "z": 0.0 },
     { "id": "sc3", "x": 5.0, "y": 1.0, "z": 0.0 }
   ],
   "elements": [
-    { "kind": "frame", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "hea200", "roll": 0.0 }
+    { "kind": "frame", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "shs100", "roll": 0.0 },
+    { "kind": "frame", "id": "e2", "start": "n2", "end": "n3", "materialId": "steel", "sectionId": "hea200", "roll": 0.0 }
   ],
   "materials": [
     { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "g": 80770000000.0, "nu": 0.3, "rho": 7850.0 }
   ],
   "sections": [
-    { "id": "hea200", "name": "HEA 200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 }
+    { "id": "hea200", "name": "HEA 200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 },
+    { "id": "shs100", "name": "SHS 100 Column", "area": 0.001, "iy": 0.000001, "iz": 0.000001, "j": 0.000002 }
   ],
   "solids": [
     { "id": "sol1", "name": "Slab", "outline": [[5.0, 0.0], [6.0, 0.0], [6.0, 1.0], [5.0, 1.0]], "holes": [], "baseZ": 0.0, "height": 0.5, "layers": 1, "meshSize": 0.5, "materialId": "steel" }
@@ -28,33 +31,26 @@
   ],
   "loadCases": [
     {
-      "id": "point",
-      "name": "Point Load",
+      "id": "dead",
+      "name": "Dead Load",
       "loads": [
-        { "kind": "nodal", "id": "l1", "nodeId": "n2", "dof": "Tz", "value": -5000.0 }
+        { "kind": "memberUdl", "id": "l1", "elementId": "e2", "wx": 0.0, "wy": 0.0, "wz": -2000.0 },
+        { "kind": "area", "id": "l2", "solidId": "sol1", "pressure": 10000.0 }
       ],
-      "selfWeight": false
+      "selfWeight": true
     },
     {
-      "id": "point2",
-      "name": "Point Load 2",
+      "id": "live",
+      "name": "Live Load",
       "loads": [
-        { "kind": "nodal", "id": "l2", "nodeId": "n2", "dof": "Tz", "value": -2000.0 }
-      ],
-      "selfWeight": false
-    },
-    {
-      "id": "pressure",
-      "name": "Slab Pressure",
-      "loads": [
-        { "kind": "area", "id": "a1", "solidId": "sol1", "pressure": 10000.0 }
+        { "kind": "nodal", "id": "l3", "nodeId": "n3", "dof": "Tz", "value": -5000.0 }
       ],
       "selfWeight": false
     }
   ],
   "combinations": [
-    { "id": "uls", "name": "ULS", "terms": [["point", 1.35], ["point2", 1.0]] }
+    { "id": "uls", "name": "ULS", "terms": [["dead", 1.35], ["live", 1.5]] }
   ],
-  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 50.0 },
+  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 300.0 },
   "camera": { "json": "{}" }
 }

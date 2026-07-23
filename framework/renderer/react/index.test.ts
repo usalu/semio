@@ -181,6 +181,7 @@ import {
   createFrameworkDisplayPanelTabs,
   type DisplayHostApi,
   resolveFrameworkLayoutSeed,
+  introductionTargetsWindow,
   buildToolTabs,
   toolIdFromPanelTabId,
 } from "./index.tsx";
@@ -1782,6 +1783,33 @@ describe("framework renderer hosts", () => {
       }),
     );
     expect(markup).toContain("semio-world-3d-empty");
+    expect(markup).not.toContain("data-orbit-view-gizmo");
+  });
+
+  it("marks every non-empty world-3d host with the bottom-right orbit view gizmo", () => {
+    const markup = renderToStaticMarkup(
+      createElement(World3dHost, {
+        node: {
+          type: "componentScene",
+          surfaceId: "puzzle.3d.play.viewport",
+          controllerId: "puzzle3d-play",
+          componentKind: "world-3d",
+          world3d: {
+            cameraJson: '{"position":[4,4,4],"target":[0,0,0],"zoom":1}',
+            meshesJson: "[]",
+            instancesJson: "[]",
+            selectionJson: "{}",
+            vorticesJson: "[]",
+            attractionsJson: "[]",
+            interactionJson: '{"activeUtility":"select"}',
+          },
+        },
+        onAction: noopAction,
+      }),
+    );
+    expect(markup).toContain("semio-world-3d-host");
+    expect(markup).toContain('data-orbit-view-gizmo=""');
+    expect(markup).toContain('data-surface-id="puzzle.3d.play.viewport"');
   });
 
   it("keeps world-3d orbit camera seed local per viewport once detached", () => {
@@ -1803,6 +1831,14 @@ describe("framework renderer hosts", () => {
     expect(merged.fov).toBe(45);
     expect(merged.explicitProjection).toBe(true);
     expect(merged.up).toEqual([0, 1, 0]);
+  });
+
+  it("preserves projectionSpec.view from gizmo snaps instead of clobbering to top", () => {
+    const merged = mergeWorldViewportCamera(
+      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionSpec: { kind: "orthographic", view: "top" } },
+      { position: [0, -600, 0], target: [0, 0, 0], zoom: 50, projection: "orthographic", projectionSpec: { kind: "orthographic", view: "front" } },
+    );
+    expect(merged.projectionSpec).toEqual({ kind: "orthographic", view: "front" });
   });
 
   it("accepts extended world 3d scene fields", () => {
@@ -3788,9 +3824,14 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
       advance: { kind: "action", id: "addObjectKind" },
-      show: ["framework.window.puzzle3dMain"],
+      show: ["framework.panelTab.framework.panel.catalogue", "framework.window.puzzle3dMain"],
     });
     expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/Drag-and-Drop|ziehen/i);
+    expect(steps.find((step) => step.id === "transform-utility")).toMatchObject({
+      introduce: "transform",
+      advance: { kind: "utility", id: "transform" },
+      show: ["framework.window.puzzle3dMain"],
+    });
 
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -4158,6 +4199,21 @@ describe("Display Windows tab — projection drag templates", () => {
     const payload = JSON.parse(topLeaf.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(payload.windowKindId).toBe("puzzle3d-main");
     expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
+  });
+});
+
+describe("introductionTargetsWindow", () => {
+  it("matches both the window kind and every open instance of that kind", () => {
+    expect(introductionTargetsWindow("puzzle3d-main", "puzzle3d-main", "puzzle3d-main")).toBe(true);
+    expect(introductionTargetsWindow("puzzle3d-main-top", "puzzle3d-main", "puzzle3d-main")).toBe(true);
+    expect(introductionTargetsWindow("puzzle3d-main-perspective", "puzzle3d-main", "puzzle3d-main")).toBe(true);
+    expect(introductionTargetsWindow("other-window", "other-window", "puzzle3d-main")).toBe(false);
+  });
+
+  it("matches action-rail segments against the kind and its instances", () => {
+    expect(introductionTargetsWindow("puzzle3d-main-top", "puzzle3d-main", null, "puzzle3dMain")).toBe(true);
+    expect(introductionTargetsWindow("puzzle3d-main", "puzzle3d-main", null, "puzzle3dMain")).toBe(true);
+    expect(introductionTargetsWindow("other-window", "other-window", null, "puzzle3dMain")).toBe(false);
   });
 });
 

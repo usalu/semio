@@ -245,27 +245,49 @@ impl DockState {
         window_labels: &HashMap<String, String>,
         atlas: &mut FontAtlas,
     ) -> Vec<(DockPath, Rect, String)> {
+        self.stack_body_rects_with_silhouettes(bounds, theme, window_labels, atlas).0
+    }
+
+    /// 🪟 Same as {@link Self::stack_body_rects} plus the active window's dock-stack silhouette.
+    pub fn stack_body_rects_with_silhouettes(
+        &self,
+        bounds: Rect,
+        theme: &Theme,
+        window_labels: &HashMap<String, String>,
+        atlas: &mut FontAtlas,
+    ) -> (Vec<(DockPath, Rect, String)>, HashMap<String, WindowSilhouette>) {
         let mut out = Vec::new();
+        let mut silhouettes = HashMap::new();
         if let Some(path) = &self.maximized_stack {
             if let Some(node) = node_at(&self.root, path) {
                 let rect = bounds;
                 if let DockNode::Stack { windows, active } = node {
+                    let layout = layout_stack_cap(
+                        windows,
+                        active,
+                        window_labels,
+                        atlas,
+                        theme,
+                        rect,
+                        true,
+                    );
+                    silhouettes.insert(
+                        active.clone(),
+                        WindowSilhouette::new(
+                            rect,
+                            layout.gap_x - rect.x,
+                            rect.x + rect.w - (layout.gap_x + layout.gap_w),
+                            theme.control_height,
+                        ),
+                    );
                     out.push((
                         path.clone(),
-                        stack_content_rect(
-                            rect,
-                            theme,
-                            windows,
-                            active,
-                            window_labels,
-                            atlas,
-                            true,
-                        ),
+                        stack_body_chrome_rect(rect, theme, windows, &layout),
                         active.clone(),
                     ));
                 }
             }
-            return out;
+            return (out, silhouettes);
         }
         collect_stack_bodies(
             &self.root,
@@ -276,8 +298,9 @@ impl DockState {
             atlas,
             self,
             &mut out,
+            &mut silhouettes,
         );
-        out
+        (out, silhouettes)
     }
 
     pub fn stack_tab_bar_rects(&self, bounds: Rect, theme: &Theme) -> Vec<(DockPath, Rect)> {
@@ -1553,6 +1576,52 @@ struct StackCapLayout {
     gap_w: f32,
 }
 
+/// 🪟 Dock-stack outer silhouette (tabs protrusion + gap cutout + controls protrusion + body).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct WindowSilhouette {
+    pub bounds: Rect,
+    pub tabs_w: f32,
+    pub controls_w: f32,
+    pub cap_h: f32,
+}
+
+impl WindowSilhouette {
+    /// 🪟 Builds the silhouette from a stack's outer bounds and measured cap geometry.
+    pub fn new(bounds: Rect, tabs_w: f32, controls_w: f32, cap_h: f32) -> Self {
+        Self {
+            bounds,
+            tabs_w: tabs_w.max(0.0),
+            controls_w: controls_w.max(0.0),
+            cap_h: cap_h.max(0.0),
+        }
+    }
+}
+
+/// 🪟 Paints a hairline (or thicker) stroke along the dock-stack silhouette path.
+pub fn push_window_silhouette_border(draw: &mut DrawList, silhouette: WindowSilhouette, stroke: f32, color: Rgba) {
+    let b = silhouette.bounds;
+    let tabs = silhouette.tabs_w.min(b.w);
+    let controls = silhouette.controls_w.min((b.w - tabs).max(0.0));
+    let cap = silhouette.cap_h.min(b.h);
+    let gap_end = (b.x + b.w - controls).max(b.x + tabs);
+    // top of tabs
+    draw.push_solid([b.x, b.y, tabs, stroke], color);
+    // right drop of tabs into gap
+    draw.push_solid([b.x + tabs - stroke, b.y, stroke, cap], color);
+    // gap baseline
+    draw.push_solid([b.x + tabs, b.y + cap - stroke, (gap_end - b.x - tabs).max(0.0), stroke], color);
+    // left rise of controls
+    draw.push_solid([gap_end, b.y, stroke, cap], color);
+    // top of controls
+    draw.push_solid([gap_end, b.y, controls, stroke], color);
+    // right side
+    draw.push_solid([b.x + b.w - stroke, b.y, stroke, b.h], color);
+    // bottom
+    draw.push_solid([b.x, b.y + b.h - stroke, b.w, stroke], color);
+    // left side
+    draw.push_solid([b.x, b.y, stroke, b.h], color);
+}
+
 fn layout_stack_cap(
     windows: &[String],
     active: &str,
@@ -1718,6 +1787,7 @@ fn collect_stack_bodies(
     atlas: &mut FontAtlas,
     state: &DockState,
     out: &mut Vec<(DockPath, Rect, String)>,
+    silhouettes: &mut HashMap<String, WindowSilhouette>,
 ) {
     match node {
         DockNode::Row(children) => {
@@ -1736,6 +1806,7 @@ fn collect_stack_bodies(
                     atlas,
                     state,
                     out,
+                    silhouettes,
                 );
                 x += w;
             }
@@ -1756,23 +1827,34 @@ fn collect_stack_bodies(
                     atlas,
                     state,
                     out,
+                    silhouettes,
                 );
                 y += h;
             }
         }
         DockNode::Stack { windows, active } => {
             let maximized = state.maximized_stack.as_ref().map(|p| p.as_slice()) == Some(path);
+            let layout = layout_stack_cap(
+                windows,
+                active,
+                window_labels,
+                atlas,
+                theme,
+                bounds,
+                maximized,
+            );
+            silhouettes.insert(
+                active.clone(),
+                WindowSilhouette::new(
+                    bounds,
+                    layout.gap_x - bounds.x,
+                    bounds.x + bounds.w - (layout.gap_x + layout.gap_w),
+                    theme.control_height,
+                ),
+            );
             out.push((
                 path.to_vec(),
-                stack_content_rect(
-                    bounds,
-                    theme,
-                    windows,
-                    active,
-                    window_labels,
-                    atlas,
-                    maximized,
-                ),
+                stack_body_chrome_rect(bounds, theme, windows, &layout),
                 active.clone(),
             ));
         }
@@ -6411,7 +6493,7 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
         UiControlNode::Toggle(n) => WidgetNode::Toggle {
             id: n.id.clone(),
             icon_id: n.icon_id.clone(),
-            pressed: n.pressed,
+            pressed: n.presence.selected,
             text: n.text.clone(),
             on_change: Some(n.on_change.clone()),
         },
@@ -6438,7 +6520,7 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
         UiControlNode::Ring(n) => WidgetNode::Ring {
             id: n.id.clone(),
             t: n.t,
-            disabled: n.disabled.unwrap_or(false),
+            disabled: n.presence.state == UiState::Disabled,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::IconSelect(n) => WidgetNode::IconSelect {
@@ -6506,12 +6588,11 @@ mod render_plan_validator_tests {
             gap: None,
             padding: None,
             id: None,
-            selected: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
             children,
-            loading: None, waiting: None,
 })
     }
 
@@ -14786,7 +14867,8 @@ pub mod shell {
 
 use crate::dock::{
     compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
-    DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
+    push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone,
+    DockRenderContext, DockState, WindowSilhouette,
 };
 use crate::engine_canvas::theme_is_dark;
 use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
@@ -15090,6 +15172,8 @@ pub struct ShellState {
     /// 🖱️ Last-rendered window body rects per window id — used to apply the active utility's cursor while
     /// the pointer is over that window's content (Architecture Decision 8, P5).
     pub window_content_rects: HashMap<String, Rect>,
+    /// 🪟 Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
+    pub window_silhouettes: HashMap<String, WindowSilhouette>,
 }
 //#endregion ShellTypes
 
@@ -15443,6 +15527,7 @@ impl ShellState {
             utility_collection_expanded: HashMap::new(),
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
+            window_silhouettes: HashMap::new(),
         };
         state.load_persisted_panel_layout();
         state
@@ -15894,11 +15979,10 @@ impl ShellState {
             padding: None,
             children: items,
             id: None,
-            selected: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None, waiting: None,
 })
     }
 
@@ -15918,8 +16002,7 @@ impl ShellState {
                         args: None,
                     },
                     style: None,
-                    disabled: None,
-                    loading: None, waiting: None,
+                    presence: UiPresence::default(),
 })
             })
             .collect();
@@ -15936,11 +16019,10 @@ impl ShellState {
             padding: None,
             children: items,
             id: None,
-            selected: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None, waiting: None,
 })
     }
 
@@ -16039,11 +16121,10 @@ impl ShellState {
                     },
                 }),
             ],
-            selected: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None, waiting: None,
 })
     }
 
@@ -22144,9 +22225,10 @@ impl ShellState {
             };
             self.dock.register_hits(&mut dock_ctx, canvas);
         }
-        let placements = self.dock.stack_body_rects(canvas, theme, &window_labels, atlas);
+        let (placements, silhouettes) = self.dock.stack_body_rects_with_silhouettes(canvas, theme, &window_labels, atlas);
         let show_fallback = placements.is_empty();
         self.window_content_rects.clear();
+        self.window_silhouettes = silhouettes;
         for (_, content, window_id) in placements {
             self.window_content_rects.insert(window_id.clone(), content);
             let window_kind = session
@@ -22813,13 +22895,128 @@ impl ShellState {
         }
     }
 
-    /// 🆔 Resolves an introduction element id to its on-screen rect this frame: `ui.navbar`/`ui.footer` are
-    /// geometric fast paths (singular shell chrome, same as the veil-free navbar/footer painters use);
-    /// `framework.window.{segment}` matches `window_content_rects` by `element_id_segment` (already
-    /// tracked per frame, no registration needed — wgpu dock window ids are kind ids); everything else
-    /// resolves through `resolve_element_rect` (utility buttons/toggles today; panel tabs and action rows
-    /// are a tracked follow-up, not yet registered, so they fall back to a centered info box like an
-    /// unresolved anchor always has).
+    /// 🆔 Resolves an introduction element id to every on-screen rect this frame: `ui.navbar`/`ui.footer`
+    /// are geometric fast paths; `framework.window.{segment}` matches every dock-stack silhouette (full
+    /// chrome outline bounds — tabs + gap + controls + body) whose own segment OR whose declared
+    /// window-kind segment equals the target (kind-level introduce/show must raise Top + Perspective
+    /// together, mirroring React's `data-element-alias`); everything else resolves through
+    /// `resolve_element_rect` (utility buttons/toggles; panel tabs via registration).
+    /// `…firstDraggable` resolves to the first draggable tree-row hit inside the tab body when available.
+    fn resolve_introduction_element_rects(
+        &self,
+        id: &str,
+        theme: &Theme,
+        width: f32,
+        height: f32,
+        hit_targets: &[HitTarget<ActionDescriptor>],
+    ) -> Vec<Rect> {
+        if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID {
+            return vec![Rect::new(0.0, 0.0, width, theme.navbar_height)];
+        }
+        if id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
+            return vec![Rect::new(0.0, height - theme.footer_height, width, theme.footer_height)];
+        }
+        // 🆔 `…firstDraggable` only resolves at tour time: draggability is a property of the rendered tree
+        // row (`tree.label.*` hits carry `drag_axis`), never knowable from the panel-tab id alone. Ladder:
+        // first draggable row inside the tab's real body → the body itself → the tab-bar chip fallback
+        // (via the base `framework.panelTab.{tabId}` lookup `resolve_element_rect` already does).
+        if let Some(tab_id) = id.strip_prefix("framework.panelTab.").and_then(|rest| rest.strip_suffix(".firstDraggable")) {
+            let base_id = semio_framework_core::panel_tab_element_id(tab_id);
+            let Some(base_rect) = resolve_element_rect(&base_id) else {
+                return Vec::new();
+            };
+            if !element_rect_is_fallback(&base_id) {
+                if let Some(row) = hit_targets.iter().find(|hit| {
+                    hit.drag_axis.is_some()
+                        && hit.control_id.as_deref().is_some_and(|cid| cid.starts_with("tree.label."))
+                        && base_rect.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)
+                }) {
+                    return vec![row.rect];
+                }
+            }
+            return vec![base_rect];
+        }
+        if let Some(rect) = resolve_element_rect(id) {
+            return vec![rect];
+        }
+        if let Some(segment) = id.strip_prefix("framework.window.") {
+            let segment = segment.split('.').next().unwrap_or(segment);
+            let kind_segments: std::collections::HashSet<String> = self
+                .session
+                .as_ref()
+                .map(|session| {
+                    session
+                        .app
+                        .window_kinds
+                        .iter()
+                        .filter(|kind| semio_framework_core::element_id_segment(&kind.id) == segment)
+                        .map(|kind| kind.id.clone())
+                        .collect()
+                })
+                .unwrap_or_default();
+            let matches_window = |window_id: &str| {
+                semio_framework_core::element_id_segment(window_id) == segment
+                    || kind_segments.iter().any(|kind_id| {
+                        window_id == kind_id
+                            || window_id.starts_with(&format!("{kind_id}-"))
+                            || semio_framework_core::element_id_segment(window_id)
+                                .starts_with(&semio_framework_core::element_id_segment(kind_id))
+                    })
+            };
+            let silhouette_rects: Vec<Rect> = self
+                .window_silhouettes
+                .iter()
+                .filter(|(window_id, _)| matches_window(window_id))
+                .map(|(_, silhouette)| silhouette.bounds)
+                .collect();
+            if !silhouette_rects.is_empty() {
+                return silhouette_rects;
+            }
+            return self
+                .window_content_rects
+                .iter()
+                .filter(|(window_id, _)| matches_window(window_id))
+                .map(|(_, rect)| *rect)
+                .collect();
+        }
+        Vec::new()
+    }
+
+    /// 🪟 Resolves every dock-stack silhouette for an introduction window id (kind or instance).
+    fn resolve_introduction_window_silhouettes(&self, id: &str) -> Vec<WindowSilhouette> {
+        let Some(segment) = id.strip_prefix("framework.window.") else {
+            return Vec::new();
+        };
+        let segment = segment.split('.').next().unwrap_or(segment);
+        let kind_segments: std::collections::HashSet<String> = self
+            .session
+            .as_ref()
+            .map(|session| {
+                session
+                    .app
+                    .window_kinds
+                    .iter()
+                    .filter(|kind| semio_framework_core::element_id_segment(&kind.id) == segment)
+                    .map(|kind| kind.id.clone())
+                    .collect()
+            })
+            .unwrap_or_default();
+        self.window_silhouettes
+            .iter()
+            .filter(|(window_id, _)| {
+                semio_framework_core::element_id_segment(window_id) == segment
+                    || kind_segments.iter().any(|kind_id| {
+                        *window_id == kind_id
+                            || window_id.starts_with(&format!("{kind_id}-"))
+                            || semio_framework_core::element_id_segment(window_id)
+                                .starts_with(&semio_framework_core::element_id_segment(kind_id))
+                    })
+            })
+            .map(|(_, silhouette)| *silhouette)
+            .collect()
+    }
+
+    /// 🆔 Convenience: first/only rect for an introduction id (info-box anchoring + single-target pulse).
     fn resolve_introduction_element_rect(
         &self,
         id: &str,
@@ -22828,42 +23025,24 @@ impl ShellState {
         height: f32,
         hit_targets: &[HitTarget<ActionDescriptor>],
     ) -> Option<Rect> {
-        if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID {
-            return Some(Rect::new(0.0, 0.0, width, theme.navbar_height));
-        }
-        if id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
-            return Some(Rect::new(0.0, height - theme.footer_height, width, theme.footer_height));
-        }
-        // 🆔 `…firstDraggable` only resolves at tour time: draggability is a property of the rendered tree
-        // row (`tree.label.*` hits carry `drag_axis`), never knowable from the panel-tab id alone. Ladder:
-        // first draggable row inside the tab's real body → the body itself → the tab-bar chip fallback
-        // (via the base `framework.panelTab.{tabId}` lookup `resolve_element_rect` already does).
-        if let Some(tab_id) = id.strip_prefix("framework.panelTab.").and_then(|rest| rest.strip_suffix(".firstDraggable")) {
-            let base_id = semio_framework_core::panel_tab_element_id(tab_id);
-            let base_rect = resolve_element_rect(&base_id)?;
-            if !element_rect_is_fallback(&base_id) {
-                if let Some(row) = hit_targets.iter().find(|hit| {
-                    hit.drag_axis.is_some()
-                        && hit.control_id.as_deref().is_some_and(|cid| cid.starts_with("tree.label."))
-                        && base_rect.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)
-                }) {
-                    return Some(row.rect);
+        let rects = self.resolve_introduction_element_rects(id, theme, width, height, hit_targets);
+        match rects.as_slice() {
+            [] => None,
+            [only] => Some(*only),
+            many => {
+                let mut min_x = f32::INFINITY;
+                let mut min_y = f32::INFINITY;
+                let mut max_x = f32::NEG_INFINITY;
+                let mut max_y = f32::NEG_INFINITY;
+                for rect in many {
+                    min_x = min_x.min(rect.x);
+                    min_y = min_y.min(rect.y);
+                    max_x = max_x.max(rect.x + rect.w);
+                    max_y = max_y.max(rect.y + rect.h);
                 }
+                Some(Rect::new(min_x, min_y, max_x - min_x, max_y - min_y))
             }
-            return Some(base_rect);
         }
-        if let Some(rect) = resolve_element_rect(id) {
-            return Some(rect);
-        }
-        if let Some(segment) = id.strip_prefix("framework.window.") {
-            let segment = segment.split('.').next().unwrap_or(segment);
-            return self
-                .window_content_rects
-                .iter()
-                .find(|(window_id, _)| semio_framework_core::element_id_segment(window_id) == segment)
-                .map(|(_, rect)| *rect);
-        }
-        None
     }
 
     /// 🎓 The currently active introduction step (if a tour is running and its index still resolves) —
@@ -23040,6 +23219,11 @@ impl ShellState {
             return;
         };
 
+        let introduce_rects = step
+            .introduce
+            .as_deref()
+            .map(|id| self.resolve_introduction_element_rects(id, theme, width, height, &input.hit_targets))
+            .unwrap_or_default();
         let introduce_rect = step
             .introduce
             .as_deref()
@@ -23047,9 +23231,9 @@ impl ShellState {
         let show_rects: Vec<Rect> = step
             .show
             .iter()
-            .filter_map(|id| self.resolve_introduction_element_rect(id, theme, width, height, &input.hit_targets))
+            .flat_map(|id| self.resolve_introduction_element_rects(id, theme, width, height, &input.hit_targets))
             .collect();
-        let cutouts: Vec<Rect> = introduce_rect.into_iter().chain(show_rects.iter().copied()).collect();
+        let cutouts: Vec<Rect> = introduce_rects.iter().copied().chain(show_rects.iter().copied()).collect();
         let bands = introduction_veil_bands(width, height, &cutouts);
         // 🎓 A targeted step that hasn't mounted yet (a folded utility bar/panel) must not trap the user
         // behind an opaque-to-clicks veil — only screen-style steps (`introduce == None`) and steps whose
@@ -23068,13 +23252,24 @@ impl ShellState {
                 });
             }
         }
-        if let Some(rect) = introduce_rect {
-            let thickness = introduced_pulse_thickness(chrome_now_ms(), theme.stroke_hairline, 3.0);
-            let ring = rect.inset(-thickness * 0.5);
-            overlay.push_solid([ring.x, ring.y, ring.w, thickness], theme.focus_ring);
-            overlay.push_solid([ring.x, ring.y + ring.h - thickness, ring.w, thickness], theme.focus_ring);
-            overlay.push_solid([ring.x, ring.y, thickness, ring.h], theme.focus_ring);
-            overlay.push_solid([ring.x + ring.w - thickness, ring.y, thickness, ring.h], theme.focus_ring);
+        let introduce_silhouettes = step
+            .introduce
+            .as_deref()
+            .map(|id| self.resolve_introduction_window_silhouettes(id))
+            .unwrap_or_default();
+        let thickness = introduced_pulse_thickness(chrome_now_ms(), theme.stroke_hairline, 3.0);
+        if introduce_silhouettes.is_empty() {
+            for rect in &introduce_rects {
+                let ring = rect.inset(-thickness * 0.5);
+                overlay.push_solid([ring.x, ring.y, ring.w, thickness], theme.focus_ring);
+                overlay.push_solid([ring.x, ring.y + ring.h - thickness, ring.w, thickness], theme.focus_ring);
+                overlay.push_solid([ring.x, ring.y, thickness, ring.h], theme.focus_ring);
+                overlay.push_solid([ring.x + ring.w - thickness, ring.y, thickness, ring.h], theme.focus_ring);
+            }
+        } else {
+            for silhouette in &introduce_silhouettes {
+                push_window_silhouette_border(overlay, *silhouette, thickness, theme.focus_ring);
+            }
         }
 
         let is_de = self.locale_id == "de";
@@ -25914,6 +26109,29 @@ mod chrome_overlays_tour_tests {
         assert_eq!(
             introduced_pulse_thickness(100.0, hairline, focus),
             introduced_pulse_thickness(100.0 + INTRODUCED_PULSE_PERIOD_MS, hairline, focus)
+        );
+    }
+
+    #[test]
+    fn window_silhouette_border_emits_notched_outline_segments() {
+        let mut draw = DrawList::default();
+        let silhouette = WindowSilhouette::new(Rect::new(10.0, 20.0, 200.0, 100.0), 60.0, 40.0, 24.0);
+        push_window_silhouette_border(&mut draw, silhouette, 2.0, Rgba::new(1.0, 0.0, 0.0, 1.0));
+        let solids: Vec<[f32; 4]> = draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter().map(|instance| instance.rect))
+            .collect();
+        assert!(solids.len() >= 8, "silhouette must paint every outline segment");
+        // Gap baseline sits at y = bounds.y + cap_h - stroke
+        assert!(
+            solids.iter().any(|r| (r[1] - (20.0 + 24.0 - 2.0)).abs() < 0.01 && r[0] >= 10.0 + 60.0 - 0.01),
+            "gap baseline must sit under the cutout between tabs and controls"
+        );
+        // Top of controls starts at x = bounds.x + bounds.w - controls_w
+        assert!(
+            solids.iter().any(|r| (r[0] - (10.0 + 200.0 - 40.0)).abs() < 0.01 && (r[1] - 20.0).abs() < 0.01),
+            "controls cap top must be part of the silhouette"
         );
     }
     //#endregion Pulse

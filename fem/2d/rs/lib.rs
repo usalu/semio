@@ -123,6 +123,9 @@ pub struct FemCombination {
 }
 
 /// ⚙️ Analysis settings — modal/buckling mode counts and the viewport deformation scale factor.
+/// `deformation_scale` exaggerates the STATIC results view's real (meter-scale) displacements only;
+/// modal/buckling mode shapes are dimensionless (mass/Kg-orthonormalized) and the viewer normalizes
+/// them to a fixed fraction of the model's own extent instead of using this factor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
@@ -300,6 +303,8 @@ fn index_of<T: HasId>(items: &[T], id: &str) -> Option<usize> {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fem2dDiff {
+    /// 🌍 Whole-document replacement (example import / reset); wins over every granular field below.
+    pub document: Option<Fem2dDocument>,
     pub nodes: NodesDiff,
     pub elements: ElementsDiff,
     pub regions: RegionsDiff,
@@ -314,6 +319,9 @@ pub struct Fem2dDiff {
 
 impl OperationDiff<Fem2dDocument> for Fem2dDiff {
     fn apply(&self, projection: &Fem2dDocument) -> Fem2dDocument {
+        if let Some(document) = &self.document {
+            return document.clone();
+        }
         let mut next = projection.clone();
         apply_collection_diff(&mut next.nodes, &self.nodes.removed, &self.nodes.set);
         apply_collection_diff(&mut next.elements, &self.elements.removed, &self.elements.set);
@@ -333,6 +341,10 @@ impl OperationDiff<Fem2dDocument> for Fem2dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.document.is_some() {
+            *self = Fem2dDiff { document: other.document, ..Default::default() };
+            return;
+        }
         self.nodes.removed.extend(other.nodes.removed);
         self.nodes.set.extend(other.nodes.set);
         self.elements.removed.extend(other.elements.removed);
@@ -381,6 +393,8 @@ pub enum Fem2dOp {
     RemoveCombination { id: String },
     SetAnalysisSettings { settings: FemAnalysisSettings },
     SetCamera { camera: FemCamera },
+    /// 🌍 Replaces the whole document (example import / reset).
+    SetDocument { document: Fem2dDocument },
 }
 
 impl Operation<Fem2dDocument> for Fem2dOp {
@@ -407,6 +421,7 @@ impl Operation<Fem2dDocument> for Fem2dOp {
             Fem2dOp::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
             Fem2dOp::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
             Fem2dOp::SetCamera { camera } => diff.camera = Some(camera.clone()),
+            Fem2dOp::SetDocument { document } => diff.document = Some(document.clone()),
         }
         diff
     }
@@ -455,6 +470,7 @@ impl Operation<Fem2dDocument> for Fem2dOp {
             Fem2dOp::RemoveCombination { id } => index_of(&projection.combinations, id).map(|index| vec![Fem2dOp::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
             Fem2dOp::SetAnalysisSettings { .. } => vec![Fem2dOp::SetAnalysisSettings { settings: projection.analysis.clone() }],
             Fem2dOp::SetCamera { .. } => vec![Fem2dOp::SetCamera { camera: projection.camera.clone() }],
+            Fem2dOp::SetDocument { .. } => vec![Fem2dOp::SetDocument { document: projection.clone() }],
         }
     }
 }
@@ -1098,6 +1114,23 @@ mod tests {
         let after = round_trip(&base, &Fem2dOp::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
         assert_eq!(after.analysis.modal_count, 5);
     }
+
+    #[test]
+    fn document_op_round_trips() {
+        let base = simply_supported_beam_doc();
+        let replacement = rectangle_region_doc();
+        let after = round_trip(&base, &Fem2dOp::SetDocument { document: replacement.clone() });
+        assert_eq!(after, replacement);
+    }
+
+    #[test]
+    fn document_diff_absorb_wins_over_granular_changes() {
+        let base = simply_supported_beam_doc();
+        let replacement = rectangle_region_doc();
+        let mut diff = Fem2dOp::SetCamera { camera: FemCamera { x: 1.0, y: 2.0, zoom: 3.0 } }.diff(&base);
+        diff.absorb(Fem2dOp::SetDocument { document: replacement.clone() }.diff(&base));
+        assert_eq!(diff.apply(&base), replacement);
+    }
     // #endregion 🔖OpRoundTrip
 
     // #region 🔖BuildModel
@@ -1371,8 +1404,8 @@ mod tests {
     fn example_fixture_parses_and_solves() {
         let json = include_str!("../example/default.fem2d.json");
         let doc: Fem2dDocument = serde_json::from_str(json).expect("example fixture parses");
-        assert_eq!(doc.nodes.len(), 6);
-        assert_eq!(doc.elements.len(), 1);
+        assert_eq!(doc.nodes.len(), 8);
+        assert_eq!(doc.elements.len(), 3);
         assert_eq!(doc.regions.len(), 1);
         assert_eq!(doc.combinations.len(), 1);
 
@@ -1384,6 +1417,12 @@ mod tests {
         assert!(results.contains_key("live"), "missing live case result");
         assert!(results.contains_key("uls"), "missing uls combination result");
         assert!(results.get("dead").unwrap().checks.residual_norm < 1e-6);
+
+        let nodal_von_mises = fem2d_nodal_von_mises(&doc, "dead").expect("nodal von mises resolves");
+        assert!(!nodal_von_mises.is_empty(), "the region carries a real area load in the dead case");
+
+        let buckling = fem2d_buckling(&doc, "dead").expect("buckling resolves for the dead case's compressed column");
+        assert!(buckling.factors[0].is_finite() && buckling.factors[0] > 1.0, "expected an illustrative (finite, >1) load factor: {:?}", buckling.factors);
     }
     // #endregion 🔖ExampleFixture
 }

@@ -936,7 +936,7 @@ fn raster_action_labels(is_de: bool) -> HashMap<String, String> {
         ("moveLayer", "Move Layer", "Ebene verschieben"),
         ("selectAll", "Select All", "Alles auswählen"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Hover festlegen"),
+        ("setHover", "Set Hover", "Überfahren festlegen"),
         ("setBrushSize", "Set Brush Size", "Pinselgröße festlegen"),
         ("setBrushOpacity", "Set Brush Opacity", "Pinseldeckkraft festlegen"),
         ("setCompositeViewport", "Set Composite Viewport", "Komposit-Ansichtsfenster festlegen"),

@@ -79,6 +79,7 @@ import {
   type IntroductionStepDefinition,
   type ShellLocale,
   type ShellTerminology,
+  panelTabFirstDraggableElementId,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
 } from "@semio-tech/framework-core";
@@ -3110,8 +3111,8 @@ export const uiChromeTranslationBundles = {
           },
           close: {
             label: {
-              normal: "Suche schliessen",
-              beginner: "Suche schliessen",
+              normal: "Suche schließen",
+              beginner: "Suche schließen",
             },
           },
           title: {
@@ -3437,7 +3438,7 @@ export const uiChromeTranslationBundles = {
           selectTarget: { label: { normal: "Ziel auswählen", beginner: "Ziel auswählen" } },
           selectOption: { label: { normal: "Option auswählen…", beginner: "Option auswählen…" } },
           noOptionsFound: { label: { normal: "Keine Optionen gefunden.", beginner: "Keine Optionen gefunden." } },
-          close: { label: { normal: "Schliessen", beginner: "Schliessen" } },
+          close: { label: { normal: "Schließen", beginner: "Schließen" } },
           newWindow: { label: { normal: "Neues Fenster", beginner: "Neues Fenster" } },
           minimize: { label: { normal: "Minimieren", beginner: "Minimieren" } },
           maximize: { label: { normal: "Maximieren", beginner: "Maximieren" } },
@@ -5015,18 +5016,15 @@ export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-f
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
-function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
-  return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
-}
-
-/** @emoji 🎓 Live-tracks the DOM rect of an introduction step's `introduce` element (via
- * {@link elementIdSelector}), stamping it `data-introduced="true"` (pulsing the introduced border, see
- * `ui/styling/js/ui.css`) for as long as it stays attached — cleared on unmount/selector change. Waits for
- * the element to mount (a folded panel/utility bar the shell is in the middle of revealing) instead of
- * failing closed; a `null` selector or a never-found element both resolve to `null`, which the caller
- * treats as a `Screen`-style full veil with no cutout. A `MutationObserver` on the document (rather than a
- * polling timer, which would either stop too early or leak forever waiting for an upgrade that may never
- * come) re-attempts attachment on every DOM change until it mounts, then disconnects. */
+/** @emoji 🎓 Live-tracks the union DOM rect of an introduction step's `introduce` element(s) (via
+ * {@link elementIdSelector}), stamping every match `data-introduced="true"` (pulsing the introduced border, see
+ * `ui/styling/js/ui.css`) for as long as they stay attached — cleared on unmount/selector change. A kind-level
+ * window id that aliases every open instance (Top + Perspective) therefore pulses and anchors against the
+ * union of all matches, not only the first. Waits for the element(s) to mount (a folded panel/utility bar the
+ * shell is in the middle of revealing) instead of failing closed; a `null` selector or a never-found element
+ * both resolve to `null`, which the caller treats as a `Screen`-style full veil. A `MutationObserver` on the
+ * document re-attempts attachment on every DOM change until at least one mounts, then keeps observing so
+ * late-arriving aliases (extra window instances) join the pulse set. */
 function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
   const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
 
@@ -5035,7 +5033,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
       setRect(null);
       return;
     }
-    let element: Element | null = null;
+    let elements: Element[] = [];
     let resizeObserver: ResizeObserver | null = null;
     // 🐢 The mutation observer below fires on every DOM change anywhere on the page — including ones
     // completely unrelated to this anchor (a live 3D viewport, other components' updates). Without this
@@ -5044,34 +5042,63 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
     // single page-wide DOM mutation for as long as the element stays unresolved.
     let reportedUnresolved = false;
 
+    const unionRect = (matches: readonly Element[]): IntroductionRect | null => {
+      if (matches.length === 0) return null;
+      let top = Infinity;
+      let left = Infinity;
+      let right = -Infinity;
+      let bottom = -Infinity;
+      for (const match of matches) {
+        const box = match.getBoundingClientRect();
+        top = Math.min(top, box.top);
+        left = Math.min(left, box.left);
+        right = Math.max(right, box.right);
+        bottom = Math.max(bottom, box.bottom);
+      }
+      return { top, left, width: right - left, height: bottom - top };
+    };
     const measure = () => {
-      if (element) setRect(domRectToIntroductionRect(element.getBoundingClientRect()));
+      const next = unionRect(elements);
+      if (next) setRect(next);
     };
     const attach = () => {
-      const candidate = document.querySelector(selector);
-      if (!candidate) {
+      const candidates = [...document.querySelectorAll(selector)];
+      if (candidates.length === 0) {
+        if (elements.length > 0) {
+          elements.forEach((el) => el.removeAttribute("data-introduced"));
+          elements = [];
+          resizeObserver?.disconnect();
+          resizeObserver = null;
+        }
         if (!reportedUnresolved) {
           reportedUnresolved = true;
           setRect(null);
         }
         return;
       }
-      element = candidate;
-      candidate.setAttribute("data-introduced", "true");
-      measure();
+      const same =
+        candidates.length === elements.length && candidates.every((candidate, index) => candidate === elements[index]);
+      if (same) return;
+      const previous = new Set(elements);
+      const next = new Set(candidates);
+      previous.forEach((el) => {
+        if (!next.has(el)) el.removeAttribute("data-introduced");
+      });
+      candidates.forEach((el) => el.setAttribute("data-introduced", "true"));
+      elements = candidates;
+      resizeObserver?.disconnect();
       resizeObserver = new ResizeObserver(measure);
-      resizeObserver.observe(candidate);
+      candidates.forEach((el) => resizeObserver?.observe(el));
+      measure();
     };
 
     attach();
-    const mutationObserver = new MutationObserver(() => {
-      if (!element) attach();
-    });
+    const mutationObserver = new MutationObserver(attach);
     mutationObserver.observe(document.body, { childList: true, subtree: true });
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
-      element?.removeAttribute("data-introduced");
+      elements.forEach((el) => el.removeAttribute("data-introduced"));
       resizeObserver?.disconnect();
       mutationObserver.disconnect();
       window.removeEventListener("resize", onResize);
@@ -5084,11 +5111,14 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
 
 /** @emoji 🎓 Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
  * veil, by stamping `data-introduction-elevated` (see `ui/styling/js/ui.css`) on its nearest
- * `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
+ * `[data-slot="mode-dock-stack"]` (full window silhouette: tabs + gap + controls + body) or else its
+ * nearest `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
  * stacking context (a deeply-nested target such as a tree row can't be raised on its own; CSS stacking
  * contexts trap it inside its panel/window regardless of its own z-index). An id with no enclosing
- * `[data-elevation-root]` elevates itself directly, gaining `position: relative` as a fallback if it was
- * `static` (restored on cleanup). Waits for each id to mount (a folded panel/utility bar the shell is
+ * chrome unit elevates itself directly, gaining `position: relative` as a fallback if it was
+ * `static` (restored on cleanup). Every DOM match of an id is elevated — a window-kind id aliased onto
+ * every open instance (Top + Perspective via `data-element-alias`) therefore raises all of them, not
+ * only the first `querySelector` hit. Waits for each id to mount (a folded utility bar/panel the shell is
  * still revealing) via the same `MutationObserver` re-attach pattern as `useIntroductionAnchorRect`, and
  * returns the ids that currently resolved so the caller can tell "still waiting" from "revealed" per id
  * (e.g. to decide whether the veil should block pointer events yet). All stamps and fallback positioning
@@ -5104,7 +5134,7 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
     // 🐢 Cleanup remembers the exact stamped element references (rather than re-querying `document` at
     // cleanup time) because React detaches a torn-down subtree from the document BEFORE running passive
     // effect cleanups — a `document.querySelectorAll` lookup in the cleanup would find nothing on unmount,
-    // leaving stamps behind. Mirrors `useIntroductionAnchorRect`'s closure-captured `element` for the same
+    // leaving stamps behind. Mirrors `useIntroductionAnchorRect`'s closure-captured elements for the same
     // reason.
     let stampedRoots = new Set<Element>();
     const positionedByUs = new Set<Element>();
@@ -5113,10 +5143,15 @@ function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
       const nextResolved = new Set<string>();
       const wantedRoots = new Set<Element>();
       for (const id of ids) {
-        const target = document.querySelector(elementIdSelector(id));
-        if (!target) continue;
+        const targets = document.querySelectorAll(elementIdSelector(id));
+        if (targets.length === 0) continue;
         nextResolved.add(id);
-        wantedRoots.add(target.closest("[data-elevation-root]") ?? target);
+        targets.forEach((target) =>
+          // 🪟 A docked window's chrome silhouette is the enclosing `mode-dock-stack` (tabs + gap cutout +
+          // controls + body). Elevate that unit so the introduction veil doesn't dim the caps while the
+          // body rises alone — fall back to `[data-elevation-root]` for standalone windows/panels/etc.
+          wantedRoots.add(target.closest('[data-slot="mode-dock-stack"]') ?? target.closest("[data-elevation-root]") ?? target),
+        );
       }
       stampedRoots.forEach((root) => {
         if (wantedRoots.has(root)) return;
@@ -6752,6 +6787,56 @@ export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active:
   }
 }
 
+/** @emoji 🪟 Measured dock-stack outline used by {@link windowSilhouettePath} / the SVG border overlay. */
+export interface WindowSilhouetteMetrics {
+  readonly width: number;
+  readonly height: number;
+  readonly tabsWidth: number;
+  readonly controlsWidth: number;
+  readonly capHeight: number;
+}
+
+/** @emoji 🪟 Closed SVG path for the dock-stack outer silhouette (tabs + gap cutout + controls + body). */
+export function windowSilhouettePath(metrics: WindowSilhouetteMetrics): string {
+  const w = Math.max(0, metrics.width);
+  const h = Math.max(0, metrics.height);
+  const tabs = Math.max(0, Math.min(metrics.tabsWidth, w));
+  const controls = Math.max(0, Math.min(metrics.controlsWidth, Math.max(0, w - tabs)));
+  const cap = Math.max(0, Math.min(metrics.capHeight, h));
+  const gapEnd = Math.max(tabs, w - controls);
+  return `M0,0 H${tabs} V${cap} H${gapEnd} V0 H${w} V${h} H0 Z`;
+}
+
+/** @emoji 🪟 Reads live silhouette metrics from a mounted `[data-slot="mode-dock-stack"]` (gap + controls). */
+export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
+  const stackRect = stack.getBoundingClientRect();
+  const width = stackRect.width;
+  const height = stackRect.height;
+  if (width <= 0 || height <= 0) return null;
+  const gap = stack.querySelector<HTMLElement>('[data-slot="mode-dock-tab-gap"]');
+  const controls = stack.querySelector<HTMLElement>('[data-slot="mode-dock-controls-cap"]');
+  const tabBar = stack.querySelector<HTMLElement>('[data-slot="mode-dock-tabbar"]');
+  const gapRect = gap?.getBoundingClientRect();
+  const controlsRect = controls?.getBoundingClientRect();
+  const tabsWidth = gapRect ? Math.max(0, gapRect.left - stackRect.left) : 0;
+  const controlsWidth = controlsRect ? Math.max(0, stackRect.right - controlsRect.left) : 0;
+  const capHeight = tabBar?.getBoundingClientRect().height || gapRect?.height || controlsRect?.height || 0;
+  return { width, height, tabsWidth, controlsWidth, capHeight };
+}
+
+/** @emoji 🪟 Which border effect the dock-stack silhouette overlay should paint for its active window. */
+export type WindowSilhouetteBorderKind = "introduced" | "loading" | "waiting";
+
+/** @emoji 🪟 Resolves silhouette border kind from the active `[data-slot="window"]` inside a dock stack. */
+export function resolveWindowSilhouetteBorderKind(windowEl: Element | null): WindowSilhouetteBorderKind | null {
+  if (!windowEl) return null;
+  if (windowEl.getAttribute("data-introduced") === "true") return "introduced";
+  const className = typeof windowEl.className === "string" ? windowEl.className : "";
+  if (/(?:^|\s)border-loading(?:-active|-element)?(?:\s|$)/.test(className)) return "loading";
+  if (/(?:^|\s)border-waiting(?:-active|-element)?(?:\s|$)/.test(className)) return "waiting";
+  return null;
+}
+
 /** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
 export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${borderNormalClass} bg-window`;
 
@@ -6764,11 +6849,13 @@ export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${borderNorma
 /** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
 export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
 
-/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides). */
-export const windowBodyFrameClass = `relative z-0 -mt-px border-x border-t-0 border-b ${borderNormalClass} bg-canvas`;
+/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides).
+ * 🎓 No z-index here (a stray `z-0` used to trap this in its own stacking context): introduction elevation
+ * prefers the enclosing `[data-slot="mode-dock-stack"]` so tabs + body rise together above the veil. */
+export const windowBodyFrameClass = `relative -mt-px border-x border-t-0 border-b ${borderNormalClass} bg-canvas`;
 
 /** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
-export const windowBodyFrameActiveClass = `relative z-0 -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
+export const windowBodyFrameActiveClass = `relative -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
 
 /** @emoji 📐 Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
@@ -17408,6 +17495,7 @@ const Panel: React.FC<PanelProps> = ({
   const [hoveredSide, setHoveredSide] = reactHostPort.useState<"left" | "right" | null>(null);
   const [resizingSide, setResizingSide] = reactHostPort.useState<"left" | "right" | null>(null);
   const sizeRef = reactHostPort.useRef(size);
+  const panelContentRef = reactHostPort.useRef<HTMLDivElement>(null);
 
   reactHostPort.useEffect(() => {
     sizeRef.current = size;
@@ -17420,6 +17508,8 @@ const Panel: React.FC<PanelProps> = ({
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible, onVisibleChange, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
   const activeNode = reactHostPort.useMemo(() => findPanelTabNode(tabs, resolvedPath), [tabs, resolvedPath]);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
+  const firstDraggableAlias = visible && activeNode ? panelTabFirstDraggableElementId(activeNode.id) : null;
+  useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
   // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
@@ -17484,7 +17574,7 @@ const Panel: React.FC<PanelProps> = ({
             <>
               <Scrollable className="relative z-10 flex-1 min-h-0">
                 {/* 🌲 Panel body content follows the anchor's flow — trees, labels, and their controls mirror on right anchors, same as the chrome (tab bar, resize handles, panel position). */}
-                <div data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
+                <div ref={panelContentRef} data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
                   {activeTabTrees && activeNode ? <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
                 </div>
               </Scrollable>
@@ -17767,11 +17857,14 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
   // 🌱 `visible: true` — MobilePanel has no folded state of its own (it renders nothing at all instead, below);
   // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
+  const panelContentRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const activeNode = findPanelTabNode(tabs, resolvedPath);
+  const firstDraggableAlias = visible && activeNode ? panelTabFirstDraggableElementId(activeNode.id) : null;
+  useFirstDraggableElementAlias(panelContentRef, firstDraggableAlias);
 
   if (!visible || tabs.length === 0) return null;
 
   const showTabBar = tabs.length > 0;
-  const activeNode = findPanelTabNode(tabs, resolvedPath);
   const activeTabTrees = activeNode?.kind === "leaf" ? activeNode.trees : null;
 
   return (
@@ -17788,7 +17881,7 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
         <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
-          <div data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
+          <div ref={panelContentRef} data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
           </div>
         </Scrollable>
@@ -23724,7 +23817,7 @@ export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, 
   if ((parent.kind === "row" && crossKind !== "column") || (parent.kind === "column" && crossKind !== "row")) return [];
   const parentSeparatorIndex = parent.panelIndex === 0 ? parent.panelIndex + 1 : parent.panelIndex;
   const edgeSide: ResizableJoinEdgeSide = parent.panelIndex === 0 ? "trailing" : "leading";
-  const alongFraction = parent.kind === "row" ? 0.5 : parent.panelIndex === 0 ? 1 : 0;
+  const alongFraction = parent.panelIndex === 0 ? 1 : 0;
   return [
     {
       parentKind: parent.kind,
@@ -23736,6 +23829,36 @@ export function modeJoinCornerSpecsForCrossSeparator(crossPath: ModeLayoutPath, 
       alongFraction,
     },
   ];
+}
+
+/** @emoji ↔️ One perpendicular axis that participates in a corner join. */
+export type ModeJoinCornerCrossAxis = {
+  path: ModeLayoutPath;
+  separatorIndex: number;
+};
+
+/** @emoji ↔️ Every perpendicular axis that shares a `+`/`T` corner (same main separator + join fraction), including the dragged cross axis. */
+export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec): ModeJoinCornerCrossAxis[] {
+  const fallback: ModeJoinCornerCrossAxis[] = [{ path: spec.crossAxisPath, separatorIndex: spec.crossSeparatorIndex }];
+  const mainNode = spec.mainAxisPath ? readLayoutAtPath(layout, spec.mainAxisPath) : layout;
+  if (!mainNode || (mainNode.kind !== "row" && mainNode.kind !== "column")) return fallback;
+  const prevChild = mainNode.children[spec.mainSeparatorIndex - 1];
+  const nextChild = mainNode.children[spec.mainSeparatorIndex];
+  if (!prevChild || !nextChild) return fallback;
+  const crossNode = readLayoutAtPath(layout, spec.crossAxisPath);
+  const ownJoin = crossNode ? modePerpendicularJoinSeparators(crossNode).find((join) => join.index === spec.crossSeparatorIndex) : undefined;
+  const targetFraction = ownJoin?.fraction ?? spec.alongFraction;
+  const peers: ModeJoinCornerCrossAxis[] = [];
+  const consider = (crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
+    if (!modeAxisIsPerpendicularChild(spec.parentKind, crossChild)) return;
+    for (const join of modePerpendicularJoinSeparators(crossChild)) {
+      if (Math.abs(join.fraction - targetFraction) > 0.001) continue;
+      peers.push({ path: crossPath, separatorIndex: join.index });
+    }
+  };
+  consider(modeJoinPath(spec.mainAxisPath, spec.mainSeparatorIndex - 1), prevChild);
+  consider(modeJoinPath(spec.mainAxisPath, spec.mainSeparatorIndex), nextChild);
+  return peers.length > 0 ? peers : fallback;
 }
 
 /** @emoji ↔️ Percentage delta for one panel pair on an axis separator. */
@@ -23799,11 +23922,13 @@ export function modeAxisGroupLayout(layout: WindowLayoutNode, axisPath: ModeLayo
   return Object.fromEntries(node.children.map((child, index) => [modeJoinPath(axisPath, index), child.size ?? 100 / node.children.length]));
 }
 
-/** @emoji ↔️ Applies a corner grab delta to both the main and cross layout axes. */
+/** @emoji ↔️ Applies a corner grab delta to the main axis and every peer cross axis at the join. */
 export function applyModeJoinCornerResize(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec, deltaXPx: number, deltaYPx: number, mainAxisPixelSize: number, crossAxisPixelSize: number): WindowLayoutNode {
   const { mainDeltaPct, crossDeltaPct } = resolveJoinCornerResizeDeltas(spec.parentKind, deltaXPx, deltaYPx, mainAxisPixelSize, crossAxisPixelSize);
   let next = applyAxisResizeDelta(layout, spec.mainAxisPath, spec.mainSeparatorIndex, mainDeltaPct);
-  next = applyAxisResizeDelta(next, spec.crossAxisPath, spec.crossSeparatorIndex, crossDeltaPct);
+  for (const peer of resolveJoinCornerPeerCrossAxes(layout, spec)) {
+    next = applyAxisResizeDelta(next, peer.path, peer.separatorIndex, crossDeltaPct);
+  }
   return next;
 }
 
@@ -24267,6 +24392,65 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 
 //#region 🧭ModeDockStack
 
+/** @emoji 🪟 SVG overlay that paints introduced/loading/waiting along the dock-stack silhouette (not the body rect). */
+const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null }> = ({ stack }) => {
+  const [epoch, setEpoch] = reactHostPort.useState(0);
+
+  reactHostPort.useLayoutEffect(() => {
+    if (!stack) return;
+    const bump = () => setEpoch((value) => value + 1);
+    bump();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(bump) : null;
+    resizeObserver?.observe(stack);
+    const mutationObserver = new MutationObserver(bump);
+    mutationObserver.observe(stack, { attributes: true, subtree: true, childList: true });
+    return () => {
+      resizeObserver?.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [stack]);
+
+  const kind = resolveWindowSilhouetteBorderKind(stack?.querySelector('[data-slot="window"]') ?? null);
+  const metrics = stack ? measureWindowSilhouetteMetrics(stack) : null;
+  void epoch;
+
+  if (!kind) return null;
+  if (!metrics) {
+    return <div data-slot="mode-dock-silhouette-border" data-kind={kind} data-pending="" aria-hidden />;
+  }
+  const path = windowSilhouettePath(metrics);
+  const stroke =
+    kind === "introduced"
+      ? "var(--introduced-border-color, var(--color-secondary))"
+      : kind === "loading"
+        ? "var(--loading-border-color, var(--border-normal-color))"
+        : "var(--waiting-border-color, var(--border-normal-color))";
+  return (
+    <svg
+      data-slot="mode-dock-silhouette-border"
+      data-kind={kind}
+      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+      width={metrics.width}
+      height={metrics.height}
+      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+      aria-hidden
+    >
+      <path
+        d={path}
+        fill="none"
+        stroke={stroke}
+        strokeLinejoin="miter"
+        vectorEffect="non-scaling-stroke"
+        className={cn(
+          kind === "introduced" && "window-silhouette-border-introduced",
+          kind === "loading" && "window-silhouette-border-loading",
+          kind === "waiting" && "window-silhouette-border-waiting",
+        )}
+      />
+    </svg>
+  );
+};
+
 interface ModeDockStackProps {
   stackPath: ModeLayoutPath;
   node: WindowLayoutStackNode;
@@ -24278,6 +24462,7 @@ interface ModeDockStackProps {
 
 const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
+  const [stackEl, setStackEl] = reactHostPort.useState<HTMLDivElement | null>(null);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const activeId = node.activeId ?? node.children[0]?.id;
@@ -24296,7 +24481,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
   const stackBody = (
-    <div ref={bodyRef} data-slot="mode-dock-stack-body" className={cn("relative z-0 flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
+    <div ref={bodyRef} data-slot="mode-dock-stack-body" className={cn("relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
       {activeDescriptor
         ? (() => {
             const { children, engagement, ...windowProps } = activeDescriptor;
@@ -24311,7 +24496,8 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   );
 
   return (
-    <div data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
+    <div ref={setStackEl} data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
+      <ModeDockStackSilhouetteBorder stack={stackEl} />
       {chromeGrid ? (
         <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
       ) : (
@@ -24638,6 +24824,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
     const mainGroup = axisGroupRefsRef.current.get(spec.mainAxisPath);
     const crossGroup = axisGroupRefsRef.current.get(spec.crossAxisPath);
     if (!mainKind || !crossKind || !mainGroup || !crossGroup) return;
+    const peers = resolveJoinCornerPeerCrossAxes(current, spec);
     const deltas = resolveJoinCornerResizeDeltas(
       spec.parentKind,
       deltaXPx,
@@ -24646,14 +24833,20 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
       readModeAxisPixelSize(axisGroupElementsRef.current.get(spec.crossAxisPath), crossKind),
     );
     const liveMainLayout = mainGroup.getLayout();
-    const liveCrossLayout = crossGroup.getLayout();
     const currentMainLayout = Object.keys(liveMainLayout).length > 0 ? liveMainLayout : modeAxisGroupLayout(current, spec.mainAxisPath);
-    const currentCrossLayout = Object.keys(liveCrossLayout).length > 0 ? liveCrossLayout : modeAxisGroupLayout(current, spec.crossAxisPath);
     const mainLayout = applyAxisGroupLayoutDelta(currentMainLayout, spec.mainAxisPath, spec.mainSeparatorIndex, deltas.mainDeltaPct);
-    const crossLayout = applyAxisGroupLayoutDelta(currentCrossLayout, spec.crossAxisPath, spec.crossSeparatorIndex, deltas.crossDeltaPct);
     mainGroup.setLayout(mainLayout);
-    crossGroup.setLayout(crossLayout);
-    setLayoutState((prev) => applyAxisSizes(applyAxisSizes(prev, spec.mainAxisPath, mainLayout), spec.crossAxisPath, crossLayout));
+    const peerLayouts: { path: ModeLayoutPath; layout: Record<string, number> }[] = [];
+    for (const peer of peers) {
+      const peerGroup = axisGroupRefsRef.current.get(peer.path);
+      if (!peerGroup) continue;
+      const livePeerLayout = peerGroup.getLayout();
+      const currentPeerLayout = Object.keys(livePeerLayout).length > 0 ? livePeerLayout : modeAxisGroupLayout(current, peer.path);
+      const peerLayout = applyAxisGroupLayoutDelta(currentPeerLayout, peer.path, peer.separatorIndex, deltas.crossDeltaPct);
+      peerGroup.setLayout(peerLayout);
+      peerLayouts.push({ path: peer.path, layout: peerLayout });
+    }
+    setLayoutState((prev) => peerLayouts.reduce((next, peer) => applyAxisSizes(next, peer.path, peer.layout), applyAxisSizes(prev, spec.mainAxisPath, mainLayout)));
   }, []);
 
   const clearTemplateDragPreview = reactHostPort.useCallback(() => {
@@ -25243,6 +25436,115 @@ if (import.meta.vitest) {
       expect(container.querySelector('[id="puzzle3d-kind:first"]')?.getAttribute("data-introduction-elevated")).toBeNull();
     });
 
+    it("elevates every open window instance aliased to a window-kind introduce id", async () => {
+      const { container } = render(
+        <div>
+          <div data-slot="window" data-elevation-root="" id="puzzle3d-main-top">
+            <div id="framework.window.puzzle3dMainTop" data-element-alias="framework.window.puzzle3dMain" />
+          </div>
+          <div data-slot="window" data-elevation-root="" id="puzzle3d-main-perspective">
+            <div id="framework.window.puzzle3dMainPerspective" data-element-alias="framework.window.puzzle3dMain" />
+          </div>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "viewport",
+                  title: "Die 3D-Ansicht",
+                  body: "Orbit, pan, and zoom.",
+                  introduce: "framework.window.puzzle3dMain",
+                  show: [],
+                  placement: "auto",
+                  advance: { kind: "next" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector('[id="puzzle3d-main-top"]')?.getAttribute("data-introduction-elevated")).toBe("true");
+        expect(container.querySelector('[id="puzzle3d-main-perspective"]')?.getAttribute("data-introduction-elevated")).toBe("true");
+      });
+      expect(container.querySelector('[id="framework.window.puzzle3dMainTop"]')?.getAttribute("data-introduced")).toBe("true");
+      expect(container.querySelector('[id="framework.window.puzzle3dMainPerspective"]')?.getAttribute("data-introduced")).toBe("true");
+    });
+
+    it("elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window", async () => {
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[{ id: "framework.window.main", title: "Main", children: <div>Main Pane</div> }]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "framework.window.main" }], activeId: "framework.window.main" }}
+            activeWindowId="framework.window.main"
+            onActiveWindowChange={() => {}}
+          />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "viewport",
+                  title: "Viewport",
+                  body: "All windows.",
+                  introduce: "framework.window.main",
+                  show: [],
+                  placement: "auto",
+                  advance: { kind: "next" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-introduction-elevated")).toBe("true");
+      });
+      expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduction-elevated")).toBeNull();
+      expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-introduced")).toBe("true");
+      expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduced")).toBe("true");
+      expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("introduced");
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
+      });
+      const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: 0,
+          height: 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
+      expect(measureWindowSilhouetteMetrics(stack)).toEqual({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 });
+      stack.setAttribute("data-silhouette-remeasure", "1");
+      await waitFor(() => {
+        const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
+        expect(border?.hasAttribute("data-pending")).toBe(false);
+        expect(border?.querySelector("path")?.getAttribute("d")).toBe(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }));
+      });
+    });
+
     it("keeps show elements interactive without pulsing them, self-elevating when there is no enclosing chrome unit", async () => {
       const { container } = render(
         <div>
@@ -25762,12 +26064,14 @@ if (import.meta.vitest) {
     const FULL_TURN_KEYFRAMES = new Set(["icon-rotate-ccw", "icon-rotate-cw", "icon-loader-2", "icon-flip-horizontal", "icon-flip-vertical", "icon-settings", "icon-globe"]);
     const NON_CATALOG_KINDS = ["emoji", "text", "typst", "image", "svg", "node", "shortcode", "missing"];
     // Icons whose SVG has cleanly separable moving parts get a mechanism-accurate per-part animation
-    // instead (--icon-animation: none plus one or more --icon-part-<N>-anim assignments); see
-    // 🔧IconPartAnim / 🪛IconPartAnim2 / 🌟IconPartAnim3. Remaining icons either have a single fused SVG
-    // path (no separable part exists without redrawing the vendored asset) or their existing whole-icon
-    // rigid motion already is the mechanically correct animation (globe, search, settings, rotate-cw/ccw,
-    // flip-horizontal/vertical, text-cursor).
-    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-down", "arrow-left", "arrow-right", "arrow-right-left", "arrow-up", "award", "bar-chart-3", "bell", "book-open", "box", "calendar-days", "camera", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hammer", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "redo", "redo-2", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "undo", "undo-2", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
+    // instead (--icon-animation: none plus one or more --icon-part-<N>-anim assignments); see 🔧IconPartAnim.
+    // Every icon below — and every whole-icon icon outside this set — has its own uniquely-named,
+    // individually-tuned keyframes; nothing is shared across icons (see the specificity/exclusivity tests).
+    // Remaining whole-icon icons either have a single fused SVG path (no separable part exists without
+    // redrawing the vendored asset — e.g. folder/folder-open/message-square/message-circle, handled with a
+    // best-effort single-rigid-body motion instead) or their rigid motion already is the mechanically
+    // correct animation (globe, search, settings, rotate-cw/ccw, flip-horizontal/vertical, text-cursor).
+    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-down", "arrow-left", "arrow-right", "arrow-right-left", "arrow-up", "award", "bar-chart-3", "bell", "book-open", "box", "calendar-days", "camera", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hammer", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "redo", "redo-2", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "table-2", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "undo", "undo-2", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
 
     async function readUiCss(): Promise<string> {
       const { readFileSync } = await import("node:fs");
@@ -25791,8 +26095,15 @@ if (import.meta.vitest) {
           }
           continue;
         }
-        expect(css).toContain(`@keyframes icon-${name} {`);
-        expect(css).toMatch(new RegExp(`\\[data-icon="${name}"\\][^\\n]*--icon-animation:\\s*icon-${name};`));
+        // Whole-icon animations are named icon-<id> or, when a descriptive suffix reads better
+        // (e.g. icon-folder-flap), icon-<id>-<suffix> — same convention as per-part icons.
+        const ruleMatch = css.match(new RegExp(`\\[data-icon="${name}"\\] \\{([^}]*)\\}`));
+        expect(ruleMatch, `missing [data-icon="${name}"] rule`).toBeTruthy();
+        const animMatch = ruleMatch![1].match(/--icon-animation:\s*(icon-[\w-]+);/);
+        expect(animMatch, `${name} has no --icon-animation assignment`).toBeTruthy();
+        const animName = animMatch![1];
+        expect(animName === `icon-${name}` || animName.startsWith(`icon-${name}-`), `${name} -> ${animName} does not match icon-${name}(-suffix)?`).toBe(true);
+        expect(css, `missing @keyframes ${animName}`).toContain(`@keyframes ${animName} {`);
       }
       for (const kind of NON_CATALOG_KINDS) {
         expect(css).toContain(`@keyframes icon-kind-${kind} {`);
@@ -25815,10 +26126,66 @@ if (import.meta.vitest) {
         }
         expect(body).toMatch(/0%,\s*\n\s*100%\s*\{/);
       }
-      // Part-mechanism icons reuse shared keyframes (e.g. icon-commit-dot drives ~15 different icons' pulses),
-      // so the count no longer tracks 1:1 with icon count — the completeness test above already verifies every
-      // icon/kind resolves to a real keyframes block; this is just a sanity floor against an empty/broken scan.
+      // Every icon has its own dedicated keyframes now, so this count roughly tracks icon count; kept as a
+      // loose sanity floor (not exact) against an empty/broken scan rather than a precise assertion.
       expect(checked).toBeGreaterThan(100);
+    });
+
+    // Keyed by the required animation-name prefix ("icon-<id>" for data-icon, "icon-kind-<kind>" for
+    // data-icon-kind), not the raw selector value, so specificity/exclusivity checks apply the right rule.
+    function collectIconRules(css: string): Map<string, string> {
+      const rules = new Map<string, string>();
+      for (const m of css.matchAll(/\[data-icon="([a-z0-9-]+)"\] \{ ([^}]*)\}/g)) {
+        rules.set(`icon-${m[1]}`, m[2]);
+      }
+      for (const m of css.matchAll(/\[data-icon-kind="([a-z0-9-]+)"\] \{ ([^}]*)\}/g)) {
+        rules.set(`icon-kind-${m[1]}`, m[2]);
+      }
+      return rules;
+    }
+
+    function collectAnimNames(ruleBody: string): string[] {
+      return [...ruleBody.matchAll(/--icon-(?:part-\d+-)?anim(?:ation)?:\s*([\w-]+);/g)].map((m) => m[1]).filter((n) => n !== "none");
+    }
+
+    it("names every icon's animation after that exact icon — no borrowed/generic names", async () => {
+      const css = await readUiCss();
+      const rules = collectIconRules(css);
+      const violations: string[] = [];
+      for (const [prefix, body] of rules) {
+        for (const name of collectAnimNames(body)) {
+          if (name !== prefix && !name.startsWith(`${prefix}-`)) {
+            violations.push(`${prefix} -> ${name}`);
+          }
+        }
+      }
+      expect(violations, `every animation name must start with icon-<id>: ${violations.join(", ")}`).toEqual([]);
+    });
+
+    it("never reuses one icon's animation for a different icon (fully handcrafted, not shared)", async () => {
+      const css = await readUiCss();
+      const rules = collectIconRules(css);
+      const owners = new Map<string, Set<string>>();
+      for (const [id, body] of rules) {
+        for (const name of collectAnimNames(body)) {
+          if (!owners.has(name)) owners.set(name, new Set());
+          owners.get(name)!.add(id);
+        }
+      }
+      const shared = [...owners.entries()].filter(([, ids]) => ids.size > 1);
+      expect(shared, `these animations are referenced by more than one icon: ${shared.map(([n, ids]) => `${n} -> [${[...ids].join(", ")}]`).join("; ")}`).toEqual([]);
+    });
+
+    it("has no orphaned keyframes — every defined icon-* animation is used by exactly one icon rule", async () => {
+      const css = await readUiCss();
+      const rules = collectIconRules(css);
+      const referenced = new Set<string>();
+      for (const [, body] of rules) {
+        for (const name of collectAnimNames(body)) referenced.add(name);
+      }
+      const defined = [...css.matchAll(/^@keyframes (icon-[a-z0-9-]+)/gm)].map((m) => m[1]).filter((n) => !n.startsWith("icon-kind-"));
+      const dead = defined.filter((n) => !referenced.has(n));
+      expect(dead, `dead keyframes with no icon referencing them: ${dead.join(", ")}`).toEqual([]);
     });
   });
 
@@ -26620,6 +26987,23 @@ if (import.meta.vitest) {
       expect(grid.gapCol).toBeLessThan(grid.controlsCol);
     });
 
+    it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
+    });
+
+    it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting", () => {
+      const el = document.createElement("div");
+      el.className = "border-loading border-waiting";
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("loading");
+      el.setAttribute("data-introduced", "true");
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      el.removeAttribute("data-introduced");
+      el.className = "border-waiting-active";
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("waiting");
+      el.className = "";
+      expect(resolveWindowSilhouetteBorderKind(el)).toBeNull();
+    });
+
     it("Mode lays out all windows and marks the active one", () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
@@ -27109,8 +27493,47 @@ if (import.meta.vitest) {
       const specs = modeJoinCornerSpecsForCrossSeparator("0", "column", 1, { path: "", kind: "row", panelIndex: 0 });
       expect(specs).toHaveLength(1);
       expect(specs[0]?.edgeSide).toBe("trailing");
+      expect(specs[0]?.alongFraction).toBe(1);
       expect(specs[0]?.mainAxisPath).toBe("");
       expect(specs[0]?.crossAxisPath).toBe("0");
+      const rightSpecs = modeJoinCornerSpecsForCrossSeparator("1", "column", 1, { path: "", kind: "row", panelIndex: 1 });
+      expect(rightSpecs[0]?.edgeSide).toBe("leading");
+      expect(rightSpecs[0]?.alongFraction).toBe(0);
+    });
+
+    it("resolveJoinCornerPeerCrossAxes includes every aligned perpendicular axis at a plus junction", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          {
+            kind: "column",
+            children: [
+              { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+            ],
+          },
+          {
+            kind: "column",
+            children: [
+              { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+              { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+            ],
+          },
+        ],
+      };
+      const spec: ResizableJoinCornerSpec = {
+        parentKind: "row",
+        mainAxisPath: "",
+        mainSeparatorIndex: 1,
+        crossAxisPath: "1",
+        crossSeparatorIndex: 1,
+        edgeSide: "trailing",
+        alongFraction: 0.5,
+      };
+      expect(resolveJoinCornerPeerCrossAxes(layout, spec)).toEqual([
+        { path: "0", separatorIndex: 1 },
+        { path: "1", separatorIndex: 1 },
+      ]);
     });
 
     it("applyModeJoinCornerResize updates both main and cross axis sizes", () => {
@@ -27125,16 +27548,23 @@ if (import.meta.vitest) {
               { kind: "stack", size: 50, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
             ],
           },
-          { kind: "stack", size: 50, children: [{ kind: "window", id: "r" }], activeId: "r" },
+          {
+            kind: "column",
+            size: 50,
+            children: [
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+            ],
+          },
         ],
       };
       const spec: ResizableJoinCornerSpec = {
         parentKind: "row",
         mainAxisPath: "",
         mainSeparatorIndex: 1,
-        crossAxisPath: "0",
+        crossAxisPath: "1",
         crossSeparatorIndex: 1,
-        edgeSide: "leading",
+        edgeSide: "trailing",
         alongFraction: 0.5,
       };
       const next = applyModeJoinCornerResize(layout, spec, 20, 10, 400, 300);
@@ -27142,10 +27572,11 @@ if (import.meta.vitest) {
       if (next.kind === "row") {
         expect(next.children[0]?.size).toBeGreaterThan(50);
         expect(next.children[1]?.size).toBeLessThan(50);
-        const leftColumn = next.children[0];
-        if (leftColumn?.kind === "column") {
-          expect(leftColumn.children[0]?.size).toBeGreaterThan(50);
-          expect(leftColumn.children[1]?.size).toBeLessThan(50);
+        for (const column of next.children) {
+          expect(column.kind).toBe("column");
+          if (column.kind !== "column") continue;
+          expect(column.children[0]?.size).toBeGreaterThan(50);
+          expect(column.children[1]?.size).toBeLessThan(50);
         }
       }
     });
@@ -27194,11 +27625,13 @@ if (import.meta.vitest) {
       );
       const rootGroup = container.querySelector<HTMLElement>("#mode-axis-root")!;
       const leftGroup = container.querySelector<HTMLElement>("#mode-axis-0")!;
+      const rightGroup = container.querySelector<HTMLElement>("#mode-axis-1")!;
       rootGroup.getBoundingClientRect = () => ({ width: 400, height: 300 }) as DOMRect;
       leftGroup.getBoundingClientRect = () => ({ width: 200, height: 300 }) as DOMRect;
+      rightGroup.getBoundingClientRect = () => ({ width: 200, height: 300 }) as DOMRect;
       const corner = [...container.querySelectorAll<HTMLElement>('[data-slot="resizable-corner"]')].find((element) => {
         const spec = readResizableJoinCornerSpec(element);
-        return spec?.mainAxisPath === "" && spec.crossAxisPath === "0";
+        return spec?.mainAxisPath === "" && spec.crossAxisPath === "1";
       })!;
       fireEvent(corner, new MouseEvent("pointerdown", { bubbles: true, button: 0, clientX: 200, clientY: 150 }));
       fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 220, clientY: 165 }));
@@ -27209,11 +27642,12 @@ if (import.meta.vitest) {
       if (resized.kind !== "row") return;
       expect(resized.children[0]?.size).toBe(55);
       expect(resized.children[1]?.size).toBe(45);
-      const left = resized.children[0];
-      expect(left.kind).toBe("column");
-      if (left.kind !== "column") return;
-      expect(left.children[0]?.size).toBe(55);
-      expect(left.children[1]?.size).toBe(45);
+      for (const column of resized.children) {
+        expect(column.kind).toBe("column");
+        if (column.kind !== "column") return;
+        expect(column.children[0]?.size).toBe(55);
+        expect(column.children[1]?.size).toBe(45);
+      }
     });
 
     it("computeModeDropZone treats tab bar hits as tab drops not body splits", () => {

@@ -642,7 +642,7 @@ fn layout_action_labels(is_de: bool) -> HashMap<String, String> {
         ("canvasDrop", "Canvas Drop", "Ablegen auf Leinwand"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
         ("setActivePage", "Set Active Page", "Aktive Seite festlegen"),
-        ("setHover", "Set Hover", "Hover festlegen"),
+        ("setHover", "Set Hover", "Überfahren festlegen"),
         ("focusPreflightIssue", "Focus Preflight Issue", "Preflight-Problem fokussieren"),
         ("engagementInput", "Engagement Input", "Eingabe"),
         ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),

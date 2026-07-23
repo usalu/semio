@@ -892,7 +892,7 @@ pub mod app_2d {
             ("setVectorStyle", "Set Vector Style", "Vektorstil festlegen"),
             ("setLodMode", "Set LOD Mode", "LOD-Modus festlegen"),
             ("setFeatureSelection", "Set Feature Selection", "Objektauswahl festlegen"),
-            ("setHover", "Set Hover", "Hover festlegen"),
+            ("setHover", "Set Hover", "Überfahren festlegen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
             ("setSelectionMode", "Set Selection Mode", "Auswahlmodus festlegen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),

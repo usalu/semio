@@ -723,7 +723,7 @@ fn draw_action_labels(is_de: bool) -> HashMap<String, String> {
         ("selectAll", "Select All", "Alles auswählen"),
         ("clearSelection", "Clear Selection", "Auswahl aufheben"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Hover festlegen"),
+        ("setHover", "Set Hover", "Überfahren festlegen"),
         ("engagementInput", "Engagement Input", "Eingabe"),
     ];
     localized_label_map(is_de, ENTRIES)

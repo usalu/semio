@@ -804,7 +804,7 @@ fn writer_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setEditorSelection", "Set Editor Selection", "Editor-Auswahl festlegen"),
         ("selectAstNode", "Select Ast Node", "AST-Knoten auswählen"),
         ("setAstSelection", "Set Ast Selection", "AST-Auswahl festlegen"),
-        ("setAstHover", "Set Ast Hover", "AST-Hover festlegen"),
+        ("setAstHover", "Set Ast Hover", "Überfahren (AST) festlegen"),
         ("textHover", "Text Hover", "Text-Hover"),
         ("toggleLineNumbers", "Toggle Line Numbers", "Zeilennummern umschalten"),
         ("setEditorSetting", "Set Editor Setting", "Editor-Einstellung festlegen"),

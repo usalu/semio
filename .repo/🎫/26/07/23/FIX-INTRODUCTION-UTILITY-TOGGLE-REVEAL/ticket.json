@@ -1,0 +1,15 @@
+{
+  "title": "Fix Introduction Utility Toggle Reveal",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "Aggregator introduction is adhoc and incomplete with the new element-id introduction system (introduce/show ids, no cutouts).\n\nReported:\n- Step 4 (viewport) should elevate/show ALL windows (Top + Perspective), not only the first match of the window-kind id.\n- Step 6 (add object) does not show the catalogue panel and tree item; drag-and-drop is impossible.\n\nRoot causes to fix at the framework/ui level:\n1. useIntroductionElevation uses querySelector (first match only) — kind-id aliases on multiple window instances never all elevate.\n2. useFirstDraggableElementAlias exists but is never wired into Panel/MobilePanel, so framework.panelTab.*.firstDraggable never mounts.\n\nMake the element-id introduce/show path work end-to-end for the Aggregator brand tour (and the shared Puzzle 3D introduction).",
+  "summary": "Fixed the last Aggregator introduction step so utility toggles appear and the tour can complete.\n\n**Root cause:** `utilityBarFoldedFor` compared the live window *instance* id segment (`puzzle3dMainTop`) to the kind id segment (`puzzle3dMain`), so force-unfold never ran on Top/Perspective. Same mismatch for the Actions rail.\n\n**Fix:** Added `introductionTargetsWindow(windowId, windowKindId, …)` that matches kind **or** instance; `utilityBarFoldedFor` / `actionsFoldedFor` now pass the instance's window kind. Transform step also `show`s the window kind so panes elevate while the utility mounts (brand + puzzle intros).\n\n**Verified:** `introductionTargetsWindow` unit tests + brand introduction assertion (3 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2275"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪26b14614ac634b92911c4a881fe8bdf3",
+    "⚪9f27f5a82b19479494c109bc4f948fe7"
+  ]
+}

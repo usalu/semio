@@ -109,7 +109,10 @@ pub struct FemCombination {
 }
 
 /// ⚙️ Analysis settings: mode/factor counts for modal and buckling analyses, plus a deformation
-/// display scale for the UI layer.
+/// display scale for the UI layer. `deformation_scale` exaggerates the STATIC results view's real
+/// (meter-scale) displacements only; modal/buckling mode shapes are dimensionless (mass/Kg-
+/// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
+/// instead of using this factor.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
@@ -349,6 +352,8 @@ fn apply_combinations_diff(combinations: &mut Vec<FemCombination>, diff: &Combin
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Fem3dDiff {
+    /// 🌍 Whole-document replacement (example import / reset); wins over every granular field below.
+    pub document: Option<Fem3dDocument>,
     pub nodes: NodesDiff,
     pub elements: ElementsDiff,
     pub materials: MaterialsDiff,
@@ -363,6 +368,9 @@ pub struct Fem3dDiff {
 
 impl OperationDiff<Fem3dDocument> for Fem3dDiff {
     fn apply(&self, projection: &Fem3dDocument) -> Fem3dDocument {
+        if let Some(document) = &self.document {
+            return document.clone();
+        }
         let mut next = projection.clone();
         apply_nodes_diff(&mut next.nodes, &self.nodes);
         apply_elements_diff(&mut next.elements, &self.elements);
@@ -382,6 +390,10 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
     }
 
     fn absorb(&mut self, other: Self) {
+        if other.document.is_some() {
+            *self = Fem3dDiff { document: other.document, ..Default::default() };
+            return;
+        }
         self.nodes.removed.extend(other.nodes.removed);
         self.nodes.set.extend(other.nodes.set);
         self.elements.removed.extend(other.elements.removed);
@@ -430,6 +442,8 @@ pub enum Fem3dOp {
     RemoveCombination { id: String },
     SetCamera { camera: FemCamera },
     SetAnalysisSettings { settings: FemAnalysisSettings },
+    /// 🌍 Replaces the whole document (example import / reset).
+    SetDocument { document: Fem3dDocument },
 }
 
 fn node_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
@@ -488,6 +502,7 @@ impl Operation<Fem3dDocument> for Fem3dOp {
             Fem3dOp::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
             Fem3dOp::SetCamera { camera } => diff.camera = Some(camera.clone()),
             Fem3dOp::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
+            Fem3dOp::SetDocument { document } => diff.document = Some(document.clone()),
         }
         diff
     }
@@ -536,6 +551,7 @@ impl Operation<Fem3dDocument> for Fem3dOp {
             Fem3dOp::RemoveCombination { id } => combination_index(projection, id).map(|index| vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
             Fem3dOp::SetCamera { .. } => vec![Fem3dOp::SetCamera { camera: projection.camera.clone() }],
             Fem3dOp::SetAnalysisSettings { .. } => vec![Fem3dOp::SetAnalysisSettings { settings: projection.analysis.clone() }],
+            Fem3dOp::SetDocument { .. } => vec![Fem3dOp::SetDocument { document: projection.clone() }],
         }
     }
 }
@@ -1067,6 +1083,23 @@ mod tests {
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
         round_trip(&base, &Fem3dOp::SetAnalysisSettings { settings });
     }
+
+    #[test]
+    fn document_op_round_trips() {
+        let (base, ..) = cantilever_fixture();
+        let replacement = solid_slab_doc();
+        let after = round_trip(&base, &Fem3dOp::SetDocument { document: replacement.clone() });
+        assert_eq!(after, replacement);
+    }
+
+    #[test]
+    fn document_diff_absorb_wins_over_granular_changes() {
+        let (base, ..) = cantilever_fixture();
+        let replacement = solid_slab_doc();
+        let mut diff = Fem3dOp::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } }.diff(&base);
+        diff.absorb(Fem3dOp::SetDocument { document: replacement.clone() }.diff(&base));
+        assert_eq!(diff.apply(&base), replacement);
+    }
     // #endregion 🔖OpRoundTrip
 
     // #region 🔖BuildModel
@@ -1362,29 +1395,32 @@ mod tests {
     fn example_fixture_parses() {
         let json = include_str!("../example/default.fem3d.json");
         let doc: Fem3dDocument = serde_json::from_str(json).expect("example fixture parses");
-        assert_eq!(doc.nodes.len(), 6);
-        assert_eq!(doc.elements.len(), 1);
+        assert_eq!(doc.nodes.len(), 7);
+        assert_eq!(doc.elements.len(), 2);
         assert_eq!(doc.solids.len(), 1);
-        let result = fem3d_solve(&doc, "point").expect("example fixture solves");
+        let result = fem3d_solve(&doc, "dead").expect("example fixture solves");
         assert!(result.checks.residual_norm < 1e-6);
 
         let all_results = fem3d_solve_all(&doc).expect("example fixture solves all");
-        assert!(all_results.contains_key("point"), "expected point case result");
-        assert!(all_results.contains_key("point2"), "expected point2 case result");
+        assert!(all_results.contains_key("dead"), "expected dead case result");
+        assert!(all_results.contains_key("live"), "expected live case result");
         assert!(all_results.contains_key("uls"), "expected uls combination result");
-        let pressure = all_results.get("pressure").expect("expected pressure case result (solid area load)");
-        assert!(pressure.checks.residual_norm < 1e-6, "residual {}", pressure.checks.residual_norm);
+        let dead = all_results.get("dead").expect("expected dead case result (solid area load + member UDL + self-weight)");
+        assert!(dead.checks.residual_norm < 1e-6, "residual {}", dead.checks.residual_norm);
 
         let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
         assert_eq!(previews.len(), 1);
         assert!(!previews[0].tets.is_empty(), "expected at least one tet");
         assert!(!previews[0].boundary_tris.is_empty(), "expected boundary triangles");
 
-        let averaged = fem3d_nodal_von_mises(&doc, "pressure").expect("nodal von mises solves");
+        let averaged = fem3d_nodal_von_mises(&doc, "dead").expect("nodal von mises solves");
         assert!(!averaged.is_empty(), "expected at least one averaged nodal value");
         for v in averaged.values() {
             assert!(v.is_finite() && *v >= 0.0, "von mises {v} should be finite and non-negative");
         }
+
+        let buckling = fem3d_buckling(&doc, "dead").expect("buckling resolves for the dead case's compressed column");
+        assert!(buckling.factors[0].is_finite() && buckling.factors[0] > 1.0, "expected an illustrative (finite, >1) load factor: {:?}", buckling.factors);
     }
 }
 // #endregion 🔖Tests

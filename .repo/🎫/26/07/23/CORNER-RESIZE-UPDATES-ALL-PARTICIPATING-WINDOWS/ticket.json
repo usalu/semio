@@ -1,0 +1,14 @@
+{
+  "title": "Corner Resize Updates All Participating Windows",
+  "emoji": "↔️",
+  "status": "closed",
+  "description": "ui: resizing on corners must work for all participating windows and preview all directions. e.g. cad has four windows that share a corner but when I move only the right two change height and the left two are not changing height correctly. Fix so a shared + junction corner drag resizes every participating axis (main + all peer cross axes) live in all directions.",
+  "summary": "Shared + junction corner drags only updated one cross-axis (e.g. right column heights), so a CAD 2×2 left pair stayed wrong while the live preview only moved two windows.\n\nFix: resolveJoinCornerPeerCrossAxes walks the main separator’s perpendicular children and returns every join at the dragged cross-axis fraction. applyModeJoinCornerResize and Mode.onJoinCornerResize apply the cross delta to all peers (live setLayout + persisted sizes) so width and both column heights update together. Cross-separator corner alongFraction now sits on the parent-facing edge (0/1) instead of mid-pane.\n\nVerified: 5 focused vitest cases pass (peer resolution, pure apply, Mode pointer drag updating both columns, cross-separator placement).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2278"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪2700ddcd5d6d443292d66ebd3221b5dc"
+  ]
+}

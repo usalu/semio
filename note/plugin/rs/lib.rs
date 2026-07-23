@@ -1086,7 +1086,7 @@ fn note_action_labels(is_de: bool) -> HashMap<String, String> {
         ("nudgeSelectionLeftFast", "Nudge Selection Left Fast", "Auswahl schnell nach links verschieben"),
         ("nudgeSelectionRightFast", "Nudge Selection Right Fast", "Auswahl schnell nach rechts verschieben"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("setHover", "Set Hover", "Hover festlegen"),
+        ("setHover", "Set Hover", "Überfahren festlegen"),
         ("engagementInput", "Engagement Input", "Eingabe"),
         ("navigatorEngagementInput", "Navigator Engagement Input", "Navigator-Eingabe"),
     ];

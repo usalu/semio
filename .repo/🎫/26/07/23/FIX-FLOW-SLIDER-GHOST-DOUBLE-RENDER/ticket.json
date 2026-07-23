@@ -1,8 +1,9 @@
 {
   "title": "Fix Flow Slider Ghost Double Render",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "flow: The slider has a bug that a second line and knob are pixelated rendered above. Only while dragging the correct slider is visible. Fix so the idle/resting slider shows a single clean line and knob without a pixelated duplicate above.",
+  "summary": "Fixed the flow graph slider ghost: GPU paint no longer draws track+knob (DOM GraphSliderOverlays owns that chrome), Slider gained showValue={false} for track-only overlays aligned to track bounds, and GraphSliderOverlays uses it. Value readout stays on the GPU to the left of the node. Verified with vitest (UI track-only + graph overlay) and cargo test -p infinite_board_port_directed_dag --lib slider (7 passed).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2267"
   },

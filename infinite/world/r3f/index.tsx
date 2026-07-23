@@ -1201,18 +1201,8 @@ function applyWorldCameraState(camera: Camera, state: WorldCameraState, controls
 
 /** @emoji 🧭 Maps a CAD viewport gizmo axis click to a named orbit view (Z-up). */
 export function resolveOrbitGizmoViewFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): OrbitCameraViewId {
-  const dominant = [
-    { axis: "x" as const, magnitude: Math.abs(direction.x), sign: direction.x >= 0 ? 1 : -1 },
-    { axis: "y" as const, magnitude: Math.abs(direction.y), sign: direction.y >= 0 ? 1 : -1 },
-    { axis: "z" as const, magnitude: Math.abs(direction.z), sign: direction.z >= 0 ? 1 : -1 },
-  ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "z" as const, magnitude: 1, sign: 1 };
-  if (dominant.axis === "x") {
-    return dominant.sign > 0 ? "right" : "left";
-  }
-  if (dominant.axis === "y") {
-    return dominant.sign > 0 ? "back" : "front";
-  }
-  return dominant.sign > 0 ? "top" : "bottom";
+  const spec = resolveProjectionGizmoSpec(resolveProjectionGizmoHitFromDirection(direction));
+  return worldProjectionSpecToOrbitView(spec) ?? "top";
 }
 
 const WORLD_ORBIT_VIEW_SNAP_DURATION_MS = 280;
@@ -1251,7 +1241,9 @@ export function useWorldOrbitViewSnapGate(): WorldOrbitViewSnapGateContextValue 
 
 export interface WorldOrbitViewGizmoProps {
   readonly show?: boolean;
-  readonly onViewSelect: (view: OrbitCameraViewId) => void;
+  readonly projectionSpec?: WorldProjectionSpec;
+  readonly onViewSelect?: (view: OrbitCameraViewId) => void;
+  readonly onSpecSelect: (spec: WorldProjectionSpec) => void;
 }
 
 function resolveWorldCadAxisColors(): [string, string, string] {
@@ -1259,6 +1251,11 @@ function resolveWorldCadAxisColors(): [string, string, string] {
 }
 
 //#region 🧭WorldOrbitViewGizmoViewport
+export type ProjectionGizmoHit =
+  | { readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1 }
+  | { readonly type: "corner"; readonly quadrant: WorldAxonometricQuadrant }
+  | { readonly type: "center" };
+
 interface WorldOrbitViewGizmoViewportProps {
   readonly labels: [string, string, string];
   readonly axisColors: [string, string, string];
@@ -1268,6 +1265,14 @@ interface WorldOrbitViewGizmoViewportProps {
   readonly labelColor: string;
   readonly font: string;
   readonly onClick?: (event: ThreeEvent<MouseEvent>) => unknown;
+}
+
+interface WorldProjectionGizmoViewportProps {
+  readonly axisColors: [string, string, string];
+  readonly axisScale: [number, number, number];
+  readonly labelColor: string;
+  readonly font: string;
+  readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }
 
 function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, number, number]; readonly color: string; readonly rotation: [number, number, number] }): ReactElement {
@@ -1281,16 +1286,16 @@ function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, numbe
   );
 }
 
-function WorldOrbitViewGizmoViewportAxisHead(props: {
-  readonly arcStyle: string;
+function WorldProjectionGizmoHitHead(props: {
   readonly position: [number, number, number];
+  readonly hit: ProjectionGizmoHit;
+  readonly color: string;
   readonly label?: string;
   readonly font: string;
   readonly labelColor: string;
   readonly axisHeadScale: number;
-  readonly onClick?: (event: ThreeEvent<MouseEvent>) => unknown;
+  readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }): ReactElement {
-  const gl = useThree((state) => state.gl);
   const texture = reactHostPort.useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;
@@ -1300,24 +1305,26 @@ function WorldOrbitViewGizmoViewportAxisHead(props: {
       return new CanvasTexture(canvas);
     }
     context.beginPath();
-    context.arc(32, 32, 16, 0, 2 * Math.PI);
+    context.arc(32, 32, props.label ? 16 : 12, 0, 2 * Math.PI);
     context.closePath();
-    context.fillStyle = props.arcStyle;
+    context.fillStyle = props.color;
     context.fill();
     if (props.label) {
       context.font = props.font;
       context.textAlign = "center";
       context.fillStyle = props.labelColor;
-      context.fillText(props.label, 32, 41);
+      context.fillText(props.label, 32, props.label.length > 2 ? 38 : 41);
     }
     return new CanvasTexture(canvas);
-  }, [props.arcStyle, props.font, props.label, props.labelColor]);
+  }, [props.color, props.font, props.label, props.labelColor]);
   const [active, setActive] = reactHostPort.useState(false);
-  const scale = (props.label ? 1 : 0.75) * (active ? 1.2 : 1) * props.axisHeadScale;
+  const baseScale = props.label ? 1 : 0.65;
+  const scale = baseScale * (active ? 1.2 : 1) * props.axisHeadScale;
   return (
     <sprite
       scale={scale}
       position={props.position}
+      userData={{ projectionGizmoHit: props.hit }}
       onPointerOver={(event) => {
         event.stopPropagation();
         setActive(true);
@@ -1329,48 +1336,59 @@ function WorldOrbitViewGizmoViewportAxisHead(props: {
       onPointerDown={(event) => {
         event.stopPropagation();
       }}
-      onClick={props.onClick}
+      onClick={(event) => {
+        event.stopPropagation();
+        const hit = (event.object.userData?.projectionGizmoHit as ProjectionGizmoHit | undefined) ?? props.hit;
+        props.onHitSelect(hit);
+      }}
     >
-      <spriteMaterial map={texture} alphaTest={0.3} opacity={props.label ? 1 : 0.75} toneMapped={false} />
+      <spriteMaterial map={texture} alphaTest={0.3} opacity={props.label ? 1 : 0.8} toneMapped={false} />
     </sprite>
   );
 }
 
-/** @emoji 🎯 Viewport gizmo heads with hover feedback only; camera snaps on click via {@link WorldOrbitViewSnapDriver}. */
-function WorldOrbitViewGizmoViewport(props: WorldOrbitViewGizmoViewportProps): ReactElement {
+/** @emoji 🎯 Navigation cube with face, corner, and center hit targets for projection snapping. */
+function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps): ReactElement {
   const [colorX, colorY, colorZ] = props.axisColors;
-  const axisHeadScale = props.axisHeadScale ?? 1;
+  const axisHeadScale = 0.88;
   const headProps = {
     font: props.font,
     labelColor: props.labelColor,
     axisHeadScale,
-    onClick: props.onClick,
+    onHitSelect: props.onHitSelect,
   };
+  const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
+  const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly label: string }[] = [
+    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne" }, label: "NE" },
+    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw" }, label: "NW" },
+    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se" }, label: "SE" },
+    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw" }, label: "SW" },
+  ];
+  const cornerColor = props.labelColor;
   return (
     <group scale={40}>
       <WorldOrbitViewGizmoViewportAxis color={colorX} rotation={[0, 0, 0]} scale={props.axisScale} />
       <WorldOrbitViewGizmoViewportAxis color={colorY} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} />
       <WorldOrbitViewGizmoViewportAxis color={colorZ} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} />
-      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorX} position={[1, 0, 0]} label={props.labels[0]} {...headProps} />
-      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorY} position={[0, 1, 0]} label={props.labels[1]} {...headProps} />
-      <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorZ} position={[0, 0, 1]} label={props.labels[2]} {...headProps} />
-      {!props.hideNegativeAxes ? (
-        <>
-          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorX} position={[-1, 0, 0]} {...headProps} />
-          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorY} position={[0, -1, 0]} {...headProps} />
-          <WorldOrbitViewGizmoViewportAxisHead arcStyle={colorZ} position={[0, 0, -1]} {...headProps} />
-        </>
-      ) : null}
+      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} color={colorX} label="X" {...headProps} />
+      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={colorX} {...headProps} />
+      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} color={colorY} label="Y" {...headProps} />
+      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={colorY} {...headProps} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} color={colorZ} label="Z" {...headProps} />
+      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={colorZ} {...headProps} />
+      {cornerHits.map((corner) => (
+        <WorldProjectionGizmoHitHead key={corner.label} position={corner.position} hit={corner.hit} color={cornerColor} label={corner.label} {...headProps} />
+      ))}
+      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} color={cornerColor} label="3D" {...headProps} />
     </group>
   );
 }
 //#endregion 🧭WorldOrbitViewGizmoViewport
 
-/** @emoji 🧭 CAD Z-up viewport gizmo (X / Y / Z) anchored bottom-right. */
+/** @emoji 🧭 CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
   const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => resolveWorldCadAxisColors());
-  const labels = reactHostPort.useMemo(() => ["X", "Y", "Z"] as [string, string, string], []);
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
   const [labelColor, setLabelColor] = reactHostPort.useState<string>(() => resolveColorHex(semanticVar("foreground"), "gray"));
@@ -1387,44 +1405,44 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
   }
   return (
     <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
-      <WorldOrbitViewGizmoViewport
-        labels={labels}
+      <WorldProjectionGizmoViewport
         axisColors={colors}
         axisScale={axisScale}
-        axisHeadScale={0.92}
-        hideNegativeAxes
         labelColor={labelColor}
-        font="16px Inter var, Arial, sans-serif"
-        onClick={(event: ThreeEvent<MouseEvent>) => {
-          props.onViewSelect(resolveOrbitGizmoViewFromDirection(event.object.position));
-          return null;
+        font="14px Inter var, Arial, sans-serif"
+        onHitSelect={(hit) => {
+          const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
+          props.onSpecSelect(spec);
+          const view = worldProjectionSpecToOrbitView(spec);
+          if (view) {
+            props.onViewSelect?.(view);
+          }
         }}
       />
     </GizmoHelper>
   );
 }
 
-export interface WorldOrbitViewSnapDriverProps {
-  readonly pendingView: OrbitCameraViewId | null;
-  readonly onPendingViewClear: () => void;
+export interface WorldProjectionSnapDriverProps {
+  readonly pendingSpec: WorldProjectionSpec | null;
+  readonly onPendingSpecClear: () => void;
   readonly onCameraChange?: (state: WorldCameraState) => void;
-  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
-  readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
+  readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
 }
 
-/** @emoji 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
-export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): null {
+/** @emoji 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set. */
+export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps): null {
   const { camera } = useThree();
   const controls = useThree((state) => state.controls as OrbitControlsTarget | null);
   const invalidate = useThree((state) => state.invalidate);
   const { setSnapGate } = useWorldOrbitViewSnapGate();
-  const animRef = reactHostPort.useRef<{ readonly view: OrbitCameraViewId; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly to: WorldCameraState; readonly start: number } | null>(null);
+  const animRef = reactHostPort.useRef<{ readonly spec: WorldProjectionSpec; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly to: WorldCameraState; readonly start: number } | null>(null);
 
   reactHostPort.useEffect(() => {
-    if (!props.pendingView || !camera || !controls?.target) {
+    if (!props.pendingSpec || !camera || !controls?.target) {
       return;
     }
-    const pendingView = props.pendingView;
+    const pendingSpec = props.pendingSpec;
     const targetCad = threeVec3ToCad(controls.target);
     const distance = orbitCameraDistance({
       position: threeVec3ToCad(camera.position),
@@ -1432,12 +1450,12 @@ export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): 
       zoom: "zoom" in camera ? (camera as ThreePerspectiveCamera).zoom : 1,
     });
     const zoom = camera instanceof ThreeOrthographicCamera || camera instanceof ThreePerspectiveCamera ? camera.zoom : 1;
-    const to = computeOrbitCameraViewState(pendingView, { target: targetCad, distance, zoom });
-    animRef.current = { view: pendingView, fromPos: camera.position.clone(), fromUp: camera.up.clone(), to, start: performance.now() };
+    const to = computeWorldProjectionPose(pendingSpec, { target: targetCad, distance, zoom });
+    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), to, start: performance.now() };
     setSnapGate(true);
-    props.onPendingViewClear();
+    props.onPendingSpecClear();
     invalidate();
-  }, [camera, controls, invalidate, props.pendingView, props.onPendingViewClear, setSnapGate]);
+  }, [camera, controls, invalidate, props.pendingSpec, props.onPendingSpecClear, setSnapGate]);
 
   useFrame(() => {
     const anim = animRef.current;
@@ -1466,30 +1484,103 @@ export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): 
     setSnapGate(false);
     applyWorldCameraState(camera, anim.to, controls);
     props.onCameraChange?.(anim.to);
-    props.onViewSnap?.(anim.view, anim.to);
-    if (anim.to.projection) {
-      props.onProjectionChange?.(anim.to.projection);
-    }
+    props.onSpecSnap?.(anim.spec, anim.to);
     invalidate();
   });
   return null;
 }
 
-export interface WorldOrbitViewControlsProps {
-  readonly show?: boolean;
+export interface WorldOrbitViewSnapDriverProps {
+  readonly pendingView: OrbitCameraViewId | null;
+  readonly onPendingViewClear: () => void;
   readonly onCameraChange?: (state: WorldCameraState) => void;
   readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
 }
 
-/** @emoji 🧭 Bundles {@link WorldOrbitViewGizmo} and {@link WorldOrbitViewSnapDriver}. */
+/** @emoji 🎞️ Interpolates the orbit camera to a named view when `pendingView` is set. */
+export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): null {
+  const pendingViewRef = reactHostPort.useRef<OrbitCameraViewId | null>(null);
+  reactHostPort.useEffect(() => {
+    if (props.pendingView) {
+      pendingViewRef.current = props.pendingView;
+    }
+  }, [props.pendingView]);
+  const pendingSpec = props.pendingView ? orbitViewToWorldProjectionSpec(props.pendingView) : null;
+  return (
+    <WorldProjectionSnapDriver
+      pendingSpec={pendingSpec}
+      onPendingSpecClear={props.onPendingViewClear}
+      onCameraChange={(state) => {
+        props.onCameraChange?.(state);
+        const view = pendingViewRef.current;
+        if (view) {
+          props.onViewSnap?.(view, state);
+          pendingViewRef.current = null;
+        }
+        if (state.projection) {
+          props.onProjectionChange?.(state.projection);
+        }
+      }}
+    />
+  );
+}
+
+export interface WorldOrbitViewControlsProps {
+  readonly show?: boolean;
+  readonly projectionSpec?: WorldProjectionSpec;
+  readonly onCameraChange?: (state: WorldCameraState) => void;
+  readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
+  readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
+  readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
+}
+
+/** @emoji 🧭 Bundles {@link WorldOrbitViewGizmo} and {@link WorldProjectionSnapDriver}. */
 export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): ReactElement {
-  const [pendingView, setPendingView] = reactHostPort.useState<OrbitCameraViewId | null>(null);
+  const [pendingSpec, setPendingSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
   return (
     <>
-      <WorldOrbitViewSnapDriver pendingView={pendingView} onPendingViewClear={() => setPendingView(null)} onCameraChange={props.onCameraChange} onProjectionChange={props.onProjectionChange} onViewSnap={props.onViewSnap} />
-      <WorldOrbitViewGizmo show={props.show} onViewSelect={setPendingView} />
+      <WorldProjectionSnapDriver
+        pendingSpec={pendingSpec}
+        onPendingSpecClear={() => setPendingSpec(null)}
+        onCameraChange={props.onCameraChange}
+        onSpecSnap={props.onSpecSnap}
+      />
+      <WorldOrbitViewGizmo show={props.show} projectionSpec={props.projectionSpec} onSpecSelect={setPendingSpec} />
     </>
+  );
+}
+
+export const WORLD_PROJECTION_KINDS: readonly WorldProjectionKind[] = ["orthographic", "axonometric", "oblique", "onePoint", "twoPoint", "threePoint", "curvilinear"];
+
+const WORLD_PROJECTION_KIND_SHORT_LABELS: Record<WorldProjectionKind, string> = {
+  orthographic: "Ortho",
+  axonometric: "Axo",
+  oblique: "Obl",
+  onePoint: "1Pt",
+  twoPoint: "2Pt",
+  threePoint: "3Pt",
+  curvilinear: "Fish",
+};
+
+export interface WorldProjectionKindSwitchProps {
+  readonly spec: WorldProjectionSpec;
+  readonly onSpecChange: (spec: WorldProjectionSpec) => void;
+  readonly className?: string;
+}
+
+/** @emoji 🔀 Projection-family switcher — every {@link WorldProjectionKind} like gumball transform modes. */
+export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
+  const shellClass = props.className ?? cn("pointer-events-auto flex flex-wrap gap-px text-2xs font-medium", floatingRibbonSurfaceClass);
+  const buttonClass = (active: boolean) => cn("px-1.5 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
+  return (
+    <div className={shellClass} data-world-projection-kind-switch>
+      {WORLD_PROJECTION_KINDS.map((kind) => (
+        <button key={kind} type="button" className={buttonClass(props.spec.kind === kind)} aria-pressed={props.spec.kind === kind} onClick={() => props.onSpecChange(worldProjectionKindSwitchSpec(kind, props.spec))}>
+          {WORLD_PROJECTION_KIND_SHORT_LABELS[kind]}
+        </button>
+      ))}
+    </div>
   );
 }
 
@@ -1497,12 +1588,15 @@ export interface WorldOrbitProjectionSwitchProps {
   readonly projection: OrbitCameraProjection;
   readonly onProjectionChange: (projection: OrbitCameraProjection) => void;
   readonly className?: string;
+  readonly spec?: WorldProjectionSpec;
+  readonly onSpecChange?: (spec: WorldProjectionSpec) => void;
 }
 
-/** @emoji 🔀 Small orthographic / perspective toggle for infinite-world viewports — a pure chrome surface with no
- * position of its own; callers place it (typically inside a {@link Pane} via {@link usePaneSlot}, so it's draggable
- * to any anchor like every other window pane). */
+/** @emoji 🔀 Orthographic / perspective toggle, or full {@link WorldProjectionKindSwitch} when `spec` is provided. */
 export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProps): ReactElement {
+  if (props.spec && props.onSpecChange) {
+    return <WorldProjectionKindSwitch spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
+  }
   const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
   const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
   return (
@@ -2066,6 +2160,146 @@ export function orbitCameraViewGumballPlane(view: OrbitCameraViewId | undefined)
 export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
   const family = worldProjectionFamily(spec);
   return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom === 1 ? 50 : state.zoom) : state.zoom };
+}
+
+/** @emoji 🧭 Maps a projection-gizmo face to an orthographic view id. */
+export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sign: 1 | -1): WorldOrthographicViewId {
+  if (axis === "x") {
+    return sign > 0 ? "right" : "left";
+  }
+  if (axis === "y") {
+    return sign > 0 ? "back" : "front";
+  }
+  return sign > 0 ? "top" : "bottom";
+}
+
+/** @emoji 🧭 Resolves a navigation-cube hit into a {@link WorldProjectionSpec}, preserving axonometric variant from `currentSpec`. */
+export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+  switch (hit.type) {
+    case "face":
+      return { kind: "orthographic", view: projectionGizmoFaceToOrthographicView(hit.axis, hit.sign) };
+    case "corner": {
+      const base = currentSpec?.kind === "axonometric" ? currentSpec : worldProjectionDefaults("axonometric");
+      return { ...base, kind: "axonometric", quadrant: hit.quadrant };
+    }
+    case "center": {
+      if (currentSpec?.kind === "onePoint" || currentSpec?.kind === "twoPoint" || currentSpec?.kind === "threePoint" || currentSpec?.kind === "curvilinear") {
+        return currentSpec;
+      }
+      return worldProjectionDefaults("threePoint");
+    }
+  }
+}
+
+/** @emoji 🧭 Maps a direction vector to a navigation-cube hit (face, corner, or center). */
+export function resolveProjectionGizmoHitFromDirection(direction: { readonly x: number; readonly y: number; readonly z: number }): ProjectionGizmoHit {
+  const absX = Math.abs(direction.x);
+  const absY = Math.abs(direction.y);
+  const absZ = Math.abs(direction.z);
+  if (absX > 0.45 && absY > 0.45 && absZ > 0.45) {
+    const sx = direction.x >= 0 ? 1 : -1;
+    const sy = direction.y >= 0 ? 1 : -1;
+    const quadrant: WorldAxonometricQuadrant = sx > 0 && sy > 0 ? "ne" : sx < 0 && sy > 0 ? "nw" : sx > 0 && sy < 0 ? "se" : "sw";
+    return { type: "corner", quadrant };
+  }
+  if (absX < 0.2 && absY < 0.2 && absZ < 0.2) {
+    return { type: "center" };
+  }
+  const dominant = [
+    { axis: "x" as const, magnitude: absX, sign: (direction.x >= 0 ? 1 : -1) as 1 | -1 },
+    { axis: "y" as const, magnitude: absY, sign: (direction.y >= 0 ? 1 : -1) as 1 | -1 },
+    { axis: "z" as const, magnitude: absZ, sign: (direction.z >= 0 ? 1 : -1) as 1 | -1 },
+  ].sort((a, b) => b.magnitude - a.magnitude)[0] ?? { axis: "z" as const, magnitude: 1, sign: 1 as const };
+  return { type: "face", axis: dominant.axis, sign: dominant.sign };
+}
+
+/** @emoji 🧭 Converts a legacy {@link OrbitCameraViewId} into a {@link WorldProjectionSpec}. */
+export function orbitViewToWorldProjectionSpec(view: OrbitCameraViewId): WorldProjectionSpec {
+  switch (view) {
+    case "top":
+    case "bottom":
+    case "front":
+    case "back":
+    case "left":
+    case "right":
+      return { kind: "orthographic", view };
+    case "north":
+      return { kind: "orthographic", view: "back" };
+    case "south":
+      return { kind: "orthographic", view: "front" };
+    case "east":
+      return { kind: "orthographic", view: "right" };
+    case "west":
+      return { kind: "orthographic", view: "left" };
+    case "isometricNe":
+      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" };
+    case "isometricNw":
+      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "nw" };
+    case "isometricSe":
+      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "se" };
+    case "isometricSw":
+      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" };
+    case "twoPointPerspective":
+      return { kind: "twoPoint", fov: 50, verticalShift: 0 };
+    case "perspective":
+    default:
+      return { kind: "threePoint", fov: 50 };
+  }
+}
+
+/** @emoji 🧭 Best-effort reverse of {@link orbitViewToWorldProjectionSpec} for legacy orbit callbacks. */
+export function worldProjectionSpecToOrbitView(spec: WorldProjectionSpec): OrbitCameraViewId | null {
+  switch (spec.kind) {
+    case "orthographic":
+      return spec.view === "plan" ? "top" : spec.view;
+    case "axonometric":
+      if (spec.variant !== "isometric") {
+        return "isometricNe";
+      }
+      switch (spec.quadrant) {
+        case "nw":
+          return "isometricNw";
+        case "se":
+          return "isometricSe";
+        case "sw":
+          return "isometricSw";
+        default:
+          return "isometricNe";
+      }
+    case "twoPoint":
+      return "twoPointPerspective";
+    case "onePoint":
+    case "threePoint":
+    case "curvilinear":
+      return "perspective";
+    case "oblique":
+      return spec.variant === "military" ? "top" : "front";
+  }
+}
+
+/** @emoji 🔀 Switches projection kind while preserving perspective FOV when possible. */
+export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+  const next = worldProjectionDefaults(kind);
+  if (kind === "onePoint" || kind === "twoPoint" || kind === "threePoint" || kind === "curvilinear") {
+    const fov = currentSpec && "fov" in currentSpec ? currentSpec.fov : next.fov;
+    if (kind === "twoPoint") {
+      return { kind, fov, verticalShift: currentSpec?.kind === "twoPoint" ? currentSpec.verticalShift : 0 };
+    }
+    if (kind === "curvilinear") {
+      return currentSpec?.kind === "curvilinear" ? currentSpec : { ...next, fov };
+    }
+    return { kind, fov };
+  }
+  if (kind === "axonometric" && currentSpec?.kind === "axonometric") {
+    return { ...currentSpec };
+  }
+  if (kind === "oblique" && currentSpec?.kind === "oblique") {
+    return { ...currentSpec };
+  }
+  if (kind === "orthographic" && currentSpec?.kind === "orthographic") {
+    return { ...currentSpec };
+  }
+  return next;
 }
 
 /** @emoji 📷 Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
@@ -3491,6 +3725,52 @@ if (import.meta.vitest) {
       expect(resolveOrbitGizmoViewFromDirection({ x: 0, y: 0, z: -1 })).toBe("bottom");
       expect(resolveOrbitGizmoViewFromDirection({ x: 0, y: -1, z: 0.1 })).toBe("front");
       expect(resolveOrbitGizmoViewFromDirection({ x: 0.05, y: 1, z: 0.1 })).toBe("back");
+    });
+  });
+
+  describe("resolveProjectionGizmoSpec", () => {
+    it("maps faces to orthographic views and corners to axonometric quadrants", () => {
+      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 })).toEqual({ kind: "orthographic", view: "top" });
+      expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sign: -1 })).toEqual({ kind: "orthographic", view: "left" });
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se" })).toEqual({
+        kind: "axonometric",
+        variant: "isometric",
+        angleA: 30,
+        angleB: 30,
+        quadrant: "se",
+      });
+      expect(resolveProjectionGizmoSpec({ type: "center" })).toEqual({ kind: "threePoint", fov: 50 });
+    });
+
+    it("preserves axonometric variant when snapping corners", () => {
+      const dimetric = { kind: "axonometric" as const, variant: "dimetric" as const, angleA: 15, angleB: 15, quadrant: "ne" as const };
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw" }, dimetric)).toEqual({ ...dimetric, quadrant: "sw" });
+    });
+
+    it("keeps active perspective kind on center click", () => {
+      const twoPoint = { kind: "twoPoint" as const, fov: 42, verticalShift: 0 };
+      expect(resolveProjectionGizmoSpec({ type: "center" }, twoPoint)).toEqual(twoPoint);
+    });
+  });
+
+  describe("orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView", () => {
+    it("round-trips orthographic and isometric orbit views", () => {
+      expect(orbitViewToWorldProjectionSpec("front")).toEqual({ kind: "orthographic", view: "front" });
+      expect(orbitViewToWorldProjectionSpec("isometricNw")).toEqual({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "nw" });
+      expect(worldProjectionSpecToOrbitView({ kind: "orthographic", view: "right" })).toBe("right");
+      expect(worldProjectionSpecToOrbitView({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "se" })).toBe("isometricSe");
+    });
+  });
+
+  describe("worldProjectionKindSwitchSpec", () => {
+    it("emits defaults for every projection kind", () => {
+      for (const kind of WORLD_PROJECTION_KINDS) {
+        expect(worldProjectionKindSwitchSpec(kind).kind).toBe(kind);
+      }
+    });
+
+    it("preserves perspective fov when switching kinds", () => {
+      expect(worldProjectionKindSwitchSpec("twoPoint", { kind: "threePoint", fov: 72 })).toEqual({ kind: "twoPoint", fov: 72, verticalShift: 0 });
     });
   });
 

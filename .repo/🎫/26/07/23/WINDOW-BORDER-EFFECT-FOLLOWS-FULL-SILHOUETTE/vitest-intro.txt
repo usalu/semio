@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern UIIntroduction veil|elevates every open window|elevates the mode-dock-stack
+
+> bun ./script.ts test --testNamePattern "UIIntroduction veil|elevates every open window|elevates the mode-dock-stack"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  7 passed | 333 skipped (340)
+   Start at  17:05:30
+   Duration  7.11s (transform 2.55s, setup 162ms, import 6.19s, tests 155ms, environment 421ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

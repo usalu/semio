@@ -1203,7 +1203,7 @@ pub mod d2 {
         fill: "Füllen",
         count: "Anzahl",
         placement: "Platzierung",
-        example_concrete_forest: "Concrete Forest",
+        example_concrete_forest: "Betonwald",
     };
 
     const PUZZLE2D_LABELS_REUSE_EN: Puzzle2dLabels = Puzzle2dLabels {
@@ -4684,7 +4684,7 @@ pub mod d3 {
         vortex: "Vortex",
         attractions: "Anziehungen",
         window_main: "Puzzle 3D",
-        example_concrete_forest: "Concrete Forest",
+        example_concrete_forest: "Betonwald",
         fill: "Füllen",
         count: "Anzahl",
         brush: "Pinsel",
@@ -6703,8 +6703,8 @@ pub mod d3 {
             ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswählen"),
             ("setJackQuery", "Set Jack Query", "Jack-Abfrage festlegen"),
             ("worldSelect", "World Select", "Welt auswählen"),
-            ("worldHover", "World Hover", "Welt-Hover"),
-            ("setHover", "Set Hover", "Hover festlegen"),
+            ("worldHover", "World Hover", "Überfahren (Welt)"),
+            ("setHover", "Set Hover", "Überfahren festlegen"),
             ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
             ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
             ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
@@ -6725,7 +6725,7 @@ pub mod d3 {
             ("setProximityRadius", "Set Proximity Radius", "Näheradius festlegen"),
             ("setChunkSize", "Set Chunk Size", "Blockgröße festlegen"),
             ("setSelectableKind", "Set Selectable Kind", "Auswählbare Art festlegen"),
-            ("setKindHover", "Set Kind Hover", "Art-Hover festlegen"),
+            ("setKindHover", "Set Kind Hover", "Überfahren (Art) festlegen"),
             ("selectAll", "Select All", "Alles auswählen"),
             ("clearSelection", "Clear Selection", "Auswahl aufheben"),
             ("contextMenuAt", "Context Menu At", "Kontextmenü bei"),
@@ -6740,7 +6740,7 @@ pub mod d3 {
             ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
             ("cycleBrushCandidateBack", "Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"),
             ("openVortexSuggestions", "Open Vortex Suggestions", "Vortex-Vorschläge öffnen"),
-            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschläge schliessen"),
+            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschläge schließen"),
             ("hoverSuggestion", "Hover Suggestion", "Vorschlag hovern"),
             ("suggestionsTick", "Suggestions Tick", "Vorschläge-Takt"),
             ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
@@ -6945,11 +6945,12 @@ pub mod d3 {
                             .placement(IntroductionPlacement::Right),
                         IntroductionStepDefinition::new("add-object", "Add an Object", "Drag the first object kind from the catalogue into the viewport.")
                             .introduce(panel_tab_first_draggable_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
-                            .show(vec![window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
+                            .show(vec![panel_tab_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID), window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
                             .placement(IntroductionPlacement::Right)
                             .advance_on(IntroductionAdvance::Action("addObjectKind".into())),
                         IntroductionStepDefinition::new("transform-utility", "Transform Objects", "Activate the Transform utility to move and rotate objects in the scene.")
                             .introduce("transform")
+                            .show(vec![window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
                             .advance_on(IntroductionAdvance::Utility("transform".into())),
                     ],
                 })
@@ -8272,7 +8273,7 @@ pub mod d5 {
         schema: "Schema",
         utility: "Werkzeug",
         none: "(keine)",
-        example_concrete_forest: "Concrete Forest",
+        example_concrete_forest: "Betonwald",
     };
 
     const PUZZLE5D_LABELS_REUSE_EN: Puzzle5dLabels = Puzzle5dLabels {
@@ -10822,8 +10823,8 @@ pub mod d5 {
             ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
             ("worldSelect", "World Select", "Welt auswählen"),
             ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-            ("worldHover", "World Hover", "Welt-Hover"),
-            ("setHover", "Set Hover", "Hover festlegen"),
+            ("worldHover", "World Hover", "Überfahren (Welt)"),
+            ("setHover", "Set Hover", "Überfahren festlegen"),
             ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
             ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
             ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),

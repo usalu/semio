@@ -1101,10 +1101,104 @@
   animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
 }
 
+/* 🪟 Docked windows: rectangular body rings are wrong — the silhouette SVG on `[data-slot="mode-dock-stack"]`
+   owns introduced/loading/waiting. Suppress the body-local effects so only the full outline paints. */
+[data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"] {
+  animation: none;
+  box-shadow: none;
+}
+
+[data-slot="mode-dock-stack"] [data-slot="window"].border-loading::after,
+[data-slot="mode-dock-stack"] [data-slot="window"].border-waiting::after {
+  content: none;
+  display: none;
+  animation: none;
+}
+
+@keyframes window-silhouette-border-introduced-pulse {
+  0%,
+  100% {
+    stroke-width: var(--stroke-hairline);
+  }
+  50% {
+    stroke-width: var(--stroke-focus);
+  }
+}
+
+@keyframes window-silhouette-border-loading-dash {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes window-silhouette-border-loading-pulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes window-silhouette-border-waiting-dash {
+  to {
+    stroke-dashoffset: -48;
+  }
+}
+
+@keyframes window-silhouette-border-waiting-pulse {
+  0%,
+  100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.window-silhouette-border-introduced {
+  stroke-width: var(--stroke-hairline);
+  animation: window-silhouette-border-introduced-pulse var(--introduced-border-duration) ease-in-out infinite;
+}
+
+.window-silhouette-border-loading {
+  stroke-width: var(--stroke-hairline);
+  stroke-dasharray: 28 20;
+  stroke-linecap: butt;
+  animation:
+    window-silhouette-border-loading-dash var(--loading-border-duration) linear infinite,
+    window-silhouette-border-loading-pulse var(--loading-border-duration) ease-in-out infinite;
+}
+
+.window-silhouette-border-waiting {
+  stroke-width: var(--stroke-hairline);
+  stroke-dasharray: 10 14;
+  stroke-linecap: butt;
+  animation:
+    window-silhouette-border-waiting-dash var(--waiting-border-duration) linear infinite,
+    window-silhouette-border-waiting-pulse var(--waiting-border-duration) ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-introduced="true"] {
     animation: none;
     box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
+  }
+
+  [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"] {
+    box-shadow: none;
+  }
+
+  .window-silhouette-border-introduced,
+  .window-silhouette-border-loading,
+  .window-silhouette-border-waiting {
+    animation: none;
+    opacity: 1;
+  }
+
+  .window-silhouette-border-introduced {
+    stroke-width: var(--stroke-default);
   }
 }
 
@@ -1287,27 +1381,37 @@
 
 
 
-@keyframes icon-folder {
+/* folder / folder-open: Lucide draws the tab as a notch in one continuous outline (not a separate closed
+   shape), so there is no literal sub-part to hinge without redrawing the vendored artwork. Best single-
+   rigid-body approximation: skew anchored at the bottom edge, so the top (where the tab sits) leans
+   relative to the base that stays planted — reads as "the flap tips" more than a plain rotate would. */
+@keyframes icon-folder-flap {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: skewX(0deg);
   }
-  50% {
-    transform: rotate(-6deg);
+  45% {
+    transform: skewX(-9deg);
+  }
+  75% {
+    transform: skewX(1.5deg);
   }
 }
-[data-icon="folder"] { --icon-animation: icon-folder; transform-origin: 0% 100%; }
+[data-icon="folder"] { --icon-animation: icon-folder-flap; transform-origin: 50% 100%; }
 
-@keyframes icon-folder-open {
+@keyframes icon-folder-open-flap {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: skewX(0deg);
   }
-  50% {
-    transform: rotate(6deg);
+  45% {
+    transform: skewX(11deg);
+  }
+  75% {
+    transform: skewX(-1.5deg);
   }
 }
-[data-icon="folder-open"] { --icon-animation: icon-folder-open; transform-origin: 0% 100%; }
+[data-icon="folder-open"] { --icon-animation: icon-folder-open-flap; transform-origin: 50% 100%; }
 
 
 
@@ -1338,7 +1442,7 @@
     transform: rotate(-4deg);
   }
 }
-[data-icon="wrench"] { --icon-animation: icon-wrench; }
+[data-icon="wrench"] { --icon-animation: icon-wrench; transform-origin: 17px 6px; }
 
 
 
@@ -1415,7 +1519,7 @@
     transform: rotate(-15deg);
   }
 }
-[data-icon="moon"] { --icon-animation: icon-moon; }
+[data-icon="moon"] { --icon-animation: icon-moon; transform-origin: 15px 10px; }
 
 
 
@@ -1434,7 +1538,7 @@
     transform: scale(0.96);
   }
 }
-[data-icon="check"] { --icon-animation: icon-check; }
+[data-icon="check"] { --icon-animation: icon-check; transform-origin: 9px 17px; }
 
 
 
@@ -1602,33 +1706,36 @@
 
 
 
-@keyframes icon-message-circle {
+/* message-square / message-circle: the tail is fused into the bubble's stroke outline (not a separate
+   shape), but a speech bubble is a single rigid object in reality — it physically pivots on its tail tip
+   when nudged, so a rotation anchored there is the mechanically correct single-body motion. */
+@keyframes icon-message-circle-bob {
   0%,
   100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  35% {
-    transform: translateY(-8%) rotate(3deg);
-  }
-  65% {
-    transform: translateY(2%) rotate(3deg);
-  }
-}
-[data-icon="message-circle"] { --icon-animation: icon-message-circle; }
-
-@keyframes icon-message-square {
-  0%,
-  100% {
-    transform: scale(1);
+    transform: rotate(0deg);
   }
   40% {
-    transform: scale(1.1);
+    transform: rotate(6deg);
   }
-  70% {
-    transform: scale(0.98);
+  72% {
+    transform: rotate(-1.5deg);
   }
 }
-[data-icon="message-square"] { --icon-animation: icon-message-square; }
+[data-icon="message-circle"] { --icon-animation: icon-message-circle-bob; transform-origin: 2px 21px; }
+
+@keyframes icon-message-square-bob {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(5deg);
+  }
+  72% {
+    transform: rotate(-1.5deg);
+  }
+}
+[data-icon="message-square"] { --icon-animation: icon-message-square-bob; transform-origin: 3px 22px; }
 
 
 

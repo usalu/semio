@@ -762,37 +762,19 @@ fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
     operation_meta.first().map(|meta| meta.author_id.clone())
 }
 
-/// @emoji 🔌 Auto-attaches a backbone from a deserialized envelope. Inside the wasm sandbox this
-/// resolves the injected {@link PortBackbone} (a pure in-memory queue relayed to the host). On
-/// native targets it never resolves IO — backbone attachment is an explicit `attach_backbone`
-/// call made by the caller (the `framework/sync` actor layer), so deserializing an envelope never
-/// performs filesystem/HTTP work in this crate.
-fn auto_attach_backbone<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Option<Box<dyn Backbone>> {
-    #[cfg(target_arch = "wasm32")]
-    {
-        return envelope
-            .backbone
-            .as_ref()
-            .and_then(|entry| resolve_backbone(&entry.uri).ok());
-    }
-    #[cfg(not(target_arch = "wasm32"))]
-    {
-        let _ = envelope;
-        None
-    }
-}
-
 impl<P, Op> DocumentVcsStore<P, Op>
 where
     P: Clone + Serialize + DeserializeOwned,
     Op: Clone + Serialize + DeserializeOwned + Operation<P>,
 {
+    /// @emoji 🚫 A store is always constructed with no backbone attached — the envelope's
+    /// `backbone` field is a descriptor of the last attachment, never an instruction to
+    /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
     pub fn new(envelope: DocumentVcsEnvelope<P, Op>) -> Self {
-        let backbone = auto_attach_backbone(&envelope);
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         Self {
             envelope,
-            backbone,
+            backbone: None,
             dag: semio_framework_core::OpDag::new(),
             applied_edit_ids: Vec::new(),
             redo_edit_ids: Vec::new(),
@@ -877,7 +859,7 @@ where
         applied_edit_ids: Vec<String>,
         redo_edit_ids: Vec<String>,
     ) {
-        self.backbone = auto_attach_backbone(&envelope);
+        self.backbone = None;
         self.edit_sequence = envelope
             .vcs
             .edits
@@ -2373,6 +2355,27 @@ impl StudioVcsHost {
         self.meta.projection()
     }
 
+    /// @emoji 🔗 Attaches a backbone to the studio-wide meta-document, same runtime-attach/detach
+    /// contract as any other `DocumentVcsStore` — default is unattached, this is always an
+    /// explicit call.
+    pub fn attach_backbone(&mut self, backbone: Box<dyn Backbone>) -> Result<(), VcsError> {
+        self.meta.attach_backbone(backbone)
+    }
+
+    /// @emoji ✂️ Detaches the meta-document's backbone; the studio history stays in memory.
+    pub fn detach_backbone(&mut self) -> Option<Box<dyn Backbone>> {
+        self.meta.detach_backbone()
+    }
+
+    pub fn backbone_ref(&self) -> Option<&DocumentBackboneRef> {
+        self.meta.backbone_ref()
+    }
+
+    /// @emoji 📡 Drains inbound backbone messages into the meta-document's edit timeline.
+    pub fn tick(&mut self) -> Result<bool, VcsError> {
+        self.meta.tick()
+    }
+
     /// @emoji 💾 Commits every dirty member (leaving clean members' existing checkpoints untouched),
     /// pins each member's resulting `(checkpoint, alternative)`, and records one `StudioCheckpoint`
     /// on the meta-document — applied *and* committed there too, so the studio history itself is
@@ -3044,6 +3047,36 @@ mod tests {
     }
 
     #[test]
+    fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut stale_json: serde_json::Value =
+            serde_json::to_value(&envelope).expect("serialize envelope");
+        stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
+        let stale_envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
+
+        let mut store = DocumentVcsStore::new(stale_envelope.clone());
+        assert!(
+            store.tick().expect("tick with no live backbone is a no-op") == false,
+            "no backbone was ever attached, so there is nothing to pump"
+        );
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply works purely against the in-memory graph");
+        assert_eq!(store.projection().expect("projection").n, 1);
+
+        store.set_state(stale_envelope, Vec::new(), Vec::new());
+        assert!(
+            store.tick().expect("tick after set_state with no live backbone is a no-op") == false,
+            "set_state must not resurrect IO from a stale backbone descriptor either"
+        );
+    }
+
+    #[test]
     fn file_json_storage_round_trips_a_blob() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FileJsonStorage::new(dir.path().join("demo.json"));
@@ -3638,6 +3671,56 @@ mod tests {
         assert!(
             !host.member("member-a").expect("member a").is_dirty(),
             "dirty member-a is committed (and therefore clean) by the studio checkpoint"
+        );
+    }
+
+    #[test]
+    fn studio_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
+        let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
+        let meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOp> =
+            create_document_vcs_envelope("os.studio.history/v1", "studio", StudioHistoryProjection::default(), None);
+        let mut host_a = StudioVcsHost::new(meta_envelope.clone());
+        let mut host_b = StudioVcsHost::new(meta_envelope);
+        assert!(host_a.backbone_ref().is_none(), "default is unattached, like any other DocumentVcsStore");
+
+        host_a.attach_backbone(Box::new(backbone_a)).expect("attach a");
+        host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
+        assert!(host_a.backbone_ref().is_some());
+
+        let mut member = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+            "demo/v1",
+            "member-a",
+            DemoProjection { n: 0 },
+            None,
+        ));
+        member
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply on member, so it's dirty and can be committed");
+        host_a.register_member(Box::new(member));
+        host_a
+            .commit_studio_checkpoint("studio init".into(), Vec::new())
+            .expect("commit studio checkpoint on a");
+
+        host_b.tick().expect("tick b");
+        assert_eq!(
+            host_b.meta_projection().expect("meta projection b").checkpoints.len(),
+            1,
+            "the studio-wide checkpoint replicates through the meta-document's backbone"
+        );
+
+        host_a.detach_backbone();
+        assert!(host_a.backbone_ref().is_none());
+        host_a
+            .commit_studio_checkpoint("studio offline".into(), Vec::new())
+            .expect("meta history keeps working purely in memory once detached");
+        host_b.tick().expect("tick b again");
+        assert_eq!(
+            host_b.meta_projection().expect("meta projection b unchanged").checkpoints.len(),
+            1,
+            "detached studio edits never reach the peer"
         );
     }
 
