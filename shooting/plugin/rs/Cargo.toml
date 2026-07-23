@@ -16,6 +16,13 @@ package = "semio:shooting"
 variant = "shooting"
 ports = { react = 6019, wgpu = 6119 }
 
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+roots = ["asset/metabolism/representation", "asset/abbau-aufbau"]
+placeholder = "asset/mesh/placeholder.glb"
+filter_from_examples = true
+
 [lib]
 crate-type = ["cdylib", "rlib"]
 path = "lib.rs"

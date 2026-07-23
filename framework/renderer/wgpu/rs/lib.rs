@@ -14,8 +14,8 @@ pub mod dock {
 use semio_framework_core::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, push_chrome_border, push_chrome_group_border,
-    push_window_cap_border, even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
+    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border,
+    even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
     HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, UiPresence, WindowLayout, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
@@ -1453,33 +1453,14 @@ fn render_stack(
             active_tab_x = tab_x;
         }
         let stack_active_tab = is_active && globally_active;
-        let is_last_before_gap = per_tab_chrome && index + 1 == windows.len();
         let hovered = tab_rect.contains(ctx.input.pointer_x, ctx.input.pointer_y);
         if stack_active_tab {
             ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.selected);
         } else if hovered {
             ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.button_hover);
-        }
-        if per_tab_chrome {
-            let tab_border = if stack_active_tab {
-                theme.accent
-            } else {
-                border
-            };
-            if stack_active_tab || is_last_before_gap {
-                push_window_cap_border(ctx.draw, tab_rect, stroke, tab_border);
-            } else {
-                push_chrome_border(
-                    ctx.draw,
-                    tab_rect,
-                    stroke,
-                    tab_border,
-                    true,
-                    true,
-                    true,
-                    true,
-                );
-            }
+        } else if per_tab_chrome && !is_active {
+            // 🪟 Inactive sibling pills — fill only; outer outline is the stack silhouette.
+            ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.panel);
         }
         dock_text(
             ctx,
@@ -1505,24 +1486,11 @@ fn render_stack(
         });
         tab_x += tw;
     }
-    if !per_tab_chrome {
-        let tabs_cap = Rect::new(cap_rect.x, cap_y, tab_x - cap_rect.x, tab_h);
-        push_window_cap_border(ctx.draw, tabs_cap, stroke, border);
-    }
     let gap_x = tab_x;
     let controls_x = cap_rect.x + cap_rect.w - controls_w;
     let gap_w = (controls_x - gap_x).max(0.0);
     let gap_rect = Rect::new(gap_x, cap_y, gap_w, tab_h);
-    push_chrome_border(
-        ctx.draw,
-        gap_rect,
-        stroke,
-        border,
-        false,
-        false,
-        true,
-        false,
-    );
+    // 🪟 Gap stays inside the full-cap glass region (frosted cutout); no piecewise bottom stroke.
     ctx.input.register_hit(HitTarget {
         rect: gap_rect,
         event: None,
@@ -1533,7 +1501,6 @@ fn render_stack(
     });
 
     let controls_rect = Rect::new(controls_x, cap_y, controls_w, tab_h);
-    push_window_cap_border(ctx.draw, controls_rect, stroke, border);
     render_cap_action_group(
         ctx,
         controls_rect,
@@ -1557,12 +1524,13 @@ fn render_stack(
     if body_fill {
         ctx.draw.push_solid([body_rect.x, body_rect.y, body_rect.w, body_rect.h], theme.canvas_clear);
     }
-    ctx.draw
-        .push_solid([body_rect.x, body_rect.y, stroke, body_rect.h], border);
-    ctx.draw
-        .push_solid([body_rect.x + body_rect.w - stroke, body_rect.y, stroke, body_rect.h], border);
-    ctx.draw
-        .push_solid([body_rect.x, body_rect.y + body_rect.h - stroke, body_rect.w, stroke], border);
+    // 🪟 One outline for tabs + glass cutout + controls + body (matches React ModeDockStackSilhouetteBorder).
+    push_window_silhouette_border(
+        ctx.draw,
+        WindowSilhouette::new(bounds, gap_x - bounds.x, controls_w, tab_h),
+        stroke,
+        border,
+    );
 
     if body_fill {
         let content = body_rect.inset(theme.padding_standard);
@@ -2628,35 +2596,42 @@ mod tests {
         use ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
         let measures = vec![
             WindowMeasure::Group {
-                id: "brush-params".into(),
-                label: "Brush".into(),
-                default_open: Some(true),
-                active_utility_id: Some("utility.a".into()),
-                children: vec![WindowMeasure::Slider {
-                    id: "size".into(),
-                    label: Some("Size".into()),
-                    value: 4.0,
-                    min: 1.0,
-                    max: 10.0,
-                    step: Some(1.0),
-                    ready: None,
-                    loading: None,
-                    waiting: None,
-                    on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setSize".into(), args: None },
-                }],
-            },
             WindowMeasure::Group {
                 id: "grid".into(),
                 label: "Grid".into(),
                 default_open: Some(true),
                 active_utility_id: None,
+                value: None,
+                min: None,
+                max: None,
+                step: None,
+                ready: None,
+                loading: None,
+                waiting: None,
+                on_change: None,
                 children: vec![],
             },
         ];
         let (general, utility_options) = partition_window_measures(&measures, Some("utility.a"));
         assert_eq!(utility_options.len(), 1, "matching utility surfaces the tagged group in utility options");
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         assert!(matches!(&utility_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
         assert_eq!(general.len(), 1, "untagged group stays in the general measures rail");
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         assert!(matches!(&general[0], WindowMeasure::Group { id, .. } if id == "grid"));
         let (general_other, utility_options_other) = partition_window_measures(&measures, Some("utility.b"));
         assert!(utility_options_other.is_empty(), "wrong active utility drops the tagged group");
@@ -7241,7 +7216,7 @@ use crate::interpreter::{validate_component_scene, FrameworkWidgetContext, RENDE
 use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, ShellFindItem, ShellState};
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
-use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
+use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -8536,7 +8511,7 @@ struct Paint2dAssetJson {
 
 struct Paint2dFlatLayer {
     id: String,
-    image_key: String,
+    image_key: Option<String>,
     x: f64,
     y: f64,
     scale_x: f64,
@@ -8561,9 +8536,6 @@ fn collect_paint2d_pixel_layers(
                 if !*visible {
                     continue;
                 }
-                let Some(image_key) = image_key else {
-                    continue;
-                };
                 out.push(Paint2dFlatLayer {
                     id: id.clone(),
                     image_key: image_key.clone(),
@@ -8572,8 +8544,8 @@ fn collect_paint2d_pixel_layers(
                     scale_x: parent_sx * transform.scale_x,
                     scale_y: parent_sy * transform.scale_y,
                     opacity: opacity * parent_opacity,
-                    width: width.unwrap_or(0),
-                    height: height.unwrap_or(0),
+                    width: width.unwrap_or(512),
+                    height: height.unwrap_or(512),
                 });
             }
             Paint2dLayerJson::Group { visible, opacity, transform, children } => {
@@ -8612,10 +8584,10 @@ fn paint2d_navigator_fit_viewport(flat: &[Paint2dFlatLayer], inner: Rect) -> Vie
     for layer in flat {
         let w = layer.width as f64 * layer.scale_x;
         let h = layer.height as f64 * layer.scale_y;
-        let x0 = layer.x as f32;
-        let y0 = layer.y as f32;
-        let x1 = (layer.x + w) as f32;
-        let y1 = (layer.y + h) as f32;
+        let x0 = (layer.x - w * 0.5) as f32;
+        let y0 = (layer.y - h * 0.5) as f32;
+        let x1 = (layer.x + w * 0.5) as f32;
+        let y1 = (layer.y + h * 0.5) as f32;
         min_x = min_x.min(x0.min(x1));
         min_y = min_y.min(y0.min(y1));
         max_x = max_x.max(x0.max(x1));
@@ -8690,11 +8662,14 @@ fn render_paint_2d(
     let viewport = if is_navigator {
         paint2d_navigator_fit_viewport(&flat, inner)
     } else {
-        let mut vp = Viewport {
-            x: doc.camera.x as f32,
-            y: doc.camera.y as f32,
-            zoom: doc.camera.zoom as f32,
-        };
+        let mut vp = Viewport::from_json(&paint_2d.camera_json);
+        if vp.zoom <= 0.0 {
+            vp = Viewport {
+                x: doc.camera.x as f32,
+                y: doc.camera.y as f32,
+                zoom: doc.camera.zoom as f32,
+            };
+        }
         let local = scene_state(&scene.surface_id);
         if local.viewport.zoom > 0.0 {
             vp = local.viewport;
@@ -8706,18 +8681,25 @@ fn render_paint_2d(
         draw_text(ctx, "Empty paint-2d document", inner.x + 8.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
     for layer in &flat {
-        let Some(asset) = assets.get(&layer.image_key) else {
-            continue;
-        };
-        let data_url = format!("data:{};base64,{}", asset.mime, asset.data);
-        let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, &data_url) else {
-            continue;
-        };
+        let w = (layer.width as f32 * layer.scale_x as f32 * viewport.zoom).max(1.0);
+        let h = (layer.height as f32 * layer.scale_y as f32 * viewport.zoom).max(1.0);
         let (sx, sy) = viewport.world_to_screen(layer.x as f32, layer.y as f32, inner);
-        let w = layer.width as f32 * layer.scale_x as f32 * viewport.zoom;
-        let h = layer.height as f32 * layer.scale_y as f32 * viewport.zoom;
-        ctx.draw
-            .push_raster_quad(&key, [sx, sy, w.max(1.0), h.max(1.0)], [0.0, 0.0, 1.0, 1.0], layer.opacity);
+        let quad = [sx - w * 0.5, sy - h * 0.5, w, h];
+        if let Some(image_key) = &layer.image_key {
+            let Some(asset) = assets.get(image_key) else {
+                ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
+                continue;
+            };
+            let data_url = format!("data:{};base64,{}", asset.mime, asset.data);
+            let Some(key) = queue_canvas_image_upload(&scene.surface_id, &layer.id, &data_url) else {
+                ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
+                continue;
+            };
+            ctx.draw
+                .push_raster_quad(&key, quad, [0.0, 0.0, 1.0, 1.0], layer.opacity);
+        } else {
+            ctx.draw.push_solid(quad, theme.panel.with_alpha(layer.opacity.clamp(0.0, 1.0)));
+        }
     }
     // 🧭 "You are here" overlay: the main surface's visible world rect, mapped into this
     // navigator's fitted screen space — matches the React reference's `overlayRect` border div.
@@ -10523,6 +10505,49 @@ fn draw_checkerboard(
     }
 }
 
+/** 📐 Theme-aware LOD world grid for canvas-2d — same large/medium/small/micro steps as flow and infinite boards. */
+fn draw_canvas_infinite_grid(draw: &mut ui_wgpu::DrawList, viewport: &Viewport, inner: Rect, theme: &ui_wgpu::Theme) {
+    if viewport.zoom <= 0.0 {
+        return;
+    }
+    let (wx0, wy0) = viewport.screen_to_world(inner.x, inner.y, inner);
+    let (wx1, wy1) = viewport.screen_to_world(inner.x + inner.w, inner.y + inner.h, inner);
+    let min_x = wx0.min(wx1);
+    let max_x = wx0.max(wx1);
+    let min_y = wy0.min(wy1);
+    let max_y = wy0.max(wy1);
+    let color = theme.separator.with_alpha((theme.separator.a * 0.35).max(0.08));
+    let steps: [(f32, f32, f32); 4] = [
+        (10.0, 1.0, 0.0),
+        (2.5, 0.72, 8.0),
+        (0.5, 0.48, 10.0),
+        (0.1, 0.32, 12.0),
+    ];
+    for (world_step, stroke_px, min_screen) in steps {
+        let screen = world_step * viewport.zoom;
+        if screen < min_screen {
+            continue;
+        }
+        let width = (stroke_px).max(0.5);
+        let start_x = (min_x / world_step).floor() * world_step;
+        let start_y = (min_y / world_step).floor() * world_step;
+        let mut x = start_x;
+        while x <= max_x {
+            let (sx0, sy0) = viewport.world_to_screen(x, min_y, inner);
+            let (sx1, sy1) = viewport.world_to_screen(x, max_y, inner);
+            draw.push_line(sx0, sy0, sx1, sy1, color, width);
+            x += world_step;
+        }
+        let mut y = start_y;
+        while y <= max_y {
+            let (sx0, sy0) = viewport.world_to_screen(min_x, y, inner);
+            let (sx1, sy1) = viewport.world_to_screen(max_x, y, inner);
+            draw.push_line(sx0, sy0, sx1, sy1, color, width);
+            y += world_step;
+        }
+    }
+}
+
 fn draw_dashed_line(
     draw: &mut ui_wgpu::DrawList,
     x0: f32,
@@ -10914,6 +10939,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     if local.viewport.zoom > 0.0 && scene.component_kind == SurfaceKind::Canvas2d {
         viewport = local.viewport;
     }
+    draw_canvas_infinite_grid(ctx.draw, &viewport, inner, theme);
     let has_polyline = layers.iter().any(|layer| layer.kind == "polyline");
     if has_polyline {
         draw_checkerboard(ctx.draw, &viewport, inner, ctx.theme, 1024.0);
@@ -14893,7 +14919,7 @@ use semio_framework_core::{
 };
 use ui_wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::{
-    ActionDescriptor, UtilityCategory, UtilityNode, UiButtonNode, UiNode, UiSelectItem, UiSelectNode, UiStackNode,
+    ActionDescriptor, UtilityCategory, UtilityNode, UiButtonNode, UiNode, UiPresence, UiSelectItem, UiSelectNode, UiStackNode,
     UiTextNode, WindowEngagement, WindowEngagementControl, WindowEngagementInput, WindowEngagementOption,
     WindowMeasure, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID,
@@ -19381,6 +19407,14 @@ fn measure_window_measure_height(
                 }
             }
             h
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         }
         WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => 16.0 + theme.control_height,
         WindowMeasure::Toggle { .. } => theme.control_height,
@@ -23941,6 +23975,14 @@ impl ShellState {
                         y += child_h;
                     }
                 }
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
             }
             WindowMeasure::Select {
                 id,
@@ -26947,7 +26989,7 @@ fn fetch_map_tile_bytes_blocking(url: &str) -> Option<Vec<u8>> {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-fn resolve_map_tile_fetch_url(url: &str) -> String {
+fn resolve_asset_fetch_url(url: &str) -> String {
     if url.starts_with("http://") || url.starts_with("https://") {
         return url.to_string();
     }
@@ -26957,6 +26999,11 @@ fn resolve_map_tile_fetch_url(url: &str) -> String {
         return format!("{}{}", base.trim_end_matches('/'), url);
     }
     url.to_string()
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn resolve_map_tile_fetch_url(url: &str) -> String {
+    resolve_asset_fetch_url(url)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -27209,7 +27256,10 @@ impl AppRuntime {
                 }
             }
             for item in glb {
-                if let Some(bytes) = pollster::block_on(fetch_url_bytes(&item.url)) {
+                let url = resolve_asset_fetch_url(&item.url);
+                let bytes = fetch_map_tile_bytes_blocking(&url)
+                    .or_else(|| pollster::block_on(fetch_url_bytes(&item.url)));
+                if let Some(bytes) = bytes {
                     if let Some(state) = self.shell.world3d_states.get_mut(&item.surface_id) {
                         apply_glb_bytes(state, &item.url, &bytes);
                     } else if let Some(state) = self.shell.icon_render_states.get_mut(&item.surface_id) {

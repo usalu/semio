@@ -43,7 +43,7 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "remodel", pluginId: "remodel", cratePath: "remodel/plugin/rs", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: [], engines: [], assets: [] },
   { variant: "s", pluginId: "s", cratePath: "s/plugin/rs", aliases: [], ports: { react: 6070, wgpu: 6066 }, examples: ["demo"], engines: [], assets: [] },
   { variant: "sequence", pluginId: "sequence", cratePath: "sequence/plugin/rs", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["default"], engines: [], assets: [] },
-  { variant: "shooting", pluginId: "shooting", cratePath: "shooting/plugin/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["base-icon"], engines: [], assets: [] },
+  { variant: "shooting", pluginId: "shooting", cratePath: "shooting/plugin/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["base-icon"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }] },
   { variant: "sourcing", pluginId: "sourcing", cratePath: "sourcing/plugin/rs", app: "sourcing-curate", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: [], engines: [], assets: [] },
   { variant: "trinity-jack", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-jack-play", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-rewrite-play", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
@@ -422,6 +422,11 @@ class PluginWorkerClient {
   }
 }
 var pluginWorkerClients = new Map;
+function relayPluginBackboneOutbound(uri, messageJson) {
+  pluginBackboneOutboundRelay?.(uri, messageJson);
+}
+globalThis.__semioMainThreadPluginBackboneOutbound = relayPluginBackboneOutbound;
+var pluginBackboneOutboundRelay = null;
 var pluginModuleHandleCache = new Map;
 function findPlaygroundVariant(playgroundPluginId) {
   return PLAYGROUND_BUILD_TARGETS.find((entry) => entry.variant === playgroundPluginId || entry.aliases.includes(playgroundPluginId));
@@ -672,13 +677,13 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "procedural3d",
-  registryPluginId: "procedural",
-  defaultAppId: "procedural3d-play",
+  variant: "shooting",
+  registryPluginId: "shooting",
+  defaultAppId: undefined,
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "procedural", moduleUrl: "/plugin-modules/procedural/procedural_plugin.js", contributes: [], consumes: ["forms.questionKind"] }
+    { pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js", contributes: [], consumes: [] }
   ]
 };
 

@@ -61,22 +61,20 @@ function assetServerBaseUrl(): string {
   return `http://127.0.0.1:${SEMIO_ASSET_SERVER_PORT}`;
 }
 
-/** @emoji 🗂️ The active playground variant's `tile-proxy` asset specs (the only kind the standalone
- * asset server serves — `static-dir`/`mesh-collection` assets are Vite-only). */
-function variantTileProxyAssets(variant: string): readonly Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }>[] {
+/** @emoji 🗂️ The active playground variant's declared asset specs (tile-proxy, mesh-collection, static-dir). */
+function variantAssetSpecs(variant: string): readonly PlaygroundAssetSpec[] {
   const row = loadFrameworkOsPlaygroundCatalog().find((entry) => entry.variant === variant);
-  return (row?.assets ?? []).filter((asset): asset is Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> => asset.kind === "tile-proxy");
+  return row?.assets ?? [];
 }
 
 /** @emoji 🌐 Generic dev-time asset server bootstrap driven by the active playground's declared
- * `tile-proxy` asset specs — replaces the previous GIS-only `ensureGisMapTileProxyServer` (which never
- * actually triggered: it compared the playground *variant* env value, e.g. `"gis2d"`, against the
- * *pluginId* `"gis"`, a mismatch fixed here by resolving specs straight from the registry instead). */
+ * asset specs — mesh-collection/static-dir are served here so Trunk proxies and native
+ * `SEMIO_ASSET_BASE_URL` can resolve `/mesh/*` (and fixture routes) without Vite. */
 function ensureAssetServer(variant: string): void {
-  const specs = variantTileProxyAssets(variant);
+  const specs = variantAssetSpecs(variant);
   if (specs.length === 0) return;
   startAssetServer(repoRoot, SEMIO_ASSET_SERVER_PORT, specs);
-  console.log(`[DEBUG] asset proxy serving at ${assetServerBaseUrl()}`);
+  console.log(`[DEBUG] asset server serving at ${assetServerBaseUrl()} (${specs.map((s) => `${s.kind}:${s.route}`).join(", ")})`);
 }
 
 /** 🎯Resolves the `--app <appId>` args for `semio-wgpu-native` from the catalog row matching `filterPlugin`, or `[]` when the row has no `app`. */

@@ -1,0 +1,27 @@
+bun test v1.3.14 (0d9b296a)
+
+ui/styling/js/index.test.ts:
+(pass) styling resolve > resolveColorHex resolves palette var refs headlessly [0.91ms]
+(pass) styling resolve > resolveColorRgba returns byte tuple [0.84ms]
+(pass) styling resolve > serializeCanvasThemeJson dark labelFill differs from light [0.54ms]
+(pass) styling resolve > resolveColorHex foreground flips with html.dark appearance [0.57ms]
+(pass) styling resolve > syncSessionCanvasTheme pushes serialized palette into a session [0.13ms]
+(pass) puzzle3d mesh-collection asset spec > resolves kit glb roots and shared placeholder [0.07ms]
+(pass) puzzle3d mesh-collection asset spec > registers a generic mesh-collection serve/build plugin pair [0.37ms]
+(pass) puzzle3d mesh-collection asset spec > includes base.glb for shooting's default fixture [0.02ms]
+(pass) elementState > resolveElementState defaults every axis to inert [0.28ms]
+(pass) elementState > elementStateHidden is true only for state === hidden [0.06ms]
+(pass) elementState > elementStateAttributes omits every axis at default [0.04ms]
+(pass) elementState > elementStateAttributes returns {} for hidden regardless of other axes [0.01ms]
+(pass) elementState > elementStateAttributes stamps data-ui-state plus data-introduced for introducing [0.04ms]
+(pass) elementState > elementStateAttributes stamps data-ui-state for previewed/disabled without data-introduced [0.03ms]
+(pass) elementState > elementStateAttributes stamps data-ui-status for non-idle status [0.04ms]
+(pass) elementState > elementStateAttributes stamps data-ui-hover and data-ui-selected independently [0.02ms]
+(pass) elementState > elementStateAttributes composes all four axes simultaneously [0.02ms]
+(pass) elementState > resolveElementFillKind follows disabled > selected > previewed > hovered > neutral precedence [0.04ms]
+(pass) elementState > resolveElementFillKind returns null for hidden [0.24ms]
+
+ 19 pass
+ 0 fail
+ 41 expect() calls
+Ran 19 tests across 1 file. [205.00ms]

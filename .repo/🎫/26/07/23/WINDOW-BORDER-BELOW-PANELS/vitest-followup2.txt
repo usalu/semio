@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern windowSilhouette|Mode lays out|Mode clears multi-tab|Mode tab stack|elevates the mode-dock|Mode multi-tab|places body under|UIIntroduction veil
+
+> bun ./script.ts test --testNamePattern "windowSilhouette|Mode lays out|Mode clears multi-tab|Mode tab stack|elevates the mode-dock|Mode multi-tab|places body under|UIIntroduction veil"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  12 passed | 328 skipped (340)
+   Start at  18:47:37
+   Duration  5.23s (transform 1.52s, setup 103ms, import 4.39s, tests 215ms, environment 370ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

@@ -5,8 +5,8 @@ use draw::{
     default_draw_document, default_layer_base, draw_layer_descendant_leaf_ids, draw_layer_world_bounds,
     draw_op_for_layer_field, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
-    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments,
-    rgba_to_hex, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
+    flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard,
+    rgba_to_hex, DrawArtboard, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView,
     build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
@@ -14,7 +14,7 @@ use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKi
     ui_inspector_groups_to_tree, ui_inspector_mixed_number,
     ui_inspector_mixed_select, ui_inspector_mixed_slider, ui_inspector_mixed_text, ui_inspector_mixed_toggle,
     ui_inspector_readonly_field, ui_stack_vertical, ui_text, App, AppLabelsOverlay, AppLabelsOverlayExt, Canvas2dScene, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelTreeBuilder, ResourceKindSpec,
-    ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiSelectItem,
+    ActionDescriptor, PanelGroup, UtilityCategory, UtilityDefinition, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSelectItem,
     UiSelectNode, UiSliderNode, UiToggleNode, UiTreeItemNode, ViewState, WindowEngagement,
     WindowEngagementInput, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, SET_ACTIVE_UTILITY_ACTION_ID, UI_INSPECTOR_MIXED_PLACEHOLDER,
@@ -785,7 +785,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
         icon_id: Some(layer_icon(layer).into()),
         default_open: Some(matches!(layer, draw::DrawLayerNode::Group(_))),
         items: nested_items,
-        is_hidden: if base.visible { None } else { Some(true) },
+        dimmed: if base.visible { None } else { Some(true) },
         ..tree_item_with_action_draggable(row_id, base.name.clone(), description, action, &drag_data)
     }
 }
@@ -894,6 +894,7 @@ fn inspector_patch(layer_ids: &[String], field: &str) -> ActionDescriptor {
 fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, values: &[f64], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_number(values);
     UiNode::Field(UiFieldNode {
+        presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
         child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
@@ -917,6 +918,7 @@ fn inspector_number_field(layer_ids: &[String], field_id: &str, label: &str, val
 fn inspector_text_field(layer_ids: &[String], field_id: &str, label: &str, values: &[String], field: &str) -> UiNode {
     let mixed = ui_inspector_mixed_text(values);
     UiNode::Field(UiFieldNode {
+        presence: UiPresence::default(),
         id: field_id.into(),
         label: label.into(),
         child: Box::new(UiNode::Input(UiInputNode { presence: UiPresence::default(),
@@ -965,6 +967,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 .collect();
             let op_mixed = ui_inspector_mixed_select(&ops);
             fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.boolean-op".into(),
                 label: labels.boolean_op.into(),
                 child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
@@ -1014,6 +1017,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
             let threshold_mixed = ui_inspector_mixed_slider(&thresholds);
             let simplify_mixed = ui_inspector_mixed_slider(&simplifies);
             fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.trace-threshold".into(),
                 label: labels.trace_threshold.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
@@ -1030,6 +1034,7 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
                 error: None,
             }));
             fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.trace-simplify".into(),
                 label: labels.simplify.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
@@ -1193,6 +1198,7 @@ fn inspector_appearance_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlay
         fields: vec![
             inspector_text_field(&layer_ids, "draw-play-inspector.fill", labels.fill, &fill_colors, "fillColor"),
             UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.fill-alpha".into(),
                 label: labels.fill_alpha.into(),
                 child: Box::new(UiNode::Slider(UiSliderNode { presence: UiPresence::default(),
@@ -1232,6 +1238,7 @@ fn inspector_layer_group(layers: &[&draw::DrawLayerNode], labels: &DrawPlayLabel
             inspector_text_field(&layer_ids, "draw-play-inspector.name", labels.name, &names, "name"),
             inspector_number_field(&layer_ids, "draw-play-inspector.opacity", labels.opacity, &opacities, "opacity"),
             UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "draw-play-inspector.blend-mode".into(),
                 label: labels.blend_mode.into(),
                 child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
@@ -1372,15 +1379,67 @@ const DRAW_OVERLAY_SELECTION_FILL: [f64; 4] = [0.98, 0.75, 0.14, 0.16];
 const DRAW_OVERLAY_HOVER_STROKE: [f64; 4] = [0.56, 0.78, 0.98, 0.9];
 const DRAW_OVERLAY_MARQUEE_STROKE: [f64; 4] = [0.36, 0.65, 0.98, 0.9];
 const DRAW_OVERLAY_MARQUEE_FILL: [f64; 4] = [0.36, 0.65, 0.98, 0.12];
+const DRAW_ARTBOARD_FILL: [f64; 4] = [0.969, 0.953, 0.890, 1.0];
+const DRAW_ARTBOARD_STROKE: [f64; 4] = [0.198, 0.223, 0.205, 0.55];
+const DRAW_ARTBOARD_LABEL: [f64; 4] = [0.198, 0.223, 0.205, 0.92];
+
+/// 📐 Formats one artboard edge length for the dimension label (integers stay bare).
+fn format_artboard_dimension(value: f64) -> String {
+    if (value - value.round()).abs() < 1e-6 {
+        format!("{}", value.round() as i64)
+    } else {
+        format!("{value:.2}")
+    }
+}
+
+/// 🖼️ Artboard paper + `W × H` dimension label — drawn under document content.
+fn artboard_scene_records(document: &DrawDocument) -> Vec<Value> {
+    let artboard = resolve_draw_artboard(document).unwrap_or(DrawArtboard { width: 1024.0, height: 1024.0 });
+    let width = artboard.width.max(1.0);
+    let height = artboard.height.max(1.0);
+    let segments = vec![
+        PathSegment::Move { to: [0.0, 0.0] },
+        PathSegment::Line { to: [width, 0.0] },
+        PathSegment::Line { to: [width, height] },
+        PathSegment::Line { to: [0.0, height] },
+        PathSegment::Close,
+    ];
+    let label = format!("{} × {}", format_artboard_dimension(width), format_artboard_dimension(height));
+    let label_size = 12.0_f64;
+    let label_x = (width * 0.5) - (label.len() as f64 * label_size * 0.28);
+    vec![
+        overlay_record(
+            "artboard:frame".into(),
+            [1.0, 0.0, 0.0, 1.0, 0.0, 0.0],
+            &segments,
+            Some(DRAW_ARTBOARD_FILL),
+            DRAW_ARTBOARD_STROKE,
+            1.0,
+        ),
+        json!({
+            "id": "artboard:dimensions",
+            "role": "overlay",
+            "transform": [1.0, 0.0, 0.0, 1.0, label_x, height + label_size * 0.35],
+            "segments": [],
+            "fill": { "kind": "solid", "color": DRAW_ARTBOARD_LABEL },
+            "opacity": 1.0,
+            "blendMode": "normal",
+            "visible": true,
+            "text": { "content": label, "size": label_size },
+        }),
+    ]
+}
 
 fn render_canvas(document: &DrawDocument, interaction: &DrawInteractionState, gesture: &draw_gesture::Snapshot, active_utility: &str) -> UiNode {
     let scene_nodes = flatten_draw_document_to_scene_nodes(document);
-    let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + 4);
+    let artboard_records = artboard_scene_records(document);
+    let mut records: Vec<Value> = Vec::with_capacity(scene_nodes.len() + artboard_records.len() + 4);
     records.push(json!({
         "id": "meta:utility",
         "role": "meta",
         "utility": active_utility,
     }));
+    records.extend(artboard_records);
     for node in &scene_nodes {
         records.push(serde_json::to_value(node).unwrap_or(Value::Null));
     }
@@ -2053,6 +2112,30 @@ mod tests {
         assert!(layers_json.contains("segments"));
         let records: Vec<Value> = serde_json::from_str(layers_json).unwrap();
         assert!(records.iter().any(|record| record.get("role").and_then(|value| value.as_str()) == Some("meta")));
+        assert!(
+            records.iter().any(|record| record.get("id").and_then(|value| value.as_str()) == Some("artboard:frame")),
+            "canvas must show the document artboard frame"
+        );
+        assert!(
+            records.iter().any(|record| {
+                record.get("id").and_then(|value| value.as_str()) == Some("artboard:dimensions")
+                    && record
+                        .pointer("/text/content")
+                        .and_then(|value| value.as_str())
+                        .is_some_and(|label| label.contains('×'))
+            }),
+            "canvas must show document dimension label"
+        );
+        assert!(layers_json.contains("200 × 200"), "example artboard dimensions must be visible");
+    }
+
+    #[test]
+    fn default_document_exposes_artboard_dimensions_on_canvas() {
+        let mut app = new_app();
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
+        let value = serde_json::to_value(&node).unwrap();
+        let layers_json = value.pointer("/canvas2d/layersJson").and_then(|v| v.as_str()).expect("layersJson string");
+        assert!(layers_json.contains("1024 × 1024"), "blank documents show default artboard dimensions");
     }
 
     #[test]

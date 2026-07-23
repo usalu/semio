@@ -6796,15 +6796,55 @@ export interface WindowSilhouetteMetrics {
   readonly capHeight: number;
 }
 
-/** @emoji 🪟 Closed SVG path for the dock-stack outer silhouette (tabs + gap cutout + controls + body). */
-export function windowSilhouettePath(metrics: WindowSilhouetteMetrics): string {
-  const w = Math.max(0, metrics.width);
-  const h = Math.max(0, metrics.height);
-  const tabs = Math.max(0, Math.min(metrics.tabsWidth, w));
-  const controls = Math.max(0, Math.min(metrics.controlsWidth, Math.max(0, w - tabs)));
-  const cap = Math.max(0, Math.min(metrics.capHeight, h));
-  const gapEnd = Math.max(tabs, w - controls);
-  return `M0,0 H${tabs} V${cap} H${gapEnd} V0 H${w} V${h} H0 Z`;
+/** @emoji 🪟 Which border effect the dock-stack silhouette overlay should paint. */
+export type WindowSilhouetteBorderKind = "introduced" | "loading" | "waiting" | "active" | "normal";
+
+/** @emoji 🪟 Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
+ * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
+ * and the stack SVG border must follow only these stamps — introducing `transform` must pulse the utility
+ * toggle, not the enclosing Top/Perspective silhouette. */
+export function isWindowChromeIntroducedTarget(el: Element): boolean {
+  if (el.getAttribute("data-slot") === "window") return true;
+  const ids = [el.getAttribute("id") ?? "", ...(el.getAttribute("data-element-alias") ?? "").split(/\s+/)].filter(Boolean);
+  for (const id of ids) {
+    if (!id.startsWith("framework.window.")) continue;
+    const rest = id.slice("framework.window.".length);
+    if (!rest.includes(".")) return true;
+  }
+  return false;
+}
+
+/** @emoji 🪟 Resolves silhouette border kind from the active window + stack active flag.
+ * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
+ * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
+ * Nested introduce targets (utilities, actions) must not promote the window silhouette. */
+export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stackActive = false): WindowSilhouetteBorderKind {
+  if (windowEl?.getAttribute("data-introduced") === "true") return "introduced";
+  if (windowEl) {
+    for (const el of windowEl.querySelectorAll('[data-introduced="true"]')) {
+      if (isWindowChromeIntroducedTarget(el)) return "introduced";
+    }
+  }
+  const className = windowEl && typeof windowEl.className === "string" ? windowEl.className : "";
+  if (/(?:^|\s)border-loading(?:-active|-element)?(?:\s|$)/.test(className)) return "loading";
+  if (/(?:^|\s)border-waiting(?:-active|-element)?(?:\s|$)/.test(className)) return "waiting";
+  return stackActive ? "active" : "normal";
+}
+
+/** @emoji 🪟 Closed SVG path for the dock-stack outer silhouette (tabs + gap cutout + controls + body).
+ * Inset slightly so a centered stroke stays inside `overflow-hidden` stacks. */
+export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = 0.5): string {
+  const w = Math.max(inset * 2, metrics.width);
+  const h = Math.max(inset * 2, metrics.height);
+  const tabs = Math.max(inset, Math.min(metrics.tabsWidth, w - inset));
+  const controls = Math.max(0, Math.min(metrics.controlsWidth, Math.max(0, w - tabs - inset)));
+  const cap = Math.max(inset, Math.min(metrics.capHeight, h - inset));
+  const gapEnd = Math.max(tabs, w - controls - inset);
+  const x0 = inset;
+  const y0 = inset;
+  const x1 = w - inset;
+  const y1 = h - inset;
+  return `M${x0},${y0} H${tabs} V${cap} H${gapEnd} V${y0} H${x1} V${y1} H${x0} Z`;
 }
 
 /** @emoji 🪟 Reads live silhouette metrics from a mounted `[data-slot="mode-dock-stack"]` (gap + controls). */
@@ -6824,38 +6864,26 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   return { width, height, tabsWidth, controlsWidth, capHeight };
 }
 
-/** @emoji 🪟 Which border effect the dock-stack silhouette overlay should paint for its active window. */
-export type WindowSilhouetteBorderKind = "introduced" | "loading" | "waiting";
+/** @emoji 🪟 Continuous tabbar glass ribbon — one backdrop-filter region (no seams between tab/gap/controls). */
+export const modeDockTabBarGlassClass = glassRibbonClass;
 
-/** @emoji 🪟 Resolves silhouette border kind from the active `[data-slot="window"]` inside a dock stack. */
-export function resolveWindowSilhouetteBorderKind(windowEl: Element | null): WindowSilhouetteBorderKind | null {
-  if (!windowEl) return null;
-  if (windowEl.getAttribute("data-introduced") === "true") return "introduced";
-  const className = typeof windowEl.className === "string" ? windowEl.className : "";
-  if (/(?:^|\s)border-loading(?:-active|-element)?(?:\s|$)/.test(className)) return "loading";
-  if (/(?:^|\s)border-waiting(?:-active|-element)?(?:\s|$)/.test(className)) return "waiting";
-  return null;
-}
+/** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on the tabbar. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
+export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
-/** @emoji 📏 Top cap sides only — no bottom edge; z-index covers the body top stroke under the cap. */
-export const windowCapFrameClass = `relative z-[2] border-t border-x !border-b-0 ${borderNormalClass} bg-window`;
+/** @emoji 📏 Active stack reuses the same transparent cell; outline color comes from the silhouette SVG. */
+export const windowCapFrameActiveClass = windowCapFrameClass;
 
-/** @emoji 📏 Top cap with primary chrome line when the stack owns the globally active window. */
-export const windowCapFrameActiveClass = `relative z-[2] border-t border-x !border-b-0 ${activeLineClass} bg-window`;
+/** @emoji 🪟 Gap cutout is frosted via the parent tabbar glass, not a second ribbon. */
+export const windowGapFrameClass = "border-0 bg-transparent";
 
-/** @emoji 📏 Canvas gap stroke — horizontal segment of the U between tab and fullscreen caps. */
-export const windowGapFrameClass = `border-x-0 border-t-0 border-b ${borderNormalClass}`;
+/** @emoji 🪟 Active gap — same transparent cell; silhouette SVG paints the notch baseline. */
+export const windowGapFrameActiveClass = windowGapFrameClass;
 
-/** @emoji 📏 Canvas gap stroke with primary chrome line when the stack is globally active. */
-export const windowGapFrameActiveClass = `border-x-0 border-t-0 border-b ${activeLineClass}`;
+/** @emoji 📏 Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body). */
+export const windowBodyFrameClass = "relative border-0 bg-canvas";
 
-/** @emoji 📏 Bottom of U-shaped window chrome; sides and bottom only (top stroke is gap + cap sides).
- * 🎓 No z-index here (a stray `z-0` used to trap this in its own stacking context): introduction elevation
- * prefers the enclosing `[data-slot="mode-dock-stack"]` so tabs + body rise together above the veil. */
-export const windowBodyFrameClass = `relative -mt-px border-x border-t-0 border-b ${borderNormalClass} bg-canvas`;
-
-/** @emoji 📏 U-shaped body frame with primary chrome line when the stack owns the globally active window. */
-export const windowBodyFrameActiveClass = `relative -mt-px border-b border-l border-r border-t-0 ${activeLineClass} bg-canvas`;
+/** @emoji 📏 Active body fill — outline via silhouette SVG `data-kind="active"`. */
+export const windowBodyFrameActiveClass = windowBodyFrameClass;
 
 /** @emoji 📐 Grid tracks for multi-tab active chrome: one column per tab, then flex gap, then controls. */
 export interface ModeDockChromeGrid {
@@ -6914,17 +6942,17 @@ export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 /** @emoji 📑 Active side-panel tab — primary fill + emphasized icon. */
 export const panelTabActiveClass = interactiveActiveFillClass;
 
-/** @emoji 📏 Stack-active tab — three-sided U-cap above body; open bottom merges into stack body. */
-export const modeDockActiveTabClass = `relative z-20 box-border min-h-medium shrink-0 border-t border-l border-r !border-b-0 ${activeLineClass} ${modeDockActiveTabFillClass}`;
+/** @emoji 📏 Stack-active tab fill — outline owned by the stack silhouette SVG. */
+export const modeDockActiveTabClass = `relative z-20 box-border min-h-medium shrink-0 border-0 ${modeDockActiveTabFillClass}`;
 
-/** @emoji 📏 Maximize cap on the right of the gap (normal chrome line). */
-export const windowControlsCapClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${borderNormalClass} bg-window text-element`;
+/** @emoji 📏 Maximize/controls glass cell — transparent; tabbar owns the ribbon. */
+export const windowControlsCapClass = "relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
-/** @emoji 📏 Maximize cap when the stack owns the globally active window. */
-export const windowControlsCapActiveClass = `relative z-[2] flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window text-element`;
+/** @emoji 📏 Active controls cap — same transparent cell; silhouette SVG carries the active stroke. */
+export const windowControlsCapActiveClass = windowControlsCapClass;
 
-/** @emoji 📏 Maximize cap in multi-tab grid when the stack is globally active. */
-export const windowControlsCapActiveSplitClass = `relative flex shrink-0 items-stretch border-t border-x !border-b-0 ${activeLineClass} bg-window text-element`;
+/** @emoji 📏 Multi-tab controls cap — same transparent cell on the shared tabbar glass. */
+export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 /** @emoji 🪟 Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
@@ -13625,6 +13653,8 @@ interface TreeItemProps {
   layoutKind?: "default" | "property";
   isHidden?: boolean;
   contextMenu?: ContextMenuItem[];
+  /** @emoji 🎚️ Control rendered on the header row of expandable property groups (label left, control right). */
+  headerControl?: React.ReactNode;
   /** @emoji 🫳 `"handle"` restricts native drag start to the trailing grip (arms `draggable` only while the grip is pressed); `"surface"` (default) keeps the whole row draggable. */
   dragInitiation?: "handle" | "surface";
   /** @emoji 🎯 Passive drop-zone highlight while a compatible tree drag is in flight. */
@@ -14502,6 +14532,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   layoutKind = "default",
   isHidden = false,
   contextMenu,
+  headerControl,
   isDragging = false,
   dragInitiation = "surface",
   isDropReady = false,
@@ -14671,6 +14702,11 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       {children}
                     </div>
                   )}
+                  {isExpandable && headerControl ? (
+                    <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
+                      {headerControl}
+                    </div>
+                  ) : null}
                   {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
                   {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
                 </div>
@@ -15360,6 +15396,7 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       dragInitiation={item.dragData || dragAndDropController?.pointerPaletteDrag ? "surface" : "handle"}
       isDropReady={draggedIds.length > 0 && !isDragging && Boolean(dragAndDropController?.handleDrop)}
       layoutKind={propertyLayout ? "property" : undefined}
+      headerControl={hasControl && hasNestedTreeItems ? item.control : undefined}
       onClick={(event) => handleSelectItem(event, item, section, [...path])}
       onDoubleClick={(event) => handleDoubleClickItem(event, item, section, [...path])}
       onDragStart={(event) => handleDragStart(event, item, section)}
@@ -15374,13 +15411,6 @@ const TreeDataItemView = reactHostPort.memo(function TreeDataItemView(props: { r
       onBranchChange={setActiveBranchIndex}
     >
       {hasControl && !hasNestedTreeItems ? item.control : null}
-      {hasControl && hasNestedTreeItems ? (
-        <Label id={item.id} label="">
-          <div data-slot="tree-item-control" className="min-w-0 w-full">
-            {item.control}
-          </div>
-        </Label>
-      ) : null}
       {childItems.map((childItem, index) => (
         <TreeDataItemView key={childItem.id} item={childItem} section={section} path={[...path, childItem.id]} isLastItem={index === childItems.length - 1} />
       ))}
@@ -16533,11 +16563,12 @@ export interface WindowMeasureTreeGroupProps {
   id: string;
   label: string;
   defaultOpen?: boolean;
+  headerControl?: React.ReactNode;
   children?: React.ReactNode;
 }
 
 /** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
-export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, children }) => {
+export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, headerControl, children }) => {
   const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
   const { block, inline } = useFlow();
   const itemId = `window-measure-group-${id}`;
@@ -16577,6 +16608,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
           </span>
         </TreeAlignedRow>
       }
+      right={headerControl}
     />
   );
   const branch =
@@ -24180,7 +24212,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
     </div>
   ) : (
     <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)} style={style}>
-      <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", windowCapFrameClass)}>
+      <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", modeDockTabBarGlassClass, windowCapFrameClass)}>
         <span className="flex min-w-0 flex-1 items-center truncate text-xs">{title}</span>
       </div>
       <div data-slot="mode-dock-drag-preview-body" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
@@ -24235,7 +24267,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const perTabActiveChrome = Boolean(chromeGrid);
   const capFrameClass = stackGloballyActive ? windowCapFrameActiveClass : windowCapFrameClass;
   const gapFrameClass = stackGloballyActive ? windowGapFrameActiveClass : windowGapFrameClass;
-  const baselineBottomClass = stackGloballyActive ? "border-b-active-base" : borderNormalBottomClass;
   const displayTabs = reactHostPort.useMemo(() => modeDockTabsWithInsertPreview(tabs, dock?.tabInsertPreview ?? null, stackPath, dock?.draggedInsertTabs ?? []), [tabs, dock?.tabInsertPreview, stackPath, dock?.draggedInsertTabs]);
   const displayChromeGrid =
     displayTabs.length > 1
@@ -24253,7 +24284,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   const inactiveTabChromeClass = (stackIndex: number) => {
     const isLastBeforeGap = perTabActiveChrome && stackIndex === tabs.length - 1;
-    return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : cn(modeDockInactiveTabClass, baselineBottomClass);
+    return isLastBeforeGap ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
   };
 
   const renderTab = (tab: (typeof tabs)[number], stackIndex: number) => {
@@ -24316,7 +24347,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const tabGap = (
     <div
       data-slot="mode-dock-tab-gap"
-      className={cn("relative min-h-medium min-w-0 flex-1 cursor-grab bg-canvas active:cursor-grabbing", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
+      className={cn("relative min-h-medium min-w-0 flex-1 cursor-grab active:cursor-grabbing", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
       onPointerUp={(event) => {
         if (event.button !== 0) return;
         dock?.clearPendingDrag?.(event.pointerId);
@@ -24332,7 +24363,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
       <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
-        <div ref={ref} data-slot="mode-dock-tabbar" className={cn("grid min-h-medium min-w-0 items-stretch", modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
+        <div ref={ref} data-slot="mode-dock-tabbar" className={cn("grid min-h-medium min-w-0 items-stretch", modeDockTabBarGlassClass, modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
               <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
@@ -24367,7 +24398,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+    <div ref={ref} data-slot="mode-dock-tabbar" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", modeDockTabBarGlassClass)}>
       <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
@@ -24392,8 +24423,9 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 
 //#region 🧭ModeDockStack
 
-/** @emoji 🪟 SVG overlay that paints introduced/loading/waiting along the dock-stack silhouette (not the body rect). */
-const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null }> = ({ stack }) => {
+/** @emoji 🪟 SVG overlay that paints the dock-stack silhouette outline (tabs + cutout + controls + body)
+ * for normal/active chrome and introduced/loading/waiting effects. */
+const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => {
   const [epoch, setEpoch] = reactHostPort.useState(0);
 
   reactHostPort.useLayoutEffect(() => {
@@ -24410,25 +24442,32 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null }> = (
     };
   }, [stack]);
 
-  const kind = resolveWindowSilhouetteBorderKind(stack?.querySelector('[data-slot="window"]') ?? null);
+  const kind = resolveWindowSilhouetteBorderKind(stack?.querySelector('[data-slot="window"]') ?? null, active);
+  // 🎓 Kind-id introduce targets stamp the inner scroll surface; only window-chrome stamps promote the
+  // silhouette — a nested utility introduce (e.g. `transform`) must not pulse the whole window outline.
+  const resolvedKind =
+    stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget) ? "introduced" : kind;
   const metrics = stack ? measureWindowSilhouetteMetrics(stack) : null;
   void epoch;
 
-  if (!kind) return null;
   if (!metrics) {
-    return <div data-slot="mode-dock-silhouette-border" data-kind={kind} data-pending="" aria-hidden />;
+    return <div data-slot="mode-dock-silhouette-border" data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
   const path = windowSilhouettePath(metrics);
   const stroke =
-    kind === "introduced"
+    resolvedKind === "introduced"
       ? "var(--introduced-border-color, var(--color-secondary))"
-      : kind === "loading"
+      : resolvedKind === "loading"
         ? "var(--loading-border-color, var(--border-normal-color))"
-        : "var(--waiting-border-color, var(--border-normal-color))";
+        : resolvedKind === "waiting"
+          ? "var(--waiting-border-color, var(--border-normal-color))"
+          : resolvedKind === "active"
+            ? "var(--active-base)"
+            : "var(--border-normal-color)";
   return (
     <svg
       data-slot="mode-dock-silhouette-border"
-      data-kind={kind}
+      data-kind={resolvedKind}
       className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
       width={metrics.width}
       height={metrics.height}
@@ -24442,9 +24481,12 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null }> = (
         strokeLinejoin="miter"
         vectorEffect="non-scaling-stroke"
         className={cn(
-          kind === "introduced" && "window-silhouette-border-introduced",
-          kind === "loading" && "window-silhouette-border-loading",
-          kind === "waiting" && "window-silhouette-border-waiting",
+          "window-silhouette-border",
+          resolvedKind === "introduced" && "window-silhouette-border-introduced",
+          resolvedKind === "loading" && "window-silhouette-border-loading",
+          resolvedKind === "waiting" && "window-silhouette-border-waiting",
+          resolvedKind === "active" && "window-silhouette-border-active",
+          resolvedKind === "normal" && "window-silhouette-border-normal",
         )}
       />
     </svg>
@@ -24495,9 +24537,11 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
     </div>
   );
 
+  // 🪟 `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
+  // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
-    <div ref={setStackEl} data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden bg-transparent">
-      <ModeDockStackSilhouetteBorder stack={stackEl} />
+    <div ref={setStackEl} data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
+      <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
       {chromeGrid ? (
         <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
       ) : (
@@ -25475,13 +25519,69 @@ if (import.meta.vitest) {
       expect(container.querySelector('[id="framework.window.puzzle3dMainPerspective"]')?.getAttribute("data-introduced")).toBe("true");
     });
 
+    it("pulses an introduced utility toggle without promoting the dock-stack window silhouette", async () => {
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[
+              {
+                id: "puzzle3d-main-top",
+                title: "Top",
+                utilityBar: <button id="transform" type="button">Transform</button>,
+                utilityBarFolded: false,
+                children: <div id="framework.window.puzzle3dMainTop" data-element-alias="framework.window.puzzle3dMain">Main Pane</div>,
+              },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "puzzle3d-main-top" }], activeId: "puzzle3d-main-top" }}
+            activeWindowId="puzzle3d-main-top"
+            onActiveWindowChange={() => {}}
+          />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "transform-utility",
+                  title: "Transform",
+                  body: "Activate transform.",
+                  introduce: "transform",
+                  show: ["framework.window.puzzle3dMain"],
+                  placement: "auto",
+                  advance: { kind: "utility", id: "transform" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector("#transform")?.getAttribute("data-introduced")).toBe("true");
+      });
+      expect(container.querySelector('[id="framework.window.puzzle3dMainTop"]')?.getAttribute("data-introduced")).toBeNull();
+      expect(isWindowChromeIntroducedTarget(container.querySelector("#transform")!)).toBe(false);
+      expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("normal");
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).not.toBe("introduced");
+      });
+    });
+
     it("elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
-            windows={[{ id: "framework.window.main", title: "Main", children: <div>Main Pane</div> }]}
-            layout={{ kind: "stack", children: [{ kind: "window", id: "framework.window.main" }], activeId: "framework.window.main" }}
-            activeWindowId="framework.window.main"
+            windows={[
+              {
+                id: "puzzle3d-main-top",
+                title: "Top",
+                children: <div id="framework.window.puzzle3dMain">Main Pane</div>,
+              },
+            ]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "puzzle3d-main-top" }], activeId: "puzzle3d-main-top" }}
+            activeWindowId="puzzle3d-main-top"
             onActiveWindowChange={() => {}}
           />
           <UIIntroduction
@@ -25492,7 +25592,7 @@ if (import.meta.vitest) {
                   id: "viewport",
                   title: "Viewport",
                   body: "All windows.",
-                  introduce: "framework.window.main",
+                  introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "auto",
                   advance: { kind: "next" },
@@ -25510,12 +25610,16 @@ if (import.meta.vitest) {
         expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-introduction-elevated")).toBe("true");
       });
       expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduction-elevated")).toBeNull();
-      expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-introduced")).toBe("true");
-      expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduced")).toBe("true");
+      // 🎓 Kind-id stamps the inner scroll surface — not `[data-slot="window"]` — matching Aggregator/OS.
+      expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBe("true");
+      expect(container.querySelector('[data-slot="window"]')?.getAttribute("data-introduced")).toBeNull();
       expect(resolveWindowSilhouetteBorderKind(container.querySelector('[data-slot="window"]'))).toBe("introduced");
       await waitFor(() => {
         expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
       });
+      // 🪟 Stack owns `z-window` so silhouette `z-[40]` stays below floating Panels; elevation still overrides.
+      expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).toContain("z-window");
+      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
       const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
       const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
         if (!(el instanceof HTMLElement)) return;
@@ -25541,6 +25645,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
         expect(border?.hasAttribute("data-pending")).toBe(false);
+        expect(border?.getAttribute("data-kind")).toBe("introduced");
         expect(border?.querySelector("path")?.getAttribute("d")).toBe(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }));
       });
     });
@@ -26988,10 +27093,11 @@ if (import.meta.vitest) {
     });
 
     it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M0.5,0.5 H60 V24 H159.5 V0.5 H199.5 V99.5 H0.5 Z");
     });
 
-    it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting", () => {
+    it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting and falls back to active/normal", () => {
       const el = document.createElement("div");
       el.className = "border-loading border-waiting";
       expect(resolveWindowSilhouetteBorderKind(el)).toBe("loading");
@@ -27001,7 +27107,19 @@ if (import.meta.vitest) {
       el.className = "border-waiting-active";
       expect(resolveWindowSilhouetteBorderKind(el)).toBe("waiting");
       el.className = "";
-      expect(resolveWindowSilhouetteBorderKind(el)).toBeNull();
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("normal");
+      expect(resolveWindowSilhouetteBorderKind(el, true)).toBe("active");
+      const scroll = document.createElement("div");
+      scroll.id = "framework.window.puzzle3dMain";
+      scroll.setAttribute("data-introduced", "true");
+      el.appendChild(scroll);
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      const utility = document.createElement("button");
+      utility.id = "transform";
+      utility.setAttribute("data-introduced", "true");
+      el.replaceChildren(utility);
+      expect(isWindowChromeIntroducedTarget(utility)).toBe(false);
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("normal");
     });
 
     it("Mode lays out all windows and marks the active one", () => {
@@ -27035,42 +27153,64 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("bg-canvas");
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("bg-canvas");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
       const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
       expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
       expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
-      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("bg-window");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("bg-window");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-active-base");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-b-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-b-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-l-0");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-normal");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-x");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-active-base");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("-mt-px");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-t-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-b");
+      expect(activeStack?.className).toContain("z-window");
+      expect(inactiveStack?.className).toContain("z-window");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-normal");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-normal");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-normal");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).not.toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("border-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
+    });
+
+    it("Mode dock-stack silhouette stays below Layout panels via z-window stacking context", () => {
+      const StubIcon = (): null => null;
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-lg">
+          <Layout
+            canvas={
+              <Mode
+                windows={[{ id: "main", title: "Main", children: <div>Main Body</div> }]}
+                layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+                activeWindowId="main"
+                onActiveWindowChange={() => {}}
+              />
+            }
+            panels={{
+              "top-left": {
+                visible: true,
+                size: 240,
+                tabs: [{ kind: "leaf", id: "workbench", icon: StubIcon, name: "Workbench", trees: [] }],
+              },
+            }}
+          />
+        </div>,
+      );
+      const stack = container.querySelector('[data-slot="mode-dock-stack"]');
+      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement | null;
+      expect(stack?.className).toContain("z-window");
+      expect(stack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(panel?.style.zIndex).toBe("20");
     });
 
     it("Mode clears multi-tab active chrome on inactive stacks", () => {
@@ -27116,17 +27256,18 @@ if (import.meta.vitest) {
       expect(inactiveStackTab?.className).toContain("border-normal");
       expect(inactiveStackTab?.className).not.toContain("border-emphasized");
       expect(inactiveStackTab?.className).not.toContain("border-active-base");
-      expect(inactiveStackTab?.className).not.toContain("border-b-0");
-      expect(activeStackTab?.className).toContain("border-active-base");
-      expect(activeStackTab?.className).toContain("border-b-0");
       expect(activeStackTab?.className).toContain("bg-active-base");
       expect(activeStackTab?.className).toContain("text-emphasized");
+      expect(activeStackTab?.className).toContain("border-0");
       expect(inactiveStackTab?.className).toContain("text-element");
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-normal");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-emphasized");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("border-active-base");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-active-base");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
     });
@@ -27266,24 +27407,23 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')?.className).toContain("z-[2]");
       expect(container.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeNull();
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-active-base");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("bg-active-base");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("text-emphasized");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-r");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-b-0");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).not.toContain("border-r-0");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-normal");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).not.toContain("border-emphasized");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-b-0");
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
       const multiTabBar = container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-tabbar"]');
       expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-active-base");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
+      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       const tabOrder = () => [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
       expect(tabOrder()).toEqual(["a", "b"]);
       fireEvent.click(screen.getByText("Beta"));
@@ -27343,14 +27483,14 @@ if (import.meta.vitest) {
       expect(inactiveTab?.className).not.toContain("border-emphasized");
       expect(inactiveTab?.className).not.toContain("border-active-base");
       const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
-      expect(activeTab?.className).toContain("border-active-base");
-      expect(activeTab?.className).toContain("border-b-0");
       expect(activeTab?.className).toContain("bg-active-base");
       expect(activeTab?.className).toContain("text-emphasized");
+      expect(activeTab?.className).toContain("border-0");
       expect(inactiveTab?.className).toContain("text-element");
       expect(inactiveTab?.className).not.toContain("text-foreground");
-      expect(stackBody?.className).toContain("border-active-base");
-      expect(stackBody?.className).not.toContain("border-emphasized");
+      expect(stackBody?.className).toContain("border-0");
+      expect(stackBody?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {

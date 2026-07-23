@@ -1,0 +1,54 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/ui-react| index.tsx (342 tests | 2 failed | 340 skipped) 117ms
+     × elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window 102ms
+     × Mode dock-stack silhouette stays below Layout panels via z-window stacking context 14ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > UIIntroduction veil and elevation > elevates the mode-dock-stack silhouette and paints the SVG border when introducing a docked window
+AssertionError: expected '' to contain 'z-[40]'
+
+- Expected
++ Received
+
+- z-[40]
+
+ ❯ index.tsx:25618:95
+    25616|       // 🪟 Stack owns `z-window` so silhouette `z-[40]` stays below f…
+    25617|       expect(container.querySelector('[data-slot="mode-dock-stack"]')?…
+    25618|       expect(container.querySelector('[data-slot="mode-dock-silhouette…
+       |                                                                                               ^
+    25619|       const stack = container.querySelector('[data-slot="mode-dock-sta…
+    25620|       const mockRect = (el: Element | null, rect: Partial<DOMRect>) =>…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > Shell components > Mode dock-stack silhouette stays below Layout panels via z-window stacking context
+AssertionError: expected '' to contain 'z-[40]'
+
+- Expected
++ Received
+
+- z-[40]
+
+ ❯ index.tsx:27208:92
+    27206|       const panel = container.querySelector('[data-slot="panel"]') as …
+    27207|       expect(stack?.className).toContain("z-window");
+    27208|       expect(stack?.querySelector('[data-slot="mode-dock-silhouette-bo…
+       |                                                                                            ^
+    27209|       expect(panel?.style.zIndex).toBe("20");
+    27210|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 340 skipped (342)
+   Start at  19:54:03
+   Duration  5.83s (transform 1.89s, setup 159ms, import 4.93s, tests 117ms, environment 448ms)
+

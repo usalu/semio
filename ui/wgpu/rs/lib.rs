@@ -512,10 +512,56 @@ pub enum WindowMeasure {
         #[serde(skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional, rename = "activeUtilityId"))]
         active_utility_id: Option<String>,
+        /// 🎚️ Optional header slider — when set with `on_change`, the group row hosts a weight control (e.g. object-kind probability).
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        value: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        min: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        max: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        step: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        ready: Option<f64>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        loading: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        waiting: Option<bool>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional, rename = "onChange"))]
+        on_change: Option<ActionDescriptor>,
         children: Vec<WindowMeasure>,
     },
 }
 //#endregion 🔖WindowMeasure
+
+impl WindowMeasure {
+    /// 🌳 Builds a measure group with default slider/header fields unset.
+    pub fn measure_group(id: impl Into<String>, label: impl Into<String>, children: Vec<WindowMeasure>) -> Self {
+        Self::Group {
+            id: id.into(),
+            label: label.into(),
+            default_open: None,
+            active_utility_id: None,
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
+            children,
+        }
+    }
+}
 
 //#region 🔖PartitionWindowMeasures
 /// @emoji 🎯 Splits a window's top-level measures into `(general, utility_options)`.
@@ -919,6 +965,14 @@ mod layout_wire_format_tests {
                 label: "Group".into(),
                 default_open: Some(true),
                 active_utility_id: None,
+                value: None,
+                min: None,
+                max: None,
+                step: None,
+                ready: None,
+                loading: None,
+                waiting: None,
+                on_change: None,
                 children: vec![],
             },
         ];
@@ -935,6 +989,14 @@ mod layout_wire_format_tests {
             default_open: None,
             active_utility_id: utility.map(str::to_string),
             children,
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         }
     }
 

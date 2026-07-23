@@ -1270,12 +1270,23 @@ export function tileProxyVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
   return plugins;
 }
 
-/** @emoji 🌐 Standalone HTTP server combining every `tile-proxy` spec's middleware (wgpu Trunk /
- * native-bin dev) — generalizes `startGisMapTileProxyServer` to any set of declared asset specs. */
+/** @emoji 🌐 Standalone HTTP server for every declared playground asset kind (tile-proxy, mesh-collection,
+ * static-dir) — wgpu Trunk proxies and native-bin `SEMIO_ASSET_BASE_URL` hit this instead of Vite. */
 export function startAssetServer(repoRoot: string, port: number, specs: readonly PlaygroundAssetSpec[], mode: GisMapTileServeMode = "fetch", host = "127.0.0.1"): Server {
-  const middlewares = specs
-    .filter((spec): spec is Extract<PlaygroundAssetSpec, { kind: "tile-proxy" }> => spec.kind === "tile-proxy")
-    .map((spec) => createTileProxyMiddleware(spec.route, resolve(repoRoot, ".repo-cache", spec.cache), spec.upstream, mode));
+  const seen = new Set<string>();
+  const middlewares: Connect.NextHandleFunction[] = [];
+  for (const spec of specs) {
+    const key = `${spec.kind}:${spec.route}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (spec.kind === "tile-proxy") {
+      middlewares.push(createTileProxyMiddleware(spec.route, resolve(repoRoot, ".repo-cache", spec.cache), spec.upstream, mode));
+    } else if (spec.kind === "mesh-collection") {
+      middlewares.push(createMeshCollectionMiddleware(repoRoot, spec));
+    } else {
+      middlewares.push(createStaticDirMiddleware(repoRoot, spec));
+    }
+  }
   const server = createServer((req, res) => {
     const run = (i: number): void => {
       if (i >= middlewares.length) {
@@ -1371,13 +1382,11 @@ function contentTypeForStaticDirAsset(filePath: string): string | undefined {
   return undefined;
 }
 
-/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
- * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
- * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
-export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Plugin[] {
+/** @emoji 🗂️ Connect middleware: serve one `static-dir` spec's files at `{route}/…`. */
+function createStaticDirMiddleware(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Connect.NextHandleFunction {
   const fixtureRoot = resolve(repoRoot, spec.root);
   const route = spec.route.endsWith("/") ? spec.route : `${spec.route}/`;
-  const serveFixture: Connect.NextHandleFunction = (req, res, next) => {
+  return (req, res, next) => {
     if (!req.url?.startsWith(route)) {
       next();
       return;
@@ -1395,6 +1404,14 @@ export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAs
     }
     createReadStream(filePath).pipe(res);
   };
+}
+
+/** @emoji 🖼️ Generic dev/build Vite plugin pair for one `static-dir` asset spec: serves and copies
+ * `spec.root` at `spec.route` — replaces the previous `cadFixtureVitePlugin`/`infiniteFixtureVitePlugin`
+ * pair (byte-identical serving logic, now route/root-driven instead of hardcoded per fixture tree). */
+export function staticDirVitePlugin(repoRoot: string, spec: Extract<PlaygroundAssetSpec, { kind: "static-dir" }>): Plugin[] {
+  const serveFixture = createStaticDirMiddleware(repoRoot, spec);
+  const fixtureRoot = resolve(repoRoot, spec.root);
   const destName = spec.route.replace(/^\//, "");
   let outDir = resolve(process.cwd(), "dist");
   return [
@@ -1777,6 +1794,25 @@ if (import.meta.vitest) {
     it("registers serve and build plugins named after the route", () => {
       const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
       expect(plugins.map((plugin) => plugin.name)).toEqual(["mesh-collection-serve/mesh", "mesh-collection-build/mesh"]);
+    });
+
+    it("startAssetServer serves base.glb as model/gltf-binary", async () => {
+      const probe = createServer();
+      await new Promise<void>((resolveListen) => probe.listen(0, "127.0.0.1", () => resolveListen()));
+      const address = probe.address();
+      if (!address || typeof address === "string") throw new Error("expected TCP address");
+      const port = address.port;
+      await new Promise<void>((resolveClose, reject) => probe.close((err) => (err ? reject(err) : resolveClose())));
+      const server = startAssetServer(repoRoot, port, [puzzle3dMeshSpec]);
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/mesh/base.glb`);
+        expect(response.status).toBe(200);
+        expect(response.headers.get("content-type")).toBe("model/gltf-binary");
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        expect(String.fromCharCode(bytes[0]!, bytes[1]!, bytes[2]!, bytes[3]!)).toBe("glTF");
+      } finally {
+        await new Promise<void>((resolveClose, reject) => server.close((err) => (err ? reject(err) : resolveClose())));
+      }
     });
   });
 

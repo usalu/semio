@@ -113,6 +113,10 @@ describe("puzzle3d mesh-collection asset spec", () => {
     const plugins = meshCollectionVitePlugin(repoRoot, puzzle3dMeshSpec);
     expect(plugins.map((plugin) => plugin.name)).toEqual(["mesh-collection-serve/mesh", "mesh-collection-build/mesh"]);
   });
+
+  it("includes base.glb for shooting's default fixture", () => {
+    expect(existsSync(resolve(repoRoot, puzzle3dMeshSpec.roots[0]!, "base.glb"))).toBe(true);
+  });
 });
 
 describe("elementState", () => {

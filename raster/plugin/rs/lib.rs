@@ -132,6 +132,8 @@ pub(crate) mod domain {
             #[serde(default)]
             transform: RasterTransform,
             adjustment_kind: String,
+            #[serde(default)]
+            params: serde_json::Map<String, serde_json::Value>,
         },
     }
     
@@ -792,6 +794,7 @@ fn create_adjustment_layer() -> RasterLayerNode {
         blend_mode: "normal".into(),
         transform: RasterTransform::default(),
         adjustment_kind: "brightnessContrast".into(),
+        params: serde_json::Map::new(),
     }
 }
 
@@ -857,7 +860,7 @@ fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
             mask: mask.clone(),
             children: children.iter().map(clone_layer).collect(),
         },
-        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, transform, adjustment_kind, .. } => {
+        RasterLayerNode::Adjustment { name, visible, opacity, blend_mode, transform, adjustment_kind, params, .. } => {
             RasterLayerNode::Adjustment {
                 id: create_raster_id("adjust"),
                 name: format!("{name} copy"),
@@ -866,6 +869,7 @@ fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
                 blend_mode: blend_mode.clone(),
                 transform: transform.clone(),
                 adjustment_kind: adjustment_kind.clone(),
+                params: params.clone(),
             }
         }
     }
@@ -1790,6 +1794,27 @@ mod tests {
         let sync_json = document_sync_json(&document);
         assert!(!sync_json.contains("\"assets\""), "sync json must omit assets");
         assert!(!sync_json.contains("\"camera\""), "sync json must omit camera");
+        assert!(sync_json.contains("\"params\""), "adjustment params must survive document→sync roundtrip for the paint host");
+        let sync_value: Value = serde_json::from_str(&sync_json).expect("sync json");
+        let layers = sync_value.get("layers").and_then(Value::as_array).expect("layers");
+        assert!(layers.iter().any(|layer| layer.get("kind").and_then(Value::as_str) == Some("adjustment") && layer.get("params").is_some()));
+        assert!(document.assets.contains_key("semio-emblem"));
+    }
+
+    #[test]
+    fn semio_example_preserves_adjustment_params() {
+        let document: RasterDocument = serde_json::from_str(SEMIO_EXAMPLE_JSON).expect("semio raster json");
+        let RasterLayerNode::Adjustment { params, adjustment_kind, .. } = document
+            .layers
+            .iter()
+            .find(|layer| matches!(layer, RasterLayerNode::Adjustment { id, .. } if id == "brighten"))
+            .expect("brighten adjustment")
+        else {
+            panic!("expected adjustment");
+        };
+        assert_eq!(adjustment_kind, "brightnessContrast");
+        assert!(params.contains_key("brightness"), "fixture brightness must roundtrip");
+        assert!(params.contains_key("contrast"), "fixture contrast must roundtrip");
     }
 
     #[test]

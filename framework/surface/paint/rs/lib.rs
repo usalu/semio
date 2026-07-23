@@ -60,6 +60,7 @@ enum LayerNodeJson {
         blend_mode: String,
         transform: TransformJson,
         adjustment_kind: String,
+        #[serde(default)]
         params: AdjustmentParamsJson,
     },
 }
@@ -604,17 +605,18 @@ impl RasterHost {
                 if !visible {
                     return;
                 }
+                let child_cam = cam * (*transform);
                 if let Some(iso) = isolated_id {
                     if iso != id {
                         for child in children {
-                            self.append_layer_node(scene, cam, child, Some(iso));
+                            self.append_layer_node(scene, child_cam, child, Some(iso));
                         }
                         return;
                     }
                 }
-                scene.push_layer(FillRule::NonZero, *blend, *opacity, cam * (*transform), &Rect::new(-1e6, -1e6, 1e6, 1e6));
+                scene.push_layer(FillRule::NonZero, *blend, *opacity, Affine::IDENTITY, &Rect::new(-1e6, -1e6, 1e6, 1e6));
                 for child in children {
-                    self.append_layer_node(scene, cam, child, isolated_id);
+                    self.append_layer_node(scene, child_cam, child, isolated_id);
                 }
                 scene.pop_layer();
                 let _ = mask;
@@ -756,13 +758,13 @@ struct ViewportJsonIn {
 
 /// 🎯 Flattened pick candidate — mirrors premigration `flattenRasterLayers` (document order, parent pushed before children, no visibility cascade).
 enum PickEntry {
-    Pixel { id: String, visible: bool, transform: Affine, width: u32, height: u32, ancestors: Vec<(String, bool)> },
-    Group { id: String, visible: bool, children: Vec<LayerNode> },
+    Pixel { id: String, visible: bool, parent: Affine, transform: Affine, width: u32, height: u32, ancestors: Vec<(String, bool)> },
+    Group { id: String, visible: bool, parent: Affine, children: Vec<LayerNode> },
 }
 
 impl RasterHost {
-    fn pixel_screen_bounds(&self, transform: &Affine, width: u32, height: u32) -> ScreenRect {
-        let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * (*transform);
+    fn pixel_screen_bounds(&self, parent: Affine, transform: &Affine, width: u32, height: u32) -> ScreenRect {
+        let world = cavas::camera::camera_content_affine(&self.camera, &self.viewport) * parent * (*transform);
         let hw = width as f64 * 0.5;
         let hh = height as f64 * 0.5;
         let corners = [world * Point::new(-hw, -hh), world * Point::new(hw, -hh), world * Point::new(hw, hh), world * Point::new(-hw, hh)];
@@ -770,7 +772,7 @@ impl RasterHost {
     }
 
     /// 🎯 Bounding box of a group's visible pixel descendants — port of premigration `rasterGroupScreenBounds`.
-    fn group_screen_bounds(&self, children: &[LayerNode]) -> Option<ScreenRect> {
+    fn group_screen_bounds(&self, parent: Affine, children: &[LayerNode]) -> Option<ScreenRect> {
         let mut acc: Option<ScreenRect> = None;
         for child in children {
             match child {
@@ -778,10 +780,10 @@ impl RasterHost {
                     if !*visible {
                         continue;
                     }
-                    acc = Some(ScreenRect::union(acc, self.pixel_screen_bounds(transform, *width, *height)));
+                    acc = Some(ScreenRect::union(acc, self.pixel_screen_bounds(parent, transform, *width, *height)));
                 }
-                LayerNode::Group { children, .. } => {
-                    if let Some(bounds) = self.group_screen_bounds(children) {
+                LayerNode::Group { transform, children, .. } => {
+                    if let Some(bounds) = self.group_screen_bounds(parent * (*transform), children) {
                         acc = Some(ScreenRect::union(acc, bounds));
                     }
                 }
@@ -792,24 +794,37 @@ impl RasterHost {
     }
 
     fn flatten_pick_targets(&self) -> Vec<PickEntry> {
-        fn walk(nodes: &[LayerNode], ancestors: &[(String, bool)], out: &mut Vec<PickEntry>) {
+        fn walk(nodes: &[LayerNode], parent: Affine, ancestors: &[(String, bool)], out: &mut Vec<PickEntry>) {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { id, visible, transform, width, height, .. } => {
-                        out.push(PickEntry::Pixel { id: id.clone(), visible: *visible, transform: *transform, width: *width, height: *height, ancestors: ancestors.to_vec() });
+                        out.push(PickEntry::Pixel {
+                            id: id.clone(),
+                            visible: *visible,
+                            parent,
+                            transform: *transform,
+                            width: *width,
+                            height: *height,
+                            ancestors: ancestors.to_vec(),
+                        });
                     }
-                    LayerNode::Group { id, visible, children, .. } => {
-                        out.push(PickEntry::Group { id: id.clone(), visible: *visible, children: children.clone() });
+                    LayerNode::Group { id, visible, transform, children, .. } => {
+                        out.push(PickEntry::Group {
+                            id: id.clone(),
+                            visible: *visible,
+                            parent,
+                            children: children.clone(),
+                        });
                         let mut next_ancestors = ancestors.to_vec();
                         next_ancestors.push((id.clone(), *visible));
-                        walk(children, &next_ancestors, out);
+                        walk(children, parent * (*transform), &next_ancestors, out);
                     }
                     LayerNode::Adjustment { .. } => {}
                 }
             }
         }
         let mut out = Vec::new();
-        walk(&self.document.layers, &[], &mut out);
+        walk(&self.document.layers, Affine::IDENTITY, &[], &mut out);
         out
     }
 
@@ -819,21 +834,21 @@ impl RasterHost {
         let mut hits: Vec<PickTargetJson> = Vec::new();
         for entry in entries.iter().rev() {
             match entry {
-                PickEntry::Group { id, visible, children } => {
+                PickEntry::Group { id, visible, parent, children } => {
                     if !*visible {
                         continue;
                     }
-                    if let Some(bounds) = self.group_screen_bounds(children) {
+                    if let Some(bounds) = self.group_screen_bounds(*parent, children) {
                         if bounds.contains_point(sx, sy) && !hits.iter().any(|h| &h.id == id) {
                             hits.push(PickTargetJson { domain: "group".into(), id: id.clone(), generality: 0 });
                         }
                     }
                 }
-                PickEntry::Pixel { id, visible, transform, width, height, ancestors } => {
+                PickEntry::Pixel { id, visible, parent, transform, width, height, ancestors } => {
                     if !*visible {
                         continue;
                     }
-                    let bounds = self.pixel_screen_bounds(transform, *width, *height);
+                    let bounds = self.pixel_screen_bounds(*parent, transform, *width, *height);
                     if !bounds.contains_point(sx, sy) {
                         continue;
                     }
@@ -861,11 +876,11 @@ impl RasterHost {
         let marquee = ScreenRect::from_points(&points);
         let mut hits = Vec::new();
         for entry in self.flatten_pick_targets() {
-            if let PickEntry::Pixel { id, visible, transform, width, height, .. } = entry {
+            if let PickEntry::Pixel { id, visible, parent, transform, width, height, .. } = entry {
                 if !visible {
                     continue;
                 }
-                let bounds = self.pixel_screen_bounds(&transform, width, height);
+                let bounds = self.pixel_screen_bounds(parent, &transform, width, height);
                 let hit = if query.crossing { marquee.intersects(&bounds) } else { marquee.contains(&bounds) };
                 if hit {
                     hits.push(id);
@@ -875,27 +890,28 @@ impl RasterHost {
         Ok(serde_json::to_string(&hits).unwrap_or_else(|_| "[]".into()))
     }
 
-    /// 📐 World-space bounds of visible pixel layers (own transform only, no camera) — port of premigration `resolveRasterDocumentWorldBounds`.
+    /// 📐 World-space bounds of visible pixel layers (own + ancestor transforms, no camera) — port of premigration `resolveRasterDocumentWorldBounds`.
     fn document_world_bounds(&self) -> Option<ScreenRect> {
-        fn walk(nodes: &[LayerNode], acc: &mut Option<ScreenRect>) {
+        fn walk(nodes: &[LayerNode], parent: Affine, acc: &mut Option<ScreenRect>) {
             for node in nodes {
                 match node {
                     LayerNode::Pixel { visible, transform, width, height, .. } => {
                         if !*visible {
                             continue;
                         }
+                        let world = parent * (*transform);
                         let hw = *width as f64 * 0.5;
                         let hh = *height as f64 * 0.5;
-                        let corners = [*transform * Point::new(-hw, -hh), *transform * Point::new(hw, -hh), *transform * Point::new(hw, hh), *transform * Point::new(-hw, hh)];
+                        let corners = [world * Point::new(-hw, -hh), world * Point::new(hw, -hh), world * Point::new(hw, hh), world * Point::new(-hw, hh)];
                         *acc = Some(ScreenRect::union(*acc, ScreenRect::from_points(&corners)));
                     }
-                    LayerNode::Group { children, .. } => walk(children, acc),
+                    LayerNode::Group { transform, children, .. } => walk(children, parent * (*transform), acc),
                     LayerNode::Adjustment { .. } => {}
                 }
             }
         }
         let mut acc: Option<ScreenRect> = None;
-        walk(&self.document.layers, &mut acc);
+        walk(&self.document.layers, Affine::IDENTITY, &mut acc);
         acc
     }
 
@@ -1157,6 +1173,30 @@ mod tests {
         let json = include_str!("../../../../raster/example/semio.raster.json");
         let doc = parse_document(json).expect("parse semio fixture");
         assert!(!doc.layers.is_empty(), "semio should have layers");
+    }
+
+    #[test]
+    fn parse_adjustment_without_params() {
+        let json = r#"{"schema":"raster.document","id":"t","layers":[
+            {"kind":"adjustment","id":"a","name":"Bright","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"adjustmentKind":"brightnessContrast"}
+        ]}"#;
+        let doc = parse_document(json).expect("adjustment params must default");
+        assert_eq!(doc.layers.len(), 1);
+    }
+
+    #[test]
+    fn group_child_world_transform_uses_parent_once() {
+        let json = r#"{"schema":"raster.document","id":"t","layers":[
+            {"kind":"group","id":"g","name":"G","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":100,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"children":[
+                {"kind":"pixel","id":"p","name":"P","visible":true,"opacity":1,"blendMode":"normal","transform":{"x":0,"y":0,"scaleX":1,"scaleY":1,"rotation":0},"width":50,"height":50}
+            ]}
+        ]}"#;
+        let mut host = RasterHost::new();
+        host.set_size(400, 400, 1.0);
+        host.set_camera(0.0, 0.0, 1.0);
+        host.sync_document_json(json).expect("sync");
+        let hits: Vec<PickTargetJson> = serde_json::from_str(&host.pick_targets_at_screen_json(300.0, 200.0)).expect("json");
+        assert_eq!(hits.first().map(|h| h.id.as_str()), Some("p"), "group translate(100) + camera center should place child at screen x≈300");
     }
 
     fn two_pixel_layer_host() -> RasterHost {

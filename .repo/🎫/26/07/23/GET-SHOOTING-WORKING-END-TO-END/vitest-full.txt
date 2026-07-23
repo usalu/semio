@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/styling
+
+
+ Test Files  2 passed (2)
+      Tests  54 passed (54)
+   Start at  19:52:23
+   Duration  13.38s (transform 286ms, setup 0ms, import 728ms, tests 25.75s, environment 0ms)
+

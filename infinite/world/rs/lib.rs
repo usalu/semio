@@ -2039,10 +2039,14 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
         (Vec3::new(0.0, 0.0, -1.0), "", Rgba::new(0.28, 0.48, 0.95, 0.65)),
     ];
     let corners = [
-        (Vec3::new(0.72, 0.72, 0.72), "NE"),
-        (Vec3::new(-0.72, 0.72, 0.72), "NW"),
-        (Vec3::new(0.72, -0.72, 0.72), "SE"),
-        (Vec3::new(-0.72, -0.72, 0.72), "SW"),
+        (Vec3::new(0.72, 0.72, 0.72), "NE↑"),
+        (Vec3::new(-0.72, 0.72, 0.72), "NW↑"),
+        (Vec3::new(0.72, -0.72, 0.72), "SE↑"),
+        (Vec3::new(-0.72, -0.72, 0.72), "SW↑"),
+        (Vec3::new(0.72, 0.72, -0.72), "NE↓"),
+        (Vec3::new(-0.72, 0.72, -0.72), "NW↓"),
+        (Vec3::new(0.72, -0.72, -0.72), "SE↓"),
+        (Vec3::new(-0.72, -0.72, -0.72), "SW↓"),
     ];
     let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool)> = axes
         .into_iter()

@@ -1,0 +1,13 @@
+{
+  "title": "Raster Semio Example Not Showing",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "The raster app's semio example (semio.raster.json) isn't showing anything on screen. Investigate root cause in the raster plugin / paint surface / document load path and fix so the Semio Brand Showcase renders correctly.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2284"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
+  "sessions": [
+    "⚪46be108d8a634bbfb24c9d0b9b91ed11"
+  ]
+}

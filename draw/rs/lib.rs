@@ -410,7 +410,15 @@ pub fn create_draw_image_layer(name: &str, image_key: &str) -> DrawLayerNode {
 }
 
 pub fn default_draw_document(id: &str, title: Option<&str>) -> DrawDocument {
-    DrawDocument { schema: DRAW_DOCUMENT_SCHEMA.into(), id: id.into(), title: title.map(str::to_string), camera: DrawCamera { x: 0.0, y: 0.0, zoom: 1.0 }, layers: vec![create_draw_path_layer("Layer 1", Vec::new())], assets: None, artboard: None }
+    DrawDocument {
+        schema: DRAW_DOCUMENT_SCHEMA.into(),
+        id: id.into(),
+        title: title.map(str::to_string),
+        camera: DrawCamera { x: 512.0, y: 512.0, zoom: 0.75 },
+        layers: vec![create_draw_path_layer("Layer 1", Vec::new())],
+        assets: None,
+        artboard: Some(DrawArtboard { width: 1024.0, height: 1024.0 }),
+    }
 }
 
 pub fn empty_draw_projection() -> DrawDocument {
@@ -1997,6 +2005,7 @@ mod tests {
     #[test]
     fn resolve_draw_artboard_skips_group_boolean_trace_kinds() {
         let mut doc = default_draw_document("artboard-test", None);
+        doc.artboard = None;
         doc.layers.clear();
         let mut rect = create_draw_shape_layer_rect("R");
         if let DrawLayerNode::Shape(shape) = &mut rect {
@@ -2007,6 +2016,14 @@ mod tests {
         let artboard = resolve_draw_artboard(&doc).expect("artboard bounds");
         assert_eq!(artboard.width, 20.0);
         assert_eq!(artboard.height, 30.0);
+    }
+
+    #[test]
+    fn default_draw_document_has_artboard_dimensions() {
+        let doc = default_draw_document("blank", None);
+        let artboard = doc.artboard.expect("default artboard");
+        assert_eq!(artboard.width, 1024.0);
+        assert_eq!(artboard.height, 1024.0);
     }
 }
 //#endregion 🧪Tests

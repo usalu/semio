@@ -1,0 +1,112 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern windowSilhouette|Mode lays out|Mode clears multi-tab|Mode tab stack|elevates the mode-dock|Mode multi-tab|places body under
+
+> bun ./script.ts test --testNamePattern "windowSilhouette|Mode lays out|Mode clears multi-tab|Mode tab stack|elevates the mode-dock|Mode multi-tab|places body under"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/ui-react| index.tsx (340 tests | 4 failed | 334 skipped) 221ms
+     × Mode lays out all windows and marks the active one 77ms
+     × Mode clears multi-tab active chrome on inactive stacks 31ms
+     × Mode tab stack shows only the active window body 11ms
+     × Mode tab stack places body under active tab and gap only 11ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > Shell components > Mode lays out all windows and marks the active one
+AssertionError: expected undefined to be 'active' // Object.is equality
+
+- Expected:
+"active"
+
++ Received:
+undefined
+
+ ❯ index.tsx:27064:114
+    27062|       const activeStack = container.querySelector('[data-slot="mode-do…
+    27063|       const inactiveStack = container.querySelector('[data-slot="mode-…
+    27064|       expect(activeStack?.querySelector('[data-slot="mode-dock-silhoue…
+       |                                                                                                                  ^
+    27065|       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silho…
+    27066|       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > Shell components > Mode clears multi-tab active chrome on inactive stacks
+AssertionError: expected undefined to be 'active' // Object.is equality
+
+- Expected:
+"active"
+
++ Received:
+undefined
+
+ ❯ index.tsx:27126:114
+    27124|       expect(inactiveStack?.querySelector('[data-slot="mode-dock-contr…
+    27125|       expect(activeStack?.querySelector('[data-slot="mode-dock-control…
+    27126|       expect(activeStack?.querySelector('[data-slot="mode-dock-silhoue…
+       |                                                                                                                  ^
+    27127|       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silho…
+    27128|       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-a…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > Shell components > Mode tab stack shows only the active window body
+AssertionError: expected undefined to be 'active' // Object.is equality
+
+- Expected:
+"active"
+
++ Received:
+undefined
+
+ ❯ index.tsx:27282:111
+    27280|       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]'…
+    27281|       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]'…
+    27282|       expect(container.querySelector('[data-slot="mode-dock-silhouette…
+       |                                                                                                               ^
+    27283|       const tabOrder = () => [...container.querySelectorAll('[data-slo…
+    27284|       expect(tabOrder()).toEqual(["a", "b"]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/4]⎯
+
+ FAIL  |@semio-tech/ui-react| index.tsx > Shell components > Mode tab stack places body under active tab and gap only
+AssertionError: expected undefined to be 'active' // Object.is equality
+
+- Expected:
+"active"
+
++ Received:
+undefined
+
+ ❯ index.tsx:27349:111
+    27347|       expect(stackBody?.className).toContain("border-0");
+    27348|       expect(stackBody?.className).toContain("bg-canvas");
+    27349|       expect(container.querySelector('[data-slot="mode-dock-silhouette…
+       |                                                                                                               ^
+    27350|     });
+    27351|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/4]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  4 failed | 2 passed | 334 skipped (340)
+   Start at  18:47:07
+   Duration  5.14s (transform 1.40s, setup 142ms, import 4.16s, tests 221ms, environment 422ms)
+
+Warning: command "bun ./script.ts test --testNamePattern "windowSilhouette|Mode lays out|Mode clears multi-tab|Mode tab stack|elevates the mode-dock|Mode multi-tab|places body under"" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:test
+
+Hint: run the command with --verbose for more details.
+

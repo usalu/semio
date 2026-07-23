@@ -4744,14 +4744,32 @@ pub fn world3d_environment_json(sun: &WorldSunConfig) -> String {
     json!({ "sun": sun }).to_string()
 }
 
+/** 🌳 Measure group with optional open state and no header slider fields. */
+fn measure_group_with_open(id: String, label: impl Into<String>, default_open: Option<bool>, children: Vec<WindowMeasure>) -> WindowMeasure {
+    WindowMeasure::Group {
+        id,
+        label: label.into(),
+        default_open,
+        active_utility_id: None,
+        value: None,
+        min: None,
+        max: None,
+        step: None,
+        ready: None,
+        loading: None,
+        waiting: None,
+        on_change: None,
+        children,
+    }
+}
+
 /** 🌞 Shared "Sun" window-options group (enable toggle + azimuth/elevation/intensity sliders), see `lowpoly_window_measures`'s "Show Edges" toggle for the sibling pattern. */
 pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl Fn(&str, Option<Value>) -> ActionDescriptor) -> WindowMeasure {
-    WindowMeasure::Group {
-        id: format!("{id_prefix}-measure-sun"),
-        label: "Sun".into(),
-        default_open: Some(false),
-        active_utility_id: None,
-        children: vec![
+    measure_group_with_open(
+        format!("{id_prefix}-measure-sun"),
+        "Sun",
+        Some(false),
+        vec![
             WindowMeasure::Toggle {
                 id: format!("{id_prefix}-measure-sun-enabled"),
                 icon_id: "sun".into(),
@@ -4797,7 +4815,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 on_change: action("setSunIntensity", None),
             },
         ],
-    }
+    )
 }
 
 /** 🌞 Applies a sun-related action id to `sun`, returning whether it was handled — mirrors `lowpoly`'s `"toggleShowEdges"` action-handler shape. */
@@ -4986,18 +5004,17 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
     };
 
     let orthographic_view = if p.kind == "orthographic" { p.orthographic_view.clone() } else { String::new() };
-    let orthographic = WindowMeasure::Group {
-        id: format!("{id_prefix}-projection-orthographic"),
-        label: "Orthographic".into(),
-        default_open: Some(true),
-        active_utility_id: None,
-        children: vec![select(
+    let orthographic = measure_group_with_open(
+        format!("{id_prefix}-projection-orthographic"),
+        "Orthographic",
+        Some(true),
+        vec![select(
             format!("{id_prefix}-projection-orthographic-view"),
             orthographic_view,
             vec![("plan", "Plan"), ("top", "Top"), ("bottom", "Bottom"), ("front", "Front"), ("back", "Back"), ("left", "Left"), ("right", "Right")],
             "orthographicView",
         )],
-    };
+    );
 
     let mut axo_children = vec![
         select(
@@ -5019,7 +5036,7 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
     if p.kind == "axonometric" && p.axonometric_variant == "trimetric" {
         axo_children.push(slider(format!("{id_prefix}-projection-axonometric-angle-b"), "Angle B", p.axonometric_angle_b, 5.0, 75.0, 0.5, "axonometricAngleB"));
     }
-    let axonometric = WindowMeasure::Group { id: format!("{id_prefix}-projection-axonometric"), label: "Axonometric".into(), default_open: Some(false), active_utility_id: None, children: axo_children };
+    let axonometric = measure_group_with_open(format!("{id_prefix}-projection-axonometric"), "Axonometric", Some(false), axo_children);
 
     let mut oblique_children = vec![select(
         format!("{id_prefix}-projection-oblique-variant"),
@@ -5033,15 +5050,14 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
             oblique_children.push(slider(format!("{id_prefix}-projection-oblique-depth"), "Depth Scale", p.oblique_depth, 0.05, 1.0, 0.05, "obliqueDepth"));
         }
     }
-    let oblique = WindowMeasure::Group { id: format!("{id_prefix}-projection-oblique"), label: "Oblique".into(), default_open: Some(false), active_utility_id: None, children: oblique_children };
+    let oblique = measure_group_with_open(format!("{id_prefix}-projection-oblique"), "Oblique", Some(false), oblique_children);
 
-    let parallel = WindowMeasure::Group {
-        id: format!("{id_prefix}-projection-parallel"),
-        label: "Parallel".into(),
-        default_open: Some(true),
-        active_utility_id: None,
-        children: vec![orthographic, axonometric, oblique],
-    };
+    let parallel = measure_group_with_open(
+        format!("{id_prefix}-projection-parallel"),
+        "Parallel",
+        Some(true),
+        vec![orthographic, axonometric, oblique],
+    );
 
     let perspective_kind_value = match p.kind.as_str() {
         "onePoint" => "onePoint",
@@ -5075,9 +5091,9 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
         }
         _ => {}
     }
-    let perspective = WindowMeasure::Group { id: format!("{id_prefix}-projection-perspective"), label: "Perspective".into(), default_open: Some(true), active_utility_id: None, children: perspective_children };
+    let perspective = measure_group_with_open(format!("{id_prefix}-projection-perspective"), "Perspective", Some(true), perspective_children);
 
-    WindowMeasure::Group { id: format!("{id_prefix}-projection"), label: "Projection".into(), default_open: Some(false), active_utility_id: None, children: vec![parallel, perspective] }
+    measure_group_with_open(format!("{id_prefix}-projection"), "Projection", Some(false), vec![parallel, perspective])
 }
 
 /** 📐 Applies `setProjection`/`setProjectionParam` to `p`, returning whether the action was handled. */
@@ -5416,11 +5432,35 @@ mod tests {
     fn projection_measures_tree_matches_the_requested_taxonomy() {
         let p = WorldProjectionConfig::default();
         let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args });
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
         assert_eq!(families.len(), 2);
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
         assert_eq!(parallel_label, "Parallel");
         assert_eq!(parallel_children.len(), 3);
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
         let WindowMeasure::Group { label: perspective_label, .. } = &families[1] else { panic!("expected perspective group") };
         assert_eq!(perspective_label, "Perspective");
     }

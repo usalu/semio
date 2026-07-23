@@ -1253,19 +1253,8 @@ function resolveWorldCadAxisColors(): [string, string, string] {
 //#region 🧭WorldOrbitViewGizmoViewport
 export type ProjectionGizmoHit =
   | { readonly type: "face"; readonly axis: "x" | "y" | "z"; readonly sign: 1 | -1 }
-  | { readonly type: "corner"; readonly quadrant: WorldAxonometricQuadrant }
+  | { readonly type: "corner"; readonly quadrant: WorldAxonometricQuadrant; readonly hemisphere: WorldAxonometricHemisphere }
   | { readonly type: "center" };
-
-interface WorldOrbitViewGizmoViewportProps {
-  readonly labels: [string, string, string];
-  readonly axisColors: [string, string, string];
-  readonly axisScale: [number, number, number];
-  readonly axisHeadScale?: number;
-  readonly hideNegativeAxes?: boolean;
-  readonly labelColor: string;
-  readonly font: string;
-  readonly onClick?: (event: ThreeEvent<MouseEvent>) => unknown;
-}
 
 interface WorldProjectionGizmoViewportProps {
   readonly axisColors: [string, string, string];
@@ -1359,10 +1348,14 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
   const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly label: string }[] = [
-    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne" }, label: "NE" },
-    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw" }, label: "NW" },
-    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se" }, label: "SE" },
-    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw" }, label: "SW" },
+    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, label: "NE↑" },
+    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, label: "NW↑" },
+    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, label: "SE↑" },
+    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "upper" }, label: "SW↑" },
+    { position: [0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "lower" }, label: "NE↓" },
+    { position: [-0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "lower" }, label: "NW↓" },
+    { position: [0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "se", hemisphere: "lower" }, label: "SE↓" },
+    { position: [-0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "lower" }, label: "SW↓" },
   ];
   const cornerColor = props.labelColor;
   return (
@@ -1864,6 +1857,7 @@ export type WorldProjectionFamily = "parallel" | "perspective";
 export type WorldOrthographicViewId = "plan" | "top" | "bottom" | "front" | "back" | "left" | "right";
 export type WorldAxonometricVariant = "isometric" | "dimetric" | "trimetric";
 export type WorldAxonometricQuadrant = "ne" | "nw" | "se" | "sw";
+export type WorldAxonometricHemisphere = "upper" | "lower";
 export type WorldObliqueVariant = "cabinet" | "cavalier" | "military";
 export type WorldCurvilinearMapping = "fisheye" | "panini";
 
@@ -1872,7 +1866,7 @@ export type WorldCurvilinearMapping = "fisheye" | "panini";
  * and https://en.wikipedia.org/wiki/Oblique_projection for the family math this taxonomy encodes. */
 export type WorldProjectionSpec =
   | { readonly kind: "orthographic"; readonly view: WorldOrthographicViewId }
-  | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number; readonly quadrant: WorldAxonometricQuadrant }
+  | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number; readonly quadrant: WorldAxonometricQuadrant; readonly hemisphere?: WorldAxonometricHemisphere }
   | { readonly kind: "oblique"; readonly variant: WorldObliqueVariant; readonly angle: number; readonly depthScale: number }
   | { readonly kind: "onePoint"; readonly axis: "x" | "y" | "z"; readonly fov: number }
   | { readonly kind: "twoPoint"; readonly fov: number; readonly verticalShift: number }
@@ -2060,8 +2054,9 @@ export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: {
       const azimuth = Math.atan(Math.sqrt(Math.tan(angleA) / Math.tan(angleB)));
       const signX = spec.quadrant === "nw" || spec.quadrant === "sw" ? -1 : 1;
       const signY = spec.quadrant === "se" || spec.quadrant === "sw" ? -1 : 1;
-      const dir: Vec3 = [signX * Math.cos(elevation) * Math.sin(azimuth), signY * Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation)];
-      return at(dir, [0, 0, 1]);
+      const hemisphere = spec.hemisphere ?? "upper";
+      const dir: Vec3 = [signX * Math.cos(elevation) * Math.sin(azimuth), signY * Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation) * (hemisphere === "lower" ? -1 : 1)];
+      return at(dir, hemisphere === "lower" ? [0, 0, -1] : [0, 0, 1]);
     }
     case "oblique":
       if (spec.variant === "military") {
@@ -2180,7 +2175,7 @@ export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?
       return { kind: "orthographic", view: projectionGizmoFaceToOrthographicView(hit.axis, hit.sign) };
     case "corner": {
       const base = currentSpec?.kind === "axonometric" ? currentSpec : worldProjectionDefaults("axonometric");
-      return { ...base, kind: "axonometric", quadrant: hit.quadrant };
+      return { ...base, kind: "axonometric", quadrant: hit.quadrant, hemisphere: hit.hemisphere };
     }
     case "center": {
       if (currentSpec?.kind === "onePoint" || currentSpec?.kind === "twoPoint" || currentSpec?.kind === "threePoint" || currentSpec?.kind === "curvilinear") {
@@ -2200,7 +2195,8 @@ export function resolveProjectionGizmoHitFromDirection(direction: { readonly x: 
     const sx = direction.x >= 0 ? 1 : -1;
     const sy = direction.y >= 0 ? 1 : -1;
     const quadrant: WorldAxonometricQuadrant = sx > 0 && sy > 0 ? "ne" : sx < 0 && sy > 0 ? "nw" : sx > 0 && sy < 0 ? "se" : "sw";
-    return { type: "corner", quadrant };
+    const hemisphere: WorldAxonometricHemisphere = direction.z >= 0 ? "upper" : "lower";
+    return { type: "corner", quadrant, hemisphere };
   }
   if (absX < 0.2 && absY < 0.2 && absZ < 0.2) {
     return { type: "center" };
@@ -3732,19 +3728,28 @@ if (import.meta.vitest) {
     it("maps faces to orthographic views and corners to axonometric quadrants", () => {
       expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 })).toEqual({ kind: "orthographic", view: "top" });
       expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sign: -1 })).toEqual({ kind: "orthographic", view: "left" });
-      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se" })).toEqual({
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se", hemisphere: "upper" })).toEqual({
         kind: "axonometric",
         variant: "isometric",
         angleA: 30,
         angleB: 30,
         quadrant: "se",
+        hemisphere: "upper",
+      });
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "nw", hemisphere: "lower" })).toEqual({
+        kind: "axonometric",
+        variant: "isometric",
+        angleA: 30,
+        angleB: 30,
+        quadrant: "nw",
+        hemisphere: "lower",
       });
       expect(resolveProjectionGizmoSpec({ type: "center" })).toEqual({ kind: "threePoint", fov: 50 });
     });
 
-    it("preserves axonometric variant when snapping corners", () => {
-      const dimetric = { kind: "axonometric" as const, variant: "dimetric" as const, angleA: 15, angleB: 15, quadrant: "ne" as const };
-      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw" }, dimetric)).toEqual({ ...dimetric, quadrant: "sw" });
+    it("preserves axonometric variant and hemisphere when snapping corners", () => {
+      const dimetric = { kind: "axonometric" as const, variant: "dimetric" as const, angleA: 15, angleB: 15, quadrant: "ne" as const, hemisphere: "upper" as const };
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw", hemisphere: "lower" }, dimetric)).toEqual({ ...dimetric, quadrant: "sw", hemisphere: "lower" });
     });
 
     it("keeps active perspective kind on center click", () => {
@@ -3912,6 +3917,15 @@ if (import.meta.vitest) {
       const sw = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" }, { target: [0, 0, 0], distance: 10 });
       expect(sw.position[0]).toBeCloseTo(-ne.position[0], 5);
       expect(sw.position[1]).toBeCloseTo(-ne.position[1], 5);
+    });
+
+    it("places lower-hemisphere axonometric corners below the target", () => {
+      const upper = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne", hemisphere: "upper" }, { target: [0, 0, 0], distance: 10 });
+      const lower = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne", hemisphere: "lower" }, { target: [0, 0, 0], distance: 10 });
+      expect(upper.position[2]).toBeGreaterThan(0);
+      expect(lower.position[2]).toBeLessThan(0);
+      expect(lower.position[0]).toBeCloseTo(upper.position[0], 5);
+      expect(lower.position[1]).toBeCloseTo(upper.position[1], 5);
     });
 
     it("keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle", () => {

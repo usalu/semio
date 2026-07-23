@@ -1,0 +1,151 @@
+   Compiling zerocopy v0.8.48
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+   Compiling futures-util v0.3.32
+   Compiling spdx v0.10.9
+   Compiling wit-parser v0.220.1
+   Compiling getrandom v0.3.4
+   Compiling libm v0.2.16
+   Compiling bytemuck v1.25.0
+   Compiling libsqlite3-sys v0.36.0
+   Compiling rayon-core v1.13.0
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling hashlink v0.11.0
+   Compiling ppv-lite86 v0.2.21
+   Compiling crypto-common v0.1.7
+   Compiling wasm-metadata v0.220.1
+   Compiling block-buffer v0.10.4
+   Compiling core_maths v0.1.1
+   Compiling rand_core v0.9.5
+   Compiling slotmap v1.1.1
+   Compiling fallible-iterator v0.3.0
+   Compiling either v1.15.0
+   Compiling bytes v1.12.1
+   Compiling httparse v1.10.1
+   Compiling heck v0.5.0
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling float-cmp v0.9.0
+   Compiling wit-bindgen-rust v0.36.0
+   Compiling digest v0.10.7
+   Compiling ttf-parser v0.25.1
+   Compiling rand_chacha v0.9.0
+   Compiling wit-component v0.220.1
+   Compiling rayon v1.12.0
+   Compiling prettyplease v0.2.37
+   Compiling cpufeatures v0.2.17
+   Compiling wit-bindgen-core v0.36.0
+   Compiling rusqlite v0.38.0
+   Compiling strict-num v0.1.1
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling wit-bindgen-rt v0.36.0
+   Compiling bumpalo v3.20.2
+   Compiling equivalent v1.0.2
+   Compiling hashbrown v0.17.1
+   Compiling tinyvec_macros v0.1.1
+   Compiling rand v0.9.5
+   Compiling sha1 v0.10.7
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+   Compiling tiny-skia-path v0.11.4
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1198:36
+     |
+1198 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1198 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1198 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1445:24
+     |
+1445 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1445 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1445 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+   Compiling http v1.4.2
+   Compiling zopfli v0.8.3
+   Compiling indexmap v2.14.0
+   Compiling tinyvec v1.11.0
+   Compiling futures-executor v0.3.32
+   Compiling brepkit-offset v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-check v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-heal v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-algo v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-blend v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling brepkit-sketch v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling fdeflate v0.3.7
+   Compiling tokio-macros v2.7.0
+   Compiling memmap2 v0.9.10
+   Compiling kurbo v0.11.3
+   Compiling socket2 v0.6.4
+   Compiling mio v1.2.1
+   Compiling unicode-bidi-mirroring v0.4.0
+   Compiling unicode-ccc v0.4.0
+   Compiling siphasher v1.0.3
+   Compiling bitflags v1.3.2
+   Compiling unicode-properties v0.1.4
+   Compiling unicode-script v0.5.8
+   Compiling data-encoding v2.11.0
+   Compiling typed-path v0.12.3
+   Compiling base64 v0.22.1
+   Compiling same-file v1.0.6
+   Compiling utf-8 v0.7.6
+   Compiling getrandom v0.4.2
+   Compiling tokio v1.52.3

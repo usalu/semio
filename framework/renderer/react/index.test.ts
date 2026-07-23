@@ -34,6 +34,7 @@ import {
 import {
   Canvas2dHost,
   worldToScreenLogical,
+  readCanvas2dSurfaceColors,
   Board2dHost,
   board2dCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
@@ -57,6 +58,7 @@ import {
   computeDagMarqueeOverlay,
   flowCatalogueItemDescriptor,
   flowRankCatalogueSuggestions,
+  flowSpotlightSuggestionListScrollClass,
   nodeGraphViewportActionArgs,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
@@ -1770,6 +1772,14 @@ describe("framework renderer hosts", () => {
     expect(layersJson).toContain('"selected":true');
   });
 
+  it("canvas-2d surface colors follow the light theme canvas token instead of a hardcoded dark fill", () => {
+    document.documentElement.classList.remove("dark");
+    const colors = readCanvas2dSurfaceColors();
+    expect(colors.clear).toBe("rgba(240, 236, 221, 1)");
+    expect(colors.clear.toLowerCase()).not.toContain("17, 19, 24");
+    expect(colors.grid).toMatch(/^rgba\(/);
+  });
+
   it("renders world 3d empty state without mounting r3f canvas", () => {
     const markup = renderToStaticMarkup(
       createElement(World3dHost, {
@@ -3147,6 +3157,26 @@ describe("s media graph flow routing", () => {
     expect(empty.some((item) => item.kind === "inputSlider")).toBe(true);
   });
 
+  it("returns every catalogue item for empty query without a 20-item cap", () => {
+    const items = Array.from({ length: 25 }, (_, index) => ({
+      kind: "neuron",
+      neuronKind: `math.op${index}`,
+      name: `Op ${index}`,
+      abbreviation: `Op${index}`,
+      icon: "emoji:➕",
+      summary: "",
+    }));
+    const sections = [{ id: "math", title: "Math", items }];
+    expect(flowRankCatalogueSuggestions(sections, "")).toHaveLength(25);
+  });
+
+  it("enables overflow scrolling only when spotlight suggestions are expanded", () => {
+    expect(flowSpotlightSuggestionListScrollClass(false)).toContain("overflow-hidden");
+    expect(flowSpotlightSuggestionListScrollClass(false)).not.toContain("overflow-y-auto");
+    expect(flowSpotlightSuggestionListScrollClass(true)).toContain("overflow-y-auto");
+    expect(flowSpotlightSuggestionListScrollClass(true)).toContain("max-h-[min(24rem,70vh)]");
+  });
+
   it("attaches a drag-and-drop controller to tree panels whose items carry drag data", () => {
     const config = uiNodeToTreePanelConfig(
       {
@@ -3656,7 +3686,7 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(resolveModeTools(toolApp, "nonexistent")).toEqual([]);
   });
 
-  it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
+    it("buildToolTabs builds one leaf per resolved tool, whose lazily-resolved tree reflects the current active tool and its measures", () => {
     const activeToolIdRef = { current: "fill" as string | null };
     const toolMeasuresByToolIdRef = { current: { fill: [{ kind: "slider", id: "puzzle3d-fill-count", label: "Count", value: 3, min: 0, max: 100, onChange: { controllerId: "c", action: "setFillCount" } }] } as Readonly<Record<string, readonly WindowMeasure[]>> };
     const onAction = vi.fn();
@@ -3669,7 +3699,8 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     expect(fillResolved.sections).toHaveLength(1);
     expect(fillResolved.sections[0]!.id).toBe("tool.fill.options");
     expect(fillResolved.sections[0]!.items).toHaveLength(1);
-    expect(fillResolved.sections[0]!.items[0]!.label).toBe("");
+    expect(fillResolved.sections[0]!.items[0]!.label).toBe("Count");
+    expect(fillResolved.sections[0]!.items[0]!.control).toBeTruthy();
 
     const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
     const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };

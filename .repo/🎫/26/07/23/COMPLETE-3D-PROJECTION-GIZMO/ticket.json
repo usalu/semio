@@ -1,8 +1,9 @@
 {
   "title": "Complete 3D Projection Gizmo",
   "emoji": "🧭",
-  "status": "open",
+  "status": "closed",
   "description": "Rebuild the ad-hoc corner orbit gizmo into a complete projection navigation control: face/corner/center cube emitting WorldProjectionSpec, plus a family switcher exposing every taxonomy kind, with fixed snap pipeline so all transitions land correctly.",
+  "summary": "Added lower navigation-cube corners (NE↓/NW↓/SE↓/SW↓) alongside upper corners. Corner hits now carry hemisphere upper|lower; axonometric WorldProjectionSpec accepts optional hemisphere and computeWorldProjectionPose flips the view below the target for lower corners. WGPU gizmo paint draws all eight corner markers. Tests: 120 passed in infinite-world-r3f.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2280"
   },
@@ -10,9 +11,10 @@
   "plan": {
     "client": "cursor",
     "id": "a2f2c1fb",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/3d_projection_gizmo_a2f2c1fb.plan.md"
+    "local": "3d_projection_gizmo_a2f2c1fb.plan.md"
   },
   "sessions": [
-    "⚪f5ce97dc25714a098ac99d105700b3a1"
+    "⚪f5ce97dc25714a098ac99d105700b3a1",
+    "⚪fa519edefae7436988ef152813aac1b4"
   ]
 }

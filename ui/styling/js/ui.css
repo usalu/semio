@@ -1101,18 +1101,22 @@
   animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
 }
 
-/* 🪟 Docked windows: rectangular body rings are wrong — the silhouette SVG on `[data-slot="mode-dock-stack"]`
-   owns introduced/loading/waiting. Suppress the body-local effects so only the full outline paints. */
-[data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"] {
-  animation: none;
-  box-shadow: none;
+/* 🪟 Docked windows: rectangular body rings are wrong for *window-chrome* introduce targets — the
+   silhouette SVG on `[data-slot="mode-dock-stack"]` owns those. Suppress only the window body stamp
+   (scroll surface `framework.window.{segment}` / `[data-slot="window"]`), not nested introduce targets
+   such as a utility toggle (`transform`) that must keep their own inset pulse. Action-row ids
+   (`framework.window.{segment}.action.*`) are nested targets and keep their pulse. */
+[data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
+[data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+  animation: none !important;
+  box-shadow: none !important;
 }
 
 [data-slot="mode-dock-stack"] [data-slot="window"].border-loading::after,
 [data-slot="mode-dock-stack"] [data-slot="window"].border-waiting::after {
-  content: none;
-  display: none;
-  animation: none;
+  content: none !important;
+  display: none !important;
+  animation: none !important;
 }
 
 @keyframes window-silhouette-border-introduced-pulse {
@@ -1157,6 +1161,10 @@
   }
 }
 
+.window-silhouette-border {
+  stroke-width: var(--stroke-hairline);
+}
+
 .window-silhouette-border-introduced {
   stroke-width: var(--stroke-hairline);
   animation: window-silhouette-border-introduced-pulse var(--introduced-border-duration) ease-in-out infinite;
@@ -1180,14 +1188,23 @@
     window-silhouette-border-waiting-pulse var(--waiting-border-duration) ease-in-out infinite;
 }
 
+.window-silhouette-border-active {
+  stroke: var(--active-base);
+}
+
+.window-silhouette-border-normal {
+  stroke: var(--border-normal-color);
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-introduced="true"] {
     animation: none;
     box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
   }
 
-  [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"] {
-    box-shadow: none;
+  [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
+  [data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+    box-shadow: none !important;
   }
 
   .window-silhouette-border-introduced,
@@ -5361,15 +5378,21 @@
   border-color: var(--border-emphasized-color) !important;
 }
 
-[data-slot="mode-dock-stack"]:not([data-active="true"]):hover
+[data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path {
+  stroke: var(--border-emphasized-color);
+  transition: stroke 120ms ease;
+}
+
+/* 🪟 Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
+[data-slot="mode-dock-stack"]
   :is(
     [data-slot="mode-dock-stack-body"],
     [data-slot="mode-dock-tab-cap"],
-    [data-slot="mode-dock-controls-cap"],
-    [data-slot="mode-dock-tab-gap"]
+    [data-slot="mode-dock-tab-gap"],
+    [data-slot="mode-dock-controls-cap"]
   ) {
-  border-color: var(--border-emphasized-color) !important;
-  transition: border-color 120ms ease;
+  border-width: 0 !important;
+  border-style: none !important;
 }
 
 [data-slot="side-panel-tab-button"],

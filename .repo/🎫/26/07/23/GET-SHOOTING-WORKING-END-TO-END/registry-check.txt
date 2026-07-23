@@ -1,0 +1,13 @@
+$ bun ./script.ts nx run @semio-tech/plugin-registry:check
+
+> nx run @semio-tech/plugin-registry:check
+
+> bun ./script.ts check
+
+plugin registry catalog is fresh (33 plugin crates, 50 playgrounds).
+
+
+
+ NX   Successfully ran target check for project @semio-tech/plugin-registry
+
+

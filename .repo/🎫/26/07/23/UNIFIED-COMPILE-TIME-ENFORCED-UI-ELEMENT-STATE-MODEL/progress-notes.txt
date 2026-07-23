@@ -30,10 +30,29 @@ DONE, VERIFIED GREEN:
   flow, gis, imperative, infinite/board/port/directed/dag, layout, lowpoly, raster, s, sequence,
   shooting, trinity, vcs, writer.
 
-IN PROGRESS (background verification, heavily loaded shared machine — 50+ concurrent cargo
-processes from other sessions observed throughout this session):
-- Full `cargo check --workspace` running to confirm every crate compiles against the final API.
-- Individual per-crate verifications for animate/forms/note/puzzle/architect-plugin queued behind it.
+FINAL VERIFICATION (completed): `cargo check --workspace` — the only remaining error in the ENTIRE
+workspace is one pre-existing, unrelated doc-comment bug in a generated file from a different
+subsystem (framework/schema/rs/generated.rs, E0753 — a `//!` inner doc comment not at the true top of
+its module), flagged separately via spawn_task (not part of this ticket, not touched).
+
+Also fixed along the way, beyond the original plugin-crate survey (found only via full-workspace
+compile verification, since these have zero old-field names to grep for or sit in scopes a targeted
+grep can't see): framework/renderer/wgpu/rs/lib.rs (large, previously-unsurveyed file — its own
+duplicate UiNode<->WidgetNode conversion helpers, ~15 unmigrated production UI-building functions, and
+a ViewState field addition from an unrelated concurrent session's work that was blocking compilation),
+mathematical/plugin, sourcing/plugin, infinite/world/rs, draw/plugin, procedural/plugin, process/plugin
+(3 crates not in the original plugin list at all).
+
+LESSON LEARNED mid-verification: framework/renderer/wgpu/rs/lib.rs has several independent top-level
+`pub mod` blocks (dock, scenes, shell, …), each with its OWN local `use ui_wgpu::{...}` import list —
+not a single crate-root scope. An import fix landed in the wrong module more than once, producing
+confusing "cannot find type UiPresence" errors in seemingly-already-fixed regions, and repeated
+compile-check races (background checks reading stale file state, plus one command's exit code getting
+masked by a `tail` pipe) made this look like flakiness before the real cause — wrong-module imports —
+was found by directly mapping `^pub mod \|^mod ` boundaries. Resolved by adding the import to each
+actual enclosing module's own use block. Verified clean via two independent builds (warm-cache rebuild
+and a fresh cold build, 61 min) of semio-framework-renderer-wgpu specifically, plus the full workspace
+check.
 
 KNOWN MISTAKE, CORRECTED: dispatched 6 parallel plugin-migration agents with isolation:"worktree",
 which this repo's CLAUDE.md explicitly forbids ("You MUST NOT use git worktrees" — breaks the shared

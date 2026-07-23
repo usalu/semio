@@ -458,7 +458,7 @@ import {
   type OrbitCameraProjection,
   type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
-import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName } from "@semio-tech/ui-styling";
+import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 
 //#region 🔖UiInterpreter
 //#region ComponentSceneHostRegistry
@@ -3194,10 +3194,99 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   );
 }
 
+function windowMeasureGroupHeaderSlider(measure: Extract<WindowMeasure, { kind: "group" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode | undefined {
+  if (measure.value === undefined || measure.onChange === undefined) return undefined;
+  const sliderMeasure: Extract<WindowMeasure, { kind: "slider" }> = {
+    kind: "slider",
+    id: `${measure.id}.header-slider`,
+    label: undefined,
+    value: measure.value,
+    min: measure.min ?? 0,
+    max: measure.max ?? 1,
+    step: measure.step,
+    ready: measure.ready,
+    loading: measure.loading,
+    waiting: measure.waiting,
+    onChange: measure.onChange,
+  };
+  return <WindowMeasureSlider measure={sliderMeasure} onAction={onAction} />;
+}
+
+function windowMeasureSelectControl(measure: Extract<WindowMeasure, { kind: "select" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
+  return (
+    <Select value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
+      <SelectTrigger id={measure.id} className="h-small w-full min-w-0" size="sm">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {measure.items.map((item) => (
+          <SelectItem key={item.id} value={item.value}>
+            {item.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
+
+function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "toggle" }>, onAction: (action: ActionDescriptor) => unknown): ReactNode {
+  return (
+    <Toggle
+      id={measure.id}
+      pressed={measure.pressed}
+      text={measure.text}
+      icon={<Icon icon={measure.iconId in ICONS ? (measure.iconId as IconName) : "circle-dot"} size="small" />}
+      onPressedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
+    />
+  );
+}
+
+/**
+ * 🌲 Maps window measures to native panel-tree rows — same chrome as left-corner trees (label left, control right, guide lines).
+ * Pre-reverses top-level measures so bottom-anchored `direction="up"` panels read Count at the bottom, Distribution above.
+ */
+function windowMeasuresToTreeItems(measures: readonly WindowMeasure[], onAction: (action: ActionDescriptor) => unknown, reverseForUpPanel = true): TreeDataItem[] {
+  const ordered = reverseForUpPanel ? [...measures].reverse() : [...measures];
+  const mapMeasure = (measure: WindowMeasure): TreeDataItem => {
+    if (measure.kind === "group") {
+      return {
+        id: measure.id,
+        label: measure.label,
+        defaultOpen: measure.defaultOpen,
+        control: windowMeasureGroupHeaderSlider(measure, onAction),
+        items: measure.children.length > 0 ? windowMeasuresToTreeItems(measure.children, onAction, false) : undefined,
+      };
+    }
+    if (measure.kind === "slider") {
+      return {
+        id: measure.id,
+        label: measure.label ?? "",
+        control: <WindowMeasureSlider measure={measure} onAction={onAction} />,
+        loading: measure.loading,
+        waiting: measure.waiting,
+      };
+    }
+    if (measure.kind === "select") {
+      return {
+        id: measure.id,
+        label: measure.label ?? "",
+        control: windowMeasureSelectControl(measure, onAction),
+      };
+    }
+    return {
+      id: measure.id,
+      label: measure.label ?? measure.text ?? "",
+      control: windowMeasureToggleControl(measure, onAction),
+    };
+  };
+  return ordered.map(mapMeasure);
+}
+
 function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDescriptor) => unknown): ReactNode {
   if (measure.kind === "group") {
+    const headerSlider = windowMeasureGroupHeaderSlider(measure, onAction);
     return (
-      <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen}>
+      <WindowMeasureTreeGroup key={measure.id} id={measure.id} label={measure.label} defaultOpen={measure.defaultOpen} headerControl={headerSlider}>
         {measure.children.map((child) => renderWindowMeasure(child, onAction))}
       </WindowMeasureTreeGroup>
     );
@@ -3205,18 +3294,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   if (measure.kind === "select") {
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
-        <Select value={measure.value} onValueChange={(value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })}>
-          <SelectTrigger id={measure.id} className="h-small w-full min-w-0" size="sm">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {measure.items.map((item) => (
-              <SelectItem key={item.id} value={item.value}>
-                {item.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {windowMeasureSelectControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
   }
@@ -3230,13 +3308,7 @@ function renderWindowMeasure(measure: WindowMeasure, onAction: (action: ActionDe
   if (measure.kind === "toggle") {
     return (
       <WindowMeasureTreeLeaf key={measure.id} label={measure.label}>
-        <Toggle
-          id={measure.id}
-          pressed={measure.pressed}
-          text={measure.text}
-          icon={<Icon icon={measure.iconId in ICONS ? (measure.iconId as IconName) : "circle-dot"} size="small" />}
-          onPressedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
-        />
+        {windowMeasureToggleControl(measure, onAction)}
       </WindowMeasureTreeLeaf>
     );
   }
@@ -4032,9 +4104,8 @@ export function buildCommandCategoryTabs(
 //#region 🛠️ToolRegistry
 /**
  * 🛠️ One tool's measure-tree content. Selecting the tool tab activates it (see `buildToolTabs` /
- * panel path change); the tree itself is a single headerless section so Fill opens directly onto
- * count + distributions — no nested Fill folder/toggle, no second empty section that would force
- * sortable section chrome. Reuses `renderWindowMeasure` (same vocabulary as utility-options).
+ * panel path change); the tree itself is a single headerless section mapped to native `TreeDataItem`s
+ * so Fill opens directly onto count + distribution with the same chrome as left-corner panel trees.
  */
 function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
   const iconName: IconName = tool.iconId in ICONS ? (tool.iconId as IconName) : "hammer";
@@ -4046,7 +4117,7 @@ function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boo
           id: `tool.${tool.id}.options`,
           label: "",
           defaultOpen: true,
-          items: measures.map((measure) => ({ id: `tool.${tool.id}.options.${measure.id}`, label: "", control: renderWindowMeasure(measure, onAction) })),
+          items: windowMeasuresToTreeItems(measures, onAction),
         },
       ],
     };
@@ -9380,16 +9451,56 @@ function drawBoundsLayer(ctx: CanvasRenderingContext2D, layer: CanvasLayerRecord
   }
 }
 
-function drawCheckerboard(ctx: CanvasRenderingContext2D, width: number, height: number, zoom: number): void {
-  const cell = 16 / Math.max(zoom, 0.25);
-  const cols = Math.ceil(width / cell) + 1;
-  const rows = Math.ceil(height / cell) + 1;
-  for (let row = 0; row < rows; row += 1) {
-    for (let col = 0; col < cols; col += 1) {
-      ctx.fillStyle = (row + col) % 2 === 0 ? "#2a2d34" : "#1f2228";
-      ctx.fillRect(col * cell - width / 2, row * cell - height / 2, cell, cell);
+/** 🎨 Board-palette rgba8888 → CSS, matching flow/infinite grid strokes. */
+function boardChannelsToCss(channels: readonly number[]): string {
+  const [r = 0, g = 0, b = 0, a = 255] = channels;
+  return `rgba(${r}, ${g}, ${b}, ${a / 255})`;
+}
+
+/** 🌓 Theme-aware canvas-2d surface paints — same board `rasterClear` / grid tokens as flow and infinite boards. */
+export function readCanvas2dSurfaceColors(): { readonly clear: string; readonly grid: string } {
+  const appearance = currentStylingAppearanceName();
+  const board = STYLING_BOARD_PALETTES[appearance];
+  return {
+    clear: boardChannelsToCss(board.rasterClear),
+    grid: boardChannelsToCss(board.gridMinorStroke),
+  };
+}
+
+/** 📐 World-space LOD grid (large/medium/small/micro), matching infinite board stroke steps. */
+function drawInfiniteCanvasGrid(ctx: CanvasRenderingContext2D, camera: CanvasCamera, logicalWidth: number, logicalHeight: number, zoom: number, stroke: string): void {
+  const halfW = logicalWidth / (2 * Math.max(zoom, 0.0001));
+  const halfH = logicalHeight / (2 * Math.max(zoom, 0.0001));
+  const minX = camera.x - halfW;
+  const maxX = camera.x + halfW;
+  const minY = camera.y - halfH;
+  const maxY = camera.y + halfH;
+  const steps: readonly { readonly world: number; readonly width: number; readonly minScreen: number }[] = [
+    { world: STYLING_METRICS.board.gridWorldLarge, width: STYLING_STROKES.gridLarge, minScreen: 0 },
+    { world: STYLING_METRICS.board.gridWorldMedium, width: STYLING_STROKES.gridMedium, minScreen: 8 },
+    { world: STYLING_METRICS.board.gridWorldSmall, width: STYLING_STROKES.gridSmall, minScreen: 10 },
+    { world: STYLING_METRICS.board.gridWorldMicro, width: STYLING_STROKES.gridMicro, minScreen: 12 },
+  ];
+  ctx.save();
+  ctx.strokeStyle = stroke;
+  for (const step of steps) {
+    const screen = step.world * zoom;
+    if (screen < step.minScreen) continue;
+    ctx.lineWidth = Math.max(step.width / zoom, 0.5 / zoom);
+    const startX = Math.floor(minX / step.world) * step.world;
+    const startY = Math.floor(minY / step.world) * step.world;
+    ctx.beginPath();
+    for (let x = startX; x <= maxX; x += step.world) {
+      ctx.moveTo(x, minY);
+      ctx.lineTo(x, maxY);
     }
+    for (let y = startY; y <= maxY; y += step.world) {
+      ctx.moveTo(minX, y);
+      ctx.lineTo(maxX, y);
+    }
+    ctx.stroke();
   }
+  ctx.restore();
 }
 
 class JsonLayersCanvasSession implements GraphWasmSession {
@@ -9471,7 +9582,8 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     const zoom = this.camera.zoom || 1;
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, deviceWidth, deviceHeight);
-    ctx.fillStyle = "#111318";
+    const surface = readCanvas2dSurfaceColors();
+    ctx.fillStyle = surface.clear;
     ctx.fillRect(0, 0, deviceWidth, deviceHeight);
     const records = this.parseLayers();
     const meta = records.find((record) => record.role === "meta");
@@ -9481,7 +9593,7 @@ class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.translate(logicalWidth * 0.5 - this.camera.x * zoom, logicalHeight * 0.5 - this.camera.y * zoom);
     ctx.scale(zoom, zoom);
-    drawCheckerboard(ctx, logicalWidth, logicalHeight, zoom);
+    drawInfiniteCanvasGrid(ctx, this.camera, logicalWidth, logicalHeight, zoom, surface.grid);
     for (const [index, layer] of layers.entries()) {
       if (layer.segments?.length || layer.text || layer.image?.src) {
         drawSceneNode(ctx, layer, zoom, this.imageCache);
@@ -10901,9 +11013,10 @@ function SceneGumball({
   readonly onDragEnd: (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => void;
 }) {
   const pivotRef = useRef<Object3D>(new Object3D());
+  const draggingRef = useRef(false);
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    if (!target) return;
+    if (!target || draggingRef.current) return;
     pivotRef.current.position.set(target[0], target[1], target[2]);
     pivotRef.current.quaternion.set(0, 0, 0, 1);
     pivotRef.current.scale.set(1, 1, 1);
@@ -10917,15 +11030,19 @@ function SceneGumball({
       <UnifiedGumball
         target={pivotRef.current}
         config={config}
-        onDraggingChanged={onDraggingChanged}
+        onDraggingChanged={(dragging) => {
+          draggingRef.current = dragging;
+          onDraggingChanged(dragging);
+        }}
         onDragStart={onDragStart}
         onDrag={onDrag}
         onDragEnd={(kind, before, after) => {
           onDragEnd(kind, before, after);
-          pivotRef.current.position.set(target[0], target[1], target[2]);
-          pivotRef.current.quaternion.set(0, 0, 0, 1);
-          pivotRef.current.scale.set(1, 1, 1);
+          pivotRef.current.position.set(after.position[0], after.position[1], after.position[2]);
+          pivotRef.current.quaternion.set(after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]);
+          pivotRef.current.scale.set(after.scale[0], after.scale[1], after.scale[2]);
           pivotRef.current.updateMatrixWorld(true);
+          draggingRef.current = false;
         }}
       />
     </>
@@ -12449,7 +12566,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
-  const gumballDragLastPoseRef = useRef<GumballPose | null>(null);
+  const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
+  const gumballDragPendingRef = useRef<{ readonly kind: GumballHandleKind; readonly pose: GumballPose } | null>(null);
+  const gumballDragRafRef = useRef<number | null>(null);
+  const gumballDragChainRef = useRef(Promise.resolve());
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   useEffect(() => {
@@ -12894,41 +13014,69 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const dispatchGumballPoseDelta = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
       const payload = gumballTransformDeltaBetweenPoses(selection.transformMode, before, after, selectionArgs(), kind);
-      if (!payload) return;
-      dispatch(payload.action, payload.args);
+      if (!payload) return Promise.resolve();
+      return Promise.resolve(dispatch(payload.action, payload.args));
     },
     [dispatch, selection.transformMode, selectionArgs],
   );
 
+  const enqueueGumballDispatch = useCallback((task: () => void | Promise<void>) => {
+    gumballDragChainRef.current = gumballDragChainRef.current.then(task).catch(() => undefined);
+    return gumballDragChainRef.current;
+  }, []);
+
+  const flushGumballDragPending = useCallback(() => {
+    gumballDragRafRef.current = null;
+    const startPose = gumballDragStartPoseRef.current;
+    const pending = gumballDragPendingRef.current;
+    if (!startPose || !pending) return;
+    gumballDragPendingRef.current = null;
+    // 🧲 Absolute delta from drag-start pose — re-applies onto the plugin transform base each tick so
+    // out-of-order async completions cannot accumulate corrupted incremental state.
+    void enqueueGumballDispatch(() => dispatchGumballPoseDelta(pending.kind, startPose, pending.pose));
+  }, [dispatchGumballPoseDelta, enqueueGumballDispatch]);
+
   const handleGumballDragStart = useCallback(
-    (kind: GumballHandleKind, before: GumballPose) => {
-      gumballDragLastPoseRef.current = before;
-      dispatch("transformBegin");
+    (_kind: GumballHandleKind, before: GumballPose) => {
+      gumballDragStartPoseRef.current = before;
+      gumballDragPendingRef.current = null;
+      if (gumballDragRafRef.current != null) {
+        cancelAnimationFrame(gumballDragRafRef.current);
+        gumballDragRafRef.current = null;
+      }
+      void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
-    [dispatch],
+    [dispatch, enqueueGumballDispatch],
   );
 
   const handleGumballDrag = useCallback(
     (kind: GumballHandleKind, pose: GumballPose) => {
-      const lastPose = gumballDragLastPoseRef.current;
-      if (!lastPose) {
-        gumballDragLastPoseRef.current = pose;
-        return;
+      if (!gumballDragStartPoseRef.current) {
+        gumballDragStartPoseRef.current = pose;
       }
-      dispatchGumballPoseDelta(kind, lastPose, pose);
-      gumballDragLastPoseRef.current = pose;
+      gumballDragPendingRef.current = { kind, pose };
+      if (gumballDragRafRef.current == null) {
+        gumballDragRafRef.current = requestAnimationFrame(() => flushGumballDragPending());
+      }
     },
-    [dispatchGumballPoseDelta],
+    [flushGumballDragPending],
   );
 
   const handleGumballDragEnd = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      const lastPose = gumballDragLastPoseRef.current ?? before;
-      dispatchGumballPoseDelta(kind, lastPose, after);
-      gumballDragLastPoseRef.current = null;
-      dispatch("transformEnd");
+      if (gumballDragRafRef.current != null) {
+        cancelAnimationFrame(gumballDragRafRef.current);
+        gumballDragRafRef.current = null;
+      }
+      const startPose = gumballDragStartPoseRef.current ?? before;
+      gumballDragPendingRef.current = null;
+      gumballDragStartPoseRef.current = null;
+      void enqueueGumballDispatch(async () => {
+        await dispatchGumballPoseDelta(kind, startPose, after);
+        await Promise.resolve(dispatch("transformEnd"));
+      });
     },
-    [dispatch, dispatchGumballPoseDelta],
+    [dispatch, dispatchGumballPoseDelta, enqueueGumballDispatch],
   );
 
   const handleFaceDragStart = useCallback((args: { objectId: string; faceId: number; normal: readonly [number, number, number]; point: readonly [number, number, number]; faceExtent?: readonly [number, number] }) => {
@@ -13586,7 +13734,7 @@ function scoreFlowCatalogueItem(item: FlowCatalogueItem, query: string): number 
 }
 
 /** @emoji 🔎 Ranks catalogue items for the double-click spotlight (exact/prefix/substring; neurons first). */
-export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSection[], query: string, limit = 20): FlowCatalogueItem[] {
+export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSection[], query: string): FlowCatalogueItem[] {
   const scored = flattenFlowCatalogueItems(sections)
     .map((item) => ({ item, score: scoreFlowCatalogueItem(item, query.trim()) }))
     .filter((row): row is { item: FlowCatalogueItem; score: number } => row.score != null)
@@ -13597,7 +13745,12 @@ export function flowRankCatalogueSuggestions(sections: readonly FlowCatalogueSec
       if (aNeuron !== bNeuron) return aNeuron - bNeuron;
       return a.item.name.localeCompare(b.item.name);
     });
-  return scored.slice(0, limit).map((row) => row.item);
+  return scored.map((row) => row.item);
+}
+
+/** @emoji 🔍 Scroll container classes for expanded flow spotlight suggestions. */
+export function flowSpotlightSuggestionListScrollClass(expanded: boolean): string {
+  return cn("min-h-0 overscroll-contain", expanded ? "overflow-y-auto max-h-[min(24rem,70vh)]" : "overflow-hidden");
 }
 
 function parseFlowCatalogueSections(json: string | undefined | null): FlowCatalogueSection[] {
@@ -13630,20 +13783,30 @@ function FlowSpotlight({
   readonly onClose: () => void;
 }) {
   const rootRef = useRef<HTMLDivElement>(null);
+  const activeItemRef = useRef<HTMLButtonElement | null>(null);
   const [query, setQuery] = useState("");
+  const [expanded, setExpanded] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [previewArmed, setPreviewArmed] = useState(false);
   const suggestions = useMemo(() => flowRankCatalogueSuggestions(sections, query), [query, sections]);
+  const visible = expanded ? suggestions : suggestions.slice(0, 1);
+  const hasMore = suggestions.length > 1;
   const activeItem = suggestions[activeIndex] ?? null;
   const shouldPreview = query.trim().length > 0 || previewArmed;
 
   useEffect(() => {
     setActiveIndex(0);
+    setExpanded(false);
   }, [query]);
 
   useEffect(() => {
     onPreview(shouldPreview ? activeItem : null);
   }, [activeItem, onPreview, shouldPreview]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    activeItemRef.current?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, expanded]);
 
   useEffect(() => {
     const onPointerDown = (event: PointerEvent) => {
@@ -13658,59 +13821,80 @@ function FlowSpotlight({
   return (
     <div
       ref={rootRef}
-      className={cn("pointer-events-auto absolute z-60 w-layout-floating-menu-sm max-h-layout-preview-md overflow-hidden p-single", floatingMenuSurfaceClass)}
+      className={cn("pointer-events-auto absolute z-60 flex min-h-0 w-layout-floating-menu-sm flex-col overflow-hidden", floatingMenuSurfaceClass)}
       style={{ left: state.screen.x, top: state.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
+      onDoubleClick={(event) => event.stopPropagation()}
+      onWheel={(event) => event.stopPropagation()}
     >
-      <Input
-        autoFocus
-        value={query}
-        placeholder="Type to add…"
-        className="mb-single text-xs"
-        onChange={(event) => setQuery(event.target.value)}
-        onKeyDown={(event) => {
-          if (event.key === "Escape") {
-            event.preventDefault();
-            onClose();
-            return;
-          }
-          if (event.key === "ArrowDown") {
-            event.preventDefault();
-            if (suggestions.length === 0) return;
-            setPreviewArmed(true);
-            setActiveIndex((index) => Math.min(index + 1, suggestions.length - 1));
-            return;
-          }
-          if (event.key === "ArrowUp") {
-            event.preventDefault();
-            if (suggestions.length === 0) return;
-            setPreviewArmed(true);
-            setActiveIndex((index) => Math.max(index - 1, 0));
-            return;
-          }
-          if (event.key === "Enter") {
-            event.preventDefault();
-            if (activeItem) onCommit(activeItem);
-          }
-        }}
-      />
-      <div className="max-h-layout-preview-md overflow-y-auto" role="listbox">
-        {suggestions.length === 0 ? (
+      <div className={cn("flex shrink-0 items-center gap-single px-single py-half", borderNormalBottomClass)}>
+        <Input
+          autoFocus
+          value={query}
+          placeholder="Type to add…"
+          className="min-w-0 flex-1 border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
+          onChange={(event) => setQuery(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === "Escape") {
+              event.preventDefault();
+              onClose();
+              return;
+            }
+            if (event.key === "ArrowDown") {
+              event.preventDefault();
+              if (suggestions.length === 0) return;
+              setPreviewArmed(true);
+              setActiveIndex((index) => Math.min(index + 1, suggestions.length - 1));
+              if (!expanded && hasMore) setExpanded(true);
+              return;
+            }
+            if (event.key === "ArrowUp") {
+              event.preventDefault();
+              if (suggestions.length === 0) return;
+              setPreviewArmed(true);
+              setActiveIndex((index) => Math.max(index - 1, 0));
+              return;
+            }
+            if (event.key === "Enter") {
+              event.preventDefault();
+              if (activeItem) onCommit(activeItem);
+            }
+          }}
+        />
+        {hasMore ? (
+          <button
+            type="button"
+            aria-label={expanded ? "Collapse suggestions" : "Show all suggestions"}
+            className="text-muted-foreground hover:bg-muted/40 hover:text-foreground shrink-0 rounded px-half text-2xs"
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded ? "▴" : "▾"}
+          </button>
+        ) : null}
+      </div>
+      <div
+        className={flowSpotlightSuggestionListScrollClass(expanded && hasMore)}
+        role="listbox"
+        onWheel={(event) => event.stopPropagation()}
+      >
+        {visible.length === 0 ? (
           <div className="text-muted-foreground px-single py-half text-2xs">No matches</div>
         ) : (
-          suggestions.map((item, index) => {
-            const active = index === activeIndex && shouldPreview;
+          visible.map((item, index) => {
+            const globalIndex = expanded ? index : 0;
+            const active = globalIndex === activeIndex && shouldPreview;
             const key = `${item.kind}:${item.neuronKind ?? item.action ?? item.format ?? item.name}`;
             return (
               <button
                 key={key}
+                ref={active ? activeItemRef : undefined}
                 type="button"
                 role="option"
                 aria-selected={active}
                 className={cn(floatingMenuItemClass, active && "bg-active-base text-emphasized")}
                 onPointerEnter={() => {
                   setPreviewArmed(true);
-                  setActiveIndex(index);
+                  setActiveIndex(globalIndex);
                 }}
                 onPointerDown={(event) => {
                   event.preventDefault();
@@ -16628,16 +16812,21 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     const session = sessionRef.current;
     if (!session) return;
     if (documentSyncRef.current !== scene.documentSyncJson) {
-      session.syncDocumentJson(scene.documentSyncJson);
-      documentSyncRef.current = scene.documentSyncJson;
+      try {
+        session.syncDocumentJson(scene.documentSyncJson);
+        documentSyncRef.current = scene.documentSyncJson;
+      } catch (error) {
+        console.error("[DEBUG] paint2d syncDocumentJson failed", error);
+        return;
+      }
     }
     if (assetsRef.current !== scene.assetsJson) {
       const assets = parsePaint2dAssets(scene.assetsJson);
       for (const [key, asset] of Object.entries(assets)) {
         try {
           session.uploadRasterImageKey(key, base64ToBytes(asset.data));
-        } catch {
-          /* asset decode failed */
+        } catch (error) {
+          console.error("[DEBUG] paint2d uploadRasterImageKey failed", key, error);
         }
       }
       assetsRef.current = scene.assetsJson;
