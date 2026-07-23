@@ -1,0 +1,13 @@
+{
+  "title": "Window-Local Utilities",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "All utilities are local to the window instance. Only tools are mode-wide. Fix puzzle 3D transform activating gumball across all windows by carrying per-window activeUtilityByWindowId on ViewState and stamping each window's utility during refreshUi.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2256"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪c3e0d5b287254ccc90038a408b7b399e"
+  ]
+}

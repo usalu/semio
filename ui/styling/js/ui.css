@@ -1108,6 +1108,15 @@
   }
 }
 
+/* 🎓 The chrome unit (panel/window/navbar/footer) containing a step's introduce/show target — raised
+   above the single fullscreen introduction veil (z-tutorial) so the real element renders crisp and stays
+   interactive, instead of the veil punching cutout holes around it. !important is required to outrank
+   Panel's inline zIndex; the attribute is unmanaged by React (stamped/cleared imperatively, like
+   data-introduced), so re-renders can't clobber it. */
+[data-introduction-elevated] {
+  z-index: calc(var(--z-tutorial) + 1) !important;
+}
+
 /* #region 🫨IconAnim — closed hover micro-animations. Every @keyframes has an identical 0% and 100%
    frame (shared rest pose), EXCEPT declared full-turn spins (rotate/rotateX/rotateY to ±360deg — a
    visually identical pose, so the loop is still seamless): rotate-ccw, rotate-cw, loader-2,
@@ -3774,7 +3783,8 @@
   background-color: color-mix(in srgb, var(--panel) calc(var(--glass-panel-alpha) * 100%), transparent);
 }
 
-/* 🎓 The introduction glass veil — the bands surrounding a step's cutout rect. */
+/* 🎓 The introduction glass veil — one fullscreen panel; the step's introduce/show elements elevate
+   above it via [data-introduction-elevated] rather than punching a cutout hole in the veil itself. */
 @utility ui-glass-veil {
   -webkit-backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--glass-veil-blur)) saturate(var(--glass-saturate));

@@ -14,7 +14,7 @@
 \RequirePackage{tcolorbox}
 \RequirePackage{eso-pic}
 \RequirePackage{tikz}
-\tcbuselibrary{skins,breakable,fitting}
+\tcbuselibrary{skins,breakable,fitting,hooks}
 
 \providecommand{\semio@chrome@titlebar@height}{1.4em}
 \providecommand{\semio@chrome@padding}{0.2em}
@@ -690,6 +690,13 @@
   }
 }
 
+\cs_new_protected:Npn \semio_window_table_border_overlay: {
+  \draw[
+    draw=semio-chrome-border-normal,
+    line~width=\semio@stroke@hairline,
+  ] (frame.north~west) -- (frame.south~west);
+}
+
 \tcbset{
   semio~window/.style={
     enhanced,
@@ -729,6 +736,7 @@
     left=0pt,
     right=0pt,
     bottom=0pt,
+    overlay~app={\semio_window_table_border_overlay:},
   },
   semio~window~row/.style={
     semio~window,
@@ -1831,6 +1839,7 @@
 
 \newcommand{\semio@register@table@header}{%
   \semio@table@long@header@repeat@three
+    {0.12}
     {\semio@register@header@key}
     {\semio@register@header@title}
     {\semio@register@header@page}%

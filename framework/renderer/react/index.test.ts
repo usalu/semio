@@ -109,6 +109,7 @@ import {
   applyUiRefreshResponseToCache,
   resolveAppDocument,
   buildUtilityRibbonSegments,
+  buildActiveUtilityByWindowId,
   buildUiRefreshRequest,
   dedupeUtilityNodesById,
   flattenPanelTabLeaves,
@@ -131,6 +132,7 @@ import {
   resolveKeybindingIntent,
   resolveUtilityActivation,
   isWorldTransformGumballMode,
+  worldGumballConfigForProjection,
   gumballTransformDeltaBetweenPoses,
   WindowActionPane,
   resolveCommands,
@@ -173,6 +175,7 @@ import {
   type DisplayHostApi,
   resolveFrameworkLayoutSeed,
   buildToolTabs,
+  toolIdFromPanelTabId,
 } from "./index.tsx";
 import { decodeWorldProjectionTemplateId, encodeWorldProjectionTemplateId } from "@semio-tech/infinite-world-r3f";
 
@@ -548,6 +551,17 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     { id: "detail", bodyKey: "puzzle2d.play.detail" },
   ];
   const panelTabLeaves = [{ kind: { kind: "app" as const, id: "framework.panel.document" }, bodyKey: "puzzle2d.play.layers" }];
+
+  it("buildActiveUtilityByWindowId omits null utilities for batched refresh", () => {
+    expect(buildActiveUtilityByWindowId({ top: "transform", perspective: null, brush: "brush" })).toEqual({ top: "transform", brush: "brush" });
+  });
+
+  it("buildUiRefreshRequest forwards per-window utility map on viewState without a focused-window singular leak", () => {
+    const viewState = { activeUtilityByWindowId: { top: "transform", perspective: "brush" }, activeUtilityId: undefined };
+    const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, viewState, new Map());
+    expect(request?.viewState.activeUtilityByWindowId).toEqual({ top: "transform", perspective: "brush" });
+    expect(request?.viewState.activeUtilityId).toBeUndefined();
+  });
 
   it("buildUiRefreshRequest for a full scope requests every window/panel/engagements/measures/labels section (utility bars are now registry-derived, not a plugin section)", () => {
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, {}, new Map());
@@ -2529,18 +2543,18 @@ describe("spawned window chrome", () => {
 });
 
 describe("partitionWindowMeasures", () => {
-  const utilityGroup = (id: string, activeUtilityId?: string): WindowMeasure => ({ kind: "group", id, label: id, activeUtilityId, children: [] });
+  const utilityGroup = (id: string, activeUtilityId: string | undefined, children: WindowMeasure[] = []): WindowMeasure => ({ kind: "group", id, label: id, activeUtilityId, children });
   const slider = (id: string): WindowMeasure => ({ kind: "slider", id, value: 1, min: 0, max: 2, onChange: { controllerId: "c", action: "a" } });
 
-  it("routes a tagged group to utilityOptions only when its utility is active", () => {
-    const measures = [utilityGroup("brush-params", "brush"), slider("zoom")];
+  it("unwraps a tagged group's children into utilityOptions only when its utility is active", () => {
+    const measures = [utilityGroup("brush-params", "brush", [slider("size")]), slider("zoom")];
     const active = partitionWindowMeasures(measures, "brush");
-    expect(active.utilityOptions.map((m) => m.id)).toEqual(["brush-params"]);
+    expect(active.utilityOptions.map((m) => m.id)).toEqual(["size"]);
     expect(active.general.map((m) => m.id)).toEqual(["zoom"]);
   });
 
   it("drops a tagged group from both buckets when a different or no utility is active", () => {
-    const measures = [utilityGroup("brush-params", "brush"), slider("zoom")];
+    const measures = [utilityGroup("brush-params", "brush", [slider("size")]), slider("zoom")];
     const other = partitionWindowMeasures(measures, "fill");
     expect(other.utilityOptions).toEqual([]);
     expect(other.general.map((m) => m.id)).toEqual(["zoom"]);
@@ -2550,7 +2564,7 @@ describe("partitionWindowMeasures", () => {
   });
 
   it("keeps untagged groups and non-group measures in general, unaffected by the active utility", () => {
-    const measures = [utilityGroup("grid"), slider("zoom")];
+    const measures = [utilityGroup("grid", undefined), slider("zoom")];
     const { general, utilityOptions } = partitionWindowMeasures(measures, "brush");
     expect(general.map((m) => m.id)).toEqual(["grid", "zoom"]);
     expect(utilityOptions).toEqual([]);
@@ -2577,7 +2591,7 @@ describe("partitionWindowMeasures", () => {
     expect(idleChrome.measures).toBeUndefined();
   });
 
-  it("parses the real ui_wgpu camelCase wire JSON and routes a utility-scoped fill group into utilityOptions (snake_case divergence regression guard)", () => {
+  it("parses the real ui_wgpu camelCase wire JSON and unwraps a utility-scoped fill group into flat utilityOptions (snake_case divergence regression guard)", () => {
     // Verbatim shape of `ui_wgpu::WindowMeasure`'s serde wire after the D-4 `rename_all_fields = "camelCase"`
     // fix: a fill-utility slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
     // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
@@ -2585,13 +2599,8 @@ describe("partitionWindowMeasures", () => {
       '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
     const measures = JSON.parse(wireJson) as WindowMeasure[];
     const { general, utilityOptions } = partitionWindowMeasures(measures, "fill");
-    expect(utilityOptions.map((m) => m.id)).toEqual(["fill-params"]);
-    const fillGroup = utilityOptions[0];
-    expect(fillGroup.kind).toBe("group");
-    if (fillGroup.kind === "group") {
-      expect(fillGroup.activeUtilityId).toBe("fill");
-      expect(fillGroup.children[0]).toMatchObject({ kind: "slider", id: "fillCount", onChange: { action: "setFillCount" } });
-    }
+    expect(utilityOptions.map((m) => m.id)).toEqual(["fillCount"]);
+    expect(utilityOptions[0]).toMatchObject({ kind: "slider", id: "fillCount", onChange: { action: "setFillCount" } });
     expect(general.map((m) => m.id)).toEqual(["grid"]);
     const gridToggle = general[0];
     expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("icon.grid");
@@ -3273,6 +3282,20 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(nodes.map((node) => (node.kind === "toggle" ? node.pressed : undefined))).toEqual([false, true]);
   });
 
+  it("deriveUtilityNodes hoists a single-child group to a top-level toggle", () => {
+    const nodes = deriveUtilityNodes(
+      "puzzle",
+      [
+        { id: "transform", label: "Transform", iconId: "move-3d", group: "transform" },
+        { id: "brush", label: "Brush", iconId: "brush" },
+      ],
+      "transform",
+    );
+    expect(nodes.map((node) => node.id)).toEqual(["transform", "brush"]);
+    expect(nodes[0]?.kind).toBe("toggle");
+    expect(nodes[0] && nodes[0].kind === "toggle" ? nodes[0].pressed : undefined).toBe(true);
+  });
+
   it("resolveUtilityActivation toggles: click activates, re-click or empty deactivates", () => {
     expect(resolveUtilityActivation(null, "brush")).toBe("brush");
     expect(resolveUtilityActivation("brush", "erase")).toBe("erase");
@@ -3306,6 +3329,22 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(isWorldTransformGumballMode(undefined)).toBe(false);
     expect(isWorldTransformGumballMode("brush")).toBe(false);
     expect(isWorldTransformGumballMode("")).toBe(false);
+  });
+
+  it("worldGumballConfigForProjection intersects transform mode with planar window projections", () => {
+    expect(worldGumballConfigForProjection("move", { kind: "orthographic", view: "top" })).toEqual({
+      moveAxes: true,
+      movePlanes: true,
+      rotate: false,
+      scaleAxes: false,
+      scalePlanes: false,
+      scaleUniform: false,
+      plane: "xy",
+    });
+    expect(worldGumballConfigForProjection("rotate", { kind: "orthographic", view: "front" }).plane).toBe("xz");
+    expect(worldGumballConfigForProjection("scale", { kind: "orthographic", view: "left" }).plane).toBe("yz");
+    expect(worldGumballConfigForProjection("move", { kind: "threePoint", fov: 50 }).plane).toBeUndefined();
+    expect(worldGumballConfigForProjection("transform", undefined).plane).toBeUndefined();
   });
 
   it("gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args", () => {
@@ -3455,15 +3494,21 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const tabs = buildToolTabs(toolApp.tools, "puzzle3d-play", activeToolIdRef, toolMeasuresByToolIdRef, onAction);
     expect(tabs.map((tab) => tab.id)).toEqual(["tool.fill", "tool.brush"]);
     const fillTab = tabs[0] as Extract<PanelTabNode, { kind: "leaf" }>;
-    const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    const fillSections = fillTree.resolveTree().sections;
-    expect(fillSections).toHaveLength(2);
-    expect(fillSections[1]!.items).toHaveLength(1);
+    const fillTree = fillTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[]; sortableSections: false } };
+    const fillResolved = fillTree.resolveTree();
+    expect(fillResolved.sortableSections).toBe(false);
+    expect(fillResolved.sections).toHaveLength(1);
+    expect(fillResolved.sections[0]!.id).toBe("tool.fill.options");
+    expect(fillResolved.sections[0]!.items).toHaveLength(1);
+    expect(fillResolved.sections[0]!.items[0]!.label).toBe("");
 
     const brushTab = tabs[1] as Extract<PanelTabNode, { kind: "leaf" }>;
     const brushTree = brushTab.trees[0]!.tree as { resolveTree: () => { sections: TreeDataSection[] } };
-    // brush is not the active tool — only the activation row renders, no options section.
-    expect(brushTree.resolveTree().sections).toHaveLength(1);
+    // brush is not the active tool — only the flat activation toggle renders (no nested Fill-style label row).
+    const brushResolved = brushTree.resolveTree();
+    expect(brushResolved.sections).toHaveLength(1);
+    expect(brushResolved.sections[0]!.id).toBe("tool.brush.activate");
+    expect(brushResolved.sections[0]!.items[0]!.label).toBe("");
   });
 
   it("buildToolTabs' activation toggle dispatches setActiveTool with this tool's id", () => {
@@ -3476,6 +3521,14 @@ describe("resolveModeTools / buildToolTabs (footer tool panel registry)", () => 
     const activateControl = fillTree.resolveTree().sections[0]!.items[0]!.control as ReactElement<{ onPressedChange: (pressed: boolean) => void }>;
     activateControl.props.onPressedChange(true);
     expect(onAction).toHaveBeenCalledWith({ controllerId: "puzzle3d-play", action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "fill" } });
+  });
+
+  it("toolIdFromPanelTabId extracts the mode tool id from a tool leaf tab id", () => {
+    expect(toolIdFromPanelTabId("tool.fill")).toBe("fill");
+    expect(toolIdFromPanelTabId("tool.brush")).toBe("brush");
+    expect(toolIdFromPanelTabId("framework.category.tool")).toBeNull();
+    expect(toolIdFromPanelTabId("tool.")).toBeNull();
+    expect(toolIdFromPanelTabId(undefined)).toBeNull();
   });
 });
 

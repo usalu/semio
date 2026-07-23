@@ -1,0 +1,21 @@
+$ bun ./script.ts nx test "@semio-tech/infinite-world-r3f" -- -t worldProjectionGumballPlane
+
+> nx run @semio-tech/infinite-world-r3f:test -t worldProjectionGumballPlane
+
+> bun ./script.ts test -t worldProjectionGumballPlane
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+
+ Test Files  2 passed (2)
+      Tests  4 passed | 102 skipped (106)
+   Start at  12:31:26
+   Duration  5.91s (transform 2.78s, setup 0ms, import 10.39s, tests 6ms, environment 979ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/infinite-world-r3f
+
+

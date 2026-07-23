@@ -34,6 +34,114 @@ pub struct StyleSpec {
 }
 //#endregion 🔖Action
 
+//#region 🔖Presence
+/// 🧭 The one shared, mandatory visual state every rendered UI element carries — orthogonal to
+/// `status` and to the `hover`/`selected` flags. `Hidden` short-circuits everything else: a hidden
+/// element is not rendered at all (no layout, no paint, no events) — renderers/reconcile must check
+/// this before doing anything with the rest of an element's `UiPresence`.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum UiState {
+    Introducing,
+    Previewed,
+    #[default]
+    Normal,
+    Disabled,
+    Hidden,
+}
+
+/// 🧭 The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum UiStatus {
+    Waiting,
+    Loading,
+    #[default]
+    Idle,
+    Finished,
+}
+
+fn is_default<T: Default + PartialEq>(value: &T) -> bool {
+    *value == T::default()
+}
+
+/// 🧭 The shared, compile-time-enforced state model every rendered UI element embeds as a
+/// mandatory `presence` field: `state` × `status` × `hover` × `selected`. All combinations are
+/// visually distinguishable except `state == Hidden`, which makes the rest irrelevant — see
+/// [`UiPresence::visible`]. Defaults to fully inert (`Normal`/`Idle`/`false`/`false`) and is omitted
+/// from the wire format entirely at default (see `UiPresence::is_default`).
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", default)]
+pub struct UiPresence {
+    #[serde(skip_serializing_if = "is_default")]
+    pub state: UiState,
+    #[serde(skip_serializing_if = "is_default")]
+    pub status: UiStatus,
+    #[serde(skip_serializing_if = "is_default")]
+    pub hover: bool,
+    #[serde(skip_serializing_if = "is_default")]
+    pub selected: bool,
+}
+
+impl UiPresence {
+    pub fn is_default(&self) -> bool {
+        *self == Self::default()
+    }
+    /// 🙈 `false` for `state == Hidden` — callers must not render, lay out, or hit-test the element.
+    pub fn visible(&self) -> bool {
+        self.state != UiState::Hidden
+    }
+    pub fn state(state: UiState) -> Self {
+        Self { state, ..Self::default() }
+    }
+    pub fn status(status: UiStatus) -> Self {
+        Self { status, ..Self::default() }
+    }
+    pub fn selected(selected: bool) -> Self {
+        Self { selected, ..Self::default() }
+    }
+    pub fn with_state(self, state: UiState) -> Self {
+        Self { state, ..self }
+    }
+    pub fn with_status(self, status: UiStatus) -> Self {
+        Self { status, ..self }
+    }
+    pub fn with_hover(self, hover: bool) -> Self {
+        Self { hover, ..self }
+    }
+    pub fn with_selected(self, selected: bool) -> Self {
+        Self { selected, ..self }
+    }
+    /// 🙈 `Hidden` when `hidden`, else `Normal` — the one-line migration for today's `is_hidden`
+    /// flags on elements that are genuinely not rendered (not to be confused with a domain "dimmed"
+    /// prop, e.g. a tree item's eye-toggle, which must stay visible/clickable).
+    pub fn hidden_if(hidden: bool) -> Self {
+        Self::state(if hidden { UiState::Hidden } else { UiState::Normal })
+    }
+    /// 🚫 `Disabled` when `disabled`, else `Normal` — the one-line migration for today's `disabled` flags.
+    pub fn disabled_if(disabled: bool) -> Self {
+        Self::state(if disabled { UiState::Disabled } else { UiState::Normal })
+    }
+}
+
+impl UiStatus {
+    /// 🌀 The one-line migration for today's independent `loading`/`waiting` flag pairs — `loading`
+    /// wins precedence when both are set, matching the prior ad-hoc convention.
+    pub fn busy(loading: bool, waiting: bool) -> Self {
+        if loading {
+            UiStatus::Loading
+        } else if waiting {
+            UiStatus::Waiting
+        } else {
+            UiStatus::Idle
+        }
+    }
+}
+//#endregion 🔖Presence
+
 //#region 🔖PanelTabConstants
 pub const FRAMEWORK_PANEL_TAB_DOCUMENT_ID: &str = "framework.panel.document";
 pub const FRAMEWORK_PANEL_TAB_CATALOGUE_ID: &str = "framework.panel.catalogue";
@@ -413,10 +521,11 @@ pub enum WindowMeasure {
 /// @emoji 🎯 Splits a window's top-level measures into `(general, utility_options)`.
 ///
 /// A top-level [`WindowMeasure::Group`] tagged with `active_utility_id: Some(id)` is *utility-scoped chrome*:
-/// it lands in `utility_options` **only** when `id == active_utility_id`, and is dropped from both buckets
-/// otherwise (it is irrelevant to whichever utility — or no utility — is currently active). Every untagged
-/// group and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level
-/// concept only: a matched group's `children` are carried along verbatim inside their group.
+/// its **children** land in `utility_options` **only** when `id == active_utility_id`, and the tagged wrapper
+/// is dropped from both buckets otherwise (it is irrelevant to whichever utility — or no utility — is
+/// currently active). The wrapper itself is a routing envelope only — never rendered — so activating a
+/// utility shows its option tree directly (no duplicate utility-name group header). Every untagged group
+/// and every non-group top-level measure stays in `general`, unchanged. Tagging is a top-level concept only.
 pub fn partition_window_measures(
     measures: &[WindowMeasure],
     active_utility_id: Option<&str>,
@@ -425,9 +534,9 @@ pub fn partition_window_measures(
     let mut utility_options = Vec::new();
     for measure in measures {
         match measure {
-            WindowMeasure::Group { active_utility_id: Some(scoped), .. } => {
+            WindowMeasure::Group { active_utility_id: Some(scoped), children, .. } => {
                 if active_utility_id == Some(scoped.as_str()) {
-                    utility_options.push(measure.clone());
+                    utility_options.extend(children.iter().cloned());
                 }
             }
             _ => general.push(measure.clone()),
@@ -819,28 +928,39 @@ mod layout_wire_format_tests {
         assert_eq!(roundtripped, measures);
     }
 
-    fn utility_scoped_group(id: &str, utility: Option<&str>) -> WindowMeasure {
+    fn utility_scoped_group(id: &str, utility: Option<&str>, children: Vec<WindowMeasure>) -> WindowMeasure {
         WindowMeasure::Group {
             id: id.into(),
             label: id.to_uppercase(),
             default_open: None,
             active_utility_id: utility.map(str::to_string),
-            children: vec![],
+            children,
+        }
+    }
+
+    fn measure_toggle(id: &str) -> WindowMeasure {
+        WindowMeasure::Toggle {
+            id: id.into(),
+            icon_id: "icon.toggle".into(),
+            label: Some(id.into()),
+            pressed: true,
+            text: None,
+            on_change: ActionDescriptor { controller_id: "c".into(), action: "t".into(), args: None },
         }
     }
 
     #[test]
-    fn partition_window_measures_routes_matching_utility_group_to_utility_options() {
-        let measures = vec![utility_scoped_group("brush-params", Some("brush"))];
+    fn partition_window_measures_unwraps_matching_utility_group_children_into_utility_options() {
+        let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
         let (general, utility_options) = partition_window_measures(&measures, Some("brush"));
         assert!(general.is_empty());
         assert_eq!(utility_options.len(), 1);
-        assert!(matches!(&utility_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
+        assert!(matches!(&utility_options[0], WindowMeasure::Toggle { id, .. } if id == "size"), "tagged wrapper is routing-only — children render flat");
     }
 
     #[test]
     fn partition_window_measures_drops_non_matching_utility_group_from_both_buckets() {
-        let measures = vec![utility_scoped_group("brush-params", Some("brush"))];
+        let measures = vec![utility_scoped_group("brush-params", Some("brush"), vec![measure_toggle("size")])];
         let (general_other, utility_options_other) = partition_window_measures(&measures, Some("fill"));
         assert!(general_other.is_empty() && utility_options_other.is_empty(), "wrong active utility drops the group entirely");
         let (general_none, utility_options_none) = partition_window_measures(&measures, None);
@@ -850,7 +970,7 @@ mod layout_wire_format_tests {
     #[test]
     fn partition_window_measures_keeps_untagged_group_and_non_group_in_general() {
         let measures = vec![
-            utility_scoped_group("grid", None),
+            utility_scoped_group("grid", None, vec![]),
             WindowMeasure::Slider {
                 id: "zoom".into(),
                 label: None,
@@ -1120,8 +1240,9 @@ pub struct DerivedUtilitySpec {
 /// Each utility becomes a `Toggle` whose `pressed` reflects `active_utility_id == Some(id)` and whose
 /// `on_change` dispatches `setActiveUtility { utilityId }` against `controller_id`. Utilities sharing a `group`
 /// collapse into one `Collection` (placed where the group first appears, in utility order); ungrouped
-/// utilities stay flat siblings. This is the single source of truth for the utility bar — `DocumentApp::utilities`
-/// no longer exists.
+/// utilities stay flat siblings. A group that ends with exactly one child is hoisted to a top-level toggle —
+/// a lone `group:transform`/`transform` pair must not render as two nested "Transform" rows. This is the
+/// single source of truth for the utility bar — `DocumentApp::utilities` no longer exists.
 pub fn derive_utility_nodes(
     controller_id: &str,
     utilities: &[DerivedUtilitySpec],
@@ -1175,6 +1296,12 @@ pub fn derive_utility_nodes(
         }
     }
     nodes
+        .into_iter()
+        .map(|node| match node {
+            UtilityNode::Collection { mut children, .. } if children.len() == 1 => children.remove(0),
+            other => other,
+        })
+        .collect()
 }
 //#endregion 🔖DeriveUtilityNodes
 
@@ -1264,6 +1391,20 @@ mod utility_node_wire_format_tests {
             other => panic!("expected collection, got {other:?}"),
         }
     }
+
+    #[test]
+    fn derive_utility_nodes_hoists_single_child_groups() {
+        let nodes = derive_utility_nodes("ctrl", &[spec("transform", Some("transform")), spec("brush", None)], Some("transform"));
+        assert_eq!(nodes.len(), 2, "lone group child is hoisted — no nested Transform/Transform pair");
+        match &nodes[0] {
+            UtilityNode::Toggle { id, pressed, .. } => {
+                assert_eq!(id, "transform");
+                assert_eq!(*pressed, Some(true));
+            }
+            other => panic!("expected hoisted toggle, got {other:?}"),
+        }
+        assert!(matches!(&nodes[1], UtilityNode::Toggle { id, .. } if id == "brush"));
+    }
 }
 //#endregion 🔖WireFormatGoldenTests
 // #endregion utilities
@@ -1277,108 +1418,141 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 //#region 🔖Action
-pub use super::layout::{ActionDescriptor, StyleSpec};
+pub use super::layout::{ActionDescriptor, StyleSpec, UiPresence, UiState, UiStatus};
 //#endregion 🔖Action
 
 //#region 🔖Primitives
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiStackNode {
     pub direction: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub gap: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub padding: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub id: Option<String>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub selected: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_overlay: Option<UiDropOverlaySpec>,
     pub children: Vec<UiNode>,
 }
 
 /// 📥 Hover-state copy for a `UiStackNode`'s `drop_overlay`: shown while a drag is over the stack, ahead of `drop_action` firing on release.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiDropOverlaySpec {
     pub title: String,
     pub hint: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub accept: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTextNode {
     pub value: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub emphasize: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub data_attributes: Option<HashMap<String, String>>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiButtonNode {
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub id: Option<String>,
     pub icon_id: String,
     pub label: String,
     pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub style: Option<StyleSpec>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub disabled: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
-pub struct UiSeparatorNode {}
+pub struct UiSeparatorNode {
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiImageNode {
     pub id: String,
     pub src: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub alt: Option<String>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiInputNode {
     pub id: String,
     pub input_kind: String,
     pub value: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub placeholder: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub commit: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub min: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub max: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub step: Option<f64>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub accept: Option<String>,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSelectItem {
     pub value: String,
@@ -1386,25 +1560,34 @@ pub struct UiSelectItem {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSelectNode {
     pub id: String,
     pub value: String,
     pub items: Vec<UiSelectItem>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub placeholder: Option<String>,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiToggleNode {
     pub id: String,
     pub icon_id: String,
-    pub pressed: bool,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub text: Option<String>,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 /** @emoji 🌿 A nestable labeled container of `UiNode` children — the declarative-tree mechanism for
@@ -1414,16 +1597,22 @@ pub struct UiToggleNode {
  * `assertNoNestedTreeSections` on the TS side), a `Group` may itself appear as another `Group`'s or
  * `UiFieldNode`'s child. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiGroupNode {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     pub children: Vec<UiNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiKeyValueEntry {
     pub label: String,
@@ -1431,12 +1620,17 @@ pub struct UiKeyValueEntry {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiKeyValueNode {
     pub entries: Vec<UiKeyValueEntry>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSliderNode {
     pub id: String,
@@ -1445,11 +1639,16 @@ pub struct UiSliderNode {
     pub max: f64,
     pub step: f64,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub unit: Option<String>,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiNumberStepperNode {
     pub id: String,
@@ -1458,20 +1657,26 @@ pub struct UiNumberStepperNode {
     pub uniform: bool,
     pub on_absolute: ActionDescriptor,
     pub on_delta: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiRingNode {
     pub id: String,
     pub orb_id: String,
     pub t: f64,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub disabled: Option<bool>,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiIconSelectNode {
     pub id: String,
@@ -1479,9 +1684,13 @@ pub struct UiIconSelectNode {
     pub uniform: bool,
     pub classifier_kind: String,
     pub on_change: ActionDescriptor,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all = "camelCase")]
 pub enum UiControlNode {
     Input(UiInputNode),
@@ -1495,81 +1704,135 @@ pub enum UiControlNode {
     IconSelect(UiIconSelectNode),
 }
 
+impl UiControlNode {
+    /// 🧭 Exhaustive accessor — a new control variant fails to compile here until wired.
+    pub fn presence(&self) -> UiPresence {
+        match self {
+            UiControlNode::Input(n) => n.presence,
+            UiControlNode::Select(n) => n.presence,
+            UiControlNode::Toggle(n) => n.presence,
+            UiControlNode::Button(n) => n.presence,
+            UiControlNode::KeyValue(n) => n.presence,
+            UiControlNode::Slider(n) => n.presence,
+            UiControlNode::NumberStepper(n) => n.presence,
+            UiControlNode::Ring(n) => n.presence,
+            UiControlNode::IconSelect(n) => n.presence,
+        }
+    }
+    pub fn presence_mut(&mut self) -> &mut UiPresence {
+        match self {
+            UiControlNode::Input(n) => &mut n.presence,
+            UiControlNode::Select(n) => &mut n.presence,
+            UiControlNode::Toggle(n) => &mut n.presence,
+            UiControlNode::Button(n) => &mut n.presence,
+            UiControlNode::KeyValue(n) => &mut n.presence,
+            UiControlNode::Slider(n) => &mut n.presence,
+            UiControlNode::NumberStepper(n) => &mut n.presence,
+            UiControlNode::Ring(n) => &mut n.presence,
+            UiControlNode::IconSelect(n) => &mut n.presence,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiFieldNode {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub required: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub error: Option<String>,
     pub child: Box<UiNode>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiSectionNode {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none", alias = "title")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     pub children: Vec<UiNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeItemAction {
     pub icon_id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<String>,
     pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub reveal_on_hover: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeItemNode {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub icon_id: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub selected: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub hover_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub unhover_action: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub actions: Option<Vec<UiTreeItemAction>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub draggable: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drag_data: Option<HashMap<String, String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub items: Option<Vec<UiTreeItemNode>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub control: Option<UiControlNode>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub is_hidden: Option<bool>,
+    /// 👁️ Domain "eye toggle" flag: the row stays visible, dimmed, and clickable (to un-hide) —
+    /// this is NOT `presence.state == Hidden`, which means not rendered at all.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub dimmed: Option<bool>,
 }
 
 impl UiTreeItemNode {
@@ -1580,9 +1843,7 @@ impl UiTreeItemNode {
             label: label.into(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -1592,51 +1853,81 @@ impl UiTreeItemNode {
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         }
     }
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeSectionNode {
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     pub items: Vec<UiTreeItemNode>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeNode {
     pub sections: Vec<UiTreeSectionNode>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub loading: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub waiting: Option<bool>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub selected_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub highlighted_ids: Option<Vec<String>>,
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub selection_change: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub drop_action: Option<ActionDescriptor>,
 }
 
+/// 🖌️ Stamps `selected`/`previewed` per-item presence across every item in every section of a
+/// tree, replacing the old id-list (`selected_ids`/`highlighted_ids`) approach — the one-line
+/// migration for plugins that held id sets. `previewed` wins visually over a plain `selected` item
+/// only insofar as both are representable simultaneously (an item can be selected AND previewed).
+pub fn ui_tree_stamp_presence(
+    sections: &mut [UiTreeSectionNode],
+    selected: &std::collections::HashSet<String>,
+    previewed: &std::collections::HashSet<String>,
+) {
+    fn stamp_items(items: &mut [UiTreeItemNode], selected: &std::collections::HashSet<String>, previewed: &std::collections::HashSet<String>) {
+        for item in items {
+            item.presence.selected = selected.contains(&item.id);
+            if previewed.contains(&item.id) {
+                item.presence.state = UiState::Previewed;
+            }
+            if let Some(children) = &mut item.items {
+                stamp_items(children, selected, previewed);
+            }
+        }
+    }
+    for section in sections {
+        stamp_items(&mut section.items, selected, previewed);
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiInspectorFieldGroup {
     pub id: String,
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
     pub default_open: Option<bool>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
+    pub presence: UiPresence,
     pub fields: Vec<UiNode>,
 }
 
@@ -1734,10 +2025,12 @@ pub fn ui_inspector_readonly_field(
             max: None,
             step: None,
             accept: None,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -1764,10 +2057,12 @@ pub fn ui_inspector_stepper_field(
             uniform: mixed.uniform,
             on_absolute: action.clone(),
             on_delta: action,
+            presence: UiPresence::default(),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -1788,13 +2083,14 @@ pub fn ui_inspector_toggle_field(
         child: Box::new(UiNode::Toggle(UiToggleNode {
             id,
             icon_id: icon_id.into(),
-            pressed: mixed.pressed,
             text: None,
             on_change: action,
+            presence: UiPresence::selected(mixed.pressed),
         })),
         description: None,
         required: None,
         error: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -1819,6 +2115,7 @@ pub fn ui_inspector_vec3_group(
         id: id.clone(),
         label: label.into(),
         default_open: Some(true),
+        presence: UiPresence::default(),
         children: vec![
             ui_inspector_stepper_field(format!("{id}.x"), "X", &xs, step, axis_action("x")),
             ui_inspector_stepper_field(format!("{id}.y"), "Y", &ys, step, axis_action("y")),
@@ -1835,8 +2132,7 @@ pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
             id: group.id.clone(),
             label: Some(group.label.clone()),
             default_open: Some(group.default_open.unwrap_or(true)),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             children: group.fields.clone(),
         })
         .collect();
@@ -1850,8 +2146,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             id: section.id.clone(),
             label: section.label.clone(),
             default_open: Some(section.default_open.unwrap_or(true)),
-            loading: section.loading,
-            waiting: section.waiting,
+            presence: section.presence,
             items: section
                 .children
                 .iter()
@@ -1868,16 +2163,13 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 id: "empty".into(),
                 label: None,
                 default_open: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
                 items: vec![UiTreeItemNode {
                     id: "empty".into(),
                     label: "—".into(),
                     description: None,
                     icon_id: None,
-                    selected: None,
-                    loading: None,
-                    waiting: None,
+                    presence: UiPresence::default(),
                     default_open: None,
                     action: None,
                     hover_action: None,
@@ -1887,23 +2179,17 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     drag_data: None,
                     items: None,
                     control: None,
-                    is_hidden: None,
+                    dimmed: None,
                 }],
             }],
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         }
     } else {
         UiTreeNode {
             sections: tree_sections,
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         }
@@ -1917,9 +2203,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             label: text.value.clone(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -1929,7 +2213,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         },
         UiNode::Field(field) => {
             let description = if let UiNode::Input(input) = field.child.as_ref() {
@@ -1945,9 +2229,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 label: field.label.clone(),
                 description,
                 icon_id: None,
-                selected: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
                 default_open: None,
                 action: None,
                 hover_action: None,
@@ -1957,7 +2239,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 drag_data: None,
                 items: None,
                 control: ui_node_to_control(&field.child),
-                is_hidden: None,
+                dimmed: None,
             }
         }
         UiNode::Button(button) => UiTreeItemNode {
@@ -1965,9 +2247,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             label: button.label.clone(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -1977,7 +2257,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             drag_data: None,
             items: None,
             control: Some(UiControlNode::Button(button.clone())),
-            is_hidden: None,
+            dimmed: None,
         },
         UiNode::Input(input) => tree_control_item(input.id.clone(), UiControlNode::Input(input.clone())),
         UiNode::Select(select) => tree_control_item(select.id.clone(), UiControlNode::Select(select.clone())),
@@ -1987,9 +2267,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             label: group.label.clone(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: group.default_open,
             action: None,
             hover_action: None,
@@ -2006,7 +2284,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                     .collect(),
             ),
             control: None,
-            is_hidden: None,
+            dimmed: None,
         },
         UiNode::KeyValue(key_value) => tree_control_item(fallback_id, UiControlNode::KeyValue(key_value.clone())),
         UiNode::Slider(slider) => tree_control_item(slider.id.clone(), UiControlNode::Slider(slider.clone())),
@@ -2022,9 +2300,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             label: "—".into(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -2034,16 +2310,14 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         },
         other => UiTreeItemNode {
             id: fallback_id,
             label: format!("{other:?}"),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -2053,7 +2327,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         },
     }
 }
@@ -2064,9 +2338,7 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         label: String::new(),
         description: None,
         icon_id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         default_open: None,
         action: None,
         hover_action: None,
@@ -2076,7 +2348,7 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         drag_data: None,
         items: None,
         control: Some(control),
-        is_hidden: None,
+        dimmed: None,
     }
 }
 //#endregion 🔖InspectorHelpers
@@ -2797,6 +3069,8 @@ pub struct UiExternalSlotNode {
     pub app_id: String,
     pub body_key: String,
     pub params_json: String,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    pub presence: UiPresence,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -2809,6 +3083,8 @@ pub struct UiComponentSceneNode {
     pub pane_id: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub binding_id: Option<String>,
+    #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    pub presence: UiPresence,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub canvas_2d: Option<Canvas2dScene>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -2869,6 +3145,57 @@ pub enum UiNode {
     Image(UiImageNode),
     ComponentScene(UiComponentSceneNode),
     ExternalSlot(UiExternalSlotNode),
+}
+
+impl UiNode {
+    /// 🧭 Exhaustive presence accessor — adding a `UiNode` variant fails to compile here (and in
+    /// `presence_mut` and `paint_node`'s match) until the new element's `presence` field is wired up.
+    pub fn presence(&self) -> UiPresence {
+        match self {
+            UiNode::Stack(n) => n.presence,
+            UiNode::Text(n) => n.presence,
+            UiNode::Button(n) => n.presence,
+            UiNode::Separator(n) => n.presence,
+            UiNode::Input(n) => n.presence,
+            UiNode::Select(n) => n.presence,
+            UiNode::Toggle(n) => n.presence,
+            UiNode::KeyValue(n) => n.presence,
+            UiNode::Slider(n) => n.presence,
+            UiNode::NumberStepper(n) => n.presence,
+            UiNode::Ring(n) => n.presence,
+            UiNode::IconSelect(n) => n.presence,
+            UiNode::Field(n) => n.presence,
+            UiNode::Section(n) => n.presence,
+            UiNode::Group(n) => n.presence,
+            UiNode::Tree(n) => n.presence,
+            UiNode::Image(n) => n.presence,
+            UiNode::ComponentScene(n) => n.presence,
+            UiNode::ExternalSlot(n) => n.presence,
+        }
+    }
+    pub fn presence_mut(&mut self) -> &mut UiPresence {
+        match self {
+            UiNode::Stack(n) => &mut n.presence,
+            UiNode::Text(n) => &mut n.presence,
+            UiNode::Button(n) => &mut n.presence,
+            UiNode::Separator(n) => &mut n.presence,
+            UiNode::Input(n) => &mut n.presence,
+            UiNode::Select(n) => &mut n.presence,
+            UiNode::Toggle(n) => &mut n.presence,
+            UiNode::KeyValue(n) => &mut n.presence,
+            UiNode::Slider(n) => &mut n.presence,
+            UiNode::NumberStepper(n) => &mut n.presence,
+            UiNode::Ring(n) => &mut n.presence,
+            UiNode::IconSelect(n) => &mut n.presence,
+            UiNode::Field(n) => &mut n.presence,
+            UiNode::Section(n) => &mut n.presence,
+            UiNode::Group(n) => &mut n.presence,
+            UiNode::Tree(n) => &mut n.presence,
+            UiNode::Image(n) => &mut n.presence,
+            UiNode::ComponentScene(n) => &mut n.presence,
+            UiNode::ExternalSlot(n) => &mut n.presence,
+        }
+    }
 }
 
 impl NodeGraphScene {
@@ -2992,9 +3319,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         gap: Some("standard".into()),
         padding: None,
         id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         children,
         drop_action: None,
@@ -3524,9 +3849,7 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
         gap: Some("standard".into()),
         padding: Some("standard".into()),
         id: Some(id.into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3544,9 +3867,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
             label: "Retry".into(),
             action: retry,
             style: None,
-            disabled: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
         }));
     }
     UiNode::Stack(UiStackNode {
@@ -3554,9 +3875,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
         gap: Some("standard".into()),
         padding: Some("standard".into()),
         id: Some(id.into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3584,9 +3903,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
         gap: Some("standard".into()),
         padding: Some("standard".into()),
         id: Some("recovery.panel".into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3599,9 +3916,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 label: restart_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.restartApp".into(), args: args.clone() },
                 style: None,
-                disabled: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.disablePlugin".into()),
@@ -3609,9 +3924,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 label: disable_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.disablePlugin".into(), args: args.clone() },
                 style: None,
-                disabled: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.showDiagnostics".into()),
@@ -3619,9 +3932,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 label: diagnostics_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.showDiagnostics".into(), args },
                 style: None,
-                disabled: None,
-                loading: None,
-                waiting: None,
+                presence: UiPresence::default(),
             }),
         ],
     })
@@ -3635,9 +3946,7 @@ pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&st
         gap: Some("standard".into()),
         padding: Some("standard".into()),
         id: Some(id.into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: Some(drop_action),
         drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into) }),
@@ -3668,9 +3977,7 @@ mod ui_node_wire_format_tests {
             gap: Some("md".into()),
             padding: None,
             id: Some("root".into()),
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -3686,9 +3993,7 @@ mod ui_node_wire_format_tests {
                     label: "Save".into(),
                     action: act("save"),
                     style: None,
-                    disabled: Some(false),
-                    loading: None,
-                    waiting: None,
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Separator(UiSeparatorNode {}),
                 UiNode::Input(UiInputNode {
@@ -3702,6 +4007,7 @@ mod ui_node_wire_format_tests {
                     step: None,
                     accept: None,
                     on_change: act("setValue"),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Select(UiSelectNode {
                     id: "sel1".into(),
@@ -3712,26 +4018,30 @@ mod ui_node_wire_format_tests {
                     ],
                     placeholder: None,
                     on_change: act("selectChange"),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Toggle(UiToggleNode {
                     id: "tog1".into(),
                     icon_id: "icon.bold".into(),
-                    pressed: true,
                     text: None,
                     on_change: act("toggle"),
+                    presence: UiPresence::selected(true),
                 }),
                 UiNode::Group(UiGroupNode {
                     id: "grp1".into(),
                     label: "Group".into(),
                     default_open: Some(true),
+                    presence: UiPresence::default(),
                     children: vec![UiNode::Text(UiTextNode {
                         value: "child".into(),
                         emphasize: None,
                         data_attributes: None,
+                        presence: UiPresence::default(),
                     })],
                 }),
                 UiNode::KeyValue(UiKeyValueNode {
                     entries: vec![UiKeyValueEntry { label: "K".into(), value: "V".into() }],
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Slider(UiSliderNode {
                     id: "sl1".into(),
@@ -3741,6 +4051,7 @@ mod ui_node_wire_format_tests {
                     step: 0.1,
                     unit: Some("%".into()),
                     on_change: act("sliderChange"),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::NumberStepper(UiNumberStepperNode {
                     id: "num1".into(),
@@ -3749,12 +4060,13 @@ mod ui_node_wire_format_tests {
                     uniform: true,
                     on_absolute: act("setAbs"),
                     on_delta: act("setDelta"),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Ring(UiRingNode {
                     id: "ring1".into(),
                     orb_id: "orb1".into(),
                     t: 0.25,
-                    disabled: None,
+                    presence: UiPresence::default(),
                     on_change: act("ringChange"),
                 }),
                 UiNode::IconSelect(UiIconSelectNode {
@@ -3763,6 +4075,7 @@ mod ui_node_wire_format_tests {
                     uniform: true,
                     classifier_kind: "icon".into(),
                     on_change: act("iconChange"),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Field(UiFieldNode {
                     id: "field1".into(),
@@ -3774,14 +4087,15 @@ mod ui_node_wire_format_tests {
                         value: "child".into(),
                         emphasize: None,
                         data_attributes: None,
+                        presence: UiPresence::default(),
                     })),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::Section(UiSectionNode {
                     id: "sec1".into(),
                     label: Some("Section".into()),
                     default_open: Some(true),
-                    loading: None,
-                    waiting: None,
+                    presence: UiPresence::default(),
                     children: vec![],
                 }),
                 UiNode::Tree(UiTreeNode {
@@ -3789,14 +4103,14 @@ mod ui_node_wire_format_tests {
                         id: "treesec1".into(),
                         label: Some("Items".into()),
                         default_open: Some(true),
-                        loading: None,
-                        waiting: None,
-                        items: vec![UiTreeItemNode::base("item1", "Item 1")],
+                        presence: UiPresence::default(),
+                        items: vec![{
+                            let mut item = UiTreeItemNode::base("item1", "Item 1");
+                            item.presence.selected = true;
+                            item
+                        }],
                     }],
-                    loading: None,
-                    waiting: None,
-                    selected_ids: Some(vec!["item1".into()]),
-                    highlighted_ids: None,
+                    presence: UiPresence::default(),
                     selection_change: None,
                     drop_action: None,
                 }),
@@ -3804,6 +4118,7 @@ mod ui_node_wire_format_tests {
                     id: "img1".into(),
                     src: "icon.png".into(),
                     alt: Some("alt text".into()),
+                    presence: UiPresence::default(),
                 }),
                 UiNode::ComponentScene(UiComponentSceneNode {
                     surface_id: "surf1".into(),
@@ -3811,6 +4126,7 @@ mod ui_node_wire_format_tests {
                     component_kind: SurfaceKind::World3d,
                     pane_id: None,
                     binding_id: None,
+                    presence: UiPresence::default(),
                     canvas_2d: None,
                     world_3d: Some(World3dScene {
                         camera_json: "{}".into(),
@@ -3853,12 +4169,13 @@ mod ui_node_wire_format_tests {
                     app_id: "app1".into(),
                     body_key: "body1".into(),
                     params_json: "{}".into(),
+                    presence: UiPresence::default(),
                 }),
             ],
         })
     }
 
-    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"},\"disabled\":false},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\"}]}],\"selectedIds\":[\"item1\"]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
     #[test]
     fn ui_node_tree_serializes_to_golden_json() {
@@ -3872,32 +4189,102 @@ mod ui_node_wire_format_tests {
         assert_eq!(roundtripped, node);
     }
 
-    /// 🌀 `loading` follows the same `Option<bool>` skip-if-none convention as `selected`: absent when unset, round-trips when set.
+    /// 🌀 `presence.status` follows the same skip-if-default convention as `presence.selected`: the whole `presence` key is absent when fully default, and round-trips when set.
     #[test]
-    fn ui_tree_item_loading_field_skips_when_none_and_roundtrips_when_set() {
+    fn ui_tree_item_loading_status_skips_when_default_and_roundtrips_when_set() {
         let idle = UiTreeItemNode::base("idle", "Idle");
-        assert!(!serde_json::to_string(&idle).unwrap().contains("loading"));
+        assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
         let mut loading = UiTreeItemNode::base("loading1", "Loading");
-        loading.loading = Some(true);
+        loading.presence.status = UiStatus::Loading;
         let json = serde_json::to_string(&loading).unwrap();
-        assert!(json.contains("\"loading\":true"));
+        assert!(json.contains("\"presence\":{\"status\":\"loading\"}"));
         let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, loading);
     }
 
-    /// 🌀 `waiting` follows the same `Option<bool>` skip-if-none convention as `loading`: absent when unset, round-trips when set.
+    /// 🌀 `waiting` follows the same skip-if-default convention as `loading`: absent when unset, round-trips when set.
     #[test]
-    fn ui_tree_item_waiting_field_skips_when_none_and_roundtrips_when_set() {
+    fn ui_tree_item_waiting_status_skips_when_default_and_roundtrips_when_set() {
         let idle = UiTreeItemNode::base("idle", "Idle");
-        assert!(!serde_json::to_string(&idle).unwrap().contains("waiting"));
+        assert!(!serde_json::to_string(&idle).unwrap().contains("presence"));
 
         let mut waiting = UiTreeItemNode::base("waiting1", "Waiting");
-        waiting.waiting = Some(true);
+        waiting.presence.status = UiStatus::Waiting;
         let json = serde_json::to_string(&waiting).unwrap();
-        assert!(json.contains("\"waiting\":true"));
+        assert!(json.contains("\"presence\":{\"status\":\"waiting\"}"));
         let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, waiting);
+    }
+
+    /// 🚫 `presence.state == Hidden` short-circuits everything else — round-trips like any other state.
+    #[test]
+    fn ui_tree_item_hidden_state_roundtrips() {
+        let mut hidden = UiTreeItemNode::base("hidden1", "Hidden");
+        hidden.presence.state = UiState::Hidden;
+        assert!(!hidden.presence.visible());
+        let json = serde_json::to_string(&hidden).unwrap();
+        assert!(json.contains("\"presence\":{\"state\":\"hidden\"}"));
+        let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, hidden);
+    }
+
+    /// ✨ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
+    /// belt-and-braces check so a future variant can't silently drop its shared state on the wire.
+    #[test]
+    fn every_ui_node_variant_serializes_a_non_default_presence() {
+        fn assert_presence_serializes(mut node: UiNode, label: &str) {
+            *node.presence_mut() = UiPresence::selected(true);
+            let json = serde_json::to_string(&node).unwrap();
+            assert!(json.contains("\"presence\""), "{label} did not serialize a non-default presence: {json}");
+        }
+        assert_presence_serializes(UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
+        assert_presence_serializes(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
+        assert_presence_serializes(UiNode::Button(UiButtonNode { id: None, icon_id: "i".into(), label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
+        assert_presence_serializes(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }), "Separator");
+        assert_presence_serializes(UiNode::Input(UiInputNode { id: "i".into(), input_kind: "text".into(), value: "v".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: act("a"), presence: UiPresence::default() }), "Input");
+        assert_presence_serializes(UiNode::Select(UiSelectNode { id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
+        assert_presence_serializes(UiNode::Toggle(UiToggleNode { id: "i".into(), icon_id: "i".into(), text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
+        assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { entries: vec![], presence: UiPresence::default() }), "KeyValue");
+        assert_presence_serializes(UiNode::Slider(UiSliderNode { id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
+        assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
+        assert_presence_serializes(UiNode::Ring(UiRingNode { id: "i".into(), orb_id: "o".into(), t: 0.0, on_change: act("a"), presence: UiPresence::default() }), "Ring");
+        assert_presence_serializes(UiNode::IconSelect(UiIconSelectNode { id: "i".into(), value: "v".into(), uniform: true, classifier_kind: "icon".into(), on_change: act("a"), presence: UiPresence::default() }), "IconSelect");
+        assert_presence_serializes(UiNode::Field(UiFieldNode { id: "i".into(), label: "l".into(), description: None, required: None, error: None, child: Box::new(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })), presence: UiPresence::default() }), "Field");
+        assert_presence_serializes(UiNode::Section(UiSectionNode { id: "i".into(), label: None, default_open: None, presence: UiPresence::default(), children: vec![] }), "Section");
+        assert_presence_serializes(UiNode::Group(UiGroupNode { id: "i".into(), label: "l".into(), default_open: None, presence: UiPresence::default(), children: vec![] }), "Group");
+        assert_presence_serializes(UiNode::Tree(UiTreeNode { sections: vec![], presence: UiPresence::default(), selection_change: None, drop_action: None }), "Tree");
+        assert_presence_serializes(UiNode::Image(UiImageNode { id: "i".into(), src: "s".into(), alt: None, presence: UiPresence::default() }), "Image");
+        assert_presence_serializes(
+            UiNode::ExternalSlot(UiExternalSlotNode { plugin_id: "p".into(), app_id: "a".into(), body_key: "b".into(), params_json: "{}".into(), presence: UiPresence::default() }),
+            "ExternalSlot",
+        );
+        assert_presence_serializes(
+            UiNode::ComponentScene(UiComponentSceneNode {
+                surface_id: "s".into(),
+                controller_id: "c".into(),
+                component_kind: SurfaceKind::Canvas2d,
+                pane_id: None,
+                binding_id: None,
+                presence: UiPresence::default(),
+                canvas_2d: None,
+                world_3d: None,
+                node_graph: None,
+                text_editor: None,
+                table: None,
+                paint_2d: None,
+                virtual_file_system: None,
+                tiled_map: None,
+                board2d: None,
+                icon_render: None,
+                ink_canvas: None,
+                graph_timeline: None,
+                block_list: None,
+                diff_view: None,
+                event_feed: None,
+            }),
+            "ComponentScene",
+        );
     }
 
     /// ☁️ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
@@ -4668,9 +5055,7 @@ fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
         label: item.label.clone(),
         action: with_item_value_arg(&select.on_change, &item.value),
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     })
 }
 
@@ -4697,9 +5082,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         gap: None,
         padding: None,
         id: Some(section.id.clone()),
-        selected: None,
-        loading: section.loading,
-        waiting: section.waiting,
+        presence: section.presence,
         activate: None,
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
@@ -4707,16 +5090,15 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
     })
 }
 
-/// 🌳 Synthesizes one retained `Stack` row per `Tree` item, keyed by `item.id`. Carries what the
-/// existing `UiNode` vocabulary already has a home for — `selected` (own flag OR membership in
-/// `tree_node.selected_ids`, matching `paint::paint_tree_item`'s own union of both sources),
-/// `loading`, and `activate` (the row's click `action`) — as a `UiStackNode`'s own fields, plus its
-/// embedded `control` (via `ui_control_to_node`), trailing `actions` (via `tree_item_action_row`), and
-/// nested `items` (recursively) as retained children. `hover_action`/`unhover_action`/`draggable`/
-/// `drag_data` have no matching `UiStackNode` field to carry them structurally — a later
-/// events/interaction milestone re-derives those straight from this row's key (`item.id`) against the
-/// parent `Tree` node's still-fully-intact `spec.0` (reconcile never drops fields, only clones them
-/// into `WidgetSpec`), the same way `paint_tree_item` already reads `tree_node.selected_ids` today.
+/// 🌳 Synthesizes one retained `Stack` row per `Tree` item, keyed by `item.id`. Carries the item's own
+/// `presence` (already the single source of truth for selected/previewed/status — no more union with
+/// a tree-level id list) and `activate` (the row's click `action`) as a `UiStackNode`'s own fields,
+/// plus its embedded `control` (via `ui_control_to_node`), trailing `actions` (via
+/// `tree_item_action_row`), and nested `items` (recursively) as retained children.
+/// `hover_action`/`unhover_action`/`draggable`/`drag_data` have no matching `UiStackNode` field to
+/// carry them structurally — a later events/interaction milestone re-derives those straight from this
+/// row's key (`item.id`) against the parent `Tree` node's still-fully-intact `spec.0` (reconcile never
+/// drops fields, only clones them into `WidgetSpec`).
 fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     let mut children: Vec<UiNode> = Vec::new();
     if let Some(control) = &item.control {
@@ -4728,15 +5110,12 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
     for nested in item.items.iter().flatten() {
         children.push(tree_item_row(tree_node, nested));
     }
-    let selected = item.selected.unwrap_or(false) || tree_node.selected_ids.as_deref().unwrap_or(&[]).iter().any(|id| id == &item.id);
     UiNode::Stack(UiStackNode {
         direction: "vertical".into(),
         gap: None,
         padding: None,
         id: Some(item.id.clone()),
-        selected: Some(selected),
-        loading: item.loading,
-        waiting: item.waiting,
+        presence: item.presence,
         activate: item.action.clone(),
         drop_action: None,
         drop_overlay: None,
@@ -4756,9 +5135,7 @@ fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
         label: action.label.clone().unwrap_or_default(),
         action: action.action.clone(),
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     })
 }
 //#endregion 🔖CompositeExpansion
@@ -4923,9 +5300,7 @@ mod tests {
             label: label.into(),
             action: action(),
             style: None,
-            disabled: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
         })
     }
 
@@ -4935,9 +5310,7 @@ mod tests {
             gap: None,
             padding: None,
             id: Some(id.into()),
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -5047,9 +5420,7 @@ mod tests {
             label: label.into(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -5059,12 +5430,16 @@ mod tests {
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         }
     }
 
-    fn tree_ui(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
+    fn tree_ui(mut sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
+        if let Some(ids) = selected_ids {
+            let selected: std::collections::HashSet<String> = ids.into_iter().collect();
+            ui_tree_stamp_presence(&mut sections, &selected, &std::collections::HashSet::new());
+        }
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
     }
 
     #[test]
@@ -5109,7 +5484,7 @@ mod tests {
         let mut tree = UiTree::new();
         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent") };
         let ui = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![nested] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![nested] }],
             Some(vec!["parent".into()]),
         );
         tree.apply_tree(&ui);
@@ -5124,7 +5499,7 @@ mod tests {
         let parent_node = tree.node(items[0]).unwrap();
         assert_eq!(parent_node.key, NodeKey::Explicit("parent".into()));
         match &parent_node.spec.0 {
-            UiNode::Stack(stack) => assert_eq!(stack.selected, Some(true), "item.selected unset but its id is in tree_node.selected_ids"),
+            UiNode::Stack(stack) => assert!(stack.presence.selected, "item.presence.selected unset but its id was stamped selected"),
             other => panic!("expected a synthesized Stack row, got {other:?}"),
         }
 
@@ -5137,11 +5512,11 @@ mod tests {
     fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         let mut tree = UiTree::new();
         let item = UiTreeItemNode {
-            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: "icon".into(), pressed: true, text: None, on_change: action() })),
+            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: "icon".into(), text: None, on_change: action(), presence: UiPresence::selected(true) })),
             actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
             ..tree_item("leaf", "Leaf")
         };
-        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }], None);
+        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
         tree.apply_tree(&ui);
         let root = tree.root.unwrap();
         let section = tree.children(root).next().unwrap();
@@ -5165,7 +5540,7 @@ mod tests {
 
         let mut tree = UiTree::new();
         let tree_ui_value = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![tree_item("a", "A")] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![tree_item("a", "A")] }],
             None,
         );
         tree.apply_tree(&tree_ui_value);
@@ -5659,9 +6034,7 @@ mod tests {
             gap: None,
             padding: None,
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -5709,6 +6082,10 @@ pub const KIND_RASTER: f32 = 5.0;
 pub const KIND_LOADING_BORDER: f32 = 6.0;
 /// 🌀 Dashed, slow-spinning + gently pulsing waiting ring (see `UiInstance::waiting_border` and `UI_SHADER`'s `kind == 7` branch).
 pub const KIND_WAITING_BORDER: f32 = 7.0;
+/// ✅ Solid, static at-bounds ring for `UiStatus::Finished` (see `UiInstance::finished_border` and `UI_SHADER`'s `kind == 8` branch) — no motion, distinguishing it from loading/waiting.
+pub const KIND_FINISHED_BORDER: f32 = 8.0;
+/// 💫 Raised-cosine breathing pulse ring for `UiState::Introducing` (see `UiInstance::introducing_border` and `UI_SHADER`'s `kind == 9` branch) — the single shared implementation of the introduction-tour pulse, driven by `globals._pad.x`.
+pub const KIND_INTRODUCING_BORDER: f32 = 9.0;
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
 #[repr(C)]
@@ -5946,6 +6323,26 @@ impl UiInstance {
         }
     }
 
+    /// ✅ Solid, static at-bounds ring for `UiStatus::Finished` in `color` — no animation.
+    pub fn finished_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+        Self {
+            rect,
+            color: [color.r, color.g, color.b, color.a],
+            params: [radius, border, KIND_FINISHED_BORDER, 0.0],
+            uv_rect: [0.0, 0.0, 1.0, 1.0],
+        }
+    }
+
+    /// 💫 Raised-cosine breathing pulse ring for `UiState::Introducing` in `color`; phase comes from `globals._pad.x` in `UI_SHADER`.
+    pub fn introducing_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+        Self {
+            rect,
+            color: [color.r, color.g, color.b, color.a],
+            params: [radius, border, KIND_INTRODUCING_BORDER, 0.0],
+            uv_rect: [0.0, 0.0, 1.0, 1.0],
+        }
+    }
+
     pub fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
         Self {
             rect,
@@ -6131,6 +6528,20 @@ impl DrawList {
         self.active_layer()
             .ui_instances
             .push(UiInstance::waiting_border(rect, color, radius, stroke));
+    }
+
+    /// ✅ Solid, static at-bounds ring around `rect`, in `color` — `UiStatus::Finished`.
+    pub fn push_finished_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::finished_border(rect, color, radius, stroke));
+    }
+
+    /// 💫 Raised-cosine breathing pulse ring around `rect`, in `color` — `UiState::Introducing`.
+    pub fn push_introducing_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::introducing_border(rect, color, radius, stroke));
     }
 
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) -> usize {
@@ -10393,9 +10804,7 @@ mod tests {
             gap: Some("none".into()),
             padding: Some("none".into()),
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -10646,6 +11055,30 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let ring_alpha = max(dash, 0.2);
         let pulse = 0.85 - 0.15 * cos(two_pi * phase);
         let alpha = border_alpha * ring_alpha * pulse * in.color.a;
+        return vec4<f32>(in.color.rgb, alpha);
+    }
+    if (kind == 8) {
+        let half = in.size * 0.5;
+        let p = in.local - half;
+        let radius = in.params.x;
+        let border = in.params.y;
+        let dist = sdf_rounded_rect(p, half, radius);
+        let border_alpha = 1.0 - smoothstep(border - 1.0, border, abs(dist));
+        let alpha = border_alpha * in.color.a;
+        return vec4<f32>(in.color.rgb, alpha);
+    }
+    if (kind == 9) {
+        let half = in.size * 0.5;
+        let p = in.local - half;
+        let radius = in.params.x;
+        let border = in.params.y;
+        let dist = sdf_rounded_rect(p, half, radius);
+        let border_alpha = 1.0 - smoothstep(border - 1.0, border, abs(dist));
+        let two_pi = 6.28318530718;
+        let duration = 1.6;
+        let phase = globals._pad.x / duration;
+        let pulse = 0.5 - 0.5 * cos(two_pi * phase);
+        let alpha = border_alpha * pulse * in.color.a;
         return vec4<f32>(in.color.rgb, alpha);
     }
     if (kind == 2) {
@@ -12097,21 +12530,58 @@ fn sync_tree_item_layout(tree: &mut UiTree, parent: NodeId, item: &UiTreeItemNod
 /// absolute position of *this node's parent's* content-box origin (so `origin + node.layout.{x,y}`
 /// is this node's own absolute top-left, matching taffy's parent-relative `Layout::location`).
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
+/// 🧭 The one shared presence overlay every `UiNode` variant gets for free, drawn centrally by
+/// `paint_node` after that variant's own paint: `previewed`/`disabled` fills underneath nothing extra
+/// (disabled reads as a scrim so it composes over whatever the variant already drew), a `status` ring
+/// (loading spin / waiting dash / finished solid — mutually exclusive, `idle` draws nothing), an
+/// outset accent ring for `selected`, and a breathing pulse ring for `introducing`. `hover` has no
+/// dedicated draw call here — it's folded into `flags` before dispatch (see `paint_node`) so every
+/// variant's own hover-aware fill (already reading `NodeFlags::HOVERED`) picks it up for free.
+fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: UiPresence) {
+    if presence.state == UiState::Disabled {
+        draw.push_solid([bounds.x, bounds.y, bounds.w, bounds.h], theme.panel.with_alpha(0.35));
+    }
+    let ring_color = if presence.selected { theme.selected } else { theme.border_normal };
+    match presence.status {
+        UiStatus::Loading => paint_loading_border(draw, bounds, ring_color, theme),
+        UiStatus::Waiting => paint_waiting_border(draw, bounds, ring_color, theme),
+        UiStatus::Finished => draw.push_finished_border([bounds.x, bounds.y, bounds.w, bounds.h], ring_color, theme.border_radius, theme.stroke_hairline),
+        UiStatus::Idle => {}
+    }
+    if presence.selected {
+        let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
+        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
+    } else if presence.state == UiState::Previewed {
+        // 🔍 Inset (not outset, unlike `selected`'s ring) hairline so the two stay distinguishable
+        // when composed — a previewed-and-selected element still reads as selected via the outset ring.
+        push_chrome_border(draw, bounds, theme.stroke_hairline, theme.accent, true, true, true, true);
+    }
+    if presence.state == UiState::Introducing {
+        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+    }
+}
+
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
+    let presence = node.spec.0.presence();
+    if !presence.visible() {
+        return;
+    }
     let abs_x = origin_x + node.layout.x;
     let abs_y = origin_y + node.layout.y;
     let bounds = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
-    let flags = node.flags;
+    // 🖱️ Authored `presence.hover` (default false) composes with live pointer hover: every variant's
+    // own paint already reads `NodeFlags::HOVERED` for its hover-aware fill, so folding the authored
+    // flag in here — suppressed while disabled, matching `events::EventRouter`'s own suppression —
+    // makes it effective everywhere for free, with no per-variant paint changes.
+    let mut flags = node.flags;
+    if presence.state != UiState::Disabled {
+        flags.set(NodeFlags::HOVERED, flags.contains(NodeFlags::HOVERED) || presence.hover);
+    }
     match &node.spec.0 {
         UiNode::Stack(stack) => {
             paint_stack_frame(stack, bounds, flags, theme, draw);
             paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
-            if stack.loading.unwrap_or(false) {
-                paint_loading_border(draw, bounds, theme.border_normal, theme);
-            } else if stack.waiting.unwrap_or(false) {
-                paint_waiting_border(draw, bounds, theme.border_normal, theme);
-            }
         }
         UiNode::Text(text) => paint_text(text, bounds, theme, atlas, draw),
         UiNode::Separator(_) => paint_separator(bounds, theme, draw),
@@ -12131,11 +12601,6 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
         UiNode::Section(section) => {
             paint_section(section, bounds, theme, atlas, icons, draw);
             paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
-            if section.loading.unwrap_or(false) {
-                paint_loading_border(draw, bounds, theme.border_normal, theme);
-            } else if section.waiting.unwrap_or(false) {
-                paint_waiting_border(draw, bounds, theme.border_normal, theme);
-            }
         }
         UiNode::Group(group) => {
             paint_group(group, bounds, theme, atlas, icons, draw);
@@ -12146,6 +12611,7 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
         UiNode::ComponentScene(scene) => paint_component_scene(scene, bounds, theme, draw),
         UiNode::ExternalSlot(slot) => paint_external_slot(slot, bounds, theme, atlas, draw),
     }
+    presence_overlay(draw, bounds, theme, presence);
 }
 
 /// 🌀 Shared "this node is loading" affordance for every `UiNode` kind that carries a
@@ -12184,18 +12650,12 @@ fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &
 /// `events`/cursor-derivation, not drawn here.
 fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme: &Theme, draw: &mut DrawList) {
     let activatable = stack.activate.is_some();
-    let selected = stack.selected.unwrap_or(false);
-    if !activatable && !selected {
+    if !activatable {
         return;
     }
-    let hovered = activatable && flags.contains(NodeFlags::HOVERED);
-    let bg = if activatable { if hovered { theme.button_hover } else { theme.panel } } else { Rgba::new(0.0, 0.0, 0.0, 0.0) };
-    let border = if selected { theme.accent } else { theme.border_normal };
-    push_control_border(draw, bounds, theme, border, bg);
-    if selected {
-        let ring = Rect::new(bounds.x - 1.0, bounds.y - 1.0, bounds.w + 2.0, bounds.h + 2.0);
-        push_chrome_border(draw, ring, theme.stroke_hairline, theme.accent, true, true, true, true);
-    }
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    let bg = if hovered { theme.button_hover } else { theme.panel };
+    push_control_border(draw, bounds, theme, theme.border_normal, bg);
 }
 
 /// 🧱 `Stack`'s own paint (beyond `paint_node`'s separate `paint_stack_frame` call for its
@@ -12235,16 +12695,11 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     // be hovered — `widgets::render_button` has no `disabled` concept at all (see this region's own
     // doc comment on why `widgets` is an incomplete reference for this specific fixture), so this is
     // an independent, `UiButtonNode.disabled`-driven fix rather than a widgets port.
-    let disabled = node.disabled.unwrap_or(false);
+    let disabled = node.presence.state == UiState::Disabled;
     let hovered = !disabled && flags.contains(NodeFlags::HOVERED);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
     push_control_border(draw, bounds, theme, dim(theme.border_normal), bg);
-    if node.loading.unwrap_or(false) {
-        paint_loading_border(draw, bounds, theme.border_normal, theme);
-    } else if node.waiting.unwrap_or(false) {
-        paint_waiting_border(draw, bounds, theme.border_normal, theme);
-    }
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id.is_empty() { node.label.as_str() } else { node.icon_id.as_str() };
     if let Some(icons) = icons {
@@ -12313,18 +12768,19 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
 }
 
 fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+    let pressed = node.presence.selected;
     let hovered = flags.contains(NodeFlags::HOVERED);
-    let bg = item_bg(theme, node.pressed, hovered);
+    let bg = item_bg(theme, pressed, hovered);
     push_control_border(draw, bounds, theme, theme.border_normal, bg);
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
         if icons.icon_uv(&node.icon_id).is_some() {
-            push_icon(draw, icons, &node.icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, node.pressed, hovered));
+            push_icon(draw, icons, &node.icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
             content_x += ICON_TINY + theme.gap_standard;
         }
     }
     if let Some(text) = &node.text {
-        draw_text_on(draw, atlas, text, content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, node.pressed, hovered));
+        draw_text_on(draw, atlas, text, content_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, item_text(theme, pressed, hovered));
     }
 }
 
@@ -12406,7 +12862,7 @@ fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawLis
     for window in points.windows(2) {
         draw.push_line(window[0][0], window[0][1], window[1][0], window[1][1], theme.separator, 2.0);
     }
-    let disabled = node.disabled.unwrap_or(false);
+    let disabled = node.presence.state == UiState::Disabled;
     let knob_angle = std::f32::consts::TAU * node.t as f32;
     let kx = cx + knob_angle.cos() * radius;
     let ky = cy + knob_angle.sin() * radius;
@@ -12500,11 +12956,8 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
         }
     }
     draw.pop_scissor();
-    if node.loading.unwrap_or(false) {
-        paint_loading_border(draw, bounds, theme.border_normal, theme);
-    } else if node.waiting.unwrap_or(false) {
-        paint_waiting_border(draw, bounds, theme.border_normal, theme);
-    }
+    // 🧭 Status/selected/introducing rings for the whole `Tree` are drawn once, centrally, by
+    // `paint_node`'s shared `presence_overlay` — not duplicated here.
 }
 
 /// 🌳 Recursive row painter for one `Tree` item (and, if expanded, its nested `items`). Ports every
@@ -12529,23 +12982,27 @@ fn paint_tree_item(
     draw: &mut DrawList,
     is_last_at_level: &[bool],
 ) -> f32 {
-    if item.is_hidden.unwrap_or(false) {
+    if !item.presence.visible() {
         return y;
     }
     let row = Rect::new(x, y, width, TREE_ROW_HEIGHT);
-    let selected = tree_node.selected_ids.as_deref().unwrap_or(&[]).iter().any(|id| id == &item.id);
-    let highlighted = tree_node.highlighted_ids.as_deref().unwrap_or(&[]).iter().any(|id| id == &item.id);
+    let selected = item.presence.selected;
+    let previewed = item.presence.state == UiState::Previewed;
+    let dimmed = item.dimmed.unwrap_or(false) || item.presence.state == UiState::Disabled;
     if selected {
         draw.push_rounded([row.x, row.y, row.w, row.h], theme.selected, theme.border_radius);
-    } else if highlighted {
+    } else if previewed {
         draw.push_rounded([row.x, row.y, row.w, row.h], theme.row_hover, theme.border_radius);
     }
-    if item.loading.unwrap_or(false) {
-        let ring_color = if selected { theme.selected } else { theme.border_normal };
-        paint_loading_border(draw, row, ring_color, theme);
-    } else if item.waiting.unwrap_or(false) {
-        let ring_color = if selected { theme.selected } else { theme.border_normal };
-        paint_waiting_border(draw, row, ring_color, theme);
+    let ring_color = if selected { theme.selected } else { theme.border_normal };
+    match item.presence.status {
+        UiStatus::Loading => paint_loading_border(draw, row, ring_color, theme),
+        UiStatus::Waiting => paint_waiting_border(draw, row, ring_color, theme),
+        UiStatus::Finished => draw.push_finished_border([row.x, row.y, row.w, row.h], ring_color, theme.border_radius, theme.stroke_hairline),
+        UiStatus::Idle => {}
+    }
+    if item.presence.state == UiState::Introducing {
+        draw.push_introducing_border([row.x, row.y, row.w, row.h], theme.accent, theme.border_radius, theme.stroke_hairline);
     }
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
@@ -12556,9 +13013,12 @@ fn paint_tree_item(
             push_icon(draw, icons, chevron, indent - TREE_TOGGLE_WIDTH, row.y + (TREE_ROW_HEIGHT - ICON_TINY) * 0.5, ICON_TINY, theme.text_element);
         }
     }
-    // 🎨 `widgets::render_tree_item`'s `text_color`: selected/highlighted rows use `active_foreground`
-    // for both icon tint and label (previously this always used `text_element`/`theme.text`).
-    let text_color = if selected || highlighted { theme.active_foreground } else { theme.text_element };
+    // 🎨 `widgets::render_tree_item`'s `text_color`: selected/previewed rows use `active_foreground`
+    // for both icon tint and label (previously this always used `text_element`/`theme.text`);
+    // `dimmed` (the eye-toggle "hidden in scene" domain flag, or `presence.state == Disabled`) halves
+    // its alpha without skipping the row — it stays visible and clickable to un-hide/re-enable.
+    let text_color = if selected || previewed { theme.active_foreground } else { theme.text_element };
+    let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
     if let (Some(icons), Some(icon_id)) = (icons, item.icon_id.as_deref()) {
         push_icon(draw, icons, icon_id, indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
     }
@@ -12694,9 +13154,7 @@ mod tests {
             gap: Some("none".into()),
             padding: Some("none".into()),
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -12711,9 +13169,7 @@ mod tests {
             label: id.into(),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
-            disabled: None,
-            loading: Some(true),
-            waiting: None,
+            presence: UiPresence::status(UiStatus::Loading),
         })
     }
 
@@ -12724,22 +13180,7 @@ mod tests {
             label: id.into(),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
-            disabled: None,
-            loading: None,
-            waiting: Some(true),
-        })
-    }
-
-    fn loading_and_waiting_button(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode {
-            id: Some(id.into()),
-            icon_id: String::new(),
-            label: id.into(),
-            action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
-            style: None,
-            disabled: None,
-            loading: Some(true),
-            waiting: Some(true),
+            presence: UiPresence::status(UiStatus::Waiting),
         })
     }
 
@@ -12829,24 +13270,15 @@ mod tests {
         assert!(has_waiting_border, "waiting button should emit a KIND_WAITING_BORDER instance");
     }
 
-    #[test]
-    fn painting_a_loading_and_waiting_button_prefers_the_loading_border() {
-        let (mut tree, root, theme, mut atlas) = setup(&loading_and_waiting_button("save"));
-        let mut draw = DrawList::default();
-
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
-
-        let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
-        assert!(instances.iter().any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01), "loading should win when both flags are set");
-        assert!(!instances.iter().any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01), "waiting border must not also be emitted when loading is set");
-    }
+    // 🚫 `painting_a_loading_and_waiting_button_prefers_the_loading_border` deleted: `status` is now a
+    // single `UiStatus` enum, so "loading and waiting both set" is unrepresentable — which is the point.
 
     //#region 🔖FidelityFixes
     // 🩹 One test per fidelity gap this pass closed (see `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: Some(disabled), loading: None, waiting: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled) })
     }
 
     #[test]
@@ -12865,7 +13297,7 @@ mod tests {
     }
 
     fn loading_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), loading: Some(true), waiting: None, children: vec![text("child")] })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Loading), children: vec![text("child")] })
     }
 
     #[test]
@@ -12880,7 +13312,7 @@ mod tests {
     }
 
     fn waiting_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), loading: None, waiting: Some(true), children: vec![text("child")] })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), presence: UiPresence::status(UiStatus::Waiting), children: vec![text("child")] })
     }
 
     #[test]
@@ -12895,7 +13327,7 @@ mod tests {
     }
 
     fn loading_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: Some(true), waiting: None, activate: None, drop_action: None, drop_overlay: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Loading), activate: None, drop_action: None, drop_overlay: None, children })
     }
 
     #[test]
@@ -12910,7 +13342,7 @@ mod tests {
     }
 
     fn waiting_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, waiting: Some(true), activate: None, drop_action: None, drop_overlay: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, presence: UiPresence::status(UiStatus::Waiting), activate: None, drop_action: None, drop_overlay: None, children })
     }
 
     #[test]
@@ -12926,11 +13358,8 @@ mod tests {
 
     fn loading_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item")] }],
-            loading: Some(true),
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            presence: UiPresence::status(UiStatus::Loading),
             selection_change: None,
             drop_action: None,
         })
@@ -12938,11 +13367,8 @@ mod tests {
 
     fn waiting_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item")] }],
-            loading: None,
-            waiting: Some(true),
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            presence: UiPresence::status(UiStatus::Waiting),
             selection_change: None,
             drop_action: None,
         })
@@ -13048,11 +13474,8 @@ mod tests {
         item.description = Some("desc".into());
         item.actions = Some(vec![UiTreeItemAction { icon_id: "star".into(), label: None, action: action(), reveal_on_hover: Some(false) }]);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }],
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         })
@@ -13060,11 +13483,8 @@ mod tests {
 
     fn tree_with_bare_item() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item One")] }],
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![UiTreeItemNode::base("i1", "Item One")] }],
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         })
@@ -13186,11 +13606,8 @@ mod tests {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.draggable = Some(true);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }],
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         })
@@ -14526,11 +14943,12 @@ mod tests {
             items: vec![UiSelectItem { value: "a".into(), label: "A".into() }, UiSelectItem { value: "b".into(), label: "B".into() }],
             placeholder: None,
             on_change: action(),
+            presence: UiPresence::default(),
         })
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, presence: UiPresence::default(), selection_change: None, drop_action: None })
     }
 
     /// 🌳 Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -14544,9 +14962,7 @@ mod tests {
             gap: None,
             padding: None,
             id: Some(item_id.into()),
-            selected: Some(false),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -14582,9 +14998,7 @@ mod tests {
             gap: None,
             padding: None,
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -15160,7 +15574,7 @@ mod tests {
         let mut leave_action = action();
         leave_action.action = "leave".into();
         item.unhover_action = Some(leave_action.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -15182,7 +15596,7 @@ mod tests {
         item.draggable = Some(true);
         let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
         item.drag_data = Some(payload.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -15311,9 +15725,7 @@ mod tests {
             gap: Some("none".into()),
             padding: Some("standard".into()),
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -15507,9 +15919,7 @@ fn root_stack() -> UiNode {
         gap: None,
         padding: None,
         id: Some("shell.root".into()),
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15530,9 +15940,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
         gap: Some("none".into()),
         padding: None,
         id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15556,9 +15964,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
         gap: None,
         padding: None,
         id: None,
-        selected: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15588,9 +15994,7 @@ fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNo
         label,
         action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
         style: None,
-        disabled: None,
-        loading: None,
-        waiting: None,
+        presence: UiPresence::default(),
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Explicit(window_id), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
@@ -15904,9 +16308,7 @@ mod tests {
             gap: None,
             padding: None,
             id: Some("root".into()),
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -16013,7 +16415,7 @@ mod tests {
                 placeholder: select.placeholder.clone(),
                 on_change: Some(select.on_change.clone()),
             },
-            UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.pressed, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
+            UiNode::Toggle(toggle) => WidgetNode::Toggle { id: toggle.id.clone(), icon_id: toggle.icon_id.clone(), pressed: toggle.presence.selected, text: toggle.text.clone(), on_change: Some(toggle.on_change.clone()) },
             UiNode::KeyValue(kv) => WidgetNode::KeyValue { entries: kv.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiNode::Slider(slider) => WidgetNode::Slider { id: slider.id.clone(), value: slider.value, min: slider.min, max: slider.max, step: slider.step, ready: None, on_change: Some(slider.on_change.clone()) },
             UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
@@ -16024,7 +16426,7 @@ mod tests {
                 on_absolute: Some(stepper.on_absolute.clone()),
                 on_delta: Some(stepper.on_delta.clone()),
             },
-            UiNode::Ring(ring) => WidgetNode::Ring { id: ring.id.clone(), t: ring.t, disabled: ring.disabled.unwrap_or(false), on_change: Some(ring.on_change.clone()) },
+            UiNode::Ring(ring) => WidgetNode::Ring { id: ring.id.clone(), t: ring.t, disabled: ring.presence.state == UiState::Disabled, on_change: Some(ring.on_change.clone()) },
             UiNode::IconSelect(select) => WidgetNode::IconSelect { id: select.id.clone(), value: select.value.clone(), uniform: select.uniform, classifier_kind: select.classifier_kind.clone(), on_change: Some(select.on_change.clone()) },
             UiNode::Field(field) => match ui_node_to_control(&field.child) {
                 Some(control) => WidgetNode::Field { id: field.id.clone(), label: field.label.clone(), child: control_to_widget(&control) },
@@ -16033,9 +16435,11 @@ mod tests {
             UiNode::Section(section) => WidgetNode::Section { id: section.id.clone(), label: section.label.clone(), default_open: section.default_open.unwrap_or(true), children: section.children.iter().map(to_widget_node).collect() },
             UiNode::Group(group) => WidgetNode::Section { id: group.id.clone(), label: Some(group.label.clone()), default_open: group.default_open.unwrap_or(true), children: group.children.iter().map(to_widget_node).collect() },
             UiNode::Tree(tree) => WidgetNode::Tree {
+                // 🧭 Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
+                // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
                 sections: tree.sections.iter().map(tree_section_to_widget).collect(),
-                selected_ids: tree.selected_ids.clone().unwrap_or_default(),
-                highlighted_ids: tree.highlighted_ids.clone().unwrap_or_default(),
+                selected_ids: Vec::new(),
+                highlighted_ids: Vec::new(),
                 selection_change: tree.selection_change.clone(),
             },
             // KNOWN GAP: `WidgetNode<E>` (the immediate-mode `widgets` region's tree type) has no
@@ -16060,11 +16464,11 @@ mod tests {
                 placeholder: n.placeholder.clone(),
                 on_change: Some(n.on_change.clone()),
             },
-            UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Toggle(n) => ControlNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => ControlNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => ControlNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => ControlNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
-            UiControlNode::Ring(n) => ControlNode::Ring { id: n.id.clone(), t: n.t, disabled: n.disabled.unwrap_or(false), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Ring(n) => ControlNode::Ring { id: n.id.clone(), t: n.t, disabled: n.presence.state == UiState::Disabled, on_change: Some(n.on_change.clone()) },
             UiControlNode::IconSelect(n) => ControlNode::IconSelect { id: n.id.clone(), value: n.value.clone(), uniform: n.uniform, classifier_kind: n.classifier_kind.clone(), on_change: Some(n.on_change.clone()) },
         }
     }
@@ -16083,11 +16487,11 @@ mod tests {
                 placeholder: n.placeholder.clone(),
                 on_change: Some(n.on_change.clone()),
             },
-            UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.pressed, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Toggle(n) => WidgetNode::Toggle { id: n.id.clone(), icon_id: n.icon_id.clone(), pressed: n.presence.selected, text: n.text.clone(), on_change: Some(n.on_change.clone()) },
             UiControlNode::KeyValue(n) => WidgetNode::KeyValue { entries: n.entries.iter().map(|entry| KeyValueEntry { label: entry.label.clone(), value: entry.value.clone() }).collect() },
             UiControlNode::Slider(n) => WidgetNode::Slider { id: n.id.clone(), value: n.value, min: n.min, max: n.max, step: n.step, ready: None, on_change: Some(n.on_change.clone()) },
             UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper { id: n.id.clone(), value: n.value, step: n.step, uniform: n.uniform, on_absolute: Some(n.on_absolute.clone()), on_delta: Some(n.on_delta.clone()) },
-            UiControlNode::Ring(n) => WidgetNode::Ring { id: n.id.clone(), t: n.t, disabled: n.disabled.unwrap_or(false), on_change: Some(n.on_change.clone()) },
+            UiControlNode::Ring(n) => WidgetNode::Ring { id: n.id.clone(), t: n.t, disabled: n.presence.state == UiState::Disabled, on_change: Some(n.on_change.clone()) },
             UiControlNode::IconSelect(n) => WidgetNode::IconSelect { id: n.id.clone(), value: n.value.clone(), uniform: n.uniform, classifier_kind: n.classifier_kind.clone(), on_change: Some(n.on_change.clone()) },
         }
     }
@@ -16102,10 +16506,10 @@ mod tests {
             label: item.label.clone(),
             description: item.description.clone(),
             icon_id: item.icon_id.clone(),
-            selected: item.selected.unwrap_or(false),
-            highlighted: false,
+            selected: item.presence.selected,
+            highlighted: item.presence.state == UiState::Previewed,
             default_open: item.default_open.unwrap_or(false),
-            is_hidden: item.is_hidden.unwrap_or(false),
+            dimmed: item.dimmed.unwrap_or(false),
             event: item.action.clone(),
             hover_event: item.hover_action.clone(),
             unhover_event: item.unhover_action.clone(),
@@ -16194,9 +16598,7 @@ mod tests {
             gap: Some("none".into()),
             padding: Some("none".into()),
             id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -16306,9 +16708,7 @@ mod tests {
             label: label.into(),
             description: None,
             icon_id: None,
-            selected: None,
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             default_open: None,
             action: None,
             hover_action: None,
@@ -16318,14 +16718,11 @@ mod tests {
             drag_data: None,
             items: None,
             control: None,
-            is_hidden: None,
+            dimmed: None,
         };
         let node = UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
-            loading: None,
-            waiting: None,
-            selected_ids: None,
-            highlighted_ids: None,
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+            presence: UiPresence::default(),
             selection_change: None,
             drop_action: None,
         });
@@ -16364,8 +16761,7 @@ mod tests {
             id: "sec".into(),
             label: Some("Section".into()),
             default_open: Some(true),
-            loading: None,
-            waiting: None,
+            presence: UiPresence::default(),
             children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None })],
         });
         let (instances, _, _) = retained_stats(&node);
@@ -16565,7 +16961,7 @@ pub struct TreeItem<E> {
     pub selected: bool,
     pub highlighted: bool,
     pub default_open: bool,
-    pub is_hidden: bool,
+    pub dimmed: bool,
     pub event: Option<E>,
     pub hover_event: Option<E>,
     pub unhover_event: Option<E>,

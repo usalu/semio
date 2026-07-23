@@ -52,6 +52,23 @@ pub mod geometry_import {
         [point[0], point[1], point[2]]
     }
 
+    fn dedupe_consecutive_points(points: Vec<Vec3>) -> Vec<Vec3> {
+        const EPS: f64 = 1e-9;
+        let mut deduped: Vec<Vec3> = Vec::new();
+        for point in points {
+            if let Some(last) = deduped.last() {
+                if (point[0] - last[0]).abs() < EPS
+                    && (point[1] - last[1]).abs() < EPS
+                    && (point[2] - last[2]).abs() < EPS
+                {
+                    continue;
+                }
+            }
+            deduped.push(point);
+        }
+        deduped
+    }
+
     fn wire_vertex_chain(wire: &CadWire, edges: &HashMap<String, &CadEdge>) -> Vec<String> {
         let Some(first_edge_id) = wire.edge_ids.first() else {
             return Vec::new();
@@ -82,7 +99,7 @@ pub mod geometry_import {
             let Some(edge) = edges.get(edge_id) else {
                 continue;
             };
-            if edge.vertex_ids.len() < 2 {
+            if edge.vertex_ids.len() < 2 || edge.vertex_ids[0] == edge.vertex_ids[1] {
                 continue;
             }
             let (vertex_a, vertex_b) = (&edge.vertex_ids[0], &edge.vertex_ids[1]);
@@ -102,10 +119,12 @@ pub mod geometry_import {
         edges: &HashMap<String, &CadEdge>,
         vertices: &HashMap<String, [f64; 3]>,
     ) -> Vec<Vec3> {
-        wire_vertex_chain(wire, edges)
-            .iter()
-            .filter_map(|vertex_id| vertices.get(vertex_id).map(|position| to_vec3(*position)))
-            .collect()
+        dedupe_consecutive_points(
+            wire_vertex_chain(wire, edges)
+                .iter()
+                .filter_map(|vertex_id| vertices.get(vertex_id).map(|position| to_vec3(*position)))
+                .collect(),
+        )
     }
 
     fn face_boundary_points(
@@ -586,6 +605,66 @@ pub mod geometry_import {
                     "triangle {triangle_index} must not be degenerate"
                 );
             }
+        }
+
+        #[test]
+        fn forest_energy_surface_tessellates_at_authored_height() {
+            let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+            let root: Value = serde_json::from_str(source).expect("fixture");
+            let geometry = parse_geometry(root.pointer("/models/2/model/geometry"));
+            let objects = root
+                .pointer("/models/2/model/objects")
+                .and_then(|value| value.as_array())
+                .cloned()
+                .unwrap_or_default();
+            let mut kernel = BrepkitKernel::new();
+            let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
+            assert_eq!(imported.len(), 1);
+            assert!(imported[0].solid_handle.is_some(), "energy face handle");
+            let handle_id = imported[0].solid_handle.as_ref().expect("handle");
+            let mesh = tessellate_geometry_handle(&mut kernel, handle_id, "surface").expect("surface mesh");
+            let min_z = mesh
+                .positions
+                .chunks_exact(3)
+                .map(|vertex| vertex[2])
+                .fold(f32::INFINITY, f32::min);
+            let max_z = mesh
+                .positions
+                .chunks_exact(3)
+                .map(|vertex| vertex[2])
+                .fold(f32::NEG_INFINITY, f32::max);
+            assert!(min_z > 2.5, "energy surface min z {min_z}");
+            assert!(max_z < 3.5, "energy surface max z {max_z}");
+        }
+
+        #[test]
+        fn forest_structure_surface_tessellates_at_authored_height() {
+            let source = include_str!("../../asset/play/hexagonal-cut-concrete-forest-left.model.json");
+            let root: Value = serde_json::from_str(source).expect("fixture");
+            let geometry = parse_geometry(root.pointer("/models/3/model/geometry"));
+            let objects = root
+                .pointer("/models/3/model/objects")
+                .and_then(|value| value.as_array())
+                .cloned()
+                .unwrap_or_default();
+            let mut kernel = BrepkitKernel::new();
+            let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
+            let slab = imported
+                .iter()
+                .find(|object| object.primitives.iter().any(|primitive| primitive.kind == "surface"))
+                .expect("surface object");
+            let mesh = tessellate_geometry_handle(
+                &mut kernel,
+                slab.solid_handle.as_ref().expect("handle"),
+                "surface",
+            )
+            .expect("surface mesh");
+            let min_z = mesh
+                .positions
+                .chunks_exact(3)
+                .map(|vertex| vertex[2])
+                .fold(f32::INFINITY, f32::min);
+            assert!(min_z > 2.5, "structure slab min z {min_z}");
         }
 
         #[test]
@@ -3492,8 +3571,8 @@ fn cad_labels(view_state: &ViewState) -> &'static CadLabels {
     }
 }
 
-/// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text.
-fn typology_label(typology: &'static str, labels: &CadLabels) -> &'static str {
+/// 🗣️ Resolves a typology catalog entry's display label from its stable id; unknown ids fall back to the catalog's native English text or the raw id.
+fn typology_label<'a>(typology: &'a str, labels: &CadLabels) -> &'a str {
     match typology {
         "spatial.shape.primitive.box" => labels.typology_box,
         "building.building.slab" | "structure.structure.onewayreinforcedconcreteslab" => labels.typology_slab,
@@ -3501,7 +3580,7 @@ fn typology_label(typology: &'static str, labels: &CadLabels) -> &'static str {
         "building.building.beam" => labels.typology_beam,
         "building.building.wall" => labels.typology_wall,
         "energy.energy.externalwall" => labels.typology_external_wall,
-        _ => TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == typology).map(|entry| entry.label).unwrap_or(typology),
+        other => TYPOLOGY_CATALOG.iter().find(|entry| entry.typology == other).map(|entry| entry.label).unwrap_or(other),
     }
 }
 //#endregion 🔖Terminology
@@ -3599,6 +3678,9 @@ fn object_tree_item(id_suffix: &str, object: &CadObject, labels: &CadLabels) -> 
         Some("box"),
         cad_action("setSelection", Some(json!({ "objectIds": [object.id] }))),
     );
+    if !object.typology.is_empty() {
+        item.description = Some(typology_label(&object.typology, labels).to_string());
+    }
     item.hover_action = Some(cad_action("worldHover", Some(json!({ "id": object.id }))));
     item.unhover_action = Some(cad_action("worldHover", None));
     item.is_hidden = Some(!object.visible);
@@ -5582,6 +5664,43 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("cad-object:"));
         assert!(json.contains("cad-node:"));
+    }
+
+    #[test]
+    fn document_tree_shows_name_with_kind_as_secondary_label() {
+        let app = CadPlayApp::default();
+        let mut scene = default_document();
+        scene.objects[0].label = "U2".into();
+        scene.objects[0].typology = "building.building.beam".into();
+        let history = empty_history();
+        let doc = DocumentView { projection: &scene, history: &history };
+        let node = app.render(CAD_PLAY_BODY_DOCUMENT, &doc, &ViewState::default());
+        let UiNode::Tree(tree) = node else {
+            panic!("document body should render a tree");
+        };
+        let object_item = tree
+            .sections
+            .iter()
+            .flat_map(|section| section.items.iter())
+            .find(|item| item.id.contains("cad-object:") && item.label == "U2")
+            .expect("named object tree item");
+        assert_eq!(object_item.description.as_deref(), Some("Beam"));
+
+        let de_node = app.render(
+            CAD_PLAY_BODY_DOCUMENT,
+            &doc,
+            &ViewState { locale: Some("de".into()), ..ViewState::default() },
+        );
+        let UiNode::Tree(de_tree) = de_node else {
+            panic!("document body should render a tree");
+        };
+        let de_object_item = de_tree
+            .sections
+            .iter()
+            .flat_map(|section| section.items.iter())
+            .find(|item| item.id.contains("cad-object:") && item.label == "U2")
+            .expect("named object tree item in German");
+        assert_eq!(de_object_item.description.as_deref(), Some("Balken"));
     }
 
     #[test]

@@ -294,6 +294,13 @@ impl BrepkitKernel {
     }
 
     fn sample_oriented_edge_lines(&self, edge: EdgeId, tol: f64) -> Result<Vec<f32>, BrepError> {
+        let edge_data = self.topo.edge(edge).map_err(Self::map_topo_err)?;
+        let start = self.topo.vertex(edge_data.start()).map_err(Self::map_topo_err)?.point();
+        let end = self.topo.vertex(edge_data.end()).map_err(Self::map_topo_err)?.point();
+        let delta = end - start;
+        if delta.x() * delta.x() + delta.y() * delta.y() + delta.z() * delta.z() < 1e-18 {
+            return Ok(Vec::new());
+        }
         let nurbs = self.edge_to_nurbs(edge)?;
         let (a, b) = nurbs.domain();
         let samples = sample_deflection(&nurbs, a, b, tol);

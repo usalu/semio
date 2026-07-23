@@ -688,10 +688,11 @@ class TestScript extends BundleScript {
     const tableSource = readFileSync(join(texDir, "semio-table.sty"), "utf8");
     assert.match(windowSource, /\\semio_window_vskip_stroke_hairline: \{[\s\S]*?\\vskip\\dimexpr-3\\semio@stroke@hairline\\relax/);
     assert.match(windowSource, /semio~window~table\/\.style=\{\s*semio~window,\s*toprule=0pt,/);
-    assert.match(tableSource, /\\semio_table_long_header_build:n #1 \{\s*\\seq_set_split:Nnn[\s\S]*?\\tl_clear:N \\l_semio_table_long_head_tl/);
+    assert.match(windowSource, /\\semio_window_table_border_overlay: \{[\s\S]*?frame\.north~west[\s\S]*?frame\.south~west/);
+    assert.match(windowSource, /semio~window~table\/\.style=\{[\s\S]*?overlay~app=\{\\semio_window_table_border_overlay:\}/);
+    assert.match(tableSource, /\\newcommand\{\\semio@table@long@header@left@cell\}\[2\]\{[\s\S]*?\\multicolumn\{1\}\{\|/);
+    assert.match(tableSource, /\\semio_table_long_header_build:nn #1#2 \{[\s\S]*?\\semio@table@long@header@left@cell[\s\S]*?\\clist_item:nn \{#1\} \{1\}/);
     assert.doesNotMatch(tableSource, /\\newcommand\{\\semio@table@long@header@(repeat|continuation)@three\}\[3\]\{%\s*\\hhline/);
-    assert.match(windowSource, /semio~window~blockquote\/\.style=\{\s*top=0pt,/);
-    assert.match(windowSource, /\{ semioblockquote \} \{ \\tl_put_right:Nn \\l_semio_window_style_tl \{ , semio~window~blockquote \} \}/);
     //#endregion
 
     console.log("print: unit tests passed");

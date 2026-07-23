@@ -4050,10 +4050,16 @@ pub fn plugin_refresh_ui(instance_id: u32, request_json: &str) -> Result<String,
         response.requested_effects = instance.app.pending_effects(&request.view_state);
 
         for entry in &request.windows {
-            // 🪟 Stamp this window's instance id into the view state before rendering, so a `DocumentApp`
-            // can key any per-window option (grid, LOD, sun, ...) off `view_state.window_id` and never off
-            // the (potentially shared-by-kind) `body_key` alone — see `Puzzle3dWindowOptions`.
-            let window_view_state = ViewState { window_id: Some(entry.key.clone()), ..request.view_state.clone() };
+            // 🪟 Stamp this window's instance id and its own active utility into the view state before
+            // rendering, so a `DocumentApp` can key per-window options and utility-driven scene state off
+            // `view_state.window_id` / `view_state.active_utility_id` and never off the focused window alone.
+            let active_utility_id = request
+                .view_state
+                .active_utility_by_window_id
+                .get(&entry.key)
+                .cloned()
+                .or_else(|| request.view_state.active_utility_id.clone());
+            let window_view_state = ViewState { window_id: Some(entry.key.clone()), active_utility_id, ..request.view_state.clone() };
             let node = instance.app.render(&entry.body_key, None, &window_view_state)?;
             let (hash, value) = ui_refresh_section(&node, entry.hash.as_deref());
             response.windows.push(SectionResponse { key: entry.key.clone(), hash, value });

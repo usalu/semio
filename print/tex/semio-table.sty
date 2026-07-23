@@ -193,18 +193,25 @@
   \noalign{\hrule height\arrayrulewidth}%
 }
 
-\newcommand{\semio@table@long@header@repeat@three}[3]{%
-  \semio@table@header@cell{#1} &
-  \semio@table@header@cell{#2} &
-  \semio@table@header@cell{#3} \\
+%region LongTableHeader
+\newcommand{\semio@table@long@header@left@cell}[2]{%
+  \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr#1\semio@table@long@inner@w\relax}@{}}{%
+    \semio@table@header@cell{#2}%
+  }%
+}
+
+\newcommand{\semio@table@long@header@repeat@three}[4]{%
+  \semio@table@long@header@left@cell{#1}{#2} &
+  \semio@table@header@cell{#3} &
+  \semio@table@header@cell{#4} \\
   \hhline{|---|}
   \global\semio@table@row@startedfalse
 }
 
-\newcommand{\semio@table@long@header@continuation@three}[3]{%
-  \semio@table@header@cell{#1} &
-  \semio@table@header@cell{#2} &
-  \semio@table@header@cell{#3} \\
+\newcommand{\semio@table@long@header@continuation@three}[4]{%
+  \semio@table@long@header@left@cell{#1}{#2} &
+  \semio@table@header@cell{#3} &
+  \semio@table@header@cell{#4} \\
   \hhline{|---|}
   \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
   \global\semio@table@row@startedfalse
@@ -245,6 +252,7 @@
 
 \newcommand{\semio@register@table@header@long@repeat}{%
   \semio@table@long@header@continuation@three
+    {0.12}
     {\semio@register@header@key}
     {\semio@register@header@title}
     {\semio@register@header@page}%
@@ -260,6 +268,7 @@
 
 \newcommand{\semio@termlist@table@header@long@repeat}[1]{%
   \semio@table@long@header@continuation@three
+    {0.22}
     {\csname semio@#1@header@term\endcsname}
     {\csname semio@#1@header@definition\endcsname}
     {\csname semio@#1@header@pages\endcsname}%
@@ -269,6 +278,7 @@
 \newcommand{\semio@glossary@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{glossary}}
 \newcommand{\semio@abbreviations@table@header}{\semio@termlist@table@header@long@repeat{abbreviations}}
 \newcommand{\semio@abbreviations@table@header@long@repeat}{\semio@termlist@table@header@long@repeat{abbreviations}}
+%endregion LongTableHeader
 
 \newcommand{\semio@table@long@render}[5]{%
   \global\semio@table@long@mode=1\relax
@@ -401,15 +411,21 @@
   \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }
 }
 
-\cs_new_protected:Npn \semio_table_long_header_build:n #1 {
-  \seq_set_split:Nnn \l_semio_table_row_seq { & } {#1}
+\cs_new_protected:Npn \semio_table_long_header_build:nn #1#2 {
+  \seq_set_split:Nnn \l_semio_table_row_seq { & } {#2}
   \tl_clear:N \l_semio_table_long_head_tl
   \int_zero:N \l_tmpa_int
   \seq_map_inline:Nn \l_semio_table_row_seq {
-    \int_compare:nNnF \l_tmpa_int = \c_zero_int {
+    \int_compare:nNnTF \l_tmpa_int = \c_zero_int {
+      \tl_put_right:Nx \l_semio_table_long_head_tl {
+        \exp_not:N \semio@table@long@header@left@cell
+          { \clist_item:nn {#1} {1} }
+          { ##1 }
+      }
+    } {
       \tl_put_right:Nn \l_semio_table_long_head_tl { & }
+      \tl_put_right:Nx \l_semio_table_long_head_tl { \exp_not:N \semio@table@header@cell { ##1 } }
     }
-    \tl_put_right:Nx \l_semio_table_long_head_tl { \exp_not:N \semio@table@header@cell { ##1 } }
     \int_incr:N \l_tmpa_int
   }
   \tl_put_right:Nn \l_semio_table_long_head_tl {
@@ -445,7 +461,7 @@
 % style name would not tokenize as one control word there.
 \cs_new_protected:Npn \semio@table@long@prepare #1#2 {
   \semio_table_long_colspec_build:n {#1}
-  \semio_table_long_header_build:n {#2}
+  \semio_table_long_header_build:nn {#1} {#2}
   \cs_gset:Npx \semio@table@long@column@count { \clist_count:n {#1} }
   % Same \long-macro-by-bare-name treatment as the head (see above) — a
   % colspec flattened straight into the argument list via \exp_args:NV

@@ -1,0 +1,21 @@
+$ bun ./script.ts nx test @semio-tech/framework-renderer-react -- -t worldGumballConfigForProjection
+
+> nx run @semio-tech/framework-renderer-react:test -t worldGumballConfigForProjection
+
+> bun ./script.ts test -t worldGumballConfigForProjection
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 229 skipped (230)
+   Start at  12:31:26
+   Duration  6.17s (transform 2.18s, setup 0ms, import 5.61s, tests 3ms, environment 353ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/framework-renderer-react
+
+

@@ -1,0 +1,13 @@
+{
+  "title": "Unified Compile-Time-Enforced UI Element State Model",
+  "emoji": "🧭",
+  "status": "open",
+  "description": "Refactor every UI element (protocol UiNode layer in Rust/TS + entire ui-react design-system library) to share ONE compile-time-enforced state model: state: introducing | previewed | normal (default) | disabled | hidden; status: waiting | loading | idle (default) | finished (orthogonal, composable with state); hover: boolean; selected: boolean. When state=hidden everything else is ignored and the element is not rendered (no layout). All other combinations must be visually distinguishable via distinct channels. Folds in existing ad-hoc fields: disabled-\u003estate=disabled, pressed-\u003eselected, highlighted/highlighted_ids-\u003estate=previewed. hover is authored in the schema (default false) and OR'd with live pointer hover by renderers. Full plan at /Users/ueli/.claude/plans/ui-make-sure-that-robust-pizza.md covering: shared UiPresence/UiState/UiStatus Rust types embedded on all 19 UiNode variants + window/engagement/utility structs; exhaustive presence()/presence_mut() accessors for compile-time enforcement; migration of ~30 plugin crates' call sites; wgpu shared presence painter (KIND_FINISHED_BORDER, KIND_INTRODUCING_BORDER, centralized paint_node dispatch, hidden skips layout); ts-rs typegen closing the UiNode hand-mirror gap; TS/React shared UiElementStateProps + data-ui-state/data-ui-status/data-ui-hover/data-ui-selected attribute scheme in ui-styling + ui-react; a typed UI_ELEMENTS registry (~40 components) that fails to compile if a component's props don't declare all four axes, plus an anti-dodge test that every exported component is registered or explicitly exempted; CSS visual engine in ui.css; interpreter rewrite in framework/renderer/react; Storybook matrix story; test updates across Rust golden/wgpu paint tests, ui-styling unit tests, ui-react in-source matrix tests, framework-renderer-react tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2253"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪cc3d2f36860747fb8dded3949f88074d"
+  ]
+}

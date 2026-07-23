@@ -16,6 +16,7 @@ import {
   gumballHandleKindToTransformMode,
   useCanvasAppearanceSync,
   type GumballConfig,
+  type GumballPlaneId,
   type GumballPose,
   type ReactNode,
   type ThreeEvent,
@@ -2005,6 +2006,61 @@ export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | unde
   return { rotate: true };
 }
 
+/** @emoji 🎛 Drafting plane for a planar window projection — `undefined` keeps the full 3D gumball
+ * (axonometric / multi-point / curvilinear). Orthographic Plan/Top/Bottom → `xy`, Front/Back → `xz`,
+ * Left/Right → `yz`; oblique military and one-point follow the same view-plane rule. */
+export function worldProjectionGumballPlane(spec: WorldProjectionSpec | undefined): GumballPlaneId | undefined {
+  if (!spec) return undefined;
+  if (spec.kind === "orthographic") {
+    switch (spec.view) {
+      case "front":
+      case "back":
+        return "xz";
+      case "left":
+      case "right":
+        return "yz";
+      default:
+        return "xy";
+    }
+  }
+  if (spec.kind === "oblique") {
+    return spec.variant === "military" ? "xy" : "xz";
+  }
+  if (spec.kind === "onePoint") {
+    switch (spec.axis) {
+      case "x":
+        return "yz";
+      case "z":
+        return "xy";
+      default:
+        return "xz";
+    }
+  }
+  return undefined;
+}
+
+/** @emoji 🎛 Drafting plane for a legacy {@link OrbitCameraViewId} preset (CAD panes that still seed via orbit views). */
+export function orbitCameraViewGumballPlane(view: OrbitCameraViewId | undefined): GumballPlaneId | undefined {
+  if (!view) return undefined;
+  switch (view) {
+    case "top":
+    case "bottom":
+      return "xy";
+    case "front":
+    case "back":
+    case "north":
+    case "south":
+      return "xz";
+    case "left":
+    case "right":
+    case "east":
+    case "west":
+      return "yz";
+    default:
+      return undefined;
+  }
+}
+
 /** @emoji 📷 Applies a projection kind/variant switch, keeping the current pose when the caller supplies one
  * (pure parameter tweaks like angle/depth/fov never move the camera — only the matrix driver re-shears). */
 export function applyWorldProjectionToCameraState(state: WorldCameraState, spec: WorldProjectionSpec): WorldCameraState {
@@ -3519,6 +3575,35 @@ if (import.meta.vitest) {
       expect(worldProjectionFamily({ kind: "threePoint", fov: 50 })).toBe("perspective");
       expect(worldProjectionFamily({ kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" })).toBe("perspective");
       expect(worldProjectionFamily(undefined)).toBe("perspective");
+    });
+  });
+
+  describe("worldProjectionGumballPlane", () => {
+    it("maps planar orthographic views to drafting planes and leaves 3D projections unconstrained", () => {
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "plan" })).toBe("xy");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "top" })).toBe("xy");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "bottom" })).toBe("xy");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "front" })).toBe("xz");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "back" })).toBe("xz");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "left" })).toBe("yz");
+      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "right" })).toBe("yz");
+      expect(worldProjectionGumballPlane({ kind: "oblique", variant: "military", angle: 45, depthScale: 1 })).toBe("xy");
+      expect(worldProjectionGumballPlane({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 })).toBe("xz");
+      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "y", fov: 50 })).toBe("xz");
+      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "x", fov: 50 })).toBe("yz");
+      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "z", fov: 50 })).toBe("xy");
+      expect(worldProjectionGumballPlane({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" })).toBeUndefined();
+      expect(worldProjectionGumballPlane({ kind: "threePoint", fov: 50 })).toBeUndefined();
+      expect(worldProjectionGumballPlane(undefined)).toBeUndefined();
+    });
+
+    it("maps legacy orbit camera view ids the same way", () => {
+      expect(orbitCameraViewGumballPlane("top")).toBe("xy");
+      expect(orbitCameraViewGumballPlane("front")).toBe("xz");
+      expect(orbitCameraViewGumballPlane("right")).toBe("yz");
+      expect(orbitCameraViewGumballPlane("isometricNe")).toBeUndefined();
+      expect(orbitCameraViewGumballPlane("perspective")).toBeUndefined();
+      expect(orbitCameraViewGumballPlane(undefined)).toBeUndefined();
     });
   });
 

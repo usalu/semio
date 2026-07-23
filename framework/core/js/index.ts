@@ -1492,8 +1492,10 @@ export const HISTORY_ACTION_IDS = ["undo", "redo", "commitCheckpoint", "createAl
 export type PluginViewState = {
   readonly activeModeId?: string;
   readonly activeWindowKindId?: string;
-  /** 🧰 Host-owned active utility for the active window kind (never a document field, never a VCS op). */
+  /** 🧰 Per-call overlay: host-owned active utility for the window targeted by this render/action (`windowId`). */
   readonly activeUtilityId?: string;
+  /** 🧰 Host-owned active utility per window instance (never a document field, never a VCS op). */
+  readonly activeUtilityByWindowId?: Readonly<Record<string, string>>;
   /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS op) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
@@ -1750,7 +1752,8 @@ export type DerivedUtilitySpec = {
  * 🧰 Hand-written twin of Rust `derive_utility_nodes` (`ui/wgpu/rs/lib.rs`): builds the utility bar node tree
  * from resolved utilities + the host-owned active utility id. Each utility becomes a `toggle` whose `pressed`
  * reflects `activeUtilityId === id` and whose `onChange` dispatches `setActiveUtility { utilityId }`; utilities
- * sharing a `group` collapse into one `collection` placed where the group first appears.
+ * sharing a `group` collapse into one `collection` placed where the group first appears. A group that ends
+ * with exactly one child is hoisted to a top-level toggle (no nested Transform/Transform pair).
  */
 export function deriveUtilityNodes(controllerId: string, utilities: readonly DerivedUtilitySpec[], activeUtilityId?: string): UtilityNode[] {
   const toggle = (utility: DerivedUtilitySpec): UtilityNode => ({
@@ -1781,22 +1784,22 @@ export function deriveUtilityNodes(controllerId: string, utilities: readonly Der
       nodes.push({ id: `group:${utility.group}`, kind: "collection", iconId: utility.iconId, label: groupLabel, title: groupLabel, category: utility.category, children: [node] });
     }
   }
-  return nodes;
+  return nodes.map((node) => (node.kind === "collection" && node.children.length === 1 ? node.children[0]! : node));
 }
 
 /**
  * 🎯 Hand-written twin of Rust `partition_window_measures` (`ui/wgpu/rs/lib.rs`): splits a window's
  * top-level measures into `general` and `utilityOptions`. A top-level `group` tagged with `activeUtilityId`
- * lands in `utilityOptions` only when it equals the window's active utility, and is dropped from both buckets
- * otherwise (irrelevant to whichever utility — or no utility — is active). Untagged groups and non-group
- * top-level measures stay in `general`, unchanged.
+ * contributes its **children** to `utilityOptions` only when it equals the window's active utility (the
+ * tagged wrapper is routing-only and never rendered), and is dropped from both buckets otherwise. Untagged
+ * groups and non-group top-level measures stay in `general`, unchanged.
  */
 export function partitionWindowMeasures(measures: readonly WindowMeasure[], activeUtilityId?: string): { readonly general: WindowMeasure[]; readonly utilityOptions: WindowMeasure[] } {
   const general: WindowMeasure[] = [];
   const utilityOptions: WindowMeasure[] = [];
   for (const measure of measures) {
     if (measure.kind === "group" && measure.activeUtilityId !== undefined) {
-      if (measure.activeUtilityId === activeUtilityId) utilityOptions.push(measure);
+      if (measure.activeUtilityId === activeUtilityId) utilityOptions.push(...measure.children);
       continue;
     }
     general.push(measure);

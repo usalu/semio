@@ -175,9 +175,14 @@ pub mod d2 {
         if ids.is_empty() { vec![kind_id.to_string()] } else { ids }
     }
 
-    /// 🧰 The host-owned active utility for this view, read from `ViewState.active_utility_id` (defaulting to
-    /// `select`) — the single source of truth for the canvas utility, never a document field or runtime cache.
-    fn puzzle2d_active_utility(view_state: &ViewState) -> String {
+    /// 🧰 The host-owned active utility for this view — per window instance via
+    /// `active_utility_by_window_id`, then the per-call `active_utility_id` overlay, then `select`.
+    fn puzzle2d_active_utility(view_state: &ViewState, window_id: Option<&str>) -> String {
+        if let Some(wid) = window_id {
+            if let Some(utility) = view_state.active_utility_by_window_id.get(wid) {
+                return utility.clone();
+            }
+        }
         view_state.active_utility_id.clone().unwrap_or_else(|| PUZZLE2D_UTILITY_SELECT.into())
     }
 
@@ -2008,7 +2013,7 @@ pub mod d2 {
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
             let document_json = doc.projection.to_string();
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
             let labels = puzzle2d_labels(view_state);
             match body_key {
                 PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
@@ -2022,28 +2027,36 @@ pub mod d2 {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
             let labels = puzzle2d_labels(view_state);
             // 🪟 One entry per live window INSTANCE of each pane kind — a split/extra instance of e.g. the
             // overview pane gets its own entry (built from the same pane's per-pane state) instead of being
             // silently absent, which is what a bare `PUZZLE2D_PANES` iteration would produce.
             PUZZLE2D_PANES
                 .iter()
-                .flat_map(|pane| window_instance_ids(view_state, pane).into_iter().map(|wid| (wid, puzzle2d_engagement(&envelope, &self.host, pane, labels))))
+                .flat_map(|pane| {
+                    window_instance_ids(view_state, pane).into_iter().map(|wid| {
+                        let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                        (wid, puzzle2d_engagement(&envelope, &self.host, pane, labels))
+                    })
+                })
                 .collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES
                 .iter()
-                .flat_map(|pane| window_instance_ids(view_state, pane).into_iter().map(|wid| (wid, puzzle2d_window_measures(pane, &envelope, labels))))
+                .flat_map(|pane| {
+                    window_instance_ids(view_state, pane).into_iter().map(|wid| {
+                        let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                        (wid, puzzle2d_window_measures(pane, &envelope, labels))
+                    })
+                })
                 .collect()
         }
 
         fn tool_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state) };
+            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
             let labels = puzzle2d_labels(view_state);
             HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
         }
@@ -2843,6 +2856,8 @@ pub mod d3 {
         kind_compatibility: Option<Value>,
     }
 
+    /// 🧊 Persisted oriented box constraining fill placement. Volume Brush creates axis-aligned voxel-sized
+    /// instances; Transform gumball edits arbitrary oriented boxes.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
     #[serde(rename_all = "camelCase")]
     struct Puzzle3dTargetVolume {
@@ -2992,10 +3007,14 @@ pub mod d3 {
         proximity_radius: f64,
         #[serde(default = "default_chunk_size")]
         chunk_size: f64,
-        #[serde(default)]
-        fill_edit_target_volumes: bool,
         #[serde(default = "default_voxel_dims")]
         voxel_dims: [u32; 3],
+        /// 🎛 Whether the transform gumball exposes translate (move axes + move planes).
+        #[serde(default = "default_true")]
+        transform_move: bool,
+        /// 🎛 Whether the transform gumball exposes rotate handles.
+        #[serde(default = "default_true")]
+        transform_rotate: bool,
         /// 🌀 When to emit vortex markers: [`PUZZLE3D_VORTEX_SHOW_ALWAYS`] or [`PUZZLE3D_VORTEX_SHOW_SELECTED`].
         #[serde(default = "default_vortex_show")]
         vortex_show: String,
@@ -3040,8 +3059,9 @@ pub mod d3 {
                 selection_mode_default: default_selection_mode(),
                 proximity_radius: default_proximity_radius(),
                 chunk_size: default_chunk_size(),
-                fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
+                transform_move: default_true(),
+                transform_rotate: default_true(),
                 vortex_show: default_vortex_show(),
                 vortex_direction: default_vortex_direction(),
                 sun: WorldSunConfig::default(),
@@ -3101,8 +3121,9 @@ pub mod d3 {
         selection_mode_default: String,
         proximity_radius: f64,
         chunk_size: f64,
-        fill_edit_target_volumes: bool,
         voxel_dims: [u32; 3],
+        transform_move: bool,
+        transform_rotate: bool,
         vortex_show: String,
         vortex_direction: String,
         sun: WorldSunConfig,
@@ -3127,8 +3148,9 @@ pub mod d3 {
                 selection_mode_default: default_selection_mode(),
                 proximity_radius: default_proximity_radius(),
                 chunk_size: default_chunk_size(),
-                fill_edit_target_volumes: false,
                 voxel_dims: default_voxel_dims(),
+                transform_move: default_true(),
+                transform_rotate: default_true(),
                 vortex_show: default_vortex_show(),
                 vortex_direction: default_vortex_direction(),
                 sun: WorldSunConfig::default(),
@@ -3157,8 +3179,9 @@ pub mod d3 {
                 selection_mode_default: self.selection_mode_default.clone(),
                 proximity_radius: self.proximity_radius,
                 chunk_size: self.chunk_size,
-                fill_edit_target_volumes: self.fill_edit_target_volumes,
                 voxel_dims: self.voxel_dims,
+                transform_move: self.transform_move,
+                transform_rotate: self.transform_rotate,
                 vortex_show: self.vortex_show.clone(),
                 vortex_direction: self.vortex_direction.clone(),
                 sun: self.sun.clone(),
@@ -3184,8 +3207,9 @@ pub mod d3 {
             self.selection_mode_default = options.selection_mode_default.clone();
             self.proximity_radius = options.proximity_radius;
             self.chunk_size = options.chunk_size;
-            self.fill_edit_target_volumes = options.fill_edit_target_volumes;
             self.voxel_dims = options.voxel_dims;
+            self.transform_move = options.transform_move;
+            self.transform_rotate = options.transform_rotate;
             self.vortex_show = options.vortex_show.clone();
             self.vortex_direction = options.vortex_direction.clone();
             self.sun = options.sun.clone();
@@ -3227,6 +3251,7 @@ pub mod d3 {
         match active_utility {
             "brush" => "brush",
             "fill" => "fill",
+            "volumeBrush" => "volumeBrush",
             _ => "select",
         }
     }
@@ -3277,16 +3302,20 @@ pub mod d3 {
     }
 
     /// 🛠️ The effective interaction id threaded through `Puzzle3dScene.active_utility`: the host-owned
-    /// window utility (`view_state.active_utility_id`), UNLESS the mode-level fill tool is active
-    /// (`view_state.active_tool_id`), in which case fill wins. Fill keeps its viewport interaction (world
-    /// engine `activeUtility` JSON, engagement session, scene mode) even though it is declared as a
-    /// windowless tool, not a `WindowKindDefinition` utility — see `ToolDefinition`/`mode_tools`.
-    fn puzzle3d_scene_active_utility(view_state: &ViewState) -> String {
+    /// window utility (`active_utility_by_window_id` for `window_id`, else `active_utility_id`), UNLESS the
+    /// mode-level fill tool is active (`active_tool_id`), in which case fill wins. Fill keeps its viewport
+    /// interaction (world engine `activeUtility` JSON, engagement session, scene mode) even though it is
+    /// declared as a windowless tool, not a `WindowKindDefinition` utility — see `ToolDefinition`/`mode_tools`.
+    fn puzzle3d_scene_active_utility(view_state: &ViewState, window_id: Option<&str>) -> String {
         if view_state.active_tool_id.as_deref() == Some("fill") {
-            "fill".to_string()
-        } else {
-            view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY).to_string()
+            return "fill".to_string();
         }
+        if let Some(wid) = window_id {
+            if let Some(utility) = view_state.active_utility_by_window_id.get(wid) {
+                return utility.clone();
+            }
+        }
+        view_state.active_utility_id.as_deref().unwrap_or(PUZZLE3D_DEFAULT_UTILITY).to_string()
     }
 
     static PUZZLE3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
@@ -3643,7 +3672,7 @@ pub mod d3 {
         }
     }
 
-    fn world_target_volumes_json(fixture: &Puzzle3dFixture) -> String {
+    fn world_target_volumes_json(fixture: &Puzzle3dFixture, selected_ids: &[String]) -> String {
         let records: Vec<Value> = fixture
             .target_volumes
             .iter()
@@ -3654,6 +3683,9 @@ pub mod d3 {
                     "orientation": volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]),
                     "scale": target_volume_scale_json(volume),
                     "color": "#f472b6",
+                    "hidden": volume.hidden,
+                    "locked": volume.locked,
+                    "selected": selected_ids.contains(&volume.id),
                 })
             })
             .collect();
@@ -3720,7 +3752,6 @@ pub mod d3 {
             "activeUtility": puzzle3d_scene_mode(&envelope.active_utility),
             "brushCandidateIndex": runtime.brush_candidate_index,
             "hoveredVortexFullId": runtime.hovered_vortex_full_id.clone(),
-            "fillEditTargetVolumes": runtime.fill_edit_target_volumes,
             "voxelDims": runtime.voxel_dims,
             "gridFactor": runtime.grid_spacing,
             "suggestionMenu": suggestion_menu,
@@ -3850,8 +3881,20 @@ pub mod d3 {
                     "face": false,
                 }),
             );
+            object.insert("targetVolumeIds".into(), json!(runtime.selection.target_volume_ids));
             if let Some(transform_mode) = puzzle3d_transform_handle(&envelope.active_utility) {
                 object.insert("transformMode".into(), json!(transform_mode));
+                object.insert(
+                    "gumballConfig".into(),
+                    json!({
+                        "moveAxes": runtime.transform_move,
+                        "movePlanes": runtime.transform_move,
+                        "rotate": runtime.transform_rotate,
+                        "scaleAxes": false,
+                        "scalePlanes": false,
+                        "scaleUniform": false,
+                    }),
+                );
             }
             if let Some(active_id) = runtime.selection.object_ids.first() {
                 object.insert("activeObjectId".into(), json!(active_id));
@@ -4582,7 +4625,10 @@ pub mod d3 {
         fill: &'static str,
         count: &'static str,
         brush: &'static str,
+        move_flag: &'static str,
+        rotate_flag: &'static str,
         edit_volumes: &'static str,
+        volume_brush: &'static str,
         voxel: &'static str,
         width: &'static str,
         depth: &'static str,
@@ -4611,7 +4657,10 @@ pub mod d3 {
         fill: "Fill",
         count: "Count",
         brush: "Brush",
+        move_flag: "Move",
+        rotate_flag: "Rotate",
         edit_volumes: "Edit Volumes",
+        volume_brush: "Volume Brush",
         voxel: "Voxel",
         width: "Width",
         depth: "Depth",
@@ -4639,7 +4688,10 @@ pub mod d3 {
         fill: "Füllen",
         count: "Anzahl",
         brush: "Pinsel",
+        move_flag: "Verschieben",
+        rotate_flag: "Drehen",
         edit_volumes: "Volumen bearbeiten",
+        volume_brush: "Volumenpinsel",
         voxel: "Voxel",
         width: "Breite",
         depth: "Tiefe",
@@ -5563,22 +5615,7 @@ pub mod d3 {
         }
     }
 
-    /// 🧊 Edit-volumes toggle — secondary fill-tool chrome for drawing/editing target volumes. Replaces the
-    /// retired fill/edit-volumes mode Select so the primary fill tree stays the count slider + distributions.
-    fn puzzle3d_edit_volumes_toggle(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
-        WindowMeasure::Toggle {
-            id: "puzzle3d-edit-volumes".into(),
-            icon_id: "box".into(),
-            label: Some(labels.edit_volumes.into()),
-            pressed: runtime.fill_edit_target_volumes,
-            text: None,
-            on_change: puzzle3d_action("setFillEditTargetVolumes", None),
-        }
-    }
-
-    /// 🧊 Voxel width/depth/height measures — the retired `puzzle3d_voxel_dim_steppers` re-expressed as
-    /// sliders (`WindowMeasure` has no stepper variant; both carry `value`/`min`/`max`/`step` + `on_change`).
-    /// `setVoxelDims` reads `axis` (baked into `on_change.args`) plus the dispatched `value`, unchanged.
+    /// 🧊 Voxel width/depth/height measures for the Volume Brush utility.
     fn puzzle3d_voxel_dim_measures(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         let [w, d, h] = runtime.voxel_dims;
         let axis_slider = |axis: &str, label: &str, value: u32| WindowMeasure::Slider {
@@ -5595,30 +5632,28 @@ pub mod d3 {
         vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]
     }
 
-    /// 🛠️ Fill tool measures — flat tree under the Fill toggle: count slider, object/vortex distributions,
-    /// then a secondary edit-volumes toggle (with voxel dim sliders while editing). No nested Fill group —
-    /// `buildToolTree` already owns the activation row (see `ToolDefinition`/`DocumentApp::tool_measures`).
+    /// 🛠️ Fill tool measures — flat tree under the Fill toggle: count slider and object/vortex distributions.
     fn puzzle3d_fill_tool_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-        let mut measures = Vec::new();
-        if !envelope.runtime.fill_edit_target_volumes {
-            measures.push(puzzle3d_fill_count_measure(envelope, precompute, labels));
-        }
+        let mut measures = vec![puzzle3d_fill_count_measure(envelope, precompute, labels)];
         measures.extend(puzzle3d_distribution_children(envelope, labels, Some(true)));
-        measures.push(puzzle3d_edit_volumes_toggle(&envelope.runtime, labels));
-        if envelope.runtime.fill_edit_target_volumes {
-            measures.push(WindowMeasure::Group {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-voxel"),
-                label: labels.voxel.into(),
-                default_open: Some(true),
-                active_utility_id: None,
-                children: puzzle3d_voxel_dim_measures(&envelope.runtime, labels),
-            });
-        }
         measures
     }
 
-    /// 🖌️ Utility Options group for the Brush utility — overlap budget, distribution trees, and (when
-    /// candidates exist) the placement picker. Tagged `Some("brush")`.
+    /// 🧊 Utility Options for the Volume Brush utility — voxel width/depth/height sliders for Alt+click painting.
+    fn puzzle3d_volume_brush_utility_options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+        WindowMeasure::Group {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-volume-brush"),
+            label: labels.volume_brush.into(),
+            default_open: Some(true),
+            active_utility_id: Some("volumeBrush".into()),
+            children: puzzle3d_voxel_dim_measures(runtime, labels),
+        }
+    }
+
+    /// 🖌️ Utility Options for the Brush utility — overlap budget, distribution trees, and (when
+    /// candidates exist) the placement picker. Tagged `Some("brush")` as a routing envelope only;
+    /// `partition_window_measures` unwraps the children so the utility bar shows the option tree directly
+    /// (no nested "Brush"/"Pinsel" header — the utility toggle already owns that row).
     fn puzzle3d_brush_utility_options(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> WindowMeasure {
         let mut children = vec![
             WindowMeasure::Slider {
@@ -5672,6 +5707,35 @@ pub mod d3 {
         }
     }
 
+    /// 🎛 Utility Options for the Transform utility — Move and Rotate flags that compose the gumball.
+    /// Tagged `Some("transform")` as a routing envelope only; children render flat under the Transform toggle.
+    fn puzzle3d_transform_utility_options(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+        WindowMeasure::Group {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-utility-options-transform"),
+            label: String::new(),
+            default_open: Some(true),
+            active_utility_id: Some("transform".into()),
+            children: vec![
+                WindowMeasure::Toggle {
+                    id: "puzzle3d-transform-move".into(),
+                    icon_id: "move-3d".into(),
+                    label: Some(labels.move_flag.into()),
+                    pressed: runtime.transform_move,
+                    text: None,
+                    on_change: puzzle3d_action("setTransformGumballFlag", Some(json!({ "flag": "move" }))),
+                },
+                WindowMeasure::Toggle {
+                    id: "puzzle3d-transform-rotate".into(),
+                    icon_id: "rotate-cw".into(),
+                    label: Some(labels.rotate_flag.into()),
+                    pressed: runtime.transform_rotate,
+                    text: None,
+                    on_change: puzzle3d_action("setTransformGumballFlag", Some(json!({ "flag": "rotate" }))),
+                },
+            ],
+        }
+    }
+
     fn puzzle3d_window_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
         vec![
             world3d_projection_measures("puzzle3d", &envelope.fixture.camera.projection, puzzle3d_action),
@@ -5681,7 +5745,9 @@ pub mod d3 {
             puzzle3d_grid_measures_group(&envelope.runtime),
             puzzle3d_select_measures_group(&envelope.runtime, labels),
             world3d_sun_measures("puzzle3d", &envelope.runtime.sun, puzzle3d_action),
+            puzzle3d_transform_utility_options(&envelope.runtime, labels),
             puzzle3d_brush_utility_options(envelope, precompute, labels),
+            puzzle3d_volume_brush_utility_options(&envelope.runtime, labels),
         ]
     }
     //#endregion 🔖Measures
@@ -5726,7 +5792,7 @@ pub mod d3 {
                 return ActionEmit::effect(HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None });
             }
             let before = doc.projection.clone();
-            let active_utility_initial = puzzle3d_scene_active_utility(view_state);
+            let active_utility_initial = puzzle3d_scene_active_utility(view_state, view_state.window_id.as_deref());
             // 🪟 This action targets exactly one window instance — materialize ITS options onto the scene
             // runtime before handling, and snapshot them back out (via `save_window`, at every exit below)
             // so a grid/LOD/selection/vortex/sun mutation never leaks into another window's options.
@@ -5907,10 +5973,13 @@ pub mod d3 {
                             object.origin[2] += dz;
                         }
                     }
+                    for volume in envelope.fixture.target_volumes.iter_mut().filter(|volume| envelope.runtime.selection.target_volume_ids.contains(&volume.id) && !volume.locked) {
+                        volume.origin[0] += dx;
+                        volume.origin[1] += dy;
+                        volume.origin[2] += dz;
+                    }
                     puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    if !ids.is_empty() {
-                    }
                 }
                 "rotateSelection" => {
                     let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
@@ -5926,10 +5995,12 @@ pub mod d3 {
                             object.orientation = Some(quat_mul(delta, current));
                         }
                     }
+                    for volume in envelope.fixture.target_volumes.iter_mut().filter(|volume| envelope.runtime.selection.target_volume_ids.contains(&volume.id) && !volume.locked) {
+                        let current = volume.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                        volume.orientation = Some(quat_mul(delta, current));
+                    }
                     puzzle3d_rederive_moved_attractions(&mut envelope.fixture, &ids, &incoming);
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
-                    if !ids.is_empty() {
-                    }
                 }
                 "scaleSelection" => {
                     let ids = mesh_selection_ids(args, &envelope.runtime.selection.object_ids);
@@ -5941,7 +6012,34 @@ pub mod d3 {
                             object.scale = Some(scale_value_mul(&object.scale, sx, sy, sz));
                         }
                     }
-                    if !ids.is_empty() {
+                    for volume in envelope.fixture.target_volumes.iter_mut().filter(|volume| envelope.runtime.selection.target_volume_ids.contains(&volume.id) && !volume.locked) {
+                        volume.scale = Some(scale_value_mul(&volume.scale, sx, sy, sz));
+                    }
+                }
+                "relocateTargetVolume" => {
+                    let volume_id = args.and_then(|value| value.get("volumeId")).and_then(|value| value.as_str()).unwrap_or("");
+                    let after = args.and_then(|value| value.get("after"));
+                    if let Some(volume) = envelope.fixture.target_volumes.iter_mut().find(|volume| volume.id == volume_id && !volume.locked) {
+                        if let Some(after) = after {
+                            if let Some(origin) = after.get("position").and_then(value_as_vec3) {
+                                volume.origin = origin;
+                            }
+                            if let Some(values) = after.get("quaternion").and_then(|value| value.as_array()).filter(|values| values.len() >= 4) {
+                                volume.orientation = Some([
+                                    values[0].as_f64().unwrap_or(0.0),
+                                    values[1].as_f64().unwrap_or(0.0),
+                                    values[2].as_f64().unwrap_or(0.0),
+                                    values[3].as_f64().unwrap_or(1.0),
+                                ]);
+                            }
+                            if let Some(scale) = after.get("scale").and_then(|value| value.as_array()).filter(|values| values.len() >= 3) {
+                                volume.scale = Some(json!([
+                                    scale[0].as_f64().unwrap_or(1.0),
+                                    scale[1].as_f64().unwrap_or(1.0),
+                                    scale[2].as_f64().unwrap_or(1.0),
+                                ]));
+                            }
+                        }
                     }
                 }
                 "worldSelect" => {
@@ -6260,15 +6358,14 @@ pub mod d3 {
                         envelope.fixture.attractions.retain(|attraction| attraction.id != id);
                     }
                 }
-                "setFillEditTargetVolumes" => {
+                "setTransformGumballFlag" => {
+                    let flag = args.and_then(|value| value.get("flag")).and_then(|value| value.as_str()).unwrap_or("");
                     let pressed = args.and_then(|value| value.get("pressed")).and_then(Value::as_bool);
-                    let id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str());
-                    envelope.runtime.fill_edit_target_volumes = match (pressed, id) {
-                        (Some(value), _) => value,
-                        (_, Some("edit-volumes")) => true,
-                        (_, Some("fill")) => false,
-                        _ => !envelope.runtime.fill_edit_target_volumes,
-                    };
+                    match flag {
+                        "move" => envelope.runtime.transform_move = pressed.unwrap_or(!envelope.runtime.transform_move),
+                        "rotate" => envelope.runtime.transform_rotate = pressed.unwrap_or(!envelope.runtime.transform_rotate),
+                        _ => {}
+                    }
                 }
                 "setVoxelDims" => {
                     let axis = args.and_then(|value| value.get("axis")).and_then(|value| value.as_str()).unwrap_or("");
@@ -6471,10 +6568,8 @@ pub mod d3 {
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
-            let active_utility = puzzle3d_scene_active_utility(view_state);
-            // 🪟 Materialize THIS window instance's own options before rendering its scene/panels — never
-            // the runtime's bare (last-touched-window) fields — so a split top/perspective pane pair each
-            // render with their own grid/LOD/vortex/sun instead of whichever window rendered last.
+            let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
+            let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let mut runtime_for_window = self.runtime.clone();
             runtime_for_window.load_window(wid);
@@ -6493,7 +6588,7 @@ pub mod d3 {
                             world_selection_json(&envelope),
                             Some(world_vortices_json(&envelope.fixture, &envelope.runtime)),
                             Some(world_attractions_json(&envelope.fixture)),
-                            Some(world_target_volumes_json(&envelope.fixture)),
+                            Some(world_target_volumes_json(&envelope.fixture, &envelope.runtime.selection.target_volume_ids)),
                             Some(world_references_json(&envelope.fixture)),
                             brush_preview,
                             Some(world_interaction_json(&envelope, &self.precompute)),
@@ -6514,13 +6609,13 @@ pub mod d3 {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let active_utility = puzzle3d_scene_active_utility(view_state);
             let labels = puzzle3d_labels(view_state);
             // 🪟 One entry per live window INSTANCE (split top/perspective panes are two instances of the
             // same kind) — each built from ITS OWN materialized options, never the shared kind entry.
             window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
                 .into_iter()
                 .map(|wid| {
+                    let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
                     let mut runtime_for_window = self.runtime.clone();
                     runtime_for_window.load_window(&wid);
                     let envelope = scene_from_projection(doc.projection, runtime_for_window, &active_utility);
@@ -6530,11 +6625,11 @@ pub mod d3 {
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let active_utility = puzzle3d_scene_active_utility(view_state);
             let labels = puzzle3d_labels(view_state);
             window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
                 .into_iter()
                 .map(|wid| {
+                    let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
                     let mut runtime_for_window = self.runtime.clone();
                     runtime_for_window.load_window(&wid);
                     let envelope = scene_from_projection(doc.projection, runtime_for_window, &active_utility);
@@ -6544,7 +6639,8 @@ pub mod d3 {
         }
 
         fn tool_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let active_utility = puzzle3d_scene_active_utility(view_state);
+            let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
+            let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
             let labels = puzzle3d_labels(view_state);
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let mut runtime_for_window = self.runtime.clone();
@@ -6568,7 +6664,7 @@ pub mod d3 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
-                group_labels: std::collections::HashMap::from([("transform".to_string(), (if is_de { "Transformieren" } else { "Transform" }).to_string())]),
+                group_labels: std::collections::HashMap::new(),
             }
         }
     }
@@ -6601,6 +6697,7 @@ pub mod d3 {
             ("deleteAttraction", "Delete Attraction", "Anziehung löschen"),
             ("addTargetVolume", "Add Target Volume", "Zielvolumen hinzufügen"),
             ("deleteTargetVolume", "Delete Target Volume", "Zielvolumen löschen"),
+            ("relocateTargetVolume", "Relocate Target Volume", "Zielvolumen verlagern"),
             ("setTargetVolumeFlag", "Set Target Volume Flag", "Zielvolumenmarkierung festlegen"),
             ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufügen"),
             ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
@@ -6640,7 +6737,7 @@ pub mod d3 {
             ("engagementInput", "Engagement Input", "Eingabe"),
             ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
             ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
-            ("setFillEditTargetVolumes", "Set Fill Edit Target Volumes", "Zielvolumen-Bearbeitung festlegen"),
+            ("setTransformGumballFlag", "Set Transform Gumball Flag", "Transform-Gumball-Flagge festlegen"),
             ("setVoxelDims", "Set Voxel Dims", "Voxel-Abmessungen festlegen"),
             ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"),
             ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
@@ -6663,6 +6760,7 @@ pub mod d3 {
             ("select", "Select", "Auswählen"),
             ("transform", "Transform", "Transformieren"),
             ("brush", "Brush", "Pinsel"),
+            ("volumeBrush", "Volume Brush", "Volumenpinsel"),
             ("fill", "Fill", "Füllen"),
             ("worldRelocate", "Relocate", "Verlagern"),
         ];
@@ -6805,8 +6903,9 @@ pub mod d3 {
                 .view_action("engagementInput", "Engagement Input")
                 .view_action("engagementAbort", "Engagement Abort")
                 .view_action("engagementControlSelect", "Engagement Control Select")
-                .view_action("setFillEditTargetVolumes", "Set Fill Edit Target Volumes")
+                .view_action("setTransformGumballFlag", "Set Transform Gumball Flag")
                 .view_action("setVoxelDims", "Set Voxel Dims")
+                .view_action("relocateTargetVolume", "Relocate Target Volume")
                 .view_action("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget")
                 .view_action("setObjectKindWeight", "Set Object Kind Weight")
                 .view_action("setVortexKindWeight", "Set Vortex Kind Weight")
@@ -6823,11 +6922,12 @@ pub mod d3 {
                 .action_args("addObjectKind", vec![
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
-                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together.
-                .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("transform", "Transform", "move-3d") })
+                // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together via Move/Rotate flags.
+                .utility(UtilityDefinition::new("transform", "Transform", "move-3d"))
                 .utility(UtilityDefinition::new("brush", "Brush", "brush"))
+                .utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "box"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
-                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "worldRelocate".into()])
+                .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "volumeBrush".into(), "worldRelocate".into()])
                 // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
                 // its viewport interaction via `ViewState.active_tool_id` (see `puzzle3d_scene_active_utility`).
                 .tool_simple("fill", "Fill", "fill")
@@ -7586,9 +7686,8 @@ pub mod d3 {
             }
         }
 
-        /// 🎯 Fill tool measures are a flat list under the Fill toggle (count + object/vortex distributions +
-        /// edit-volumes toggle); voxel-dimension steppers join only while editing. Brush placement stays a
-        /// utility-options group in [`puzzle3d_window_measures`]. Neither carries a [`WindowEngagementControl`].
+        /// 🎯 Fill tool measures are a flat list under the Fill toggle (count + object/vortex distributions).
+        /// Volume Brush voxel dims live in a utility-options group in [`puzzle3d_window_measures`].
         #[test]
         fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
             let labels = puzzle3d_labels(&ViewState::default());
@@ -7601,21 +7700,19 @@ pub mod d3 {
             );
             assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-distribution-objects"), Some(None));
             assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-distribution-vortices"), Some(None));
-            assert_eq!(find_measure_toggle(&fill_tool_measures, "puzzle3d-edit-volumes"), Some(false));
-            assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-tool-options-voxel"), None, "voxel-dimension group is absent until edit-volumes mode is on");
-            assert!(find_measure_slider(&fill_tool_measures, "puzzle3d-fill-count").is_some(), "fill-count slider lives in the fill tool measures while not editing volumes");
+            assert!(find_measure_toggle(&fill_tool_measures, "puzzle3d-edit-volumes").is_none(), "fill must not carry edit-volumes toggle");
+            assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-tool-options-voxel"), None, "fill must not carry voxel-dimension sliders");
+            assert!(find_measure_slider(&fill_tool_measures, "puzzle3d-fill-count").is_some(), "fill-count slider always lives in the fill tool measures");
             assert!(
                 !puzzle3d_window_measures(&fill_scene, &session, labels).iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id.contains("fill"))),
                 "fill must no longer surface in window_measures — it is a mode-level tool, not a window utility"
             );
-            let mut edit_runtime = Puzzle3dRuntime::default();
-            edit_runtime.fill_edit_target_volumes = true;
-            let edit_scene = Puzzle3dScene { fixture: default_fixture(), runtime: edit_runtime, active_utility: "fill".into() };
-            let edit_tool_measures = puzzle3d_fill_tool_measures(&edit_scene, &session, labels);
-            assert_eq!(find_measure_toggle(&edit_tool_measures, "puzzle3d-edit-volumes"), Some(true));
-            assert_eq!(measure_group_tag(&edit_tool_measures, "puzzle3d-play-tool-options-voxel"), Some(None), "voxel-dimension steppers surface in edit-volumes mode");
-            assert!(find_measure_slider(&edit_tool_measures, "puzzle3d-fill-count").is_none(), "the fill-count slider is hidden while editing target volumes, exactly like the old engagement gate");
-            assert!(find_measure_slider(&edit_tool_measures, "puzzle3d-voxel-w").is_some(), "voxel width slider is present in edit-volumes mode");
+            let volume_brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "volumeBrush".into() };
+            assert_eq!(
+                measure_group_tag(&puzzle3d_window_measures(&volume_brush_scene, &session, labels), "puzzle3d-play-utility-options-volume-brush"),
+                Some(Some("volumeBrush".into()))
+            );
+            assert!(find_measure_slider(&puzzle3d_window_measures(&volume_brush_scene, &session, labels), "puzzle3d-voxel-w").is_some(), "volume brush utility exposes voxel width slider");
             let fill_engagement = puzzle3d_engagement(&fill_scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert!(fill_engagement.control.is_none() && fill_engagement.controls.is_none(), "fill engagement HUD must no longer carry the relocated controls");
             let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".into() };
@@ -7870,10 +7967,55 @@ pub mod d3 {
             let transform_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &transform_view).expect("render")).unwrap());
             assert_eq!(transform_selection.get("gumballActive").and_then(Value::as_bool), Some(true));
             assert_eq!(transform_selection.get("transformMode").and_then(Value::as_str), Some("transform"));
+            assert_eq!(transform_selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
+            assert_eq!(transform_selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(true));
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let brush_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render")).unwrap());
             assert_eq!(brush_selection.get("gumballActive").and_then(Value::as_bool), Some(false));
             assert!(brush_selection.get("transformMode").is_none());
+        }
+
+        #[test]
+        fn transform_utility_is_local_to_the_window_instance_not_shared_across_split_panes() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
+            let top = PUZZLE3D_PLAY_WINDOW_TOP;
+            let perspective = PUZZLE3D_PLAY_WINDOW_PERSPECTIVE;
+            let instances = vec![
+                ViewWindowInstance { id: top.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+                ViewWindowInstance { id: perspective.to_string(), window_kind_id: PUZZLE3D_PLAY_WINDOW_MAIN.to_string() },
+            ];
+            let mut active_utility_by_window_id = std::collections::HashMap::new();
+            active_utility_by_window_id.insert(top.to_string(), "transform".to_string());
+            let shared = ViewState { window_instances: instances, active_utility_by_window_id, ..ViewState::default() };
+            let top_view = ViewState { window_id: Some(top.into()), ..shared.clone() };
+            let perspective_view = ViewState { window_id: Some(perspective.into()), ..shared };
+            let top_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &top_view).expect("render top")).unwrap());
+            assert_eq!(top_selection.get("gumballActive").and_then(Value::as_bool), Some(true), "transform on top pane must show the gumball");
+            let perspective_selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &perspective_view).expect("render perspective")).unwrap());
+            assert_eq!(perspective_selection.get("gumballActive").and_then(Value::as_bool), Some(false), "perspective pane must not inherit top pane's transform utility");
+            assert!(perspective_selection.get("transformMode").is_none());
+        }
+
+        #[test]
+        fn transform_utility_options_expose_move_and_rotate_flags() {
+            let labels = puzzle3d_labels(&ViewState::default());
+            let session = Puzzle3dPrecomputeSession::new();
+            let scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "transform".into() };
+            let measures = puzzle3d_window_measures(&scene, &session, labels);
+            assert_eq!(measure_group_tag(&measures, "puzzle3d-play-utility-options-transform"), Some(Some("transform".into())));
+            assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-move"), Some(true));
+            assert_eq!(find_measure_toggle(&measures, "puzzle3d-transform-rotate"), Some(true));
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let transform_view = ViewState { active_utility_id: Some("transform".into()), ..ViewState::default() };
+            app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &transform_view, &testkit::meta("local")).expect("pick");
+            app.handle_action("setTransformGumballFlag", Some(&json!({ "flag": "rotate", "pressed": false })), &transform_view, &testkit::meta("local")).expect("disable rotate");
+            let selection = selection_of(&serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &transform_view).expect("render")).unwrap());
+            assert_eq!(selection.pointer("/gumballConfig/moveAxes").and_then(Value::as_bool), Some(true));
+            assert_eq!(selection.pointer("/gumballConfig/rotate").and_then(Value::as_bool), Some(false));
+            let app_measures = app.window_measures(&transform_view);
+            let window_measures = app_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
+            assert_eq!(find_measure_toggle(window_measures, "puzzle3d-transform-rotate"), Some(false));
         }
 
         #[test]
@@ -8390,6 +8532,17 @@ pub mod d5 {
         runtime: Puzzle5dRuntime,
         /// 🧰 Host-owned active utility mirrored from `view_state.active_utility_id` — transient, never persisted.
         active_utility: String,
+    }
+
+    /// 🧰 The host-owned active utility for this view — per window instance via
+    /// `active_utility_by_window_id`, then the per-call `active_utility_id` overlay, then `select`.
+    fn puzzle5d_scene_active_utility(view_state: &ViewState, window_id: Option<&str>) -> String {
+        if let Some(wid) = window_id {
+            if let Some(utility) = view_state.active_utility_by_window_id.get(wid) {
+                return utility.clone();
+            }
+        }
+        view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY).to_string()
     }
 
     /// 🧭 The select/brush/fill interaction mode the world engine reads, derived from the flat active utility
@@ -9946,7 +10099,7 @@ pub mod d5 {
 
         fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle5dOp> {
             let before = doc.projection.clone();
-            let active_utility_initial = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY).to_string();
+            let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
             match action {
                 "setFixtureJson" => {
@@ -10507,7 +10660,7 @@ pub mod d5 {
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
-            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
+            let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
             let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
             match body_key {
@@ -10544,24 +10697,32 @@ pub mod d5 {
         }
 
         fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
-            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
             // 🪟 One entry per live window INSTANCE of each of the 2D/3D window kinds — a split/extra
             // instance gets its own entry instead of being silently absent.
             PUZZLE5D_PLAY_WINDOWS
                 .iter()
-                .flat_map(|window| window_instance_ids(view_state, window).into_iter().map(|wid| (wid, puzzle5d_engagement(&envelope, window, labels))))
+                .flat_map(|window| {
+                    window_instance_ids(view_state, window).into_iter().map(|wid| {
+                        let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
+                        let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
+                        (wid, puzzle5d_engagement(&envelope, window, labels))
+                    })
+                })
                 .collect()
         }
 
         fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE5D_DEFAULT_UTILITY);
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), active_utility);
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS
                 .iter()
-                .flat_map(|window| window_instance_ids(view_state, window).into_iter().map(|wid| (wid, puzzle5d_window_measures(window, &envelope, &self.precompute, labels))))
+                .flat_map(|window| {
+                    window_instance_ids(view_state, window).into_iter().map(|wid| {
+                        let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
+                        let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
+                        (wid, puzzle5d_window_measures(window, &envelope, &self.precompute, labels))
+                    })
+                })
                 .collect()
         }
 

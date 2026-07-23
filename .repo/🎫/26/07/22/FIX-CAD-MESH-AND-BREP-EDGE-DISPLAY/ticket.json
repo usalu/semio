@@ -1,9 +1,9 @@
 {
   "title": "Fix CAD Mesh and Brep Edge Display",
   "emoji": "🐛",
-  "status": "closed",
+  "status": "open",
   "description": "CAD meshes display shredded with holes because fixture wires are imported with wrong edge orientation (54/57 forest wires). Lines are unclean because B-rep edge samples are dropped and World3d falls back to EdgesGeometry on bad mesh. Fix wire_points chaining, carry edge_positions through mesh_data_from_mesh_transfer, prefer B-rep edges over EdgesGeometry in World3d.",
-  "summary": "Fixed structure model definition line display. Structure curves (walls/columns) were swept into tube solids and outlined with tessellated mesh edges; now tessellate the wire handle directly for clean centerline edge_positions with no shaded tube mesh. Face/surface primitives now get boundary edge_positions from outer-wire sampling in BrepkitKernel. World3d renders edge-only meshes (curve centerlines) without requiring triangle indices and allows mesh picking on edge lines.",
+  "summary": "Fixed energy/structure surfaces rendering flat on the floor. Root cause: fixture wires include zero-length degenerate closing edges; face tessellation failed with \"degenerate line: start == end\", so object_mesh_data fell back to typology box at z≈0. Skip degenerate wire edges when chaining, dedupe consecutive wire points before polyline import, and skip zero-length edges in kernel boundary sampling. Added height regression tests for energy baseplate and structure slab (z≈3).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2225"
   },
@@ -15,6 +15,8 @@
   },
   "sessions": [
     "⚪5cde0edc401b453290bc2ea83c8e0dc1",
-    "⚪821fa4bfb4a24535b24785c574980461"
+    "⚪821fa4bfb4a24535b24785c574980461",
+    "⚪04d12c05e76c43f8918d079d8081f1d9",
+    "⚪beac1a9d13504e9abd0ab04e173f7967"
   ]
 }

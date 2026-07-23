@@ -436,6 +436,7 @@ import {
   WorldOrbitProjectionSwitch,
   WorldProjectionRig,
   worldProjectionFamily,
+  worldProjectionGumballPlane,
   worldProjectionOrbitConstraints,
   createWorldProjectionTemplates,
   decodeWorldProjectionTemplateId,
@@ -450,6 +451,7 @@ import {
   WorldOrbitViewSnapGateProvider,
   WorldReferenceLayer,
   WorldVolumeLayer,
+  type WorldVolumeRelocatePayload,
   type OrbitCameraProjection,
   type WorldCameraState,
 } from "@semio-tech/infinite-world-r3f";
@@ -4026,42 +4028,51 @@ export function buildCommandCategoryTabs(
 
 //#region 🛠️ToolRegistry
 /**
- * 🛠️ One tool's measure-tree content: an activation toggle row, followed — only while this tool is the
- * active one — by its live measures (e.g. puzzle3d fill's count slider). Reuses `renderWindowMeasure`
- * (the same control renderer as a window's utility-options rail) so a tool's controls look and behave
- * identically to a utility's, without dispatching against a window (tool measures carry no `windowId`).
+ * 🛠️ One tool's measure-tree content. Selecting the tool tab activates it (see `buildToolTabs` /
+ * panel path change); the tree itself is a single headerless section so Fill opens directly onto
+ * count + distributions — no nested Fill folder/toggle, no second empty section that would force
+ * sortable section chrome. Reuses `renderWindowMeasure` (same vocabulary as utility-options).
  */
-function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[] } {
+function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
   const iconName: IconName = tool.iconId in ICONS ? (tool.iconId as IconName) : "hammer";
-  const sections: TreeDataSection[] = [
-    {
-      id: `tool.${tool.id}.activate`,
-      label: "",
-      items: [
+  if (isActive && measures && measures.length > 0) {
+    return {
+      sortableSections: false,
+      sections: [
         {
-          id: `tool.${tool.id}.activate.toggle`,
-          label: tool.label,
-          control: (
-            <Toggle
-              id={`tool.${tool.id}`}
-              pressed={isActive}
-              text={tool.label}
-              icon={<Icon icon={iconName} size="small" />}
-              onPressedChange={(pressed) => onAction({ controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: pressed ? tool.id : "" } })}
-            />
-          ),
+          id: `tool.${tool.id}.options`,
+          label: "",
+          defaultOpen: true,
+          items: measures.map((measure) => ({ id: `tool.${tool.id}.options.${measure.id}`, label: "", control: renderWindowMeasure(measure, onAction) })),
         },
       ],
-    },
-  ];
-  if (isActive && measures && measures.length > 0) {
-    sections.push({
-      id: `tool.${tool.id}.options`,
-      label: "",
-      items: measures.map((measure) => ({ id: `tool.${tool.id}.options.${measure.id}`, label: "", control: renderWindowMeasure(measure, onAction) })),
-    });
+    };
   }
-  return { sections };
+  return {
+    sortableSections: false,
+    sections: [
+      {
+        id: `tool.${tool.id}.activate`,
+        label: "",
+        defaultOpen: true,
+        items: [
+          {
+            id: `tool.${tool.id}.activate.toggle`,
+            label: "",
+            control: (
+              <Toggle
+                id={`tool.${tool.id}`}
+                pressed={isActive}
+                text={tool.label}
+                icon={<Icon icon={iconName} size="small" />}
+                onPressedChange={(pressed) => onAction({ controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: pressed ? tool.id : "" } })}
+              />
+            ),
+          },
+        ],
+      },
+    ],
+  };
 }
 
 /**
@@ -4084,9 +4095,21 @@ export function buildToolTabs(
       id: `tool.${tool.id}`,
       icon: shellTabIcon(tool.iconId),
       name: tool.label,
-      tree: { resolveTree: () => buildToolTree(tool, controllerId, activeToolIdRef.current === tool.id, toolMeasuresByToolIdRef.current[tool.id], onAction) },
+      tree: {
+        resolveTree: () => {
+          const tree = buildToolTree(tool, controllerId, activeToolIdRef.current === tool.id, toolMeasuresByToolIdRef.current[tool.id], onAction);
+          return { sections: tree.sections, sortableSections: tree.sortableSections };
+        },
+      },
     }),
   );
+}
+
+/** 🛠️ Activates the mode tool whose footer tab was just selected (`tool.<id>`), mirroring utility-bar press → options. */
+export function toolIdFromPanelTabId(tabId: string | undefined): string | null {
+  if (!tabId?.startsWith("tool.")) return null;
+  const toolId = tabId.slice("tool.".length);
+  return toolId.length > 0 ? toolId : null;
 }
 //#endregion 🛠️ToolRegistry
 
@@ -4173,6 +4196,11 @@ function sessionWindowInstances(
     return kind ? [{ id: instance.id, bodyKey: kind.bodyKey, windowKindId: instance.windowKindId }] : [];
   });
   return [...base, ...extra];
+}
+
+/** @emoji 🧰 Materializes the shell's per-window utility map for batched `refresh-ui` — omits null entries. */
+export function buildActiveUtilityByWindowId(activeUtilityByWindowId: Readonly<Record<string, string | null>>): Record<string, string> {
+  return Object.fromEntries(Object.entries(activeUtilityByWindowId).flatMap(([windowId, utilityId]) => (utilityId ? [[windowId, utilityId]] : [])));
 }
 
 /**
@@ -4621,12 +4649,14 @@ export function FrameworkOsShell({
       const extraInstancesForFetch = extraInstancesOverride ?? layoutSeed?.extraInstances ?? extraWindowInstancesRef.current;
       const windowInstances = sessionWindowInstances(nextSession.app, extraInstancesForFetch);
       const contributionsJson = buildContributionsJson(loadedPlugins.map((entry) => ({ pluginId: entry.handle.pluginId, manifest: entry.manifest })));
-      const viewState: ViewState = injectActiveUtility({
+      const viewState: ViewState = injectActiveTool({
         ...nextSession.viewState,
         contributionsJson,
         locale: uiLocale,
         terminology: uiTerminology,
         windowInstances: windowInstances.map((instance) => ({ id: instance.id, windowKindId: instance.windowKindId })),
+        activeUtilityByWindowId: buildActiveUtilityByWindowId(activeUtilityByWindowIdRef.current),
+        activeUtilityId: undefined,
       });
       const panelTabLeaves = flattenPanelTabLeaves(nextSession.app.panelTabs);
       // 🐢 One batched, hash-conditional round trip replaces the old ~12 sequential
@@ -6426,6 +6456,14 @@ export function FrameworkOsShell({
           dispatch({ type: "SET_COMMAND_EXPANDED", value: null });
         }
         const tabId = path[path.length - 1];
+        // 🛠️ Selecting a mode-tool leaf (`tool.<id>`) activates that tool so its measures render immediately
+        // under the tab — no nested Fill toggle inside the tree.
+        if (anchor === "bottom-middle" && session && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
+          const selectedToolId = toolIdFromPanelTabId(tabId);
+          if (selectedToolId && selectedToolId !== activeToolIdRef.current) {
+            onAction({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: selectedToolId } });
+          }
+        }
         // 🌱 Progressive paths often end at a branch (or are empty) — only leaves are meaningful "active panel tab" selections.
         if (tabId && studioMode && session?.app.id === hostAppId && findPanelTabNode(dock.anchors[anchor], path)?.kind === "leaf") {
           onAction({ controllerId: session.app.controllerId, action: "setActivePanelTab", args: { tabId } });
@@ -9685,6 +9723,7 @@ type WorldSelectionRecord = {
   readonly ids?: readonly string[];
   readonly hoveredId?: string | null;
   readonly referenceSelectedId?: string;
+  readonly targetVolumeIds?: readonly string[];
   readonly granularity?: string;
   readonly selectionMode?: string;
   readonly activeObjectId?: string;
@@ -9694,6 +9733,8 @@ type WorldSelectionRecord = {
   readonly interactionMode?: "model" | "paint";
   readonly gumballTarget?: readonly [number, number, number];
   readonly gumballActive?: boolean;
+  /** 🎛 Plugin-authored gumball handle flags (e.g. puzzle3d Move/Rotate). When set, overrides {@link gumballConfigForTransformMode}. */
+  readonly gumballConfig?: GumballConfig;
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
   readonly engagementSessionActive?: boolean;
@@ -9727,7 +9768,6 @@ type WorldInteractionRecord = {
   readonly activeUtility?: string;
   readonly brushCandidateIndex?: number;
   readonly hoveredVortexFullId?: string;
-  readonly fillEditTargetVolumes?: boolean;
   readonly voxelDims?: readonly [number, number, number];
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
@@ -9769,6 +9809,9 @@ type WorldTargetVolumeRecord = {
   readonly orientation?: readonly [number, number, number, number];
   readonly scale?: readonly [number, number, number] | number;
   readonly color?: string;
+  readonly hidden?: boolean;
+  readonly locked?: boolean;
+  readonly selected?: boolean;
 };
 
 type WorldReferenceRecord = {
@@ -10323,7 +10366,7 @@ export function resolveWorldContextMenuTarget(interaction: WorldInteractionRecor
 
 /** @emoji 🚫 Instance-mesh picking must be disabled for fill/brush engagements — otherwise a click meant for a vortex marker or a fill/voxel gesture falls through and selects/gumballs the underlying object instead. */
 export function worldInstancePickBlocked(activeUtility: string | undefined): boolean {
-  return activeUtility === "fill" || activeUtility === "brush";
+  return activeUtility === "fill" || activeUtility === "brush" || activeUtility === "volumeBrush";
 }
 
 /** @emoji 🖱️ In brush mode or vertex selection mode, pointer-down on a vortex selects immediately; otherwise a click selects and a drag starts connect. */
@@ -10710,17 +10753,21 @@ export function gumballTransformDeltaBetweenPoses(
   return { action: "scaleSelection", args: { ...base, sx, sy, sz } };
 }
 
-function gumballConfigForTransformMode(mode: string): GumballConfig {
-  if (mode === "transform") {
-    return { moveAxes: true, movePlanes: true, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
-  }
-  if (mode === "rotate") {
-    return { moveAxes: false, movePlanes: false, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false };
-  }
-  if (mode === "scale") {
-    return { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: true, scalePlanes: true, scaleUniform: true };
-  }
-  return { moveAxes: true, movePlanes: true, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false };
+export function gumballConfigForTransformMode(mode: string, plane?: GumballConfig["plane"]): GumballConfig {
+  const groups =
+    mode === "transform"
+      ? { moveAxes: true, movePlanes: true, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false }
+      : mode === "rotate"
+        ? { moveAxes: false, movePlanes: false, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false }
+        : mode === "scale"
+          ? { moveAxes: false, movePlanes: false, rotate: false, scaleAxes: true, scalePlanes: true, scaleUniform: true }
+          : { moveAxes: true, movePlanes: true, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false };
+  return plane ? { ...groups, plane } : groups;
+}
+
+/** @emoji 🎛 Transform-mode gumball config intersected with the planar subset implied by a window projection. */
+export function worldGumballConfigForProjection(mode: string, projectionSpec?: WorldProjectionSpec): GumballConfig {
+  return gumballConfigForTransformMode(mode, worldProjectionGumballPlane(projectionSpec));
 }
 
 function SceneGumball({
@@ -11116,6 +11163,7 @@ function WorldInstancesLayer({
   meshes,
   selection,
   palette,
+  projectionSpec,
   onInstancePointerDown,
   onInstancePointerMove,
   onWorldPick,
@@ -11136,6 +11184,7 @@ function WorldInstancesLayer({
   readonly meshes: readonly WorldMeshRecord[];
   readonly selection: WorldSelectionRecord;
   readonly palette: MeshStylePalette;
+  readonly projectionSpec?: WorldProjectionSpec;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string }) => void;
@@ -11181,7 +11230,13 @@ function WorldInstancesLayer({
   const pickEnabled = !gumballDragActive && !onPaintAt && !blockPick && !mergedComponentIdsSet && !mergedInstanceIdsSet;
   const transformMode = selection.transformMode;
   const transformGumballMode = isWorldTransformGumballMode(transformMode);
-  const gumballConfig = useMemo(() => gumballConfigForTransformMode(transformMode ?? "move"), [transformMode]);
+  const gumballConfig = useMemo(() => {
+    if (selection.gumballConfig) {
+      const plane = worldProjectionGumballPlane(projectionSpec);
+      return plane ? { ...selection.gumballConfig, plane } : selection.gumballConfig;
+    }
+    return worldGumballConfigForProjection(transformMode ?? "move", projectionSpec);
+  }, [selection.gumballConfig, transformMode, projectionSpec]);
   const paintMode = selection.interactionMode === "paint";
   const gumballVisible = Boolean(selection.gumballActive) && transformGumballMode && !paintMode;
 
@@ -12192,6 +12247,8 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const activeUtility = interaction.activeUtility ?? "select";
   const fillMode = activeUtility === "fill";
   const brushMode = activeUtility === "brush";
+  const volumeBrushMode = activeUtility === "volumeBrush";
+  const volumeLayersInteractive = !brushMode && !fillMode && !volumeBrushMode;
   const hostRef = useRef<HTMLDivElement | null>(null);
   const instancesGroupRef = useRef<Group | null>(null);
   const lodRef = useRef(DEFAULT_MANUAL_LOD);
@@ -12298,6 +12355,13 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     return new Set([selection.referenceSelectedId]);
   }, [selection.referenceSelectedId]);
 
+  const targetVolumeSelectedIds = useMemo(() => new Set(selection.targetVolumeIds ?? []), [selection.targetVolumeIds]);
+
+  const volumeGumballConfig = useMemo(() => {
+    if (activeUtility !== "transform") return undefined;
+    return selection.gumballConfig ?? gumballConfigForTransformMode("transform");
+  }, [activeUtility, selection.gumballConfig]);
+
   const referenceHoveredId = useMemo(() => {
     const hovered = selection.hoveredId;
     if (!hovered?.startsWith("reference:")) return null;
@@ -12330,6 +12394,32 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       dispatch("referenceHover", { referenceId: id });
+    },
+    [dispatch],
+  );
+
+  const handleTargetVolumeSelect = useCallback(
+    (id: string) => {
+      const volume = targetVolumes.find((entry) => entry.id === id);
+      if (volume?.locked) {
+        dispatch("worldPick", { granularity: selectionMode, id: null, merge: "replace" });
+        return;
+      }
+      dispatch("setSelection", {
+        selection: { objectIds: [], vortexIds: [], attractionIds: [], targetVolumeIds: [id], referenceIds: [] },
+      });
+    },
+    [dispatch, selectionMode, targetVolumes],
+  );
+
+  const handleTargetVolumeRelocate = useCallback(
+    (payload: WorldVolumeRelocatePayload) => {
+      dispatch("relocateTargetVolume", {
+        volumeId: payload.volumeId,
+        mode: payload.mode,
+        before: payload.before,
+        after: payload.after,
+      });
     },
     [dispatch],
   );
@@ -13045,6 +13135,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 meshes={meshes}
                 selection={selection}
                 palette={meshStylePalette}
+                projectionSpec={worldProjectionSpec}
                 onInstancePointerDown={handleInstancePointerDown}
                 onInstancePointerMove={handleInstancePointerMove}
                 onWorldPick={handleWorldPick}
@@ -13083,17 +13174,27 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             {!brushPreview && catalogueDropPreview ? <CatalogueDropGhost preview={catalogueDropPreview} meshes={meshes} palette={meshStylePalette} /> : null}
             {engagementPreview.length > 0 ? <EngagementPreviewLayer items={engagementPreview} color={colors.hover} /> : null}
             <WorldVolumeLayer
-              volumes={targetVolumes.map((volume) => ({
-                id: volume.id,
-                origin: volume.origin as [number, number, number],
-                orientation: volume.orientation as [number, number, number, number] | undefined,
-                scale: volume.scale,
-                color: volume.color,
-              }))}
-              interactive={false}
+              volumes={targetVolumes
+                .filter((volume) => !volume.hidden)
+                .map((volume) => ({
+                  id: volume.id,
+                  origin: volume.origin as [number, number, number],
+                  orientation: volume.orientation as [number, number, number, number] | undefined,
+                  scale: volume.scale,
+                  color: volume.color,
+                  hidden: volume.hidden,
+                  locked: volume.locked,
+                }))}
+              selectedIds={targetVolumeSelectedIds}
+              interactive={volumeLayersInteractive}
+              gumballConfig={volumeGumballConfig}
+              relocateActive={activeUtility === "transform"}
+              translationSnap={gridSnapEnabled ? gridFactor : undefined}
+              onSelect={handleTargetVolumeSelect}
+              onRelocate={handleTargetVolumeRelocate}
             />
-            {interaction.fillEditTargetVolumes ? <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} /> : null}
-            {interaction.fillEditTargetVolumes && voxelHoverOrigin ? <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} /> : null}
+            {volumeBrushMode ? <WorldVoxelGroundPlane gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} onHover={setVoxelHoverOrigin} onPlace={handleVoxelPlace} /> : null}
+            {volumeBrushMode && voxelHoverOrigin ? <WorldVoxelPreviewBox origin={voxelHoverOrigin} dims={interaction.voxelDims ?? [1, 1, 1]} gridFactor={interaction.gridFactor ?? DEFAULT_LOD_GRID_FACTOR} /> : null}
             <WorldReferenceLayer
               references={references
                 .filter((reference) => !reference.hidden)

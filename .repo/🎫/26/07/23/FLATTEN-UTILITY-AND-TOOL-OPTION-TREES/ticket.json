@@ -1,0 +1,13 @@
+{
+  "title": "Flatten Utility and Tool Option Trees",
+  "emoji": "🔧",
+  "status": "open",
+  "description": "Remove all unnecessary nestings in utilities and tools. When a utility/tool is activated, show its option tree directly (no duplicate category node). Example: Puzzle 3D Transform shows Transformieren twice and does not show Move flag / Rotate flag options.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2252"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪550cfc5c9af94869a134897966c87b3c"
+  ]
+}

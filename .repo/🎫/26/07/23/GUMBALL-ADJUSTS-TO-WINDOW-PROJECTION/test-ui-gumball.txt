@@ -1,0 +1,21 @@
+$ bun ./script.ts nx test @semio-tech/ui-react -- -t "UnifiedGumball math"
+
+> nx run @semio-tech/ui-react:test -t UnifiedGumball math
+
+> bun ./script.ts test -t "UnifiedGumball math"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 327 skipped (328)
+   Start at  12:31:26
+   Duration  4.90s (transform 1.28s, setup 92ms, import 4.21s, tests 8ms, environment 357ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

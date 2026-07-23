@@ -79,6 +79,7 @@ import {
   WorldOrbitViewControls,
   WorldOrbitViewSnapGateProvider,
   applyOrbitProjectionToCameraState,
+  orbitCameraViewGumballPlane,
   type OrbitCameraProjection,
   WorldReferenceLayer,
   applyWorldReferenceTransform,
@@ -3799,6 +3800,11 @@ export function InteractionSpatialView({
   reactHostPort.useEffect(() => {
     onSnapshotRevisionChange?.(snapshot.revision);
   }, [snapshot.revision, onSnapshotRevisionChange]);
+  const projectionGumballConfig = reactHostPort.useMemo(() => {
+    if (!transformGumballConfig) return null;
+    const plane = orbitCameraViewGumballPlane(cameraView);
+    return plane ? { ...transformGumballConfig, plane } : transformGumballConfig;
+  }, [transformGumballConfig, cameraView]);
   const resolvedTheme = { ...defaultInteractionSpatialViewTheme, ...theme };
   const cadLodRef = reactHostPort.useRef(DEFAULT_MANUAL_LOD);
   const layerMeshes = reactHostPort.useMemo(() => {
@@ -3875,8 +3881,8 @@ export function InteractionSpatialView({
               selectedIds={selectedReferenceIds}
               hoveredId={hoveredReferenceId}
               revealedIds={revealedReferenceIds}
-              gumballConfig={transformGumballConfig ?? undefined}
-              relocateActive={referenceRelocateActive && cadGumballConfigVisible(transformGumballConfig ?? {})}
+              gumballConfig={projectionGumballConfig ?? undefined}
+              relocateActive={referenceRelocateActive && cadGumballConfigVisible(projectionGumballConfig ?? {})}
               onSelect={onReferenceSelect}
               onHover={onReferenceHover}
               onRelocate={onReferenceRelocate}
@@ -3957,9 +3963,9 @@ export function InteractionSpatialView({
           </WorldLayer>
           <WorldLayer order={60} name="cad.gumball">
             {slots?.afterCommitted}
-            {cadGumballConfigVisible(transformGumballConfig) && geometry && onTransformGumballCommit ? (
+            {cadGumballConfigVisible(projectionGumballConfig) && geometry && onTransformGumballCommit ? (
               <SpatialTransformGumball
-                config={transformGumballConfig!}
+                config={projectionGumballConfig!}
                 model={transformGumballModel ?? geometry!}
                 targets={transformGumballTargets}
                 previewKernel={previewKernel}

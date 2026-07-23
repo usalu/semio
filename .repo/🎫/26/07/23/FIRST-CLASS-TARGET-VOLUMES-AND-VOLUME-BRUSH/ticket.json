@@ -1,0 +1,13 @@
+{
+  "title": "First-Class Target Volumes and Volume Brush",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Make target volumes first class citizens. Generalize them to not only be voxels. Add Volume Brush as window tool where you can draw voxels. Remove it from the fill tool. The fill tool should only fill.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2257"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪58e10e80c8ce4c91bb14f9328af3ad83"
+  ]
+}

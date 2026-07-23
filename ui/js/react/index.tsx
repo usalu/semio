@@ -4975,7 +4975,7 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
 function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRootProps) {
   const level = useLevel();
   return (
-    <GhostRegionShell clickThroughWhenGhost data-level={level} className={className} style={style} {...props}>
+    <GhostRegionShell clickThroughWhenGhost data-level={level} data-elevation-root="" className={className} style={style} {...props}>
       {children}
     </GhostRegionShell>
   );
@@ -5057,81 +5057,75 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
   return rect;
 }
 
-export type IntroductionVeilBand = IntroductionRect;
-
-/** @emoji 🎓 Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when they don't overlap). */
-export function punchIntroductionCutout(band: IntroductionRect, hole: IntroductionRect): readonly IntroductionRect[] {
-  const top = Math.max(band.top, hole.top);
-  const left = Math.max(band.left, hole.left);
-  const bottom = Math.min(band.top + band.height, hole.top + hole.height);
-  const right = Math.min(band.left + band.width, hole.left + hole.width);
-  if (right <= left || bottom <= top) return [band];
-  return [
-    { top: band.top, left: band.left, width: band.width, height: top - band.top },
-    { top: bottom, left: band.left, width: band.width, height: band.top + band.height - bottom },
-    { top, left: band.left, width: left - band.left, height: bottom - top },
-    { top, left: right, width: band.left + band.width - right, height: bottom - top },
-  ].filter((piece) => piece.width > 0 && piece.height > 0);
-}
-
-/** @emoji 🎓 Splits `viewport` into glass bands tiling the space around every `cutout` — real
- * `backdrop-filter` glass survives this way (an SVG mask over the whole screen can't carry it), and each
- * hole left in the middle is a genuine DOM gap rather than a clipped overlay, so it stays interactive.
- * An empty cutout list (a `Screen`/no-emphasis step) returns one full-viewport band. */
-export function introductionVeilBands(viewport: { readonly width: number; readonly height: number }, cutouts: readonly IntroductionRect[]): readonly IntroductionVeilBand[] {
-  let bands: IntroductionRect[] = [{ top: 0, left: 0, width: viewport.width, height: viewport.height }];
-  for (const cutout of cutouts) {
-    const clamped: IntroductionRect = {
-      top: Math.max(0, Math.min(cutout.top, viewport.height)),
-      left: Math.max(0, Math.min(cutout.left, viewport.width)),
-      width: Math.max(0, Math.min(cutout.left + cutout.width, viewport.width) - Math.max(0, Math.min(cutout.left, viewport.width))),
-      height: Math.max(0, Math.min(cutout.top + cutout.height, viewport.height) - Math.max(0, Math.min(cutout.top, viewport.height))),
-    };
-    if (clamped.width <= 0 || clamped.height <= 0) continue;
-    bands = bands.flatMap((band) => [...punchIntroductionCutout(band, clamped)]);
-  }
-  return bands;
-}
-
-/** @emoji 🎓 Live-tracks the DOM rects of every element matching `selectors` (all matches per selector via
- * `querySelectorAll`) — used for secondary introduction cutouts such as drop-target windows that must stay
- * interactive without receiving the introduced pulse. */
-function useIntroductionCutoutRects(selectors: readonly string[]): readonly IntroductionRect[] {
-  const [rects, setRects] = reactHostPort.useState<readonly IntroductionRect[]>([]);
+/** @emoji 🎓 Elevates the chrome unit containing each of `ids` above the single fullscreen introduction
+ * veil, by stamping `data-introduction-elevated` (see `ui/styling/js/ui.css`) on its nearest
+ * `[data-elevation-root]` ancestor — the panel/window/navbar/footer that owns a real, root-level
+ * stacking context (a deeply-nested target such as a tree row can't be raised on its own; CSS stacking
+ * contexts trap it inside its panel/window regardless of its own z-index). An id with no enclosing
+ * `[data-elevation-root]` elevates itself directly, gaining `position: relative` as a fallback if it was
+ * `static` (restored on cleanup). Waits for each id to mount (a folded panel/utility bar the shell is
+ * still revealing) via the same `MutationObserver` re-attach pattern as `useIntroductionAnchorRect`, and
+ * returns the ids that currently resolved so the caller can tell "still waiting" from "revealed" per id
+ * (e.g. to decide whether the veil should block pointer events yet). All stamps and fallback positioning
+ * are undone on id-list change and unmount. */
+function useIntroductionElevation(ids: readonly string[]): ReadonlySet<string> {
+  const [resolved, setResolved] = reactHostPort.useState<ReadonlySet<string>>(() => new Set());
 
   reactHostPort.useEffect(() => {
-    if (selectors.length === 0) {
-      setRects([]);
+    if (ids.length === 0) {
+      setResolved(new Set());
       return;
     }
-    let resizeObserver: ResizeObserver | null = null;
-    const measure = () => {
-      const next: IntroductionRect[] = [];
-      const observed = new Set<Element>();
-      for (const selector of selectors) {
-        document.querySelectorAll(selector).forEach((element) => {
-          next.push(domRectToIntroductionRect(element.getBoundingClientRect()));
-          observed.add(element);
-        });
-      }
-      setRects(next);
-      resizeObserver?.disconnect();
-      resizeObserver = new ResizeObserver(measure);
-      for (const element of observed) resizeObserver.observe(element);
-    };
-    measure();
-    const mutationObserver = new MutationObserver(measure);
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
-    window.addEventListener("resize", measure);
-    return () => {
-      resizeObserver?.disconnect();
-      mutationObserver.disconnect();
-      window.removeEventListener("resize", measure);
-      setRects([]);
-    };
-  }, [selectors]);
+    // 🐢 Cleanup remembers the exact stamped element references (rather than re-querying `document` at
+    // cleanup time) because React detaches a torn-down subtree from the document BEFORE running passive
+    // effect cleanups — a `document.querySelectorAll` lookup in the cleanup would find nothing on unmount,
+    // leaving stamps behind. Mirrors `useIntroductionAnchorRect`'s closure-captured `element` for the same
+    // reason.
+    let stampedRoots = new Set<Element>();
+    const positionedByUs = new Set<Element>();
 
-  return rects;
+    const resolve = () => {
+      const nextResolved = new Set<string>();
+      const wantedRoots = new Set<Element>();
+      for (const id of ids) {
+        const target = document.querySelector(elementIdSelector(id));
+        if (!target) continue;
+        nextResolved.add(id);
+        wantedRoots.add(target.closest("[data-elevation-root]") ?? target);
+      }
+      stampedRoots.forEach((root) => {
+        if (wantedRoots.has(root)) return;
+        root.removeAttribute("data-introduction-elevated");
+        if (positionedByUs.has(root)) {
+          (root as HTMLElement).style.position = "";
+          positionedByUs.delete(root);
+        }
+      });
+      wantedRoots.forEach((root) => {
+        root.setAttribute("data-introduction-elevated", "true");
+        if (!positionedByUs.has(root) && getComputedStyle(root as Element).position === "static") {
+          (root as HTMLElement).style.position = "relative";
+          positionedByUs.add(root);
+        }
+      });
+      stampedRoots = wantedRoots;
+      setResolved((prev) => (prev.size === nextResolved.size && [...nextResolved].every((id) => prev.has(id)) ? prev : nextResolved));
+    };
+
+    resolve();
+    const mutationObserver = new MutationObserver(resolve);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    return () => {
+      mutationObserver.disconnect();
+      stampedRoots.forEach((root) => {
+        root.removeAttribute("data-introduction-elevated");
+        if (positionedByUs.has(root)) (root as HTMLElement).style.position = "";
+      });
+      setResolved(new Set());
+    };
+  }, [ids]);
+
+  return resolved;
 }
 
 type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number };
@@ -5238,16 +5232,20 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
   );
 }
 
-/** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
- * `introduce` element is cut out of it and pulses the introduced border itself, `show` elements stay
- * interactive without pulsing, and an info box explains it — renders the declarative
+/** @emoji 🎓 Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
+ * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
+ * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
+ * and an info box explains it. Renders the declarative
  * `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
-  const showSelectors = reactHostPort.useMemo((): readonly string[] => (step?.show ?? []).map(elementIdSelector), [step]);
-  const showRects = useIntroductionCutoutRects(showSelectors);
+  const elevationIds = reactHostPort.useMemo(
+    (): readonly string[] => [...(step?.introduce ? [step.introduce] : []), ...(step?.show ?? [])],
+    [step],
+  );
+  const elevated = useIntroductionElevation(elevationIds);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -5291,22 +5289,23 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   if (!step) return null;
 
   const advance: IntroductionAdvance = step.advance;
-  const cutouts = [...(introduceRect ? [introduceRect] : []), ...showRects];
-  const bands = introductionVeilBands(viewport, cutouts);
   const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
   // 🎓 A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
   // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
   // and steps whose target did resolve block pointer events; an unresolved `introduce` lets clicks through
-  // so the user can reveal it themselves. `show` rects alone also count as resolved targets (e.g. drop
-  // windows while the drag source mounts).
-  const veilBlocksPointer = step.introduce == null || introduceRect != null || showRects.length > 0;
+  // so the user can reveal it themselves. A resolved `show` target also counts (e.g. a drop window while
+  // the drag source mounts).
+  const veilBlocksPointer = step.introduce == null || elevated.has(step.introduce) || (step.show ?? []).some((id) => elevated.has(id));
 
   return (
     <>
-      {bands.map((band, index) => (
-        <div key={index} className={cn("ui-glass-veil z-tutorial fixed", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} style={{ top: band.top, left: band.left, width: band.width, height: band.height }} />
-      ))}
-      <div ref={boxRef} data-slot="introduction-info-box" className={GLASS_OVERLAY_BOX_CLASS} style={{ top: boxPosition.top, left: boxPosition.left }}>
+      <div className={cn("ui-glass-veil z-tutorial fixed inset-0", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
+      <div
+        ref={boxRef}
+        data-slot="introduction-info-box"
+        className={GLASS_OVERLAY_BOX_CLASS}
+        style={{ top: boxPosition.top, left: boxPosition.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
+      >
         <div className="mb-single flex items-center justify-between gap-double">
           <h3 className="text-sm font-medium">{step.title}</h3>
           <span className="text-xs text-muted-foreground">
@@ -7477,7 +7476,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <footer id="ui.footer" data-slot="footer" className={cn(borderNormalTopClass, "relative h-large z-navbar", bgClass, className)}>
+    <footer id="ui.footer" data-slot="footer" data-elevation-root="" className={cn(borderNormalTopClass, "relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -7535,7 +7534,10 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, ca
           // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
           // the same way a window's options rail overlays its own canvas.
           <div className="flex flex-1 min-h-0 relative">
-            <div className="flex flex-col flex-1 min-w-0 relative z-0">
+            {/* 🎓 No z-index here (was z-0): trapping this column in its own stacking context would make
+                windows unreachable by [data-introduction-elevated] — a window can only rise above the
+                fullscreen introduction veil if it participates in the root stacking context. */}
+            <div className="flex flex-col flex-1 min-w-0 relative">
               <div className="flex flex-1 min-h-0 relative">
                 <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
               </div>
@@ -12063,7 +12065,7 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" data-elevation-root="" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -18963,6 +18965,7 @@ const Window: React.FC<WindowProps> = ({
       <GhostRegionShell
         ref={windowRef}
         data-slot="window"
+        data-elevation-root=""
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
@@ -20259,6 +20262,9 @@ export type GumballPose = {
 /** @emoji 🎛 Per-handle drag kinds for the unified gumball. */
 export type GumballHandleKind = "moveX" | "moveY" | "moveZ" | "moveXY" | "moveYZ" | "moveXZ" | "rotateX" | "rotateY" | "rotateZ" | "scaleX" | "scaleY" | "scaleZ" | "scaleXY" | "scaleYZ" | "scaleXZ" | "scaleUniform";
 
+/** @emoji 🎛 Drafting plane that restricts the gumball to the in-plane handle subset (two axes, view plane, normal rotation). */
+export type GumballPlaneId = "xy" | "yz" | "xz";
+
 /** @emoji 🎛 Visibility and snap settings for {@link UnifiedGumball}. */
 export interface GumballConfig {
   readonly moveAxes?: boolean;
@@ -20267,6 +20273,8 @@ export interface GumballConfig {
   readonly scaleAxes?: boolean;
   readonly scalePlanes?: boolean;
   readonly scaleUniform?: boolean;
+  /** When set, only the planar subset for this drafting plane is shown (e.g. Top → `xy`). */
+  readonly plane?: GumballPlaneId;
   readonly translationSnap?: number;
   readonly rotationSnap?: number;
   readonly scaleSnap?: number;
@@ -20275,6 +20283,13 @@ export interface GumballConfig {
   readonly shiftScaleSnap?: number;
   readonly size?: number;
 }
+
+/** @emoji 🎛 Handles that remain visible for each drafting plane (in-plane move/scale + normal-axis rotate + uniform). */
+export const GUMBALL_PLANE_HANDLES: Readonly<Record<GumballPlaneId, ReadonlySet<GumballHandleKind>>> = {
+  xy: new Set(["moveX", "moveY", "moveXY", "rotateZ", "scaleX", "scaleY", "scaleXY", "scaleUniform"]),
+  yz: new Set(["moveY", "moveZ", "moveYZ", "rotateX", "scaleY", "scaleZ", "scaleYZ", "scaleUniform"]),
+  xz: new Set(["moveX", "moveZ", "moveXZ", "rotateY", "scaleX", "scaleZ", "scaleXZ", "scaleUniform"]),
+};
 
 /** @emoji 🎛 Default unified gumball: every handle group visible. */
 export const DEFAULT_GUMBALL_CONFIG: Readonly<Required<Pick<GumballConfig, "moveAxes" | "movePlanes" | "rotate" | "scaleAxes" | "scalePlanes" | "scaleUniform">>> = {
@@ -20311,13 +20326,38 @@ export function resolveGumballConfig(config?: GumballConfig): Required<Pick<Gumb
     scaleAxes: config?.scaleAxes !== false,
     scalePlanes: config?.scalePlanes !== false,
     scaleUniform: config?.scaleUniform !== false,
+    plane: config?.plane,
   };
+}
+
+/** @emoji 🎛 True when a handle is allowed by an optional drafting-plane subset. */
+export function gumballHandleAllowedByPlane(kind: GumballHandleKind, plane: GumballPlaneId | undefined): boolean {
+  if (!plane) return true;
+  return GUMBALL_PLANE_HANDLES[plane].has(kind);
+}
+
+/** @emoji 🎛 True when a handle's visibility group is enabled in the resolved config. */
+export function gumballHandleGroupEnabled(kind: GumballHandleKind, config: ReturnType<typeof resolveGumballConfig>): boolean {
+  if (kind === "moveX" || kind === "moveY" || kind === "moveZ") return config.moveAxes;
+  if (kind === "moveXY" || kind === "moveYZ" || kind === "moveXZ") return config.movePlanes;
+  if (kind === "rotateX" || kind === "rotateY" || kind === "rotateZ") return config.rotate;
+  if (kind === "scaleX" || kind === "scaleY" || kind === "scaleZ") return config.scaleAxes;
+  if (kind === "scaleXY" || kind === "scaleYZ" || kind === "scaleXZ") return config.scalePlanes;
+  return config.scaleUniform;
+}
+
+/** @emoji 🎛 True when a handle should render for the resolved config (group flags ∩ plane subset). */
+export function gumballHandleEnabled(kind: GumballHandleKind, config: ReturnType<typeof resolveGumballConfig>): boolean {
+  return gumballHandleGroupEnabled(kind, config) && gumballHandleAllowedByPlane(kind, config.plane);
 }
 
 /** @emoji 🎛 True when at least one gumball handle group is enabled. */
 export function gumballConfigVisible(config?: GumballConfig): boolean {
   const resolved = resolveGumballConfig(config);
-  return resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scalePlanes || resolved.scaleUniform;
+  if (!(resolved.moveAxes || resolved.movePlanes || resolved.rotate || resolved.scaleAxes || resolved.scalePlanes || resolved.scaleUniform)) return false;
+  if (!resolved.plane) return true;
+  const kinds: readonly GumballHandleKind[] = ["moveX", "moveY", "moveZ", "moveXY", "moveYZ", "moveXZ", "rotateX", "rotateY", "rotateZ", "scaleX", "scaleY", "scaleZ", "scaleXY", "scaleYZ", "scaleXZ", "scaleUniform"];
+  return kinds.some((kind) => gumballHandleEnabled(kind, resolved));
 }
 
 /** @emoji 🎛 Maps a handle drag to translate / rotate / scale for host commit payloads. */
@@ -20626,11 +20666,13 @@ const GUMBALL_PREVIEW_MIN_EXTENT = 12;
 const GUMBALL_PREVIEW_EXTENT_MARGIN = 2.75;
 const GUMBALL_PREVIEW_RING_RADIUS = 1.22;
 const GUMBALL_PREVIEW_RING_TUBE = 0.014;
+const GUMBALL_PREVIEW_DISK_RADIUS = GUMBALL_RING_RADIUS;
+const GUMBALL_PREVIEW_DISK_SEGMENTS = 64;
 
 const _gumballPreviewCamPos = new THREE.Vector3();
 const _gumballPreviewPivot = new THREE.Vector3();
 
-/** @emoji 👁 World half-extent for gumball axis/plane previews (fills the viewport at the pivot). */
+/** @emoji 👁 World half-extent for gumball axis line previews (fills the viewport at the pivot). */
 export function gumballPreviewWorldExtent(camera: THREE.Camera, pivotWorld: THREE.Vector3): number {
   _gumballPreviewCamPos.copy(camera.position);
   const dist = Math.max(_gumballPreviewCamPos.distanceTo(pivotWorld), 1e-3);
@@ -20777,21 +20819,10 @@ function GumballAxisPreviewLine(props: { readonly axis: GumballPreviewAxis; read
 }
 
 function GumballPlanePreviewMesh(props: { readonly orientation: "xy" | "yz" | "xz"; readonly color: string; readonly opacity: number }): React.ReactElement {
-  const meshRef = reactHostPort.useRef<THREE.Mesh>(null);
-  const camera = useThree((state) => state.camera);
-  const invalidate = useThree((state) => state.invalidate);
-  useFrame(() => {
-    const mesh = meshRef.current;
-    if (!mesh) return;
-    const half = gumballPreviewWorldExtent(camera, mesh.getWorldPosition(_gumballPreviewPivot));
-    const size = half * 2;
-    mesh.scale.set(size, size, 1);
-    invalidate();
-  });
   const rotation = props.orientation === "yz" ? ([0, Math.PI / 2, 0] as const) : props.orientation === "xz" ? ([-Math.PI / 2, 0, 0] as const) : ([0, 0, 0] as const);
   return (
-    <mesh ref={meshRef} rotation={rotation} renderOrder={997}>
-      <planeGeometry args={[1, 1]} />
+    <mesh rotation={rotation} renderOrder={997}>
+      <circleGeometry args={[GUMBALL_PREVIEW_DISK_RADIUS, GUMBALL_PREVIEW_DISK_SEGMENTS]} />
       <meshBasicMaterial color={props.color} transparent opacity={props.opacity} depthTest={false} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
   );
@@ -21064,12 +21095,12 @@ function GumballHandles(props: {
   );
   const scaleHandleProps = (kind: "scaleX" | "scaleY" | "scaleZ", axis: GumballPreviewAxis) => handleProps(kind, <GumballScaleAxisHandle axis={axis} />);
   const scalePlaneHandleProps = (kind: "scaleXY" | "scaleYZ" | "scaleXZ", plane: GumballScalePlane) => handleProps(kind, <GumballPlaneScaleLHandle plane={plane} />);
+  const show = (kind: GumballHandleKind) => gumballHandleEnabled(kind, props.config);
   return (
     <group renderOrder={999}>
-      {highlightKind ? <GumballInteractionPreview kind={highlightKind} palette={props.palette} phase={props.active === highlightKind ? "active" : "hover"} /> : null}
-      {props.config.moveAxes ? (
-        <>
-          {handleProps(
+      {highlightKind && show(highlightKind) ? <GumballInteractionPreview kind={highlightKind} palette={props.palette} phase={props.active === highlightKind ? "active" : "hover"} /> : null}
+      {show("moveX")
+        ? handleProps(
             "moveX",
             <>
               <mesh rotation={[0, 0, -Math.PI / 2]}>
@@ -21079,8 +21110,10 @@ function GumballHandles(props: {
                 <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
-          )}
-          {handleProps(
+          )
+        : null}
+      {show("moveY")
+        ? handleProps(
             "moveY",
             <>
               <mesh>
@@ -21090,8 +21123,10 @@ function GumballHandles(props: {
                 <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
-          )}
-          {handleProps(
+          )
+        : null}
+      {show("moveZ")
+        ? handleProps(
             "moveZ",
             <>
               <mesh rotation={[Math.PI / 2, 0, 0]}>
@@ -21101,68 +21136,63 @@ function GumballHandles(props: {
                 <coneGeometry args={[GUMBALL_ARROW_RADIUS * GUMBALL_ARROW_HEAD_RADIUS_SCALE, GUMBALL_ARROW_HEAD, 8]} />
               </mesh>
             </>,
-          )}
-        </>
+          )
+        : null}
+      {show("moveXY") ? (
+        handleProps(
+          "moveXY",
+          <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
+            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+          </mesh>,
+        )
       ) : null}
-      {props.config.movePlanes ? (
-        <>
-          {handleProps(
-            "moveXY",
-            <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
-              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "moveYZ",
-            <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
-              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "moveXZ",
-            <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
-              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-            </mesh>,
-          )}
-        </>
+      {show("moveYZ") ? (
+        handleProps(
+          "moveYZ",
+          <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
+            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+          </mesh>,
+        )
       ) : null}
-      {props.config.rotate ? (
-        <>
-          {handleProps(
-            "rotateX",
-            <mesh rotation={[0, Math.PI / 2, 0]}>
-              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "rotateY",
-            <mesh rotation={[Math.PI / 2, 0, 0]}>
-              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-            </mesh>,
-          )}
-          {handleProps(
-            "rotateZ",
-            <mesh>
-              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-            </mesh>,
-          )}
-        </>
+      {show("moveXZ") ? (
+        handleProps(
+          "moveXZ",
+          <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
+            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+          </mesh>,
+        )
       ) : null}
-      {props.config.scaleAxes ? (
-        <>
-          {scaleHandleProps("scaleX", "x")}
-          {scaleHandleProps("scaleY", "y")}
-          {scaleHandleProps("scaleZ", "z")}
-        </>
+      {show("rotateX") ? (
+        handleProps(
+          "rotateX",
+          <mesh rotation={[0, Math.PI / 2, 0]}>
+            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+          </mesh>,
+        )
       ) : null}
-      {props.config.scalePlanes ? (
-        <>
-          {scalePlaneHandleProps("scaleXY", "xy")}
-          {scalePlaneHandleProps("scaleYZ", "yz")}
-          {scalePlaneHandleProps("scaleXZ", "xz")}
-        </>
+      {show("rotateY") ? (
+        handleProps(
+          "rotateY",
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+          </mesh>,
+        )
       ) : null}
-      {props.config.scaleUniform
+      {show("rotateZ") ? (
+        handleProps(
+          "rotateZ",
+          <mesh>
+            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+          </mesh>,
+        )
+      ) : null}
+      {show("scaleX") ? scaleHandleProps("scaleX", "x") : null}
+      {show("scaleY") ? scaleHandleProps("scaleY", "y") : null}
+      {show("scaleZ") ? scaleHandleProps("scaleZ", "z") : null}
+      {show("scaleXY") ? scalePlaneHandleProps("scaleXY", "xy") : null}
+      {show("scaleYZ") ? scalePlaneHandleProps("scaleYZ", "yz") : null}
+      {show("scaleXZ") ? scalePlaneHandleProps("scaleXZ", "xz") : null}
+      {show("scaleUniform")
         ? handleProps(
             "scaleUniform",
             <>
@@ -25005,11 +25035,11 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("UIIntroduction show/introduce cutouts", () => {
-    it("cuts out the introduced panel by its stamped element id", async () => {
+  describe("UIIntroduction veil and elevation", () => {
+    it("renders a single fullscreen veil and elevates the introduced panel above it", async () => {
       const { container } = render(
         <div>
-          <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
+          <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-elevation-root="" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
           <UIIntroduction
             introduction={{
               title: "Welcome",
@@ -25035,12 +25065,14 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBe("true");
       });
+      expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduction-elevated")).toBe("true");
+      expect(container.querySelectorAll(".ui-glass-veil")).toHaveLength(1);
     });
 
-    it("introduces the first draggable tree item via its stamped alias, without pulsing its siblings", async () => {
+    it("introduces the first draggable tree item via its stamped alias, elevating the panel (not the row) and not pulsing siblings", async () => {
       const { container } = render(
         <div>
-          <div data-slot="panel" data-panel-visible="true">
+          <div data-slot="panel" data-elevation-root="" data-panel-visible="true">
             <div data-slot="tree-item-row" data-draggable="true" data-element-alias="framework.panelTab.framework.panel.catalogue.firstDraggable" id="puzzle3d-kind:first" />
             <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:second" />
           </div>
@@ -25071,9 +25103,11 @@ if (import.meta.vitest) {
       });
       expect(container.querySelector('[id="puzzle3d-kind:second"]')?.getAttribute("data-introduced")).toBeNull();
       expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBeNull();
+      expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduction-elevated")).toBe("true");
+      expect(container.querySelector('[id="puzzle3d-kind:first"]')?.getAttribute("data-introduction-elevated")).toBeNull();
     });
 
-    it("keeps show elements interactive without pulsing them", async () => {
+    it("keeps show elements interactive without pulsing them, self-elevating when there is no enclosing chrome unit", async () => {
       const { container } = render(
         <div>
           <div id="framework.window.puzzle3dMain" />
@@ -25100,9 +25134,116 @@ if (import.meta.vitest) {
         </div>,
       );
       await waitFor(() => {
-        expect(container.querySelectorAll(".ui-glass-veil").length).toBeGreaterThan(0);
+        expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduction-elevated")).toBe("true");
       });
+      expect(container.querySelectorAll(".ui-glass-veil")).toHaveLength(1);
       expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBeNull();
+    });
+
+    it("blocks the veil's pointer-events only once a target resolves", async () => {
+      const { container, rerender } = render(
+        <div>
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "add-object",
+                  title: "Baukomponente hinzufügen",
+                  body: "Drag the first kind.",
+                  introduce: "framework.window.puzzle3dMain",
+                  show: [],
+                  placement: "right",
+                  advance: { kind: "next" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      expect(container.querySelector(".ui-glass-veil")?.className).toContain("pointer-events-none");
+      rerender(
+        <div>
+          <div id="framework.window.puzzle3dMain" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "add-object",
+                  title: "Baukomponente hinzufügen",
+                  body: "Drag the first kind.",
+                  introduce: "framework.window.puzzle3dMain",
+                  show: [],
+                  placement: "right",
+                  advance: { kind: "next" },
+                  logos: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(container.querySelector(".ui-glass-veil")?.className).toContain("pointer-events-auto");
+      });
+    });
+
+    it("clears elevation on step change and on unmount", async () => {
+      const { container, rerender, unmount } = render(
+        <div>
+          <div id="framework.window.puzzle3dMain" data-elevation-root="" />
+          <div id="framework.panelTab.framework.panel.catalogue" data-elevation-root="" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      const stepAWindow = container.querySelector('[id="framework.window.puzzle3dMain"]')!;
+      const stepBPanel = container.querySelector('[id="framework.panelTab.framework.panel.catalogue"]')!;
+      await waitFor(() => {
+        expect(stepAWindow.getAttribute("data-introduction-elevated")).toBe("true");
+      });
+      rerender(
+        <div>
+          <div id="framework.window.puzzle3dMain" data-elevation-root="" />
+          <div id="framework.panelTab.framework.panel.catalogue" data-elevation-root="" />
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+              ],
+            }}
+            stepIndex={1}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />
+        </div>,
+      );
+      await waitFor(() => {
+        expect(stepBPanel.getAttribute("data-introduction-elevated")).toBe("true");
+      });
+      expect(stepAWindow.getAttribute("data-introduction-elevated")).toBeNull();
+      unmount();
+      expect(stepBPanel.getAttribute("data-introduction-elevated")).toBeNull();
     });
   });
 
@@ -25239,35 +25380,6 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("introductionVeilBands", () => {
-    it("returns one full-viewport band when there is no cutout", () => {
-      const bands = introductionVeilBands({ width: 800, height: 600 }, []);
-      expect(bands).toEqual([{ top: 0, left: 0, width: 800, height: 600 }]);
-    });
-
-    it("tiles the viewport into up to four bands around the cutout, dropping zero-area bands", () => {
-      const bands = introductionVeilBands({ width: 800, height: 600 }, [{ top: 100, left: 200, width: 100, height: 50 }]);
-      const coveredArea = bands.reduce((sum, band) => sum + band.width * band.height, 0);
-      expect(coveredArea).toBe(800 * 600 - 100 * 50);
-      for (const band of bands) {
-        expect(band.width).toBeGreaterThan(0);
-        expect(band.height).toBeGreaterThan(0);
-      }
-    });
-
-    it("punches multiple cutouts so each hole stays interactive", () => {
-      const bands = introductionVeilBands(
-        { width: 800, height: 600 },
-        [
-          { top: 40, left: 10, width: 80, height: 40 },
-          { top: 100, left: 300, width: 400, height: 400 },
-        ],
-      );
-      const coveredArea = bands.reduce((sum, band) => sum + band.width * band.height, 0);
-      expect(coveredArea).toBe(800 * 600 - 80 * 40 - 400 * 400);
-    });
-  });
-
   describe("resolveIntroductionPlacement", () => {
     const viewport = { width: 800, height: 600 };
     const boxSize = { width: 100, height: 50 };
@@ -25379,6 +25491,22 @@ if (import.meta.vitest) {
       expect(gumballHandleKindToTransformMode("scaleUniform")).toBe("scale");
       expect(gumballConfigVisible(DEFAULT_GUMBALL_CONFIG)).toBe(true);
       expect(gumballConfigVisible({ moveAxes: false, movePlanes: false, rotate: false, scaleAxes: false, scalePlanes: false, scaleUniform: false })).toBe(false);
+      expect(gumballHandleAllowedByPlane("moveZ", undefined)).toBe(true);
+      expect(gumballHandleAllowedByPlane("moveZ", "xy")).toBe(false);
+      expect(gumballHandleAllowedByPlane("moveX", "xy")).toBe(true);
+      expect(gumballHandleAllowedByPlane("rotateZ", "xy")).toBe(true);
+      expect(gumballHandleAllowedByPlane("rotateX", "xy")).toBe(false);
+      expect(gumballHandleAllowedByPlane("moveYZ", "yz")).toBe(true);
+      expect(gumballHandleAllowedByPlane("rotateY", "xz")).toBe(true);
+      const xyMove = resolveGumballConfig({ moveAxes: true, movePlanes: true, rotate: true, scaleAxes: false, scalePlanes: false, scaleUniform: false, plane: "xy" });
+      expect(gumballHandleEnabled("moveX", xyMove)).toBe(true);
+      expect(gumballHandleEnabled("moveZ", xyMove)).toBe(false);
+      expect(gumballHandleEnabled("moveXY", xyMove)).toBe(true);
+      expect(gumballHandleEnabled("moveYZ", xyMove)).toBe(false);
+      expect(gumballHandleEnabled("rotateZ", xyMove)).toBe(true);
+      expect(gumballHandleEnabled("rotateX", xyMove)).toBe(false);
+      expect(gumballConfigVisible(xyMove)).toBe(true);
+      expect(resolveGumballConfig({ plane: "yz" }).plane).toBe("yz");
       expect(gumballHandleKindToTransformMode("scaleXY")).toBe("scale");
       expect(gumballHandleVisualState("moveX", "moveY", null)).toBe("dimmed");
       expect(gumballHandleVisualState("moveX", "moveX", null)).toBe("hover");
@@ -25413,6 +25541,8 @@ if (import.meta.vitest) {
       ortho.position.set(0, 0, 20);
       ortho.updateProjectionMatrix();
       expect(gumballPreviewWorldExtent(ortho, previewPivot)).toBeGreaterThan(9);
+      expect(GUMBALL_PREVIEW_DISK_RADIUS).toBe(GUMBALL_RING_RADIUS);
+      expect(GUMBALL_PREVIEW_DISK_RADIUS).toBeLessThan(GUMBALL_PREVIEW_RING_RADIUS);
       expect(gumballScalePlaneAxisIndices("scaleXY")).toEqual([0, 1]);
       expect(gumballScalePlaneAxisIndices("scaleYZ")).toEqual([1, 2]);
       expect(gumballScalePlaneAxisIndices("scaleXZ")).toEqual([0, 2]);

@@ -1,0 +1,13 @@
+{
+  "title": "Get Procedural 3D Working End to End",
+  "emoji": "🧊",
+  "status": "open",
+  "description": "Get procedural 3d working end to end. Currently the window shows: Renderfehler: Maximum update depth exceeded. This can happen when a component repeatedly calls setState inside componentWillUpdate or componentDidUpdate. React limits the number of nested updates to prevent infinite loops.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2258"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪0866e38658fa45b8b8a3eb0760bec195"
+  ]
+}

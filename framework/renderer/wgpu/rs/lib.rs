@@ -20961,7 +20961,12 @@ fn element_rect_is_fallback(id: &str) -> bool {
 }
 
 /// 🎓 Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
-/// they don't overlap) — byte-for-byte port of `punchIntroductionCutout` (`ui/js/react/index.tsx`).
+/// they don't overlap). The React shell now renders one fullscreen `ui-glass-veil` div and raises the
+/// introduced/shown element's chrome unit above it via z-index instead of doing this subtraction itself —
+/// wgpu keeps the geometric subtraction because it's the only way to realize the *same visual result*
+/// here: `push_solid` quads tile with no seam (no per-quad backdrop-filter to discontinue), a real glass
+/// veil can't work in this renderer (see `introduction_veil_bands`'s doc), and 3D window content lives in
+/// separate `scene_passes` that can't be repainted above an overlay at all.
 fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     let top = band.y.max(hole.y);
     let left = band.x.max(hole.x);
@@ -20981,8 +20986,15 @@ fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
     .collect()
 }
 
-/// 🎓 Splits the viewport into glass bands tiling the space around every cutout — byte-for-byte port of
-/// `introductionVeilBands` (`ui/js/react/index.tsx`). An empty cutout list returns one full-viewport band.
+/// 🎓 Splits the viewport into bands tiling the space around every cutout, painted as this renderer's
+/// internal realization of "one fullscreen veil beneath elevated elements" — an empty cutout list returns
+/// one full-viewport band. A *real* glass veil (matching React's `ui-glass-veil`) is infeasible here: the
+/// blur chain (`run_blur_chain`, ui/wgpu/rs/lib.rs) only mips the main draw-list's scene texture, but
+/// panels/navbar/footer paint into the *overlay* DrawList (`with_chrome_sink`), so a glass veil would show
+/// blurred canvas where it overlaps chrome rather than frosting it; and in `composite_to_swapchain`,
+/// overlay glass regions composite *before* the overlay's own instance pass, i.e. beneath that chrome
+/// regardless of push order. A solid-fill veil with real geometric holes is therefore the correct choice,
+/// not a shortcut — and it's seam-free by construction (no per-quad backdrop-filter exists to discontinue).
 fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
     let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
     for cutout in cutouts {
@@ -22769,11 +22781,13 @@ impl ShellState {
         chrome_advance_introduction(intro.steps.len());
     }
 
-    /// 🎓 Paints the current introduction-tour step (item 3) — glass bands tile the viewport around the
-    /// `introduce`/`show` element ids that resolved to a rect this frame (real DOM-like gaps, ported from
-    /// `introductionVeilBands`), the `introduce` rect pulses an inset ring (`introduced_pulse_thickness`),
-    /// and the info box anchors beside it via `resolve_introduction_placement` — byte-for-byte parity with
-    /// `ui/js/react/index.tsx`'s `UIIntroduction`. Ids that don't resolve to a rect (see
+    /// 🎓 Paints the current introduction-tour step (item 3) — visual parity with `ui/js/react/index.tsx`'s
+    /// `UIIntroduction`, which now renders one fullscreen veil div and raises the introduced/shown
+    /// element's chrome unit above it via z-index. This painter achieves the identical *pixels* by solid
+    /// bands tiled around the `introduce`/`show` element ids that resolved to a rect this frame instead —
+    /// see `introduction_veil_bands`'s doc for why that's the correct approach here, not a shortcut. The
+    /// `introduce` rect pulses an inset ring (`introduced_pulse_thickness`), and the info box anchors
+    /// beside it via `resolve_introduction_placement`. Ids that don't resolve to a rect (see
     /// `resolve_introduction_element_rect`'s doc comment for the current registration gaps) fall back to
     /// a centered box with no cutout, same as a `None` `introduce`.
     fn render_chrome_tour(

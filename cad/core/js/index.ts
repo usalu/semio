@@ -4570,6 +4570,8 @@ export interface CadGumballConfig {
   readonly scaleAxes?: boolean;
   readonly scalePlanes?: boolean;
   readonly scaleUniform?: boolean;
+  /** When set, only the planar subset for this drafting plane is shown (e.g. Top → `xy`). */
+  readonly plane?: "xy" | "yz" | "xz";
   readonly translationSnap?: number;
   readonly rotationSnap?: number;
   readonly scaleSnap?: number;

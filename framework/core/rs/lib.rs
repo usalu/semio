@@ -4298,10 +4298,17 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_window_kind_id: Option<String>,
-    /// 🧰 The host-owned active utility for the active window kind (never a document field, never a VCS op).
+    /// 🧰 Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
+    /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
+    /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_utility_id: Option<String>,
+    /// 🧰 Host-owned active utility per window **instance** (never a document field, never a VCS op). The shell
+    /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
+    /// `active_tool_id`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub active_utility_by_window_id: std::collections::HashMap<String, String>,
     /// 🛠️ The host-owned active tool of the active mode (never a document field, never a VCS op) —
     /// mutually exclusive with `active_utility_id`: activating one clears the other (see the React
     /// shell's `onAction` interceptors).
