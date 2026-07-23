@@ -793,7 +793,7 @@ pub mod d2 {
                 max: PUZZLE2D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE2D_SUGGESTION_OFFSET_STEP),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: puzzle2d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Group {
@@ -857,7 +857,7 @@ pub mod d2 {
                 max: PUZZLE2D_FILL_COUNT_MAX as f64,
                 step: Some(1.0),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: puzzle2d_action("setFillCount", None),
             }],
         }
@@ -1361,7 +1361,7 @@ pub mod d2 {
                 let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind");
                 let draggable = slice == "nodes";
                 UiTreeItemNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: format!("{section_id}.{index}.{kind_id}"),
                     label: catalog_kind_label(entry),
                     description: Some(kind_id.into()),
@@ -1381,7 +1381,7 @@ pub mod d2 {
             })
             .collect();
         UiTreeSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(true),
@@ -1397,7 +1397,7 @@ pub mod d2 {
         let handle_entries = kind_catalog_entries(fixture, "handles").unwrap_or(inferred_handles.as_slice());
         let edge_entries = kind_catalog_entries(fixture, "edges").unwrap_or(inferred_edges.as_slice());
         UiNode::Tree(UiTreeNode {
-            loading: None,
+            loading: None, waiting: None,
             sections: vec![
                 kind_catalog_section("puzzle2d-play-kinds.nodes", "nodes", labels.nodes, &node_entries, labels),
                 kind_catalog_section("puzzle2d-play-kinds.handles", "handles", labels.handles, &handle_entries, labels),
@@ -1536,7 +1536,7 @@ pub mod d2 {
                     max: 1.0,
                     step: Some(0.01),
                     ready: None,
-                    loading: None,
+                    loading: None, waiting: None,
                     on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
                 }
             })
@@ -2684,7 +2684,8 @@ pub mod d3 {
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
         SurfaceKind, ToolRef, UtilityDefinition, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWindowInstance, WindowEngagement, WindowEngagementInput, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
-        IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
+        IntroductionAdvance, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
+        window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
         ActionRef, DialogDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
@@ -4581,7 +4582,6 @@ pub mod d3 {
         fill: &'static str,
         count: &'static str,
         brush: &'static str,
-        mode: &'static str,
         edit_volumes: &'static str,
         voxel: &'static str,
         width: &'static str,
@@ -4611,7 +4611,6 @@ pub mod d3 {
         fill: "Fill",
         count: "Count",
         brush: "Brush",
-        mode: "Mode",
         edit_volumes: "Edit Volumes",
         voxel: "Voxel",
         width: "Width",
@@ -4640,7 +4639,6 @@ pub mod d3 {
         fill: "Füllen",
         count: "Anzahl",
         brush: "Pinsel",
-        mode: "Modus",
         edit_volumes: "Volumen bearbeiten",
         voxel: "Voxel",
         width: "Breite",
@@ -4695,7 +4693,7 @@ pub mod d3 {
     //#region 🔖Panels
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
         UiTreeItemNode {
-            loading: None,
+            loading: None, waiting: None,
             id: id.into(),
             label: label.into(),
             description: None,
@@ -4745,7 +4743,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "object", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: format!("puzzle3d-object:{}", object.id),
                     label: object.object_kind.clone().unwrap_or_else(|| object.id.clone()),
                     description: None,
@@ -4774,7 +4772,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "reference", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: format!("puzzle3d-reference:{}", reference.id),
                     label: reference.id.clone(),
                     description: Some(reference.source.url.clone()),
@@ -4803,7 +4801,7 @@ pub mod d3 {
                     move |flag: &str| json!({ "flag": flag, "value": true, "entity": "targetVolume", "ids": [id.clone()] })
                 };
                 UiTreeItemNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: format!("puzzle3d-target-volume:{}", volume.id),
                     label: volume.id.clone(),
                     description: None,
@@ -4836,12 +4834,12 @@ pub mod d3 {
             })
             .collect();
         UiNode::Tree(UiTreeNode {
-            loading: None,
+            loading: None, waiting: None,
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), loading: None, items: reference_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), loading: None, items: target_volume_items },
-                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, waiting: None, items: object_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.references".into(), label: Some("References".into()), default_open: Some(false), loading: None, waiting: None, items: reference_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.target-volumes".into(), label: Some("Target Volumes".into()), default_open: Some(false), loading: None, waiting: None, items: target_volume_items },
+                UiTreeSectionNode { id: "puzzle3d-play-document.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, waiting: None, items: attraction_items },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -4873,7 +4871,7 @@ pub mod d3 {
                         let vortex_kind = template.get("vortexKind").and_then(|value| value.as_str()).unwrap_or("vortex");
                         let position = template.get("position").cloned().unwrap_or(json!([0.0, 0.0, 0.0]));
                         UiTreeItemNode {
-                            loading: None,
+                            loading: None, waiting: None,
                             id: format!("puzzle3d-kind-vortex.{index}.{vortex_kind}"),
                             label: vortex_kind.into(),
                             description: Some(position.to_string()),
@@ -4901,7 +4899,7 @@ pub mod d3 {
         let mesh_url = entry.get("meshUrl").and_then(|value| value.as_str()).filter(|url| !url.is_empty()).map(str::to_string);
         let draggable = mesh_url.is_some();
         UiTreeItemNode {
-            loading: None,
+            loading: None, waiting: None,
             id: format!("puzzle3d-kind:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id.clone()),
@@ -4929,7 +4927,7 @@ pub mod d3 {
     fn puzzle3d_catalog_kind_item(entry: &Value, icon_id: &str) -> UiTreeItemNode {
         let kind_id = entry.get("id").and_then(|value| value.as_str()).unwrap_or("kind").to_string();
         UiTreeItemNode {
-            loading: None,
+            loading: None, waiting: None,
             id: format!("puzzle3d-kind-entry:{kind_id}"),
             label: puzzle3d_catalog_entry_label(entry),
             description: Some(kind_id),
@@ -4954,12 +4952,12 @@ pub mod d3 {
         let cable_entries = puzzle3d_catalog_entries(&envelope.fixture, "cables");
         let attraction_entries = puzzle3d_catalog_entries(&envelope.fixture, "attractions");
         UiNode::Tree(UiTreeNode {
-            loading: None,
+            loading: None, waiting: None,
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), loading: None, items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), loading: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), loading: None, waiting: None, items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), loading: None, waiting: None, items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some("Cables".into()), default_open: Some(false), loading: None, waiting: None, items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some("Attractions".into()), default_open: Some(false), loading: None, waiting: None, items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
             ],
             selected_ids: None,
             highlighted_ids: None,
@@ -5012,7 +5010,7 @@ pub mod d3 {
     fn inspector_header_and_delete(count: usize, noun: &str) -> Vec<UiNode> {
         vec![
             ui_text(format!("{count} {noun} selected")),
-            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None }),
+            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: "Delete".into(), action: puzzle3d_action("deleteSelection", None), style: None, disabled: None, loading: None, waiting: None }),
         ]
     }
 
@@ -5434,7 +5432,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, on_change: puzzle3d_action("setLodManual", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
     }
@@ -5448,7 +5446,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible"), icon_id: "layout-grid".into(), label: Some("Visible".into()), pressed: runtime.grid_visible, text: None, on_change: puzzle3d_action("setGridVisible", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some("Snap".into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("Spacing {:.1}", runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, on_change: puzzle3d_action("setGridSpacing", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("Spacing {:.1}", runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, on_change: puzzle3d_action("setGridSpacing", None) },
             ],
         }
     }
@@ -5486,28 +5484,30 @@ pub mod d3 {
                     max: 1.0,
                     step: Some(0.01),
                     ready: None,
-                    loading: None,
+                    loading: None, waiting: None,
                     on_change: puzzle3d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
             .collect()
     }
 
-    fn puzzle3d_brush_distribution_children(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
+    /// 🎲 Object/vortex kind-weight distribution trees — shared by the fill tool panel and the brush utility
+    /// options (both consume the same `object_kind_weights` / `vortex_kind_weights` maps).
+    fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, default_open: Option<bool>) -> Vec<WindowMeasure> {
         let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
         let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
         vec![
             WindowMeasure::Group {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-objects"),
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution-objects"),
                 label: format!("{} ({:.0}%)", labels.objects, puzzle3d_kind_weight_sum(&envelope.runtime.object_kind_weights, &object_ids) * 100.0).into(),
-                default_open: Some(false),
+                default_open,
                 active_utility_id: None,
                 children: puzzle3d_kind_weight_measures("object-kind", &object_ids, &envelope.runtime.object_kind_weights, "setObjectKindWeight"),
             },
             WindowMeasure::Group {
-                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-brush-distribution-vortices"),
+                id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution-vortices"),
                 label: format!("{} ({:.0}%)", labels.vortices, puzzle3d_kind_weight_sum(&envelope.runtime.vortex_kind_weights, &vortex_ids) * 100.0).into(),
-                default_open: Some(false),
+                default_open,
                 active_utility_id: None,
                 children: puzzle3d_kind_weight_measures("vortex-kind", &vortex_ids, &envelope.runtime.vortex_kind_weights, "setVortexKindWeight"),
             },
@@ -5558,23 +5558,20 @@ pub mod d3 {
             max: PUZZLE3D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
             ready: Some(available_count as f64),
-            loading: if done { None } else { Some(true) },
+            loading: if done { None } else { Some(true) }, waiting: None,
             on_change: puzzle3d_action("setFillCount", None),
         }
     }
 
-    /// 🧊 Fill/edit-volumes mode picker measure — replaces the retired `puzzle3d_voxel_mode_toggle`. A
-    /// [`WindowMeasure::Select`] dispatches its item `value` under the `value` key, so `setFillEditTargetVolumes`
-    /// now reads `id`-or-`value` (see its handler) to keep the `fill`/`edit-volumes` semantics identical.
-    fn puzzle3d_voxel_mode_measure(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
-        WindowMeasure::Select {
-            id: "puzzle3d-voxel-edit-mode".into(),
-            label: Some(labels.mode.into()),
-            value: if runtime.fill_edit_target_volumes { "edit-volumes".into() } else { "fill".into() },
-            items: vec![
-                MeasureSelectItem { id: "fill".into(), value: "fill".into(), label: labels.fill.into() },
-                MeasureSelectItem { id: "edit-volumes".into(), value: "edit-volumes".into(), label: labels.edit_volumes.into() },
-            ],
+    /// 🧊 Edit-volumes toggle — secondary fill-tool chrome for drawing/editing target volumes. Replaces the
+    /// retired fill/edit-volumes mode Select so the primary fill tree stays the count slider + distributions.
+    fn puzzle3d_edit_volumes_toggle(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
+        WindowMeasure::Toggle {
+            id: "puzzle3d-edit-volumes".into(),
+            icon_id: "box".into(),
+            label: Some(labels.edit_volumes.into()),
+            pressed: runtime.fill_edit_target_volumes,
+            text: None,
             on_change: puzzle3d_action("setFillEditTargetVolumes", None),
         }
     }
@@ -5592,23 +5589,22 @@ pub mod d3 {
             max: 64.0,
             step: Some(1.0),
             ready: None,
-            loading: None,
+            loading: None, waiting: None,
             on_change: puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis }))),
         };
         vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]
     }
 
-    /// 🛠️ Fill tool measures — the fill-count slider (hidden while editing target volumes, matching the
-    /// retired engagement gate), the fill/edit-volumes mode picker, and (only while editing target
-    /// volumes) the voxel width/depth/height dimension sliders. Surfaced in the mode-level tool panel
-    /// while the fill tool is active — not a window utility-options group, since fill is a whole-document
-    /// generator, not a per-window pointer mode (see `ToolDefinition`/`DocumentApp::tool_measures`).
+    /// 🛠️ Fill tool measures — flat tree under the Fill toggle: count slider, object/vortex distributions,
+    /// then a secondary edit-volumes toggle (with voxel dim sliders while editing). No nested Fill group —
+    /// `buildToolTree` already owns the activation row (see `ToolDefinition`/`DocumentApp::tool_measures`).
     fn puzzle3d_fill_tool_measures(envelope: &Puzzle3dScene, precompute: &Puzzle3dPrecomputeSession, labels: &Puzzle3dLabels) -> Vec<WindowMeasure> {
-        let mut children = vec![puzzle3d_voxel_mode_measure(&envelope.runtime, labels)];
+        let mut measures = Vec::new();
         if !envelope.runtime.fill_edit_target_volumes {
-            children.insert(0, puzzle3d_fill_count_measure(envelope, precompute, labels));
+            measures.push(puzzle3d_fill_count_measure(envelope, precompute, labels));
         }
-        let mut measures = vec![WindowMeasure::Group { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-fill"), label: labels.fill.into(), default_open: Some(true), active_utility_id: None, children }];
+        measures.extend(puzzle3d_distribution_children(envelope, labels, Some(true)));
+        measures.push(puzzle3d_edit_volumes_toggle(&envelope.runtime, labels));
         if envelope.runtime.fill_edit_target_volumes {
             measures.push(WindowMeasure::Group {
                 id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-tool-options-voxel"),
@@ -5633,7 +5629,7 @@ pub mod d3 {
                 max: 1.0,
                 step: Some(0.01),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
             },
             WindowMeasure::Group {
@@ -5641,7 +5637,7 @@ pub mod d3 {
                 label: "Distribution".into(),
                 default_open: Some(false),
                 active_utility_id: None,
-                children: puzzle3d_brush_distribution_children(envelope, labels),
+                children: puzzle3d_distribution_children(envelope, labels, Some(false)),
             },
         ];
         if let Some(target) = puzzle3d_brush_target_vortex(envelope) {
@@ -6265,10 +6261,12 @@ pub mod d3 {
                     }
                 }
                 "setFillEditTargetVolumes" => {
+                    let pressed = args.and_then(|value| value.get("pressed")).and_then(Value::as_bool);
                     let id = args.and_then(|value| value.get("id").or_else(|| value.get("value"))).and_then(|value| value.as_str());
-                    envelope.runtime.fill_edit_target_volumes = match id {
-                        Some("edit-volumes") => true,
-                        Some("fill") => false,
+                    envelope.runtime.fill_edit_target_volumes = match (pressed, id) {
+                        (Some(value), _) => value,
+                        (_, Some("edit-volumes")) => true,
+                        (_, Some("fill")) => false,
                         _ => !envelope.runtime.fill_edit_target_volumes,
                     };
                 }
@@ -6844,37 +6842,20 @@ pub mod d3 {
                             "welcome",
                             "Welcome to Puzzle 3D",
                             "A quick tour of the viewport, utilities, and panels before you start composing.",
-                            IntroductionAnchor::Screen,
                         ),
-                        IntroductionStepDefinition::new(
-                            "viewport",
-                            "The Viewport",
-                            "This is your 3D scene — orbit, pan, and zoom to look around.",
-                            IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into()),
-                        ),
-                        IntroductionStepDefinition::new(
-                            "catalogue",
-                            "The Catalogue",
-                            "Browse the object kinds available to place from here.",
-                            IntroductionAnchor::PanelTab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
-                        )
-                        .placement(IntroductionPlacement::Right),
-                        IntroductionStepDefinition::new(
-                            "add-object",
-                            "Add an Object",
-                            "Drag the first object kind from the catalogue into the viewport.",
-                            IntroductionAnchor::PanelFirstDraggable(FRAMEWORK_PANEL_TAB_CATALOGUE_ID.into()),
-                        )
-                        .placement(IntroductionPlacement::Right)
-                        .advance_on(IntroductionAdvance::Action("addObjectKind".into()))
-                        .cutouts(vec![IntroductionAnchor::WindowKind(PUZZLE3D_PLAY_WINDOW_MAIN.into())]),
-                        IntroductionStepDefinition::new(
-                            "transform-utility",
-                            "Transform Objects",
-                            "Activate the Transform utility to move and rotate objects in the scene.",
-                            IntroductionAnchor::Utility("transform".into()),
-                        )
-                        .advance_on(IntroductionAdvance::Utility("transform".into())),
+                        IntroductionStepDefinition::new("viewport", "The Viewport", "This is your 3D scene — orbit, pan, and zoom to look around.")
+                            .introduce(window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)),
+                        IntroductionStepDefinition::new("catalogue", "The Catalogue", "Browse the object kinds available to place from here.")
+                            .introduce(panel_tab_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
+                            .placement(IntroductionPlacement::Right),
+                        IntroductionStepDefinition::new("add-object", "Add an Object", "Drag the first object kind from the catalogue into the viewport.")
+                            .introduce(panel_tab_first_draggable_element_id(FRAMEWORK_PANEL_TAB_CATALOGUE_ID))
+                            .show(vec![window_element_id(PUZZLE3D_PLAY_WINDOW_MAIN)])
+                            .placement(IntroductionPlacement::Right)
+                            .advance_on(IntroductionAdvance::Action("addObjectKind".into())),
+                        IntroductionStepDefinition::new("transform-utility", "Transform Objects", "Activate the Transform utility to move and rotate objects in the scene.")
+                            .introduce("transform")
+                            .advance_on(IntroductionAdvance::Utility("transform".into())),
                     ],
                 })
                 // 🗨️ Reference dialog (proof of the framework's Dialog mechanism, see `DialogDefinition`
@@ -7605,19 +7586,22 @@ pub mod d3 {
             }
         }
 
-        /// 🎯 D-3 follow-up: the fill-count slider, fill/edit-volumes mode picker and voxel-dimension steppers
-        /// are untagged `WindowMeasure::Group`s in [`puzzle3d_fill_tool_measures`] (surfaced by the mode-level
-        /// tool panel, never a window's Utility Options rail); the brush placement picker stays a
+        /// 🎯 Fill tool measures are a flat list under the Fill toggle (count + object/vortex distributions +
+        /// edit-volumes toggle); voxel-dimension steppers join only while editing. Brush placement stays a
         /// utility-options group in [`puzzle3d_window_measures`]. Neither carries a [`WindowEngagementControl`].
         #[test]
         fn fill_and_brush_params_are_tagged_utility_options_not_engagement_controls() {
             let labels = puzzle3d_labels(&ViewState::default());
             let session = Puzzle3dPrecomputeSession::new();
-            // 🛠️ Fill tool: no active_utility_id tag (fill is windowless); the voxel-dimension group only
-            // materialises once the edit-volumes mode is on (mirroring the retired `voxel_edit_active` gate).
             let fill_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
             let fill_tool_measures = puzzle3d_fill_tool_measures(&fill_scene, &session, labels);
-            assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-tool-options-fill"), Some(None));
+            assert!(
+                !fill_tool_measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "puzzle3d-play-tool-options-fill")),
+                "fill must not wrap its options in a nested Fill group — the tool toggle already owns that row"
+            );
+            assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-distribution-objects"), Some(None));
+            assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-distribution-vortices"), Some(None));
+            assert_eq!(find_measure_toggle(&fill_tool_measures, "puzzle3d-edit-volumes"), Some(false));
             assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-tool-options-voxel"), None, "voxel-dimension group is absent until edit-volumes mode is on");
             assert!(find_measure_slider(&fill_tool_measures, "puzzle3d-fill-count").is_some(), "fill-count slider lives in the fill tool measures while not editing volumes");
             assert!(
@@ -7628,19 +7612,17 @@ pub mod d3 {
             edit_runtime.fill_edit_target_volumes = true;
             let edit_scene = Puzzle3dScene { fixture: default_fixture(), runtime: edit_runtime, active_utility: "fill".into() };
             let edit_tool_measures = puzzle3d_fill_tool_measures(&edit_scene, &session, labels);
+            assert_eq!(find_measure_toggle(&edit_tool_measures, "puzzle3d-edit-volumes"), Some(true));
             assert_eq!(measure_group_tag(&edit_tool_measures, "puzzle3d-play-tool-options-voxel"), Some(None), "voxel-dimension steppers surface in edit-volumes mode");
             assert!(find_measure_slider(&edit_tool_measures, "puzzle3d-fill-count").is_none(), "the fill-count slider is hidden while editing target volumes, exactly like the old engagement gate");
             assert!(find_measure_slider(&edit_tool_measures, "puzzle3d-voxel-w").is_some(), "voxel width slider is present in edit-volumes mode");
-            // 🧰 The fill engagement HUD no longer carries any relocated control/controls.
             let fill_engagement = puzzle3d_engagement(&fill_scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert!(fill_engagement.control.is_none() && fill_engagement.controls.is_none(), "fill engagement HUD must no longer carry the relocated controls");
-            // 🖌️ Brush utility: with no candidates to place the tagged group is absent (matching the old gate); the
-            // engagement HUD is likewise bare. The positive candidate case is exercised through the app below.
             let brush_scene = Puzzle3dScene { fixture: default_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "brush".into() };
             assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())));
             let brush_engagement = puzzle3d_engagement(&brush_scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
-            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
+            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
             // candidates exist — the brush Utility Options group must then surface, tagged for "brush".
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
@@ -9399,7 +9381,7 @@ pub mod d5 {
                     max: 1.0,
                     step: Some(0.01),
                     ready: None,
-                    loading: None,
+                    loading: None, waiting: None,
                     on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
@@ -9439,7 +9421,7 @@ pub mod d5 {
             max: PUZZLE5D_FILL_COUNT_MAX as f64,
             step: Some(1.0),
             ready: None,
-            loading: None,
+            loading: None, waiting: None,
             on_change: puzzle5d_action("setFillCount", None),
         }
     }
@@ -9468,7 +9450,7 @@ pub mod d5 {
                 max: PUZZLE5D_SUGGESTION_OFFSET_MAX,
                 step: Some(PUZZLE5D_SUGGESTION_OFFSET_STEP),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: puzzle5d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Slider {
@@ -9479,7 +9461,7 @@ pub mod d5 {
                 max: 0.2,
                 step: Some(0.005),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
             },
             WindowMeasure::Group {
@@ -9539,13 +9521,13 @@ pub mod d5 {
         item.icon_id = icon_id.map(str::to_string);
         item.action = Some(action);
         item
-    }
+}
 
     fn tree_info_item(id: impl Into<String>, label: impl Into<String>, description: Option<String>) -> UiTreeItemNode {
         let mut item = UiTreeItemNode::base(id, label);
         item.description = description;
         item
-    }
+}
 
     fn part_label(part: &Puzzle5dPart) -> String {
         if !part.part_2d.text.is_empty() {
@@ -9599,17 +9581,17 @@ pub mod d5 {
             .map(|fastener| tree_item_with_action(format!("puzzle5d-play-document.fastener.{}", fastener.id), fastener_label(&envelope.document, fastener), Some("link"), puzzle5d_action("setSelection", Some(json!({ "fastenerIds": [fastener.id] })))))
             .collect();
         UiNode::Tree(UiTreeNode {
-            loading: None,
+            loading: None, waiting: None,
             sections: vec![
                 UiTreeSectionNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: "puzzle5d-play-document.parts".into(),
                     label: Some(labels.parts.into()),
                     default_open: Some(true),
                     items: if part_items.is_empty() { vec![tree_info_item("puzzle5d-play-document.parts.empty", labels.none, None)] } else { part_items },
                 },
                 UiTreeSectionNode {
-                    loading: None,
+                    loading: None, waiting: None,
                     id: "puzzle5d-play-document.fasteners".into(),
                     label: Some(labels.fasteners.into()),
                     default_open: Some(false),
@@ -9668,7 +9650,7 @@ pub mod d5 {
             })
             .collect();
         UiTreeSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: section_id.into(),
             label: Some(label.into()),
             default_open: Some(!items.is_empty()),
@@ -9687,7 +9669,7 @@ pub mod d5 {
             part_entries = ids.into_iter().map(|id| json!({ "id": id, "name": id })).collect();
         }
         UiNode::Tree(UiTreeNode {
-            loading: None,
+            loading: None, waiting: None,
             sections: vec![
                 kind_catalog_section("puzzle5d-play-kinds.parts", labels.parts, &part_entries, Some("addPartKind"), labels.none),
                 kind_catalog_section("puzzle5d-play-kinds.grips", labels.grips, &slice("grips"), None, labels.none),

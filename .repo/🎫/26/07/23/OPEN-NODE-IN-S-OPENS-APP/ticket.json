@@ -1,0 +1,14 @@
+{
+  "title": "Open Node in S Opens App",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When opening a node in s it should open the app. Currently nothing happens and you stay stuck in s studio.",
+  "summary": "Opening a media-graph node in s stayed on studio because applyHostEffects overwrote ensureSpawnedPlugin's activeSpawnedId. Fold spawn/focus into nextViewState via studioPanelFocusingSpawned + viewStateWithStudioPanel before the final SET_SESSION; cover with vitest; leave [DEBUG] openPluginInstance log for runtime confirmation.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2249"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪519f115e8baf4981a15886a3de2c23a3"
+  ]
+}

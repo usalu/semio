@@ -1,0 +1,14 @@
+{
+  "title": "Fix Flow Text Appearance Colors",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Flow text does not adjust to appearance — on dark mode it still has dark text. Fix WASM canvas hosts (FlowGraphCanvasHost, WasmEditorSurface, WasmGraphSurface) to sync canvas theme via useCanvasAppearanceSync + syncSessionCanvasTheme + renderFrame(), matching the puzzle/note pattern.",
+  "summary": "Fixed Flow dark-mode text by syncing WASM canvas themes on attach/session-ready and appearance changes (FlowGraphCanvasHost, WasmEditorSurface, WasmGraphSurface), matching the puzzle/note pattern, and giving declarative UiNode text the text-foreground class so panel copy follows appearance.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2250"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3f2ec68af9c145faa9863b86b67856fc"
+  ]
+}

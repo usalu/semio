@@ -155,16 +155,17 @@ pub mod app {
 //! 🧩 Declarative app builder and plugin trait.
 
 use semio_framework_core::{
-    effective_action_args, history_action_definitions, is_element_id, missing_required_args, kernel::{
+    effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
         ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
-    IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
+    IntroductionAdvance, IntroductionDefinition, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, UtilityDefinition,
     UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
 };
 use ui_wgpu::{
     collect_window_kind_ids_from_layout, ui_control_to_node, ui_stack_vertical, ui_text, ActionDescriptor, NamedLayout, UiButtonNode,
@@ -960,52 +961,53 @@ impl AppBuilder {
                     self.id,
                     step.id
                 );
-                let validate_anchor = |anchor: &IntroductionAnchor, role: &str| match anchor {
-                    IntroductionAnchor::Screen | IntroductionAnchor::Navbar | IntroductionAnchor::Footer => {}
-                    IntroductionAnchor::Element(id) => assert!(
+                // 🆔 Every `introduce`/`show` target is grammar-checked always, plus a best-effort semantic
+                // check for the id shapes this app itself declares (utility ids, navbar/footer, panel tabs,
+                // window bodies — matched via `element_id_segment` since window kind ids are camelCased at
+                // the stamp site, never compared raw). Anything else grammar-valid is an escape hatch — an
+                // app may legitimately introduce a plugin- or framework-owned element it doesn't declare.
+                let validate_element_id = |id: &str, role: &str| {
+                    assert!(
                         is_element_id(id),
                         "app {} introduction step {} {} element id {} does not match the UI element id grammar",
                         self.id,
                         step.id,
                         role,
                         id
-                    ),
-                    IntroductionAnchor::WindowKind(id) => assert!(
-                        window_kind_ids.contains(id),
-                        "app {} introduction step {} {} undeclared window kind {}",
-                        self.id,
-                        step.id,
-                        role,
-                        id
-                    ),
-                    IntroductionAnchor::Utility(utility_ref) => assert!(
-                        declared_utility_ids.contains(utility_ref.as_str()),
-                        "app {} introduction step {} {} undeclared utility {}",
-                        self.id,
-                        step.id,
-                        role,
-                        utility_ref.as_str()
-                    ),
-                    IntroductionAnchor::Action(action_ref) => assert!(
-                        declared_action_ids.contains(action_ref.as_str()),
-                        "app {} introduction step {} {} undeclared action {}",
-                        self.id,
-                        step.id,
-                        role,
-                        action_ref.as_str()
-                    ),
-                    IntroductionAnchor::PanelTab(id) | IntroductionAnchor::PanelFirstDraggable(id) => assert!(
-                        panel_tab_ids.contains(id),
-                        "app {} introduction step {} {} undeclared panel tab {}",
-                        self.id,
-                        step.id,
-                        role,
-                        id
-                    ),
+                    );
+                    if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
+                        return;
+                    }
+                    if let Some(rest) = id.strip_prefix("framework.panelTab.") {
+                        let tab_id = rest.strip_suffix(".firstDraggable").unwrap_or(rest);
+                        assert!(
+                            panel_tab_ids.contains(tab_id),
+                            "app {} introduction step {} {} undeclared panel tab {}",
+                            self.id,
+                            step.id,
+                            role,
+                            tab_id
+                        );
+                        return;
+                    }
+                    if let Some(rest) = id.strip_prefix("framework.window.") {
+                        let segment = rest.split('.').next().unwrap_or(rest);
+                        let declared = window_kind_ids.iter().any(|kind_id| element_id_segment(kind_id) == segment);
+                        assert!(
+                            declared,
+                            "app {} introduction step {} {} undeclared window kind for element id {}",
+                            self.id,
+                            step.id,
+                            role,
+                            id
+                        );
+                    }
                 };
-                validate_anchor(&step.anchor, "anchors");
-                for cutout in &step.cutouts {
-                    validate_anchor(cutout, "cutout references");
+                if let Some(id) = &step.introduce {
+                    validate_element_id(id, "introduce");
+                }
+                for id in &step.show {
+                    validate_element_id(id, "show");
                 }
                 match &step.advance {
                     IntroductionAdvance::Next => {}
@@ -1239,7 +1241,7 @@ impl PanelTreeBuilder {
 
     /// 🌳 Adds a section verbatim.
     pub fn section(mut self, id: impl Into<String>, label: Option<String>, default_open: bool, items: Vec<UiTreeItemNode>) -> Self {
-        self.sections.push(UiTreeSectionNode { id: id.into(), label, default_open: Some(default_open), items, loading: None });
+        self.sections.push(UiTreeSectionNode { id: id.into(), label, default_open: Some(default_open), items, loading: None, waiting: None });
         self
     }
 
@@ -1255,7 +1257,7 @@ impl PanelTreeBuilder {
     ) -> Self {
         let id = id.into();
         let items = if items.is_empty() { vec![tree_item(format!("{id}.empty"), placeholder_label)] } else { items };
-        self.sections.push(UiTreeSectionNode { id, label, default_open: Some(default_open), items, loading: None });
+        self.sections.push(UiTreeSectionNode { id, label, default_open: Some(default_open), items, loading: None, waiting: None });
         self
     }
 
@@ -1283,6 +1285,7 @@ impl PanelTreeBuilder {
         UiNode::Tree(UiTreeNode {
             sections: self.sections,
             loading: None,
+            waiting: None,
             selected_ids: self.selected_ids,
             highlighted_ids: self.highlighted_ids,
             selection_change: self.selection_change,
@@ -1427,6 +1430,7 @@ impl FormPanelBuilder {
             style: None,
             disabled: None,
             loading: None,
+            waiting: None,
         });
         self
     }
@@ -1437,7 +1441,7 @@ impl FormPanelBuilder {
         if let Some(submit) = self.submit {
             children.push(UiNode::Button(submit));
         }
-        UiNode::Section(UiSectionNode { id: self.namespace, label: None, default_open: Some(true), loading: None, children })
+        UiNode::Section(UiSectionNode { id: self.namespace, label: None, default_open: Some(true), loading: None, waiting: None, children })
     }
 }
 
@@ -1516,7 +1520,7 @@ mod form_kit_tests {
             "Widget",
             Some("A widget"),
             vec![UiKeyValueEntry { label: "Kind".into(), value: "gizmo".into() }],
-            vec![UiButtonNode { id: None, icon_id: "edit".into(), label: "Edit".into(), action, style: None, disabled: None, loading: None }],
+            vec![UiButtonNode { id: None, icon_id: "edit".into(), label: "Edit".into(), action, style: None, disabled: None, loading: None, waiting: None }],
         );
         let UiNode::Stack(stack) = node else { panic!("expected a Stack node") };
         assert_eq!(stack.children.len(), 4);
@@ -2274,11 +2278,11 @@ mod app_builder_tests {
 
     #[test]
     fn declaring_introduction_injects_start_introduction_action() {
-        use semio_framework_core::{ActionKind, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
+        use semio_framework_core::{ActionKind, IntroductionDefinition, IntroductionStepDefinition, START_INTRODUCTION_ACTION_ID};
         let definition = minimal_app("intro-app")
             .introduction(IntroductionDefinition {
                 title: "Welcome".into(),
-                steps: vec![IntroductionStepDefinition::new("welcome", "Welcome", "Hi there", IntroductionAnchor::Screen)],
+                steps: vec![IntroductionStepDefinition::new("welcome", "Welcome", "Hi there")],
             })
             .build_definition();
         let start_introduction = definition
@@ -2310,14 +2314,14 @@ mod app_builder_tests {
 
     #[test]
     fn build_definition_rejects_duplicate_introduction_step_ids() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("dupe-step-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
                     steps: vec![
-                        IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Screen),
-                        IntroductionStepDefinition::new("step", "B", "b", IntroductionAnchor::Screen),
+                        IntroductionStepDefinition::new("step", "A", "a"),
+                        IntroductionStepDefinition::new("step", "B", "b"),
                     ],
                 })
                 .build_definition()
@@ -2326,18 +2330,13 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_anchoring_undeclared_window_kind() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+    fn build_definition_rejects_introduction_step_introducing_undeclared_window_kind() {
+        use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-window-app")
+            minimal_app("bad-window-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new(
-                        "step",
-                        "A",
-                        "a",
-                        IntroductionAnchor::WindowKind("missing".into()),
-                    )],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(window_element_id("missing"))],
                 })
                 .build_definition()
         });
@@ -2345,88 +2344,58 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_anchoring_undeclared_utility() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+    fn build_definition_rejects_introduction_step_introducing_undeclared_panel_tab() {
+        use semio_framework_core::{panel_tab_element_id, panel_tab_first_draggable_element_id, IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-utility-app")
+            minimal_app("bad-panel-tab-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new(
-                        "step",
-                        "A",
-                        "a",
-                        IntroductionAnchor::Utility("missing".into()),
-                    )],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(panel_tab_element_id("missing"))],
                 })
                 .build_definition()
         });
         assert!(result.is_err());
+        let result_first_draggable = std::panic::catch_unwind(|| {
+            minimal_app("bad-panel-tab-first-draggable-app")
+                .introduction(IntroductionDefinition {
+                    title: "Welcome".into(),
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce(panel_tab_first_draggable_element_id("missing"))],
+                })
+                .build_definition()
+        });
+        assert!(result_first_draggable.is_err());
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_anchoring_undeclared_action() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+    fn build_definition_rejects_introduction_step_targeting_malformed_element_id() {
+        use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-action-app")
+            minimal_app("bad-element-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new(
-                        "step",
-                        "A",
-                        "a",
-                        IntroductionAnchor::Action("missing".into()),
-                    )],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("not-camel-case")],
                 })
                 .build_definition()
         });
         assert!(result.is_err());
-    }
-
-    #[test]
-    fn build_definition_rejects_introduction_step_anchoring_undeclared_panel_tab() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
-        let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-panel-tab-app")
+        let result_show = std::panic::catch_unwind(|| {
+            minimal_app("bad-element-show-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new(
-                        "step",
-                        "A",
-                        "a",
-                        IntroductionAnchor::PanelTab("missing".into()),
-                    )],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").show(vec!["not-camel-case".into()])],
                 })
                 .build_definition()
         });
-        assert!(result.is_err());
+        assert!(result_show.is_err());
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_anchoring_malformed_element_id() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
-        let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-anchor-element-app")
-                .introduction(IntroductionDefinition {
-                    title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new(
-                        "step",
-                        "A",
-                        "a",
-                        IntroductionAnchor::Element("not-camel-case".into()),
-                    )],
-                })
-                .build_definition()
-        });
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn build_definition_accepts_introduction_anchored_at_well_formed_element_id() {
-        use semio_framework_core::{IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
-        let definition = minimal_app("good-anchor-element-app")
+    fn build_definition_accepts_introduction_step_introducing_escape_hatch_element_id() {
+        use semio_framework_core::{IntroductionDefinition, IntroductionStepDefinition};
+        let definition = minimal_app("good-escape-hatch-app")
             .introduction(IntroductionDefinition {
                 title: "Welcome".into(),
-                steps: vec![IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Element("ui.custom.thing".into()))],
+                steps: vec![IntroductionStepDefinition::new("step", "A", "a").introduce("ui.custom.thing")],
             })
             .build_definition();
         let introduction = definition.introduction.expect("introduction present");
@@ -2435,13 +2404,12 @@ mod app_builder_tests {
 
     #[test]
     fn build_definition_rejects_introduction_step_advancing_on_undeclared_utility() {
-        use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework_core::{IntroductionAdvance, IntroductionDefinition, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-advance-utility-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new("step", "A", "a", IntroductionAnchor::Screen)
-                        .advance_on(IntroductionAdvance::Utility("missing".into()))],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").advance_on(IntroductionAdvance::Utility("missing".into()))],
                 })
                 .build_definition()
         });
@@ -2449,8 +2417,8 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_accepts_introduction_anchored_at_declared_utility_and_action() {
-        use semio_framework_core::{IntroductionAdvance, IntroductionAnchor, IntroductionDefinition, IntroductionStepDefinition};
+    fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
+        use semio_framework_core::{window_element_id, IntroductionAdvance, IntroductionDefinition, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")
             .utility_simple("brush", "Brush", "icon.brush")
@@ -2459,12 +2427,12 @@ mod app_builder_tests {
             .introduction(IntroductionDefinition {
                 title: "Welcome".into(),
                 steps: vec![
-                    IntroductionStepDefinition::new("welcome", "Welcome", "Hi", IntroductionAnchor::Screen),
-                    IntroductionStepDefinition::new("main-window", "Main Window", "…", IntroductionAnchor::WindowKind("main".into())),
-                    IntroductionStepDefinition::new("brush-utility", "Brush", "…", IntroductionAnchor::Utility("brush".into()))
+                    IntroductionStepDefinition::new("welcome", "Welcome", "Hi"),
+                    IntroductionStepDefinition::new("main-window", "Main Window", "…").introduce(window_element_id("main")),
+                    IntroductionStepDefinition::new("brush-utility", "Brush", "…")
+                        .introduce("brush")
                         .advance_on(IntroductionAdvance::Utility("brush".into())),
-                    IntroductionStepDefinition::new("add-layer", "Add Layer", "…", IntroductionAnchor::Action("addLayer".into()))
-                        .advance_on(IntroductionAdvance::Action("addLayer".into())),
+                    IntroductionStepDefinition::new("add-layer", "Add Layer", "…").advance_on(IntroductionAdvance::Action("addLayer".into())),
                 ],
             })
             .build_definition();
@@ -4723,6 +4691,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 step: Some(1.0),
                 ready: None,
                 loading: None,
+                waiting: None,
                 on_change: action("setSunAzimuth", None),
             },
             WindowMeasure::Slider {
@@ -4734,6 +4703,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 step: Some(1.0),
                 ready: None,
                 loading: None,
+                waiting: None,
                 on_change: action("setSunElevation", None),
             },
             WindowMeasure::Slider {
@@ -4745,6 +4715,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 step: Some(0.05),
                 ready: None,
                 loading: None,
+                waiting: None,
                 on_change: action("setSunIntensity", None),
             },
         ],
@@ -4932,6 +4903,7 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
         step: Some(step),
         ready: None,
         loading: None,
+        waiting: None,
         on_change: action("setProjectionParam", Some(json!({ "param": param }))),
     };
 

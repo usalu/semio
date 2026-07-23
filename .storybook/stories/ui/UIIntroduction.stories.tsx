@@ -16,14 +16,14 @@ import { useState } from "react";
 // #endregion 🔌Adapters
 
 // 🎓#region 🎓UIIntroduction
-// Every step anchors on "screen" (full-viewport veil, no highlight cutout) so the story renders
+// Every step leaves `introduce: null` (full-viewport veil, no cutout) so the story renders
 // deterministically without depending on real navbar/panel/utility chrome mounting elsewhere on the page.
 const walkthrough: IntroductionDefinition = {
   title: "Welcome to Semio",
   steps: [
-    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
-    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
-    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.welcome", title: "Welcome", body: "This short walkthrough introduces the design workspace.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.canvas", title: "The Canvas", body: "Your design lives here — pan, zoom, and select pieces directly.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
+    { id: "step.done", title: "You're Ready", body: "That's the tour — start designing.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
   ],
 };
 

@@ -57,6 +57,7 @@ import {
   borderNormalTopClass,
   catalogueTreeDragController,
   childElementId,
+  elementIdSegment,
   classifyIconSelectorMode,
   cn,
   loadingBorderClass,
@@ -65,6 +66,7 @@ import {
   resolveTranslationLabel,
   uiI18n,
   useLabel,
+  waitingBorderElementClass,
   type TreeDataItem,
   type TreeDataSection,
   type TreeDragAndDropController,
@@ -165,10 +167,6 @@ import {
   UI_TERMINOLOGY_NATIVE,
   UIIntroduction,
   UIDialog,
-  introductionAnchorSelector,
-  introductionPanelTabFallbackSelector,
-  introductionWindowActionPaneUnfoldSelector,
-  introductionUtilityBarUnfoldSelector,
   readStoredIntroductionSeen,
   writeStoredIntroductionSeen,
   navbarFillItem,
@@ -314,7 +312,6 @@ import {
   type Canvas2dScene,
   type ContextMenuItemSpec,
   type DialogDefinition,
-  type IntroductionAnchor,
   type IntroductionDefinition,
   type IntroductionStepDefinition,
   type TiledMapScene,
@@ -679,8 +676,8 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
           icon={resolveDeclarativeControlIcon(control.iconId)}
           disabled={control.disabled}
           onClick={() => onAction(control.action)}
-          className={control.loading ? loadingBorderElementClass : undefined}
-          aria-busy={control.loading || undefined}
+          className={control.loading ? loadingBorderElementClass : control.waiting ? waitingBorderElementClass : undefined}
+          aria-busy={control.loading || control.waiting || undefined}
         />
       );
   }
@@ -698,6 +695,7 @@ function uiTreeItemsToTreeData(items: readonly UiTreeItemNode[], onAction: UiInt
     defaultOpen: item.defaultOpen,
     isSelected: item.selected,
     loading: item.loading,
+    waiting: item.waiting,
     isHidden: item.isHidden,
     draggable: item.draggable,
     dragData: item.dragData,
@@ -723,6 +721,7 @@ export function uiTreeNodeToTreePanelConfig(treeNode: UiTreeNode, onAction: UiIn
     label: section.label ?? "",
     defaultOpen: section.defaultOpen,
     loading: section.loading,
+    waiting: section.waiting,
     items: uiTreeItemsToTreeData(section.items, onAction),
   }));
   return {
@@ -964,7 +963,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
     case "stack":
       return <UiStackHost node={node} context={context} />;
     case "text":
-      return <p className={node.emphasize ? "font-semibold" : "text-sm"}>{node.value}</p>;
+      return <p className={cn("text-foreground", node.emphasize ? "font-semibold" : "text-sm")}>{node.value}</p>;
     case "button":
       return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} />;
     case "separator":
@@ -1086,7 +1085,7 @@ type StudioProgramEntry = {
   readonly yields: string;
 };
 
-type SpawnedAppEntry = {
+export type SpawnedAppEntry = {
   readonly id: string;
   readonly pluginId: string;
   readonly instanceId: number;
@@ -1095,7 +1094,7 @@ type SpawnedAppEntry = {
   readonly document: readonly string[];
 };
 
-type StudioPanelState = {
+export type StudioPanelState = {
   readonly activePanelTab: string;
   readonly programs: readonly StudioProgramEntry[];
   readonly spawnedApps: readonly SpawnedAppEntry[];
@@ -2466,6 +2465,25 @@ function parsePanelState(viewState: ViewState): StudioPanelState | null {
   }
 }
 
+/**
+ * @emoji 🪟 Returns a studio panel with `spawned` present and focused as `activeSpawnedId`.
+ * Host-effect application must fold this into the in-flight `nextViewState` before the final
+ * `SET_SESSION` write — a separate panel dispatch is overwritten by that write and leaves the shell
+ * stuck on the studio surface.
+ * @see HostEffect.openPluginInstance
+ */
+export function studioPanelFocusingSpawned(panel: StudioPanelState, spawned: SpawnedAppEntry): StudioPanelState {
+  const spawnedApps = panel.spawnedApps.some((entry) => entry.id === spawned.id)
+    ? panel.spawnedApps.map((entry) => (entry.id === spawned.id ? spawned : entry))
+    : [...panel.spawnedApps, spawned];
+  return buildStudioPanelState(panel.programs, spawnedApps, panel.activePanelTab, spawned.id);
+}
+
+/** @emoji 🐚 Commits a studio panel into a view state's `panelJson` for a single host-effect session write. */
+export function viewStateWithStudioPanel(viewState: ViewState, panel: StudioPanelState): ViewState {
+  return { ...viewState, panelJson: panelJsonFromState(panel) };
+}
+
 /** @emoji 🧭 Default anchor a plugin-declared panel-tab `group` docks into — groups only ever map to the four corners; the four edge-middle anchors start empty and are user-populated via drag-and-drop or a dock skeleton override. */
 function panelAnchorForGroup(group: string): Anchor {
   if (group === "workbench" || group === "document") return "top-left";
@@ -3164,6 +3182,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       max={measure.max}
       ready={measure.ready}
       loading={measure.loading === true}
+      waiting={measure.waiting === true}
       step={measure.step}
       onValueChange={(values) => dispatchValue(values[0] ?? measure.value)}
     />
@@ -4840,44 +4859,33 @@ export function FrameworkOsShell({
   }, []);
 
   const ensureSpawnedPlugin = useCallback(
-    async (program: StudioProgramEntry, label?: string, osInstanceId?: string, documentJson?: string) => {
+    async (program: StudioProgramEntry, label?: string, osInstanceId?: string, documentJson?: string, sourceViewState?: ViewState): Promise<StudioPanelState | null> => {
       const pluginEntry = loadedPlugins.find((entry) => entry.handle.pluginId === program.pluginId);
-      if (!pluginEntry || !session) return;
+      if (!pluginEntry || !session) return null;
       const app = pluginEntry.manifest.apps.find((candidate) => candidate.id === program.appId);
-      const currentPanel = parsePanelState(session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
+      const currentPanel = parsePanelState(sourceViewState ?? session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
       const existing = osInstanceId ? currentPanel.spawnedApps.find((entry) => entry.id === osInstanceId) : currentPanel.spawnedApps.find((entry) => entry.appId === program.appId && entry.pluginId === program.pluginId);
       if (existing) {
         if (documentJson && app) {
-          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, session.viewState);
+          await syncSpawnedPluginDocument(pluginEntry.handle, app, existing.instanceId, documentJson, sourceViewState ?? session.viewState);
         }
-        updateStudioPanel(buildStudioPanelState(currentPanel.programs, currentPanel.spawnedApps, currentPanel.activePanelTab, existing.id));
-        return;
+        return studioPanelFocusingSpawned(currentPanel, existing);
       }
       const instanceId = await pluginEntry.handle.createApp(program.appId);
       if (documentJson && app) {
-        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, session.viewState);
+        await syncSpawnedPluginDocument(pluginEntry.handle, app, instanceId, documentJson, sourceViewState ?? session.viewState);
       }
       const spawnedId = osInstanceId ?? `${program.pluginId}-${instanceId}`;
-      updateStudioPanel(
-        buildStudioPanelState(
-          currentPanel.programs,
-          [
-            ...currentPanel.spawnedApps,
-            {
-              id: spawnedId,
-              pluginId: program.pluginId,
-              instanceId,
-              appId: program.appId,
-              label: label ?? program.label,
-              document: program.document,
-            },
-          ],
-          currentPanel.activePanelTab,
-          spawnedId,
-        ),
-      );
+      return studioPanelFocusingSpawned(currentPanel, {
+        id: spawnedId,
+        pluginId: program.pluginId,
+        instanceId,
+        appId: program.appId,
+        label: label ?? program.label,
+        document: program.document,
+      });
     },
-    [loadedPlugins, session, syncSpawnedPluginDocument, updateStudioPanel],
+    [loadedPlugins, session, syncSpawnedPluginDocument],
   );
 
   /**
@@ -5010,16 +5018,35 @@ export function FrameworkOsShell({
         if ("spawnPluginInstance" in effect) {
           const { programId, appId, osInstanceId, label, documentJson } = effect.spawnPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-          const program = currentPanel.programs.find((entry) => entry.programId === programId && entry.appId === appId) ?? currentPanel.programs.find((entry) => entry.programId === programId);
-          if (program) await ensureSpawnedPlugin(program, label, osInstanceId, documentJson);
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : buildStudioPrograms(loadedPlugins);
+          const program = catalog.find((entry) => entry.programId === programId && entry.appId === appId) ?? catalog.find((entry) => entry.programId === programId);
+          if (program) {
+            // 🪟 Fold spawn into `nextViewState` — a separate SET_SESSION would be clobbered by the
+            // final write below and leave the shell stuck on the studio surface.
+            const nextPanel = await ensureSpawnedPlugin(program, label, osInstanceId, documentJson, nextViewState);
+            if (nextPanel) nextViewState = viewStateWithStudioPanel(nextViewState, nextPanel);
+          }
           continue;
         }
         if ("openPluginInstance" in effect) {
           const { programId, appId, osInstanceId } = effect.openPluginInstance;
           const currentPanel = parsePanelState(nextViewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
-          const program = currentPanel.programs.find((entry) => entry.programId === programId && entry.appId === appId) ?? currentPanel.programs.find((entry) => entry.programId === programId);
+          const catalog = currentPanel.programs.length > 0 ? currentPanel.programs : buildStudioPrograms(loadedPlugins);
+          const program = catalog.find((entry) => entry.programId === programId && entry.appId === appId) ?? catalog.find((entry) => entry.programId === programId);
           if (program) {
-            await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined);
+            // 🪟 Fold focus into `nextViewState` so the final SET_SESSION keeps `activeSpawnedId`
+            // (opening a media-graph node depends on this — otherwise nothing appears to happen).
+            const nextPanel = await ensureSpawnedPlugin(program, undefined, osInstanceId, undefined, nextViewState);
+            if (nextPanel) {
+              nextViewState = viewStateWithStudioPanel(nextViewState, nextPanel);
+              console.log("[DEBUG] openPluginInstance focused spawned app", {
+                programId,
+                appId,
+                osInstanceId,
+                activeSpawnedId: nextPanel.activeSpawnedId,
+                spawnedCount: nextPanel.spawnedApps.length,
+              });
+            }
             if (osInstanceId && openStudioIdRef.current) {
               openInstanceIdRef.current = osInstanceId;
               navigateHistory(`/studios/${openStudioIdRef.current}/instances/${osInstanceId}`);
@@ -5029,7 +5056,7 @@ export function FrameworkOsShell({
               "[os-shell] openPluginInstance: no program matches",
               { programId, appId },
               "available:",
-              currentPanel.programs.map((entry) => `${entry.programId}/${entry.appId}`),
+              catalog.map((entry) => `${entry.programId}/${entry.appId}`),
             );
           }
           continue;
@@ -5204,22 +5231,14 @@ export function FrameworkOsShell({
       const currentPanel = parsePanelState(session.viewState) ?? buildStudioPanelState(buildStudioPrograms(loadedPlugins), []);
       const spawnedId = `${program.pluginId}-${instanceId}`;
       updateStudioPanel(
-        buildStudioPanelState(
-          currentPanel.programs,
-          [
-            ...currentPanel.spawnedApps,
-            {
-              id: spawnedId,
-              pluginId: program.pluginId,
-              instanceId,
-              appId: program.appId,
-              label: program.label,
-              document: program.document,
-            },
-          ],
-          currentPanel.activePanelTab,
-          spawnedId,
-        ),
+        studioPanelFocusingSpawned(currentPanel, {
+          id: spawnedId,
+          pluginId: program.pluginId,
+          instanceId,
+          appId: program.appId,
+          label: program.label,
+          document: program.document,
+        }),
       );
     },
     [loadedPlugins, session, updateStudioPanel],
@@ -6229,16 +6248,38 @@ export function FrameworkOsShell({
   const detailsOverrideTabId = panel?.activePanelTab;
   const detailsOverrideAnchor = detailsOverrideTabId ? findPanelTabInDock(dock, detailsOverrideTabId)?.anchor : undefined;
 
-  /** @emoji 🎓 The current introduction step's anchor, decomposed by kind — `null` unless that kind is
-   * active, so every reveal override below (here and in `modeWindows`) is a plain truthiness check. A
-   * folded utility bar/Actions rail/dock panel would otherwise hide the step's anchor from ever mounting (see
-   * `useIntroductionAnchorRect`), leaving the step centered with no cutout and no way for the user to
-   * find what to do. */
-  const activeIntroductionStepAnchor: IntroductionAnchor | null = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex]?.anchor ?? null) : null;
-  const introductionUtilityId = activeIntroductionStepAnchor?.kind === "utility" ? activeIntroductionStepAnchor.id : null;
-  const introductionActionId = activeIntroductionStepAnchor?.kind === "action" ? activeIntroductionStepAnchor.id : null;
-  const introductionPanelTabId =
-    activeIntroductionStepAnchor?.kind === "panelTab" || activeIntroductionStepAnchor?.kind === "panelFirstDraggable" ? activeIntroductionStepAnchor.id : null;
+  /** @emoji 🎓 The current introduction step's target element ids (`introduce` + `show`), classified by
+   * shape — `null` unless that shape is present, so every reveal override below (here and in
+   * `modeWindows`) is a plain truthiness check. A folded utility bar/Actions rail/dock panel would
+   * otherwise hide the target from ever mounting (see `useIntroductionAnchorRect`), leaving the step
+   * centered with no cutout and no way for the user to find what to do. Ids are matched, never
+   * reconstructed: a `framework.window.{segment}` id's segment is `elementIdSegment(windowId)`, a lossy
+   * camelCase normalization — comparing `elementIdSegment(windowId) === segment` is the only safe check. */
+  const activeIntroductionStep = activeIntroduction && introductionStepIndex != null ? (activeIntroduction.steps[introductionStepIndex] ?? null) : null;
+  const introductionElementIds = useMemo(
+    (): readonly string[] => (activeIntroductionStep ? [activeIntroductionStep.introduce, ...activeIntroductionStep.show].filter((id): id is string => Boolean(id)) : []),
+    [activeIntroductionStep],
+  );
+  const introductionUtilityId = useMemo(() => {
+    if (!session) return null;
+    return introductionElementIds.find((id) => session.app.utilities.some((utility) => utility.id === id)) ?? null;
+  }, [introductionElementIds, session]);
+  const introductionActionWindowSegment = useMemo(() => {
+    for (const id of introductionElementIds) {
+      const rest = id.startsWith("framework.window.") ? id.slice("framework.window.".length) : null;
+      const actionIndex = rest?.indexOf(".action.") ?? -1;
+      if (rest && actionIndex >= 0) return rest.slice(0, actionIndex);
+    }
+    return null;
+  }, [introductionElementIds]);
+  const introductionPanelTabId = useMemo(() => {
+    for (const id of introductionElementIds) {
+      if (!id.startsWith("framework.panelTab.")) continue;
+      const rest = id.slice("framework.panelTab.".length);
+      return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
+    }
+    return null;
+  }, [introductionElementIds]);
   const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
   const introductionUtilityWindowId = useMemo(() => {
     if (!introductionUtilityId || !session) return null;
@@ -6248,36 +6289,6 @@ export function FrameworkOsShell({
     }
     return null;
   }, [appLabelsOverlay, introductionUtilityId, session]);
-  const introductionActionWindowId = useMemo(() => {
-    if (!introductionActionId || !session) return null;
-    for (const kind of session.app.windowKinds) {
-      const actions = resolveWindowActions(session.app, kind);
-      if (actions.some((action) => action.id === introductionActionId)) return kind.id;
-    }
-    return null;
-  }, [introductionActionId, session]);
-  const introductionAnchorFallbackSelectors = useMemo((): readonly string[] => {
-    if (introductionUtilityWindowId) return [introductionUtilityBarUnfoldSelector(introductionUtilityWindowId)];
-    if (introductionActionWindowId) return [introductionWindowActionPaneUnfoldSelector(introductionActionWindowId)];
-    if (introductionPanelTabId) {
-      // 🎓 panelFirstDraggable upgrades from the tab chip → the panel → the first drag row as each mounts.
-      if (activeIntroductionStepAnchor?.kind === "panelFirstDraggable") {
-        return [
-          introductionPanelTabFallbackSelector(introductionPanelTabId),
-          `[id="framework.panelTab.${introductionPanelTabId}"]`,
-        ];
-      }
-      return [introductionPanelTabFallbackSelector(introductionPanelTabId)];
-    }
-    return [];
-  }, [activeIntroductionStepAnchor, introductionActionWindowId, introductionPanelTabId, introductionUtilityWindowId]);
-  const introductionWorld3dCutoutSelectors = useMemo((): readonly string[] => {
-    if (activeIntroductionStepAnchor?.kind !== "panelFirstDraggable" || !session) return [];
-    return session.app.windowKinds
-      .filter((kind) => kind.surfaceKind === "world-3d")
-      .map((kind) => introductionAnchorSelector({ kind: "windowKind", id: kind.id }))
-      .filter((entry): entry is string => Boolean(entry));
-  }, [activeIntroductionStepAnchor, session]);
 
   const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -6611,7 +6622,12 @@ export function FrameworkOsShell({
   const modeWindows = useMemo((): ModeWindowDescriptor[] => {
     if (!session) return [];
     const actionPaneSlice: ActionPaneSlice = { expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId };
-    const actionsFoldedFor = (windowId: string, actions: readonly ActionDefinition[]) => (introductionActionId && actions.some((action) => action.id === introductionActionId) ? false : (actionPaneFoldedByWindowId[windowId] ?? true));
+    const actionsFoldedFor = (windowId: string) =>
+      introductionActionWindowSegment && elementIdSegment(windowId) === introductionActionWindowSegment ? false : (actionPaneFoldedByWindowId[windowId] ?? true);
+    // 🎓 `undefined` keeps the Window's own internal fold state — only the introduction's target window is
+    // force-controlled to `false` while its utility step is active.
+    const utilityBarFoldedFor = (windowId: string): boolean | undefined =>
+      introductionUtilityWindowId && elementIdSegment(windowId) === elementIdSegment(introductionUtilityWindowId) ? false : undefined;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
@@ -6626,7 +6642,6 @@ export function FrameworkOsShell({
         const windowKind = spawnedApp?.windowKinds[0];
         const chrome = windowKind ? spawnedWindowChromeForKind(windowKind, spawned.id, spawnedWindowEngagements, spawnedWindowMeasures, activeUtilityByWindowId[spawned.id], onActionStable) : undefined;
         const spawnedUtilities = spawnedApp && windowKind ? resolveUtilityNodes(spawnedApp, windowKind, activeUtilityByWindowId[spawned.id], spawned.id, appLabelsOverlay) : [];
-        const spawnedActions = spawnedApp && windowKind ? resolveWindowActions(spawnedApp, windowKind) : [];
         return [
           {
             id: spawned.id,
@@ -6637,8 +6652,9 @@ export function FrameworkOsShell({
             engagement: chrome?.engagement,
             search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
+            utilityBarFolded: utilityBarFoldedFor(spawned.id),
             actionPane: spawnedApp && windowKind ? windowActionPaneNode(spawnedApp, windowKind, spawned.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay) : undefined,
-            actionsFolded: actionsFoldedFor(spawned.id, spawnedActions),
+            actionsFolded: actionsFoldedFor(spawned.id),
             onActionsFoldedChange: onActionsFoldedFor(spawned.id),
             children: (
               <ChromeAwareWindowScrollSurface className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={spawnedApp ? cursorFor(spawnedApp, spawned.id) : undefined}>
@@ -6652,7 +6668,6 @@ export function FrameworkOsShell({
     if (Object.keys(windowUiByWindowId).length === 0) return [];
     const baseWindows = session.app.windowKinds.map((kind) => {
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[kind.id], kind.id, appLabelsOverlay);
-      const actions = resolveWindowActions(session.app, kind);
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[kind.id] ?? kind.options.measures, activeUtilityByWindowId[kind.id], kind.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
@@ -6664,11 +6679,12 @@ export function FrameworkOsShell({
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
+        utilityBarFolded: utilityBarFoldedFor(kind.id),
         actionPane: windowActionPaneNode(session.app, kind, kind.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-        actionsFolded: actionsFoldedFor(kind.id, actions),
+        actionsFolded: actionsFoldedFor(kind.id),
         onActionsFoldedChange: onActionsFoldedFor(kind.id),
         children: (
-          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, kind.id)}>
+          <ChromeAwareWindowScrollSurface id={childElementId("framework.window", kind.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={cursorFor(session.app, kind.id)}>
             <WindowInstanceIdContext.Provider value={kind.id}>
               <InterpretedUiNode node={windowUiByWindowId[kind.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${kind.id}` }} onAction={onActionStable} />
             </WindowInstanceIdContext.Provider>
@@ -6678,12 +6694,13 @@ export function FrameworkOsShell({
     });
     // 🪟 Each extra (split/spawned) instance renders its OWN `windowUiByWindowId[instance.id]` body,
     // measures, and engagement — never the base kind's shared entry — so two instances of the same kind
-    // (e.g. split top/perspective panes) never show or affect each other's options.
+    // (e.g. split top/perspective panes) never show or affect each other's options. `data-element-alias`
+    // aliases the instance to its window kind's element id so an introduction `show` target of the kind
+    // (not a specific instance) raises every open instance above the glass, not only the base one.
     const extraWindows = extraWindowInstances.flatMap((instance) => {
       const kind = session.app.windowKinds.find((entry) => entry.id === instance.windowKindId);
       if (!kind) return [];
       const utilities = resolveUtilityNodes(session.app, kind, activeUtilityByWindowId[instance.id], instance.id, appLabelsOverlay);
-      const actions = resolveWindowActions(session.app, kind);
       const chrome = windowMeasuresChrome(windowMeasuresByWindowId[instance.id] ?? kind.options.measures, activeUtilityByWindowId[instance.id], instance.id, onActionStable);
       const resolvedEngagement = resolveWindowEngagement(kind, instance.id, windowEngagementsByWindowId);
       return [
@@ -6696,11 +6713,17 @@ export function FrameworkOsShell({
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
+          utilityBarFolded: utilityBarFoldedFor(instance.id),
           actionPane: windowActionPaneNode(session.app, kind, instance.id, actionPaneSlice, onActionStable, dispatch, appLabelsOverlay),
-          actionsFolded: actionsFoldedFor(instance.id, actions),
+          actionsFolded: actionsFoldedFor(instance.id),
           onActionsFoldedChange: onActionsFoldedFor(instance.id),
           children: (
-            <ChromeAwareWindowScrollSurface id={childElementId("framework.window", instance.id)} className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" data-window-kind-id={kind.id} style={cursorFor(session.app, instance.id)}>
+            <ChromeAwareWindowScrollSurface
+              id={childElementId("framework.window", instance.id)}
+              data-element-alias={childElementId("framework.window", kind.id)}
+              className="relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden"
+              style={cursorFor(session.app, instance.id)}
+            >
               <WindowInstanceIdContext.Provider value={instance.id}>
                 <InterpretedUiNode node={windowUiByWindowId[instance.id] ?? { type: "text", value: `${shellLabel("ui.common.missingWindow")}: ${instance.id}` }} onAction={onActionStable} />
               </WindowInstanceIdContext.Provider>
@@ -6717,8 +6740,9 @@ export function FrameworkOsShell({
     activeUtilityByWindowId,
     appLabelsOverlay,
     extraWindowInstances,
-    introductionActionId,
+    introductionActionWindowSegment,
     introductionUtilityId,
+    introductionUtilityWindowId,
     loadedPlugins,
     onActionStable,
     panel,
@@ -6910,8 +6934,6 @@ export function FrameworkOsShell({
           <UIIntroduction
             introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
-            anchorFallbackSelectors={introductionAnchorFallbackSelectors}
-            additionalCutoutSelectors={introductionWorld3dCutoutSelectors}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={() => {
               dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
@@ -13625,11 +13647,22 @@ function WasmGraphSurface({
   const onSessionReady = useCallback(
     (session: GraphWasmSession) => {
       sessionRef.current = session as FrameworkGraphSession;
+      syncSessionCanvasTheme(sessionRef.current);
       sessionRef.current.syncFromSceneJson(sceneJson);
       paintOverlays();
     },
     [sceneJson, paintOverlays],
   );
+
+  useCanvasAppearanceSync(() => {
+    syncSessionCanvasTheme(sessionRef.current);
+    try {
+      sessionRef.current?.renderFrame();
+    } catch {
+      /* gpu not ready */
+    }
+    paintOverlays();
+  });
 
   const [wasmSession, setWasmSession] = useState<FrameworkGraphSession | null>(null);
 
@@ -13650,6 +13683,7 @@ function WasmGraphSurface({
       setSize: () => {},
       renderFrame: () => {},
       syncFromSceneJson: () => {},
+      setCanvasThemeJson: () => {},
       pointerDownScreen: () => {},
       pointerMoveScreen: () => {},
       pointerUpScreen: () => {},
@@ -14741,6 +14775,7 @@ export function FlowGraphCanvasHost({
         if (cancelled) return;
         console.log("[DEBUG] attachCanvas effect: attached OK, applying initial camera");
         syncFlowSessionFromScene(session, sceneRef.current, true);
+        syncSessionCanvasTheme(session);
         const resize = () => {
           const next = container.getBoundingClientRect();
           const nextDpr = globalThis.devicePixelRatio || 1;
@@ -14789,6 +14824,12 @@ export function FlowGraphCanvasHost({
 
   useCanvasAppearanceSync(() => {
     syncSessionCanvasTheme(sessionRef.current);
+    try {
+      sessionRef.current?.renderFrame();
+    } catch {
+      /* gpu not ready */
+    }
+    paintOverlays();
   });
 
   const pickInteraction = useCanvasPickInteraction({
@@ -15341,6 +15382,15 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
     // since the attach lifecycle is independent of scene changes and a ref update alone would not otherwise re-trigger this effect.
   }, [syncSession, sessionEpoch]);
 
+  useCanvasAppearanceSync(() => {
+    syncSessionCanvasTheme(sessionRef.current);
+    try {
+      sessionRef.current?.renderFrame();
+    } catch {
+      /* gpu not ready */
+    }
+  });
+
   const emitSelection = useCallback(() => {
     const session = sessionRef.current;
     if (!session) return;
@@ -15502,6 +15552,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
   // so it must not close over anything that changes per scene update (see sessionEpoch above for re-sync).
   const onSessionReady = useCallback((session: GraphWasmSession) => {
     sessionRef.current = session as FrameworkEditorSession;
+    syncSessionCanvasTheme(sessionRef.current);
     setSessionEpoch((epoch) => epoch + 1);
   }, []);
 

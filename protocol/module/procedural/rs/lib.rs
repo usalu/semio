@@ -357,6 +357,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         style: None,
         disabled: None,
         loading: None,
+        waiting: None,
     })
 }
 
@@ -369,6 +370,7 @@ fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
         style: None,
         disabled: None,
         loading: None,
+        waiting: None,
     })
 }
 

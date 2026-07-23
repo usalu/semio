@@ -572,27 +572,30 @@ fn build_inspection_tree(projection: &VcsDemoProjection, labels: &VcsLabels) -> 
 //#region 🔖Render
 fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
-        loading: None,
         direction: "horizontal".into(),
         gap: Some("tight".into()),
         padding: Some("none".into()),
         id: None,
         selected: None,
+        loading: None,
+        waiting: None,
         activate: None,
-        children,
         drop_action: None,
+        drop_overlay: None,
+        children,
     })
 }
 
 fn editor_button(id: &str, icon_id: &str, label: &str, action: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
-        loading: None,
         id: Some(format!("vcs-play-editor.{id}")),
         icon_id: icon_id.into(),
         label: label.into(),
         action: vcs_action(action, None),
         style: None,
         disabled: None,
+        loading: None,
+        waiting: None,
     })
 }
 

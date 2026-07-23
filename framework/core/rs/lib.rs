@@ -3543,6 +3543,30 @@ pub fn child_element_id(parent: &str, segments: &[&str]) -> String {
     }
     id
 }
+
+/// @emoji 🆔 Element id of the app shell's navbar — singular, shell-owned chrome.
+pub const UI_NAVBAR_ELEMENT_ID: &str = "ui.navbar";
+/// @emoji 🆔 Element id of the app shell's footer — singular, shell-owned chrome.
+pub const UI_FOOTER_ELEMENT_ID: &str = "ui.footer";
+
+/// @emoji 🆔 Element id of a window kind's body — `framework.window.{camelCased kind id}`.
+pub fn window_element_id(kind_id: &str) -> String {
+    child_element_id("framework.window", &[kind_id])
+}
+
+/// @emoji 🆔 Element id of a panel tab's uncollapsed panel body. `tab_id` is already a dotted
+/// `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended verbatim rather than through
+/// `child_element_id`, which would collapse its dots into camelCase.
+pub fn panel_tab_element_id(tab_id: &str) -> String {
+    format!("framework.panelTab.{tab_id}")
+}
+
+/// @emoji 🆔 Alias id of the first draggable tree row inside a panel tab (document order within that
+/// uncollapsed panel) — stamped via `data-element-alias` since no single tree row has a stable semantic
+/// id at authoring time. Used to teach catalogue drag-and-drop without hardcoding a kind id.
+pub fn panel_tab_first_draggable_element_id(tab_id: &str) -> String {
+    format!("framework.panelTab.{tab_id}.firstDraggable")
+}
 //#endregion 🆔ElementId
 
 //#region 🔖Introduction
@@ -3558,8 +3582,8 @@ pub struct IntroductionDefinition {
     pub steps: Vec<IntroductionStepDefinition>,
 }
 
-/// @emoji 🪜 One step of an `IntroductionDefinition`: an info box pointing at `anchor`, with an
-/// `emphasis` treatment cut out of the glass veil and an `advance` condition that completes the step.
+/// @emoji 🪜 One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
+/// raising extra elements above the glass veil and an `advance` condition that completes the step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -3567,9 +3591,14 @@ pub struct IntroductionStepDefinition {
     pub id: String,
     pub title: String,
     pub body: String,
-    pub anchor: IntroductionAnchor,
+    /// 🎯 The single element id raised above the glass, pulsing `data-introduced`, that the info box
+    /// anchors to. `None` = a screen-style step: full veil, centered info box.
     #[serde(default)]
-    pub emphasis: IntroductionEmphasis,
+    pub introduce: Option<String>,
+    /// 🕳️ Additional element ids raised above the glass — interactive, no pulse — e.g. every 3D window
+    /// that accepts a catalogue drop while `introduce` teaches the drag source.
+    #[serde(default)]
+    pub show: Vec<String>,
     #[serde(default)]
     pub placement: IntroductionPlacement,
     #[serde(default)]
@@ -3577,34 +3606,35 @@ pub struct IntroductionStepDefinition {
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
-    /// 🕳️ Extra interactive cutouts (no introduced pulse) — e.g. every 3D window that accepts a catalogue drop
-    /// while the primary `anchor` teaches the drag source.
-    #[serde(default)]
-    pub cutouts: Vec<IntroductionAnchor>,
 }
 
 impl IntroductionStepDefinition {
-    pub fn new(id: impl Into<String>, title: impl Into<String>, body: impl Into<String>, anchor: IntroductionAnchor) -> Self {
+    pub fn new(id: impl Into<String>, title: impl Into<String>, body: impl Into<String>) -> Self {
         Self {
             id: id.into(),
             title: title.into(),
             body: body.into(),
-            anchor,
-            emphasis: IntroductionEmphasis::default(),
+            introduce: None,
+            show: Vec::new(),
             placement: IntroductionPlacement::default(),
             advance: IntroductionAdvance::default(),
             logos: Vec::new(),
-            cutouts: Vec::new(),
         }
     }
 
-    /// @emoji 🔦 Overrides how the anchor is emphasized against the glass veil.
-    pub fn emphasis(mut self, emphasis: IntroductionEmphasis) -> Self {
-        self.emphasis = emphasis;
+    /// @emoji 🎯 Sets the single element id raised above the glass and anchoring the info box.
+    pub fn introduce(mut self, element_id: impl Into<String>) -> Self {
+        self.introduce = Some(element_id.into());
         self
     }
 
-    /// @emoji 📍 Overrides where the info box is placed relative to the anchor.
+    /// @emoji 🕳️ Additional element ids raised above the glass alongside `introduce` (no pulse).
+    pub fn show(mut self, element_ids: Vec<String>) -> Self {
+        self.show = element_ids;
+        self
+    }
+
+    /// @emoji 📍 Overrides where the info box is placed relative to `introduce`.
     pub fn placement(mut self, placement: IntroductionPlacement) -> Self {
         self.placement = placement;
         self
@@ -3621,12 +3651,6 @@ impl IntroductionStepDefinition {
         self.logos = logos;
         self
     }
-
-    /// @emoji 🕳️ Extra interactive cutouts alongside the primary anchor (no introduced pulse).
-    pub fn cutouts(mut self, cutouts: Vec<IntroductionAnchor>) -> Self {
-        self.cutouts = cutouts;
-        self
-    }
 }
 
 /// @emoji 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
@@ -3641,70 +3665,6 @@ pub struct IntroductionLogo {
     pub alt: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub href: Option<String>,
-}
-
-/// @emoji 🎯 Renderer-agnostic reference to the UI element an `IntroductionStepDefinition` points at —
-/// no CSS/DOM types leak into the contract; each renderer maps a variant onto its own element lookup
-/// (the React shell resolves these to `data-*` selectors).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase", tag = "kind", content = "id")]
-pub enum IntroductionAnchor {
-    /// 🖥️ No specific element — the whole screen (paired with `IntroductionPlacement::Center`).
-    Screen,
-    Navbar,
-    Footer,
-    /// 🪟 References `AppDefinition.windowKinds[].id`.
-    WindowKind(String),
-    /// 🧰 References `AppDefinition.utilities`.
-    Utility(UtilityRef),
-    /// 📇 References `AppDefinition.actions`.
-    Action(ActionRef),
-    /// 📑 References a declared `PanelTabDefinition.id()`.
-    PanelTab(String),
-    /// 🌲 First draggable tree-item row inside the named panel tab (document order within that
-    /// uncollapsed panel) — used to teach catalogue drag-and-drop without hardcoding a kind id.
-    PanelFirstDraggable(String),
-    /// 🪝 Escape hatch: a raw UI element id (must satisfy `is_element_id`), for anchors none of the
-    /// other variants name.
-    Element(String),
-}
-
-impl IntroductionAnchor {
-    /// @emoji 🎯 The single logical element id this anchor resolves to, or `None` for anchors that name a
-    /// *class* of elements rather than one singular instance. `Screen` has no element at all;
-    /// `WindowKind`/`Action` are deliberately class references — multiple window instances can share a
-    /// kind, and the same action can be dispatched from more than one open window — so renderers resolve
-    /// those two via a dedicated class attribute (`data-window-kind-id` / `data-action-id`) instead of a
-    /// single `id`. Every other variant names exactly one element.
-    pub fn element_id(&self) -> Option<String> {
-        match self {
-            IntroductionAnchor::Screen => None,
-            IntroductionAnchor::Navbar => Some("ui.navbar".to_string()),
-            IntroductionAnchor::Footer => Some("ui.footer".to_string()),
-            IntroductionAnchor::WindowKind(_) => None,
-            IntroductionAnchor::Utility(utility_ref) => Some(utility_ref.as_str().to_string()),
-            IntroductionAnchor::Action(_) => None,
-            // 📑 `id` is already a dotted `PanelTabDefinition.id()` (e.g. `puzzle.catalogue`) — appended
-            // directly rather than through `child_element_id`, which would collapse its dots into camelCase.
-            IntroductionAnchor::PanelTab(id) => Some(format!("framework.panelTab.{id}")),
-            IntroductionAnchor::PanelFirstDraggable(id) => Some(format!("framework.panelTab.{id}")),
-            IntroductionAnchor::Element(id) => Some(id.clone()),
-        }
-    }
-}
-
-/// @emoji 🔦 How a step's anchor is treated against the full-screen glass veil.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase")]
-pub enum IntroductionEmphasis {
-    /// 🌫️ No cutout — the anchor stays veiled (used with `IntroductionAnchor::Screen`).
-    None,
-    /// 🕳️ The anchor is cut out of the veil, shown normally and interactive, and pulses the
-    /// introduced border ([[data-introduced]]) itself.
-    #[default]
-    Cutout,
 }
 
 /// @emoji 📍 Where the info box is placed relative to its anchor.
@@ -5376,9 +5336,10 @@ mod app_document_tests {
         child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
-        CommandScope, DialogDefinition, IntroductionAdvance,
-        IntroductionAnchor, Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
-        SET_ACTIVE_UTILITY_ACTION_ID,
+        CommandScope, DialogDefinition, IntroductionAdvance, IntroductionStepDefinition,
+        Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
+        SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
+        panel_tab_first_draggable_element_id,
     };
     use crate::ui::kernel::HostEffect;
     use serde_json::json;
@@ -5623,25 +5584,6 @@ mod app_document_tests {
     }
 
     #[test]
-    fn introduction_anchor_round_trips_tagged() {
-        for anchor in [
-            IntroductionAnchor::Screen,
-            IntroductionAnchor::Navbar,
-            IntroductionAnchor::WindowKind("main".into()),
-            IntroductionAnchor::Utility(UtilityRef::new("brush")),
-            IntroductionAnchor::Action(ActionRef::new("add")),
-            IntroductionAnchor::PanelTab("puzzle.catalogue".into()),
-            IntroductionAnchor::PanelFirstDraggable("puzzle.catalogue".into()),
-            IntroductionAnchor::Element("framework.navbar".into()),
-        ] {
-            let json = serde_json::to_string(&anchor).unwrap();
-            assert!(json.contains("\"kind\":"), "tagged with kind: {json}");
-            let round: IntroductionAnchor = serde_json::from_str(&json).unwrap();
-            assert_eq!(round, anchor);
-        }
-    }
-
-    #[test]
     fn is_element_id_accepts_dotted_camel_case_and_rejects_the_rest() {
         assert!(is_element_id("framework.navbar"));
         assert!(is_element_id("ui.window.main.action.addLayer"));
@@ -5669,27 +5611,36 @@ mod app_document_tests {
     }
 
     #[test]
-    fn introduction_anchor_element_id_is_none_for_class_references() {
-        assert_eq!(IntroductionAnchor::Screen.element_id(), None);
-        assert_eq!(IntroductionAnchor::WindowKind("main".into()).element_id(), None);
-        assert_eq!(IntroductionAnchor::Action(ActionRef::new("add")).element_id(), None);
+    fn introduction_step_serde_defaults() {
+        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        assert_eq!(step.introduce, None);
+        assert!(step.show.is_empty());
+        let json = serde_json::to_string(&step).unwrap();
+        let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, step);
+
+        let with_targets = IntroductionStepDefinition::new("viewport", "The Viewport", "…")
+            .introduce(window_element_id("puzzle3d-main"))
+            .show(vec![window_element_id("puzzle3d-secondary")]);
+        let json = serde_json::to_string(&with_targets).unwrap();
+        assert!(json.contains("\"introduce\":\"framework.window.puzzle3dMain\""), "{json}");
+        let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, with_targets);
     }
 
     #[test]
-    fn introduction_anchor_element_id_resolves_singular_anchors() {
-        assert_eq!(IntroductionAnchor::Navbar.element_id(), Some("ui.navbar".to_string()));
-        assert_eq!(IntroductionAnchor::Footer.element_id(), Some("ui.footer".to_string()));
-        assert_eq!(IntroductionAnchor::Utility(UtilityRef::new("brush")).element_id(), Some("brush".to_string()));
+    fn element_id_authoring_helpers() {
+        assert_eq!(window_element_id("puzzle3d-main"), "framework.window.puzzle3dMain");
+        assert_eq!(panel_tab_element_id("framework.panel.catalogue"), "framework.panelTab.framework.panel.catalogue");
         assert_eq!(
-            IntroductionAnchor::PanelTab("puzzle.catalogue".into()).element_id(),
-            Some("framework.panelTab.puzzle.catalogue".to_string())
+            panel_tab_first_draggable_element_id("framework.panel.catalogue"),
+            "framework.panelTab.framework.panel.catalogue.firstDraggable"
         );
-        assert_eq!(
-            IntroductionAnchor::PanelFirstDraggable("puzzle.catalogue".into()).element_id(),
-            Some("framework.panelTab.puzzle.catalogue".to_string())
-        );
-        assert_eq!(IntroductionAnchor::Element("ui.custom.thing".into()).element_id(), Some("ui.custom.thing".to_string()));
-        assert!(is_element_id(&IntroductionAnchor::Navbar.element_id().unwrap()));
+        assert!(is_element_id(UI_NAVBAR_ELEMENT_ID));
+        assert!(is_element_id(UI_FOOTER_ELEMENT_ID));
+        assert!(is_element_id(&window_element_id("puzzle3d-main")));
+        assert!(is_element_id(&panel_tab_element_id("framework.panel.catalogue")));
+        assert!(is_element_id(&panel_tab_first_draggable_element_id("framework.panel.catalogue")));
     }
 
     #[test]
@@ -5944,8 +5895,6 @@ mod app_document_tests {
         crate::ui::PanelTabDefinition::export().unwrap();
         crate::ui::IntroductionDefinition::export().unwrap();
         crate::ui::IntroductionStepDefinition::export().unwrap();
-        crate::ui::IntroductionAnchor::export().unwrap();
-        crate::ui::IntroductionEmphasis::export().unwrap();
         crate::ui::IntroductionPlacement::export().unwrap();
         crate::ui::IntroductionAdvance::export().unwrap();
         crate::ui::IntroductionLogo::export().unwrap();
@@ -5955,6 +5904,7 @@ mod app_document_tests {
         crate::ui::ExampleDefinition::export().unwrap();
         crate::ui::Contribution::export().unwrap();
         crate::ui::PluginManifest::export().unwrap();
+        crate::ui::ViewWindowInstance::export().unwrap();
         crate::ui::ViewState::export().unwrap();
         crate::ui::AppLabelsOverlay::export().unwrap();
         crate::ui::kernel::CapabilityRequirement::export().unwrap();

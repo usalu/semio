@@ -1,0 +1,145 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+<--- Last few GCs --->
+
+[97964:0xc3a80c000]  2045591 ms: Scavenge (interleaved) 3958.7 (4082.9) -> 3933.1 (4150.4) MB, pooled: 0 MB, 11.62 / 0.00 ms  (average mu = 0.386, current mu = 0.386) allocation failure; 
+[97964:0xc3a80c000]  2047053 ms: Mark-Compact (reduce) 3949.8 (4150.6) -> 3895.4 (4020.6) MB, pooled: 0 MB, 44.00 / 0.00 ms  (+ 1323.7 ms in 264 steps since start of marking, biggest step 5.1 ms, walltime since start of marking 1462 ms) (average mu = 0.39
+FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory
+----- Native stack trace -----
+
+ 1: 0x10788d504 node::OOMErrorHandler(char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 2: 0x106c5db90 v8::Utils::ReportOOMFailure(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 3: 0x106c5db48 v8::internal::V8::FatalProcessOutOfMemory(v8::internal::Isolate*, char const*, v8::OOMDetails const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 4: 0x106e1b0d4 v8::internal::Heap::ShouldOptimizeForLoadTime() const [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 5: 0x106e1d76c v8::internal::Heap::OldGenerationConsumedBytes() const [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 6: 0x106e1d60c v8::internal::Heap::RecomputeLimits(v8::internal::GarbageCollector, v8::base::TimeTicks) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 7: 0x106e2a7e8 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1::operator()() const [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 8: 0x106e2a48c void heap::base::Stack::SetMarkerAndCallbackImpl<v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags)::$_1>(heap::base::Stack*, void*, void const*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+ 9: 0x107472178 PushAllRegistersAndIterateStack [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+10: 0x106e19818 v8::internal::Heap::CollectGarbage(v8::internal::AllocationSpace, v8::internal::GarbageCollectionReason, v8::GCCallbackFlags) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+11: 0x106da870c v8::internal::StackGuard::HandleInterrupts(v8::internal::StackGuard::InterruptLevel) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+12: 0x107123a70 v8::internal::Runtime_StackGuardWithGap(int, unsigned long*, v8::internal::Isolate*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+13: 0x106886234 Builtins_CEntry_Return1_ArgvOnStack_NoBuiltinExit [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+14: 0x128387b40 
+15: 0x128387a90 
+16: 0x1284d1e7c 
+17: 0x12848155c 
+18: 0x1281f396c 
+19: 0x12851c6e8 
+20: 0x1283bae48 
+21: 0x12838cc08 
+22: 0x12838a654 
+23: 0x12838cd5c 
+24: 0x12838a6d4 
+25: 0x12838c9dc 
+26: 0x12838a654 
+27: 0x12838cd5c 
+28: 0x12838a654 
+29: 0x12838c9dc 
+30: 0x12838a654 
+31: 0x12838ce14 
+32: 0x12838a654 
+33: 0x12838cd5c 
+34: 0x12838a654 
+35: 0x12838cd5c 
+36: 0x12838a654 
+37: 0x12838c9dc 
+38: 0x12838a754 
+39: 0x12838c9dc 
+40: 0x12838a6d4 
+41: 0x12838cd5c 
+42: 0x12838a754 
+43: 0x12838c9dc 
+44: 0x12838a654 
+45: 0x12838c79c 
+46: 0x1284db5c4 
+47: 0x12836cce0 
+48: 0x12835d1e4 
+49: 0x128337580 
+50: 0x1283bbd94 
+51: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+52: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+53: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+54: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+55: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+56: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+57: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+58: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+59: 0x1068fb3dc Builtins_PromiseConstructor [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+60: 0x1067e9550 Builtins_InterpreterPushArgsThenFastConstructFunction [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+61: 0x106979628 Builtins_ConstructHandler [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+62: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+63: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+64: 0x1068fb3dc Builtins_PromiseConstructor [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+65: 0x1067e9550 Builtins_InterpreterPushArgsThenFastConstructFunction [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+66: 0x106979628 Builtins_ConstructHandler [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+67: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+68: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+69: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+70: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+71: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+72: 0x12811460c 
+73: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+74: 0x1067e8bec Builtins_InterpreterEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+75: 0x1068277e8 Builtins_AsyncFunctionAwaitResolveClosure [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+76: 0x1068fce58 Builtins_PromiseFulfillReactionJob [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+77: 0x106816bd0 Builtins_RunMicrotasks [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+78: 0x1067e67b0 Builtins_JSRunMicrotasksEntry [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+79: 0x106d85b7c v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+80: 0x106d86224 v8::internal::(anonymous namespace)::InvokeWithTryCatch(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+81: 0x106d86314 v8::internal::Execution::TryRunMicrotasks(v8::internal::Isolate*, v8::internal::MicrotaskQueue*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+82: 0x106da6cb0 v8::internal::MicrotaskQueue::RunMicrotasks(v8::internal::Isolate*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+83: 0x106da6acc v8::internal::MicrotaskQueue::PerformCheckpointInternal(v8::Isolate*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+84: 0x1067ea818 Builtins_CallApiCallbackGeneric [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+85: 0x12816c054 
+86: 0x1067e68cc Builtins_JSEntryTrampoline [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+87: 0x1067e6570 Builtins_JSEntry [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+88: 0x106d85bac v8::internal::(anonymous namespace)::Invoke(v8::internal::Isolate*, v8::internal::(anonymous namespace)::InvokeParams const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+89: 0x106d8559c v8::internal::Execution::Call(v8::internal::Isolate*, v8::internal::DirectHandle<v8::internal::Object>, v8::internal::DirectHandle<v8::internal::Object>, v8::base::Vector<v8::internal::DirectHandle<v8::internal::Object> const>) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+90: 0x106c6e6d0 v8::Function::Call(v8::Isolate*, v8::Local<v8::Context>, v8::Local<v8::Value>, int, v8::Local<v8::Value>*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+91: 0x1069c3d08 node::InternalCallbackScope::Close() [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+92: 0x1069c3f34 node::InternalMakeCallback(node::Environment*, v8::Local<v8::Object>, v8::Local<v8::Object>, v8::Local<v8::Function>, int, v8::Local<v8::Value>*, node::async_context, v8::Local<v8::Value>) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+93: 0x1069d5ce0 node::AsyncWrap::MakeCallback(v8::Local<v8::Function>, int, v8::Local<v8::Value>*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+94: 0x106b3e1f4 node::StreamBase::CallJSOnreadMethod(long, v8::Local<v8::ArrayBuffer>, unsigned long, node::StreamBase::StreamBaseJSChecks) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+95: 0x106b3f828 node::EmitToJSStreamListener::OnStreamRead(long, uv_buf_t const&) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+96: 0x106b42b64 node::LibuvStreamWrap::OnUvRead(long, uv_buf_t const*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+97: 0x106b43010 node::LibuvStreamWrap::ReadStart()::$_1::__invoke(uv_stream_s*, long, uv_buf_t const*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+98: 0x102bc8660 uv__stream_io [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+99: 0x102bcd1b0 uv__io_poll [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+100: 0x102bbeb64 uv_run [/opt/homebrew/Cellar/libuv/1.52.1/lib/libuv.1.0.0.dylib]
+101: 0x1069c4dc4 node::SpinEventLoopInternal(node::Environment*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+102: 0x106a9e804 node::NodeMainInstance::Run(node::ExitCode*, node::Environment*) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+103: 0x106a9e598 node::NodeMainInstance::Run() [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+104: 0x106a3f698 node::Start(int, char**) [/opt/homebrew/Cellar/node@24/24.15.0/lib/libnode.137.dylib]
+105: 0x18b4bbe00 start [/usr/lib/dyld]
+⎯⎯⎯⎯⎯⎯ Unhandled Errors ⎯⎯⎯⎯⎯⎯
+
+Vitest caught 1 unhandled error during the test run.
+This might cause false positive tests. Resolve unhandled errors to make sure your tests are not affected.
+
+⎯⎯⎯⎯⎯⎯ Unhandled Error ⎯⎯⎯⎯⎯⎯⎯
+Error: [vitest-pool]: Worker forks emitted error.
+ ❯ EventEmitter.<anonymous> ../../../node_modules/vitest/dist/chunks/cli-api.C6CiCDM3.js:3446:22
+ ❯ EventEmitter.emit node:events:509:28
+ ❯ ChildProcess.emitUnexpectedExit ../../../node_modules/vitest/dist/chunks/cli-api.C6CiCDM3.js:3013:22
+ ❯ ChildProcess.emit node:events:509:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:295:12
+
+Caused by: Error: Worker exited unexpectedly
+ ❯ ChildProcess.emitUnexpectedExit ../../../node_modules/vitest/dist/chunks/cli-api.C6CiCDM3.js:3012:33
+ ❯ ChildProcess.emit node:events:509:28
+ ❯ Process.ChildProcess._handle.onexit node:internal/child_process:295:12
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+
+
+ Test Files   (1)
+      Tests  326 skipped (327)
+     Errors  1 error
+   Start at  01:15:59
+   Duration  2047.25s (transform 1.13s, setup 150ms, import 3.70s, tests 0ms, environment 386ms)
+
+[vitest-pool]: Timeout terminating forks worker for test files /Users/ueli/Documents/semio/ui/js/react/index.tsx.
+bun x vitest run --config vitest.config.ts -t   2506.82s user 631.43s system 152% cpu 34:17.97 total

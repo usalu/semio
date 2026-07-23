@@ -1001,7 +1001,9 @@ fn question_kind_editor_fields(
                         ),
                         style: None,
                         disabled: None,
-                    }));
+                    
+                        waiting: None,
+}));
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
@@ -1012,7 +1014,9 @@ fn question_kind_editor_fields(
                 action: forms_action("addQuestionOption", Some(json!({ "questionId": question.id, "label": "New option" }))),
                 style: None,
                 disabled: None,
-            }));
+            
+                waiting: None,
+}));
         }
         "date" | "color" => {
             fields.push(inspector_text_field(
@@ -1088,7 +1092,9 @@ fn question_kind_editor_fields(
                         ),
                         style: None,
                         disabled: None,
-                    }));
+                    
+                        waiting: None,
+}));
                 }
             }
             fields.push(UiNode::Button(UiButtonNode {
@@ -1102,7 +1108,9 @@ fn question_kind_editor_fields(
                 ),
                 style: None,
                 disabled: None,
-            }));
+            
+                waiting: None,
+}));
         }
         "note" => {
             fields.push(inspector_text_field(
@@ -1295,15 +1303,17 @@ fn ui_text_emphasized(value: impl Into<String>) -> UiNode {
 
 fn ui_stack_horizontal(children: Vec<UiNode>) -> UiNode {
     UiNode::Stack(UiStackNode {
-        loading: None,
         direction: "horizontal".into(),
         gap: Some("tight".into()),
         padding: Some("none".into()),
         id: None,
         selected: None,
+        loading: None,
+        waiting: None,
         activate: None,
-        children,
         drop_action: None,
+        drop_overlay: None,
+        children,
     })
 }
 
@@ -1552,7 +1562,8 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
             action: forms_action("previousStep", None),
             style: None,
             disabled: Some(step_index == 0).filter(|disabled| *disabled),
-        }),
+
+            waiting: None,}),
         if step_index + 1 < spec.steps.len() {
             UiNode::Button(UiButtonNode {
                 loading: None,
@@ -1562,7 +1573,8 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
                 action: forms_action("nextStep", None),
                 style: None,
                 disabled: Some(!advance).filter(|disabled| *disabled),
-            })
+
+                waiting: None,})
         } else {
             UiNode::Button(UiButtonNode {
                 loading: None,
@@ -1572,7 +1584,8 @@ fn render_try_wizard(spec: &FormSpec, runtime: &FormsPlayRuntime, contributions:
                 action: forms_action("submit", None),
                 style: None,
                 disabled: Some(!advance).filter(|disabled| *disabled),
-            })
+
+                waiting: None,})
         },
     ];
     children.push(ui_stack_horizontal(nav));

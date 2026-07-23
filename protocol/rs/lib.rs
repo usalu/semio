@@ -723,6 +723,7 @@ pub mod generation_forms {
                     control: None,
                     is_hidden: None,
                     loading: None,
+                    waiting: None,
                 }
             })
             .collect();
@@ -748,11 +749,13 @@ pub mod generation_forms {
                     control: None,
                     is_hidden: None,
                     loading: None,
+                    waiting: None,
                 }]
             } else {
                 items
             },
             loading: None,
+            waiting: None,
         }];
         sections.push(UiTreeSectionNode {
             id: format!("{surface_prefix}.actions"),
@@ -775,12 +778,15 @@ pub mod generation_forms {
                 control: None,
                 is_hidden: None,
                 loading: None,
+                waiting: None,
             }],
             loading: None,
+            waiting: None,
         });
         UiNode::Tree(UiTreeNode {
             sections,
             loading: None,
+            waiting: None,
             selected_ids: selected_id.map(|id| vec![format!("{surface_prefix}.generation.{id}")]),
             highlighted_ids: None,
             selection_change: Some(generation_action(controller_id, "selectGeneration", None)),

@@ -1,0 +1,14 @@
+{
+  "title": "Get S Working End to End",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Get s working end to end. Dev build fails because framework/plugin/rs/lib.rs WindowMeasure::Slider, UiTreeSectionNode, UiButtonNode, UiSectionNode, and UiTreeNode initializers are missing the new waiting field after waiting-state was mirrored through React controls/trees/wgpu chrome. Fix compile and confirm bun run dev:s (or equivalent) builds plugins end to end.",
+  "summary": "Fixed OS studio (`dev:s` / SEMIO_PLUGIN=s) end-to-end build. Root cause: `waiting: Option\u003cbool\u003e` added to UI nodes and WindowMeasure::Slider without updating plugin/module initializers; studio mode builds all plugins so one miss blocked everything. Added waiting: None across framework helpers and guest plugins, plus related struct gaps (group_labels, slider ready/loading, diff_view/event_feed, drop_overlay, SceneQuery import, DAG catalogue kinds). Verified with SEMIO_PLUGIN=s bun ./script.ts build in framework/product/os/dev (exit 0, 35 plugin modules packaged including s).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2246"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪192ade792c50401988c996d3f7a2ca87"
+  ]
+}

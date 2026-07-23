@@ -459,6 +459,19 @@ This MUST NOT happen.
 
 ---
 
+Make sure that every single ui element is implemented cleanly and that there are proper mechanisms enforcing this.
+All ui elements share this and must render a visually distinguishable state for all combinations (except when hidden, then the rest of the props are ignored).
+A ui element can be in one of three states. The status state has 4 states. hover and selected are always possible and must be composable.
+
+state: introducing | status (default) | hidden
+status: idle (default), loading, waiting, finished, 
+hover: boolean
+selected: Boolean
+
+Exhaustively refactor everything to be proper and enforced at compile time.
+
+---
+
 introduce waiting state for all ui elements. waiting is like loading an active color border that spins pulsating around but the spin speed and pulse speed is lower and it shows dashed active border instead.
 
 ---

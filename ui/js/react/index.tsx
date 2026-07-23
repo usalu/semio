@@ -66,9 +66,7 @@ import {
   type DockSkeleton,
   type DockTabSkeleton,
   type IntroductionAdvance,
-  type IntroductionAnchor,
   type IntroductionDefinition,
-  type IntroductionEmphasis,
   type IntroductionLogo,
   type IntroductionPlacement,
   type IntroductionStepDefinition,
@@ -4815,9 +4813,19 @@ function findGhostRegionAncestor(target: Element): Element | null {
   return null;
 }
 
+/** @emoji 📐 Pane/panel/mode edge resize is layout chrome, not a canvas ghost interaction. */
+function isChromeResizeHandleTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof Element)) return false;
+  const slotted = target.closest("[data-slot]");
+  if (!slotted) return false;
+  const slot = slotted.getAttribute("data-slot") ?? "";
+  return slot === "pane-resize-handle" || slot === "panel-resize-handle" || slot === "resizable-handle" || slot === "resizable-corner" || slot.startsWith("window-measures-resize");
+}
+
 /** @emoji 👻 Keeps automatic ghosting on interaction surfaces and direct tree rows, not nested UI controls. */
 function shouldBeginAutomaticGhostInteraction(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
+  if (isChromeResizeHandleTarget(target)) return false;
   const region = findGhostRegionAncestor(target);
   const dimmed = target.closest("[data-dim]");
   if (!dimmed || (region && !region.contains(dimmed))) return true;
@@ -4980,154 +4988,73 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
  * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention. */
 export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
 
-/** @emoji 🎓 The canonical UI element id an `IntroductionAnchor` resolves to, mirroring
- * `IntroductionAnchor::element_id` in `framework/core/rs/lib.rs` byte-for-byte — `null` for anchors that
- * name a *class* of elements rather than one singular instance (`windowKind`/`action`: multiple window
- * instances can share a kind, and the same action can be dispatched from more than one open window). */
-export function introductionAnchorElementId(anchor: IntroductionAnchor): string | null {
-  switch (anchor.kind) {
-    case "screen":
-    case "windowKind":
-    case "action":
-      return null;
-    case "navbar":
-      return "ui.navbar";
-    case "footer":
-      return "ui.footer";
-    case "utility":
-      return anchor.id;
-    case "panelTab":
-    case "panelFirstDraggable":
-      return `framework.panelTab.${anchor.id}`;
-    case "element":
-      return anchor.id;
-  }
-}
-
-/** @emoji 🎓 CSS selector for an `IntroductionAnchor`. Singular anchors resolve through
- * {@link introductionAnchorElementId} to a plain `[id="…"]` match; the two class anchors resolve
- * differently since more than one element can legitimately share them at once: window bodies carry
- * `data-window-kind-id` (multiple window instances can share a kind), action rows carry a real
- * hierarchical element id ending in `.action.${actionId}` (or `.action.${actionId}.execute` for
- * staged-arg actions) — matched by suffix so any open window's row for that action qualifies, the same
- * multiplicity the old hyphenated-id suffix match handled. Draggable tree rows carry
- * `data-draggable="true"` (so `panelFirstDraggable` resolves the first catalogue drag source below the
- * panel-tab element). `null` means "no specific element" (paired with `Screen`/`Center`). */
-export function introductionAnchorSelector(anchor: IntroductionAnchor): string | null {
-  switch (anchor.kind) {
-    case "screen":
-      return null;
-    case "windowKind":
-      return `[data-window-kind-id="${anchor.id}"]`;
-    case "action":
-      return `[id$=".action.${anchor.id}"], [id$=".action.${anchor.id}.execute"]`;
-    case "panelFirstDraggable":
-      return `[id="${introductionAnchorElementId(anchor)}"] [data-slot="tree-item-row"][data-draggable="true"]`;
-    default:
-      return `[id="${introductionAnchorElementId(anchor)}"]`;
-  }
-}
-
-/** @emoji 📑 CSS selector for a panel-tab chip — folded-chrome fallback while a `panelTab` /
- * `panelFirstDraggable` step's uncollapsed panel (or its first drag source) is still mounting. */
-export function introductionPanelTabFallbackSelector(tabId: string): string {
-  return `[data-tab-id="${tabId}"]`;
-}
-
-/** @emoji 🧰 CSS selector for a window's folded Utilities-rail unfold chip — used when a utility anchor is still hidden inside the folded utility bar. */
-export function introductionUtilityBarUnfoldSelector(windowId: string): string {
-  return `[id="${childElementId("framework.window", windowId, "utilityBar", "unfold")}"]`;
-}
-
-/** @emoji 🎛 CSS selector for a window's folded top-left Actions toggle — used when an action anchor is still hidden inside the folded merged engagement/actions pane. */
-export function introductionWindowActionPaneUnfoldSelector(windowId: string): string {
-  return `[id="${childElementId("framework.window", windowId, "engagement", "toggle")}"]`;
-}
-
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
-
-type IntroductionAnchorResolution = { readonly rect: IntroductionRect | null; readonly viaFallback: boolean };
 
 function domRectToIntroductionRect(rect: DOMRect): IntroductionRect {
   return { top: rect.top, left: rect.left, width: rect.width, height: rect.height };
 }
 
-/** @emoji 🎓 Live-tracks the DOM rect of an introduction step's anchor, re-measuring on element resize
- * and window resize. Waits for the anchor to mount (a folded panel/utility bar) instead of failing
- * closed; a `null` selector or a never-found anchor both resolve to `null`, which the caller treats as a
- * `Screen`-style full veil with no cutout. When `fallbackSelectors` are given, the first mounted selector
- * wins in order — the primary anchor first, then each fallback (e.g. a folded Utilities rail's unfold chip
- * while the utility button is still hidden). A `MutationObserver` on the document (rather than a polling
- * timer, which would either stop too early or — if kept alive waiting for an upgrade that may never come,
- * e.g. in a test fixture that never unfolds the rail — leak forever) re-attempts attachment on every DOM
- * change, so a fallback attachment upgrades to the real anchor the moment it mounts (e.g. once the rail
- * unfolds) without ever polling when the DOM is idle. */
-/** @emoji 🎓 When `introduce` is set, stamps the resolved anchor element with `data-introduced="true"`
- * (pulsing the introduced border, see `ui/styling/js/ui.css`) for as long as it stays attached, moving
- * the stamp if a better-ranked selector mounts and clearing it on step change/unmount. */
-function useIntroductionAnchorRect(selector: string | null, fallbackSelectors: readonly string[] = [], introduce = false): IntroductionAnchorResolution {
-  const [resolution, setResolution] = reactHostPort.useState<IntroductionAnchorResolution>({ rect: null, viaFallback: false });
+/** @emoji 🎓 Live-tracks the DOM rect of an introduction step's `introduce` element (via
+ * {@link elementIdSelector}), stamping it `data-introduced="true"` (pulsing the introduced border, see
+ * `ui/styling/js/ui.css`) for as long as it stays attached — cleared on unmount/selector change. Waits for
+ * the element to mount (a folded panel/utility bar the shell is in the middle of revealing) instead of
+ * failing closed; a `null` selector or a never-found element both resolve to `null`, which the caller
+ * treats as a `Screen`-style full veil with no cutout. A `MutationObserver` on the document (rather than a
+ * polling timer, which would either stop too early or leak forever waiting for an upgrade that may never
+ * come) re-attempts attachment on every DOM change until it mounts, then disconnects. */
+function useIntroductionAnchorRect(selector: string | null): IntroductionRect | null {
+  const [rect, setRect] = reactHostPort.useState<IntroductionRect | null>(null);
 
   reactHostPort.useEffect(() => {
-    const selectors = [selector, ...fallbackSelectors].filter((entry): entry is string => Boolean(entry));
-    if (selectors.length === 0) {
-      setResolution({ rect: null, viaFallback: false });
+    if (!selector) {
+      setRect(null);
       return;
     }
     let element: Element | null = null;
-    let activeSelectorIndex = -1;
     let resizeObserver: ResizeObserver | null = null;
     // 🐢 The mutation observer below fires on every DOM change anywhere on the page — including ones
     // completely unrelated to this anchor (a live 3D viewport, other components' updates). Without this
-    // guard, every one of those unrelated mutations would call `setResolution` with a fresh `{ rect:
-    // null }` object while unresolved, and since object identity always differs, React would re-render
-    // this component on every single page-wide DOM mutation for as long as the anchor stays unresolved.
+    // guard, every one of those unrelated mutations would call `setRect(null)` with a fresh object while
+    // unresolved, and since object identity always differs, React would re-render this component on every
+    // single page-wide DOM mutation for as long as the element stays unresolved.
     let reportedUnresolved = false;
 
     const measure = () => {
-      if (element) setResolution({ rect: domRectToIntroductionRect(element.getBoundingClientRect()), viaFallback: activeSelectorIndex > 0 });
+      if (element) setRect(domRectToIntroductionRect(element.getBoundingClientRect()));
     };
-    /** Re-attaches to the best (lowest-index) selector currently mounted, never downgrading from what's
-     * already attached — a no-op once the primary (index 0) is attached. */
     const attach = () => {
-      for (let index = 0; index < selectors.length; index += 1) {
-        if (activeSelectorIndex !== -1 && index >= activeSelectorIndex) break;
-        const candidate = document.querySelector(selectors[index]!);
-        if (!candidate) continue;
-        resizeObserver?.disconnect();
-        if (introduce) element?.removeAttribute("data-introduced");
-        element = candidate;
-        activeSelectorIndex = index;
-        reportedUnresolved = false;
-        if (introduce) candidate.setAttribute("data-introduced", "true");
-        measure();
-        resizeObserver = new ResizeObserver(measure);
-        resizeObserver.observe(candidate);
+      const candidate = document.querySelector(selector);
+      if (!candidate) {
+        if (!reportedUnresolved) {
+          reportedUnresolved = true;
+          setRect(null);
+        }
         return;
       }
-      if (activeSelectorIndex === -1 && !reportedUnresolved) {
-        reportedUnresolved = true;
-        setResolution({ rect: null, viaFallback: false });
-      }
+      element = candidate;
+      candidate.setAttribute("data-introduced", "true");
+      measure();
+      resizeObserver = new ResizeObserver(measure);
+      resizeObserver.observe(candidate);
     };
 
     attach();
     const mutationObserver = new MutationObserver(() => {
-      if (activeSelectorIndex !== 0) attach();
+      if (!element) attach();
     });
     mutationObserver.observe(document.body, { childList: true, subtree: true });
     const onResize = () => measure();
     window.addEventListener("resize", onResize);
     return () => {
-      if (introduce) element?.removeAttribute("data-introduced");
+      element?.removeAttribute("data-introduced");
       resizeObserver?.disconnect();
       mutationObserver.disconnect();
       window.removeEventListener("resize", onResize);
-      setResolution({ rect: null, viaFallback: false });
+      setRect(null);
     };
-  }, [selector, fallbackSelectors, introduce]);
+  }, [selector]);
 
-  return resolution;
+  return rect;
 }
 
 export type IntroductionVeilBand = IntroductionRect;
@@ -5252,10 +5179,6 @@ export type UIIntroductionProps = {
   readonly stepIndex: number;
   readonly onStepIndexChange: (index: number) => void;
   readonly onDismiss: (completed: boolean) => void;
-  /** @emoji 🎯 Folded-chrome fallbacks tried after the step's primary anchor selector — e.g. a Tools-rail unfold chip while a utility button is still hidden. */
-  readonly anchorFallbackSelectors?: readonly string[];
-  /** @emoji 🕳️ Extra cutout selectors merged with the step's declared `cutouts` — e.g. every mounted World3d window that accepts a catalogue drop. */
-  readonly additionalCutoutSelectors?: readonly string[];
 };
 
 /** @emoji 📐 One row of an introduction step's {@link IntroductionLogo}s, all sharing one computed height
@@ -5316,18 +5239,15 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
 }
 
 /** @emoji 🎓 Full-screen first-run walkthrough: a glass veil covers the screen, the current step's
- * anchor is cut out of it and — for `emphasis: "cutout"` — pulses the introduced border itself, optional
- * secondary `cutouts` stay interactive without pulsing, and an info box explains it — renders the
- * declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
-export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss, anchorFallbackSelectors = [], additionalCutoutSelectors = [] }) => {
+ * `introduce` element is cut out of it and pulses the introduced border itself, `show` elements stay
+ * interactive without pulsing, and an info box explains it — renders the declarative
+ * `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
+export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
-  const selector = step ? introductionAnchorSelector(step.anchor) : null;
-  const { rect: anchorRect, viaFallback } = useIntroductionAnchorRect(selector, anchorFallbackSelectors, step ? step.emphasis !== "none" : false);
-  const cutoutSelectors = reactHostPort.useMemo((): readonly string[] => {
-    const fromStep = (step?.cutouts ?? []).map((anchor) => introductionAnchorSelector(anchor)).filter((entry): entry is string => Boolean(entry));
-    return [...new Set([...fromStep, ...additionalCutoutSelectors])];
-  }, [additionalCutoutSelectors, step]);
-  const extraCutoutRects = useIntroductionCutoutRects(cutoutSelectors);
+  const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
+  const introduceRect = useIntroductionAnchorRect(introduceSelector);
+  const showSelectors = reactHostPort.useMemo((): readonly string[] => (step?.show ?? []).map(elementIdSelector), [step]);
+  const showRects = useIntroductionCutoutRects(showSelectors);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -5371,16 +5291,15 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   if (!step) return null;
 
   const advance: IntroductionAdvance = step.advance;
-  const emphasis: IntroductionEmphasis = anchorRect ? (viaFallback ? "cutout" : step.emphasis) : "none";
-  const primaryCutouts = emphasis === "none" || !anchorRect ? [] : [anchorRect];
-  const cutouts = [...primaryCutouts, ...extraCutoutRects];
+  const cutouts = [...(introduceRect ? [introduceRect] : []), ...showRects];
   const bands = introductionVeilBands(viewport, cutouts);
-  const boxPosition = resolveIntroductionPlacement(step.placement, anchorRect, boxSize, viewport);
-  // 🎓 A targeted anchor that hasn't mounted yet (a folded utility bar/panel) must not trap the user behind
-  // an opaque-to-clicks veil — only `Screen` steps (and steps whose anchor did resolve) block pointer
-  // events; an unresolved targeted anchor lets clicks through so the user can reveal it themselves.
-  // Secondary cutouts alone also count as resolved targets (e.g. drop windows while the drag source mounts).
-  const veilBlocksPointer = step.anchor.kind === "screen" || anchorRect != null || extraCutoutRects.length > 0;
+  const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
+  // 🎓 A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
+  // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
+  // and steps whose target did resolve block pointer events; an unresolved `introduce` lets clicks through
+  // so the user can reveal it themselves. `show` rects alone also count as resolved targets (e.g. drop
+  // windows while the drag source mounts).
+  const veilBlocksPointer = step.introduce == null || introduceRect != null || showRects.length > 0;
 
   return (
     <>
@@ -7245,6 +7164,61 @@ export function childElementId(parent: string, ...segments: (string | number)[])
 export function assertElementId(id: string, componentName: string): void {
   if (process.env.NODE_ENV === "production") return;
   if (!isElementId(id)) console.error(`${componentName} received id "${id}" which does not match the UI element id grammar (dot-separated camelCase, e.g. "framework.window.main.action.addLayer")`);
+}
+
+/** 🆔 CSS selector matching the element whose DOM `id` is `id`, OR any element carrying `id` as a
+ * secondary logical id via the space-separated `data-element-alias` attribute — the single logical-id →
+ * element resolver every consumer (introductions, tests, tutorials) should use instead of hand-rolling
+ * `[id=...]`/`[data-*=...]` selectors. */
+export function elementIdSelector(id: string): string {
+  return `[id="${id}"], [data-element-alias~="${id}"]`;
+}
+
+/** 🆔 Adds `id` as a token to `element`'s space-separated `data-element-alias` attribute (idempotent). */
+function addElementAlias(element: Element, id: string): void {
+  const existing = element.getAttribute("data-element-alias");
+  const tokens = existing ? existing.split(" ").filter(Boolean) : [];
+  if (tokens.includes(id)) return;
+  tokens.push(id);
+  element.setAttribute("data-element-alias", tokens.join(" "));
+}
+
+/** 🆔 Removes `id` from `element`'s `data-element-alias` attribute, dropping the attribute entirely once empty. */
+function removeElementAlias(element: Element, id: string): void {
+  const existing = element.getAttribute("data-element-alias");
+  if (!existing) return;
+  const tokens = existing.split(" ").filter((token) => token && token !== id);
+  if (tokens.length === 0) element.removeAttribute("data-element-alias");
+  else element.setAttribute("data-element-alias", tokens.join(" "));
+}
+
+/** 🆔 Stamps `alias` (a logical element id) onto the first draggable tree row inside `containerRef`, in
+ * document order — the generic mechanism behind teaching catalogue drag-and-drop without any component
+ * hardcoding "first draggable row" semantics: the Panel/MobilePanel decide the alias value (their own tab
+ * id + `.firstDraggable`), this hook just keeps it stamped on whichever row is first as the tree changes.
+ * Re-scans on `data-draggable` mutations (not `data-element-alias`, which would self-trigger the observer). */
+export function useFirstDraggableElementAlias(containerRef: React.RefObject<HTMLElement | null>, alias: string | null): void {
+  reactHostPort.useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !alias) return;
+    let current: Element | null = null;
+    const restamp = () => {
+      const next = container.querySelector('[data-slot="tree-item-row"][data-draggable="true"]');
+      if (next === current) return;
+      if (current) removeElementAlias(current, alias);
+      current = next;
+      if (current) addElementAlias(current, alias);
+    };
+    restamp();
+    const observer = new MutationObserver((mutations) => {
+      if (mutations.some((mutation) => mutation.type === "childList" || mutation.attributeName === "data-draggable")) restamp();
+    });
+    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ["data-draggable"] });
+    return () => {
+      observer.disconnect();
+      if (current) removeElementAlias(current, alias);
+    };
+  }, [containerRef, alias]);
 }
 //#endregion 🆔ElementId
 
@@ -16455,10 +16429,11 @@ export interface WindowMeasureTreeLeafProps {
   children: React.ReactNode;
   fullWidth?: boolean;
   loading?: boolean;
+  waiting?: boolean;
 }
 
 /** @emoji 🌳 Measure control leaf aligned like a tree row (label + value or full-width control). */
-export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false, loading = false }) => {
+export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ label, children, fullWidth = false, loading = false, waiting = false }) => {
   const { level, isLastAtLevel, showLines } = reactHostPort.useContext(TreeContext);
   const labelNode = label ? (
     <span data-slot="tree-label" className={cn("truncate select-none", windowMeasureTreeLeafLabelClass)} style={treeItemLabelStyle}>
@@ -16469,6 +16444,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
     return (
       <WindowMeasureTreeRow
         loading={loading}
+        waiting={waiting}
         left={
           <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="min-w-0 w-full">
             <div data-slot="window-measure-tree-leaf-body" className="min-w-0 w-full">
@@ -16482,6 +16458,7 @@ export const WindowMeasureTreeLeaf: React.FC<WindowMeasureTreeLeafProps> = ({ la
   return (
     <WindowMeasureTreeRow
       loading={loading}
+      waiting={waiting}
       left={
         <TreeAlignedRow level={level} isLastAtLevel={isLastAtLevel} showLines={showLines} connectCurrentLevel={level > 0} slotOffsetPx={2} contentClassName="flex min-w-0 items-center gap-double">
           {labelNode}
@@ -17231,13 +17208,11 @@ function PanelResizeHandle({
   setResizingSide: (side: "left" | "right" | null) => void;
   setHoveredSide: (side: "left" | "right" | null) => void;
 }) {
-  const panelGhost = usePanelGhost();
   const isResizing = resizingSide === side;
   const resizeStartRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
   const resizePointerProps = usePointerDrag<HTMLDivElement>({
     onStart: (event) => {
       event.preventDefault();
-      panelGhost?.begin(event.currentTarget);
       resizeStartRef.current = { pointerX: event.clientX, size: sizeRef.current };
       setResizingSide(side);
     },
@@ -17253,15 +17228,13 @@ function PanelResizeHandle({
     onEnd: () => {
       resizeStartRef.current = null;
       setResizingSide(null);
-      panelGhost?.end();
     },
     onCancel: () => {
       resizeStartRef.current = null;
       setResizingSide(null);
-      panelGhost?.end();
     },
   });
-  return <div className={resizeHandleClass} onMouseEnter={() => setHoveredSide(side)} onMouseLeave={() => !isResizing && setHoveredSide(null)} {...resizePointerProps} />;
+  return <div data-slot="panel-resize-handle" className={resizeHandleClass} onMouseEnter={() => setHoveredSide(side)} onMouseLeave={() => !isResizing && setHoveredSide(null)} {...resizePointerProps} />;
 }
 
 const Panel: React.FC<PanelProps> = ({
@@ -18694,6 +18667,7 @@ export interface WindowConfig {
   onDoubleClick?: () => void;
   className?: string;
   loading?: boolean;
+  waiting?: boolean;
   error?: Error | null;
   skeleton?: React.ReactNode;
   showControls?: boolean;
@@ -18832,6 +18806,7 @@ const Window: React.FC<WindowProps> = ({
   className = "",
   isVisible = true,
   loading = false,
+  waiting = false,
   error = null,
   skeleton,
   showControls = false,
@@ -18991,7 +18966,14 @@ const Window: React.FC<WindowProps> = ({
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
         onPointerDownCapture={() => onActivate?.()}
-        className={cn("relative flex w-full min-w-0 flex-col overflow-hidden", fill ? "h-full min-h-0" : "h-auto max-h-full self-start", bgClass, getLevelZClass("window"), loadingBorderStateClass(loading, active), className)}
+        className={cn(
+          "relative flex w-full min-w-0 flex-col overflow-hidden",
+          fill ? "h-full min-h-0" : "h-auto max-h-full self-start",
+          bgClass,
+          getLevelZClass("window"),
+          loadingBorderStateClass(loading, active) || waitingBorderStateClass(waiting, active),
+          className,
+        )}
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
@@ -24971,38 +24953,62 @@ if (import.meta.vitest) {
     });
   });
 
-  describe("introductionAnchorSelector", () => {
-    it("resolves singular anchors to a plain id selector, or null for Screen", () => {
-      expect(introductionAnchorSelector({ kind: "screen" })).toBeNull();
-      expect(introductionAnchorSelector({ kind: "navbar" })).toBe('[id="ui.navbar"]');
-      expect(introductionAnchorSelector({ kind: "footer" })).toBe('[id="ui.footer"]');
-      expect(introductionAnchorSelector({ kind: "utility", id: "brush" })).toBe('[id="brush"]');
-      expect(introductionAnchorSelector({ kind: "panelTab", id: "puzzle.catalogue" })).toBe('[id="framework.panelTab.puzzle.catalogue"]');
-      expect(introductionAnchorSelector({ kind: "panelFirstDraggable", id: "puzzle.catalogue" })).toBe(
-        '[id="framework.panelTab.puzzle.catalogue"] [data-slot="tree-item-row"][data-draggable="true"]',
+  describe("elementIdSelector", () => {
+    it("matches a plain id or an aliased element", () => {
+      expect(elementIdSelector("ui.navbar")).toBe('[id="ui.navbar"], [data-element-alias~="ui.navbar"]');
+      const { container } = render(
+        <div>
+          <div id="ui.navbar" />
+          <div data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable other.alias" />
+        </div>,
       );
-      expect(introductionAnchorSelector({ kind: "element", id: "ui.custom.thing" })).toBe('[id="ui.custom.thing"]');
-    });
-
-    it("resolves class anchors (windowKind/action) to a class attribute or id-suffix match, not a plain id", () => {
-      expect(introductionAnchorSelector({ kind: "windowKind", id: "main" })).toBe('[data-window-kind-id="main"]');
-      expect(introductionAnchorSelector({ kind: "action", id: "addLayer" })).toBe('[id$=".action.addLayer"], [id$=".action.addLayer.execute"]');
-    });
-
-    it("maps folded window chrome toggles for utility/action fallbacks", () => {
-      expect(introductionUtilityBarUnfoldSelector("puzzle3d-main")).toBe('[id="framework.window.puzzle3dMain.utilityBar.unfold"]');
-      expect(introductionWindowActionPaneUnfoldSelector("puzzle3d-main")).toBe('[id="framework.window.puzzle3dMain.engagement.toggle"]');
-      expect(introductionPanelTabFallbackSelector("puzzle.catalogue")).toBe('[data-tab-id="puzzle.catalogue"]');
+      expect(container.querySelectorAll(elementIdSelector("ui.navbar"))).toHaveLength(1);
+      expect(container.querySelectorAll(elementIdSelector("framework.panelTab.puzzle.catalogue.firstDraggable"))).toHaveLength(1);
+      expect(container.querySelectorAll(elementIdSelector("other.alias"))).toHaveLength(1);
+      expect(container.querySelectorAll(elementIdSelector("nothing.here"))).toHaveLength(0);
     });
   });
 
-  describe("UIIntroduction panelTab cutout", () => {
-    it("cuts out the uncollapsed panel stamped with data-active-tab-id, not only the tab chip", async () => {
+  describe("useFirstDraggableElementAlias", () => {
+    function FirstDraggableHarness({ alias, rows }: { readonly alias: string | null; readonly rows: readonly string[] }) {
+      const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
+      useFirstDraggableElementAlias(containerRef, alias);
+      return (
+        <div ref={containerRef}>
+          {rows.map((id) => (
+            <div key={id} id={id} data-slot="tree-item-row" data-draggable="true" />
+          ))}
+        </div>
+      );
+    }
+
+    it("stamps the alias on the first draggable row in document order and moves it as rows change", async () => {
+      const { container, rerender } = render(<FirstDraggableHarness alias="framework.panelTab.puzzle.catalogue.firstDraggable" rows={["a", "b"]} />);
+      await waitFor(() => {
+        expect(container.querySelector("#a")?.getAttribute("data-element-alias")).toBe("framework.panelTab.puzzle.catalogue.firstDraggable");
+      });
+      expect(container.querySelector("#b")?.getAttribute("data-element-alias")).toBeNull();
+      rerender(<FirstDraggableHarness alias="framework.panelTab.puzzle.catalogue.firstDraggable" rows={["b"]} />);
+      await waitFor(() => {
+        expect(container.querySelector("#b")?.getAttribute("data-element-alias")).toBe("framework.panelTab.puzzle.catalogue.firstDraggable");
+      });
+    });
+
+    it("cleans up the alias on unmount", async () => {
+      const { container, unmount } = render(<FirstDraggableHarness alias="framework.panelTab.puzzle.catalogue.firstDraggable" rows={["a"]} />);
+      await waitFor(() => {
+        expect(container.querySelector("#a")?.getAttribute("data-element-alias")).toBe("framework.panelTab.puzzle.catalogue.firstDraggable");
+      });
+      const row = container.querySelector("#a")!;
+      unmount();
+      expect(row.getAttribute("data-element-alias")).toBeNull();
+    });
+  });
+
+  describe("UIIntroduction show/introduce cutouts", () => {
+    it("cuts out the introduced panel by its stamped element id", async () => {
       const { container } = render(
         <div>
-          <button type="button" data-tab-id="framework.panel.catalogue">
-            Katalog
-          </button>
           <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue" />
           <UIIntroduction
             introduction={{
@@ -25012,8 +25018,8 @@ if (import.meta.vitest) {
                   id: "catalogue",
                   title: "Der Katalog",
                   body: "Browse kinds.",
-                  anchor: { kind: "panelTab", id: "framework.panel.catalogue" },
-                  emphasis: "cutout",
+                  introduce: "framework.panelTab.framework.panel.catalogue",
+                  show: [],
                   placement: "right",
                   advance: { kind: "next" },
                   logos: [],
@@ -25029,14 +25035,13 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBe("true");
       });
-      expect(container.querySelector('[data-tab-id="framework.panel.catalogue"]')?.getAttribute("data-introduced")).toBeNull();
     });
 
-    it("introduces the first draggable tree item inside the panel for panelFirstDraggable", async () => {
+    it("introduces the first draggable tree item via its stamped alias, without pulsing its siblings", async () => {
       const { container } = render(
         <div>
-          <div id="framework.panelTab.framework.panel.catalogue" data-slot="panel" data-panel-visible="true" data-active-tab-id="framework.panel.catalogue">
-            <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:first" />
+          <div data-slot="panel" data-panel-visible="true">
+            <div data-slot="tree-item-row" data-draggable="true" data-element-alias="framework.panelTab.framework.panel.catalogue.firstDraggable" id="puzzle3d-kind:first" />
             <div data-slot="tree-item-row" data-draggable="true" id="puzzle3d-kind:second" />
           </div>
           <UIIntroduction
@@ -25047,8 +25052,8 @@ if (import.meta.vitest) {
                   id: "add-object",
                   title: "Baukomponente hinzufügen",
                   body: "Drag the first kind.",
-                  anchor: { kind: "panelFirstDraggable", id: "framework.panel.catalogue" },
-                  emphasis: "cutout",
+                  introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
+                  show: [],
                   placement: "right",
                   advance: { kind: "action", id: "addObjectKind" },
                   logos: [],
@@ -25067,62 +25072,57 @@ if (import.meta.vitest) {
       expect(container.querySelector('[id="puzzle3d-kind:second"]')?.getAttribute("data-introduced")).toBeNull();
       expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBeNull();
     });
-  });
 
-  describe("UIIntroduction folded-chrome fallbacks", () => {
-    it("highlights a fallback Utilities-rail unfold chip while the utility anchor is still hidden", async () => {
+    it("keeps show elements interactive without pulsing them", async () => {
       const { container } = render(
         <div>
-          <button type="button" id={childElementId("framework.window", "puzzle3d-main", "utilityBar", "unfold")}>
-            Utilities
-          </button>
+          <div id="framework.window.puzzle3dMain" />
           <UIIntroduction
             introduction={{
               title: "Welcome",
               steps: [
                 {
-                  id: "move-utility",
-                  title: "Move Objects",
-                  body: "Activate Move.",
-                  anchor: { kind: "utility", id: "move" },
-                  emphasis: "cutout",
-                  placement: "auto",
-                  advance: { kind: "utility", id: "move" },
+                  id: "add-object",
+                  title: "Baukomponente hinzufügen",
+                  body: "Drag the first kind.",
+                  introduce: null,
+                  show: ["framework.window.puzzle3dMain"],
+                  placement: "right",
+                  advance: { kind: "next" },
                   logos: [],
                 },
               ],
             }}
             stepIndex={0}
-            anchorFallbackSelectors={[introductionUtilityBarUnfoldSelector("puzzle3d-main")]}
             onStepIndexChange={vi.fn()}
             onDismiss={vi.fn()}
           />
         </div>,
       );
       await waitFor(() => {
-        expect(container.querySelector(`[id="${childElementId("framework.window", "puzzle3d-main", "utilityBar", "unfold")}"]`)?.getAttribute("data-introduced")).toBe("true");
+        expect(container.querySelectorAll(".ui-glass-veil").length).toBeGreaterThan(0);
       });
-      expect(container.querySelector(".animate-pulse")).toBeNull();
+      expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBeNull();
     });
   });
 
   describe("UIIntroduction appearance", () => {
-    it("stamps a cutout anchor as introduced and clears it on step change", async () => {
+    it("stamps an introduced element and clears it on step change", async () => {
       const steps: IntroductionStepDefinition[] = [
-        { id: "footer", title: "Footer", body: "This is the footer.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" }, logos: [] },
-        { id: "welcome", title: "Welcome", body: "No anchor.", anchor: { kind: "screen" }, emphasis: "none", placement: "center", advance: { kind: "next" }, logos: [] },
+        { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [] },
+        { id: "welcome", title: "Welcome", body: "No introduce.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
       ];
       const Harness: React.FC = () => {
         const [stepIndex, setStepIndex] = reactHostPort.useState(0);
         return (
           <div>
-            <footer data-slot="footer" />
+            <footer id="ui.footer" />
             <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={stepIndex} onStepIndexChange={setStepIndex} onDismiss={vi.fn()} />
           </div>
         );
       };
       const { container } = render(<Harness />);
-      const footer = container.querySelector('[data-slot="footer"]')!;
+      const footer = container.querySelector("#ui\\.footer")!;
       await waitFor(() => {
         expect(footer.getAttribute("data-introduced")).toBe("true");
       });
@@ -25135,11 +25135,11 @@ if (import.meta.vitest) {
     it("unmount clears an introduced stamp", async () => {
       const { container, unmount } = render(
         <div>
-          <footer data-slot="footer" />
+          <footer id="ui.footer" />
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Cutout.", anchor: { kind: "footer" }, emphasis: "cutout", placement: "auto", advance: { kind: "next" }, logos: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Cutout.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -25147,7 +25147,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const footer = container.querySelector('[data-slot="footer"]')!;
+      const footer = container.querySelector("#ui\\.footer")!;
       await waitFor(() => {
         expect(footer.getAttribute("data-introduced")).toBe("true");
       });
@@ -25155,14 +25155,14 @@ if (import.meta.vitest) {
       expect(footer.getAttribute("data-introduced")).toBeNull();
     });
 
-    it("a `none` emphasis step never stamps its anchor", () => {
+    it("a screen-style step (`introduce: null`) never stamps anything", () => {
       const { container } = render(
         <div>
-          <footer data-slot="footer" />
+          <footer id="ui.footer" />
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", anchor: { kind: "footer" }, emphasis: "none", placement: "auto", advance: { kind: "next" }, logos: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", introduce: null, show: [], placement: "auto", advance: { kind: "next" }, logos: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -25170,7 +25170,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const footer = container.querySelector('[data-slot="footer"]')!;
+      const footer = container.querySelector("#ui\\.footer")!;
       expect(footer.getAttribute("data-introduced")).toBeNull();
     });
 
@@ -25184,8 +25184,8 @@ if (import.meta.vitest) {
                 id: "welcome",
                 title: "Welcome",
                 body: "Introduction body",
-                anchor: { kind: "screen" },
-                emphasis: "none",
+                introduce: null,
+                show: [],
                 placement: "center",
                 advance: { kind: "next" },
                 logos: [],
@@ -25213,8 +25213,8 @@ if (import.meta.vitest) {
                 id: "funding",
                 title: "Funding",
                 body: "Funded by",
-                anchor: { kind: "screen" },
-                emphasis: "none",
+                introduce: null,
+                show: [],
                 placement: "center",
                 advance: { kind: "next" },
                 logos: [
@@ -27863,7 +27863,7 @@ if (import.meta.vitest) {
       expect(overlay?.className).toContain("pointer-events-none");
       expect(overlay?.className).toContain("top-0");
       expect(overlay?.className).toContain("left-0");
-      expect(overlay?.className).toContain("p-single");
+      expect(overlay?.className).toContain("p-0");
       expect(zone?.className).toContain("pointer-events-auto");
       expect(zone?.className).toContain("flex-row");
       expect(overlay?.getAttribute("data-expanded")).toBeNull();
@@ -28721,6 +28721,11 @@ if (treeVitest) {
           <div data-slot="window-measures-stack" data-dim>
             <button id="window-option">Option</button>
           </div>
+          <div data-slot="panel-resize-handle" id="panel-resize"></div>
+          <div data-slot="pane-resize-handle" id="pane-resize"></div>
+          <div data-slot="resizable-handle" id="mode-resize"></div>
+          <div data-slot="resizable-corner" id="mode-corner-resize"></div>
+          <div data-slot="window-measures-resize-left" id="measures-resize"></div>
         </div>
       `;
 
@@ -28728,6 +28733,65 @@ if (treeVitest) {
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("row-label"))).toBe(true);
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("slider"))).toBe(false);
       expect(shouldBeginAutomaticGhostInteraction(document.getElementById("window-option"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("panel-resize"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("pane-resize"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("mode-resize"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("mode-corner-resize"))).toBe(false);
+      expect(shouldBeginAutomaticGhostInteraction(document.getElementById("measures-resize"))).toBe(false);
+    });
+
+    it("GhostProvider keeps panel chrome visible while a panel resize handle is dragged", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const onSizeChange = vi.fn();
+      const { container } = render(
+        <GhostProvider>
+          <Panel anchor="top-left" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />
+        </GhostProvider>,
+      );
+      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+      const handle = container.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement;
+      expect(handle).toBeTruthy();
+      expect(panel.querySelectorAll("[data-dim]").length).toBeGreaterThan(0);
+
+      fireEvent.pointerDown(handle, { button: 0, clientX: 100, clientY: 10 });
+      fireEvent.pointerMove(document, { clientX: 160, clientY: 10 });
+      fireEvent.pointerMove(handle, { clientX: 160, clientY: 10 });
+
+      expect(panel.hasAttribute("data-ghost")).toBe(false);
+      expect(onSizeChange).toHaveBeenCalled();
+      expect(panel.querySelectorAll("[data-dim]").length).toBeGreaterThan(0);
+      fireEvent.pointerUp(document);
+    });
+
+    it("GhostProvider keeps pane chrome visible while a pane resize handle is dragged", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const onSizeChange = vi.fn();
+      const { container } = render(
+        <GhostProvider>
+          <GhostRegionShell>
+            <PaneHost>
+              <Pane id="resize-pane" anchor="top-left" label="Resize" resizable size={300} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+                <div>Content</div>
+              </Pane>
+            </PaneHost>
+          </GhostRegionShell>
+        </GhostProvider>,
+      );
+      const region = container.querySelector("[data-ghost-region]") as HTMLElement;
+      const handle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
+      expect(handle).toBeTruthy();
+      expect(container.querySelector('[data-slot="pane"] [data-dim]')).toBeTruthy();
+
+      fireEvent.pointerDown(handle, { button: 0, pointerId: 3, clientX: 100, clientY: 0 });
+      fireEvent.pointerMove(document, { clientX: 160, clientY: 0 });
+      fireEvent.pointerMove(handle, { pointerId: 3, clientX: 160, clientY: 0 });
+
+      expect(region.hasAttribute("data-ghost")).toBe(false);
+      expect(container.querySelector('[data-slot="pane"] [data-dim]')).toBeTruthy();
+      expect(onSizeChange).toHaveBeenCalledWith(360);
+      fireEvent.pointerUp(document);
     });
 
     it("GhostProvider keeps sibling window UI visible while a nested slider moves", async () => {
@@ -28776,11 +28840,30 @@ if (treeVitest) {
       expect(loadingBorderStateClass(true, true)).toBe(loadingBorderActiveClass);
     });
 
+    it("waitingBorderStateClass returns the active ring only when both waiting and active are true", () => {
+      expect(waitingBorderStateClass(false)).toBe("");
+      expect(waitingBorderStateClass(false, true)).toBe("");
+      expect(waitingBorderStateClass(true, false)).toBe(waitingBorderClass);
+      expect(waitingBorderStateClass(true, true)).toBe(waitingBorderActiveClass);
+    });
+
     it("treeRowChromeContentFillClasses adds the loading ring in the row's own color", () => {
       expect(treeRowChromeContentFillClasses(true, false, true)).toContain("border-loading-active");
       expect(treeRowChromeContentFillClasses(false, false, true)).toContain("border-loading");
       expect(treeRowChromeContentFillClasses(false, false, true)).not.toContain("border-loading-active");
       expect(treeRowChromeContentFillClasses(false, false, false)).not.toContain("border-loading");
+    });
+
+    it("treeRowChromeContentFillClasses adds the waiting ring in the row's own color", () => {
+      expect(treeRowChromeContentFillClasses(true, false, false, true)).toContain("border-waiting-active");
+      expect(treeRowChromeContentFillClasses(false, false, false, true)).toContain("border-waiting");
+      expect(treeRowChromeContentFillClasses(false, false, false, true)).not.toContain("border-waiting-active");
+      expect(treeRowChromeContentFillClasses(false, false, false, false)).not.toContain("border-waiting");
+    });
+
+    it("treeRowChromeContentFillClasses prefers the loading ring over waiting when both are set", () => {
+      expect(treeRowChromeContentFillClasses(false, false, true, true)).toContain("border-loading");
+      expect(treeRowChromeContentFillClasses(false, false, true, true)).not.toContain("border-waiting");
     });
 
     it("applies tree row fill on tree-row-content so gutter guides stay visible", () => {
@@ -29213,6 +29296,26 @@ if (treeVitest) {
       expect(thumbIdx).toBeGreaterThan(trackWrapIdx);
       expect(markup.indexOf("border-loading")).toBeGreaterThan(trackWrapIdx);
       expect(markup.indexOf("border-loading")).toBeLessThan(thumbIdx);
+    });
+
+    it("puts the waiting ring on the track wrap only so the knob and hover chrome stay visible", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.waiting" value={[10]} min={0} max={100} ready={40} waiting />);
+
+      expect(markup).toContain('data-slot="slider-track-wrap"');
+      expect(markup).toContain('data-waiting="true"');
+      expect(markup).toContain("border-waiting");
+      expect(markup).toContain('data-slot="slider-thumb"');
+      const trackWrapIdx = markup.indexOf('data-slot="slider-track-wrap"');
+      const thumbIdx = markup.indexOf('data-slot="slider-thumb"');
+      expect(markup.indexOf("border-waiting")).toBeGreaterThan(trackWrapIdx);
+      expect(markup.indexOf("border-waiting")).toBeLessThan(thumbIdx);
+    });
+
+    it("prefers the loading ring over waiting on the slider track wrap when both are set", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.both" value={[10]} min={0} max={100} ready={40} loading waiting />);
+
+      expect(markup).toContain("border-loading");
+      expect(markup).not.toContain("border-waiting");
     });
 
     it("renders shared field roots that stretch within the property value column", () => {
@@ -30065,6 +30168,20 @@ if (treeVitest) {
       expect(markup).toMatch(/data-tree-guide-line="" class="w-px h-full bg-muted-foreground\/40 group-hover:bg-emphasized/);
     });
 
+    it("puts a waiting ring on a window measure tree leaf's own row", () => {
+      const markup = renderToStaticMarkup(
+        <WindowMeasuresTree>
+          <WindowMeasureTreeGroup id="fill" label="Fill" defaultOpen>
+            <WindowMeasureTreeLeaf label="Count" waiting>
+              <span>0</span>
+            </WindowMeasureTreeLeaf>
+          </WindowMeasureTreeGroup>
+        </WindowMeasuresTree>,
+      );
+      expect(markup).toMatch(/data-slot="window-measure-tree-row"[^>]*data-waiting="true"/);
+      expect(markup).toMatch(/data-slot="window-measure-tree-row"[^>]*border-waiting/);
+    });
+
     it("renders nested measure groups with branch guide lines", () => {
       const markup = renderToStaticMarkup(
         <WindowMeasuresTree>
@@ -30807,7 +30924,7 @@ if (treeVitest) {
       expect(root.style.left).toBe("50%");
       expect(root.style.transform).toBe("translateX(-50%)");
       expect(root.getAttribute("dir")).toBeNull();
-      const handles = container.querySelectorAll(".cursor-ew-resize");
+      const handles = container.querySelectorAll('[data-slot="panel-resize-handle"]');
       expect(handles.length).toBe(2);
       const sides = [...handles].map((handle) => ((handle as HTMLElement).className.includes("left-0") ? "left" : "right"));
       expect(sides.sort()).toEqual(["left", "right"]);
@@ -30819,14 +30936,14 @@ if (treeVitest) {
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const onSizeChange = vi.fn();
       const { container } = render(<Panel anchor="top-middle" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />);
-      const rightHandle = [...container.querySelectorAll(".cursor-ew-resize")].find((handle) => (handle as HTMLElement).className.includes("right-0")) as HTMLElement;
+      const rightHandle = [...container.querySelectorAll('[data-slot="panel-resize-handle"]')].find((handle) => (handle as HTMLElement).className.includes("right-0")) as HTMLElement;
       fireEvent.pointerDown(rightHandle, { clientX: 100 });
       fireEvent.pointerMove(rightHandle, { clientX: 150 });
       expect(onSizeChange).toHaveBeenCalledWith(400);
 
       onSizeChange.mockClear();
       const { container: cornerContainer } = render(<Panel anchor="top-left" visible tabs={tabs} size={300} minSize={100} maxSize={1000} onSizeChange={onSizeChange} />);
-      const cornerHandle = cornerContainer.querySelector(".cursor-ew-resize") as HTMLElement;
+      const cornerHandle = cornerContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement;
       fireEvent.pointerDown(cornerHandle, { clientX: 100 });
       fireEvent.pointerMove(cornerHandle, { clientX: 150 });
       expect(onSizeChange).toHaveBeenCalledWith(350);
@@ -30843,15 +30960,15 @@ if (treeVitest) {
       expect(leftRoot.style.top).toBe("50%");
       expect(leftRoot.style.transform).toBe("translateY(-50%)");
       expect(leftRoot.style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
-      expect(leftContainer.querySelectorAll(".cursor-ew-resize").length).toBe(1);
-      expect((leftContainer.querySelector(".cursor-ew-resize") as HTMLElement).className).toContain("right-0");
+      expect(leftContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
+      expect((leftContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("right-0");
 
       const { container: rightContainer } = render(<Panel anchor="right-middle" visible tabs={tabs} onSizeChange={() => {}} />);
       const rightRoot = rightContainer.querySelector('[data-slot="panel"]') as HTMLElement;
       expect(rightRoot.getAttribute("dir")).toBe("rtl");
       expect(rightRoot.style.top).toBe("50%");
-      expect(rightContainer.querySelectorAll(".cursor-ew-resize").length).toBe(1);
-      expect((rightContainer.querySelector(".cursor-ew-resize") as HTMLElement).className).toContain("left-0");
+      expect(rightContainer.querySelectorAll('[data-slot="panel-resize-handle"]').length).toBe(1);
+      expect((rightContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("left-0");
     });
 
     it("navbar keeps inline labels when compact chrome is enabled", () => {

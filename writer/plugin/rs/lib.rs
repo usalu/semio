@@ -325,8 +325,8 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         items: if children.is_empty() { None } else { Some(children) },
         control: None,
         is_hidden: None,
-        loading: None,
-    }
+        loading: None, waiting: None,
+}
 }
 //#endregion 🔖JackAst
 
@@ -837,8 +837,8 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
             label: Some(labels.document.into()),
             default_open: Some(true),
             children: vec![ui_text(document.id.clone()), ui_text(document.language_id.clone())],
-            loading: None,
-        }]);
+            loading: None, waiting: None,
+}]);
     }
     let root = parse_jack_ast(&document.text);
     let items = if root.kind == "error" {
@@ -865,8 +865,8 @@ fn render_catalogue_panel(labels: &WriterPlayLabels) -> UiNode {
         label: Some(labels.language.into()),
         default_open: Some(true),
         children: vec![ui_text(labels.jack_description)],
-        loading: None,
-    }])
+        loading: None, waiting: None,
+}])
 }
 
 fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabels) -> UiNode {
@@ -882,8 +882,8 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 ui_text(format!("Uri: {}", document.uri)),
                 ui_text(format!("Lines: {}", document.text.lines().count())),
             ],
-            loading: None,
-        },
+            loading: None, waiting: None,
+},
         UiSectionNode {
             id: "writer-inspector.camera".into(),
             label: Some(labels.camera.into()),
@@ -893,8 +893,8 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 ui_text(format!("y: {}", document.camera.y)),
                 ui_text(format!("zoom: {}", document.camera.zoom)),
             ],
-            loading: None,
-        },
+            loading: None, waiting: None,
+},
     ];
     if document.language_id == "jack" {
         let graph = example_graph();
@@ -905,8 +905,8 @@ fn render_inspection_panel(document: &WriterProjection, labels: &WriterPlayLabel
                 label: Some(labels.diagnostics.into()),
                 default_open: Some(true),
                 children: messages.into_iter().map(ui_text).collect(),
-                loading: None,
-            });
+                loading: None, waiting: None,
+});
         }
     }
     ui_declarative_sections_to_tree(&sections)
@@ -1335,8 +1335,11 @@ impl DocumentApp for WriterPlayApp {
                 min: 10.0,
                 max: 24.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
+                waiting: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "fontPx" }))),
-            },
+                },
             WindowMeasure::Slider {
                 id: "writer-line-height-measure".into(),
                 label: Some(labels.line_height.into()),
@@ -1344,8 +1347,11 @@ impl DocumentApp for WriterPlayApp {
                 min: 16.0,
                 max: 40.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
+                waiting: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "lineHeight" }))),
-            },
+                },
             WindowMeasure::Slider {
                 id: "writer-tab-size-measure".into(),
                 label: Some(labels.tab_size.into()),
@@ -1353,8 +1359,11 @@ impl DocumentApp for WriterPlayApp {
                 min: 1.0,
                 max: 8.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
+                waiting: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "tabSize" }))),
-            },
+                },
             WindowMeasure::Toggle {
                 id: "writer-line-numbers-measure".into(),
                 icon_id: "list-ordered".into(),

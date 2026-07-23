@@ -1142,7 +1142,8 @@ fn lowpoly_utility_param_slider(
         ready: None,
         loading: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
-    }
+
+        waiting: None,}
 }
 
 /// 🎯 One selection-granularity toggle. Selection kinds are a non-exclusive multi-select (mesh + face +
@@ -1228,7 +1229,8 @@ fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLab
         ready: None,
         loading: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
-    };
+
+        waiting: None,};
     WindowMeasure::Group {
         id: format!("lowpoly-measure-paint-params-{utility}"),
         label: labels.brush_group.into(),

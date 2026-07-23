@@ -268,7 +268,10 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         items: None,
         control: None,
         is_hidden: None,
-    }
+    
+ 
+    waiting: None,
+}
 }
 
 fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, description: impl Into<String>) -> UiTreeItemNode {
@@ -289,7 +292,10 @@ fn tree_item_with_description(id: impl Into<String>, label: impl Into<String>, d
         items: None,
         control: None,
         is_hidden: None,
-    }
+    
+ 
+    waiting: None,
+}
 }
 
 fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, description: Option<String>, action: ActionDescriptor) -> UiTreeItemNode {
@@ -310,7 +316,10 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         items: None,
         control: None,
         is_hidden: None,
-    }
+    
+ 
+    waiting: None,
+}
 }
 //#endregion 🔖DocumentHelpers
 
@@ -449,12 +458,14 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
     let edge_items: Vec<UiTreeItemNode> = document.edges.iter().map(|edge| tree_item_with_description(format!("dag-play-document.edge.{}", edge.id), format!("{} → {}", edge.source, edge.target), edge.id.clone())).collect();
     UiNode::Tree(UiTreeNode {
         loading: None,
+        waiting: None,
         sections: vec![
             UiTreeSectionNode {
                 id: "dag-play-document.nodes".into(),
                 label: Some(labels.nodes.into()),
                 default_open: Some(true),
                 loading: None,
+                waiting: None,
                 items: if node_items.is_empty() { vec![tree_item("dag-play-document.nodes.empty", labels.empty)] } else { node_items },
             },
             UiTreeSectionNode {
@@ -462,6 +473,7 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
                 label: Some(labels.edges.into()),
                 default_open: Some(false),
                 loading: None,
+                waiting: None,
                 items: if edge_items.is_empty() { vec![tree_item("dag-play-document.edges.empty", labels.empty)] } else { edge_items },
             },
         ],
@@ -473,15 +485,34 @@ fn build_document_tree(document: &DagDocument, selected: &[String], labels: &Dag
 }
 
 fn build_catalogue_tree(labels: &DagPlayLabels) -> UiNode {
-    let kinds =
+    let kinds = [
+        ("computation", labels.kind_computation),
+        ("slider", labels.kind_slider),
+        ("select", labels.kind_select),
+        ("screen", labels.kind_screen),
+        ("note", labels.kind_note),
+        ("preview", labels.kind_preview),
+    ];
     UiNode::Tree(UiTreeNode {
         loading: None,
+        waiting: None,
         sections: vec![UiTreeSectionNode {
             id: "dag-play-catalogue.node-kinds".into(),
             label: Some(FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL.into()),
             default_open: Some(true),
             loading: None,
-            items: kinds.iter().map(|(kind, label)| tree_item_with_action(format!("dag-play-catalogue.kind.{kind}"), *label, Some((*kind).into()), dag_action("addNode", Some(json!({ "kind": kind }))))).collect(),
+            waiting: None,
+            items: kinds
+                .iter()
+                .map(|(kind, label)| {
+                    tree_item_with_action(
+                        format!("dag-play-catalogue.kind.{kind}"),
+                        *label,
+                        Some((*kind).into()),
+                        dag_action("addNode", Some(json!({ "kind": kind }))),
+                    )
+                })
+                .collect(),
         }],
         selected_ids: Some(vec![]),
         highlighted_ids: None,
@@ -544,7 +575,9 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             default_open: Some(true),
             loading: None,
             children: vec![ui_text(labels.select_a_node)],
-        }]);
+        
+            waiting: None,
+}]);
     }
     let nodes: Vec<&DagNodeSpec> = selected.iter().filter_map(|id| document.nodes.iter().find(|node| &node.id == id)).collect();
     if nodes.is_empty() {
@@ -554,7 +587,9 @@ fn build_inspector_tree(document: &DagDocument, selected: &[String], labels: &Da
             default_open: Some(true),
             loading: None,
             children: vec![ui_text(labels.node_not_found)],
-        }]);
+        
+            waiting: None,
+}]);
     }
     let node_ids: Vec<String> = nodes.iter().map(|node| node.id.clone()).collect();
     let mut groups: Vec<UiInspectorFieldGroup> = Vec::new();

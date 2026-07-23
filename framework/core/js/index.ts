@@ -43,8 +43,6 @@ import type {
   AppDefinition as GeneratedAppDefinition,
   IntroductionDefinition as GeneratedIntroductionDefinition,
   IntroductionStepDefinition as GeneratedIntroductionStepDefinition,
-  IntroductionAnchor as GeneratedIntroductionAnchor,
-  IntroductionEmphasis as GeneratedIntroductionEmphasis,
   IntroductionPlacement as GeneratedIntroductionPlacement,
   IntroductionAdvance as GeneratedIntroductionAdvance,
   IntroductionLogo as GeneratedIntroductionLogo,
@@ -71,6 +69,51 @@ export const FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL = "Parameters";
 export const FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID = "framework.panel.parameters";
 
 export const UI_INSPECTOR_MIXED_PLACEHOLDER = "Mixed";
+
+//#region 🆔ElementId
+/** 🆔 Element id of the app shell's navbar/footer — singular, shell-owned chrome. */
+export const UI_NAVBAR_ELEMENT_ID = "ui.navbar";
+export const UI_FOOTER_ELEMENT_ID = "ui.footer";
+
+/** 🆔 Normalizes arbitrary input into a single camelCase element-id segment — byte-for-byte mirror of
+ * `element_id_segment` in `framework/core/rs/lib.rs` (core/js stays DOM-free, so the DOM-facing
+ * `elementIdSelector`/alias helpers live in `ui/js/react` instead). */
+function elementIdSegment(raw: string): string {
+  let segment = "";
+  let capitalizeNext = false;
+  for (const ch of raw) {
+    if (ch === "-" || ch === "_" || ch === " " || ch === ".") {
+      capitalizeNext = true;
+      continue;
+    }
+    if (!/[a-zA-Z0-9]/.test(ch)) continue;
+    if (segment.length === 0) {
+      segment += ch.toLowerCase();
+    } else if (capitalizeNext) {
+      segment += ch.toUpperCase();
+      capitalizeNext = false;
+    } else {
+      segment += ch;
+    }
+  }
+  return segment;
+}
+
+/** 🆔 Element id of a window kind's body — `framework.window.{camelCased kind id}`. */
+export function windowElementId(kindId: string): string {
+  return `framework.window.${elementIdSegment(kindId)}`;
+}
+
+/** 🆔 Element id of a panel tab's uncollapsed panel body; `tabId` is already dotted, appended verbatim. */
+export function panelTabElementId(tabId: string): string {
+  return `framework.panelTab.${tabId}`;
+}
+
+/** 🆔 Alias id of the first draggable tree row inside a panel tab, stamped via `data-element-alias`. */
+export function panelTabFirstDraggableElementId(tabId: string): string {
+  return `framework.panelTab.${tabId}.firstDraggable`;
+}
+//#endregion 🆔ElementId
 
 export type CanvasPickTarget = {
   readonly domain: string;
@@ -213,6 +256,7 @@ export type UiSectionNode = {
   readonly label?: string;
   readonly defaultOpen?: boolean;
   readonly loading?: boolean;
+  readonly waiting?: boolean;
   readonly children: readonly UiNode[];
 };
 
@@ -232,6 +276,7 @@ export type UiTreeItemNode = {
   readonly iconId?: string;
   readonly selected?: boolean;
   readonly loading?: boolean;
+  readonly waiting?: boolean;
   readonly defaultOpen?: boolean;
   readonly action?: ActionDescriptor;
   readonly hoverAction?: ActionDescriptor;
@@ -249,6 +294,7 @@ export type UiTreeSectionNode = {
   readonly label?: string;
   readonly defaultOpen?: boolean;
   readonly loading?: boolean;
+  readonly waiting?: boolean;
   readonly items: readonly UiTreeItemNode[];
 };
 
@@ -256,6 +302,7 @@ export type UiTreeNode = {
   readonly type: "tree";
   readonly sections: readonly UiTreeSectionNode[];
   readonly loading?: boolean;
+  readonly waiting?: boolean;
   readonly selectedIds?: readonly string[];
   readonly highlightedIds?: readonly string[];
   readonly selectionChange?: ActionDescriptor;
@@ -390,6 +437,7 @@ export type UiButtonNode = {
   readonly style?: StyleSpec;
   readonly disabled?: boolean;
   readonly loading?: boolean;
+  readonly waiting?: boolean;
 };
 
 export type UiTextNode = {
@@ -407,6 +455,7 @@ export type UiStackNode = {
   readonly id?: string;
   readonly selected?: boolean;
   readonly loading?: boolean;
+  readonly waiting?: boolean;
   readonly activate?: ActionDescriptor;
   readonly dropAction?: ActionDescriptor;
   readonly dropOverlay?: UiDropOverlaySpec;
@@ -1380,8 +1429,6 @@ export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
 /** 🎓 Generated from Rust `Introduction*` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type IntroductionDefinition = GeneratedIntroductionDefinition;
 export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
-export type IntroductionAnchor = GeneratedIntroductionAnchor;
-export type IntroductionEmphasis = GeneratedIntroductionEmphasis;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
 export type IntroductionAdvance = GeneratedIntroductionAdvance;
 export type IntroductionLogo = GeneratedIntroductionLogo;

@@ -742,8 +742,11 @@ pub mod app_2d {
                 min: 0.25,
                 max: 3.0,
                 step: Some(0.05),
+                ready: None,
+                loading: None,
                 on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
-            })
+
+                waiting: None,})
             .collect();
         vec![
             WindowMeasure::Select {

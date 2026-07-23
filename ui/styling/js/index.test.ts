@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { clearColorResolveCache, resolveColorHex, resolveColorRgba, resolveSemanticColorHex } from "./index.ts";
+import { clearColorResolveCache, resolveColorHex, resolveColorRgba, resolveSemanticColorHex, serializeCanvasThemeJson, syncSessionCanvasTheme, STYLING_BOARD_PALETTES } from "./index.ts";
 import { meshCollectionVitePlugin, type PlaygroundAssetSpec } from "../vite-elements-assets.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
@@ -16,6 +16,26 @@ describe("styling resolve", () => {
   it("resolveColorRgba returns byte tuple", () => {
     clearColorResolveCache();
     expect(resolveColorRgba("var(--color-gray)", "gray")).toEqual([123, 130, 125, 255]);
+  });
+
+  it("serializeCanvasThemeJson dark labelFill differs from light", () => {
+    const light = JSON.parse(serializeCanvasThemeJson("light")) as { labelFill: number[] };
+    const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { labelFill: number[] };
+    expect(light.labelFill).toEqual(STYLING_BOARD_PALETTES.light.labelFill);
+    expect(dark.labelFill).toEqual(STYLING_BOARD_PALETTES.dark.labelFill);
+    expect(dark.labelFill).not.toEqual(light.labelFill);
+  });
+
+  it("syncSessionCanvasTheme pushes serialized palette into a session", () => {
+    const calls: string[] = [];
+    syncSessionCanvasTheme({
+      setCanvasThemeJson(json: string) {
+        calls.push(json);
+      },
+    });
+    expect(calls).toHaveLength(1);
+    const parsed = JSON.parse(calls[0]!) as { labelFill: number[] };
+    expect(parsed.labelFill).toEqual(STYLING_BOARD_PALETTES.light.labelFill);
   });
 });
 

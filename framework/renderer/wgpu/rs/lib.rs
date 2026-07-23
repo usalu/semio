@@ -2559,6 +2559,7 @@ mod tests {
                     step: Some(1.0),
                     ready: None,
                     loading: None,
+                    waiting: None,
                     on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "setSize".into(), args: None },
                 }],
             },
@@ -2717,7 +2718,7 @@ fn sync_field(cache: &mut Option<String>, value: &str) -> bool {
     }
 }
 
-fn theme_is_dark(theme: &Theme) -> bool {
+pub(crate) fn theme_is_dark(theme: &Theme) -> bool {
     let c = theme.canvas_clear;
     let lum = f64::from(linear_to_rgba8_channel(c.r))
         * 0.299
@@ -5908,7 +5909,7 @@ fn resolve_ui_image_url(id: &str, url: &str) -> (Option<String>, Option<(u32, u3
  * (`http(s)://` absolute or a relative path) is treated as a URL and queued for async fetch via
  * `collect_pending_ui_image_fetches`, rendering whatever was previously cached (or nothing) in the
  * meantime — matches the React reference's plain `<img src>`, which resolves any URL natively. */
-fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
+pub(crate) fn resolve_ui_image(id: &str, src: &str) -> (Option<String>, Option<(u32, u32)>) {
     if src.is_empty() {
         return (None, None);
     }
@@ -6318,8 +6319,8 @@ mod render_plan_validator_tests {
             drop_action: None,
             drop_overlay: None,
             children,
-            loading: None,
-        })
+            loading: None, waiting: None,
+})
     }
 
     #[test]
@@ -6899,10 +6900,14 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<PluginBridgeEntry>, 
 }
 
 //#region 🏠🧳PluginHostConfig
-#[path = "../../../../plugin/registry/generated/hosts.rs"]
-mod generated_plugin_hosts;
-
-pub use generated_plugin_hosts::{is_studio_mode, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
+// 🐛 `generated_plugin_hosts` is declared at the crate root (below, outside this inline `plugin_bridge`
+// module) and re-exported here — a `#[path]` file-module declared *inside* an inline `mod` block resolves
+// relative to a virtual `<enclosing-file-dir>/plugin_bridge/` directory that has no real counterpart on
+// disk, and POSIX path resolution requires every component a `..` traverses through (even one that's
+// lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
+// root instead (where `plugin_bridge/`'s directory is real) and re-exporting preserves the
+// `crate::plugin_bridge::{PluginHostConfig, ...}` path every call site already depends on.
+pub use crate::generated_plugin_hosts::{is_studio_mode, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
 //#endregion 🏠🧳PluginHostConfig
 
 pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, _plugin_filter: &str) -> Vec<PluginBridgeEntry> {
@@ -6945,6 +6950,14 @@ pub fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Path) ->
 }
 // #endregion plugin_bridge
 }
+
+//#region 🏠🧳PluginHostConfig
+// 🐛 Lives at the crate root, not inside `plugin_bridge` above (see that module's own `PluginHostConfig`
+// region for why) — this is the file's real directory, so the 3-`..` climb to
+// `framework/plugin/registry/generated/hosts.rs` actually resolves.
+#[path = "../../../plugin/registry/generated/hosts.rs"]
+mod generated_plugin_hosts;
+//#endregion 🏠🧳PluginHostConfig
 
 pub mod scenes {
 //#region scenes
@@ -14576,7 +14589,8 @@ use crate::dock::{
     compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
     DockDragKind, DockDragPayload, DockDragState, DockDropZone, DockRenderContext, DockState,
 };
-use crate::interpreter::{framework_widget_context, render_ui_node, validate_window_body_surface};
+use crate::engine_canvas::theme_is_dark;
+use crate::interpreter::{framework_widget_context, render_ui_node, resolve_ui_image, validate_window_body_surface};
 use crate::scenes::{
     clear_graph_node_context, open_board2d_context_menu, push_tiled_map_context_menu, resolve_graph_context_action, seed_vfs_expanded, toggle_vfs_row_expanded, vfs_selection_for_click, TiledMapSurface, NodeGraphSurface,
     Board2dSurface,
@@ -15333,6 +15347,9 @@ impl ShellState {
                 contributions_json: None,
                 locale: Some(self.locale_id.clone()),
                 terminology: Some(self.terminology_id.clone()),
+                window_id: None,
+                window_instances: Vec::new(),
+                active_tool_id: None,
             };
             self.active_window_id = Some(s_app.window_kinds.first().id.clone());
             self.session = Some(ActiveSession {
@@ -15363,6 +15380,9 @@ impl ShellState {
                     contributions_json: None,
                     locale: Some(self.locale_id.clone()),
                     terminology: Some(self.terminology_id.clone()),
+                    window_id: None,
+                    window_instances: Vec::new(),
+                    active_tool_id: None,
                 },
             });
         }
@@ -15615,6 +15635,9 @@ impl ShellState {
                                 contributions_json: None,
                                 locale: Some(self.locale_id.clone()),
                                 terminology: Some(self.terminology_id.clone()),
+                                window_id: None,
+                                window_instances: Vec::new(),
+                                active_tool_id: None,
                             };
                             self.spawned_ui = Some(
                                 spawn_plugin
@@ -15673,8 +15696,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None,
-        })
+            loading: None, waiting: None,
+})
     }
 
     fn build_display_layout_ui(&self, session: &ActiveSession) -> UiNode {
@@ -15694,8 +15717,8 @@ impl ShellState {
                     },
                     style: None,
                     disabled: None,
-                    loading: None,
-                })
+                    loading: None, waiting: None,
+})
             })
             .collect();
         if items.is_empty() {
@@ -15715,8 +15738,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None,
-        })
+            loading: None, waiting: None,
+})
     }
 
     fn build_settings_general_ui(&self) -> UiNode {
@@ -15818,8 +15841,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None,
-        })
+            loading: None, waiting: None,
+})
     }
 
     fn active_terminologies(&self) -> Vec<String> {
@@ -16484,13 +16507,17 @@ impl ShellState {
         let result = plugin
             .handle_action(session.instance_id, &action_json, &session.view_state)
             .await?;
+        // 🎓 Advance-by-doing: this action was actually performed (the plugin call above succeeded), so
+        // a tour step whose `advance` targets it moves on now — see `chrome_tour_note_action_performed`.
+        self.chrome_tour_note_action_performed(&action.action);
         // 🧰 A plugin may programmatically switch the active utility via `HostEffect::SetActiveUtility`
-        // (Architecture Decision 4/9) — apply it to the host-owned map just like a user click.
+        // (Architecture Decision 4/9) — routed through `apply_set_active_utility` (rather than writing
+        // `active_utility_by_window` directly) so the tour's advance-by-doing funnel sees this activation
+        // too, exactly like a user click would.
         for effect in &result.requested_effects {
             match effect {
                 semio_framework_core::kernel::HostEffect::SetActiveUtility { window_id, utility_id } => {
-                    self.active_utility_by_window
-                        .insert(window_id.clone(), utility_id.clone());
+                    self.apply_set_active_utility(window_id, utility_id);
                 }
                 // 🔁 Self re-dispatch (D2): queues `action` onto the same `deferred_actions` mechanism
                 // tree-hover/selection follow-ups already use, which `flush_deferred_actions` drains every
@@ -16781,6 +16808,9 @@ impl ShellState {
             contributions_json: None,
             locale: Some(self.locale_id.clone()),
             terminology: Some(self.terminology_id.clone()),
+            window_id: None,
+            window_instances: Vec::new(),
+            active_tool_id: None,
         });
         self.active_window_id = Some(app.window_kinds.first().id.clone());
         if app_id == cfg.landing_app_id {
@@ -18451,6 +18481,34 @@ impl ShellState {
                 return;
             }
         }
+        // 🎓 Tour keys take precedence over every other chord below (mirrors Escape closing the topmost
+        // overlay above) but never fire while a field is focused or the sync-attach card is open — same
+        // "not editing" guard the rest of this function uses (computed inline here since `editing` itself
+        // isn't bound until after this block).
+        if input.focused_id.is_none() && self.sync_card_kind.is_none() {
+            if let Some(step) = self.chrome_tour_active_step() {
+                match action {
+                    ui_wgpu::KeyAction::Escape => {
+                        if let Some(session) = self.session.as_ref() {
+                            write_stored_introduction_seen(&session.app.id);
+                        }
+                        chrome_skip_introduction();
+                        return;
+                    }
+                    ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::ArrowRight => {
+                        if matches!(step.advance, semio_framework_core::IntroductionAdvance::Next) {
+                            self.chrome_tour_advance_current_step(&step);
+                            return;
+                        }
+                    }
+                    ui_wgpu::KeyAction::ArrowLeft => {
+                        chrome_back_introduction();
+                        return;
+                    }
+                    _ => {}
+                }
+            }
+        }
         let meta = modifiers.meta || modifiers.ctrl;
         // ⌨️ Hardcoded shell chords never fire while a text field (or the sync-attach draft buffer)
         // has focus — matches `os-shell.tsx`'s `isEditableEventTarget`/`useActionHotkey` (backed by
@@ -18944,6 +19002,7 @@ fn render_panel_tab_bar(
             drag_axis: None,
             drag_data: None,
         });
+        register_element_rect_fallback(semio_framework_core::panel_tab_element_id(tab.id()), rect);
         tab_x += tw;
     }
     panel_draw.pop_scissor();
@@ -19278,6 +19337,7 @@ fn render_footer_utility_nodes(
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
                 render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                register_element_rect(id.clone(), rect);
                 input.register_hit(HitTarget {
                     rect,
                     event: Some(on_press.clone()),
@@ -19314,6 +19374,7 @@ fn render_footer_utility_nodes(
                 let item_w = measure_chrome_group_item(atlas, theme, &item);
                 let rect = Rect::new(x, btn_y, item_w, btn_h);
                 render_chrome_group(draw, atlas, icons, input, theme, rect, &[item], true);
+                register_element_rect(id.clone(), rect);
                 input.register_hit(HitTarget {
                     rect,
                     event: Some(on_change.clone()),
@@ -19671,6 +19732,9 @@ impl ShellState {
         } else {
             self.active_utility_by_window
                 .insert(window_kind_id.to_string(), utility_id.to_string());
+            // 🎓 Advance-by-doing: only the activation branch counts as "the utility was activated" —
+            // see `chrome_tour_note_utility_performed`.
+            self.chrome_tour_note_utility_performed(utility_id);
         }
     }
 
@@ -20125,8 +20189,8 @@ impl ShellState {
                 activate: None,
                 drop_action: None,
                 drop_overlay: None,
-                loading: None,
-            }));
+                loading: None, waiting: None,
+}));
         }
         UiNode::Stack(UiStackNode {
             direction: "column".into(),
@@ -20138,8 +20202,8 @@ impl ShellState {
             activate: None,
             drop_action: None,
             drop_overlay: None,
-            loading: None,
-        })
+            loading: None, waiting: None,
+})
     }
 
     /// 🎛️ One `build_command_panel_ui` row: a `Select` for the four os commands whose single arg already
@@ -20192,8 +20256,8 @@ impl ShellState {
                 },
                 style: None,
                 disabled: None,
-                loading: None,
-            });
+                loading: None, waiting: None,
+});
         }
         UiNode::Text(UiTextNode {
             value: if definition.id == "os.resetDock" {
@@ -20804,6 +20868,199 @@ fn chrome_advance_introduction(step_count: usize) {
     });
 }
 
+/// 🎓 Decrements the tour's step index (Back button / keyboard) — a no-op at step 0 or when no tour is active.
+fn chrome_back_introduction() {
+    CHROME_TOUR_STATE.with(|cell| {
+        if let Some(tour) = cell.borrow_mut().as_mut() {
+            tour.step_index = tour.step_index.saturating_sub(1);
+        }
+    });
+}
+
+thread_local! {
+    /// 🎓 The step id `chrome_tour_frame_begin` last force-revealed chrome for — so re-entering the same
+    /// step (every subsequent frame) doesn't snap a user-initiated fold/close back open.
+    static CHROME_TOUR_REVEAL_LATCH: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
+}
+
+/// 🧰 Whether `target_id` (a bare Button/Toggle utility id) exists anywhere in `nodes`, recursing through
+/// nested `Collection`s.
+fn utility_node_contains(nodes: &[UtilityNode], target_id: &str) -> bool {
+    nodes.iter().any(|node| match node {
+        UtilityNode::Button { id, .. } | UtilityNode::Toggle { id, .. } => id == target_id,
+        UtilityNode::Collection { id, children, .. } => id == target_id || utility_node_contains(children, target_id),
+        UtilityNode::Separator { .. } => false,
+    })
+}
+
+/// 🧰 Ancestor `Collection` ids (root → immediate parent) that must be expanded for `target_id` to be
+/// visible in the footer utility bar — empty when `target_id` isn't nested in any collection (already
+/// visible) or doesn't exist. Pure so it's independently testable from the frame-reveal wiring.
+fn utility_collection_path_to_id(nodes: &[UtilityNode], target_id: &str) -> Vec<String> {
+    for node in nodes {
+        if let UtilityNode::Collection { id, children, .. } = node {
+            if utility_node_contains(children, target_id) {
+                let mut path = vec![id.clone()];
+                path.extend(utility_collection_path_to_id(children, target_id));
+                return path;
+            }
+        }
+    }
+    Vec::new()
+}
+
+/// 🎓 A rect registered this frame under a logical element id (`register_element_rect`) — `fallback`
+/// entries (folded-chrome chips) never override an already-registered primary entry, mirroring
+/// `ui/js/react/index.tsx`'s `useIntroductionAnchorRect` "never downgrade" rule.
+struct ChromeElementRectEntry {
+    rect: Rect,
+    fallback: bool,
+}
+
+thread_local! {
+    static CHROME_ELEMENT_RECTS: std::cell::RefCell<HashMap<String, ChromeElementRectEntry>> = std::cell::RefCell::new(HashMap::new());
+}
+
+/// 🆔 Clears the per-frame element-rect registry — called once at the top of `render_chrome`, mirroring
+/// `chrome_tooltip_titles_clear`.
+fn chrome_element_rects_clear() {
+    CHROME_ELEMENT_RECTS.with(|cell| cell.borrow_mut().clear());
+}
+
+/// 🆔 Registers `id`'s rect for this frame — the tour resolves `introduce`/`show` element ids through
+/// this registry (plus the geometric navbar/footer fast path and `window_content_rects`, which need no
+/// registration since they're already known). Call sites: footer utility buttons/toggles (raw utility id).
+fn register_element_rect(id: impl Into<String>, rect: Rect) {
+    CHROME_ELEMENT_RECTS.with(|cell| {
+        cell.borrow_mut().insert(id.into(), ChromeElementRectEntry { rect, fallback: false });
+    });
+}
+
+/// 🆔 Registers `id`'s rect as a fallback stand-in (a folded-chrome unfold chip) — only used while no
+/// primary entry exists for that id.
+fn register_element_rect_fallback(id: impl Into<String>, rect: Rect) {
+    let id = id.into();
+    CHROME_ELEMENT_RECTS.with(|cell| {
+        let mut rects = cell.borrow_mut();
+        if !rects.contains_key(&id) {
+            rects.insert(id, ChromeElementRectEntry { rect, fallback: true });
+        }
+    });
+}
+
+/// 🆔 Resolves `id`'s rect from the per-frame registry — primary entries win over fallbacks.
+fn resolve_element_rect(id: &str) -> Option<Rect> {
+    CHROME_ELEMENT_RECTS.with(|cell| cell.borrow().get(id).map(|entry| entry.rect))
+}
+
+/// 🆔 Whether `id`'s currently-registered rect is a fallback (folded-chrome chip) stand-in rather than
+/// the real element — `…firstDraggable` resolution uses this to avoid scanning tree rows against a chip
+/// rect that has nothing to do with the panel's actual body.
+fn element_rect_is_fallback(id: &str) -> bool {
+    CHROME_ELEMENT_RECTS.with(|cell| cell.borrow().get(id).is_some_and(|entry| entry.fallback))
+}
+
+/// 🎓 Punches `hole` out of `band`, returning up to four remaining rectangles (or the original band when
+/// they don't overlap) — byte-for-byte port of `punchIntroductionCutout` (`ui/js/react/index.tsx`).
+fn punch_introduction_cutout(band: Rect, hole: Rect) -> Vec<Rect> {
+    let top = band.y.max(hole.y);
+    let left = band.x.max(hole.x);
+    let bottom = (band.y + band.h).min(hole.y + hole.h);
+    let right = (band.x + band.w).min(hole.x + hole.w);
+    if right <= left || bottom <= top {
+        return vec![band];
+    }
+    [
+        Rect::new(band.x, band.y, band.w, top - band.y),
+        Rect::new(band.x, bottom, band.w, band.y + band.h - bottom),
+        Rect::new(band.x, top, left - band.x, bottom - top),
+        Rect::new(right, top, band.x + band.w - right, bottom - top),
+    ]
+    .into_iter()
+    .filter(|piece| piece.w > 0.0 && piece.h > 0.0)
+    .collect()
+}
+
+/// 🎓 Splits the viewport into glass bands tiling the space around every cutout — byte-for-byte port of
+/// `introductionVeilBands` (`ui/js/react/index.tsx`). An empty cutout list returns one full-viewport band.
+fn introduction_veil_bands(width: f32, height: f32, cutouts: &[Rect]) -> Vec<Rect> {
+    let mut bands = vec![Rect::new(0.0, 0.0, width, height)];
+    for cutout in cutouts {
+        let x = cutout.x.clamp(0.0, width);
+        let y = cutout.y.clamp(0.0, height);
+        let w = (cutout.x + cutout.w).clamp(0.0, width) - x;
+        let h = (cutout.y + cutout.h).clamp(0.0, height) - y;
+        if w <= 0.0 || h <= 0.0 {
+            continue;
+        }
+        let clamped = Rect::new(x, y, w, h);
+        bands = bands.into_iter().flat_map(|band| punch_introduction_cutout(band, clamped)).collect();
+    }
+    bands
+}
+
+const INTRODUCED_PULSE_PERIOD_MS: f64 = 1600.0;
+
+/// 🎓 Raised-cosine breathing thickness for the introduced-element pulse ring — mirrors the
+/// `data-introduced` CSS keyframes (`ui/styling/js/ui.css`: hairline → focus → hairline over 1.6s,
+/// ease-in-out), which are exactly a raised cosine.
+fn introduced_pulse_thickness(now_ms: f64, hairline: f32, focus: f32) -> f32 {
+    let phase = (now_ms.rem_euclid(INTRODUCED_PULSE_PERIOD_MS) / INTRODUCED_PULSE_PERIOD_MS) as f32;
+    hairline + (focus - hairline) * 0.5 * (1.0 - (phase * std::f32::consts::TAU).cos())
+}
+
+const INTRODUCTION_INFO_BOX_GAP: f32 = 16.0;
+
+/// 🎓 Where the info box sits relative to `anchor` — byte-for-byte port of `resolveIntroductionPlacement`
+/// (`ui/js/react/index.tsx`). `auto` picks the side with the most free viewport space; `center` (and any
+/// anchor-less step) centers the box.
+fn resolve_introduction_placement(
+    placement: semio_framework_core::IntroductionPlacement,
+    anchor: Option<Rect>,
+    box_size: (f32, f32),
+    viewport: (f32, f32),
+) -> (f32, f32) {
+    use semio_framework_core::IntroductionPlacement;
+    let (box_w, box_h) = box_size;
+    let (vw, vh) = viewport;
+    let centered = ((vw - box_w) / 2.0, (vh - box_h) / 2.0);
+    let Some(anchor) = anchor else {
+        return centered;
+    };
+    if matches!(placement, IntroductionPlacement::Center) {
+        return centered;
+    }
+    let gap = INTRODUCTION_INFO_BOX_GAP;
+    let clamp_left = |left: f32| left.max(gap).min((vw - box_w - gap).max(gap));
+    let clamp_top = |top: f32| top.max(gap).min((vh - box_h - gap).max(gap));
+    let space_top = anchor.y;
+    let space_bottom = vh - (anchor.y + anchor.h);
+    let space_left = anchor.x;
+    let space_right = vw - (anchor.x + anchor.w);
+    let side = if matches!(placement, IntroductionPlacement::Auto) {
+        [("top", space_top), ("bottom", space_bottom), ("left", space_left), ("right", space_right)]
+            .into_iter()
+            .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+            .map(|(side, _)| side)
+            .unwrap_or("bottom")
+    } else {
+        match placement {
+            IntroductionPlacement::Top => "top",
+            IntroductionPlacement::Bottom => "bottom",
+            IntroductionPlacement::Left => "left",
+            IntroductionPlacement::Right => "right",
+            _ => "bottom",
+        }
+    };
+    match side {
+        "top" => (clamp_left(anchor.x + anchor.w / 2.0 - box_w / 2.0), clamp_top(anchor.y - box_h - gap)),
+        "bottom" => (clamp_left(anchor.x + anchor.w / 2.0 - box_w / 2.0), clamp_top(anchor.y + anchor.h + gap)),
+        "left" => (clamp_left(anchor.x - box_w - gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
+        "right" => (clamp_left(anchor.x + anchor.w + gap), clamp_top(anchor.y + anchor.h / 2.0 - box_h / 2.0)),
+        _ => centered,
+    }
+}
+
 /// ⌨️ Ports `engagementInlineCompletion`/`engagementCompletionSuffix` (`ui/js/react/index.tsx`) to this
 /// renderer: the first `possible` (in the order the host already gave them — wgpu's engagement rail has
 /// no ranked-match dropdown to reorder by) whose label case-insensitively prefix-matches `query`, sliced
@@ -20878,7 +21135,9 @@ impl ShellState {
         FIND_ITEM_SINK.with(|cell| cell.borrow_mut().clear());
         CONTEXT_MENU_SINK.with(|cell| cell.borrow_mut().clear());
         chrome_tooltip_titles_clear();
+        chrome_element_rects_clear();
         chrome_compute_click_edge(input.pointer_down);
+        self.chrome_tour_frame_begin();
         clear_graph_node_context();
         self.node_graph_states.clear();
         self.tiled_map_states.clear();
@@ -21482,6 +21741,7 @@ impl ShellState {
             panel.w - theme.gap_standard * 2.0,
             panel.h - tab_bar_h - theme.gap_standard,
         );
+        register_element_rect(semio_framework_core::panel_tab_element_id(active_tab_id), content);
         let scroll_key = format!(
             "panel.{}.{}",
             if side_left { "left" } else { "right" },
@@ -22327,10 +22587,195 @@ impl ShellState {
         }
     }
 
-    /// 🎓 Paints the current introduction-tour step (item 3) — a full-screen veil plus an info box
-    /// anchored at the step's target when a concrete on-screen rect for it is known (`Navbar`/`Footer`
-    /// today; other `IntroductionAnchor` kinds fall back to a centered placement, an honest scope-down —
-    /// see the report) using `OverlayKind`'s `BelowAnchorWithFlip`/`Centered` placement rules.
+    /// 🆔 Resolves an introduction element id to its on-screen rect this frame: `ui.navbar`/`ui.footer` are
+    /// geometric fast paths (singular shell chrome, same as the veil-free navbar/footer painters use);
+    /// `framework.window.{segment}` matches `window_content_rects` by `element_id_segment` (already
+    /// tracked per frame, no registration needed — wgpu dock window ids are kind ids); everything else
+    /// resolves through `resolve_element_rect` (utility buttons/toggles today; panel tabs and action rows
+    /// are a tracked follow-up, not yet registered, so they fall back to a centered info box like an
+    /// unresolved anchor always has).
+    fn resolve_introduction_element_rect(
+        &self,
+        id: &str,
+        theme: &Theme,
+        width: f32,
+        height: f32,
+        hit_targets: &[HitTarget<ActionDescriptor>],
+    ) -> Option<Rect> {
+        if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID {
+            return Some(Rect::new(0.0, 0.0, width, theme.navbar_height));
+        }
+        if id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
+            return Some(Rect::new(0.0, height - theme.footer_height, width, theme.footer_height));
+        }
+        // 🆔 `…firstDraggable` only resolves at tour time: draggability is a property of the rendered tree
+        // row (`tree.label.*` hits carry `drag_axis`), never knowable from the panel-tab id alone. Ladder:
+        // first draggable row inside the tab's real body → the body itself → the tab-bar chip fallback
+        // (via the base `framework.panelTab.{tabId}` lookup `resolve_element_rect` already does).
+        if let Some(tab_id) = id.strip_prefix("framework.panelTab.").and_then(|rest| rest.strip_suffix(".firstDraggable")) {
+            let base_id = semio_framework_core::panel_tab_element_id(tab_id);
+            let base_rect = resolve_element_rect(&base_id)?;
+            if !element_rect_is_fallback(&base_id) {
+                if let Some(row) = hit_targets.iter().find(|hit| {
+                    hit.drag_axis.is_some()
+                        && hit.control_id.as_deref().is_some_and(|cid| cid.starts_with("tree.label."))
+                        && base_rect.contains(hit.rect.x + 1.0, hit.rect.y + 1.0)
+                }) {
+                    return Some(row.rect);
+                }
+            }
+            return Some(base_rect);
+        }
+        if let Some(rect) = resolve_element_rect(id) {
+            return Some(rect);
+        }
+        if let Some(segment) = id.strip_prefix("framework.window.") {
+            let segment = segment.split('.').next().unwrap_or(segment);
+            return self
+                .window_content_rects
+                .iter()
+                .find(|(window_id, _)| semio_framework_core::element_id_segment(window_id) == segment)
+                .map(|(_, rect)| *rect);
+        }
+        None
+    }
+
+    /// 🎓 The currently active introduction step (if a tour is running and its index still resolves) —
+    /// shared by every wgpu tour touchpoint beyond painting (reveal, advance-by-doing, keyboard) so they
+    /// can never drift on what "the active step" means.
+    fn chrome_tour_active_step(&self) -> Option<semio_framework_core::IntroductionStepDefinition> {
+        let session = self.session.as_ref()?;
+        let intro = session.app.introduction.as_ref()?;
+        let step_index = CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index))?;
+        intro.steps.get(step_index).cloned()
+    }
+
+    /// 🎓 Opens+selects `tab_id`'s panel side, mirroring `select_left_panel_tab`/the `shell.panel.tab.right.*`
+    /// hit handler exactly (including their differing `setActivePanelTab` dispatch conditions) so the
+    /// tour's programmatic reveal behaves identically to the user clicking the tab themselves.
+    fn chrome_tour_reveal_panel_tab(&mut self, session: &ActiveSession, tab_id: &str) {
+        let is_left = session.app.panel_tabs.iter().any(|tab| tab.id() == tab_id && group_side(tab.group) == "left");
+        let is_right = !is_left && session.app.panel_tabs.iter().any(|tab| tab.id() == tab_id && group_side(tab.group) == "right");
+        if is_left {
+            self.left_panel_open = true;
+            self.active_left_kind = LeftPanelKind::Workbench;
+            self.active_left_tab = Some(tab_id.to_string());
+            let host_app_id = self.host_config().map(|cfg| cfg.host_app_id);
+            if Some(session.app.id.as_str()) == host_app_id {
+                self.deferred_actions.push(ActionDescriptor {
+                    controller_id: session.app.controller_id.clone(),
+                    action: "setActivePanelTab".into(),
+                    args: Some(serde_json::json!({ "tabId": tab_id })),
+                });
+            }
+        } else if is_right {
+            self.right_panel_open = true;
+            self.active_right_kind = RightPanelKind::Details;
+            self.active_right_tab = Some(tab_id.to_string());
+            if let Some(controller_id) = self.host_controller_id() {
+                self.deferred_actions.push(ActionDescriptor {
+                    controller_id,
+                    action: "setActivePanelTab".into(),
+                    args: Some(serde_json::json!({ "tabId": tab_id })),
+                });
+            }
+        }
+    }
+
+    /// 🎓 Force-reveals whatever the active step's `introduce`/`show` ids target — folded action rails,
+    /// nested utility collections, closed panel tabs — before any of that chrome paints this frame; must
+    /// run ahead of `render_main_window`/`render_left_panel`/`render_right_panel`/`render_footer`, all of
+    /// which read the fold/open state this writes. Latched per step id (`CHROME_TOUR_REVEAL_LATCH`) so a
+    /// user who re-folds/closes what the tour revealed doesn't get it snapped back open next frame —
+    /// mirrors the React shell's own reveal effects, which likewise fire once per step.
+    fn chrome_tour_frame_begin(&mut self) {
+        let Some(step) = self.chrome_tour_active_step() else {
+            return;
+        };
+        let already_latched = CHROME_TOUR_REVEAL_LATCH.with(|cell| cell.borrow().as_deref() == Some(step.id.as_str()));
+        if already_latched {
+            return;
+        }
+        CHROME_TOUR_REVEAL_LATCH.with(|cell| *cell.borrow_mut() = Some(step.id.clone()));
+        let Some(session) = self.session.clone() else {
+            return;
+        };
+        let ids: Vec<String> = step.introduce.iter().cloned().chain(step.show.iter().cloned()).collect();
+        for id in ids {
+            if id == semio_framework_core::UI_NAVBAR_ELEMENT_ID || id == semio_framework_core::UI_FOOTER_ELEMENT_ID {
+                continue;
+            }
+            if let Some(rest) = id.strip_prefix("framework.window.") {
+                if let Some((segment, _action_id)) = rest.split_once(".action.") {
+                    let window_id = session
+                        .app
+                        .window_kinds
+                        .iter()
+                        .find(|kind| semio_framework_core::element_id_segment(&kind.id) == segment)
+                        .map(|kind| kind.id.clone());
+                    if let Some(window_id) = window_id {
+                        self.action_panel_folded.insert(window_id, false);
+                    }
+                }
+                continue;
+            }
+            if let Some(rest) = id.strip_prefix("framework.panelTab.") {
+                let tab_id = rest.strip_suffix(".firstDraggable").unwrap_or(rest);
+                self.chrome_tour_reveal_panel_tab(&session, tab_id);
+                continue;
+            }
+            for collection_id in utility_collection_path_to_id(&self.active_utilities, &id) {
+                self.utility_collection_expanded.insert(collection_id, true);
+            }
+        }
+    }
+
+    /// 🎓 Advance-by-doing (Part B) — called from the single funnel points a user/plugin action can take
+    /// (`dispatch_action`'s successful plugin forward, `apply_set_active_utility`'s activation branch) so
+    /// a step whose `advance` is `Action`/`Utility` moves on the instant the described behavior actually
+    /// happens, mirroring the React shell's own advance-by-doing wiring. No-ops when no tour is active or
+    /// the active step's `advance` doesn't match what was performed.
+    fn chrome_tour_note_action_performed(&self, action_id: &str) {
+        let Some(step) = self.chrome_tour_active_step() else {
+            return;
+        };
+        if !matches!(&step.advance, semio_framework_core::IntroductionAdvance::Action(action) if action.as_str() == action_id) {
+            return;
+        }
+        self.chrome_tour_advance_current_step(&step);
+    }
+
+    fn chrome_tour_note_utility_performed(&self, utility_id: &str) {
+        let Some(step) = self.chrome_tour_active_step() else {
+            return;
+        };
+        if !matches!(&step.advance, semio_framework_core::IntroductionAdvance::Utility(utility) if utility.as_str() == utility_id) {
+            return;
+        }
+        self.chrome_tour_advance_current_step(&step);
+    }
+
+    fn chrome_tour_advance_current_step(&self, step: &semio_framework_core::IntroductionStepDefinition) {
+        let Some(session) = self.session.as_ref() else {
+            return;
+        };
+        let Some(intro) = session.app.introduction.as_ref() else {
+            return;
+        };
+        let step_index = intro.steps.iter().position(|candidate| candidate.id == step.id).unwrap_or(0);
+        if step_index + 1 >= intro.steps.len() {
+            write_stored_introduction_seen(&session.app.id);
+        }
+        chrome_advance_introduction(intro.steps.len());
+    }
+
+    /// 🎓 Paints the current introduction-tour step (item 3) — glass bands tile the viewport around the
+    /// `introduce`/`show` element ids that resolved to a rect this frame (real DOM-like gaps, ported from
+    /// `introductionVeilBands`), the `introduce` rect pulses an inset ring (`introduced_pulse_thickness`),
+    /// and the info box anchors beside it via `resolve_introduction_placement` — byte-for-byte parity with
+    /// `ui/js/react/index.tsx`'s `UIIntroduction`. Ids that don't resolve to a rect (see
+    /// `resolve_introduction_element_rect`'s doc comment for the current registration gaps) fall back to
+    /// a centered box with no cutout, same as a `None` `introduce`.
     fn render_chrome_tour(
         &self,
         overlay: &mut DrawList,
@@ -22366,62 +22811,149 @@ impl ShellState {
             CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
             return;
         };
-        overlay.push_solid([0.0, 0.0, width, height], Rgba::new(0.0, 0.0, 0.0, 0.35));
-        let anchor_rect: Option<Rect> = match &step.anchor {
-            semio_framework_core::IntroductionAnchor::Navbar => Some(Rect::new(0.0, 0.0, width, theme.navbar_height)),
-            semio_framework_core::IntroductionAnchor::Footer => {
-                Some(Rect::new(0.0, height - theme.footer_height, width, theme.footer_height))
+
+        let introduce_rect = step
+            .introduce
+            .as_deref()
+            .and_then(|id| self.resolve_introduction_element_rect(id, theme, width, height, &input.hit_targets));
+        let show_rects: Vec<Rect> = step
+            .show
+            .iter()
+            .filter_map(|id| self.resolve_introduction_element_rect(id, theme, width, height, &input.hit_targets))
+            .collect();
+        let cutouts: Vec<Rect> = introduce_rect.into_iter().chain(show_rects.iter().copied()).collect();
+        let bands = introduction_veil_bands(width, height, &cutouts);
+        // 🎓 A targeted step that hasn't mounted yet (a folded utility bar/panel) must not trap the user
+        // behind an opaque-to-clicks veil — only screen-style steps (`introduce == None`) and steps whose
+        // target did resolve block pointer events; `show` rects alone also count as a resolved target.
+        let veil_blocks_pointer = step.introduce.is_none() || introduce_rect.is_some() || !show_rects.is_empty();
+        for band in &bands {
+            overlay.push_solid([band.x, band.y, band.w, band.h], Rgba::new(0.0, 0.0, 0.0, 0.35));
+            if veil_blocks_pointer {
+                input.register_hit(HitTarget {
+                    rect: *band,
+                    event: None,
+                    control_id: Some("shell.tour.veil".to_string()),
+                    kind: HitKind::Generic,
+                    drag_axis: None,
+                    drag_data: None,
+                });
             }
-            _ => None,
-        };
+        }
+        if let Some(rect) = introduce_rect {
+            let thickness = introduced_pulse_thickness(chrome_now_ms(), theme.stroke_hairline, 3.0);
+            let ring = rect.inset(-thickness * 0.5);
+            overlay.push_solid([ring.x, ring.y, ring.w, thickness], theme.focus_ring);
+            overlay.push_solid([ring.x, ring.y + ring.h - thickness, ring.w, thickness], theme.focus_ring);
+            overlay.push_solid([ring.x, ring.y, thickness, ring.h], theme.focus_ring);
+            overlay.push_solid([ring.x + ring.w - thickness, ring.y, thickness, ring.h], theme.focus_ring);
+        }
+
+        let is_de = self.locale_id == "de";
+        // 🎓 Logos (Part B's "info box" item) reuse the existing UI-image pipeline verbatim: `resolve_ui_image`
+        // queues/decodes async, returning `None` until cached — an un-cached logo is simply skipped this
+        // frame (it appears once its fetch lands, same as any other async `Image` node). Sized to a fixed
+        // row height at natural aspect ratio ("aspect-sum row math"), dark-mode picks `dark_src` when set.
+        let is_dark = theme_is_dark(theme);
+        let logo_h = 28.0_f32;
+        let resolved_logos: Vec<(String, f32)> = step
+            .logos
+            .iter()
+            .enumerate()
+            .filter_map(|(index, logo)| {
+                let src = if is_dark {
+                    logo.dark_src.as_deref().filter(|src| !src.is_empty()).unwrap_or(logo.src.as_str())
+                } else {
+                    logo.src.as_str()
+                };
+                let (key, natural) = resolve_ui_image(&format!("shell.tour.logo.{index}"), src);
+                let key = key?;
+                let (nw, nh) = natural.filter(|(w, h)| *w > 0 && *h > 0).unwrap_or((1, 1));
+                Some((key, logo_h * nw as f32 / nh as f32))
+            })
+            .collect();
+        let logos_row_h = if resolved_logos.is_empty() { 0.0 } else { logo_h + theme.gap_standard };
+
         let box_w = 320.0_f32;
-        let box_h = 168.0_f32;
-        let scratch_tree = ui_wgpu::UiTree::new();
-        let (x, y) = match anchor_rect {
-            Some(rect) => ui_wgpu::resolve_overlay_placement(
-                &scratch_tree,
-                ui_wgpu::OverlayAnchor::Point { x: rect.x, y: rect.y + rect.h },
-                (box_w, box_h),
-                (width, height),
-                ui_wgpu::OverlayPlacement::BelowAnchorWithFlip,
-            ),
-            None => ui_wgpu::resolve_overlay_placement(
-                &scratch_tree,
-                ui_wgpu::OverlayAnchor::Point { x: 0.0, y: 0.0 },
-                (box_w, box_h),
-                (width, height),
-                ui_wgpu::OverlayKind::Dialog.default_placement(),
-            ),
-        };
+        let box_h = 168.0_f32 + logos_row_h;
+        let (x, y) = resolve_introduction_placement(step.placement, introduce_rect, (box_w, box_h), (width, height));
         overlay.push_glass([x, y, box_w, box_h], theme.border_radius, GlassTier::Panel, theme);
         let pad = theme.padding_standard;
-        chrome_text(overlay, atlas, input, theme, &step.title, x + pad, y + pad + theme.font_size_body, theme.font_size_body, theme.text);
+        if !resolved_logos.is_empty() {
+            let total_w: f32 = resolved_logos.iter().map(|(_, w)| *w).sum::<f32>()
+                + theme.gap_standard * (resolved_logos.len() as f32 - 1.0);
+            let mut lx = x + ((box_w - total_w) * 0.5).max(pad);
+            for (key, w) in &resolved_logos {
+                overlay.push_raster_quad(key, [lx, y + pad, *w, logo_h], [0.0, 0.0, 1.0, 1.0], 1.0);
+                lx += w + theme.gap_standard;
+            }
+        }
+        chrome_text(overlay, atlas, input, theme, &step.title, x + pad, y + pad + logos_row_h + theme.font_size_body, theme.font_size_body, theme.text);
         chrome_text(
             overlay, atlas, input, theme, &step.body,
-            x + pad, y + pad + theme.font_size_body + theme.gap_standard + theme.font_size_small,
+            x + pad, y + pad + logos_row_h + theme.font_size_body + theme.gap_standard + theme.font_size_small,
             theme.font_size_small, theme.text_muted,
         );
         chrome_text(
             overlay, atlas, input, theme, &format!("{} / {}", step_index + 1, intro.steps.len()),
-            x + box_w - pad - 40.0, y + pad + theme.font_size_body, theme.font_size_small, theme.text_muted,
+            x + box_w - pad - 40.0, y + pad + logos_row_h + theme.font_size_body, theme.font_size_small, theme.text_muted,
         );
         let btn_h = theme.control_height;
         let is_last = step_index + 1 >= intro.steps.len();
-        let next_label = if is_last { "Done" } else { "Next" };
+        let next_label = shell_chrome_string(if is_last { "introduction.done" } else { "introduction.next" }, is_de);
+        let advance_by_button = matches!(step.advance, semio_framework_core::IntroductionAdvance::Next);
         let next_rect = Rect::new(x + box_w - pad - 90.0, y + box_h - pad - btn_h, 90.0, btn_h);
         let skip_rect = Rect::new(x + pad, y + box_h - pad - btn_h, 70.0, btn_h);
+        let back_rect = Rect::new(next_rect.x - 8.0 - 70.0, y + box_h - pad - btn_h, 70.0, btn_h);
         overlay.push_rounded([skip_rect.x, skip_rect.y, skip_rect.w, skip_rect.h], theme.button, theme.border_radius);
         chrome_text(
-            overlay, atlas, input, theme, "Skip",
+            overlay, atlas, input, theme, shell_chrome_string("introduction.skip", is_de),
             skip_rect.x + 10.0, skip_rect.y + (skip_rect.h + theme.font_size_small) * 0.5 - 1.0,
             theme.font_size_small, theme.text,
         );
-        overlay.push_rounded([next_rect.x, next_rect.y, next_rect.w, next_rect.h], theme.accent, theme.border_radius);
-        chrome_text(
-            overlay, atlas, input, theme, next_label,
-            next_rect.x + 10.0, next_rect.y + (next_rect.h + theme.font_size_small) * 0.5 - 1.0,
-            theme.font_size_small, theme.active_foreground,
-        );
+        if step_index > 0 {
+            overlay.push_rounded([back_rect.x, back_rect.y, back_rect.w, back_rect.h], theme.button, theme.border_radius);
+            chrome_text(
+                overlay, atlas, input, theme, shell_chrome_string("introduction.back", is_de),
+                back_rect.x + 10.0, back_rect.y + (back_rect.h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small, theme.text,
+            );
+            input.register_hit(HitTarget {
+                rect: back_rect,
+                event: None,
+                control_id: Some(format!("shell.tour.{}.back", step.id)),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+        }
+        if advance_by_button {
+            overlay.push_rounded([next_rect.x, next_rect.y, next_rect.w, next_rect.h], theme.accent, theme.border_radius);
+            chrome_text(
+                overlay, atlas, input, theme, next_label,
+                next_rect.x + 10.0, next_rect.y + (next_rect.h + theme.font_size_small) * 0.5 - 1.0,
+                theme.font_size_small, theme.active_foreground,
+            );
+            input.register_hit(HitTarget {
+                rect: next_rect,
+                event: None,
+                control_id: Some(format!("shell.tour.{}.next", step.id)),
+                kind: HitKind::Button,
+                drag_axis: None,
+                drag_data: None,
+            });
+        } else {
+            let hint = match &step.advance {
+                semio_framework_core::IntroductionAdvance::Utility(utility) => {
+                    shell_chrome_string("introduction.activateToContinue", is_de).replacen("{}", utility.as_str(), 1)
+                }
+                semio_framework_core::IntroductionAdvance::Action(action) => {
+                    shell_chrome_string("introduction.performToContinue", is_de).replacen("{}", action.as_str(), 1)
+                }
+                semio_framework_core::IntroductionAdvance::Next => String::new(),
+            };
+            chrome_text(overlay, atlas, input, theme, &hint, next_rect.x - 120.0, next_rect.y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
+        }
         input.register_hit(HitTarget {
             rect: skip_rect,
             event: None,
@@ -22430,17 +22962,9 @@ impl ShellState {
             drag_axis: None,
             drag_data: None,
         });
-        input.register_hit(HitTarget {
-            rect: next_rect,
-            event: None,
-            control_id: Some(format!("shell.tour.{}.next", step.id)),
-            kind: HitKind::Button,
-            drag_axis: None,
-            drag_data: None,
-        });
         if chrome_clicked_this_frame() {
             let (px, py) = (input.pointer_x, input.pointer_y);
-            if next_rect.contains(px, py) {
+            if advance_by_button && next_rect.contains(px, py) {
                 if is_last {
                     write_stored_introduction_seen(&session.app.id);
                 }
@@ -22448,6 +22972,8 @@ impl ShellState {
             } else if skip_rect.contains(px, py) {
                 write_stored_introduction_seen(&session.app.id);
                 chrome_skip_introduction();
+            } else if step_index > 0 && back_rect.contains(px, py) {
+                chrome_back_introduction();
             }
         }
     }
@@ -23036,6 +23562,7 @@ impl ShellState {
                 step,
                 ready,
                 loading: _,
+                waiting: _,
                 on_change,
             } => {
                 if let Some(label) = label {
@@ -23498,6 +24025,10 @@ impl ShellState {
                     row_h,
                 );
                 render_chrome_group(chrome, atlas, icons, input, theme, chip, &[item], false);
+                let segment = semio_framework_core::element_id_segment(window_id);
+                for action in &actions {
+                    register_element_rect_fallback(format!("framework.window.{segment}.action.{}", action.id), chip);
+                }
                 return Some((chip, format!("shell.action.fold.{window_id}")));
             }
             let width = theme
@@ -23578,6 +24109,10 @@ impl ShellState {
                     kind: HitKind::Button,
                 };
                 render_chrome_group(chrome, atlas, icons, input, theme, row, &[item], false);
+                register_element_rect(
+                    format!("framework.window.{}.action.{}", semio_framework_core::element_id_segment(window_id), action.id),
+                    row,
+                );
                 if enabled {
                     let control_id = if has_args {
                         format!("shell.action.expand::{window_id}::{}", action.id)
@@ -24517,6 +25052,18 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("common.execute", true) => "Ausführen",
         ("common.reset", false) => "Reset",
         ("common.reset", true) => "Zurücksetzen",
+        ("introduction.skip", false) => "Skip",
+        ("introduction.skip", true) => "Überspringen",
+        ("introduction.back", false) => "Back",
+        ("introduction.back", true) => "Zurück",
+        ("introduction.next", false) => "Next",
+        ("introduction.next", true) => "Weiter",
+        ("introduction.done", false) => "Done",
+        ("introduction.done", true) => "Fertig",
+        ("introduction.activateToContinue", false) => "Activate \"{}\" to continue",
+        ("introduction.activateToContinue", true) => "Aktivieren Sie „{}“, um fortzufahren",
+        ("introduction.performToContinue", false) => "Perform \"{}\" to continue",
+        ("introduction.performToContinue", true) => "„{}“ ausführen, um fortzufahren",
         (other, _) => other,
     }
 }
@@ -24876,6 +25423,7 @@ mod chrome_overlays_tour_tests {
         CHROME_DIALOG_STACK.with(|cell| cell.borrow_mut().clear());
         CHROME_TOUR_STATE.with(|cell| *cell.borrow_mut() = None);
         CHROME_TOUR_AUTO_CONSIDERED.with(|cell| *cell.borrow_mut() = None);
+        CHROME_ELEMENT_RECTS.with(|cell| cell.borrow_mut().clear());
     }
 
     //#region Tooltip
@@ -25039,7 +25587,140 @@ mod chrome_overlays_tour_tests {
         chrome_advance_introduction(5);
         assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
     }
+
+    #[test]
+    fn tour_back_decrements_and_floors_at_zero() {
+        reset_chrome_overlay_state();
+        chrome_start_introduction();
+        chrome_advance_introduction(3);
+        chrome_advance_introduction(3);
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(2));
+        chrome_back_introduction();
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(1));
+        chrome_back_introduction();
+        chrome_back_introduction();
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.step_index)), Some(0));
+    }
+
+    #[test]
+    fn tour_back_on_empty_state_is_a_no_op() {
+        reset_chrome_overlay_state();
+        chrome_back_introduction();
+        assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+    }
     //#endregion Tour
+
+    //#region ElementRects
+    #[test]
+    fn element_rect_registers_and_resolves() {
+        reset_chrome_overlay_state();
+        assert_eq!(resolve_element_rect("transform"), None);
+        register_element_rect("transform", Rect::new(1.0, 2.0, 3.0, 4.0));
+        assert_eq!(resolve_element_rect("transform"), Some(Rect::new(1.0, 2.0, 3.0, 4.0)));
+        chrome_element_rects_clear();
+        assert_eq!(resolve_element_rect("transform"), None);
+    }
+
+    #[test]
+    fn element_rect_fallback_never_overrides_a_primary_entry() {
+        reset_chrome_overlay_state();
+        register_element_rect_fallback("transform", Rect::new(0.0, 0.0, 10.0, 10.0));
+        assert_eq!(resolve_element_rect("transform"), Some(Rect::new(0.0, 0.0, 10.0, 10.0)));
+        register_element_rect("transform", Rect::new(5.0, 5.0, 20.0, 20.0));
+        register_element_rect_fallback("transform", Rect::new(0.0, 0.0, 1.0, 1.0));
+        assert_eq!(resolve_element_rect("transform"), Some(Rect::new(5.0, 5.0, 20.0, 20.0)));
+    }
+    //#endregion ElementRects
+
+    //#region VeilBands
+    #[test]
+    fn punch_cutout_returns_the_band_unchanged_when_disjoint() {
+        let band = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let hole = Rect::new(200.0, 200.0, 10.0, 10.0);
+        assert_eq!(punch_introduction_cutout(band, hole), vec![band]);
+    }
+
+    #[test]
+    fn punch_cutout_centered_hole_tiles_into_four_pieces_covering_the_remaining_area() {
+        let band = Rect::new(0.0, 0.0, 100.0, 100.0);
+        let hole = Rect::new(25.0, 25.0, 50.0, 50.0);
+        let pieces = punch_introduction_cutout(band, hole);
+        assert_eq!(pieces.len(), 4);
+        let covered: f32 = pieces.iter().map(|p| p.w * p.h).sum();
+        assert_eq!(covered, band.w * band.h - hole.w * hole.h);
+    }
+
+    #[test]
+    fn veil_bands_with_no_cutouts_is_one_full_viewport_band() {
+        let bands = introduction_veil_bands(800.0, 600.0, &[]);
+        assert_eq!(bands, vec![Rect::new(0.0, 0.0, 800.0, 600.0)]);
+    }
+
+    #[test]
+    fn veil_bands_clamp_out_of_viewport_cutouts_to_a_no_op() {
+        let bands = introduction_veil_bands(800.0, 600.0, &[Rect::new(-100.0, -100.0, 10.0, 10.0)]);
+        assert_eq!(bands, vec![Rect::new(0.0, 0.0, 800.0, 600.0)]);
+    }
+
+    #[test]
+    fn veil_bands_compose_multiple_cutouts() {
+        let bands = introduction_veil_bands(800.0, 600.0, &[Rect::new(0.0, 0.0, 100.0, 100.0), Rect::new(700.0, 500.0, 100.0, 100.0)]);
+        let covered: f32 = bands.iter().map(|b| b.w * b.h).sum();
+        assert_eq!(covered, 800.0 * 600.0 - 100.0 * 100.0 * 2.0);
+    }
+    //#endregion VeilBands
+
+    //#region Pulse
+    #[test]
+    fn pulse_thickness_breathes_hairline_to_focus_and_back() {
+        let hairline = 1.0;
+        let focus = 3.0;
+        assert_eq!(introduced_pulse_thickness(0.0, hairline, focus), hairline);
+        assert!((introduced_pulse_thickness(INTRODUCED_PULSE_PERIOD_MS / 2.0, hairline, focus) - focus).abs() < 0.001);
+        assert!((introduced_pulse_thickness(INTRODUCED_PULSE_PERIOD_MS, hairline, focus) - hairline).abs() < 0.001);
+    }
+
+    #[test]
+    fn pulse_thickness_is_periodic() {
+        let (hairline, focus) = (1.0, 3.0);
+        assert_eq!(
+            introduced_pulse_thickness(100.0, hairline, focus),
+            introduced_pulse_thickness(100.0 + INTRODUCED_PULSE_PERIOD_MS, hairline, focus)
+        );
+    }
+    //#endregion Pulse
+
+    //#region Placement
+    #[test]
+    fn placement_centers_when_no_anchor() {
+        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Auto, None, (320.0, 168.0), (800.0, 600.0));
+        assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
+    }
+
+    #[test]
+    fn placement_center_variant_ignores_the_anchor() {
+        let anchor = Rect::new(10.0, 10.0, 50.0, 20.0);
+        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Center, Some(anchor), (320.0, 168.0), (800.0, 600.0));
+        assert_eq!((x, y), ((800.0 - 320.0) / 2.0, (600.0 - 168.0) / 2.0));
+    }
+
+    #[test]
+    fn placement_auto_picks_the_side_with_the_most_free_space() {
+        // Anchor near the top-left in a wide viewport: space_right (750) exceeds space_bottom (580),
+        // space_top (0), and space_left (0), so "right" wins.
+        let anchor = Rect::new(0.0, 0.0, 50.0, 20.0);
+        let (x, y) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Auto, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+        assert_eq!(x, anchor.x + anchor.w + INTRODUCTION_INFO_BOX_GAP);
+        assert!(y >= INTRODUCTION_INFO_BOX_GAP);
+    }
+
+    #[test]
+    fn placement_explicit_side_is_honored_and_clamped_to_the_viewport() {
+        let anchor = Rect::new(780.0, 10.0, 15.0, 15.0);
+        let (x, _) = resolve_introduction_placement(semio_framework_core::IntroductionPlacement::Right, Some(anchor), (100.0, 50.0), (800.0, 600.0));
+        assert!(x <= 800.0 - 100.0 - INTRODUCTION_INFO_BOX_GAP + 0.001);
+    }
+    //#endregion Placement
 
     //#region RibbonActivePath
     #[test]

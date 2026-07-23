@@ -156,7 +156,7 @@ fn build_step_tree_item(step: &SequenceStep, fixture: &SequenceFixture, labels: 
                     description: Some(format!("{} {}", step.id, labels.slot)),
                     icon_id: Some("folder".into()),
                     selected: None,
-                    loading: None,
+                    loading: None, waiting: None,
                     default_open: Some(true),
                     action: None,
                     hover_action: None,
@@ -295,7 +295,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None,
+            loading: None, waiting: None,
             children: vec![ui_text(labels.select_prompt)],
         }]);
     }
@@ -305,7 +305,7 @@ fn build_inspector_tree(fixture: &SequenceFixture, selected: &[String], labels: 
             id: "sequence-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
-            loading: None,
+            loading: None, waiting: None,
             children: vec![ui_text(labels.step_not_found)],
         }]);
     }

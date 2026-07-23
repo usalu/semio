@@ -120,6 +120,8 @@ import {
   parseStudioShellPath,
   preserveJsonIdentity,
   reconcileUtilityPath,
+  studioPanelFocusingSpawned,
+  viewStateWithStudioPanel,
   findPressedUtilityLeafId,
   resolveUtilityNodes,
   resolveUtilities,
@@ -161,6 +163,7 @@ import {
   type UISearchItem,
   useUIFind,
   interpretUiNode,
+  dagOverlayLabelFill,
   dispatchOpenedFiles,
   scheduleDispatchAction,
   sampleMediaFrameTimestampsMs,
@@ -813,6 +816,25 @@ describe("framework external slots", () => {
 });
 
 describe("declarative forms parity", () => {
+  it("renders declarative text with appearance-aware foreground", () => {
+    const markup = renderToStaticMarkup(interpretUiNode({ type: "text", value: "Hello flow" }, { onAction: noopAction }));
+    expect(markup).toContain("text-foreground");
+    expect(markup).toContain("Hello flow");
+    const emphasized = renderToStaticMarkup(interpretUiNode({ type: "text", value: "Emphasized", emphasize: true }, { onAction: noopAction }));
+    expect(emphasized).toContain("text-foreground");
+    expect(emphasized).toContain("font-semibold");
+  });
+
+  it("dag overlay label fills use CSS appearance variables", () => {
+    const chrome = { selectedIds: new Set<string>(["sel"]), highlightedIds: new Set<string>(["hi"]) };
+    expect(dagOverlayLabelFill("plain", false, null, chrome)).toBe("var(--color-muted-foreground)");
+    expect(dagOverlayLabelFill("sel", false, null, chrome)).toBe("var(--color-foreground)");
+    expect(dagOverlayLabelFill("hi", false, null, chrome)).toBe("var(--color-secondary)");
+    expect(dagOverlayLabelFill("plain", false, "plain", chrome)).toBe("var(--color-foreground)");
+    expect(dagOverlayLabelFill("ghost", true, null, chrome)).toBe("var(--color-secondary)");
+    expect(dagOverlayLabelFill("plain", false, null, chrome, ["plain"])).toBe("var(--color-border)");
+  });
+
   it("renders field description, required marker and inline error", () => {
     const markup = renderToStaticMarkup(
       interpretUiNode(
@@ -2990,6 +3012,27 @@ describe("s media graph flow routing", () => {
     expect(parseStudioShellPath("/")).toBeNull();
     expect(parseStudioShellPath("/studios/my-studio/instances/inst-1/extra")).toBeNull();
   });
+
+  it("folds spawned focus into viewState so a subsequent host-effect session write keeps activeSpawnedId", () => {
+    const panel = {
+      activePanelTab: "s-play-catalogue",
+      programs: [{ pluginId: "draw", programId: "draw", appId: "draw", label: "Draw", document: ["draw"], yields: "2d.drawing" }],
+      spawnedApps: [] as const,
+    };
+    const spawned = { id: "app-draw-1", pluginId: "draw", instanceId: 1, appId: "draw", label: "Semio Emblem", document: ["draw"] };
+    const focused = studioPanelFocusingSpawned(panel, spawned);
+    expect(focused.activeSpawnedId).toBe("app-draw-1");
+    expect(focused.spawnedApps).toEqual([spawned]);
+    // 🐚 Simulate applyHostEffects: fold into nextViewState, then a final SET_SESSION commits that
+    // viewState (the bug was committing the pre-spawn viewState and wiping activeSpawnedId).
+    const baseViewState = { panelJson: JSON.stringify(panel) };
+    const nextViewState = viewStateWithStudioPanel(baseViewState, focused);
+    expect(JSON.parse(nextViewState.panelJson!).activeSpawnedId).toBe("app-draw-1");
+    const refocused = studioPanelFocusingSpawned(focused, { ...spawned, label: "Renamed" });
+    expect(refocused.spawnedApps).toHaveLength(1);
+    expect(refocused.spawnedApps[0]?.label).toBe("Renamed");
+    expect(refocused.activeSpawnedId).toBe("app-draw-1");
+  });
 });
 
 describe("ui search/find (fuse re-export from @semio-tech/ui-react)", () => {
@@ -3556,10 +3599,10 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility"]);
     expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
-      anchor: { kind: "panelFirstDraggable", id: "framework.panel.catalogue" },
+      introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
       advance: { kind: "action", id: "addObjectKind" },
-      cutouts: [{ kind: "windowKind", id: "puzzle3d-main" }],
+      show: ["framework.window.puzzle3dMain"],
     });
     expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/Drag-and-Drop|ziehen/i);
 

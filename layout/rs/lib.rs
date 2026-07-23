@@ -1426,7 +1426,7 @@ mod wasm_session {
     use web_sys::HtmlCanvasElement;
 
     use crate::document::parse_layout_document;
-    use crate::engine::{build_scene_from_document_json, hit_test_document_json, screen_to_world_json, LayoutDropPreview};
+    use crate::engine::{build_scene_from_document_json, hit_test_document_json, screen_to_world_json, LayoutDropPreview, SceneQuery};
     use crate::export::{export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip};
 
     #[derive(Clone, Debug)]

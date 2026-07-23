@@ -1111,7 +1111,9 @@ fn render_catalogue_panel(labels: &RasterPlayLabels) -> UiNode {
             ui_text(labels.catalogue_group),
             ui_text(labels.catalogue_adjustment),
         ],
-    }])
+    
+        waiting: None,
+}])
 }
 
 fn render_properties_panel(document: &RasterDocument, runtime: &RasterPlayRuntime, view_state: &ViewState, labels: &RasterPlayLabels) -> UiNode {
@@ -1238,8 +1240,11 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 min: 1.0,
                 max: 128.0,
                 step: Some(1.0),
+                ready: None,
+                loading: None,
+                waiting: None,
                 on_change: raster_action("setBrushSize", None),
-            },
+                },
             WindowMeasure::Slider {
                 id: format!("raster-{utility}-opacity"),
                 label: Some("Opacity".into()),
@@ -1247,8 +1252,11 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 min: 0.0,
                 max: 1.0,
                 step: Some(0.05),
+                ready: None,
+                loading: None,
+                waiting: None,
                 on_change: raster_action("setBrushOpacity", None),
-            },
+                },
         ],
     }
 }

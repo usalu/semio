@@ -1186,7 +1186,9 @@ fn render_catalogue_panel(labels: &NotePlayLabels) -> UiNode {
             ui_text(labels.catalogue_ink),
             ui_text(labels.catalogue_group),
         ],
-    }])
+    
+        waiting: None,
+}])
 }
 
 fn inspector_patch(block_ids: &[String], field: &str) -> ActionDescriptor {
@@ -1382,8 +1384,11 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                 min: 0.1,
                 max: 8.0,
                 step: Some(0.05),
+                ready: None,
+                loading: None,
                 on_change: note_action("setCameraZoom", None),
-            }],
+
+                waiting: None,}],
         },
         WindowMeasure::Group {
             id: "note-measures.grid".into(),
@@ -1406,8 +1411,11 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     min: 8.0,
                     max: 256.0,
                     step: Some(4.0),
+                    ready: None,
+                    loading: None,
+                    waiting: None,
                     on_change: note_action("setGridSpacing", None),
-                },
+                    },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-subdivisions".into(),
                     label: Some(labels.measure_subdivisions.into()),
@@ -1415,8 +1423,11 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     min: 1.0,
                     max: 16.0,
                     step: Some(1.0),
+                    ready: None,
+                    loading: None,
+                    waiting: None,
                     on_change: note_action("setGridSubdivisions", None),
-                },
+                    },
                 WindowMeasure::Slider {
                     id: "note-measures.grid-opacity".into(),
                     label: Some(labels.measure_opacity.into()),
@@ -1424,8 +1435,11 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     min: 0.05,
                     max: 1.0,
                     step: Some(0.05),
+                    ready: None,
+                    loading: None,
+                    waiting: None,
                     on_change: note_action("setGridOpacity", None),
-                },
+                    },
             ],
         },
         WindowMeasure::Group {
@@ -1449,8 +1463,11 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     min: 1.0,
                     max: 128.0,
                     step: Some(1.0),
+                    ready: None,
+                    loading: None,
+                    waiting: None,
                     on_change: note_action("setSnapGridSpacing", None),
-                },
+                    },
             ],
         },
         note_pencil_utility_options(document, labels),
@@ -1472,8 +1489,11 @@ fn note_pencil_utility_options(document: &NoteDocument, labels: &NotePlayLabels)
             min: 1.0,
             max: 24.0,
             step: Some(1.0),
+            ready: None,
+            loading: None,
             on_change: note_action("setPencilWidth", None),
-        }],
+
+            waiting: None,}],
     }
 }
 
@@ -1490,8 +1510,11 @@ fn note_eraser_utility_options(document: &NoteDocument, labels: &NotePlayLabels,
             min: 4.0,
             max: 48.0,
             step: Some(1.0),
+            ready: None,
+            loading: None,
             on_change: note_action("setEraserRadius", None),
-        }],
+
+            waiting: None,}],
     }
 }
 
@@ -1504,8 +1527,11 @@ fn note_navigator_measures(document: &NoteDocument, labels: &NotePlayLabels) -> 
             min: 0.05,
             max: 2.0,
             step: Some(0.05),
+            ready: None,
+            loading: None,
+            waiting: None,
             on_change: note_action("setCameraZoom", None),
-        },
+            },
         WindowMeasure::Toggle {
             id: "note-navigator-measures.grid-visible".into(),
             icon_id: "layout-grid".into(),

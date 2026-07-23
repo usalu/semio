@@ -1495,6 +1495,7 @@ pub mod app_studio {
                                 style: None,
                                 disabled: None,
                                 loading: None,
+                                waiting: None,
                             })),
                             description: None,
                             required: None,
@@ -1536,6 +1537,7 @@ pub mod app_studio {
             label: Some(FRAMEWORK_PANEL_TAB_PARAMETERS_LABEL.into()),
             default_open: Some(true),
             loading: None,
+            waiting: None,
             children: vec![
                 UiNode::Button(UiButtonNode {
                     id: Some("s-play-parameters.add".into()),
@@ -1545,6 +1547,7 @@ pub mod app_studio {
                     style: None,
                     disabled: None,
                     loading: None,
+                    waiting: None,
                 }),
                 ui_text(format!("{} {}", projection.parameters.len(), labels.parameter_count_suffix)),
             ],
@@ -1600,6 +1603,7 @@ pub mod app_studio {
                 style: None,
                 disabled: None,
                 loading: None,
+                waiting: None,
             }));
             children.push(UiSectionNode {
                 id: format!("s-play-parameters.{parameter_id}"),
@@ -1611,6 +1615,7 @@ pub mod app_studio {
                 }),
                 default_open: Some(true),
                 loading: None,
+                waiting: None,
                 children: parameter_children,
             });
         }
@@ -1625,6 +1630,7 @@ pub mod app_studio {
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             loading: None,
+            waiting: None,
             children: vec![ui_text(format!(
                 "{} {} · {} {}",
                 media_node_ids.len(),
@@ -1725,6 +1731,7 @@ pub mod app_studio {
                 }),
                 default_open: Some(true),
                 loading: None,
+                waiting: None,
                 children: node_fields,
             });
         }
@@ -1876,6 +1883,7 @@ pub mod app_studio {
                 }),
                 default_open: Some(true),
                 loading: None,
+                waiting: None,
                 children: instance_fields,
             });
         }

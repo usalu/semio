@@ -165,6 +165,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         icon_id: None,
         selected: None,
         loading: None,
+        waiting: None,
         default_open: None,
         action: None,
         hover_action: None,
@@ -186,6 +187,7 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
         icon_id: None,
         selected: None,
         loading: None,
+        waiting: None,
         default_open: None,
         action: Some(action),
         hover_action: None,
@@ -200,11 +202,11 @@ fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, descri
 }
 
 fn tree_section(id: impl Into<String>, label: Option<String>, items: Vec<UiTreeItemNode>) -> UiTreeSectionNode {
-    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), loading: None, items }
+    UiTreeSectionNode { id: id.into(), label, default_open: Some(true), loading: None, waiting: None, items }
 }
 
 fn tree_node(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-    UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
+    UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
 }
 
 fn element_label(program: &Program, id: &EntityId) -> String {
@@ -942,6 +944,8 @@ fn empty_component_scene(surface_id: &str, component_kind: SurfaceKind) -> UiCom
         ink_canvas: None,
         graph_timeline: None,
         block_list: None,
+        diff_view: None,
+        event_feed: None,
     }
 }
 
@@ -1145,8 +1149,10 @@ fn render_adjacency_body(program: &Program, runtime: &ArchitectPlayRuntime) -> U
         id: Some("architect-adjacency.matrix".into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
+        drop_overlay: None,
         children: vec![ui_stack_vertical(glyph_rows), tree_node(pair_sections, None)],
     })
 }

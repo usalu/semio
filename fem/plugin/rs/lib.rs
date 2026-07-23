@@ -651,6 +651,7 @@ impl DocumentApp for Fem2dPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            group_labels: HashMap::new(),
         }
     }
 }
@@ -1146,6 +1147,7 @@ impl DocumentApp for Fem3dPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            group_labels: HashMap::new(),
         }
     }
 }

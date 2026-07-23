@@ -541,7 +541,7 @@ pub mod app_jack {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None,
+                loading: None, waiting: None,
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -555,7 +555,7 @@ pub mod app_jack {
                 id: "trinity-inspector.missing".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None,
+                loading: None, waiting: None,
                 children: vec![ui_text("Piece not found")],
             }]);
         }
@@ -2222,7 +2222,7 @@ pub mod app_rewrite {
 
     fn catalogue_add_item(id: &str, label: &str, clause_kind: &str) -> UiTreeItemNode {
         tree_item_with_action(id, label, None, rewrite_action("addRuleClause", Some(json!({ "kind": clause_kind }))))
-    }
+}
 
     fn build_catalogue_tree(labels: &TrinityRewriteLabels) -> UiNode {
         PanelTreeBuilder::new("trinity-catalogue")
@@ -2281,7 +2281,7 @@ pub mod app_rewrite {
                 id: "trinity-inspector.empty".into(),
                 label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
                 default_open: Some(true),
-                loading: None,
+                loading: None, waiting: None,
                 children: vec![ui_text("Select one or more pieces")],
             }]);
         }
@@ -2413,7 +2413,7 @@ pub mod app_rewrite {
             id: "trinity-rewrite.parameters".into(),
             label: Some(labels.parameters.into()),
             default_open: Some(true),
-            loading: None,
+            loading: None, waiting: None,
             children,
         }])
     }

@@ -1,0 +1,10 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 326 skipped (327)
+   Start at  01:52:33
+   Duration  6.43s (transform 1.58s, setup 140ms, import 5.44s, tests 67ms, environment 507ms)
+
+bun x vitest run --config vitest.config.ts -t   6.01s user 0.90s system 93% cpu 7.371 total

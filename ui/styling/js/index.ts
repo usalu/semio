@@ -804,9 +804,11 @@ if (import.meta.vitest) {
       expect(parsed.nodeStrokeSelected).toEqual(STYLING_BOARD_PALETTES.light.nodeStrokeSelected);
       expect(parsed.handleFill[3]).toBe(0);
       expect(parsed.gridMinorStroke[3]).toBeLessThan(255);
-      const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { rasterClear: number[] };
+      const dark = JSON.parse(serializeCanvasThemeJson("dark")) as { rasterClear: number[]; labelFill: number[] };
       expect(dark.rasterClear).toEqual(STYLING_BOARD_PALETTES.dark.rasterClear);
       expect(dark.rasterClear).not.toEqual(parsed.rasterClear);
+      expect(dark.labelFill).toEqual(STYLING_BOARD_PALETTES.dark.labelFill);
+      expect(dark.labelFill).not.toEqual(parsed.labelFill);
     });
 
     it("syncSessionCanvasTheme pushes serialized palette into a session", () => {

@@ -373,6 +373,10 @@ pub enum WindowMeasure {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         loading: Option<bool>,
+        /// 🌀 When true, the measure tree leaf shows a dashed, slower waiting ring; `loading` takes precedence when both are set.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        waiting: Option<bool>,
         #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
@@ -790,6 +794,7 @@ mod layout_wire_format_tests {
                 step: Some(0.5),
                 ready: None,
                 loading: None,
+                waiting: None,
                 on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
             },
             WindowMeasure::Toggle {
@@ -855,6 +860,7 @@ mod layout_wire_format_tests {
                 step: None,
                 ready: None,
                 loading: None,
+                waiting: None,
                 on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
             },
         ];
@@ -1290,6 +1296,8 @@ pub struct UiStackNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub activate: Option<ActionDescriptor>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub drop_action: Option<ActionDescriptor>,
@@ -1332,6 +1340,8 @@ pub struct UiButtonNode {
     pub disabled: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -1509,6 +1519,8 @@ pub struct UiSectionNode {
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
     pub children: Vec<UiNode>,
 }
 
@@ -1536,6 +1548,8 @@ pub struct UiTreeItemNode {
     pub selected: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1568,6 +1582,7 @@ impl UiTreeItemNode {
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1592,6 +1607,8 @@ pub struct UiTreeSectionNode {
     pub default_open: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
     pub items: Vec<UiTreeItemNode>,
 }
 
@@ -1601,6 +1618,8 @@ pub struct UiTreeNode {
     pub sections: Vec<UiTreeSectionNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub loading: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub waiting: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected_ids: Option<Vec<String>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1817,6 +1836,7 @@ pub fn ui_inspector_groups_to_tree(groups: &[UiInspectorFieldGroup]) -> UiNode {
             label: Some(group.label.clone()),
             default_open: Some(group.default_open.unwrap_or(true)),
             loading: None,
+            waiting: None,
             children: group.fields.clone(),
         })
         .collect();
@@ -1831,6 +1851,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
             label: section.label.clone(),
             default_open: Some(section.default_open.unwrap_or(true)),
             loading: section.loading,
+            waiting: section.waiting,
             items: section
                 .children
                 .iter()
@@ -1848,6 +1869,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 label: None,
                 default_open: None,
                 loading: None,
+                waiting: None,
                 items: vec![UiTreeItemNode {
                     id: "empty".into(),
                     label: "—".into(),
@@ -1855,6 +1877,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                     icon_id: None,
                     selected: None,
                     loading: None,
+                    waiting: None,
                     default_open: None,
                     action: None,
                     hover_action: None,
@@ -1868,6 +1891,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
                 }],
             }],
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -1877,6 +1901,7 @@ pub fn ui_declarative_sections_to_tree(sections: &[UiSectionNode]) -> UiNode {
         UiTreeNode {
             sections: tree_sections,
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -1894,6 +1919,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1921,6 +1947,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
                 icon_id: None,
                 selected: None,
                 loading: None,
+                waiting: None,
                 default_open: None,
                 action: None,
                 hover_action: None,
@@ -1940,6 +1967,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -1961,6 +1989,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: group.default_open,
             action: None,
             hover_action: None,
@@ -1995,6 +2024,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -2013,6 +2043,7 @@ fn ui_declarative_child_to_tree_item(node: &UiNode, fallback_id: String) -> UiTr
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -2035,6 +2066,7 @@ fn tree_control_item(id: String, control: UiControlNode) -> UiTreeItemNode {
         icon_id: None,
         selected: None,
         loading: None,
+        waiting: None,
         default_open: None,
         action: None,
         hover_action: None,
@@ -2962,6 +2994,7 @@ pub fn ui_stack_vertical(children: Vec<UiNode>) -> UiNode {
         id: None,
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         children,
         drop_action: None,
@@ -3493,6 +3526,7 @@ pub fn ui_empty_state(id: &str, title: &str, description: Option<&str>, action: 
         id: Some(id.into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3512,6 +3546,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
             style: None,
             disabled: None,
             loading: None,
+            waiting: None,
         }));
     }
     UiNode::Stack(UiStackNode {
@@ -3521,6 +3556,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
         id: Some(id.into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3550,6 +3586,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
         id: Some("recovery.panel".into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -3564,6 +3601,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 style: None,
                 disabled: None,
                 loading: None,
+                waiting: None,
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.disablePlugin".into()),
@@ -3573,6 +3611,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 style: None,
                 disabled: None,
                 loading: None,
+                waiting: None,
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.showDiagnostics".into()),
@@ -3582,6 +3621,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
                 style: None,
                 disabled: None,
                 loading: None,
+                waiting: None,
             }),
         ],
     })
@@ -3597,6 +3637,7 @@ pub fn ui_import_drop_zone(id: &str, title: &str, hint: &str, accept: Option<&st
         id: Some(id.into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: Some(drop_action),
         drop_overlay: Some(UiDropOverlaySpec { title: title.into(), hint: hint.into(), accept: accept.map(Into::into) }),
@@ -3629,6 +3670,7 @@ mod ui_node_wire_format_tests {
             id: Some("root".into()),
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -3646,6 +3688,7 @@ mod ui_node_wire_format_tests {
                     style: None,
                     disabled: Some(false),
                     loading: None,
+                    waiting: None,
                 }),
                 UiNode::Separator(UiSeparatorNode {}),
                 UiNode::Input(UiInputNode {
@@ -3738,6 +3781,7 @@ mod ui_node_wire_format_tests {
                     label: Some("Section".into()),
                     default_open: Some(true),
                     loading: None,
+                    waiting: None,
                     children: vec![],
                 }),
                 UiNode::Tree(UiTreeNode {
@@ -3746,9 +3790,11 @@ mod ui_node_wire_format_tests {
                         label: Some("Items".into()),
                         default_open: Some(true),
                         loading: None,
+                        waiting: None,
                         items: vec![UiTreeItemNode::base("item1", "Item 1")],
                     }],
                     loading: None,
+                    waiting: None,
                     selected_ids: Some(vec!["item1".into()]),
                     highlighted_ids: None,
                     selection_change: None,
@@ -3838,6 +3884,20 @@ mod ui_node_wire_format_tests {
         assert!(json.contains("\"loading\":true"));
         let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, loading);
+    }
+
+    /// 🌀 `waiting` follows the same `Option<bool>` skip-if-none convention as `loading`: absent when unset, round-trips when set.
+    #[test]
+    fn ui_tree_item_waiting_field_skips_when_none_and_roundtrips_when_set() {
+        let idle = UiTreeItemNode::base("idle", "Idle");
+        assert!(!serde_json::to_string(&idle).unwrap().contains("waiting"));
+
+        let mut waiting = UiTreeItemNode::base("waiting1", "Waiting");
+        waiting.waiting = Some(true);
+        let json = serde_json::to_string(&waiting).unwrap();
+        assert!(json.contains("\"waiting\":true"));
+        let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, waiting);
     }
 
     /// ☁️ `points_json` follows the same `Option<String>` skip-if-none convention as `terrain_json`:
@@ -4610,6 +4670,7 @@ fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
         style: None,
         disabled: None,
         loading: None,
+        waiting: None,
     })
 }
 
@@ -4638,6 +4699,7 @@ fn tree_section_row(tree_node: &UiTreeNode, section: &UiTreeSectionNode) -> UiNo
         id: Some(section.id.clone()),
         selected: None,
         loading: section.loading,
+        waiting: section.waiting,
         activate: None,
         drop_action: tree_node.drop_action.clone(),
         drop_overlay: None,
@@ -4674,6 +4736,7 @@ fn tree_item_row(tree_node: &UiTreeNode, item: &UiTreeItemNode) -> UiNode {
         id: Some(item.id.clone()),
         selected: Some(selected),
         loading: item.loading,
+        waiting: item.waiting,
         activate: item.action.clone(),
         drop_action: None,
         drop_overlay: None,
@@ -4695,6 +4758,7 @@ fn tree_item_action_row(action: &UiTreeItemAction) -> UiNode {
         style: None,
         disabled: None,
         loading: None,
+        waiting: None,
     })
 }
 //#endregion 🔖CompositeExpansion
@@ -4861,6 +4925,7 @@ mod tests {
             style: None,
             disabled: None,
             loading: None,
+            waiting: None,
         })
     }
 
@@ -4872,6 +4937,7 @@ mod tests {
             id: Some(id.into()),
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -4983,6 +5049,7 @@ mod tests {
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -4997,7 +5064,7 @@ mod tests {
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>, selected_ids: Option<Vec<String>>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     #[test]
@@ -5042,7 +5109,7 @@ mod tests {
         let mut tree = UiTree::new();
         let nested = UiTreeItemNode { items: Some(vec![tree_item("child", "Child")]), ..tree_item("parent", "Parent") };
         let ui = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![nested] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![nested] }],
             Some(vec!["parent".into()]),
         );
         tree.apply_tree(&ui);
@@ -5074,7 +5141,7 @@ mod tests {
             actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
             ..tree_item("leaf", "Leaf")
         };
-        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] }], None);
+        let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }], None);
         tree.apply_tree(&ui);
         let root = tree.root.unwrap();
         let section = tree.children(root).next().unwrap();
@@ -5098,7 +5165,7 @@ mod tests {
 
         let mut tree = UiTree::new();
         let tree_ui_value = tree_ui(
-            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![tree_item("a", "A")] }],
+            vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![tree_item("a", "A")] }],
             None,
         );
         tree.apply_tree(&tree_ui_value);
@@ -5594,6 +5661,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -5639,6 +5707,8 @@ pub const KIND_TEXTURED: f32 = 4.0;
 pub const KIND_RASTER: f32 = 5.0;
 /// 🌀 Clockwise spinning + pulsing loading ring (see `UiInstance::loading_border` and `UI_SHADER`'s `kind == 6` branch).
 pub const KIND_LOADING_BORDER: f32 = 6.0;
+/// 🌀 Dashed, slow-spinning + gently pulsing waiting ring (see `UiInstance::waiting_border` and `UI_SHADER`'s `kind == 7` branch).
+pub const KIND_WAITING_BORDER: f32 = 7.0;
 pub const SCENE_MIP_LEVELS: u32 = 5;
 
 #[repr(C)]
@@ -5866,6 +5936,16 @@ impl UiInstance {
         }
     }
 
+    /// 🌀 Dashed, slow-spinning + gently pulsing waiting ring in `color`; the sweep and pulse phase come from `globals._pad.x` (elapsed seconds) in `UI_SHADER`.
+    pub fn waiting_border(rect: [f32; 4], color: Rgba, radius: f32, border: f32) -> Self {
+        Self {
+            rect,
+            color: [color.r, color.g, color.b, color.a],
+            params: [radius, border, KIND_WAITING_BORDER, 0.0],
+            uv_rect: [0.0, 0.0, 1.0, 1.0],
+        }
+    }
+
     pub fn glyph(rect: [f32; 4], color: Rgba, uv_rect: [f32; 4]) -> Self {
         Self {
             rect,
@@ -6044,6 +6124,13 @@ impl DrawList {
         self.active_layer()
             .ui_instances
             .push(UiInstance::loading_border(rect, color, radius, stroke));
+    }
+
+    /// 🌀 Dashed, slow-spinning + gently pulsing waiting ring around `rect`, in `color` (gray `theme.border_normal` at rest, `theme.selected` when the node is selected/active).
+    pub fn push_waiting_border(&mut self, rect: [f32; 4], color: Rgba, radius: f32, stroke: f32) {
+        self.active_layer()
+            .ui_instances
+            .push(UiInstance::waiting_border(rect, color, radius, stroke));
     }
 
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) -> usize {
@@ -10308,6 +10395,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -10420,7 +10508,7 @@ mod tests {
     #[test]
     fn section_children_stack_below_the_header_at_their_own_intrinsic_height_with_gap() {
         let mut tree = UiTree::new();
-        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), loading: None, children: vec![text("a"), text("a longer line of text")] });
+        let section = UiNode::Section(UiSectionNode { id: "s".into(), label: Some("Section".into()), default_open: Some(true), loading: None, waiting: None, children: vec![text("a"), text("a longer line of text")] });
         tree.apply_tree(&section);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
@@ -10535,6 +10623,28 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let comet_alpha = sweep / two_pi;
         let ring_alpha = max(comet_alpha, 0.2);
         let pulse = 0.775 - 0.225 * cos(two_pi * phase);
+        let alpha = border_alpha * ring_alpha * pulse * in.color.a;
+        return vec4<f32>(in.color.rgb, alpha);
+    }
+    if (kind == 7) {
+        let half = in.size * 0.5;
+        let p = in.local - half;
+        let radius = in.params.x;
+        let border = in.params.y;
+        let dist = sdf_rounded_rect(p, half, radius);
+        let border_alpha = 1.0 - smoothstep(border - 1.0, border, abs(dist));
+        let two_pi = 6.28318530718;
+        let duration = 3.2;
+        let phase = globals._pad.x / duration;
+        var theta = atan2(p.x, -p.y);
+        theta = theta - floor(theta / two_pi) * two_pi;
+        var spin = phase * two_pi;
+        spin = spin - floor(spin / two_pi) * two_pi;
+        var sweep = theta - spin;
+        sweep = sweep - floor(sweep / two_pi) * two_pi;
+        let dash = step(fract(sweep / two_pi * 12.0), 0.6);
+        let ring_alpha = max(dash, 0.2);
+        let pulse = 0.85 - 0.15 * cos(two_pi * phase);
         let alpha = border_alpha * ring_alpha * pulse * in.color.a;
         return vec4<f32>(in.color.rgb, alpha);
     }
@@ -11999,6 +12109,8 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
             paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
             if stack.loading.unwrap_or(false) {
                 paint_loading_border(draw, bounds, theme.border_normal, theme);
+            } else if stack.waiting.unwrap_or(false) {
+                paint_waiting_border(draw, bounds, theme.border_normal, theme);
             }
         }
         UiNode::Text(text) => paint_text(text, bounds, theme, atlas, draw),
@@ -12021,6 +12133,8 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
             paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
             if section.loading.unwrap_or(false) {
                 paint_loading_border(draw, bounds, theme.border_normal, theme);
+            } else if section.waiting.unwrap_or(false) {
+                paint_waiting_border(draw, bounds, theme.border_normal, theme);
             }
         }
         UiNode::Group(group) => {
@@ -12045,6 +12159,13 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
 /// to the caller.
 fn paint_loading_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
     draw.push_loading_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
+}
+
+/// 🌀 Shared "this node is waiting" affordance mirroring `paint_loading_border`: dashed, slower ring
+/// via `draw::DrawList::push_waiting_border` (`UI_SHADER`'s `kind == 7` branch). Callers dispatch
+/// `loading` before `waiting` so the more active state wins when both flags are set.
+fn paint_waiting_border(draw: &mut DrawList, bounds: Rect, color: Rgba, theme: &Theme) {
+    draw.push_waiting_border([bounds.x, bounds.y, bounds.w, bounds.h], color, theme.border_radius, theme.stroke_hairline);
 }
 
 /// 🎴 A `Stack`'s `activate`/`selected` visual affordances, ported from
@@ -12121,6 +12242,8 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     push_control_border(draw, bounds, theme, dim(theme.border_normal), bg);
     if node.loading.unwrap_or(false) {
         paint_loading_border(draw, bounds, theme.border_normal, theme);
+    } else if node.waiting.unwrap_or(false) {
+        paint_waiting_border(draw, bounds, theme.border_normal, theme);
     }
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id.is_empty() { node.label.as_str() } else { node.icon_id.as_str() };
@@ -12379,6 +12502,8 @@ fn paint_tree_widget(node: &UiTreeNode, bounds: Rect, theme: &Theme, atlas: &mut
     draw.pop_scissor();
     if node.loading.unwrap_or(false) {
         paint_loading_border(draw, bounds, theme.border_normal, theme);
+    } else if node.waiting.unwrap_or(false) {
+        paint_waiting_border(draw, bounds, theme.border_normal, theme);
     }
 }
 
@@ -12418,6 +12543,9 @@ fn paint_tree_item(
     if item.loading.unwrap_or(false) {
         let ring_color = if selected { theme.selected } else { theme.border_normal };
         paint_loading_border(draw, row, ring_color, theme);
+    } else if item.waiting.unwrap_or(false) {
+        let ring_color = if selected { theme.selected } else { theme.border_normal };
+        paint_waiting_border(draw, row, ring_color, theme);
     }
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);
     let indent = x + (depth - 1) as f32 * TREE_INDENT_PER_LEVEL + TREE_TOGGLE_WIDTH;
@@ -12549,7 +12677,7 @@ mod tests {
         UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode,
         UiStackNode, UiTreeItemAction, UiTreeSectionNode,
     };
-    use crate::draw::{KIND_GLYPH, KIND_LOADING_BORDER};
+    use crate::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_WAITING_BORDER};
     use crate::flex::LayoutEngine;
 
     fn action() -> ActionDescriptor {
@@ -12568,6 +12696,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -12584,6 +12713,33 @@ mod tests {
             style: None,
             disabled: None,
             loading: Some(true),
+            waiting: None,
+        })
+    }
+
+    fn waiting_button(id: &str) -> UiNode {
+        UiNode::Button(UiButtonNode {
+            id: Some(id.into()),
+            icon_id: String::new(),
+            label: id.into(),
+            action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
+            style: None,
+            disabled: None,
+            loading: None,
+            waiting: Some(true),
+        })
+    }
+
+    fn loading_and_waiting_button(id: &str) -> UiNode {
+        UiNode::Button(UiButtonNode {
+            id: Some(id.into()),
+            icon_id: String::new(),
+            label: id.into(),
+            action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
+            style: None,
+            disabled: None,
+            loading: Some(true),
+            waiting: Some(true),
         })
     }
 
@@ -12658,12 +12814,39 @@ mod tests {
         assert!(has_loading_border, "loading button should emit a KIND_LOADING_BORDER instance");
     }
 
+    #[test]
+    fn painting_a_waiting_button_emits_a_waiting_border_instance() {
+        let (mut tree, root, theme, mut atlas) = setup(&waiting_button("save"));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let has_waiting_border = draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
+        assert!(has_waiting_border, "waiting button should emit a KIND_WAITING_BORDER instance");
+    }
+
+    #[test]
+    fn painting_a_loading_and_waiting_button_prefers_the_loading_border() {
+        let (mut tree, root, theme, mut atlas) = setup(&loading_and_waiting_button("save"));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let instances: Vec<_> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).collect();
+        assert!(instances.iter().any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01), "loading should win when both flags are set");
+        assert!(!instances.iter().any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01), "waiting border must not also be emitted when loading is set");
+    }
+
     //#region 🔖FidelityFixes
     // 🩹 One test per fidelity gap this pass closed (see `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w1c-paint-parity.md`),
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: Some(disabled), loading: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: Some(disabled), loading: None, waiting: None })
     }
 
     #[test]
@@ -12682,7 +12865,7 @@ mod tests {
     }
 
     fn loading_section(id: &str) -> UiNode {
-        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), loading: Some(true), children: vec![text("child")] })
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), loading: Some(true), waiting: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -12696,8 +12879,23 @@ mod tests {
         assert!(has_loading_border, "a loading section should emit a KIND_LOADING_BORDER instance");
     }
 
+    fn waiting_section(id: &str) -> UiNode {
+        UiNode::Section(UiSectionNode { id: id.into(), label: Some("Sec".into()), default_open: Some(true), loading: None, waiting: Some(true), children: vec![text("child")] })
+    }
+
+    #[test]
+    fn painting_a_waiting_section_emits_a_waiting_border_instance() {
+        let (mut tree, root, theme, mut atlas) = setup(&waiting_section("sec"));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
+        assert!(has_waiting_border, "a waiting section should emit a KIND_WAITING_BORDER instance");
+    }
+
     fn loading_stack(children: Vec<UiNode>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: Some(true), activate: None, drop_action: None, drop_overlay: None, children })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: Some(true), waiting: None, activate: None, drop_action: None, drop_overlay: None, children })
     }
 
     #[test]
@@ -12711,10 +12909,38 @@ mod tests {
         assert!(has_loading_border, "a loading stack should emit a KIND_LOADING_BORDER instance");
     }
 
+    fn waiting_stack(children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, waiting: Some(true), activate: None, drop_action: None, drop_overlay: None, children })
+    }
+
+    #[test]
+    fn painting_a_waiting_stack_emits_a_waiting_border_instance() {
+        let (mut tree, root, theme, mut atlas) = setup(&waiting_stack(vec![text("a")]));
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
+        assert!(has_waiting_border, "a waiting stack should emit a KIND_WAITING_BORDER instance");
+    }
+
     fn loading_tree() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item")] }],
             loading: Some(true),
+            waiting: None,
+            selected_ids: None,
+            highlighted_ids: None,
+            selection_change: None,
+            drop_action: None,
+        })
+    }
+
+    fn waiting_tree() -> UiNode {
+        UiNode::Tree(UiTreeNode {
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item")] }],
+            loading: None,
+            waiting: Some(true),
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -12731,6 +12957,17 @@ mod tests {
 
         let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
         assert!(has_loading_border, "a loading tree should emit a KIND_LOADING_BORDER instance");
+    }
+
+    #[test]
+    fn painting_a_waiting_tree_emits_a_waiting_border_instance() {
+        let (mut tree, root, theme, mut atlas) = setup(&waiting_tree());
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+
+        let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
+        assert!(has_waiting_border, "a waiting tree should emit a KIND_WAITING_BORDER instance");
     }
 
     fn stepper(id: &str, value: f64, uniform: bool) -> UiNode {
@@ -12811,8 +13048,9 @@ mod tests {
         item.description = Some("desc".into());
         item.actions = Some(vec![UiTreeItemAction { icon_id: "star".into(), label: None, action: action(), reveal_on_hover: Some(false) }]);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }],
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -12822,8 +13060,9 @@ mod tests {
 
     fn tree_with_bare_item() -> UiNode {
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![UiTreeItemNode::base("i1", "Item One")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![UiTreeItemNode::base("i1", "Item One")] }],
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -12903,7 +13142,7 @@ mod tests {
     }
 
     fn drop_stack(drop_action: Option<ActionDescriptor>) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("dz".into()), selected: None, loading: None, waiting: None, activate: None, drop_action, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -12920,7 +13159,7 @@ mod tests {
     }
 
     fn activatable_stack(selected: bool) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: Some(selected), loading: None, waiting: None, activate: Some(action()), drop_action: None, drop_overlay: None, children: vec![text("child")] })
     }
 
     #[test]
@@ -12947,8 +13186,9 @@ mod tests {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.draggable = Some(true);
         UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] }],
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -14290,7 +14530,7 @@ mod tests {
     }
 
     fn tree_ui(sections: Vec<UiTreeSectionNode>) -> UiNode {
-        UiNode::Tree(UiTreeNode { sections, loading: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
+        UiNode::Tree(UiTreeNode { sections, loading: None, waiting: None, selected_ids: None, highlighted_ids: None, selection_change: None, drop_action: None })
     }
 
     /// 🌳 Manually inserts a `Tree` row `Stack` (mirroring `reconcile::tree_item_row`'s synthesized
@@ -14306,6 +14546,7 @@ mod tests {
             id: Some(item_id.into()),
             selected: Some(false),
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -14343,6 +14584,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -14359,7 +14601,7 @@ mod tests {
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None, loading: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, disabled: None, loading: None, waiting: None })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -14885,7 +15127,7 @@ mod tests {
     }
 
     fn activatable_stack_ui(action: ActionDescriptor) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: Some("card".into()), selected: None, loading: None, waiting: None, activate: Some(action), drop_action: None, drop_overlay: None, children: Vec::new() })
     }
 
     #[test]
@@ -14918,7 +15160,7 @@ mod tests {
         let mut leave_action = action();
         leave_action.action = "leave".into();
         item.unhover_action = Some(leave_action.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -14940,7 +15182,7 @@ mod tests {
         item.draggable = Some(true);
         let payload = DragPayload::from([("application/x-semio-tree-section-reorder".to_string(), "{}".to_string())]);
         item.drag_data = Some(payload.clone());
-        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item] };
+        let section = UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item] };
 
         let mut tree = UiTree::new();
         let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
@@ -15071,6 +15313,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -15266,6 +15509,7 @@ fn root_stack() -> UiNode {
         id: Some("shell.root".into()),
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15288,6 +15532,7 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
         id: None,
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15313,6 +15558,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
         id: None,
         selected: None,
         loading: None,
+        waiting: None,
         activate: None,
         drop_action: None,
         drop_overlay: None,
@@ -15344,6 +15590,7 @@ fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNo
         style: None,
         disabled: None,
         loading: None,
+        waiting: None,
     });
     let id = tree.insert_child(Some(parent), Node::new(NodeKey::Explicit(window_id), WidgetSpec(spec)));
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
@@ -15659,6 +15906,7 @@ mod tests {
             id: Some("root".into()),
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -15671,7 +15919,7 @@ mod tests {
     }
 
     fn button_ui(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, disabled: None, loading: None })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, disabled: None, loading: None, waiting: None })
     }
 
     #[test]
@@ -15928,7 +16176,7 @@ mod tests {
     /// identical bounds, which is what makes an exact instance/vector-count comparison meaningful
     /// instead of an artifact of divergent layout math.
     fn leaf(child: UiNode) -> UiNode {
-        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
+        UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: Some("none".into()), padding: Some("none".into()), id: None, selected: None, loading: None, waiting: None, activate: None, drop_action: None, drop_overlay: None, children: vec![child] })
     }
 
     fn assert_equivalent(kind: &str, node: &UiNode) {
@@ -15948,6 +16196,7 @@ mod tests {
             id: None,
             selected: None,
             loading: None,
+            waiting: None,
             activate: None,
             drop_action: None,
             drop_overlay: None,
@@ -15966,7 +16215,7 @@ mod tests {
 
     #[test]
     fn golden_button() {
-        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, disabled: None, loading: None })));
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, disabled: None, loading: None, waiting: None })));
     }
 
     #[test]
@@ -16059,6 +16308,7 @@ mod tests {
             icon_id: None,
             selected: None,
             loading: None,
+            waiting: None,
             default_open: None,
             action: None,
             hover_action: None,
@@ -16071,8 +16321,9 @@ mod tests {
             is_hidden: None,
         };
         let node = UiNode::Tree(UiTreeNode {
-            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
+            sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), loading: None, waiting: None, items: vec![item("i1", "Item One"), item("i2", "Item Two")] }],
             loading: None,
+            waiting: None,
             selected_ids: None,
             highlighted_ids: None,
             selection_change: None,
@@ -16114,6 +16365,7 @@ mod tests {
             label: Some("Section".into()),
             default_open: Some(true),
             loading: None,
+            waiting: None,
             children: vec![UiNode::Text(UiTextNode { value: "child".into(), emphasize: None, data_attributes: None })],
         });
         let (instances, _, _) = retained_stats(&node);

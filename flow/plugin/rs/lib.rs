@@ -499,7 +499,9 @@ fn build_catalogue_tree(fixture: &FlowFixture, runtime: &FlowPlayRuntime, labels
                         .collect()
                 })
                 .unwrap_or_default();
-            Some(UiTreeSectionNode { loading: None, id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items })
+            Some(UiTreeSectionNode { loading: None, id: format!("flow-play-catalogue.{id}"), label: Some(title), default_open: Some(true), items, 
+ waiting: None,
+})
         })
         .collect();
     let tree_sections = if tree_sections.is_empty() { catalogue_tree_sections_fallback(labels) } else { tree_sections };
@@ -531,9 +533,13 @@ fn flow_extensions_tree_sections(runtime: &FlowPlayRuntime, labels: &FlowPlayLab
             tree_item_with_action(format!("flow-play-extensions.action.{action_id}"), flow_extension_action_title_label(action_id, title, labels), Some((*action_id).into()), flow_action("runExtensionAction", Some(json!({ "actionId": action_id }))))
         })
         .collect();
-    let mut sections = vec![UiTreeSectionNode { loading: None, id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed }];
+    let mut sections = vec![UiTreeSectionNode { loading: None, id: "flow-play-extensions.installed".into(), label: Some(labels.extensions.into()), default_open: Some(false), items: installed, 
+ waiting: None,
+}];
     if !actions.is_empty() {
-        sections.push(UiTreeSectionNode { loading: None, id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions });
+        sections.push(UiTreeSectionNode { loading: None, id: "flow-play-extensions.actions".into(), label: Some(labels.extension_actions.into()), default_open: Some(false), items: actions, 
+ waiting: None,
+});
     }
     sections
 }
@@ -544,7 +550,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
     let sinks = [("outputPreview", labels.catalogue_preview), ("outputExport", labels.catalogue_export)];
     vec![
         UiTreeSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: "flow-play-catalogue.sources".into(),
             label: Some(labels.sources.into()),
             default_open: Some(true),
@@ -557,7 +563,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: "flow-play-catalogue.components".into(),
             label: Some(labels.components.into()),
             default_open: Some(true),
@@ -570,7 +576,7 @@ fn catalogue_tree_sections_fallback(labels: &FlowPlayLabels) -> Vec<UiTreeSectio
                 .collect(),
         },
         UiTreeSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: "flow-play-catalogue.sinks".into(),
             label: Some(labels.sinks.into()),
             default_open: Some(false),
@@ -642,7 +648,7 @@ fn flow_grid_measures_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) 
                 max: 50.0,
                 step: Some(0.5),
                 ready: None,
-                loading: None,
+                loading: None, waiting: None,
                 on_change: flow_action("setGridFactor", None),
             },
         ],
@@ -660,7 +666,7 @@ fn flow_window_measures(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> V
             max: 240.0,
             step: Some(4.0),
             ready: None,
-            loading: None,
+            loading: None, waiting: None,
             on_change: flow_action("setProximityDistance", None),
         },
         flow_grid_measures_group(runtime, labels),
@@ -691,7 +697,7 @@ fn focus_selection_camera(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> O
 fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> UiNode {
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: "flow-play-inspector.empty".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
@@ -701,7 +707,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
     let widgets: Vec<&Widget> = selected.iter().filter_map(|id| fixture.widgets.iter().find(|widget| widget_id(widget) == id)).collect();
     if widgets.is_empty() {
         return ui_declarative_sections_to_tree(&[semio_framework_plugin::UiSectionNode {
-            loading: None,
+            loading: None, waiting: None,
             id: "flow-play-inspector.missing".into(),
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),

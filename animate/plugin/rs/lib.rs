@@ -234,7 +234,7 @@ fn tree_item(id: impl Into<String>, label: impl Into<String>) -> UiTreeItemNode 
         items: None,
         control: None,
         is_hidden: None,
-        loading: None,
+        loading: None, waiting: None,
     }
 }
 
@@ -258,13 +258,14 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
             items: None,
             control: None,
             is_hidden: None,
-            loading: None,
+            loading: None, waiting: None,
         })
         .collect();
     UiNode::Tree(UiTreeNode {
         sections: vec![UiTreeSectionNode {
             id: "animate-present-play.tiles".into(),
             loading: None,
+            waiting: None,
             label: Some(labels.tiles_section.into()),
             default_open: Some(true),
             items: if items.is_empty() { vec![tree_item("empty", labels.no_tiles)] } else { items },
@@ -274,6 +275,7 @@ fn build_document_tree(deck: &PresentDeck, selected: &[String], labels: &Animate
         selection_change: Some(animate_present_action("setSelectedIds", Some(json!({ "ids": [] })))),
         drop_action: None,
         loading: None,
+        waiting: None,
     })
 }
 
@@ -304,7 +306,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
     if selected.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.empty".into(),
-            loading: None,
+            loading: None, waiting: None,
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_select_tile)],
@@ -314,7 +316,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
     if tiles.is_empty() {
         return ui_declarative_sections_to_tree(&[UiSectionNode {
             id: "animate.present.play.details.not-found".into(),
-            loading: None,
+            loading: None, waiting: None,
             label: Some(FRAMEWORK_PANEL_TAB_INSPECTION_LABEL.into()),
             default_open: Some(true),
             children: vec![ui_text(labels.details_tile_not_found)],
@@ -350,7 +352,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
             action: animate_present_action("deleteTile", Some(json!({ "id": tile_ids[0] }))),
             style: None,
             disabled: None,
-            loading: None,
+            loading: None, waiting: None,
         }));
     }
     identity_fields.push(UiNode::Button(semio_framework_plugin::UiButtonNode {
@@ -360,7 +362,7 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
         action: animate_present_action("deleteSelection", None),
         style: None,
         disabled: None,
-        loading: None,
+        loading: None, waiting: None,
     }));
     let groups = vec![
         UiInspectorFieldGroup {
@@ -380,14 +382,15 @@ fn build_details_tree(deck: &PresentDeck, selected: &[String], labels: &AnimateP
 }
 
 fn catalogue_button(id: &str, label: &str, action: &str, args: Option<Value>) -> UiNode {
-    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, disabled: None, loading: None })
+    UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some(id.into()), icon_id: "plus".into(), label: label.into(), action: animate_present_action(action, args), style: None, disabled: None, loading: None, waiting: None,
+})
 }
 
 fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> UiNode {
     ui_declarative_sections_to_tree(&[
         UiSectionNode {
             id: "animate.present.play.catalogue.templates".into(),
-            loading: None,
+            loading: None, waiting: None,
             label: Some(labels.catalogue_tile_templates.into()),
             default_open: Some(true),
             children: vec![
@@ -400,7 +403,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
         },
         UiSectionNode {
             id: "animate.present.play.catalogue.figure".into(),
-            loading: None,
+            loading: None, waiting: None,
             label: Some(labels.catalogue_figure_templates.into()),
             default_open: Some(true),
             children: vec![
