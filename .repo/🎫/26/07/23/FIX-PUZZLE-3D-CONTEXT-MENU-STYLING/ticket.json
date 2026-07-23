@@ -1,0 +1,14 @@
+{
+  "title": "Fix Puzzle 3D Context Menu Styling",
+  "emoji": "🖱️",
+  "status": "closed",
+  "description": "puzzle 3d: The context menu is not styled correctly and has bloat. e.g. remove the tick and checkmark. Just show highlight the item same as the 3d preview highlight.",
+  "summary": "Removed context-menu tick/checkmark bloat. Checked rows now use the same active highlight as 3D preview / CanvasPickMenu (bg-active-base), and menu chrome reuses floating-menu surface/item styling. Extended ContextMenu vitest (5 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2272"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪dfb3f7cacb464c90a6c973ba9d6ac776"
+  ]
+}

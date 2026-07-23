@@ -305,19 +305,24 @@ fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowF
         json!({ "id": "select-all", "label": labels.select_all, "icon": "maximize-2", "action": "selectAll" }),
         json!({ "id": "reorganize", "label": labels.reorganize, "icon": "layout-grid", "action": "reorganize" }),
         json!({ "id": "sep-selection", "separator": true }),
-        json!({
-            "id": "toggle-preview",
-            "label": if all_preview_off { labels.show_preview } else { labels.hide_preview },
-            "icon": if all_preview_off { "eye" } else { "eye-off" },
-            "checked": if has_selection { Some(!all_preview_off) } else { None::<bool> },
-            "disabled": !has_selection,
-            "action": "setPreviewOff",
-            "args": { "ids": selected, "value": !all_preview_off },
-        }),
+        {
+            let mut toggle = json!({
+                "id": "toggle-preview",
+                "label": if all_preview_off { labels.show_preview } else { labels.hide_preview },
+                "icon": if all_preview_off { "eye" } else { "eye-off" },
+                "disabled": !has_selection,
+                "action": "setPreviewOff",
+                "args": { "ids": selected, "value": !all_preview_off },
+            });
+            if has_selection {
+                toggle["checked"] = json!(!all_preview_off);
+            }
+            toggle
+        },
         json!({
             "id": "zoom-to-selection",
             "label": labels.zoom_to_selection,
-            "icon": "scan-search",
+            "icon": "crosshair",
             "disabled": !has_selection,
             "action": "focusSelection",
         }),
@@ -725,6 +730,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
                 .collect::<Vec<_>>(),
         );
         groups.push(UiInspectorFieldGroup {
+            presence: UiPresence::default(),
             id: "flow-play-inspector.kind.inputSlider".into(),
             label: "inputSlider".into(),
             default_open: None,
@@ -760,6 +766,7 @@ fn build_inspector_tree(fixture: &FlowFixture, selected: &[String], _runtime: &F
                 .collect::<Vec<_>>(),
         );
         groups.push(UiInspectorFieldGroup {
+            presence: UiPresence::default(),
             id: "flow-play-inspector.kind.inputNote".into(),
             label: "inputNote".into(),
             default_open: None,
@@ -1710,7 +1717,15 @@ mod tests {
         assert!(menu.contains("setPreviewOff"), "menu should expose preview toggle: {menu}");
         assert!(menu.contains("Hide preview") || menu.contains("eye-off"), "menu should offer hide preview: {menu}");
         assert!(menu.contains("focusSelection"), "menu should expose zoom to selection: {menu}");
-        assert!(!menu.contains(r#""id":"toggle-preview","label":"Hide preview","icon":"eye-off","checked":true,"disabled":true"#), "preview must be enabled with selection: {menu}");
+        assert!(menu.contains(r#""checked":true"#), "preview checked when visible: {menu}");
+        assert!(!menu.contains(r#""id":"toggle-preview""#) || !menu
+            .split("\"id\":\"toggle-preview\"")
+            .nth(1)
+            .unwrap_or("")
+            .split("\"id\":")
+            .next()
+            .unwrap_or("")
+            .contains("\"disabled\":true"), "preview must be enabled with selection: {menu}");
         app.handle_action("setPreviewOff", Some(&json!({ "ids": ["slider"], "value": true })), &ViewState::default(), &meta("local")).expect("setPreviewOff");
         let after_menu = context_menu_items(&mut app, &ViewState::default()).to_string();
         let preview_off = preview_off_ids(&mut app, &ViewState::default());

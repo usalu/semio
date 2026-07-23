@@ -15,7 +15,7 @@ pub mod app_2d {
         ui_inspector_groups_to_tree, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, tree_item_with_action, ActionArgDef, ActionArgOption, ActionEmit, App,
         AppLabelsOverlayExt, Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView,
-        NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiTreeItemNode,
+        NodeGraphScene, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode,
         ViewState,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
         FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
@@ -1318,7 +1318,7 @@ pub mod app_3d {
         mesh_from_kind, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_readonly_field,
         ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionEmit, App, AppLabelsOverlayExt, DocumentApp, DocumentView, world3d_scene, world3d_selection_json, world3d_sun_measures,
         ActionDescriptor, MeasureSelectItem, MediaClass, MediaForm, MediaType, NodeGraphScene, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, UtilityDefinition,
-        UiFieldNode, UiInspectorFieldGroup, UiNode, UiTreeItemNode, ViewState, WindowMeasure, WorldSunConfig,
+        UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, ViewState, WindowMeasure, WorldSunConfig,
         SET_ACTIVE_UTILITY_ACTION_ID,
         FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
         FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -2239,6 +2239,7 @@ pub mod app_3d {
         if let Widget::InputSlider { value, min, max, .. } = widget {
             let mixed = ui_inspector_mixed_number(&[*value]);
             fields.push(UiNode::Field(UiFieldNode {
+                presence: UiPresence::default(),
                 id: "procedural-play-inspector.value".into(),
                 label: labels.value_field.into(),
                 child: Box::new(UiNode::Input(semio_framework_plugin::UiInputNode { presence: UiPresence::default(),
@@ -2819,7 +2820,7 @@ pub mod app_3d {
                 .action_labels(procedural3d_action_labels(is_de))
                 .utility_labels(procedural3d_utility_labels(is_de))
                 .example_labels(semio_framework_plugin::localized_label_map(is_de, &[
-                    (PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", "Sechseckige Pilzsaeule"),
+                    (PROCEDURAL_EXAMPLE_HEX_COLUMN, "Hexagonal Mushroom Column", "Sechseckige Pilzsäule"),
                     (PROCEDURAL_EXAMPLE_RECT_EXTRUDE, "Rectangle Extrude Volume", "Rechteck-Extrusionsvolumen"),
                     (PROCEDURAL_EXAMPLE_SPHERE_TORUS, "Sphere Cut With Torus", "Kugel mit Torus geschnitten"),
                 ]))

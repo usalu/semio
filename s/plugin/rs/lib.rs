@@ -75,7 +75,7 @@ pub mod app_home {
 
     use super::{ensure_studio_fixtures_registered, parse_demo_studio_document};
     use semio_framework_os::{
-        create_os_studio, delete_os_studio, document_backbone_ref, import_os_studio_from_json,
+        create_ephemeral_os_studio, create_os_studio, delete_os_studio, document_backbone_ref, import_os_studio_from_json,
         list_os_studio_catalog_entries, load_os_studio_document, os_document_to_envelope_json, os_document_to_json,
         seed_os_studio_catalog_if_empty, MemoryBackbonePort, OsBackbonePort, OsDocument, OS_HOME_VFS_ROOT_ID,
         OS_STUDIO_BACKBONE_URI_PREFIX, VcsError,
@@ -177,6 +177,9 @@ pub mod app_home {
     static STUDIO_PORTS: LazyLock<Mutex<HashMap<String, Arc<dyn OsBackbonePort>>>> =
         LazyLock::new(|| Mutex::new(HashMap::new()));
 
+    static EPHEMERAL_STUDIOS: LazyLock<Mutex<HashMap<String, OsDocument>>> =
+        LazyLock::new(|| Mutex::new(HashMap::new()));
+
     fn catalog_port() -> Arc<dyn OsBackbonePort> {
         CATALOG_PORT.clone()
     }
@@ -191,8 +194,27 @@ pub mod app_home {
         }
     }
 
-    /// @emoji 📂 Resolves a studio id against registered ports, then the ephemeral and persistent catalogs.
+    /// @emoji 🫧 Registers a session-local studio document — no backbone URI, no catalog port write.
+    fn register_ephemeral_studio(document: OsDocument) -> String {
+        let id = document.id.clone();
+        if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
+            guard.insert(id.clone(), document);
+        }
+        id
+    }
+
+    /// @emoji 🆕 Mints and registers an ephemeral empty studio for the default create path.
+    fn create_and_register_ephemeral_studio(name: &str) -> String {
+        register_ephemeral_studio(create_ephemeral_os_studio(name))
+    }
+
+    /// @emoji 📂 Resolves a studio id against the ephemeral registry, registered ports, then catalogs.
     pub(crate) fn resolve_studio_document(studio_id: &str) -> Option<OsDocument> {
+        if let Ok(guard) = EPHEMERAL_STUDIOS.lock() {
+            if let Some(document) = guard.get(studio_id) {
+                return Some(document.clone());
+            }
+        }
         if let Ok(guard) = STUDIO_PORTS.lock() {
             if let Some(port) = guard.get(studio_id) {
                 if let Ok(document) = load_os_studio_document(studio_id, port.clone()) {
@@ -228,6 +250,22 @@ pub mod app_home {
                         entries.push(entry);
                     }
                 }
+            }
+        }
+        if let Ok(guard) = EPHEMERAL_STUDIOS.lock() {
+            for (id, document) in guard.iter() {
+                if !seen.insert(id.clone()) {
+                    continue;
+                }
+                let projection = &document.vcs.initial_projection;
+                entries.push(semio_framework_os::OsStudioCatalogEntry {
+                    id: id.clone(),
+                    name: document.name.clone(),
+                    backbone_uri: String::new(),
+                    app_count: projection.app_instances.len(),
+                    node_count: projection.media_graph.nodes.len(),
+                    updated_at: "0".into(),
+                });
             }
         }
         entries
@@ -409,16 +447,7 @@ pub mod app_home {
                         .and_then(|value| value.get("kind"))
                         .and_then(|value| value.as_str())
                         .unwrap_or("catalog");
-                    // 🆕 Create writes an empty studio to the chosen catalog and navigates to it —
-                    // never downloads a file (export/save is a separate action).
                     match kind {
-                        "temporary" => {
-                            if let Ok(entry) = create_os_studio(name, temp_catalog_port()) {
-                                register_studio_port(&entry.id, temp_catalog_port());
-                                eprintln!("[DEBUG] createStudio temporary id={}", entry.id);
-                                return created_studio_emit(generation, &entry.id);
-                            }
-                        }
                         "folder" => {
                             #[cfg(not(target_arch = "wasm32"))]
                             {
@@ -438,11 +467,9 @@ pub mod app_home {
                             }
                         }
                         _ => {
-                            // 📁 "file" / "catalog" / default — persist in the studio catalog only.
-                            if let Ok(entry) = create_os_studio(name, port.clone()) {
-                                eprintln!("[DEBUG] createStudio catalog id={}", entry.id);
-                                return created_studio_emit(generation, &entry.id);
-                            }
+                            let studio_id = create_and_register_ephemeral_studio(name);
+                            eprintln!("[DEBUG] createStudio ephemeral id={studio_id}");
+                            return created_studio_emit(generation, &studio_id);
                         }
                     }
                     ActionEmit::default()
@@ -511,6 +538,9 @@ pub mod app_home {
                         .and_then(|value| value.strip_prefix("studio:"));
                     match studio_id {
                         Some(studio_id) => {
+                            if let Ok(mut guard) = EPHEMERAL_STUDIOS.lock() {
+                                guard.remove(studio_id);
+                            }
                             let _ = delete_os_studio(studio_id, port.clone());
                             bump(generation + 1)
                         }
@@ -615,17 +645,34 @@ pub mod app_home {
         }
 
         #[test]
-        fn temporary_studio_uses_ephemeral_port() {
+        fn temporary_studio_uses_ephemeral_registry_not_catalog() {
             let mut home = HomeApp;
             let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
             let history = empty_history();
             let doc = DocumentView { projection: &projection, history: &history };
             let emit = home.handle_action("createStudio", Some(&json!({ "name": "Temp Studio", "kind": "temporary" })), &doc, &ViewState::default());
             assert!(emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+            assert!(
+                !emit.effects.iter().any(|effect| matches!(effect, HostEffect::DownloadMediaExport { .. })),
+                "ephemeral create must not download"
+            );
             let persistent = list_os_studio_catalog_entries(catalog_port()).expect("list");
             assert!(!persistent.iter().any(|entry| entry.name == "Temp Studio"));
-            let ephemeral = list_os_studio_catalog_entries(temp_catalog_port()).expect("list");
-            assert!(ephemeral.iter().any(|entry| entry.name == "Temp Studio"));
+            let ephemeral_catalog = list_os_studio_catalog_entries(temp_catalog_port()).expect("list");
+            assert!(!ephemeral_catalog.iter().any(|entry| entry.name == "Temp Studio"));
+            let uri = emit
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::Navigate { uri } => Some(uri.as_str()),
+                    _ => None,
+                })
+                .expect("navigate");
+            let studio_id = uri.trim_start_matches("/studios/");
+            let document = resolve_studio_document(studio_id).expect("ephemeral studio");
+            assert_eq!(document.name, "Temp Studio");
+            assert!(document.backbone.is_none());
+            assert!(document.vcs.initial_projection.app_instances.is_empty());
         }
 
         #[test]
@@ -657,6 +704,7 @@ pub mod app_home {
             let studio_id = uri.trim_start_matches("/studios/");
             let document = resolve_studio_document(studio_id).expect("created studio");
             assert_eq!(document.name, "Fresh Studio");
+            assert!(document.backbone.is_none(), "ephemeral studio must not attach backbone");
             assert!(document.vcs.initial_projection.app_instances.is_empty());
 
             let mut studio = super::super::app_studio::StudioApp::new();
@@ -723,7 +771,7 @@ pub mod app_studio {
     use super::{demo_studio_projection, ensure_studio_fixtures_registered, parse_demo_studio_document};
     use semio_framework_os::{
         apply_flow_fixture_to_os_media_graph, build_os_media_flow_operator_infos, create_default_os_parameter,
-        create_os_document_id, create_os_id, default_os_projection, list_os_media_graph_vfs_children, list_os_programs,
+        create_empty_os_document, create_os_document_id, create_os_id, default_os_projection, list_os_media_graph_vfs_children, list_os_programs,
         materialize_os_app_instance_document_json, materialize_os_projection, media_port_spec_id, negotiate_media_contract, os_app_primary_output_kind,
         os_app_registration, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
         os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
@@ -2778,32 +2826,31 @@ pub mod app_studio {
                         self.runtime.selected_media_node_ids.clear();
                         self.runtime.selected_app_instance_ids.clear();
                         self.runtime.clipboard_instance_ids.clear();
-                        let document = super::app_home::resolve_studio_document(studio_id).or_else(|| {
-                            S_STUDIO_EXAMPLES
-                                .iter()
-                                .find(|(id, _, _)| *id == studio_id)
-                                .map(|_| parse_demo_studio_document())
-                        });
-                        if let Some(document) = document {
-                            if let Ok(projection) = materialize_os_projection(&document, &[]) {
-                                self.runtime.active_instance_id =
-                                    projection.app_instances.first().map(|instance| instance.id.clone());
-                            } else {
-                                self.runtime.active_instance_id = None;
-                            }
-                            if let Some(document_json) = super::app_home::studio_document_envelope_json(&document) {
-                                eprintln!(
-                                    "[DEBUG] openStudio id={} instances={}",
-                                    studio_id,
-                                    document.vcs.initial_projection.app_instances.len()
-                                );
-                                // 📂 Host owns the store swap via `loadAppDocument`; this action only
-                                // binds runtime + emits the envelope (no Navigate — applyShellUri already
-                                // routed here).
-                                return ActionEmit::effect(HostEffect::LoadDocument { document_json });
-                            }
+                        let document = super::app_home::resolve_studio_document(studio_id)
+                            .or_else(|| {
+                                if studio_id == "demo" {
+                                    Some(parse_demo_studio_document())
+                                } else {
+                                    None
+                                }
+                            })
+                            .unwrap_or_else(|| create_empty_os_document(studio_id, "Untitled Studio"));
+                        if let Ok(projection) = materialize_os_projection(&document, &[]) {
+                            self.runtime.active_instance_id =
+                                projection.app_instances.first().map(|instance| instance.id.clone());
+                        } else {
+                            self.runtime.active_instance_id = None;
                         }
-                        eprintln!("[DEBUG] openStudio missing document id={studio_id}");
+                        if let Some(document_json) = super::app_home::studio_document_envelope_json(&document) {
+                            eprintln!(
+                                "[DEBUG] openStudio id={} instances={} backbone={:?}",
+                                studio_id,
+                                document.vcs.initial_projection.app_instances.len(),
+                                document.backbone.as_ref().map(|row| row.uri.clone())
+                            );
+                            return ActionEmit::effect(HostEffect::LoadDocument { document_json });
+                        }
+                        eprintln!("[DEBUG] openStudio missing envelope id={studio_id}");
                         self.runtime.active_instance_id = None;
                     }
                     return ActionEmit::default();
@@ -3217,6 +3264,73 @@ pub mod app_studio {
                     .any(|effect| matches!(effect, HostEffect::LoadDocument { .. }))
             );
             assert!(!emit.effects.iter().any(|effect| matches!(effect, HostEffect::Navigate { .. })));
+        }
+
+        #[test]
+        fn open_studio_unknown_id_loads_empty_not_demo() {
+            let mut app = StudioApp::new();
+            let empty = default_os_projection();
+            let emit = studio_emit(&mut app, &empty, "openStudio", json!({ "studioId": "unknown-studio-id" }));
+            let document_json = emit
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::LoadDocument { document_json } => Some(document_json.as_str()),
+                    _ => None,
+                })
+                .expect("load document");
+            assert!(document_json.contains("\"id\":\"unknown-studio-id\""));
+            assert!(document_json.contains("\"appInstances\":[]"));
+            assert!(!document_json.contains("\"id\":\"demo\""));
+            assert!(app.runtime.active_instance_id.is_none());
+        }
+
+        #[test]
+        fn open_studio_demo_explicit_loads_demo_fixture() {
+            let mut app = StudioApp::new();
+            let empty = default_os_projection();
+            let emit = studio_emit(&mut app, &empty, "openStudio", json!({ "studioId": "demo" }));
+            let document_json = emit
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::LoadDocument { document_json } => Some(document_json.as_str()),
+                    _ => None,
+                })
+                .expect("load document");
+            assert!(document_json.contains("demo-studio"));
+            assert!(!document_json.contains("\"appInstances\":[]"));
+        }
+
+        #[test]
+        fn open_studio_loads_ephemeral_created_studio() {
+            let mut home = super::super::app_home::HomeApp;
+            let projection = home.initial_projection();
+            let history = empty_history();
+            let doc = DocumentView { projection: &projection, history: &history };
+            let create = home.handle_action("createStudio", Some(&json!({ "name": "Ephemeral Open" })), &doc, &ViewState::default());
+            let studio_id = create
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::Navigate { uri } => Some(uri.trim_start_matches("/studios/").to_string()),
+                    _ => None,
+                })
+                .expect("navigate");
+            let mut app = StudioApp::new();
+            let empty = default_os_projection();
+            let emit = studio_emit(&mut app, &empty, "openStudio", json!({ "studioId": studio_id }));
+            let document_json = emit
+                .effects
+                .iter()
+                .find_map(|effect| match effect {
+                    HostEffect::LoadDocument { document_json } => Some(document_json.as_str()),
+                    _ => None,
+                })
+                .expect("load document");
+            assert!(document_json.contains(&studio_id));
+            assert!(document_json.contains("\"appInstances\":[]"));
+            assert!(!document_json.contains("\"backbone\""));
         }
 
         fn seed_draw_program() {

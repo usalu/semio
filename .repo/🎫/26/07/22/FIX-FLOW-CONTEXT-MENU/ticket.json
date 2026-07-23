@@ -1,9 +1,9 @@
 {
   "title": "Fix Flow Context Menu",
   "emoji": "🖱️",
-  "status": "open",
+  "status": "closed",
   "description": "Unify declarative context-menu specs end-to-end (icons, colors, hover previews, full item sets), fix host mapping that strips richness, and fill incomplete menus in flow, puzzle, and every other app.",
-  "summary": "Unified declarative ContextMenuItemSpec end-to-end: UI supports color swatches, hover, and submenus; hosts map full specs; suggestions use the same controller with per-kind colors on candidates and brush ghosts; flow emits rich menus (add/select-all/reorganize/hide-show preview/delete) with preview_off runtime; puzzle 2d/3d/5d and other node-graph apps emit icons, separators, and destructive delete; vortex menus include suggest plus zoom/delete. Verified via vitest and cargo tests; [DEBUG] logs on menu open and hoverSuggestion.",
+  "summary": "Fixed flow context menu: secondary click no longer drags nodes (board engine + React host), and the menu always includes preview/zoom/clear/delete — enriched immediately for the clicked selection so items are not missing while waiting for a plugin round-trip.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2237"
   },

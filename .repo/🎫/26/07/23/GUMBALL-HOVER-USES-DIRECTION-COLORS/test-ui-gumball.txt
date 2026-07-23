@@ -1,0 +1,21 @@
+
+> nx run @semio-tech/ui-react:test -t UnifiedGumball math  [existing outputs match the cache, left as is]
+
+> bun ./script.ts test -t "UnifiedGumball math"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 330 skipped (331)
+   Start at  15:05:28
+   Duration  6.15s (transform 1.58s, setup 123ms, import 5.34s, tests 8ms, environment 483ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+

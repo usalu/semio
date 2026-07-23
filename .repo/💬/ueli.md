@@ -635,6 +635,19 @@ Implement it general for infinite worlds so that puzzle 3d, cad, etc have it
 
 ---
 
+The tree of the fill tool is not correctly structured and rendered.
+The verbindungspunkte tree section has too large font and wrongly sits on the right.
+The following items should be clean:
+- <Count Slider>
+- Distribution
+	- <ObjectKind with Slider>
+		- <VortexKind with Slider>
+Make sure that the distributions are correct. The slider of the vortex kind is the probability of the object kind times the probability of the vortex kind.
+Make sure that all object kinds add to 1 and all vortex kind add to one.
+e.g. when the object kind is increased then automatically the vortex kind slider raise proportionally.
+
+---
+
 Add default suggestion percentages to all node/object kinds and handles/vortices.
 Make sure that:
 tambours appear 15 times more often than bases.

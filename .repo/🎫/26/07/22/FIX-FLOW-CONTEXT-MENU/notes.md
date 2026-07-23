@@ -1,16 +1,19 @@
-# Rich Context Menus — verification
+# Fix Flow Context Menu
 
-## Vitest
+## Bugs
 
-- `@semio-tech/ui-react` ContextMenu: 4 passed
-- `@semio-tech/framework-renderer-react` menu / mapContextMenuSpecs / puzzle2d selection: 5 passed
+1. Right-click moved nodes: `BoardEngine::pointer_down_screen` started drag on any button when hitting a node. DAG skipped rectangle-drag for `button != 0`, then fell through to the engine which still dragged.
+2. Preview/zoom/clear missing: menu rows were selection-gated and opened from stale `contextMenuJson` before `contextMenuAt` round-tripped.
 
-## Cargo (`--config 'build.rustc-wrapper=""'`, target `/tmp/semio-rich-menus3`)
+## Fixes
 
-- `flow-plugin` `context_menu*`: 2 passed (icons, destructive, hide/show preview, `previewOffJson`)
-- `puzzle-plugin` `context_menu_at_selects_vortex*`: 1 passed (sparkles + zoom + delete)
-- `puzzle-plugin` `hover_suggestion_updates*`: 1 passed (candidate/brush `color` + `icon`)
+- `infinite/board`: secondary/middle only select/hover — never drag; empty secondary keeps selection.
+- `flow/plugin`: always emit preview / zoom / clear / delete (disabled when empty).
+- `FlowGraphCanvasHost`: ignore secondary pointerDown/Up; pick target; enrich menu for effective selection immediately.
+- Inspector `UiInspectorFieldGroup` missing `presence` (compile break).
 
-## Runtime `[DEBUG]` logs
+## Verification
 
-Hosts log menu open (`logContextMenuOpen`) and `hoverSuggestion` / `brushPreview` color in `framework/renderer/react/index.tsx`.
+- `infinite_board` `secondary_pointer*`: 2 passed
+- `flow-plugin` `context_menu*`: 3 passed
+- vitest enrich/map context menu: 2 passed

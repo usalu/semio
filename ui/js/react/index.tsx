@@ -1632,12 +1632,23 @@ export const menuListItemClassName = cn(
   "data-[selected=true]:bg-active-base data-[selected=true]:border-active-base data-[selected=true]:text-emphasized",
 );
 
-const contextMenuContentClassName = cn(glassMenuClass, "w-auto min-w-[10rem] overflow-hidden border p-single z-temporary text-element");
-const contextMenuItemClassName = cn(
-  "text-element relative flex items-center gap-single p-single text-sm outline-none whitespace-nowrap cursor-default select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
-  menuListItemClassName,
-);
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
+
+/** @emoji 🪟 Context-menu surface — same glass chrome as {@link floatingMenuSurfaceClass}. */
+function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
+  return cn(floatingMenuSurfaceClass, "w-auto min-w-[10rem] p-single z-temporary", ...extra);
+}
+
+/** @emoji 🪟 Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark). */
+function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
+  return cn(
+    floatingMenuItemClass,
+    "whitespace-nowrap data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+    item.destructive && "text-destructive focus:bg-destructive/10 hover:bg-destructive/10",
+    ...extra,
+    item.checked && "bg-active-base text-emphasized",
+  );
+}
 
 /**
  * 🧩 Serializable right-click entry for {@link ContextMenu} and puzzle 2d/window surfaces.
@@ -1675,7 +1686,6 @@ function renderContextMenuIcon(icon: ContextMenuItem["icon"]): React.ReactNode {
 function renderContextMenuLeading(item: ContextMenuItem): React.ReactNode {
   return (
     <>
-      {item.checked !== undefined ? <span className="size-small shrink-0 text-center">{item.checked ? "✓" : ""}</span> : null}
       {renderContextMenuColor(item.color)}
       {renderContextMenuIcon(item.icon)}
     </>
@@ -1698,13 +1708,13 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
     if (item.children?.length) {
       rows.push(
         <DropdownMenuPrimitive.Sub key={item.id}>
-          <DropdownMenuPrimitive.SubTrigger disabled={item.disabled} className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}>
+          <DropdownMenuPrimitive.SubTrigger disabled={item.disabled} className={contextMenuItemClassName(item)}>
             {renderContextMenuLeading(item)}
             <span className="truncate">{item.label ?? item.id}</span>
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
           </DropdownMenuPrimitive.SubTrigger>
           <DropdownMenuPrimitive.Portal>
-            <DropdownMenuPrimitive.SubContent className={contextMenuContentClassName}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
+            <DropdownMenuPrimitive.SubContent className={contextMenuContentClassName()}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
           </DropdownMenuPrimitive.Portal>
         </DropdownMenuPrimitive.Sub>,
       );
@@ -1714,7 +1724,8 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
       <DropdownMenuPrimitive.Item
         key={item.id}
         disabled={item.disabled}
-        className={cn(contextMenuItemClassName, item.destructive && "text-destructive focus:bg-destructive/10")}
+        className={contextMenuItemClassName(item)}
+        data-selected={item.checked ? "true" : undefined}
         onSelect={(event) => {
           item.onSelect?.(event as unknown as Event);
           onClose?.();
@@ -1824,7 +1835,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
         <DropdownMenuPrimitive.Content
           align="start"
           avoidCollisions={false}
-          className={contextMenuContentClassName}
+          className={contextMenuContentClassName()}
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
           sideOffset={0}
@@ -1850,8 +1861,9 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
     <div className="relative" onPointerEnter={() => setOpen(true)} onPointerLeave={() => setOpen(false)}>
       <button
         aria-disabled={item.disabled}
-        className={cn(contextMenuItemClassName, "w-full bg-transparent text-start", item.destructive && "text-destructive focus:bg-destructive/10")}
+        className={contextMenuItemClassName(item, "bg-transparent text-start")}
         data-disabled={item.disabled ? "" : undefined}
+        data-selected={item.checked ? "true" : undefined}
         disabled={item.disabled}
         role="menuitem"
         type="button"
@@ -1861,7 +1873,7 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
         <span className={contextMenuShortcutClassName}>›</span>
       </button>
       {open && item.children?.length ? (
-        <div className={cn(contextMenuContentClassName, "absolute start-full top-0 ms-tiny")} role="menu">
+        <div className={contextMenuContentClassName("absolute start-full top-0 ms-tiny")} role="menu">
           {renderFixedContextMenuItems(item.children, onClose)}
         </div>
       ) : null}
@@ -1883,8 +1895,9 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
         key={item.id}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
-        className={cn(contextMenuItemClassName, "w-full bg-transparent text-start", item.destructive && "text-destructive focus:bg-destructive/10")}
+        className={contextMenuItemClassName(item, "bg-transparent text-start")}
         data-disabled={item.disabled ? "" : undefined}
+        data-selected={item.checked ? "true" : undefined}
         disabled={item.disabled}
         onClick={(event) => {
           item.onSelect?.(event.nativeEvent);
@@ -1938,7 +1951,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div className={contextMenuContentClassName} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
+    <div className={contextMenuContentClassName()} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
       {renderFixedContextMenuItems(items, close)}
     </div>,
     getDocumentBody(),
@@ -10168,6 +10181,7 @@ function Slider({
   loading = false,
   waiting = false,
   showLabel,
+  showValue = true,
   onValueChange,
   onPointerDown,
   onPointerUp,
@@ -10185,6 +10199,8 @@ function Slider({
     /** @emoji 🌀 Dashed, slow-spinning waiting ring around the track only — never the row, so the knob and hover chrome stay visible. */
     waiting?: boolean;
     showLabel?: boolean;
+    /** @emoji 🔢 When false, only the track+thumb render (graph overlays that already paint the value elsewhere). */
+    showValue?: boolean;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
     onPointerCancel?: () => void;
@@ -10377,8 +10393,9 @@ function Slider({
     </SliderPrimitive.Root>
   );
 
-  const sliderContent = (
-    <div data-slot="slider-content" data-detail-panel-control="fill" data-dim style={{ opacity: isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className="flex-1 min-w-0">
+  const contentClassName = showLabel ? undefined : className;
+  const sliderContent = showValue ? (
+    <div data-slot="slider-content" data-detail-panel-control="fill" data-dim style={{ opacity: isInPropertyValueColumn && !hasBeenEdited ? 0.6 : 1, transition: "opacity 150ms" }} className={cn("flex-1 min-w-0", contentClassName)}>
       <div data-slot="slider-row" className="grid h-medium grid-cols-[minmax(0,1fr)_var(--size-large)] items-center gap-x-tiny">
         <div data-slot="slider-track-cell" className="min-w-0">
           {sliderElement}
@@ -10402,6 +10419,10 @@ function Slider({
           </span>
         )}
       </div>
+    </div>
+  ) : (
+    <div data-slot="slider-content" data-detail-panel-control="fill" data-dim className={cn("flex h-full min-w-0 flex-1 items-center", contentClassName)}>
+      {sliderElement}
     </div>
   );
 
@@ -19082,6 +19103,7 @@ const Window: React.FC<WindowProps> = ({
     <LevelProvider level="window">
       <GhostRegionShell
         ref={windowRef}
+        id={id}
         data-slot="window"
         data-elevation-root=""
         data-active={active ? "true" : undefined}
@@ -20825,15 +20847,13 @@ function gumballAxisPreviewPoints(axis: GumballPreviewAxis, half: number): [numb
   ];
 }
 
-/** @emoji 🎨 Resolved gumball chrome aligned with spatial selection / hover tokens. */
+/** @emoji 🎨 Resolved gumball chrome from direction accents; hover/active only raise opacity. */
 export interface GumballVisualPalette {
   readonly axisX: string;
   readonly axisY: string;
   readonly axisZ: string;
   readonly plane: string;
   readonly uniform: string;
-  readonly hover: string;
-  readonly active: string;
   readonly idleOpacity: number;
   readonly dimmedOpacity: number;
   readonly hoverOpacity: number;
@@ -20842,7 +20862,7 @@ export interface GumballVisualPalette {
   readonly previewActiveOpacity: number;
 }
 
-/** @emoji 🎨 Reads gumball palette from design tokens (matches CAD spatial pick chrome). */
+/** @emoji 🎨 Reads gumball palette from design tokens (X/Y/Z → accent / secondary / tertiary). */
 export function resolveGumballVisualPalette(): GumballVisualPalette {
   return {
     axisX: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "gray"),
@@ -20850,8 +20870,6 @@ export function resolveGumballVisualPalette(): GumballVisualPalette {
     axisZ: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "gray"),
     plane: resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"),
     uniform: resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"),
-    hover: getComputedColor("--color-changed-hovered"),
-    active: getComputedColor("--color-changed-selected"),
     idleOpacity: 0.62,
     dimmedOpacity: 0.28,
     hoverOpacity: 0.96,
@@ -20873,10 +20891,10 @@ export function gumballHandleVisualState(kind: GumballHandleKind, hovered: Gumba
   return "idle";
 }
 
-/** @emoji 🎨 Handle tint + opacity for a resolved visual state. */
+/** @emoji 🎨 Handle tint + opacity for a resolved visual state. Keeps direction color; only opacity changes. */
 export function gumballResolveHandleVisual(baseColor: string, state: GumballHandleVisualState, palette: GumballVisualPalette): { readonly color: string; readonly opacity: number } {
-  if (state === "active") return { color: palette.active, opacity: palette.activeOpacity };
-  if (state === "hover") return { color: palette.hover, opacity: palette.hoverOpacity };
+  if (state === "active") return { color: baseColor, opacity: palette.activeOpacity };
+  if (state === "hover") return { color: baseColor, opacity: palette.hoverOpacity };
   if (state === "dimmed") return { color: baseColor, opacity: palette.dimmedOpacity };
   return { color: baseColor, opacity: palette.idleOpacity };
 }
@@ -20947,7 +20965,7 @@ function GumballPlanePreviewMesh(props: { readonly orientation: "xy" | "yz" | "x
 }
 
 function GumballInteractionPreview(props: { readonly kind: GumballHandleKind; readonly palette: GumballVisualPalette; readonly phase: "hover" | "active" }): React.ReactElement | null {
-  const color = props.phase === "active" ? props.palette.active : props.palette.hover;
+  const color = gumballBaseColorForKind(props.kind, props.palette);
   const fillOpacity = props.phase === "active" ? props.palette.previewActiveOpacity : props.palette.previewHoverOpacity;
   const lineWidth = props.phase === "active" ? 3.25 : 2.5;
   const lineOpacity = props.phase === "active" ? 0.92 : 0.72;
@@ -25631,16 +25649,21 @@ if (import.meta.vitest) {
       expect(gumballHandleVisualState("moveX", null, "moveX")).toBe("active");
       expect(gumballHandleVisualState("moveY", "moveX", "moveX")).toBe("dimmed");
       const palette = resolveGumballVisualPalette();
-      expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe(palette.hover);
-      expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe(palette.active);
+      expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe("#ff0000");
+      expect(gumballResolveHandleVisual("#ff0000", "hover", palette).opacity).toBe(palette.hoverOpacity);
+      expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe("#ff0000");
+      expect(gumballResolveHandleVisual("#ff0000", "active", palette).opacity).toBe(palette.activeOpacity);
       expect(gumballResolveHandleVisual("#ff0000", "idle", palette).color).toBe("#ff0000");
+      expect(gumballResolveHandleVisual(palette.axisX, "hover", palette).color).toBe(palette.axisX);
+      expect(gumballResolveHandleVisual(palette.axisY, "hover", palette).color).toBe(palette.axisY);
+      expect(gumballResolveHandleVisual(palette.axisZ, "active", palette).color).toBe(palette.axisZ);
       const tintRoot = new THREE.Group();
       const visibleMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: "#000000" }));
       const pickMesh = new THREE.Mesh(new THREE.BoxGeometry(), new THREE.MeshBasicMaterial({ color: "#000000" }));
       pickMesh.visible = false;
       pickMesh.userData = { gumballHandlePick: true };
       tintRoot.add(visibleMesh, pickMesh);
-      const tintMaterial = new THREE.MeshBasicMaterial({ color: palette.hover, transparent: true, opacity: palette.hoverOpacity });
+      const tintMaterial = new THREE.MeshBasicMaterial({ color: palette.axisX, transparent: true, opacity: palette.hoverOpacity });
       gumballApplyHandleVisualMaterial(tintRoot, tintMaterial);
       expect(visibleMesh.material).toBe(tintMaterial);
       expect(pickMesh.material).not.toBe(tintMaterial);
@@ -25736,8 +25759,15 @@ if (import.meta.vitest) {
   });
 
   describe("icon hover animations", () => {
-    const FULL_TURN_KEYFRAMES = new Set(["icon-rotate-ccw", "icon-rotate-cw", "icon-loader-2", "icon-flip-horizontal", "icon-flip-vertical", "icon-arrow-right-left", "icon-settings", "icon-globe"]);
+    const FULL_TURN_KEYFRAMES = new Set(["icon-rotate-ccw", "icon-rotate-cw", "icon-loader-2", "icon-flip-horizontal", "icon-flip-vertical", "icon-settings", "icon-globe"]);
     const NON_CATALOG_KINDS = ["emoji", "text", "typst", "image", "svg", "node", "shortcode", "missing"];
+    // Icons whose SVG has cleanly separable moving parts get a mechanism-accurate per-part animation
+    // instead (--icon-animation: none plus one or more --icon-part-<N>-anim assignments); see
+    // 🔧IconPartAnim / 🪛IconPartAnim2 / 🌟IconPartAnim3. Remaining icons either have a single fused SVG
+    // path (no separable part exists without redrawing the vendored asset) or their existing whole-icon
+    // rigid motion already is the mechanically correct animation (globe, search, settings, rotate-cw/ccw,
+    // flip-horizontal/vertical, text-cursor).
+    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-down", "arrow-left", "arrow-right", "arrow-right-left", "arrow-up", "award", "bar-chart-3", "bell", "book-open", "box", "calendar-days", "camera", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hammer", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "redo", "redo-2", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "undo", "undo-2", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
 
     async function readUiCss(): Promise<string> {
       const { readFileSync } = await import("node:fs");
@@ -25749,6 +25779,18 @@ if (import.meta.vitest) {
     it("gives every vendored icon id and non-catalog kind a hover keyframes block and animation assignment", async () => {
       const css = await readUiCss();
       for (const name of Object.keys(ICONS as Record<string, string>)) {
+        if (PART_MECHANISM_ICONS.has(name)) {
+          const ruleMatch = css.match(new RegExp(`\\[data-icon="${name}"\\] \\{([^}]*)\\}`));
+          expect(ruleMatch, `missing [data-icon="${name}"] rule`).toBeTruthy();
+          const rule = ruleMatch![1];
+          expect(rule).toMatch(/--icon-animation:\s*none;/);
+          const partAnims = [...rule.matchAll(/--icon-part-(\d+)-anim:\s*([\w-]+);/g)];
+          expect(partAnims.length, `${name} should assign at least one --icon-part-N-anim`).toBeGreaterThan(0);
+          for (const [, , kfName] of partAnims) {
+            expect(css, `missing @keyframes ${kfName} referenced by ${name}`).toContain(`@keyframes ${kfName} {`);
+          }
+          continue;
+        }
         expect(css).toContain(`@keyframes icon-${name} {`);
         expect(css).toMatch(new RegExp(`\\[data-icon="${name}"\\][^\\n]*--icon-animation:\\s*icon-${name};`));
       }
@@ -25773,7 +25815,10 @@ if (import.meta.vitest) {
         }
         expect(body).toMatch(/0%,\s*\n\s*100%\s*\{/);
       }
-      expect(checked).toBeGreaterThanOrEqual(Object.keys(ICONS as Record<string, string>).length + NON_CATALOG_KINDS.length);
+      // Part-mechanism icons reuse shared keyframes (e.g. icon-commit-dot drives ~15 different icons' pulses),
+      // so the count no longer tracks 1:1 with icon count — the completeness test above already verifies every
+      // icon/kind resolves to a real keyframes block; this is just a sanity floor against an empty/broken scan.
+      expect(checked).toBeGreaterThan(100);
     });
   });
 
@@ -25862,6 +25907,30 @@ if (import.meta.vitest) {
       expect(onHover).toHaveBeenCalled();
       fireEvent.pointerLeave(item);
       expect(onHoverEnd).toHaveBeenCalled();
+    });
+
+    it("highlights checked items without a tick or checkmark", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 8, y: 16 }}
+          items={[
+            { id: "a", label: "Capsule · port", icon: "box", color: "#112233", checked: true },
+            { id: "b", label: "Box · port", icon: "box", color: "#445566", checked: false },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const active = await waitFor(() => screen.getByRole("menuitemcheckbox", { name: "Capsule · port" }));
+      const idle = screen.getByRole("menuitemcheckbox", { name: "Box · port" });
+      expect(active.getAttribute("aria-checked")).toBe("true");
+      expect(active.getAttribute("data-selected")).toBe("true");
+      expect(active.className.split(/\s+/)).toContain("bg-active-base");
+      expect(active.textContent).not.toContain("✓");
+      expect(idle.getAttribute("aria-checked")).toBe("false");
+      expect(idle.getAttribute("data-selected")).toBeNull();
+      expect(idle.className.split(/\s+/)).not.toContain("bg-active-base");
+      expect(idle.textContent).not.toContain("✓");
     });
   });
 
@@ -29537,6 +29606,16 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="slider-ready"');
       expect(markup).toContain('data-slot="slider-track-wrap"');
       expect(markup).not.toContain("border-loading");
+    });
+
+    it("can omit the numeric readout for track-only graph overlays", () => {
+      const markup = renderToStaticMarkup(<Slider id="ui.slider.track-only" className="h-full w-full min-w-0" value={[42]} min={0} max={100} showValue={false} />);
+
+      expect(markup).toContain('data-slot="slider-track"');
+      expect(markup).toContain('data-slot="slider-thumb"');
+      expect(markup).toContain("h-full w-full min-w-0");
+      expect(markup).not.toContain('data-slot="slider-value"');
+      expect(markup).not.toContain('data-slot="slider-row"');
     });
 
     it("renders a ready extent highlight to the right of the knob on a fixed range", () => {

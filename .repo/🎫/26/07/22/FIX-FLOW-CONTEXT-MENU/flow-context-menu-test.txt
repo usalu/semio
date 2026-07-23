@@ -1,0 +1,714 @@
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1216:36
+     |
+1216 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1216 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1216 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1463:24
+     |
+1463 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1463 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1463 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3807:17
+     |
+3807 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3807 -     let action: serde_json::Value =
+3807 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3809:18
+     |
+3809 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3809 -     let context: serde_json::Value =
+3809 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3837:18
+     |
+3837 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3837 -     let command: serde_json::Value =
+3837 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3839:18
+     |
+3839 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3839 -     let context: serde_json::Value =
+3839 +     let context: Value =
+     |
+
+warning: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+   Compiling infinite_board_port_directed_dag v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs)
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:262:25
+    |
+262 |     pub default: Option<serde_json::Value>,
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+262 -     pub default: Option<serde_json::Value>,
+262 +     pub default: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:264:23
+    |
+264 |     pub value: Option<serde_json::Value>,
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+264 -     pub value: Option<serde_json::Value>,
+264 +     pub value: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:376:15
+    |
+376 |         json: serde_json::Value,
+    |               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+376 -         json: serde_json::Value,
+376 +         json: Value,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:434:43
+    |
+434 | fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+434 - fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+434 + fn preview_tree_collapsed_summary(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:436:9
+    |
+436 |         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+436 -         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+436 +         Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:437:9
+    |
+437 |         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+437 -         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+437 +         Value::Array(arr) => format!("[{} items]", arr.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:438:9
+    |
+438 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+438 -         serde_json::Value::String(s) => format!("\"{s}\""),
+438 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:439:9
+    |
+439 |         serde_json::Value::Number(n) => n.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+439 -         serde_json::Value::Number(n) => n.to_string(),
+439 +         Value::Number(n) => n.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:440:9
+    |
+440 |         serde_json::Value::Bool(b) => b.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -         serde_json::Value::Bool(b) => b.to_string(),
+440 +         Value::Bool(b) => b.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:441:9
+    |
+441 |         serde_json::Value::Null => "null".into(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+441 -         serde_json::Value::Null => "null".into(),
+441 +         Value::Null => "null".into(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:445:40
+    |
+445 | fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+    |                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+445 - fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+445 + fn preview_tree_scalar_display(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:447:9
+    |
+447 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+447 -         serde_json::Value::String(s) => format!("\"{s}\""),
+447 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:508:29
+    |
+508 | fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+508 - fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+508 + fn preview_tree_rows(json: &Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:511:9
+    |
+511 |         serde_json::Value::Object(map) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+511 -         serde_json::Value::Object(map) => {
+511 +         Value::Object(map) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:50
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:81
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:523:9
+    |
+523 |         serde_json::Value::Array(arr) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+523 -         serde_json::Value::Array(arr) => {
+523 +         Value::Array(arr) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:50
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:81
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:593:56
+    |
+593 | fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+593 - fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+593 + fn preview_tree_row_layouts(node: &DagNodeSpec, json: &Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1656:40
+     |
+1656 | fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+     |                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1656 - fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+1656 + fn lod_max_zoom_json(max_zoom: f64) -> Value {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1666:19
+     |
+1666 |     let rows: Vec<serde_json::Value> = DAG_LODS
+     |                   ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1666 -     let rows: Vec<serde_json::Value> = DAG_LODS
+1666 +     let rows: Vec<Value> = DAG_LODS
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3717:92
+     |
+3717 |     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                                                            ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3717 -     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+3717 +     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3724:122
+     |
+3724 | ...wLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                           ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3724 -     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+3724 +     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3752:48
+     |
+3752 |                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3752 -                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+3752 +                     obj.insert("ghost".into(), Value::Bool(ghost));
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3760:105
+     |
+3760 |     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+     |                                                                                                         ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3760 -     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+3760 +     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3831:30
+     |
+3831 |         let mut sliders: Vec<serde_json::Value> = Vec::new();
+     |                              ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3831 -         let mut sliders: Vec<serde_json::Value> = Vec::new();
+3831 +         let mut sliders: Vec<Value> = Vec::new();
+     |
+
+warning: unused imports: `Circle` and `Line`
+    --> infinite/board/port/directed/dag/rs/lib.rs:4261:21
+     |
+4261 |         use cavas::{Circle, Line, Point, Rect, Stroke};
+     |                     ^^^^^^  ^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `widget_drag_idx`
+    --> infinite/board/port/directed/dag/rs/lib.rs:4255:9
+     |
+4255 |         widget_drag_idx: Option<usize>,
+     |         ^^^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_widget_drag_idx`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `infinite_board_port_directed_dag` (lib) generated 29 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 29 suggestions)
+   Compiling flow_core v0.1.0 (/Users/ueli/Documents/semio/flow/core/rs)
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:396:40
+    |
+396 |             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+396 -             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+396 +             let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:406:40
+    |
+406 |             let (name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             let (name, abbreviation) = dag::normalize_node_display(title, title);
+406 +             let (name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:412:48
+    |
+412 |             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+412 +             let (display_name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1176:45
+     |
+1176 |     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+     |                                             ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1176 -     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+1176 +     let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1737:24
+     |
+1737 |     ghost_node: Option<dag::DagNodeSpec>,
+     |                        ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1737 -     ghost_node: Option<dag::DagNodeSpec>,
+1737 +     ghost_node: Option<DagNodeSpec>,
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4198:27
+     |
+4198 |     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4198 -     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+4198 +     let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4213:28
+     |
+4213 |     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4213 -     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+4213 +     let after_synapse_ids: BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |
+
+warning: `flow_core` (lib) generated 7 warnings (run `cargo fix --lib -p flow_core` to apply 7 suggestions)
+   Compiling flow-plugin v0.1.0 (/Users/ueli/Documents/semio/flow/plugin/rs)
+    Finished `test` profile [unoptimized] target(s) in 28.42s
+warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running unittests lib.rs (/tmp/semio-flow-ctx-menu/debug/deps/flow_plugin-2785a6c0ce1d4e57)
+
+running 3 tests
+test tests::context_menu_includes_select_all_when_empty ... ok
+test tests::context_menu_at_selects_target_and_enables_preview ... ok
+test tests::context_menu_includes_hide_preview_for_selection_and_set_preview_off_mutates_scene ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 21 filtered out; finished in 0.06s
+

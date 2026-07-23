@@ -499,8 +499,8 @@ const composeSketchpadTranslationBundles = {
           },
           "qualities": {
             "label": {
-              "normal": "Qualitaeten",
-              "beginner": "Qualitaeten"
+              "normal": "Qualitäten",
+              "beginner": "Qualitäten"
             }
           },
           "temporary": {
@@ -1227,8 +1227,8 @@ const composeSketchpadTranslationBundles = {
               },
               "chargeStrength": {
                 "label": {
-                  "normal": "Ladungsstaerke",
-                  "beginner": "Steuert, wie stark Knoten sich abstossen. Negativere Werte druecken Knoten weiter auseinander."
+                  "normal": "Ladungsstärke",
+                  "beginner": "Steuert, wie stark Knoten sich abstoßen. Negativere Werte drücken Knoten weiter auseinander."
                 }
               },
               "linkDistance": {
@@ -1245,7 +1245,7 @@ const composeSketchpadTranslationBundles = {
               },
               "centerStrength": {
                 "label": {
-                  "normal": "Zentrierungsstaerke",
+                  "normal": "Zentrierungsstärke",
                   "beginner": "Wie stark Knoten zur Mitte des Diagramms gezogen werden."
                 }
               }
@@ -1605,7 +1605,7 @@ const composeSketchpadTranslationBundles = {
               "beginner": "Das angeforderte Kit wurde nicht gefunden"
             },
             "description": {
-              "normal": "Das Kit wurde moeglicherweise entfernt oder der Link ist ungültig.",
+              "normal": "Das Kit wurde möglicherweise entfernt oder der Link ist ungültig.",
               "beginner": "Zurück zur Startseite und ein anderes Kit öffnen oder ein neues erstellen."
             }
           },
@@ -1807,7 +1807,7 @@ const composeSketchpadTranslationBundles = {
           "sortByKind": {
             "label": {
               "normal": "Nach Art sortieren",
-              "beginner": "Artefakte nach ihrem Typ sortieren (Entwurf, Typ, Qualitaet, usw.)"
+              "beginner": "Artefakte nach ihrem Typ sortieren (Entwurf, Typ, Qualität, usw.)"
             },
             "hotkey": "Ctrl+Shift+K"
           },
@@ -1820,8 +1820,8 @@ const composeSketchpadTranslationBundles = {
           },
           "sortByUpdatedAt": {
             "label": {
-              "normal": "Nach Aenderungsdatum sortieren",
-              "beginner": "Artefakte nach ihrem letzten Aenderungsdatum sortieren"
+              "normal": "Nach Änderungsdatum sortieren",
+              "beginner": "Artefakte nach ihrem letzten Änderungsdatum sortieren"
             },
             "hotkey": "Ctrl+Shift+U"
           },
@@ -1864,16 +1864,16 @@ const composeSketchpadTranslationBundles = {
             },
             "showQualities": {
               "label": {
-                "normal": "Qualitaeten anzeigen",
-                "beginner": "Klicken, um alle Qualitaeten in diesem Kit anzuzeigen"
+                "normal": "Qualitäten anzeigen",
+                "beginner": "Klicken, um alle Qualitäten in diesem Kit anzuzeigen"
               },
               "manual": "manuals/compose/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
             "createQuality": {
               "label": {
-                "normal": "Qualitaet erstellen",
-                "beginner": "Klicken, um eine neue Qualitaetsdefinition in diesem Kit zu erstellen"
+                "normal": "Qualität erstellen",
+                "beginner": "Klicken, um eine neue Qualitätsdefinition in diesem Kit zu erstellen"
               },
               "manual": "manuals/compose/kit#qualities",
               "tutorial": "getting-started/intro#quality"
@@ -2870,7 +2870,7 @@ const composeSketchpadTranslationBundles = {
                   },
                   "longitude": {
                     "label": {
-                      "normal": "Laengengrad",
+                      "normal": "Längengrad",
                       "beginner": "Die Ost-West-Position dieses Entwurfsstandorts in Dezimalgrad."
                     },
                     "manual": "design#location"
@@ -4620,8 +4620,8 @@ const composeSketchpadTranslationBundles = {
           },
           "description": {
             "label": {
-              "normal": "Messqualitaeten definieren",
-              "beginner": "Messqualitaeten definieren"
+              "normal": "Messqualitäten definieren",
+              "beginner": "Messqualitäten definieren"
             }
           },
           "tools": {
@@ -4654,8 +4654,8 @@ const composeSketchpadTranslationBundles = {
           },
           "defaultName": {
             "label": {
-              "normal": "Neue Qualitaet",
-              "beginner": "Neue Qualitaet"
+              "normal": "Neue Qualität",
+              "beginner": "Neue Qualität"
             }
           },
           "numericFunctions": {
@@ -4726,8 +4726,8 @@ const composeSketchpadTranslationBundles = {
           },
           "noQualities": {
             "label": {
-              "normal": "Keine Qualitaeten definiert",
-              "beginner": "Keine Qualitaeten definiert"
+              "normal": "Keine Qualitäten definiert",
+              "beginner": "Keine Qualitäten definiert"
             }
           },
           "key": {
@@ -4745,13 +4745,13 @@ const composeSketchpadTranslationBundles = {
           "kind": {
             "label": {
               "normal": "Art",
-              "beginner": "Der Entitaetstyp, auf den diese Qualitaet anwendbar ist"
+              "beginner": "Der Entitätstyp, auf den diese Qualität anwendbar ist"
             }
           },
           "formula": {
             "label": {
               "normal": "Formel",
-              "beginner": "Die Formel zur Berechnung dieser Qualitaet"
+              "beginner": "Die Formel zur Berechnung dieser Qualität"
             }
           },
           "formulaPlaceholder": "Formel eingeben...",
@@ -4800,7 +4800,7 @@ const composeSketchpadTranslationBundles = {
           "canScale": {
             "label": {
               "normal": "Kann skalieren",
-              "beginner": "Ob diese Qualitaet mit der Teilegröße skaliert"
+              "beginner": "Ob diese Qualität mit der Teilegröße skaliert"
             }
           },
           "panel": {
@@ -14026,7 +14026,7 @@ const SKETCHPAD_PANEL_LABELS: UiTerminologyLabelSet<
     description: "Beschreibung",
     gap: "Abstand",
     representations: "Repraesentationen",
-    quality: "Qualitaet",
+    quality: "Qualität",
     center: "Zentrum",
     plane: "Ebene",
     origin: "Ursprung",

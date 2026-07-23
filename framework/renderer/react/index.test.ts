@@ -42,6 +42,7 @@ import {
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
+  enrichNodeGraphContextMenuItems,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
   board2dPeers,
@@ -59,6 +60,7 @@ import {
   nodeGraphViewportActionArgs,
   parseCatalogueAppDragPayload,
   parseDagSliderOverlays,
+  GraphSliderOverlays,
   resolveFixtureWidgetInstanceId,
   Paint2dHost,
   TableHost,
@@ -69,6 +71,7 @@ import {
   multiSpanReplace,
   World3dHost,
   brushObjectPlacementArgs,
+  brushPreviewGhostMeshUrl,
   parsePuzzle3dCatalogueDragPayload,
   mergeWorldViewportCamera,
   raycastGroundPoint,
@@ -564,6 +567,24 @@ describe("batched ui refresh request/response (puzzle 2d perf round 3)", () => {
     const viewState = { activeUtilityByWindowId: { top: "transform", perspective: "brush" }, activeUtilityId: undefined };
     const request = buildUiRefreshRequest({ kind: "full" }, windowKinds, panelTabLeaves, viewState, new Map());
     expect(request?.viewState.activeUtilityByWindowId).toEqual({ top: "transform", perspective: "brush" });
+    expect(request?.viewState.activeUtilityId).toBeUndefined();
+  });
+
+  it("buildActiveUtilityByWindowId makes a just-activated transform visible to refresh before the next React render", () => {
+    // Regression: setActiveUtility must sync activeUtilityByWindowIdRef before refreshUi; otherwise the
+    // plugin never stamps transform and the gumball stays hidden.
+    const map: Record<string, string | null> = { "puzzle3d-main-top": null };
+    map["puzzle3d-main-top"] = "transform";
+    const activeUtilityByWindowId = buildActiveUtilityByWindowId(map);
+    expect(activeUtilityByWindowId).toEqual({ "puzzle3d-main-top": "transform" });
+    const request = buildUiRefreshRequest(
+      { kind: "full" },
+      [{ id: "puzzle3d-main-top", bodyKey: "puzzle3d.play.composite" }, { id: "puzzle3d-main-perspective", bodyKey: "puzzle3d.play.composite" }],
+      [],
+      { activeUtilityByWindowId, activeUtilityId: undefined },
+      new Map(),
+    );
+    expect(request?.viewState.activeUtilityByWindowId).toEqual({ "puzzle3d-main-top": "transform" });
     expect(request?.viewState.activeUtilityId).toBeUndefined();
   });
 
@@ -1209,6 +1230,37 @@ describe("framework renderer hosts", () => {
     expect(sliders[0]?.value).toBe(2.2);
   });
 
+  it("renders graph slider overlays as track-only controls without a nested value readout", () => {
+    const markup = renderToStaticMarkup(
+      createElement(GraphSliderOverlays, {
+        stateJson: JSON.stringify({
+          camera: { x: 0, y: 0, zoom: 1 },
+          sliders: [
+            {
+              widgetId: "slider_2",
+              value: 2.2,
+              min: 0,
+              max: 10,
+              step: 0.1,
+              x: 100,
+              y: 50,
+              w: 120,
+              h: 8,
+            },
+          ],
+        }),
+        logicalW: 800,
+        logicalH: 600,
+        editable: true,
+        onSliderChange: () => {},
+      }),
+    );
+    expect(markup).toContain('data-slot="slider"');
+    expect(markup).toContain('data-slot="slider-thumb"');
+    expect(markup).not.toContain('data-slot="slider-value"');
+    expect(markup).not.toContain('data-slot="slider-row"');
+  });
+
   it("renders canvas 2d host with infinite canvas session", () => {
     const markup = renderToStaticMarkup(
       createElement(Canvas2dHost, {
@@ -1506,6 +1558,34 @@ describe("framework renderer hosts", () => {
     expect(dispatch).toHaveBeenCalledWith("hoverFlag", { index: 1 });
     expect(items[1]).toMatchObject({ id: "sep", separator: true });
     expect(items[2]).toMatchObject({ id: "delete", destructive: true, icon: "trash" });
+  });
+
+  it("enriches node-graph context menu rows for the effective right-click selection", () => {
+    const base = [
+      { id: "add-node", label: "Add node…", icon: "plus", action: "openSpotlight" },
+      { id: "toggle-preview", label: "Hide preview", icon: "eye-off", disabled: true, action: "setPreviewOff", args: { ids: [], value: true } },
+      { id: "zoom-to-selection", label: "Zoom to Selection", icon: "crosshair", disabled: true, action: "focusSelection" },
+      { id: "clear-selection", label: "Clear Selection", icon: "square-dashed", disabled: true, action: "clearSelection" },
+      { id: "delete-selection", label: "Delete selection", icon: "trash", disabled: true, destructive: true, action: "nodeGraphEdit" },
+    ];
+    const enabled = enrichNodeGraphContextMenuItems(base, { selectedIds: ["slider"], previewOffIds: [] });
+    expect(enabled.find((item) => item.id === "toggle-preview")).toMatchObject({
+      disabled: false,
+      checked: true,
+      icon: "eye-off",
+      label: "Hide preview",
+      args: { ids: ["slider"], value: true },
+    });
+    expect(enabled.find((item) => item.id === "zoom-to-selection")).toMatchObject({ disabled: false });
+    expect(enabled.find((item) => item.id === "delete-selection")).toMatchObject({ disabled: false });
+    const show = enrichNodeGraphContextMenuItems(base, { selectedIds: ["slider"], previewOffIds: ["slider"] });
+    expect(show.find((item) => item.id === "toggle-preview")).toMatchObject({
+      disabled: false,
+      checked: false,
+      icon: "eye",
+      label: "Show preview",
+      args: { ids: ["slider"], value: false },
+    });
   });
 
   it("builds the full selection menu with Hide/Lock/Duplicate/SelectSameKind/ZoomToSelection/Delete for a visible unlocked node", () => {
@@ -1883,6 +1963,14 @@ describe("framework renderer hosts", () => {
   it("defaults sourceVortexIndex to 0 when the brush preview omits it", () => {
     const args = brushObjectPlacementArgs({ targetVortexFullId: "seed-left-001:v0", objectKindId: "hex-concrete" });
     expect(args).toMatchObject({ sourceVortexIndex: 0 });
+  });
+
+  it("resolves brush/suggestion ghost mesh URLs even when the kind is not yet among scene meshes", () => {
+    // 👻 One-shot suggestion ghosts must load the preview meshUrl directly (catalogue-drop parity) —
+    // requiring a scene mesh match left suggested objects invisible in 3D.
+    expect(brushPreviewGhostMeshUrl({ meshUrl: "/meshes/new-kind.glb" }, [])).toBe("/meshes/new-kind.glb");
+    expect(brushPreviewGhostMeshUrl({ meshUrl: "/meshes/placed.glb" }, [{ url: "/meshes/placed.glb" }])).toBe("/meshes/placed.glb");
+    expect(brushPreviewGhostMeshUrl({}, [{ url: "/meshes/placed.glb" }])).toBeUndefined();
   });
 
   it("resolves the right-click context menu target by priority: vortex, then object, then reference", () => {

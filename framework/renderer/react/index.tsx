@@ -4449,6 +4449,23 @@ export function FrameworkOsShell({
   activeUtilityByWindowIdRef.current = activeUtilityByWindowId;
   const activeToolIdRef = useRef(activeToolId);
   activeToolIdRef.current = activeToolId;
+  /** 🧰 Dispatch + sync the ref immediately — `refreshUi` reads the ref before the next render, so a
+   * bare `dispatch(SET_ACTIVE_UTILITY)` alone leaves the map stale and the gumball never appears. */
+  const setActiveUtilityForWindow = useCallback((windowId: string, utilityId: string | null) => {
+    activeUtilityByWindowIdRef.current = { ...activeUtilityByWindowIdRef.current, [windowId]: utilityId };
+    dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId });
+  }, []);
+  /** 🧰 Clear every window's utility in the ref + store at once (tool/utility mutual exclusion). */
+  const clearAllWindowUtilities = useCallback(() => {
+    const next: Record<string, string | null> = { ...activeUtilityByWindowIdRef.current };
+    for (const windowId of Object.keys(next)) {
+      if (next[windowId]) {
+        next[windowId] = null;
+        dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
+      }
+    }
+    activeUtilityByWindowIdRef.current = next;
+  }, []);
   const toolMeasuresByToolIdRef = useRef(toolMeasuresByToolId);
   toolMeasuresByToolIdRef.current = toolMeasuresByToolId;
   const activeWindowIdRef = useRef(activeWindowId);
@@ -4934,11 +4951,15 @@ export function FrameworkOsShell({
           continue;
         }
         if ("setActiveUtility" in effect) {
-          // 🧰 A plugin programmatically switched utility: mirror it into the host-owned store slice and,
-          // when it targets the active window, into the view state fed to the follow-up refresh.
+          // 🧰 A plugin programmatically switched utility: mirror it into the host-owned store slice AND
+          // the ref `refreshUi` reads (bare `dispatch` alone leaves the map stale until the next render —
+          // which is after this same pass's refresh, so brush/suggestion ghosts and gumballs never appear).
           const { windowId, utilityId } = effect.setActiveUtility;
-          dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: utilityId || null });
-          if (utilityId && activeToolIdRef.current) dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+          setActiveUtilityForWindow(windowId, utilityId || null);
+          if (utilityId && activeToolIdRef.current) {
+            activeToolIdRef.current = null;
+            dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+          }
           if (windowId === activeWindowIdRef.current) nextViewState = { ...nextViewState, activeUtilityId: utilityId || undefined, activeToolId: utilityId ? undefined : nextViewState.activeToolId };
           continue;
         }
@@ -4948,12 +4969,9 @@ export function FrameworkOsShell({
           // exclusion — a tool and a window utility never both claim the pointer), and fold it into the
           // view state fed to the follow-up refresh.
           const { toolId } = effect.setActiveTool;
+          activeToolIdRef.current = toolId || null;
           dispatch({ type: "SET_ACTIVE_TOOL", toolId: toolId || null });
-          if (toolId) {
-            for (const windowId of Object.keys(activeUtilityByWindowIdRef.current)) {
-              if (activeUtilityByWindowIdRef.current[windowId]) dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
-            }
-          }
+          if (toolId) clearAllWindowUtilities();
           nextViewState = { ...nextViewState, activeToolId: toolId || undefined, activeUtilityId: toolId ? undefined : nextViewState.activeUtilityId };
           continue;
         }
@@ -5124,7 +5142,7 @@ export function FrameworkOsShell({
         await refreshUi(nextSession, uiScope);
       }
     },
-    [ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, studioMode],
+    [clearAllWindowUtilities, ensureSpawnedPlugin, loadedPlugins, navigateHistory, refreshSpawnedUi, refreshUi, session, setActiveUtilityForWindow, studioMode],
   );
 
   const applyShellUri = useCallback(
@@ -5321,10 +5339,13 @@ export function FrameworkOsShell({
         if (!windowId) return;
         const requested = typeof args.utilityId === "string" ? args.utilityId : "";
         const next = resolveUtilityActivation(activeUtilityByWindowIdRef.current[windowId], requested);
-        dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: next });
+        setActiveUtilityForWindow(windowId, next);
         // 🛠️ A tool and a window utility are mutually exclusive interaction owners — activating a real
         // utility clears any active mode-level tool.
-        if (next && activeToolIdRef.current) dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+        if (next && activeToolIdRef.current) {
+          activeToolIdRef.current = null;
+          dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
+        }
         if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
@@ -5346,12 +5367,9 @@ export function FrameworkOsShell({
         const args = typeof action.args === "object" && action.args != null ? (action.args as { toolId?: unknown }) : {};
         const requested = typeof args.toolId === "string" ? args.toolId : "";
         const next = resolveUtilityActivation(activeToolIdRef.current, requested);
+        activeToolIdRef.current = next;
         dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
-        if (next) {
-          for (const windowId of Object.keys(activeUtilityByWindowIdRef.current)) {
-            if (activeUtilityByWindowIdRef.current[windowId]) dispatch({ type: "SET_ACTIVE_UTILITY", windowId, utilityId: null });
-          }
-        }
+        if (next) clearAllWindowUtilities();
         if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
@@ -5477,12 +5495,14 @@ export function FrameworkOsShell({
     [
       applyHostEffects,
       attachSyncBackbone,
+      clearAllWindowUtilities,
       detachSyncBackbone,
       findPluginForAction,
       injectActiveUtility,
       loadedPlugins,
       panel,
       session,
+      setActiveUtilityForWindow,
       spawnProgram,
       studioMode,
       syncBackboneUri,
@@ -10363,16 +10383,19 @@ export function enrichNodeGraphContextMenuItems(
   return specs.map((spec) => {
     if (spec.separator) return spec;
     switch (spec.id) {
-      case "toggle-preview":
+      case "toggle-preview": {
+        const showLabel = spec.label?.replace(/hide|ausblenden/i, (match) => (match.toLowerCase() === "ausblenden" ? "einblenden" : "Show"));
+        const hideLabel = spec.label?.replace(/show|einblenden/i, (match) => (match.toLowerCase() === "einblenden" ? "ausblenden" : "Hide"));
         return {
           ...spec,
           disabled: !hasSelection,
           checked: hasSelection ? !allPreviewOff : undefined,
           icon: allPreviewOff ? "eye" : "eye-off",
-          label: allPreviewOff ? (spec.label?.toLowerCase().includes("show") ? spec.label : spec.label?.replace(/hide/i, "Show") ?? "Show preview") : (spec.label?.toLowerCase().includes("hide") ? spec.label : spec.label?.replace(/show/i, "Hide") ?? "Hide preview"),
+          label: allPreviewOff ? (showLabel ?? "Show preview") : (hideLabel ?? "Hide preview"),
           action: "setPreviewOff",
           args: { ids: [...selectedIds], value: !allPreviewOff },
         };
+      }
       case "zoom-to-selection":
         return { ...spec, disabled: !hasSelection, action: spec.action ?? "focusSelection" };
       case "clear-selection":
@@ -11707,21 +11730,38 @@ function WorldAttractionLines({ attractions }: { readonly attractions: readonly 
   );
 }
 
+/** @emoji 👻 GLB URL for a brush/suggestion ghost — scene mesh match when present, else the preview's own `meshUrl` (catalogue-drop parity so one-shot suggestions still render kinds not yet placed). */
+export function brushPreviewGhostMeshUrl(preview: Pick<WorldBrushPreviewRecord, "meshUrl">, meshes: readonly Pick<WorldMeshRecord, "url">[]): string | undefined {
+  const meshUrl = preview.meshUrl;
+  if (!meshUrl) return undefined;
+  return meshes.find((mesh) => mesh.url === meshUrl)?.url ?? meshUrl;
+}
+
+/** @emoji 🎞️ Demand-frameloop kick when a token changes — box fallbacks and already-cached GLBs otherwise leave the suggestion ghost invisible until the next orbit tick. */
+function DemandInvalidateOnToken({ token }: { readonly token: string }) {
+  const invalidate = useThree((state) => state.invalidate);
+  useLayoutEffect(() => {
+    invalidate();
+  }, [invalidate, token]);
+  return null;
+}
+
 function BrushPreviewGhost({ preview, meshes, palette }: { readonly preview: WorldBrushPreviewRecord; readonly meshes: readonly WorldMeshRecord[]; readonly palette: MeshStylePalette }) {
   if (!preview.origin) return null;
   const style = palette.highlighted;
   const meshColor = preview.color ?? style.meshColor;
-  const meshUrl = preview.meshUrl;
-  const meshRecord = meshUrl ? meshes.find((mesh) => mesh.url === meshUrl) : undefined;
+  const url = brushPreviewGhostMeshUrl(preview, meshes);
   const position = preview.origin as [number, number, number];
   const rotation = preview.orientation as [number, number, number, number] | undefined;
   const scale = scaleTuple(preview.scale);
   const quaternion = rotation ? new Quaternion(rotation[0], rotation[1], rotation[2], rotation[3]) : undefined;
+  const invalidateToken = `${preview.objectKindId ?? ""}:${preview.targetVortexFullId ?? ""}:${preview.sourceVortexIndex ?? 0}:${url ?? ""}:${position.join(",")}`;
   return (
-    <group position={position} scale={scale} quaternion={quaternion}>
-      {meshRecord?.url ? (
+    <group position={position} scale={scale} quaternion={quaternion} raycast={() => null}>
+      <DemandInvalidateOnToken token={invalidateToken} />
+      {url ? (
         <Suspense fallback={null}>
-          <GlbInstanceMesh url={meshRecord.url} color={meshColor} emissive={meshColor} emissiveIntensity={0.6} opacity={1} borderColor={palette.neutral.lineColor} revision="highlighted" />
+          <GlbInstanceMesh url={url} color={meshColor} emissive={meshColor} emissiveIntensity={0.6} opacity={0.72} borderColor={palette.neutral.lineColor} revision="highlighted" />
         </Suspense>
       ) : (
         <mesh raycast={() => null}>
@@ -11790,7 +11830,7 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
-/** @emoji 🧭 Floating per-vortex brush-candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — hovering a row previews it as the brush ghost, clicking places it. */
+/** @emoji 🧭 Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. */
 function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
   if (menu.pending) {
     return [{ id: "pending", label: "Checking placement…", disabled: true }];
@@ -12521,7 +12561,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch],
   );
 
-  const brushMeshUrls = useMemo(() => [...new Set(meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)))], [meshes]);
+  // 👻 Include the live brush/suggestion ghost URL so collision precompute can register kinds that are
+  // not yet placed in the scene — otherwise suggestions stay pending and never emit a 3D preview.
+  const brushMeshUrls = useMemo(() => [...new Set([...meshes.map((mesh) => mesh.url).filter((url): url is string => Boolean(url)), ...(brushPreview?.meshUrl ? [brushPreview.meshUrl] : [])])], [brushPreview?.meshUrl, meshes]);
 
   const handleZoomToSelection = useCallback(() => {
     const selectedIds = new Set(selection.ids ?? []);
@@ -13988,6 +14030,7 @@ function WasmGraphSurface({
         className="absolute inset-0 z-30"
         onPointerDown={(event) => {
           if (!editable) return;
+          if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session?.pointerDownScreen) return;
           const rect = event.currentTarget.getBoundingClientRect();
@@ -14664,14 +14707,15 @@ export function GraphSliderOverlays({
         const w = slider.w * camera.zoom;
         const h = Math.max(slider.h * camera.zoom, 16);
         return (
-          <div key={slider.widgetId} className="pointer-events-auto absolute flex items-center px-1" style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }} onPointerDown={(event) => event.stopPropagation()}>
+          <div key={slider.widgetId} className="pointer-events-auto absolute flex items-center" style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }} onPointerDown={(event) => event.stopPropagation()}>
             <Slider
-              className="w-full min-w-0"
+              className="h-full w-full min-w-0"
               max={slider.max}
               min={slider.min}
               step={slider.step}
               value={[slider.value]}
               disabled={!editable}
+              showValue={false}
               onValueChange={(values) => onSliderChange(slider.widgetId, values[0] ?? slider.value)}
               onPointerDown={onSliderPointerDown}
               onPointerUp={onSliderPointerUp}
@@ -14800,7 +14844,12 @@ export function FlowGraphCanvasHost({
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number; readonly widgetId?: string } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    readonly x: number;
+    readonly y: number;
+    readonly widgetId?: string;
+    readonly items: readonly GraphContextMenuItem[];
+  } | null>(null);
   const [selectionBounds, setSelectionBounds] = useState<ReturnType<typeof parseDagSelectionUnionBoundsScreen>>(null);
   const [marquee, setMarquee] = useState<ReturnType<typeof computeDagMarqueeOverlay>>(null);
   const [labelStateJson, setLabelStateJson] = useState("{}");
@@ -14814,9 +14863,9 @@ export function FlowGraphCanvasHost({
   sceneRef.current = scene;
 
   useEffect(() => {
-    if (contextMenu == null || contextMenuItems.length === 0) return;
-    logContextMenuOpen("flow-graph", contextMenuItems);
-  }, [contextMenu, contextMenuItems]);
+    if (contextMenu == null || contextMenu.items.length === 0) return;
+    logContextMenuOpen("flow-graph", contextMenu.items);
+  }, [contextMenu]);
 
   useEffect(() => {
     console.log("[DEBUG] FlowGraphCanvasHost mounted", { surfaceId, controllerId });
@@ -15296,11 +15345,51 @@ export function FlowGraphCanvasHost({
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
-        const widgetId = sessionRef.current?.hoveredWidgetId();
-        if (widgetId) {
+        const session = sessionRef.current;
+        const container = containerRef.current;
+        let widgetId: string | undefined;
+        let selectedIds: string[] = [];
+        let previewOffIds: string[] = [];
+        try {
+          selectedIds = session ? (JSON.parse(session.selectedWidgetIds()) as string[]) : [];
+        } catch {
+          selectedIds = [];
+        }
+        try {
+          previewOffIds = session ? parseDagNodeIdArray(session.previewOffWidgetIds()) : [];
+        } catch {
+          previewOffIds = [];
+        }
+        if (session && container) {
+          const rect = container.getBoundingClientRect();
+          const sx = event.clientX - rect.left;
+          const sy = event.clientY - rect.top;
+          try {
+            const targets = JSON.parse(session.pickTargetsAtScreenJson(sx, sy)) as CanvasPickTarget[];
+            widgetId = pickMostSpecificCanvasTarget(targets)?.id;
+          } catch {
+            widgetId = undefined;
+          }
+        }
+        if (!widgetId) {
+          widgetId = session?.hoveredWidgetId() ?? undefined;
+        }
+        if (widgetId && !selectedIds.includes(widgetId)) {
+          selectedIds = [widgetId];
+          try {
+            session?.setSelection?.(JSON.stringify(selectedIds));
+            session?.renderFrame();
+          } catch {
+            /* session not ready */
+          }
+          dispatch("contextMenuAt", { id: widgetId });
+        } else if (widgetId) {
           dispatch("contextMenuAt", { id: widgetId });
         }
-        setContextMenu({ x: event.clientX, y: event.clientY, widgetId: widgetId ?? undefined });
+        const items = enrichNodeGraphContextMenuItems(contextMenuItems, { selectedIds, previewOffIds });
+        console.log("[DEBUG] flow context menu open", { widgetId, selectedIds, itemIds: items.map((item) => item.id) });
+        setContextMenu({ x: event.clientX, y: event.clientY, widgetId, items });
+        paintOverlays();
       }}
     >
       <canvas ref={gpuCanvasRef} className="absolute inset-0 block h-full w-full" />
@@ -15345,6 +15434,8 @@ export function FlowGraphCanvasHost({
         className="absolute inset-0 z-30"
         onPointerDown={(event) => {
           if (!editable) return;
+          // 🖱️ Secondary button opens the context menu — never start node drag / marquee from it.
+          if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
@@ -15365,6 +15456,7 @@ export function FlowGraphCanvasHost({
           paintOverlays();
         }}
         onPointerUp={(event) => {
+          if (event.button === 2) return;
           const session = sessionRef.current;
           if (!session) return;
           const rect = event.currentTarget.getBoundingClientRect();
@@ -15397,7 +15489,7 @@ export function FlowGraphCanvasHost({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenuItems, (action, args) => {
+        items={mapContextMenuSpecs(contextMenu?.items ?? [], (action, args) => {
           if (action === "openSpotlight") {
             const host = containerRef.current;
             if (host) openSpotlightAtClient(contextMenu?.x ?? 0, contextMenu?.y ?? 0, host);

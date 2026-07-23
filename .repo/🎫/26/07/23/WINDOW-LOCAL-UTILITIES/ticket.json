@@ -3,12 +3,13 @@
   "emoji": "🪟",
   "status": "closed",
   "description": "All utilities are local to the window instance. Only tools are mode-wide. Fix puzzle 3D transform activating gumball across all windows by carrying per-window activeUtilityByWindowId on ViewState and stamping each window's utility during refreshUi.",
-  "summary": "Fixed utilities leaking across window instances during batched refreshUi. The shell already stored per-window utilities in activeUtilityByWindowId, but refresh injected only the focused window's utility into a shared ViewState used for every pane render — causing puzzle 3D transform/gumball (and other utility-driven scene state) to appear in all panes.\n\nChanges:\n- framework/core (rs + js): added ViewState.activeUtilityByWindowId map; clarified activeUtilityId as per-call overlay; tools stay mode-wide via activeToolId.\n- framework/renderer/react: buildActiveUtilityByWindowId helper; refreshUi passes the full utility map and clears singular activeUtilityId; actions still use injectActiveUtility for targeted window overlay.\n- framework/plugin: plugin_refresh_ui stamps each window's active_utility_id from the map before render.\n- puzzle/plugin: puzzle2d/3d/5d scene-active-utility helpers resolve per window instance; window_engagements/measures build envelopes inside per-wid loops with the correct utility.\n\nTests: vitest buildActiveUtilityByWindowId + refresh map forwarding (2/2 pass). Added puzzle3d transform_utility_is_local_to_the_window_instance_not_shared_across_split_panes Rust test. cargo check -p semio-framework-core and -p semio-framework-plugin pass in isolated target dir; puzzle-plugin lib has unrelated concurrent compile errors (missing presence fields) blocking full cargo test run.",
+  "summary": "Follow-up: transform utility selection showed no gumball because refreshUi raced the React render.\n\nRoot cause: after WINDOW-LOCAL-UTILITIES, refreshUi sends only activeUtilityByWindowId (singular activeUtilityId cleared). setActiveUtility dispatched SET_ACTIVE_UTILITY but updated activeUtilityByWindowIdRef only on the next render — handleAction's follow-up refresh ran first with a stale empty map, so plugin render never stamped \"transform\" and gumballActive stayed false.\n\nFix: setActiveUtilityForWindow / clearAllWindowUtilities sync the ref immediately at every utility/tool activation site (onAction interceptors + applyHostEffects setActiveUtility/setActiveTool) before any refreshUi can run. Also sync activeToolIdRef on tool switches.\n\nTests: vitest regression for just-activated transform visible to refresh before render (3 related tests pass).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2256"
   },
   "goal": "🎯r2602",
   "sessions": [
-    "⚪c3e0d5b287254ccc90038a408b7b399e"
+    "⚪c3e0d5b287254ccc90038a408b7b399e",
+    "⚪5c37ce364a33409a8341ac7b28cee967"
   ]
 }

@@ -1,0 +1,26 @@
+Ephemeral studio tests (CARGO_TARGET_DIR=ticket/target):
+
+cargo test -p semio-framework-os --lib create_ephemeral
+  create_ephemeral_os_studio_has_no_backbone ... ok
+
+cargo test -p s-plugin --lib create_studio
+  home_declares_create_studio_action ... ok
+  create_studio_navigates_without_download_and_opens_empty ... ok
+
+cargo test -p s-plugin --lib temporary_studio
+  temporary_studio_uses_ephemeral_registry_not_catalog ... ok
+
+cargo test -p s-plugin --lib open_studio
+  open_studio_loads_created_empty_catalog_studio ... ok
+  open_studio_unknown_id_loads_empty_not_demo ... ok
+  open_studio_loads_ephemeral_created_studio ... ok
+  open_studio_demo_explicit_loads_demo_fixture ... ok
+
+cargo test -p s-plugin --lib initial_projection
+  initial_projection_is_empty_not_demo ... ok
+
+WASM rebuild: bun ./script.ts wasm (s/rs) — pkg/s_studio_bg.wasm ready (0.89 MiB)
+
+DEBUG logs verified in test output:
+  [DEBUG] createStudio ephemeral id=studio-*
+  [DEBUG] openStudio id=* instances=0 backbone=None

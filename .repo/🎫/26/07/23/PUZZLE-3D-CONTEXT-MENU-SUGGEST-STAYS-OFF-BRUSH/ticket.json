@@ -1,0 +1,13 @@
+{
+  "title": "Puzzle 3D Context Menu Suggest Stays Off Brush",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "puzzle 3d: When suggesting objects via context menu dont change the active tool and dont get into brush mode. It is just a single suggestion.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2270"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪ae3d74b556664a1ca00bbac86c8c4517"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Gumball Hover Uses Direction Colors",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "When hovering over the gumball, all elements are shown with highlighted secondary color. Make sure the highlighting happens in the color of the direction (X/Y/Z axis colors) instead of the global secondary hover token.",
+  "summary": "Gumball hover/active highlighting now keeps each handle's direction color (X/Y/Z accents) instead of swapping to the global secondary hover token.\n\nRoot cause: `gumballResolveHandleVisual` and `GumballInteractionPreview` replaced `baseColor` with `--color-changed-hovered` / `--color-changed-selected` (mapped to accent-secondary / accent), so every hovered handle turned teal.\n\nFix: keep `baseColor` on hover/active and only raise opacity; previews use `gumballBaseColorForKind`. Removed unused `hover`/`active` color fields from `GumballVisualPalette`. Updated UnifiedGumball math expectations.\n\nVerified: `nx test @semio-tech/ui-react -- -t \"UnifiedGumball math\"` passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2269"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8d9d68cfe5b14537bdbcc65623ae23dc"
+  ]
+}

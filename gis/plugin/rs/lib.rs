@@ -1801,7 +1801,7 @@ pub mod app_3d {
     /// 🗣️ Complete UI label set for the GIS 3D app; one field per label makes every locale combination compile-checked.
     app_labels! {
         struct Gis3dPlayLabels {
-            window_terrain: &'static str = en: "Terrain", de: "Gelaende";
+            window_terrain: &'static str = en: "Terrain", de: "Gelände";
             mode_view: &'static str = en: "View", de: "Ansicht";
         }
     }

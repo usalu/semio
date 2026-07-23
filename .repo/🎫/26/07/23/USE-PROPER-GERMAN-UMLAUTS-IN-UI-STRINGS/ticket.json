@@ -1,0 +1,14 @@
+{
+  "title": "Use Proper German Umlauts in UI Strings",
+  "emoji": "🔤",
+  "status": "closed",
+  "description": "All German words with Umlaut should not have the e but the direct letter öäü (e.g. Pilzsaeule → Pilzsäule). Fix German UI/locale display strings that use ae/oe/ue substitutes; keep ASCII identifiers/filenames unchanged.",
+  "summary": "Replaced ae/oe/ue umlaut substitutes with ä/ö/ü in German UI/locale display strings. Example: Pilzsaeule → Pilzsäule. Also fixed Gelände (gis), remodel labels (Läuft, Dünne, Verhältnis, ausgeführt, Qualitätsbericht, Spurlänge), and compose sketchpad German copy (Qualität, Änderungsdatum, Längengrad, möglicherweise, drücken, abstoßen, Ladungs-/Zentrierungsstärke, Entitätstyp, Messqualitäten). Identifiers/filenames/URLs left as ASCII.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2268"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪8007ba486c5a4477a15c162a867d205b"
+  ]
+}

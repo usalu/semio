@@ -798,7 +798,7 @@ app_labels! {
         reconstruction: &'static str = en: "Reconstruction", de: "Rekonstruktion";
         error: &'static str = en: "error", de: "Fehler";
         status: &'static str = en: "Status", de: "Status";
-        running: &'static str = en: "Running", de: "Laeuft";
+        running: &'static str = en: "Running", de: "Läuft";
         idle: &'static str = en: "Idle", de: "Leerlauf";
         utility: &'static str = en: "Utility", de: "Werkzeug";
         selection: &'static str = en: "selection", de: "Auswahl";
@@ -812,7 +812,7 @@ app_labels! {
         stream_kind_image_sequence: &'static str = en: "image sequence", de: "Bildsequenz";
         frames: &'static str = en: "frames", de: "Frames";
         sync_offset: &'static str = en: "sync offset", de: "Sync-Versatz";
-        sparse_cloud: &'static str = en: "Sparse point cloud", de: "Duenne Punktwolke";
+        sparse_cloud: &'static str = en: "Sparse point cloud", de: "Dünne Punktwolke";
         dense_cloud: &'static str = en: "Dense point cloud", de: "Dichte Punktwolke";
         results_none: &'static str = en: "none", de: "keine";
         trajectory: &'static str = en: "Trajectory", de: "Trajektorie";
@@ -832,7 +832,7 @@ app_labels! {
         downscale_short: &'static str = en: "downscale", de: "Verkleinerung";
         target_short: &'static str = en: "target", de: "Ziel";
         octaves_short: &'static str = en: "octaves", de: "Oktaven";
-        ratio_short: &'static str = en: "ratio", de: "Verhaeltnis";
+        ratio_short: &'static str = en: "ratio", de: "Verhältnis";
         window_short: &'static str = en: "window", de: "Fenster";
         ransac_short: &'static str = en: "ransac", de: "Ransac";
         min_track_short: &'static str = en: "min track", de: "min. Spur";
@@ -845,10 +845,10 @@ app_labels! {
         gcps: &'static str = en: "Ground control points", de: "Passpunkte";
         tracks: &'static str = en: "Motion tracks", de: "Bewegungsspuren";
         tracks_none: &'static str = en: "No motion tracks", de: "Keine Bewegungsspuren";
-        motion_not_implemented: &'static str = en: "Motion tracking is not yet driven by the reconstruction engine", de: "Bewegungsverfolgung wird von der Rekonstruktions-Engine noch nicht ausgefuehrt";
-        qc_none: &'static str = en: "No quality report yet", de: "Noch kein Qualitaetsbericht";
+        motion_not_implemented: &'static str = en: "Motion tracking is not yet driven by the reconstruction engine", de: "Bewegungsverfolgung wird von der Rekonstruktions-Engine noch nicht ausgeführt";
+        qc_none: &'static str = en: "No quality report yet", de: "Noch kein Qualitätsbericht";
         qc_reprojection: &'static str = en: "Mean reprojection error", de: "Mittlerer Reprojektionsfehler";
-        qc_track_length: &'static str = en: "Mean track length", de: "Mittlere Spurlaenge";
+        qc_track_length: &'static str = en: "Mean track length", de: "Mittlere Spurlänge";
         qc_registered_ratio: &'static str = en: "Registered frame ratio", de: "Anteil registrierter Frames";
         qc_dense_coverage: &'static str = en: "Dense coverage ratio", de: "Dense-Abdeckungsanteil";
         qc_gcp_rmse: &'static str = en: "GCP checkpoint RMSE", de: "Passpunkt-Kontroll-RMSE";

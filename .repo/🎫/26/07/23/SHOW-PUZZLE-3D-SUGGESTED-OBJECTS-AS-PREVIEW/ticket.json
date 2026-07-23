@@ -1,0 +1,13 @@
+{
+  "title": "Show Puzzle 3D Suggested Objects as Preview",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "Puzzle 3D: suggested objects are not shown as preview in 3D. When hovering/selecting suggested objects from the suggestion menu, the brush preview ghost should appear in the 3D world at the proposed placement. Diagnose why brushPreviewJson is missing or not rendered during suggestion hover, fix at the root, add regression coverage in existing tests, and verify with runtime evidence.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2271"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪1c1e74a99f124185a56896d572c2d275"
+  ]
+}

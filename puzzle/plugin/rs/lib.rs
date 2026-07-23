@@ -3770,8 +3770,10 @@ pub mod d3 {
         .to_string()
     }
 
+    /// 👻 Ghost placement for the brush utility, or for a one-shot context-menu / Alt+right-click
+    /// suggestion popup (`suggestion_menu`) that must not switch the host-owned active utility into brush.
     fn world_brush_preview_json(session: &Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) -> Option<String> {
-        if envelope.active_utility != "brush" {
+        if envelope.active_utility != "brush" && envelope.runtime.suggestion_menu.is_none() {
             return None;
         }
         let vortex_id = puzzle3d_brush_target_vortex(envelope)?;
@@ -6465,10 +6467,11 @@ pub mod d3 {
                     }
                 }
                 "openVortexSuggestions" => {
+                    // 💡 One-shot suggestion popup: select the vortex and open the picker without
+                    // switching the host-owned utility/tool into brush mode.
                     if let Some(full_id) = args.and_then(|value| value.get("fullId")).and_then(|value| value.as_str()) {
                         envelope.runtime.selection.vortex_ids = vec![full_id.to_string()];
                         envelope.runtime.selection.object_ids.clear();
-                        envelope.active_utility = "brush".into();
                         envelope.runtime.brush_candidate_index = 0;
                         let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                         let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -6495,7 +6498,6 @@ pub mod d3 {
                                     puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                     resolve_puzzle3d_attractions(&mut envelope.fixture);
                                     envelope.runtime.suggestion_menu = None;
-                                    envelope.active_utility = PUZZLE3D_DEFAULT_UTILITY.into();
                                 }
                             }
                         }
@@ -7352,13 +7354,13 @@ pub mod d3 {
             let vortex = first_vortex_full_id(&app);
             let result = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 12.0, "y": 34.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
             assert!(
-                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id == "brush"),
-                "opening suggestions switches the host-owned utility to brush",
+                result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+                "opening a one-shot suggestion must not switch the host-owned utility or tool: {:?}",
+                result.requested_effects,
             );
-            let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
             let interaction = interaction_of(&serde_json::to_value(&node).unwrap());
-            assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("brush"));
+            assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "context-menu suggestion stays in the current selection mode");
             let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
             assert_eq!(menu.get("open").and_then(Value::as_bool), Some(true));
             assert_eq!(menu.get("x").and_then(Value::as_f64), Some(12.0));
@@ -7377,19 +7379,17 @@ pub mod d3 {
 
         /// 🖱️ Hovering a row in the suggestion popup must live-update the 3D brush preview (rendered by
         /// `world_brush_preview_json`, which reads `runtime.brush_candidate_index`) to the hovered
-        /// candidate, so the UI can highlight it in 3D before the user clicks to accept.
+        /// candidate, so the UI can highlight it in 3D before the user clicks to accept — without
+        /// switching the host-owned active utility into brush mode.
         #[test]
         fn hover_suggestion_updates_the_brush_candidate_index_and_live_preview() {
-            // 🧰 `active_utility` (the brush-preview gate in `world_brush_preview_json`) mirrors the
-            // host-owned `view_state.active_utility_id`, not `runtime.active_utility` — the render call must be
-            // given a "brush" view state, exactly like `open_vortex_suggestions_opens_the_suggestion_popup`.
-            let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
             app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
-            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
             let composite = serde_json::to_value(&node).unwrap();
             let interaction = interaction_of(&composite);
+            assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "suggestion hover must not enter brush mode");
             assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(0), "opening suggestions starts hover at the first candidate");
             let candidates = interaction.pointer("/suggestionMenu/candidates").and_then(Value::as_array).cloned().unwrap_or_default();
             assert!(!candidates.is_empty(), "suggestion candidates should be present");
@@ -7401,7 +7401,7 @@ pub mod d3 {
             assert!(preview.get("color").and_then(Value::as_str).is_some_and(|color| color.starts_with('#')), "brush preview carries object-kind color: {preview}");
 
             app.handle_action("hoverSuggestion", Some(&json!({ "index": 1 })), &ViewState::default(), &testkit::meta("local")).expect("hoverSuggestion");
-            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &brush_view).expect("render");
+            let node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render");
             let composite = serde_json::to_value(&node).unwrap();
             let interaction = interaction_of(&composite);
             assert_eq!(interaction.get("brushCandidateIndex").and_then(Value::as_u64), Some(1), "hovering a different row must move the tracked candidate index");
@@ -7416,12 +7416,12 @@ pub mod d3 {
             let object_count_before = object_count(&app);
             let vortex = first_vortex_full_id(&app);
             app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
-            let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
-            let result = app.handle_action("acceptSuggestion", None, &brush_view, &testkit::meta("local")).expect("acceptSuggestion");
+            let result = app.handle_action("acceptSuggestion", None, &ViewState::default(), &testkit::meta("local")).expect("acceptSuggestion");
             assert_eq!(object_count(&app), object_count_before + 1);
             assert!(
-                matches!(result.requested_effects.as_slice(), [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == PUZZLE3D_PLAY_WINDOW_MAIN && utility_id.is_empty()),
-                "accepting a context-menu suggestion restores the host-owned default selection mode",
+                result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+                "accepting a one-shot suggestion must leave the host-owned utility/tool unchanged: {:?}",
+                result.requested_effects,
             );
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
@@ -7712,8 +7712,10 @@ pub mod d3 {
             assert_eq!(measure_group_tag(&puzzle3d_window_measures(&brush_scene, &session, labels), "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())));
             let brush_engagement = puzzle3d_engagement(&brush_scene, &PUZZLE3D_LABELS_NATIVE_EN);
             assert!(brush_engagement.control.is_none() && brush_engagement.controls.is_none(), "brush engagement HUD must no longer carry the relocated control");
-            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real            // 🖌️ Positive case: opening a vortex's suggestions selects it and drives the precompute so real
-            // candidates exist — the brush Utility Options group must then surface, tagged for "brush".
+            // 🖌️ Positive case: while already in the brush utility, opening a vortex's suggestions
+            // selects it and drives precompute so real candidates exist — the brush Utility Options
+            // group must then surface, tagged for "brush". One-shot suggestions outside brush mode
+            // must not switch into brush just to show this group.
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
@@ -7721,6 +7723,35 @@ pub mod d3 {
             let brush_app_measures = app.window_measures(&brush_view);
             let window_measures = brush_app_measures.get(PUZZLE3D_PLAY_WINDOW_MAIN).expect("main window measures");
             assert_eq!(measure_group_tag(window_measures, "puzzle3d-play-utility-options-brush"), Some(Some("brush".into())), "the brush Utility Options group surfaces once there are candidates to place");
+        }
+
+        /// 🧰 Context-menu / Alt+right-click suggestions are a one-shot placement: opening and accepting
+        /// must leave whatever host-owned utility was already active (e.g. transform) untouched.
+        #[test]
+        fn open_and_accept_vortex_suggestions_preserve_active_utility() {
+            let transform_view = ViewState { active_utility_id: Some("transform".into()), ..ViewState::default() };
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortex = first_vortex_full_id(&app);
+            let open = app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &transform_view, &testkit::meta("local")).expect("openVortexSuggestions");
+            assert!(
+                open.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+                "opening suggestions must not emit utility/tool switches: {:?}",
+                open.requested_effects,
+            );
+            let open_node = app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &transform_view).expect("render");
+            let open_interaction = interaction_of(&serde_json::to_value(&open_node).unwrap());
+            assert_eq!(open_interaction.get("activeUtility").and_then(Value::as_str), Some("select"), "transform remains non-brush scene mode during suggestions");
+            assert_eq!(open_interaction.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
+            assert!(brush_preview_of(&serde_json::to_value(&open_node).unwrap()).get("objectKindId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "one-shot suggestions still emit a placement preview without entering brush mode");
+            let accept = app.handle_action("acceptSuggestion", None, &transform_view, &testkit::meta("local")).expect("acceptSuggestion");
+            assert!(
+                accept.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+                "accepting suggestions must not emit utility/tool switches: {:?}",
+                accept.requested_effects,
+            );
+            let accept_interaction = interaction_of(&app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, &transform_view).map(|node| serde_json::to_value(&node).unwrap()).expect("render"));
+            assert!(accept_interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
+            assert_eq!(accept_interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
         }
         //#endregion 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
 

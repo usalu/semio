@@ -1131,6 +1131,12 @@ pub mod host {
         Ok(entries)
     }
 
+    /// @emoji 🫧 Mints an empty session-local studio document — no backbone URI and no catalog port write.
+    pub fn create_ephemeral_os_studio(name: &str) -> OsDocument {
+        let id = create_os_id("studio");
+        create_empty_os_document(&id, name.trim())
+    }
+
     /// @emoji 🆕 Creates an empty studio document on the dev backbone.
     pub fn create_os_studio(name: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
         let id = create_os_id("studio");
@@ -1624,6 +1630,15 @@ pub mod host {
                 OsParameter::Numeric { value, .. } => assert_eq!(*value, 10.0),
                 _ => panic!("expected numeric"),
             }
+        }
+
+        #[test]
+        fn create_ephemeral_os_studio_has_no_backbone() {
+            let document = create_ephemeral_os_studio("Ephemeral Studio");
+            assert!(document.id.starts_with("studio-"));
+            assert_eq!(document.name, "Ephemeral Studio");
+            assert!(document.backbone.is_none());
+            assert!(document.vcs.initial_projection.app_instances.is_empty());
         }
 
         #[test]
@@ -4482,7 +4497,7 @@ pub mod registry {
 #[cfg(not(target_arch = "wasm32"))]
 pub use backbone::{open_file_studio_backbone, open_folder_studio_backbone};
 pub use host::{
-    apply_os_operation, create_empty_os_document, create_os_studio, default_os_projection, delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_document_from_json,
+    apply_os_operation, create_empty_os_document, create_ephemeral_os_studio, create_os_studio, default_os_projection, delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_document_from_json,
     os_document_to_envelope_json, os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
     OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };

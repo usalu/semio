@@ -92,7 +92,6 @@ const DAG_IO_COLUMN_WIDTH: f64 = ui_styling::metrics::dag::IO_COLUMN_WIDTH;
 const DAG_COMPONENT_WIDTH: f64 = DAG_IO_COLUMN_WIDTH * 2.0;
 const DAG_DISTRIBUTE_MIN_GAP: f64 = ui_styling::metrics::board::LAYOUT_SIBLING_GAP;
 const DAG_IO_WIDGET_HEIGHT: f64 = ui_styling::metrics::dag::IO_WIDGET_HEIGHT;
-const DAG_SLIDER_KNOB_SCREEN_PX: f64 = ui_styling::metrics::dag::SLIDER_KNOB_SCREEN_PX;
 const DAG_LABEL_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_DEFAULT_PX;
 const DAG_LABEL_COMPACT_SCREEN_PX: f64 = ui_styling::metrics::label::DAG_COMPACT_PX;
 
@@ -4253,13 +4252,12 @@ impl DagHost {
         lod: DagDrawLod,
         lod_index: usize,
         node: &DagNodeSpec,
-        widget_drag_idx: Option<usize>,
         chrome: DagNodePaintChrome,
     ) {
         use cavas::camera::world_to_screen;
         use cavas::text::append_label;
         use cavas::FillRule;
-        use cavas::{Circle, Line, Point, Rect, Stroke};
+        use cavas::{Point, Rect, Stroke};
 
         let theme = &self.canvas_theme;
         let label_halo = theme.label_halo;
@@ -4320,23 +4318,14 @@ impl DagHost {
                         }
                     }
                 }
-                DagNodeKind::Slider { min, max, value, .. } => {
+                DagNodeKind::Slider { value, .. } => {
                     if let Some(label) = label_text.filter(|_| lod.shows_controls() && !caption_on_overlay) {
                         Self::paint_slider_name(scene, cam, viewport, node, label, paint_px, label_fill, label_halo);
                     }
+                    // 🎚️ Track + knob live on the HTML `GraphSliderOverlays` control — painting them here
+                    // doubles a pixelated GPU ghost above the crisp DOM slider. Only the left value readout
+                    // stays on the GPU so the overlay can stay track-bounds-aligned (`showValue={false}`).
                     if lod.shows_controls() {
-                        let (x0, y0, x1, y1) = slider_track_bounds(node);
-                        let track_y = (y0 + y1) * 0.5;
-                        let track = Line::new(Point::new(x0, track_y), Point::new(x1, track_y));
-                        let track_emphasized = chrome.is_hovered || chrome.is_selected || widget_drag_idx.is_some();
-                        let track_stroke = if track_emphasized { theme.label_fill_hovered } else { theme.edge_stroke };
-                        scene.stroke(&Stroke::new(chrome_stroke), *aff, track_stroke, None, &track);
-                        let span = (max - min).max(1e-6);
-                        let t = ((*value - *min) / span).clamp(0.0, 1.0);
-                        let thumb_x = x0 + t * (x1 - x0);
-                        let knob_dragging = widget_drag_idx.is_some();
-                        let knob_fill = if knob_dragging { theme.handle_fill_selected } else { label_fill };
-                        scene.fill(FillRule::NonZero, *aff, knob_fill, None, &Circle::new(Point::new(thumb_x, track_y), DAG_SLIDER_KNOB_SCREEN_PX / cam.zoom.max(0.05)));
                         let value_text = format!("{value:.1}");
                         let value_px = paint_px * 0.9;
                         let (vx, vy) = slider_value_world_center(node, &value_text, value_px, cam.zoom);
@@ -4606,12 +4595,11 @@ impl DagHost {
                 lod,
                 lod_index,
                 node,
-                self.widget_drag.filter(|drag_idx| *drag_idx == idx),
                 DagNodePaintChrome { is_dimmed, is_selected, is_highlighted, is_hovered, is_computing, is_stale, body_fill_alpha: 255, ghost_tint: false },
             );
         }
         if let Some(ghost) = self.ghost_node.as_ref() {
-            self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, ghost, None, DagNodePaintChrome::ghost_preview());
+            self.paint_node_visual(scene, &aff, &cam, &viewport, lod, lod_index, ghost, DagNodePaintChrome::ghost_preview());
         }
         for (hid, center, _radius) in &snap.handles {
             paint_snap_handle(scene, hid, center, Some(PortShape::Triangle));
