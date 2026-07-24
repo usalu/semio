@@ -1,13 +1,15 @@
 import { describe, expect, it } from "bun:test";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import {
   clearColorResolveCache,
   resolveColorHex,
   resolveColorRgba,
   resolveSemanticColorHex,
+  resolveSpatialAxisColors,
   serializeCanvasThemeJson,
   syncSessionCanvasTheme,
+  SPATIAL_AXIS_COLOR_REFS,
   STYLING_BOARD_PALETTES,
   STYLING_TOKENS,
   elementStateAttributes,
@@ -18,12 +20,24 @@ import {
 import { meshCollectionVitePlugin, type PlaygroundAssetSpec } from "../vite-elements-assets.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../..");
+const uiCss = readFileSync(resolve(import.meta.dir, "ui.css"), "utf8");
 
 describe("styling resolve", () => {
+  it("selection fill uses accent with emphasized text color so muted gray stays readable", () => {
+    expect(uiCss).toMatch(/::selection\s*\{\s*background-color:\s*var\(--accent\);\s*color:\s*var\(--border-emphasized-color\);/);
+    expect(uiCss).toMatch(/::-moz-selection\s*\{\s*background-color:\s*var\(--accent\);\s*color:\s*var\(--border-emphasized-color\);/);
+  });
+
   it("resolveColorHex resolves palette var refs headlessly", () => {
     clearColorResolveCache();
     expect(resolveColorHex("var(--color-secondary)", "gray")).toBe("#34d1bf");
     expect(resolveSemanticColorHex("border-element-color", "gray")).toBe("#7b827d");
+  });
+
+  it("resolveSpatialAxisColors maps X/Y/Z to primary/secondary/tertiary permanently", () => {
+    clearColorResolveCache();
+    expect(resolveSpatialAxisColors()).toEqual({ x: "#ff344f", y: "#34d1bf", z: "#fa9500" });
+    expect(SPATIAL_AXIS_COLOR_REFS).toEqual({ x: "var(--color-primary)", y: "var(--color-secondary)", z: "var(--color-tertiary)" });
   });
 
   it("resolveColorRgba returns byte tuple", () => {

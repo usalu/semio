@@ -1299,6 +1299,21 @@ impl Puzzle3dEngine {
         self.meshes.contains_key(url)
     }
 
+    /// 🧊 Drops a cached brush-candidate entry and re-queues that vortex at the front so a just-opened
+    /// suggestion popup is not stuck on a stale empty / pending result.
+    fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
+        self.brush_cache.remove(vortex_full_id);
+        self.queue.retain(|task| !matches!(task, PrecomputeTask::BrushTarget(id) if id == vortex_full_id));
+        self.queue.insert(0, PrecomputeTask::BrushTarget(vortex_full_id.to_string()));
+    }
+
+    /// 🧊 Recomputes and caches brush candidates for one vortex immediately (used when opening / accepting
+    /// the suggestion popup so the UI does not wait on the background queue).
+    fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+        let result = self.compute_brush_cache_entry(vortex_full_id);
+        self.brush_cache.insert(vortex_full_id.to_string(), result);
+    }
+
     fn preview_collides(meshes: &HashMap<String, CollisionBody>, preview: &BrushPreviewState, placed: &[PlacedCollisionEntry], overlap_budget: f64, sample_count: usize) -> Option<bool> {
         let preview_body = meshes.get(&preview.mesh_url)?;
         let preview_world = pose_isometry(preview.origin, preview.orientation, &preview.scale);
@@ -1683,6 +1698,14 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.engine.precompute_step(budget)
+    }
+
+    pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
+        self.engine.invalidate_brush_target(vortex_full_id);
+    }
+
+    pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+        self.engine.refresh_brush_candidates(vortex_full_id);
     }
 
     pub fn brush_candidates(&self, vortex_full_id: &str) -> String {
@@ -2079,6 +2102,14 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn precompute_step(&mut self, budget: u32) -> bool {
         self.engine.precompute_step(budget)
+    }
+
+    pub fn invalidate_brush_target(&mut self, vortex_full_id: &str) {
+        self.engine.invalidate_brush_target(vortex_full_id);
+    }
+
+    pub fn refresh_brush_candidates(&mut self, vortex_full_id: &str) {
+        self.engine.refresh_brush_candidates(vortex_full_id);
     }
 
     pub fn brush_candidates(&self, vortex_full_id: &str) -> String {

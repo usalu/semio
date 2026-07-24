@@ -1,0 +1,14 @@
+{
+  "title": "Keep Panel Toggles Visible During Canvas Ghost",
+  "emoji": "👻",
+  "status": "closed",
+  "description": "ui: When interacting inside the window (e.g. rectangle selection on 3d) then the panes correctly hide but the toggles for panels in the navbar in the footer also hide although they dont need to hide. Only open panels and panes need to be hidden. e.g. the border of panels still dont hide properly.",
+  "summary": "Canvas ghost no longer hides navbar/footer panel toggles; open panel/pane borders now hide with the rest of open chrome.\n\n**Cause:** Every `GhostRegionShell` (including `PanelChromeTabBar`) got `data-ghost` during a global session, and chrome tab rows used `data-dim`. Open panel/pane `[data-slot=\"chrome-frame\"]` was intentionally not `data-dim`, so borders remained after fill hid.\n\n**Fix:**\n1. `GhostRegionShell` `sessionGhost` prop (default true); `PanelChromeTabBar` uses `sessionGhost={false}`.\n2. Tab rows only `data-dim` when open (not chrome variant / folded root row).\n3. Open panels/panes mark fill, frame, chrome, and body `data-dim`; folded toggles stay undimmed.\n4. Window measures/engagement/search/utility stacks only `data-dim` when open.\n\n**Verified:** related ui-react vitest filters — 12 + 10 + 4 targeted cases passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2302"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪87d4a45deafd4fe3acb3f44862bb91a4"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Aggregator Window Right Borders",
+  "emoji": "🪟",
+  "status": "closed",
+  "description": "Aggregator: right borders of windows are not visible or very tiny. Active Perspective pane shows red borders on left/top/bottom but the right edge at the screen edge is missing/clipped. Fix so all four window borders render consistently and visibly.",
+  "summary": "Fixed missing/tiny right (and bottom) window silhouette borders.\n\n**Cause:** `windowSilhouettePath` used a 0.5px inset for a centered 1px hairline SVG stroke, placing the stroke flush with the exclusive max clip edge of overflow-hidden ancestors. Left/top (inclusive min edges) stayed visible; right/bottom vanished.\n\n**Fix:** Default inset is now `WINDOW_SILHOUETTE_PATH_INSET = 1` so the full hairline sits inside the stack box. Mode dock `ResizablePanel` also uses `overflow-visible`.\n\n**Verified:** ui-react vitest filters for silhouette/Mode — 29 passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2294"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪ff5eca1aeb2949fe8a28ac904b9802d2"
+  ]
+}

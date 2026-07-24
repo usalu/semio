@@ -1,0 +1,14 @@
+{
+  "title": "Complete Aggregator Introduction Tour Steps",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "Complete the Aggregator (Entwerfen mit Bestand) introduction: add steps for Verbindungspunkte (vortex show window options), suggestion via context menu, and other core missing tour beats so the walkthrough is no longer adhoc/incomplete. Wire introduce/show element ids to real chrome (measures, utilities, windows) with German copy. Update brand.ts and keep puzzle3d reference intro coherent; extend brand assertion tests.",
+  "summary": "Completed the Aggregator introduction with Verbindungspunkte (puzzle3d-play-vortex-show / setVortexShow) and Baukomponenten vorschlagen (openVortexSuggestions via Kontextmenü). Force-unfolds window measures when a measure id is introduced/shown. Localized puzzle3d context-menu labels and reuse DE/EN vortex_show / suggest_objects wording. Brand assertion + measure-tree + cargo context-menu/vortex-show tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2299"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪060220de5b694055976b5b3869a2049b"
+  ]
+}

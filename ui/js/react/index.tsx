@@ -39,6 +39,7 @@ import {
   resolveElementFillKind,
   resolveElementState,
   resolveSemanticColorHex,
+  resolveSpatialAxisColors,
   semanticVar,
   semioTheme,
   serializeUiTheme,
@@ -1854,6 +1855,8 @@ export interface ContextMenuControllerProps {
   position: { x: number; y: number } | null;
   items: ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
+  /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
+  closeOnSelect?: boolean;
 }
 
 function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenuItem; readonly onClose: () => void }): React.ReactNode {
@@ -1917,10 +1920,15 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
   });
 }
 
+/** @emoji 🖱️ True when a pointer event targets any open context menu surface (including sibling menus from split world panes). */
+export function isContextMenuPointerTarget(target: EventTarget | null): boolean {
+  return Boolean(target instanceof Element && target.closest('[role="menu"]'));
+}
+
 /**
  * 🧩 Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
-export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange }) => {
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -1928,11 +1936,15 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     if (!open || !items.length || !position) {
       return undefined;
     }
+    // 🛡️ Arm after the opening gesture finishes — opening from another menu's click must not see that
+    // same pointer cycle (or a sibling pane's duplicate menu) as an outside dismiss.
+    let armed = false;
+    const armTimer = window.setTimeout(() => {
+      armed = true;
+    }, 0);
     const handlePointerDown = (event: PointerEvent): void => {
-      const target = event.target;
-      if (target instanceof Node && menuRef.current?.contains(target)) {
-        return;
-      }
+      if (!armed) return;
+      if (isContextMenuPointerTarget(event.target)) return;
       onOpenChange(false);
     };
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -1943,7 +1955,10 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     const bindings = createDOMEventBinding();
     bindings.listen(window, "pointerdown", handlePointerDown, false);
     bindings.listen(window, "keydown", handleKeyDown, false);
-    return () => bindings.dispose();
+    return () => {
+      window.clearTimeout(armTimer);
+      bindings.dispose();
+    };
   }, [items.length, onOpenChange, open, position?.x, position?.y]);
   if (!items.length) {
     return null;
@@ -1953,7 +1968,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   }
   return renderPortalInto(
     <div className={contextMenuContentClassName()} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
-      {renderFixedContextMenuItems(items, close)}
+      {renderFixedContextMenuItems(items, closeOnSelect ? close : () => undefined)}
     </div>,
     getDocumentBody(),
   );
@@ -3042,7 +3057,7 @@ const uiRibbonParentDe: UiRibbonParentEntries = {
   targets: { label: { normal: "Ziele", beginner: "Ziele" } },
   export: { label: { normal: "Export", beginner: "Export" } },
   tools: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
-  utilities: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
+  utilities: { label: { normal: "Hilfsmittel", beginner: "Hilfsmittel" } },
   sync: { label: { normal: "Sync", beginner: "Sync" } },
 };
 
@@ -3387,8 +3402,8 @@ export const uiChromeTranslationBundles = {
           group: {
             parent: {
               label: {
-                normal: "Werkzeug",
-                beginner: "Werkzeug",
+                normal: "Hilfsmittel",
+                beginner: "Hilfsmittel",
               },
             },
           },
@@ -3444,7 +3459,7 @@ export const uiChromeTranslationBundles = {
           maximize: { label: { normal: "Maximieren", beginner: "Maximieren" } },
           action: { label: { normal: "Aktion", beginner: "Aktion" } },
           actions: { label: { normal: "Aktionen", beginner: "Aktionen" } },
-          utilities: { label: { normal: "Werkzeuge", beginner: "Werkzeuge" } },
+          utilities: { label: { normal: "Hilfsmittel", beginner: "Hilfsmittel" } },
           retry: { label: { normal: "Erneut versuchen", beginner: "Erneut versuchen" } },
           somethingWentWrong: { label: { normal: "Etwas ist schiefgelaufen", beginner: "Etwas ist schiefgelaufen" } },
           doubleClickToEdit: { label: { normal: "Zum Bearbeiten doppelklicken", beginner: "Zum Bearbeiten doppelklicken" } },
@@ -4788,7 +4803,7 @@ export enum SectionSpecificity {
 // #endregion 🔊Section Specificity
 
 // #region 🔤Interaction Context
-// Global ghost mode hides panel chrome during interactions; only an active tree path stays visible.
+// Global ghost mode hides open panel/pane chrome during interactions; navbar/footer panel toggles stay visible.
 
 const PANEL_GHOST_MOVE_THRESHOLD_PX = 4;
 
@@ -4974,20 +4989,23 @@ interface GhostRegionShellProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   /** @emoji 🫳 When true, the region root is click-through while ghosted (panels over canvas). */
   clickThroughWhenGhost?: boolean;
+  /** @emoji 👻 When false, this region stays undimmed during a global ghost session (navbar/footer panel toggles). Default true — open panels/panes hide. */
+  sessionGhost?: boolean;
 }
 
-/** @emoji 👻 Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active. */
-const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, ...props }, ref) {
+/** @emoji 👻 Ghost region shell: dims {@link data-dim} children when {@link GhostProvider} is active and {@link sessionGhost} is true. */
+const GhostRegionShell = reactHostPort.forwardRef<HTMLDivElement, GhostRegionShellProps>(function GhostRegionShell({ children, className, style, clickThroughWhenGhost = false, sessionGhost = true, ...props }, ref) {
   const ghost = usePanelGhost();
+  const ghostActive = Boolean(sessionGhost && ghost?.active);
   const mergedStyle = reactHostPort.useMemo(
     () => ({
       ...(style as React.CSSProperties | undefined),
-      pointerEvents: clickThroughWhenGhost && ghost?.active ? ("none" as const) : undefined,
+      pointerEvents: clickThroughWhenGhost && ghostActive ? ("none" as const) : undefined,
     }),
-    [clickThroughWhenGhost, ghost?.active, style],
+    [clickThroughWhenGhost, ghostActive, style],
   );
   return (
-    <div ref={ref} data-ghost-region data-ghost={ghost?.active ? "true" : undefined} className={className} style={mergedStyle} {...props}>
+    <div ref={ref} data-ghost-region data-ghost={ghostActive ? "true" : undefined} className={className} style={mergedStyle} {...props}>
       {children}
     </div>
   );
@@ -5011,8 +5029,11 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 
 // #region 🎓Introduction
 /** 🪟 The glass overlay box recipe shared by the introduction info box and modal dialogs (see
- * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention. */
-export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg border p-double shadow-lg");
+ * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention.
+ * Border color is CSS-owned (`[data-slot="introduction-info-box"|"dialog-box"]`): normal at rest,
+ * emphasized while the pointer is inside (introduction is hover-only — `:focus-within` would stick
+ * after clicking Next across steps; dialogs also emphasize on `:focus-within` for form fields). */
+export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
@@ -5543,13 +5564,13 @@ export const borderEmphasizedTopClass = `border-t ${borderEmphasizedClass}`;
 /** @emoji 📏 Subtle normal stroke for controls, windows, dividers, and in-chrome separators. */
 export const borderNormalClass = "!border-normal";
 
-/** @emoji 📏 Normal chrome frame (`border` + {@link borderNormalClass}); emphasized on `[data-slot="panel"]:hover` via CSS. */
+/** @emoji 📏 Normal chrome frame (`border` + {@link borderNormalClass}); panel/pane hosts prefer {@link shellChromeFrameLayerClass} + CSS parent-hover. */
 export const borderNormalFrameClass = `box-border border border-solid ${borderNormalClass}`;
 
-/** @emoji 📏 Normal navbar bottom edge; emphasized on `[data-slot="navbar"]:hover` via CSS. */
+/** @emoji 📏 Normal bottom edge utility for in-chrome dividers (not shell navbar — navbar uses a CSS `::after` stroke). */
 export const borderNormalBottomClass = `border-b ${borderNormalClass}`;
 
-/** @emoji 📏 Normal footer top edge; emphasized on `[data-slot="footer"]:hover` via CSS. */
+/** @emoji 📏 Normal top edge utility for in-chrome dividers (not shell footer — footer uses a CSS `::before` stroke). */
 export const borderNormalTopClass = `border-t ${borderNormalClass}`;
 
 /** @emoji 📏 Implicit element border color (controls, dropdowns, dividers). */
@@ -5579,20 +5600,20 @@ export const sliderValueClassName = cn("text-element w-large text-end text-xs le
 /** @emoji 📏 Active window chrome line when that stack is globally active. */
 export const activeLineClass = "border-active-base";
 
-/** @emoji 🪟 Panel outline — normal gray frame; emphasized while the pointer is inside `[data-slot="panel"]`. */
-export const panelChromeBorderClass = borderNormalFrameClass;
+/** @emoji 🪟 Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
+export const shellChromeBorderClass = borderNormalFrameClass;
 
-/** @emoji 🪟 Frosted fill layer behind panel content (no stroke — border lives on the frame). */
+/** @emoji 🪟 Frosted fill layer behind panel/pane content (no stroke — border lives on the frame). */
 export const panelGlassFillClass = glassPanelClass;
 
-/** @emoji 🪟 Frosted fill layer (ghost-dimmed; sits under the stroke so the border stays visible). */
+/** @emoji 🪟 Frosted fill layer (ghost-dimmed with the open panel/pane). */
 export const panelChromeFillLayerClass = cn("pointer-events-none absolute inset-0 z-0", panelGlassFillClass);
 
-/** @emoji 🪟 Emphasized stroke on top of fill and content (transparent center; not ghost-dimmed). */
-export const panelChromeFrameLayerClass = cn("pointer-events-none absolute inset-0 z-30 box-border bg-transparent", panelChromeBorderClass);
+/** @emoji 🪟 Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
+export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
 
 /** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
-export const panelGlassFrameClass = cn(panelChromeBorderClass, panelGlassFillClass);
+export const panelGlassFrameClass = cn(shellChromeBorderClass, panelGlassFillClass);
 
 /** @emoji 🪟 Frosted floating menu/popover surface for technology renderer overlays. */
 export const floatingMenuSurfaceClass = cn(glassMenuClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
@@ -5624,7 +5645,7 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
 
-/** @emoji 📑 Panel tab strip base — sits above {@link panelChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` spans the divider across the row, while `ui-scrollbar-hidden` preserves the fixed control height when overflowing tabs remain horizontally scrollable. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
+/** @emoji 📑 Panel tab strip base — sits above {@link shellChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` spans the divider across the row, while `ui-scrollbar-hidden` preserves the fixed control height when overflowing tabs remain horizontally scrollable. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
 const panelTabBarBaseClass = "ui-scrollbar-hidden relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
@@ -6173,9 +6194,11 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const tabDragActive = Boolean(dock?.dragTabId);
   const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
   const unitDragActive = usePanelTreeUnitDragActive();
+  // 👻 Navbar/footer chrome toggles and folded panel root rows stay visible during canvas ghost; only open panel tab strips dim.
+  const ghostDim = variant !== "chrome" && showActiveColor;
 
   return (
-    <div ref={setRowRef} data-dim data-slot={`${tabSlot}-tabs`} className={cn(barClass, rowDropReady && dropZoneReadyClass)}>
+    <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} data-slot={`${tabSlot}-tabs`} className={cn(barClass, rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
         const Icon = tab.icon;
         const isActive = tab.id === resolvedActiveId;
@@ -6752,7 +6775,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
     if (!dock?.dragTabId) return null;
     return (
       <LevelProvider level="panel">
-        <GhostRegionShell data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+        <GhostRegionShell sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
           <PanelEmptyDockZone anchor={anchor} />
         </GhostRegionShell>
       </LevelProvider>
@@ -6761,7 +6784,7 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
 
   return (
     <LevelProvider level="panel">
-      <GhostRegionShell data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
+      <GhostRegionShell sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
         <PanelTabBar variant="chrome" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} showActiveColor={visible} />
       </GhostRegionShell>
     </LevelProvider>
@@ -6831,9 +6854,14 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
   return stackActive ? "active" : "normal";
 }
 
+/** @emoji 🪟 Hairline inset for {@link windowSilhouettePath}: a centered `--stroke-hairline` (1px) stroke
+ * must sit fully inside the stack box. Half-pixel inset leaves the right/bottom halves on the exclusive
+ * clip edge of `overflow: hidden` ancestors (resizable panels / mode body), so those sides vanish. */
+export const WINDOW_SILHOUETTE_PATH_INSET = 1;
+
 /** @emoji 🪟 Closed SVG path for the dock-stack outer silhouette (tabs + gap cutout + controls + body).
- * Inset slightly so a centered stroke stays inside `overflow-hidden` stacks. */
-export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = 0.5): string {
+ * Inset by {@link WINDOW_SILHOUETTE_PATH_INSET} so a centered hairline stroke stays inside clipped stacks. */
+export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): string {
   const w = Math.max(inset * 2, metrics.width);
   const h = Math.max(inset * 2, metrics.height);
   const tabs = Math.max(inset, Math.min(metrics.tabsWidth, w - inset));
@@ -7668,7 +7696,7 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <footer id="ui.footer" data-slot="footer" data-elevation-root="" className={cn(borderNormalTopClass, "relative h-large z-navbar", bgClass, className)}>
+    <footer id="ui.footer" data-slot="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -9392,7 +9420,7 @@ function ButtonGroupItem({
       {...(props as any)}
     >
       {children}
-      {inlineText ? <span className="text-xs whitespace-nowrap">{inlineText}</span> : null}
+      {inlineText ? <span className={cn("min-w-0 text-xs whitespace-nowrap", /\bjustify-between\b/.test(String(className ?? "")) && "flex-1 truncate")}>{inlineText}</span> : null}
       {renderControlIcon(icon)}
     </Comp>
   );
@@ -10171,7 +10199,7 @@ function SelectTrigger({
       data-size={size}
       data-level={level}
       className={cn(
-        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
+        `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
         hoverClass,
         className,
       )}
@@ -10179,7 +10207,9 @@ function SelectTrigger({
     >
       {children as React.ReactNode}
       <SelectPrimitive.Icon asChild>
-        <ChevronDownIconAlt className="size-small opacity-50" />
+        <span data-slot="select-chevron" className="pointer-events-none inline-flex size-small shrink-0 items-center justify-center text-muted-foreground">
+          <Icon icon="chevron-down" size="small" />
+        </span>
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   );
@@ -12265,7 +12295,7 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" data-elevation-root="" className={cn(borderNormalBottomClass, "relative h-large z-navbar", bgClass, className)}>
+    <nav id="ui.navbar" data-slot="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
       <UiChromeLabelPolicyProvider policy="always">
         <div className="p-single flex gap-single items-center min-w-0 h-full">
           {normalItems.map((item, index) => (
@@ -12894,6 +12924,8 @@ const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
 const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
+const treeItemControlClassName =
+  "ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double [&_[data-slot=slider-content]]:w-[calc(var(--size-large)+6*var(--ui-spacing))] [&_[data-slot=slider-content]]:min-w-[calc(var(--size-large)+6*var(--ui-spacing))]";
 const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** @emoji 🌳 Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
@@ -12965,25 +12997,29 @@ interface TreeDocumentGutterProps {
   showLines: boolean;
   slot?: React.ReactNode;
   connectCurrentLevel?: boolean;
-  extendCurrentLevelToBottom?: boolean;
+  /** @emoji 🌿 Draw the current-level stem from the row anchor toward this group's children (`down` → bottom, `up` → top). */
+  extendBranchStem?: boolean;
   slotOffsetPx?: number;
   anchorOffsetPx?: number;
 }
 
-const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendCurrentLevelToBottom = false, slotOffsetPx = 0, anchorOffsetPx }) => {
-  const { indentMultiplier } = reactHostPort.useContext(TreeContext);
+const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLines, slot, connectCurrentLevel = false, extendBranchStem = false, slotOffsetPx = 0, anchorOffsetPx }) => {
+  const { indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const currentGuidePx = indentationLinePx(level, indentMultiplier);
   const parentGuidePx = level > 0 ? indentationLinePx(level - 1, indentMultiplier) : 0;
   const hasSlot = slot !== null && slot !== undefined && slot !== false;
   const slotLeftPx = treeGutterSlotLeftPx(level, slotOffsetPx, indentMultiplier);
   const elbowEndPx = hasSlot ? slotLeftPx : currentGuidePx;
   const elbowWidthPx = Math.max(elbowEndPx - parentGuidePx, 0);
-  const gutterWidthPx = treeGutterWidthPx(level, indentMultiplier);
   const positionedSlot = hasSlot ? (
     <span data-slot="tree-gutter-slot" className="absolute flex -translate-y-1/2 items-center justify-center" style={treeGutterSlotStyle(level, slotOffsetPx, indentMultiplier, anchorOffsetPx)}>
       {slot}
     </span>
   ) : null;
+  const branchStemStyle: React.CSSProperties =
+    direction === "up"
+      ? { top: 0, bottom: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)` }
+      : { top: treeGutterAnchorTop(anchorOffsetPx), bottom: 0, insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)` };
 
   return (
     <div data-dim data-slot="tree-gutter" className="relative min-h-full" style={{ width: treeGutterWidthLen(level, indentMultiplier), minWidth: treeGutterWidthLen(level, indentMultiplier) }}>
@@ -12994,12 +13030,8 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
           style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
         />
       )}
-      {showLines && level > 0 && extendCurrentLevelToBottom && (
-        <div
-          data-slot="tree-branch-stem"
-          className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)}
-          style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: `calc(${indentationLineLen(level, indentMultiplier)} - var(--stroke-hairline) / 2)`, bottom: 0 }}
-        />
+      {showLines && extendBranchStem && (
+        <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />
       )}
       {positionedSlot}
     </div>
@@ -13017,7 +13049,7 @@ interface TreeAlignedRowProps {
   contentChromeClassName?: string;
   align?: "start" | "center";
   connectCurrentLevel?: boolean;
-  extendCurrentLevelToBottom?: boolean;
+  extendBranchStem?: boolean;
   slotOffsetPx?: number;
   anchorOffsetPx?: number;
 }
@@ -13033,14 +13065,14 @@ const TreeAlignedRow: React.FC<TreeAlignedRowProps> = ({
   contentChromeClassName,
   align = "center",
   connectCurrentLevel = false,
-  extendCurrentLevelToBottom = false,
+  extendBranchStem = false,
   slotOffsetPx = 0,
   anchorOffsetPx,
 }) => {
   const { indentMultiplier } = reactHostPort.useContext(TreeContext);
   return (
     <div data-slot="tree-row-layout" className={cn(treeRowLayoutClassName, align === "start" ? "items-start" : "items-center", className)} style={treeAlignedRowStyle(level, indentMultiplier)}>
-      <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendCurrentLevelToBottom={extendCurrentLevelToBottom} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
+      <TreeDocumentGutter level={level} showLines={showLines} slot={slot} connectCurrentLevel={connectCurrentLevel} extendBranchStem={extendBranchStem} slotOffsetPx={slotOffsetPx} anchorOffsetPx={anchorOffsetPx} />
       <div data-slot="tree-row-content" className={cn(align === "start" ? "min-w-0 h-full" : treeRowContentClassName, contentChromeClassName, contentClassName)}>
         {children}
       </div>
@@ -14143,7 +14175,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
           isLastAtLevel={isLastAtLevel}
           showLines={showLines}
           connectCurrentLevel={level > 0}
-          extendCurrentLevelToBottom={open && hasChildren}
+          extendBranchStem={open && hasChildren}
           slot={<SectionFoldChevron className={treeSectionChevronClassName} />}
           contentClassName="min-w-0"
           contentChromeClassName={rowContentFillClassName}
@@ -14260,7 +14292,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               isLastAtLevel={isLastAtLevel}
               showLines={showLines}
               connectCurrentLevel={level > 0}
-              extendCurrentLevelToBottom={open && hasChildren}
+              extendBranchStem={open && hasChildren}
               slot={
                 <button
                   className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
@@ -14299,7 +14331,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </TreeAlignedRow>
           </div>
           {open && (
-            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+            <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
               <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
                 {children}
               </TreeBranchContent>
@@ -14334,7 +14366,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             isLastAtLevel={isLastAtLevel}
             showLines={showLines}
             connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={open && hasChildren}
+            extendBranchStem={open && hasChildren}
             slot={
               <button
                 className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
@@ -14373,7 +14405,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           </TreeAlignedRow>
         </div>
         {open && (
-          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier }}>
+          <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
             <TreeBranchContent slot="tree-item-content" ownerRowKind="group" ownerExpanded={open && hasChildren} topPaddingPx={treeItemContentPaddingTopPx}>
               {children}
             </TreeBranchContent>
@@ -14656,7 +14688,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 isLastAtLevel={isLastAtLevel}
                 showLines={showLines}
                 connectCurrentLevel={level > 0}
-                extendCurrentLevelToBottom={isExpandable && open && hasChildren}
+                extendBranchStem={isExpandable && open && hasChildren}
                 slot={
                   isExpandable ? (
                     <button
@@ -14698,13 +14730,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                     </span>
                   </div>
                   {!isExpandable && (
-                    <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
-                      {children}
+                    <div data-slot="tree-item-control" className={treeItemControlClassName}>
+                      <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
                     </div>
                   )}
                   {isExpandable && headerControl ? (
-                    <div data-slot="tree-item-control" className="ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double">
-                      {headerControl}
+                    <div data-slot="tree-item-control" className={treeItemControlClassName}>
+                      <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
                     </div>
                   ) : null}
                   {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
@@ -14780,7 +14812,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 isLastAtLevel={isLastAtLevel}
                 showLines={showLines}
                 connectCurrentLevel={level > 0}
-                extendCurrentLevelToBottom={open && hasChildren}
+                extendBranchStem={open && hasChildren}
                 slot={
                   <button
                     className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
@@ -15121,8 +15153,8 @@ const clearTreeHoverPath = (root: HTMLElement) => {
 
 /**
  * 📦Derive the row element that owns a branch container.
- * Handles all DOM shapes: tree-item-row/control-tree-row siblings,
- * tree-section-row behind collapsible-content, tree-property-item parent.
+ * Handles all DOM shapes: tree-item-row/control-tree-row siblings (branch below for `down`, above for `up`),
+ * tree-section-row beside collapsible-content, tree-property-item parent.
  */
 const rowForBranch = (branch: Element): Element | null => {
   const prev = branch.previousElementSibling;
@@ -15130,12 +15162,19 @@ const rowForBranch = (branch: Element): Element | null => {
     const prevSlot = prev.getAttribute("data-slot");
     if (prevSlot && treeRowSlots.has(prevSlot)) return prev;
   }
+  const next = branch.nextElementSibling;
+  if (next) {
+    const nextSlot = next.getAttribute("data-slot");
+    if (nextSlot && treeRowSlots.has(nextSlot)) return next;
+  }
   const parent = branch.parentElement;
   const parentSlot = parent?.getAttribute("data-slot");
   if (parentSlot === "tree-property-item") return parent!;
   if (parentSlot === "collapsible-content") {
-    const sectionRow = parent!.previousElementSibling;
-    if (sectionRow?.getAttribute("data-slot") === "tree-section-row") return sectionRow;
+    const previousRow = parent!.previousElementSibling;
+    if (previousRow?.getAttribute("data-slot") === "tree-section-row") return previousRow;
+    const nextRow = parent!.nextElementSibling;
+    if (nextRow?.getAttribute("data-slot") === "tree-section-row") return nextRow;
   }
   return null;
 };
@@ -15157,20 +15196,21 @@ const resolveHoverRow = (target: HTMLElement, root: HTMLElement): Element | null
 const markTerminalBranch = (row: Element, pathAttr: string) => {
   const slot = row.getAttribute("data-slot");
   if (slot === "tree-item-row" || slot === "control-tree-row" || slot === "window-measure-tree-row") {
-    const next = row.nextElementSibling;
-    if (next) {
-      const nextSlot = next.getAttribute("data-slot");
-      if (nextSlot && treeBranchSlots.has(nextSlot)) {
-        next.setAttribute(pathAttr, "branch");
+    for (const sibling of [row.nextElementSibling, row.previousElementSibling]) {
+      if (!sibling) continue;
+      const siblingSlot = sibling.getAttribute("data-slot");
+      if (siblingSlot && treeBranchSlots.has(siblingSlot)) {
+        sibling.setAttribute(pathAttr, "branch");
+        return;
       }
     }
   } else if (slot === "tree-section-row") {
-    const next = row.nextElementSibling;
-    if (next?.getAttribute("data-slot") === "collapsible-content") {
-      for (const child of Array.from(next.children)) {
+    for (const sibling of [row.nextElementSibling, row.previousElementSibling]) {
+      if (sibling?.getAttribute("data-slot") !== "collapsible-content") continue;
+      for (const child of Array.from(sibling.children)) {
         if (child.getAttribute("data-slot") === "tree-section-content") {
           child.setAttribute(pathAttr, "branch");
-          break;
+          return;
         }
       }
     }
@@ -16393,7 +16433,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
             isLastAtLevel={isLastAtLevel}
             showLines={showLines}
             connectCurrentLevel={level > 0}
-            extendCurrentLevelToBottom={open && hasChildren}
+            extendBranchStem={open && hasChildren}
             slotOffsetPx={2}
             slot={
               hasChildren ? (
@@ -16420,7 +16460,7 @@ const ControlTreeFolderRow: React.FC<ControlTreeFolderRowProps> = ({ node, class
         }
       />
       {open && hasChildren && (
-        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier, direction }}>
           <TreeBranchContent slot="control-tree-folder-content" className={classNames?.folderChildren}>
             {children}
           </TreeBranchContent>
@@ -16552,7 +16592,7 @@ export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className
     <FlowProvider block={direction}>
       <div ref={treeRootRef} data-slot="window-measures-tree" data-direction={direction} className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
         <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
-          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>{orderedChildren}</TreeContext.Provider>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1, direction }}>{orderedChildren}</TreeContext.Provider>
         </TreeHoverPathRefreshContext.Provider>
       </div>
     </FlowProvider>
@@ -16569,7 +16609,7 @@ export interface WindowMeasureTreeGroupProps {
 
 /** @emoji 🌳 Collapsible measure group row (same geometry as {@link ControlTree} folders). */
 export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ id, label, defaultOpen = false, headerControl, children }) => {
-  const { level, isLastAtLevel, showLines, isTree, indentMultiplier } = reactHostPort.useContext(TreeContext);
+  const { level, isLastAtLevel, showLines, isTree, indentMultiplier, direction = "down" } = reactHostPort.useContext(TreeContext);
   const { block, inline } = useFlow();
   const itemId = `window-measure-group-${id}`;
   const { open, setOpen } = useTreeOpenState(itemId, defaultOpen);
@@ -16584,7 +16624,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
           isLastAtLevel={isLastAtLevel}
           showLines={showLines}
           connectCurrentLevel={level > 0}
-          extendCurrentLevelToBottom={open && hasChildren && block === "down"}
+          extendBranchStem={open && hasChildren}
           slotOffsetPx={2}
           slot={
             hasChildren ? (
@@ -16613,7 +16653,7 @@ export const WindowMeasureTreeGroup: React.FC<WindowMeasureTreeGroupProps> = ({ 
   );
   const branch =
     open && hasChildren ? (
-      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier }}>
+      <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, false], showLines, isTree, indentMultiplier, direction }}>
         <TreeBranchContent slot="window-measure-tree-content">{block === "up" ? React.Children.toArray(children).reverse() : children}</TreeBranchContent>
       </TreeContext.Provider>
     ) : null;
@@ -17592,8 +17632,8 @@ const Panel: React.FC<PanelProps> = ({
         style={positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
-          <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-          <div data-dim data-slot="panel-chrome-frame" aria-hidden className={cn(panelChromeFrameLayerClass, visible && activeAccentSide && panelResizeEdgeAccentClass(activeAccentSide, true))} />
+          <div {...(visible ? { "data-dim": true } : {})} aria-hidden className={panelChromeFillLayerClass} />
+          <div {...(visible ? { "data-dim": true } : {})} data-slot="chrome-frame" aria-hidden className={cn(shellChromeFrameLayerClass, visible && activeAccentSide && panelResizeEdgeAccentClass(activeAccentSide, true))} />
           <UiChromeLabelPolicyProvider policy="always">
             {isChromeHosted ? (
               // 🎛️ The root row lives in the sibling PanelChromeTabBar — this panel only ever shows depth ≥ 1 (only reachable while open, so no fold-affordance row is needed here).
@@ -17606,7 +17646,7 @@ const Panel: React.FC<PanelProps> = ({
             <>
               <Scrollable className="relative z-10 flex-1 min-h-0">
                 {/* 🌲 Panel body content follows the anchor's flow — trees, labels, and their controls mirror on right anchors, same as the chrome (tab bar, resize handles, panel position). */}
-                <div ref={panelContentRef} data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
+                <div ref={panelContentRef} data-dim data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
                   {activeTabTrees && activeNode ? <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
                 </div>
               </Scrollable>
@@ -17686,7 +17726,10 @@ export interface PaneHostProps {
 
 /** @emoji 🪟 Bounds box for floating panes: mount one inside a window body (or any floating-chrome host) so every
  * {@link Pane} inside — direct JSX children or portaled in via {@link usePaneSlot} — shares one anchor coordinate
- * space to drag between and one DOM parent to measure drag drops against. */
+ * space to drag between and one DOM parent to measure drag drops against.
+ *
+ * Children live as siblings of the portal mount (not inside the `pointer-events-none` overlay) so window canvas
+ * content keeps normal hit-testing while still receiving {@link PaneHostContext}. */
 export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [container, setContainer] = reactHostPort.useState<HTMLDivElement | null>(null);
@@ -17697,8 +17740,9 @@ export const PaneHost: React.FC<PaneHostProps> = ({ className, children }) => {
   const contextValue = reactHostPort.useMemo((): PaneHostContextValue => ({ containerRef, container }), [container]);
   return (
     <PaneHostContext.Provider value={contextValue}>
-      <div ref={setRef} data-slot="pane-host" className={cn("pointer-events-none absolute inset-0", className)}>
+      <div data-slot="pane-host-root" className={cn("relative h-full min-h-0 min-w-0 w-full", className)}>
         {children}
+        <div ref={setRef} data-slot="pane-host" className="pointer-events-none absolute inset-0" />
       </div>
     </PaneHostContext.Provider>
   );
@@ -17835,8 +17879,9 @@ export const Pane: React.FC<PaneProps> = ({
       style={positionStyle}
     >
       <FlowProvider inline={flow.inline} block={flow.block}>
-        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-        <div data-slot="pane-chrome" className={cn(windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
+        <div {...(!effectiveFolded ? { "data-dim": true } : {})} aria-hidden className={panelChromeFillLayerClass} />
+        <div {...(!effectiveFolded ? { "data-dim": true } : {})} data-slot="chrome-frame" aria-hidden className={shellChromeFrameLayerClass} />
+        <div {...(!effectiveFolded ? { "data-dim": true } : {})} data-slot="pane-chrome" className={cn("relative z-40", windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
           <WindowPaneChromeToggle
             id={childElementId(id, "pane", "fold")}
             icon={icon}
@@ -17848,7 +17893,7 @@ export const Pane: React.FC<PaneProps> = ({
           />
         </div>
         {!effectiveFolded ? (
-          <div data-slot="pane-body" className="relative min-h-0 flex-1 overflow-y-auto">
+          <div data-dim data-slot="pane-body" className="relative z-10 min-h-0 flex-1 overflow-y-auto">
             {children}
           </div>
         ) : null}
@@ -17910,10 +17955,10 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
         className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}
       >
         <div data-dim aria-hidden className={panelChromeFillLayerClass} />
-        <div data-dim data-slot="panel-chrome-frame" aria-hidden className={panelChromeFrameLayerClass} />
+        <div data-dim data-slot="chrome-frame" aria-hidden className={shellChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
-          <div ref={panelContentRef} data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
+          <div ref={panelContentRef} data-dim data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
             {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
           </div>
         </Scrollable>
@@ -18951,6 +18996,10 @@ export interface WindowConfig {
   controls?: React.ReactNode;
   measures?: React.ReactNode;
   utilityBar?: React.ReactNode;
+  /** @emoji 🎛 Controlled fold state for the Window Options (measures) rail (default true); externally settable so the introduction walkthrough can force-unfold a step's measure target into view. */
+  measuresFolded?: boolean;
+  /** @emoji 🎛 Fires when the user or a redirect toggles the Window Options rail fold state. */
+  onMeasuresFoldedChange?: (folded: boolean) => void;
   /** @emoji 🎛 Controlled fold state for the Utilities rail (default true); externally settable so the introduction walkthrough can force-unfold a step's utility anchor into view. */
   utilityBarFolded?: boolean;
   /** @emoji 🎛 Fires when the user or a redirect toggles the Utilities rail fold state. */
@@ -19022,7 +19071,7 @@ function useWindowMeasuresReservePx(enabled: boolean, measures: React.ReactNode,
 
 /**
  * @emoji 📐 Live px cap for the bottom-left utility bar's content so a tall active-utility options tree (e.g. a
- * fill tool's Werkzeug tree) grows upward only up to just below the top-anchored chrome (engagement/search/measures)
+ * fill utility's options tree) grows upward only up to just below the top-anchored chrome (engagement/search/measures)
  * instead of overlapping it — re-measured whenever the window body or any top overlay resizes. A CSS percentage
  * (`max-h-full`) can't do this: it only resolves against an ancestor with an explicitly *specified* height, and the
  * overlay wrapper here only ever has a `max-height`, never a `height` — so the percentage silently fails to resolve
@@ -19089,6 +19138,8 @@ const Window: React.FC<WindowProps> = ({
   onClose,
   controls,
   measures,
+  measuresFolded: measuresFoldedProp,
+  onMeasuresFoldedChange,
   utilityBar,
   utilityBarFolded: utilityBarFoldedProp,
   onUtilityBarFoldedChange,
@@ -19112,7 +19163,12 @@ const Window: React.FC<WindowProps> = ({
   const windowRef = reactHostPort.useRef<HTMLDivElement>(null);
   const windowBodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const measuresOverlayRef = reactHostPort.useRef<HTMLDivElement>(null);
-  const [measuresFolded, setMeasuresFolded] = reactHostPort.useState(true);
+  const [measuresFoldedInternal, setMeasuresFoldedInternal] = reactHostPort.useState(true);
+  const measuresFolded = measuresFoldedProp ?? measuresFoldedInternal;
+  const setMeasuresFolded = (folded: boolean) => {
+    onMeasuresFoldedChange?.(folded);
+    if (measuresFoldedProp === undefined) setMeasuresFoldedInternal(folded);
+  };
   const [measuresExpanded, setMeasuresExpanded] = reactHostPort.useState(false);
   const [searchFolded, setSearchFolded] = reactHostPort.useState(true);
   // 🎛 Controlled-with-default fold state for the bottom-left Utilities rail (default true).
@@ -19245,9 +19301,10 @@ const Window: React.FC<WindowProps> = ({
       >
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
-          {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
-          {/* 🪟 Mount point for app-contributed floating panes (see usePaneSlot) — e.g. a per-tool control deep inside the window's canvas. Empty (and inert) until something portals into it. */}
-          <PaneHost />
+          {/* 🪟 PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
+          <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>
+            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
+          </PaneHost>
           {measures ? (
             <GlassTierProvider tier="windowOptions">
               <div
@@ -19258,7 +19315,7 @@ const Window: React.FC<WindowProps> = ({
                 className={cn(windowMeasuresOverlayClass, measuresFolded ? windowMeasuresOverlayFoldedClass : measuresExpanded ? windowMeasuresOverlayExpandedClass : !measuresOverlaySizeStyle && windowMeasuresRailWidthClass)}
               >
                 <div
-                  data-dim
+                  {...(!measuresFolded ? { "data-dim": true } : {})}
                   data-slot="window-measures-stack"
                   data-folded={measuresFolded ? "true" : undefined}
                   className={cn(
@@ -19310,7 +19367,7 @@ const Window: React.FC<WindowProps> = ({
               >
                 <div
                   ref={engagementZoneRef}
-                  data-dim
+                  {...(engagementExpanded ? { "data-dim": true } : {})}
                   data-slot="window-engagement-zone"
                   data-folded={engagementExpanded ? undefined : "true"}
                   className={cn(windowMeasuresStackClass, "flex-row items-start", !engagementExpanded && windowMeasuresStackFoldedClass)}
@@ -19335,7 +19392,7 @@ const Window: React.FC<WindowProps> = ({
                 className={cn(windowSearchOverlayClass, !searchExpanded && windowSearchOverlayFoldedClass)}
               >
                 <div
-                  data-dim
+                  {...(searchExpanded ? { "data-dim": true } : {})}
                   data-slot="window-search-zone"
                   data-folded={searchExpanded ? undefined : "true"}
                   className={cn(windowMeasuresStackClass, "flex-row items-start", !searchExpanded && windowMeasuresStackFoldedClass)}
@@ -19364,7 +19421,7 @@ const Window: React.FC<WindowProps> = ({
           {!measuresExpanded ? (
             <GlassTierProvider tier="windowOptions">
               <div data-slot="utility-bar-overlay" data-folded={utilityBarFolded ? "true" : undefined} className={utilityBarOverlayClass}>
-                <div data-dim data-slot="utility-bar" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
+                <div {...(!utilityBarFolded ? { "data-dim": true } : {})} data-slot="utility-bar" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
                   <UtilityBarChrome windowId={id} folded={utilityBarFolded} disabled={!utilityBar} onFold={() => setUtilityBarFolded(true)} onUnfold={() => setUtilityBarFolded(false)} />
                   {!utilityBarFolded && utilityBar ? (
                     <div data-slot="utility-bar-body" className={utilityBarBodyClass} style={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}>
@@ -20508,11 +20565,17 @@ export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" |
  * resolveSceneGizmoViewportPlacement holds the data fields for a resolveSceneGizmoViewportPlacement record.
  **/
 export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; height: number }): SceneGizmoViewportPlacement => {
-  const clampHorizontalMargin = (width: number): number => Math.min(56, Math.max(26, Math.floor(width / 5)));
-  const clampVerticalMargin = (height: number): number => Math.min(40, Math.max(18, Math.floor(height / 7)));
+  // 🧭 GizmoHelper `margin` is the offset to the widget CENTER. Match pane chrome (`anchorPositionStyle`
+  // uses `--spacing-single` from the edge to the widget's outer edge) by adding half the navigation-cube
+  // screen extent so face/corner tips clear the edge by the same inset as panes/windows.
+  const chromeInset = Math.max(4, Math.round(uiSpacingPx(1)));
+  const gizmoHalfExtentPx = 28;
+  const preferred = chromeInset + gizmoHalfExtentPx;
+  const maxFit = Math.max(22, Math.floor(Math.min(viewport.width, viewport.height) / 3));
+  const margin = Math.min(preferred, maxFit);
   return {
     alignment: "bottom-right",
-    margin: [clampHorizontalMargin(viewport.width), clampVerticalMargin(viewport.height)],
+    margin: [margin, margin],
   };
 };
 
@@ -20739,7 +20802,6 @@ export function gumballResolveDragSnaps(config: GumballConfig, shiftKey: boolean
   };
 }
 
-const GUMBALL_AXIS_COLOR_REFS = { x: semanticVar("accent"), y: semanticVar("accent-secondary"), z: semanticVar("accent-tertiary") } as const;
 const GUMBALL_PLANE_COLOR_REF = themeColorVar("muted-foreground");
 const GUMBALL_UNIFORM_COLOR_REF = tokenVar("light");
 const GUMBALL_HANDLE_LENGTH = 0.98;
@@ -20991,12 +21053,13 @@ export interface GumballVisualPalette {
   readonly previewActiveOpacity: number;
 }
 
-/** @emoji 🎨 Reads gumball palette from design tokens (X/Y/Z → accent / secondary / tertiary). */
+/** @emoji 🎨 Reads gumball palette from design tokens (X/Y/Z → primary / secondary / tertiary permanently). */
 export function resolveGumballVisualPalette(): GumballVisualPalette {
+  const axes = resolveSpatialAxisColors();
   return {
-    axisX: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.x, "gray"),
-    axisY: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.y, "gray"),
-    axisZ: resolveColorHex(GUMBALL_AXIS_COLOR_REFS.z, "gray"),
+    axisX: axes.x,
+    axisY: axes.y,
+    axisZ: axes.z,
     plane: resolveColorHex(GUMBALL_PLANE_COLOR_REF, "gray"),
     uniform: resolveColorHex(GUMBALL_UNIFORM_COLOR_REF, "light"),
     idleOpacity: 0.62,
@@ -21791,7 +21854,11 @@ const updateSceneCameraProjection = (camera: THREE.Camera): void => {
  **/
 const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const { size } = useThree();
-  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => [getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
+  // 🧭 drei GizmoViewport is Y-up; Scene is Z-up so labels remap Y↔Z while colors stay CAD-axis (X primary, Y secondary, Z tertiary).
+  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => {
+    const axes = resolveSpatialAxisColors();
+    return [axes.x, axes.z, axes.y];
+  });
   const labels = reactHostPort.useMemo(() => ["X", "Z", "-Y"] as [string, string, string], []);
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   // GizmoViewport axis box uses boxGeometry args [length, thickness, thickness]; uniform scale yields a chunky cube.
@@ -21799,7 +21866,10 @@ const Gizmo: React.FC<GizmoProps> = ({ show = true, onAxisClick }) => {
   const labelColor = reactHostPort.useMemo(() => getComputedColor("--foreground"), []);
 
   reactHostPort.useEffect(() => {
-    const updateColors = () => setColors([getComputedColor("--accent"), getComputedColor("--accent-tertiary"), getComputedColor("--accent-secondary")]);
+    const updateColors = () => {
+      const axes = resolveSpatialAxisColors();
+      setColors([axes.x, axes.z, axes.y]);
+    };
     updateColors();
     const observer = new MutationObserver(updateColors);
     observer.observe(document.documentElement, {
@@ -23819,15 +23889,21 @@ export function modeAxisIsPerpendicularChild(parentKind: "row" | "column", child
   return (parentKind === "row" && child.kind === "column") || (parentKind === "column" && child.kind === "row");
 }
 
-/** @emoji ↔️ Separator indices and center fractions for joins inside a perpendicular child axis. */
+/** @emoji ↔️ Separator indices and size-weighted fractions for joins inside a perpendicular child axis. */
 export function modePerpendicularJoinSeparators(node: WindowLayoutNode): readonly { index: number; fraction: number }[] {
   if (node.kind !== "row" && node.kind !== "column") return [];
   const count = node.children.length;
   if (count < 2) return [];
-  return Array.from({ length: count - 1 }, (_, offset) => ({
-    index: offset + 1,
-    fraction: (offset + 1) / count,
-  }));
+  const sizes = node.children.map((child) => child.size ?? 100 / count);
+  const total = sizes.reduce((sum, size) => sum + size, 0);
+  if (total <= 0) return [];
+  let cumulative = 0;
+  const joins: { index: number; fraction: number }[] = [];
+  for (let index = 1; index < count; index += 1) {
+    cumulative += sizes[index - 1]!;
+    joins.push({ index, fraction: cumulative / total });
+  }
+  return joins;
 }
 
 /** @emoji ↔️ Corner join specs for a main-axis separator that crosses perpendicular child splits. */
@@ -23881,7 +23957,10 @@ export type ModeJoinCornerCrossAxis = {
   separatorIndex: number;
 };
 
-/** @emoji ↔️ Every perpendicular axis that shares a `+`/`T` corner (same main separator + join fraction), including the dragged cross axis. */
+/** @emoji ↔️ Max fraction delta for two perpendicular joins to count as the same touching corner. */
+export const MODE_JOIN_CORNER_TOUCH_EPS = 0.0025;
+
+/** @emoji ↔️ Every perpendicular axis whose join actually touches this corner (same main separator + size fraction), including the dragged cross axis. */
 export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: ResizableJoinCornerSpec): ModeJoinCornerCrossAxis[] {
   const fallback: ModeJoinCornerCrossAxis[] = [{ path: spec.crossAxisPath, separatorIndex: spec.crossSeparatorIndex }];
   const mainNode = spec.mainAxisPath ? readLayoutAtPath(layout, spec.mainAxisPath) : layout;
@@ -23896,7 +23975,7 @@ export function resolveJoinCornerPeerCrossAxes(layout: WindowLayoutNode, spec: R
   const consider = (crossPath: ModeLayoutPath, crossChild: WindowLayoutNode) => {
     if (!modeAxisIsPerpendicularChild(spec.parentKind, crossChild)) return;
     for (const join of modePerpendicularJoinSeparators(crossChild)) {
-      if (Math.abs(join.fraction - targetFraction) > 0.001) continue;
+      if (Math.abs(join.fraction - targetFraction) > MODE_JOIN_CORNER_TOUCH_EPS) continue;
       peers.push({ path: crossPath, separatorIndex: join.index });
     }
   };
@@ -24599,7 +24678,7 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
       panels.push(<ResizableHandle key={`sep-${childPath}`} joinCorners={joinCorners} onJoinCornerResize={ctx.onJoinCornerResize} orientation={orientation} />);
     }
     panels.push(
-      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0">
+      <ResizablePanel key={childPath} id={childPath} defaultSize={child.size ?? 100 / node.children.length} minSize={8} className="box-border min-h-0 min-w-0 overflow-visible">
         {renderModeDockNode(child, childPath, ctx, { path, kind: node.kind, panelIndex: index })}
       </ResizablePanel>,
     );
@@ -25895,8 +25974,27 @@ if (import.meta.vitest) {
       );
       const box = container.querySelector('[data-slot="introduction-info-box"]');
       expect(box?.className).toContain("text-foreground");
+      expect(box?.className).not.toMatch(/(?:^|\s)border(?:\s|$)/);
+      expect(box?.className).not.toContain("border-emphasized");
       expect(box?.querySelector("p")?.className).toContain("text-muted-foreground");
       expect(box?.querySelector("p")?.className).not.toMatch(/(?:^|\s)text-muted(?:\s|$)/);
+    });
+
+    it("introduction and dialog glass boxes emphasize their border only while the pointer is inside", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      expect(css).toContain('[data-slot="introduction-info-box"]');
+      expect(css).toContain('[data-slot="dialog-box"]');
+      expect(css).toMatch(/\[data-slot="introduction-info-box"\][\s\S]*?border-color:\s*var\(--border-normal-color\)\s*!important;/);
+      expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover/);
+      expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover[\s\S]*?border-color:\s*var\(--border-emphasized-color\)\s*!important;/);
+      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
+      expect(css).toMatch(/\[data-slot="dialog-box"\]:focus-within/);
+      expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
+      expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-emphasized");
+      expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
     });
 
     it("renders step logos, wrapping only those with an href, and swaps light/dark srcs", () => {
@@ -26068,6 +26166,9 @@ if (import.meta.vitest) {
       expect(gumballHandleVisualState("moveX", null, "moveX")).toBe("active");
       expect(gumballHandleVisualState("moveY", "moveX", "moveX")).toBe("dimmed");
       const palette = resolveGumballVisualPalette();
+      expect(palette.axisX).toBe("#ff344f");
+      expect(palette.axisY).toBe("#34d1bf");
+      expect(palette.axisZ).toBe("#fa9500");
       expect(gumballResolveHandleVisual("#ff0000", "hover", palette).color).toBe("#ff0000");
       expect(gumballResolveHandleVisual("#ff0000", "hover", palette).opacity).toBe(palette.hoverOpacity);
       expect(gumballResolveHandleVisual("#ff0000", "active", palette).color).toBe("#ff0000");
@@ -26231,11 +26332,15 @@ if (import.meta.vitest) {
     // instead (--icon-animation: none plus one or more --icon-part-<N>-anim assignments); see 🔧IconPartAnim.
     // Every icon below — and every whole-icon icon outside this set — has its own uniquely-named,
     // individually-tuned keyframes; nothing is shared across icons (see the specificity/exclusivity tests).
-    // Remaining whole-icon icons either have a single fused SVG path (no separable part exists without
-    // redrawing the vendored asset — e.g. folder/folder-open/message-square/message-circle, handled with a
-    // best-effort single-rigid-body motion instead) or their rigid motion already is the mechanically
-    // correct animation (globe, search, settings, rotate-cw/ccw, flip-horizontal/vertical, text-cursor).
-    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-down", "arrow-left", "arrow-right", "arrow-right-left", "arrow-up", "award", "bar-chart-3", "bell", "book-open", "box", "calendar-days", "camera", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hammer", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "redo", "redo-2", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "table-2", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "undo", "undo-2", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
+    // Physical-correctness pass moved hammer/box/move/arrow-up/arrow-down/arrow-left/arrow-right/undo/
+    // undo-2/redo/redo-2 OUT of this set: each is one rigid object (hammer head+handle, arrow head+shaft,
+    // the whole "move" cross, an undo/redo hook+curve), so it now animates as a single whole-icon rigid
+    // motion instead of independently-moving parts. Remaining whole-icon icons either have a single fused
+    // SVG path (no separable part exists without redrawing the vendored asset — e.g.
+    // folder/folder-open/message-square/message-circle, handled with a best-effort single-rigid-body
+    // motion instead) or their rigid motion already is the mechanically correct animation (globe, search,
+    // settings, rotate-cw/ccw, flip-horizontal/vertical, text-cursor).
+    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-right-left", "award", "bar-chart-3", "bell", "book-open", "calendar-days", "camera", "folder", "folder-open", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "table-2", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
 
     async function readUiCss(): Promise<string> {
       const { readFileSync } = await import("node:fs");
@@ -26463,6 +26568,44 @@ if (import.meta.vitest) {
       expect(idle.className.split(/\s+/)).not.toContain("bg-active-base");
       expect(idle.textContent).not.toContain("✓");
     });
+
+    it("ignores outside dismiss when pointerdown targets a sibling menu", async () => {
+      const onOpenChange = vi.fn();
+      render(
+        <>
+          <ContextMenuController open position={{ x: 10, y: 10 }} items={[{ id: "a", label: "Alpha", onSelect: vi.fn() }]} onOpenChange={onOpenChange} />
+          <div role="menu" data-testid="sibling-menu">
+            <button type="button">Sibling</button>
+          </div>
+        </>,
+      );
+      await waitFor(() => screen.getByRole("menuitem", { name: "Alpha" }));
+      await new Promise((resolve) => setTimeout(resolve, 0));
+      fireEvent.pointerDown(screen.getByTestId("sibling-menu"));
+      expect(onOpenChange).not.toHaveBeenCalled();
+      fireEvent.pointerDown(document.body);
+      expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("does not close on select when closeOnSelect is false", async () => {
+      const onOpenChange = vi.fn();
+      const onSelect = vi.fn();
+      render(<ContextMenuController open closeOnSelect={false} position={{ x: 4, y: 4 }} items={[{ id: "place", label: "Place", onSelect }]} onOpenChange={onOpenChange} />);
+      fireEvent.click(await waitFor(() => screen.getByRole("menuitem", { name: "Place" })));
+      expect(onSelect).toHaveBeenCalled();
+      expect(onOpenChange).not.toHaveBeenCalled();
+    });
+
+    it("isContextMenuPointerTarget detects menu surfaces", () => {
+      const menu = document.createElement("div");
+      menu.setAttribute("role", "menu");
+      const child = document.createElement("button");
+      menu.appendChild(child);
+      document.body.appendChild(menu);
+      expect(isContextMenuPointerTarget(child)).toBe(true);
+      expect(isContextMenuPointerTarget(document.body)).toBe(false);
+      menu.remove();
+    });
   });
 
   describe("CanvasPickMenu", () => {
@@ -26583,7 +26726,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");
-      expect(container.querySelector('[data-slot="panel-chrome-frame"]')?.className).toContain("z-30");
+      expect(container.querySelector('[data-slot="chrome-frame"]')?.className).toContain("z-30");
     });
 
     it("Panel only paints the active tab's fill/border while expanded — a folded button group shouldn't claim a tab is active", () => {
@@ -26732,6 +26875,38 @@ if (import.meta.vitest) {
       const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
       expect(upMarkup).toContain('data-icon="chevron-left"');
       expect(upMarkup).not.toContain('data-icon="chevron-right"');
+    });
+
+    it("Tree direction=up extends open-group branch stems toward children (top) instead of toward the bottom", () => {
+      const sections: TreeDataSection[] = [
+        {
+          id: "sec",
+          label: "Section",
+          defaultOpen: true,
+          items: [
+            {
+              id: "group",
+              label: "Group",
+              defaultOpen: true,
+              items: [
+                { id: "leaf-a", label: "Leaf A" },
+                { id: "leaf-b", label: "Leaf B" },
+              ],
+            },
+          ],
+        },
+      ];
+      const downMarkup = renderToStaticMarkup(<Tree sections={sections} />);
+      const upMarkup = renderToStaticMarkup(<Tree sections={sections} direction="up" />);
+      const stemStyle = (markup: string) => markup.match(/data-slot="tree-branch-stem"[^>]*style="([^"]*)"/)?.[1] ?? "";
+      const downStem = stemStyle(downMarkup);
+      const upStem = stemStyle(upMarkup);
+      expect(downStem).toContain("top:calc(var(--size-workbench) / 2)");
+      expect(downStem).toContain("bottom:0");
+      expect(downStem).not.toContain("top:0");
+      expect(upStem).toContain("top:0");
+      expect(upStem).toContain("bottom:calc(var(--size-workbench) / 2)");
+      expect(upStem).not.toContain("bottom:0");
     });
 
     it("progressPanelTabSelection reveals one level per press, records/restores drill-down memory, collapses, and prunes stale memory", () => {
@@ -27153,7 +27328,9 @@ if (import.meta.vitest) {
 
     it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M0.5,0.5 H60 V24 H159.5 V0.5 H199.5 V99.5 H0.5 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H1 Z");
+      // 🪟 Right/bottom centerlines stay ≥ half a hairline inside the box so overflow clip can't eat them.
+      expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
     });
 
     it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting and falls back to active/normal", () => {
@@ -27707,15 +27884,15 @@ if (import.meta.vitest) {
           {
             kind: "column",
             children: [
-              { kind: "stack", children: [{ kind: "window", id: "lt" }], activeId: "lt" },
-              { kind: "stack", children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
             ],
           },
           {
             kind: "column",
             children: [
-              { kind: "stack", children: [{ kind: "window", id: "rt" }], activeId: "rt" },
-              { kind: "stack", children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
             ],
           },
         ],
@@ -27733,6 +27910,103 @@ if (import.meta.vitest) {
         { path: "0", separatorIndex: 1 },
         { path: "1", separatorIndex: 1 },
       ]);
+    });
+
+    it("resolveJoinCornerPeerCrossAxes ignores perpendicular joins that no longer touch", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          {
+            kind: "column",
+            children: [
+              { kind: "stack", size: 30, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", size: 70, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+            ],
+          },
+          {
+            kind: "column",
+            children: [
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+            ],
+          },
+        ],
+      };
+      expect(
+        resolveJoinCornerPeerCrossAxes(layout, {
+          parentKind: "row",
+          mainAxisPath: "",
+          mainSeparatorIndex: 1,
+          crossAxisPath: "1",
+          crossSeparatorIndex: 1,
+          edgeSide: "trailing",
+          alongFraction: 0.5,
+        }),
+      ).toEqual([{ path: "1", separatorIndex: 1 }]);
+      expect(
+        resolveJoinCornerPeerCrossAxes(layout, {
+          parentKind: "row",
+          mainAxisPath: "",
+          mainSeparatorIndex: 1,
+          crossAxisPath: "0",
+          crossSeparatorIndex: 1,
+          edgeSide: "leading",
+          alongFraction: 0.3,
+        }),
+      ).toEqual([{ path: "0", separatorIndex: 1 }]);
+      expect(modePerpendicularJoinSeparators(layout.children[0]!)).toEqual([{ index: 1, fraction: 0.3 }]);
+      expect(modePerpendicularJoinSeparators(layout.children[1]!)).toEqual([{ index: 1, fraction: 0.5 }]);
+    });
+
+    it("applyModeJoinCornerResize updates only touching cross axes when joins are misaligned", () => {
+      const layout: WindowLayoutNode = {
+        kind: "row",
+        children: [
+          {
+            kind: "column",
+            size: 50,
+            children: [
+              { kind: "stack", size: 30, children: [{ kind: "window", id: "lt" }], activeId: "lt" },
+              { kind: "stack", size: 70, children: [{ kind: "window", id: "lb" }], activeId: "lb" },
+            ],
+          },
+          {
+            kind: "column",
+            size: 50,
+            children: [
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rt" }], activeId: "rt" },
+              { kind: "stack", size: 50, children: [{ kind: "window", id: "rb" }], activeId: "rb" },
+            ],
+          },
+        ],
+      };
+      const next = applyModeJoinCornerResize(
+        layout,
+        {
+          parentKind: "row",
+          mainAxisPath: "",
+          mainSeparatorIndex: 1,
+          crossAxisPath: "1",
+          crossSeparatorIndex: 1,
+          edgeSide: "trailing",
+          alongFraction: 0.5,
+        },
+        20,
+        10,
+        400,
+        300,
+      );
+      expect(next.kind).toBe("row");
+      if (next.kind !== "row") return;
+      const left = next.children[0];
+      const right = next.children[1];
+      expect(left?.kind).toBe("column");
+      expect(right?.kind).toBe("column");
+      if (left?.kind !== "column" || right?.kind !== "column") return;
+      expect(left.children[0]?.size).toBe(30);
+      expect(left.children[1]?.size).toBe(70);
+      expect(right.children[0]?.size).toBeGreaterThan(50);
+      expect(right.children[1]?.size).toBeLessThan(50);
     });
 
     it("applyModeJoinCornerResize updates both main and cross axis sizes", () => {
@@ -29652,6 +29926,29 @@ if (treeVitest) {
       expect(document.getElementById("section-a")?.hasAttribute("data-tree-selection-path")).toBe(false);
     });
 
+    it("syncTreeSelectionPath marks ancestor rows when the branch renders above the parent (direction=up)", () => {
+      document.body.innerHTML = `
+        <div id="tree-root">
+          <div data-slot="collapsible-content">
+            <div data-slot="tree-section-content" id="section-branch">
+              <div data-slot="tree-item-content" id="group-branch">
+                <div data-slot="tree-item-row" id="item-a"></div>
+              </div>
+              <div data-slot="tree-item-row" id="group-a"></div>
+            </div>
+          </div>
+          <div data-slot="tree-section-row" id="section-a"></div>
+        </div>
+      `;
+      const root = document.getElementById("tree-root")!;
+      syncTreeSelectionPath(root, ["item-a"]);
+      expect(document.getElementById("item-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("group-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("group-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+      expect(document.getElementById("section-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("section-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+    });
+
     it("markGhostTreeInteraction keeps only the active tree ancestry and guides visible", () => {
       document.body.innerHTML = `
         <div data-ghost-region id="region">
@@ -29802,6 +30099,69 @@ if (treeVitest) {
 
       expect(region.hasAttribute("data-ghost")).toBe(false);
       expect(document.getElementById("window-ui")).not.toBeNull();
+      fireEvent.pointerUp(document);
+    });
+
+    it("GhostProvider keeps navbar/footer PanelChromeTabBar toggles visible while canvas ghost dims open panels including borders", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const { container } = render(
+        <GhostProvider>
+          <PanelChromeTabBar anchor="bottom-middle" tabs={tabs} visible={false} />
+          <Panel anchor="bottom-middle" tabBarHost="chrome" visible tabs={tabs} size={300} minSize={100} maxSize={1000} />
+          <GhostRegionShell>
+            <div id="canvas" />
+          </GhostRegionShell>
+        </GhostProvider>,
+      );
+      const chromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"]') as HTMLElement;
+      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+      const canvas = container.querySelector("#canvas") as HTMLElement;
+      expect(chromeBar).toBeTruthy();
+      expect(panel).toBeTruthy();
+      expect(panel.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
+
+      fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
+
+      expect(panel.getAttribute("data-ghost")).toBe("true");
+      expect(chromeBar.hasAttribute("data-ghost")).toBe(false);
+      expect(chromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(false);
+      fireEvent.pointerUp(document);
+    });
+
+    it("GhostProvider dims open pane fill, border, chrome, and body while folded pane toggles stay undimmed", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const { container } = render(
+        <GhostProvider>
+          <GhostRegionShell>
+            <div id="canvas" />
+            <PaneHost>
+              <Pane id="open-pane" anchor="top-left" icon="box" label="Open" folded={false}>
+                <div>Open body</div>
+              </Pane>
+              <Pane id="folded-pane" anchor="top-right" icon="box" label="Folded" folded />
+            </PaneHost>
+          </GhostRegionShell>
+        </GhostProvider>,
+      );
+      const panes = container.querySelectorAll('[data-slot="pane"]');
+      expect(panes.length).toBe(2);
+      const open = Array.from(panes).find((pane) => pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
+      const folded = Array.from(panes).find((pane) => !pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
+      expect(open.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(open.querySelector('[data-slot="pane-chrome"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(open.querySelector('[data-slot="pane-body"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(folded.querySelector('[data-slot="pane-chrome"]')?.hasAttribute("data-dim")).toBe(false);
+      expect(folded.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(false);
+
+      const canvas = container.querySelector("#canvas") as HTMLElement;
+      fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
+      expect(open.closest("[data-ghost-region]")?.getAttribute("data-ghost")).toBe("true");
+      expect(folded.querySelector('[data-slot="window-pane-chrome-toggle"]')).toBeTruthy();
       fireEvent.pointerUp(document);
     });
 
@@ -30045,6 +30405,27 @@ if (treeVitest) {
       expect(markup).not.toContain('data-slot="tree-property-content"');
       expect(markup).toContain('id="inspector.object.id.input"');
       expect(markup).toContain("seed-left-001");
+    });
+
+    it("gives tree property sliders enough width for the track, not just the thumb", () => {
+      const markup = renderToStaticMarkup(
+        <TreeStateProvider>
+          <Tree
+            sections={[
+              {
+                id: "tool.fill.options",
+                label: "",
+                defaultOpen: true,
+                items: [{ id: "puzzle3d-fill-count", label: "Count", control: <Slider id="puzzle3d-fill-count" value={[3]} min={0} max={100} /> }],
+              },
+            ]}
+          />
+        </TreeStateProvider>,
+      );
+
+      expect(markup).toContain('data-slot="tree-item-control"');
+      expect(markup).toContain('data-slot="slider-track"');
+      expect(markup).toContain("calc(var(--size-large)+6*var(--ui-spacing))");
     });
 
     it("keeps leaf inspector controls visible without manual expand", () => {
@@ -30402,6 +30783,40 @@ if (treeVitest) {
       expect(comboboxMarkup).toContain('role="combobox"');
       expect(selectMarkup).toContain('data-slot="select-trigger"');
       expect(selectMarkup).toContain('data-detail-panel-control="fill"');
+    });
+
+    it("keeps a trailing chevron affordance on select and playground example dropdowns", () => {
+      const selectMarkup = renderToStaticMarkup(
+        <Select id="tooltip.manual" defaultValue="alpha">
+          <SelectTrigger className="w-32">
+            <SelectValue placeholder="Select" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="alpha">A very long option label that must not clip the chevron</SelectItem>
+          </SelectContent>
+        </Select>,
+      );
+      const exampleMarkup = renderToStaticMarkup(
+        <NavbarExampleSelect
+          id="playground.navbar.fixture"
+          value="nakagin"
+          options={[
+            { id: "nakagin", label: "Nakagin Capsule Tower with an intentionally long label" },
+            { id: "villa", label: "Villa Savoye" },
+          ]}
+          onValueChange={() => undefined}
+          includeNoExample={false}
+        />,
+      );
+
+      expect(selectMarkup).toContain('data-slot="select-chevron"');
+      expect(selectMarkup).toContain('data-icon="chevron-down"');
+      expect(selectMarkup).toContain("*:data-[slot=select-value]:min-w-0");
+      expect(selectMarkup).toContain("*:data-[slot=select-value]:flex-1");
+      expect(selectMarkup).toContain("shrink-0");
+      expect(exampleMarkup).toContain('data-slot="select-trigger"');
+      expect(exampleMarkup).toContain('data-slot="select-chevron"');
+      expect(exampleMarkup).toContain('data-icon="chevron-down"');
     });
 
     it("renders section and item content slots flush under their headers", () => {
@@ -30957,20 +31372,20 @@ if (treeVitest) {
       });
     });
 
-    it("keeps the gizmo in the bottom-right corner with a larger inset so it stays visible", () => {
+    it("keeps the gizmo in the bottom-right corner with pane-matched chrome inset", () => {
       expect(resolveSceneGizmoViewportPlacement({ width: 1280, height: 720 })).toEqual({
         alignment: "bottom-right",
-        margin: [56, 40],
+        margin: [32, 32],
       });
 
       expect(resolveSceneGizmoViewportPlacement({ width: 120, height: 160 })).toEqual({
         alignment: "bottom-right",
-        margin: [26, 22],
+        margin: [32, 32],
       });
 
       expect(resolveSceneGizmoViewportPlacement({ width: 40, height: 48 })).toEqual({
         alignment: "bottom-right",
-        margin: [26, 18],
+        margin: [22, 22],
       });
     });
   });
@@ -31228,6 +31643,9 @@ if (treeVitest) {
       expect(markup.indexOf("Voxel")).toBeLessThan(markup.indexOf("Count"));
       expect(markup.indexOf("Count")).toBeLessThan(markup.indexOf("Fill"));
       expect(markup).toContain('data-icon="chevron-up"');
+      const stemStyle = markup.match(/data-slot="tree-branch-stem"[^>]*style="([^"]*)"/)?.[1] ?? "";
+      expect(stemStyle).toContain("top:0");
+      expect(stemStyle).toContain("bottom:calc(var(--size-workbench) / 2)");
     });
 
     it("stretches full-width measure toggles so active fill spans the tree row", () => {
@@ -31507,15 +31925,19 @@ if (treeVitest) {
       expect(resolveControlLabelId("search-input")).toBe("ui.windowSearch.action");
     });
 
-    it("uses normal shell edges on panel frame, navbar bottom, and footer top with CSS hover emphasis", () => {
-      expect(panelChromeBorderClass).toContain("border-normal");
-      expect(panelChromeBorderClass).not.toContain("border-emphasized");
+    it("uses normal shell edges on panel/pane frame, navbar bottom, and footer top with CSS hover emphasis", () => {
+      expect(shellChromeBorderClass).toContain("border-normal");
+      expect(shellChromeBorderClass).not.toContain("border-emphasized");
+      expect(shellChromeFrameLayerClass).not.toContain("border-normal");
+      expect(shellChromeFrameLayerClass).not.toContain("border-emphasized");
       const navbarMarkup = renderToStaticMarkup(<Navbar items={[{ key: "a", content: "Nav" }]} />);
-      expect(navbarMarkup).toContain(borderNormalBottomClass);
+      expect(navbarMarkup).toContain('data-slot="navbar"');
+      expect(navbarMarkup).not.toContain(borderNormalBottomClass);
       expect(navbarMarkup).not.toContain("border-emphasized");
       expect(navbarMarkup).not.toContain("border-border");
       const footerMarkup = renderToStaticMarkup(<Footer items={[{ key: "a", content: "Footer" }]} />);
-      expect(footerMarkup).toContain(borderNormalTopClass);
+      expect(footerMarkup).toContain('data-slot="footer"');
+      expect(footerMarkup).not.toContain(borderNormalTopClass);
       expect(footerMarkup).not.toContain("border-emphasized");
       const breadcrumbMarkup = renderToStaticMarkup(<Breadcrumb items={[{ content: "Home" }, { content: "Project" }]} />);
       expect(breadcrumbMarkup).toContain(borderNormalClass);
@@ -31532,18 +31954,44 @@ if (treeVitest) {
       expect(ribbonMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
       expect(panelMarkup).toContain('data-slot="panel"');
-      expect(panelMarkup).toContain('data-slot="panel-chrome-frame"');
-      expect(panelMarkup).toContain("border-normal");
+      expect(panelMarkup).toContain('data-slot="chrome-frame"');
+      expect(panelMarkup).not.toMatch(/chrome-frame[^>]*border-normal/);
       expect(panelMarkup).not.toContain("border-emphasized");
-      expect(panelMarkup).not.toMatch(/panel-chrome-frame[^>]*divide-x/);
-      expect(panelMarkup).toContain(borderNormalClass);
+      expect(panelMarkup).not.toMatch(/chrome-frame[^>]*divide-x/);
       expect(panelMarkup).not.toContain("border-b-current");
       expect(panelMarkup).not.toMatch(/panel-tabs[^>]*border-emphasized/);
       expect(panelMarkup).toMatch(/panel-tabs[^>]*z-40/);
-      expect(panelMarkup).toMatch(/panel-chrome-frame[^>]*z-30/);
+      expect(panelMarkup).toMatch(/chrome-frame[^>]*z-30/);
+      const paneMarkup = renderToStaticMarkup(
+        <PaneHost>
+          <Pane id="hover-pane" anchor="top-left" icon="box" label="Pane">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(paneMarkup).toContain('data-slot="pane"');
+      expect(paneMarkup).toContain('data-slot="chrome-frame"');
+      expect(paneMarkup).not.toMatch(/chrome-frame[^>]*border-normal/);
+      expect(paneMarkup).not.toContain("border-emphasized");
+      expect(paneMarkup).toMatch(/chrome-frame[^>]*z-30/);
       const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
       expect(measuresMarkup).toContain("border-element/40");
       expect(measuresMarkup).not.toContain("border-emphasized");
+    });
+
+    it("emphasizes parent shell borders via CSS while the pointer is inside navbar, footer, panel, or pane", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      expect(css).toContain('[data-slot="navbar"]::after');
+      expect(css).toContain('[data-slot="footer"]::before');
+      expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
+      expect(css).toMatch(/\[data-slot="footer"\]:hover::before/);
+      expect(css).toContain("background-color: var(--border-emphasized-color)");
+      expect(css).toContain(':is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"]');
+      expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+      expect(css).toContain("[data-slot=\"mode-dock-stack\"]:not([data-active=\"true\"]):hover [data-slot=\"mode-dock-silhouette-border\"][data-kind=\"normal\"] path");
     });
 
     it("draws exactly one border around the Stepper group, never a second one on its buttons", () => {

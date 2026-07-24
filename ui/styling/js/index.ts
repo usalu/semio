@@ -449,6 +449,22 @@ export function themeColorVar(name: string): string {
   return `var(--color-${name.replaceAll("_", "-")})`;
 }
 
+/** @emoji 🧭 Permanent X/Y/Z paints for gumball and view/projection gizmos — primary / secondary / tertiary, never active/hover chrome. */
+export const SPATIAL_AXIS_COLOR_REFS = {
+  x: tokenVar("primary"),
+  y: tokenVar("secondary"),
+  z: tokenVar("tertiary"),
+} as const;
+
+/** @emoji 🧭 Resolved `#rrggbb` axis paints for spatial manipulators and navigation cubes. */
+export function resolveSpatialAxisColors(): { readonly x: string; readonly y: string; readonly z: string } {
+  return {
+    x: resolveColorHex(SPATIAL_AXIS_COLOR_REFS.x, "primary"),
+    y: resolveColorHex(SPATIAL_AXIS_COLOR_REFS.y, "secondary"),
+    z: resolveColorHex(SPATIAL_AXIS_COLOR_REFS.z, "tertiary"),
+  };
+}
+
 /** @emoji 🔑 Returns the canonical hex for a palette token key (headless-safe). */
 export function tokenHex(key: StylingTokenKey | string): string {
   return STYLING_TOKENS[key as StylingTokenKey] ?? STYLING_TOKENS.gray;
@@ -753,6 +769,12 @@ if (import.meta.vitest) {
     it("resolveColorHex resolves palette var refs headlessly", () => {
       clearColorResolveCache();
       expect(resolveColorHex("var(--color-secondary)", "gray")).toBe("#34d1bf");
+    });
+
+    it("resolveSpatialAxisColors maps X/Y/Z to primary/secondary/tertiary permanently", () => {
+      clearColorResolveCache();
+      expect(resolveSpatialAxisColors()).toEqual({ x: "#ff344f", y: "#34d1bf", z: "#fa9500" });
+      expect(SPATIAL_AXIS_COLOR_REFS).toEqual({ x: "var(--color-primary)", y: "var(--color-secondary)", z: "var(--color-tertiary)" });
     });
 
     it("resolveColorHex passes through hex literals", () => {

@@ -1,0 +1,14 @@
+{
+  "title": "Fix Introduction Step Border Emphasis Across Steps",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "The first introduction step correctly shows emphasized border with cursor inside and normal border with cursor outside, but subsequent steps wrongly always keep the emphasized border.",
+  "summary": "Introduction info boxes no longer stay emphasized after advancing steps. Root cause: :focus-within stayed true because Next kept keyboard focus. Introduction boxes now emphasize on :hover only; dialogs still use :hover and :focus-within. Extended the glass-box vitest to assert this split.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2301"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪f352a101f3e74a5f90999b90c1cde31d"
+  ]
+}

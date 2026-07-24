@@ -6,7 +6,6 @@
 import {
   cn,
   floatingRibbonSurfaceClass,
-  menuListItemClassName,
   reactHostPort,
   resolveSceneGizmoViewportPlacement,
   sceneHostPort,
@@ -21,7 +20,7 @@ import {
   type ReactNode,
   type ThreeEvent,
 } from "@semio-tech/ui-react";
-import { clearColorResolveCache, resolveColorHex, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
+import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
 import { OrbitControls as ThreeOrbitControls } from "three/addons/controls/OrbitControls.js";
 import { MeshBVH, type HitPointInfo } from "three-mesh-bvh";
@@ -1142,6 +1141,37 @@ function orbitCameraZoomForProjection(projection: OrbitCameraProjection, zoom?: 
   return zoom ?? 1;
 }
 
+/** @emoji 🔎 Duck-typed camera zoom — `instanceof Three*Camera` fails across duplicate `three` package copies. */
+export function worldCameraZoom(camera: Camera): number {
+  const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom?: number };
+  if ((zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) && typeof zoomable.zoom === "number") {
+    return zoomable.zoom;
+  }
+  return 1;
+}
+
+/** @emoji 🔎 Duck-typed orthographic check — same duplicate-`three` constraint as {@link worldCameraZoom}. */
+export function worldCameraIsOrthographic(camera: Camera): boolean {
+  return (camera as Camera & { readonly isOrthographicCamera?: boolean }).isOrthographicCamera === true;
+}
+
+/** @emoji 🔎 Zoom carried through a projection gizmo snap — preserves live parallel zoom; maps perspective's unit zoom onto the orthographic default. */
+export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, currentZoom: number, currentIsOrthographic: boolean): number {
+  const family = worldProjectionFamily(pendingSpec);
+  if (family === "parallel") {
+    return currentIsOrthographic ? currentZoom : orbitCameraZoomForProjection("orthographic", currentZoom);
+  }
+  return orbitCameraZoomForProjection("perspective", currentZoom);
+}
+
+function writeWorldCameraZoom(camera: Camera, zoom: number): void {
+  const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom: number; updateProjectionMatrix: () => void };
+  if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
+    zoomable.zoom = zoom;
+    zoomable.updateProjectionMatrix();
+  }
+}
+
 /** @emoji 📷 Computes a Z-up orbit camera state for a named view around `target`. */
 export function computeOrbitCameraViewState(view: OrbitCameraViewId, options: ComputeOrbitCameraViewOptions): WorldCameraState {
   const distance = options.distance ?? 600;
@@ -1246,8 +1276,8 @@ export interface WorldOrbitViewGizmoProps {
   readonly onSpecSelect: (spec: WorldProjectionSpec) => void;
 }
 
-function resolveWorldCadAxisColors(): [string, string, string] {
-  return [resolveColorHex(semanticVar("accent"), "gray"), resolveColorHex(semanticVar("accent-secondary"), "gray"), resolveColorHex(semanticVar("accent-tertiary"), "gray")];
+function resolveWorldGizmoNeutralColor(): string {
+  return resolveColorHex(semanticVar("muted-foreground"), "gray");
 }
 
 //#region 🧭WorldOrbitViewGizmoViewport
@@ -1257,9 +1287,9 @@ export type ProjectionGizmoHit =
   | { readonly type: "center" };
 
 interface WorldProjectionGizmoViewportProps {
-  readonly axisColors: [string, string, string];
+  readonly axisColors: { readonly x: string; readonly y: string; readonly z: string };
+  readonly neutralColor: string;
   readonly axisScale: [number, number, number];
-  readonly labelColor: string;
   readonly font: string;
   readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }
@@ -1271,7 +1301,31 @@ function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, numbe
         <boxGeometry args={props.scale} />
         <meshBasicMaterial color={props.color} toneMapped={false} />
       </mesh>
+      <mesh position={[-0.4, 0, 0]}>
+        <boxGeometry args={props.scale} />
+        <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={0.72} />
+      </mesh>
     </group>
+  );
+}
+
+/** @emoji 📏 Thin shaft from the gizmo origin to a corner hit (matches axis shafts for the eight diagonals). */
+function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number, number, number]; readonly color: string }): ReactElement {
+  const quaternion = reactHostPort.useMemo(() => {
+    const dir = new Vector3(props.to[0], props.to[1], props.to[2]);
+    const length = dir.length();
+    if (length < 1e-6) {
+      return new Quaternion();
+    }
+    dir.multiplyScalar(1 / length);
+    return new Quaternion().setFromUnitVectors(new Vector3(1, 0, 0), dir);
+  }, [props.to]);
+  const length = Math.hypot(props.to[0], props.to[1], props.to[2]);
+  return (
+    <mesh position={[props.to[0] * 0.5, props.to[1] * 0.5, props.to[2] * 0.5]} quaternion={quaternion}>
+      <boxGeometry args={[length * 0.88, 0.022, 0.022]} />
+      <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={0.72} />
+    </mesh>
   );
 }
 
@@ -1282,9 +1336,14 @@ function WorldProjectionGizmoHitHead(props: {
   readonly label?: string;
   readonly font: string;
   readonly labelColor: string;
+  readonly hoverLabelColor: string;
   readonly axisHeadScale: number;
   readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }): ReactElement {
+  const [active, setActive] = reactHostPort.useState(false);
+  // 🧭 Axis paints stay primary/secondary/tertiary permanently — hover only swaps label contrast, never chrome "emphasized".
+  const fillColor = props.color;
+  const labelColor = active ? props.hoverLabelColor : props.labelColor;
   const texture = reactHostPort.useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;
@@ -1296,19 +1355,18 @@ function WorldProjectionGizmoHitHead(props: {
     context.beginPath();
     context.arc(32, 32, props.label ? 16 : 12, 0, 2 * Math.PI);
     context.closePath();
-    context.fillStyle = props.color;
+    context.fillStyle = fillColor;
     context.fill();
     if (props.label) {
       context.font = props.font;
       context.textAlign = "center";
-      context.fillStyle = props.labelColor;
+      context.fillStyle = labelColor;
       context.fillText(props.label, 32, props.label.length > 2 ? 38 : 41);
     }
     return new CanvasTexture(canvas);
-  }, [props.color, props.font, props.label, props.labelColor]);
-  const [active, setActive] = reactHostPort.useState(false);
-  const baseScale = props.label ? 1 : 0.65;
-  const scale = baseScale * (active ? 1.2 : 1) * props.axisHeadScale;
+  }, [fillColor, labelColor, props.font, props.label]);
+  reactHostPort.useEffect(() => () => texture.dispose(), [texture]);
+  const scale = (props.label ? 1 : 0.65) * props.axisHeadScale * (active ? 1.08 : 1);
   return (
     <sprite
       scale={scale}
@@ -1331,48 +1389,52 @@ function WorldProjectionGizmoHitHead(props: {
         props.onHitSelect(hit);
       }}
     >
-      <spriteMaterial map={texture} alphaTest={0.3} opacity={props.label ? 1 : 0.8} toneMapped={false} />
+      <spriteMaterial map={texture} alphaTest={0.3} opacity={1} toneMapped={false} />
     </sprite>
   );
 }
 
 /** @emoji 🎯 Navigation cube with face, corner, and center hit targets for projection snapping. */
 function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps): ReactElement {
-  const [colorX, colorY, colorZ] = props.axisColors;
-  const axisHeadScale = 0.88;
-  const headProps = {
+  const axisHeadScale = 0.62;
+  const labelColor = resolveColorHex(tokenVar("light"), "light");
+  const hoverLabelColor = labelColor;
+  const headBase = {
     font: props.font,
-    labelColor: props.labelColor,
+    labelColor,
+    hoverLabelColor,
     axisHeadScale,
     onHitSelect: props.onHitSelect,
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
   const cornerHits: readonly { readonly position: [number, number, number]; readonly hit: ProjectionGizmoHit; readonly label: string }[] = [
-    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, label: "NE↑" },
-    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, label: "NW↑" },
-    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, label: "SE↑" },
-    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "upper" }, label: "SW↑" },
-    { position: [0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "lower" }, label: "NE↓" },
-    { position: [-0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "lower" }, label: "NW↓" },
-    { position: [0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "se", hemisphere: "lower" }, label: "SE↓" },
-    { position: [-0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "lower" }, label: "SW↓" },
+    { position: [0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "upper" }, label: "NE" },
+    { position: [-0.72, 0.72, 0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "upper" }, label: "NW" },
+    { position: [0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "se", hemisphere: "upper" }, label: "SE" },
+    { position: [-0.72, -0.72, 0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "upper" }, label: "SW" },
+    { position: [0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "ne", hemisphere: "lower" }, label: "ne" },
+    { position: [-0.72, 0.72, -0.72], hit: { type: "corner", quadrant: "nw", hemisphere: "lower" }, label: "nw" },
+    { position: [0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "se", hemisphere: "lower" }, label: "se" },
+    { position: [-0.72, -0.72, -0.72], hit: { type: "corner", quadrant: "sw", hemisphere: "lower" }, label: "sw" },
   ];
-  const cornerColor = props.labelColor;
   return (
-    <group scale={40}>
-      <WorldOrbitViewGizmoViewportAxis color={colorX} rotation={[0, 0, 0]} scale={props.axisScale} />
-      <WorldOrbitViewGizmoViewportAxis color={colorY} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} />
-      <WorldOrbitViewGizmoViewportAxis color={colorZ} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} />
-      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} color={colorX} label="X" {...headProps} />
-      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={colorX} {...headProps} />
-      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} color={colorY} label="Y" {...headProps} />
-      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={colorY} {...headProps} />
-      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} color={colorZ} label="Z" {...headProps} />
-      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={colorZ} {...headProps} />
+    <group scale={22}>
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.x} rotation={[0, 0, 0]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.y} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.z} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} />
       {cornerHits.map((corner) => (
-        <WorldProjectionGizmoHitHead key={corner.label} position={corner.position} hit={corner.hit} color={cornerColor} label={corner.label} {...headProps} />
+        <WorldProjectionGizmoCornerShaft key={`shaft-${corner.hit.quadrant}-${corner.hit.hemisphere}`} to={corner.position} color={props.neutralColor} />
       ))}
-      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} color={cornerColor} label="3D" {...headProps} />
+      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} label="X" color={props.axisColors.x} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={props.axisColors.x} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} label="Y" color={props.axisColors.y} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={props.axisColors.y} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} label="Z" color={props.axisColors.z} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={props.axisColors.z} {...headBase} />
+      {cornerHits.map((corner) => (
+        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} label={corner.label} color={props.neutralColor} {...headBase} />
+      ))}
+      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} label="3D" color={props.neutralColor} {...headBase} />
     </group>
   );
 }
@@ -1381,15 +1443,15 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
 /** @emoji 🧭 CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
-  const [colors, setColors] = reactHostPort.useState<[string, string, string]>(() => resolveWorldCadAxisColors());
+  const [axisColors, setAxisColors] = reactHostPort.useState(() => resolveSpatialAxisColors());
+  const [neutralColor, setNeutralColor] = reactHostPort.useState(() => resolveWorldGizmoNeutralColor());
   const placement = reactHostPort.useMemo(() => resolveSceneGizmoViewportPlacement(size), [size]);
   const axisScale = reactHostPort.useMemo(() => [0.88, 0.036, 0.036] as [number, number, number], []);
-  const [labelColor, setLabelColor] = reactHostPort.useState<string>(() => resolveColorHex(semanticVar("foreground"), "gray"));
 
   useCanvasAppearanceSync(
     reactHostPort.useCallback(() => {
-      setColors(resolveWorldCadAxisColors());
-      setLabelColor(resolveColorHex(semanticVar("foreground"), "gray"));
+      setAxisColors(resolveSpatialAxisColors());
+      setNeutralColor(resolveWorldGizmoNeutralColor());
     }, []),
   );
 
@@ -1399,10 +1461,10 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
   return (
     <GizmoHelper alignment={placement.alignment} margin={placement.margin}>
       <WorldProjectionGizmoViewport
-        axisColors={colors}
+        axisColors={axisColors}
+        neutralColor={neutralColor}
         axisScale={axisScale}
-        labelColor={labelColor}
-        font="14px Inter var, Arial, sans-serif"
+        font="12px Inter var, Arial, sans-serif"
         onHitSelect={(hit) => {
           const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
           props.onSpecSelect(spec);
@@ -1429,7 +1491,7 @@ export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps)
   const controls = useThree((state) => state.controls as OrbitControlsTarget | null);
   const invalidate = useThree((state) => state.invalidate);
   const { setSnapGate } = useWorldOrbitViewSnapGate();
-  const animRef = reactHostPort.useRef<{ readonly spec: WorldProjectionSpec; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly to: WorldCameraState; readonly start: number } | null>(null);
+  const animRef = reactHostPort.useRef<{ readonly spec: WorldProjectionSpec; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly fromZoom: number; readonly to: WorldCameraState; readonly start: number } | null>(null);
 
   reactHostPort.useEffect(() => {
     if (!props.pendingSpec || !camera || !controls?.target) {
@@ -1440,11 +1502,12 @@ export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps)
     const distance = orbitCameraDistance({
       position: threeVec3ToCad(camera.position),
       target: targetCad,
-      zoom: "zoom" in camera ? (camera as ThreePerspectiveCamera).zoom : 1,
+      zoom: worldCameraZoom(camera),
     });
-    const zoom = camera instanceof ThreeOrthographicCamera || camera instanceof ThreePerspectiveCamera ? camera.zoom : 1;
+    const fromZoom = worldCameraZoom(camera);
+    const zoom = worldProjectionSnapZoom(pendingSpec, fromZoom, worldCameraIsOrthographic(camera));
     const to = computeWorldProjectionPose(pendingSpec, { target: targetCad, distance, zoom });
-    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), to, start: performance.now() };
+    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), fromZoom, to, start: performance.now() };
     setSnapGate(true);
     props.onPendingSpecClear();
     invalidate();
@@ -1465,10 +1528,7 @@ export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps)
     camera.lookAt(target[0], target[1], target[2]);
     controls.target.set(target[0], target[1], target[2]);
     controls.update();
-    if (camera instanceof ThreePerspectiveCamera || camera instanceof ThreeOrthographicCamera) {
-      camera.zoom = anim.to.zoom;
-      camera.updateProjectionMatrix();
-    }
+    writeWorldCameraZoom(camera, anim.fromZoom + (anim.to.zoom - anim.fromZoom) * eased);
     if (progress < 1) {
       invalidate();
       return;
@@ -1556,23 +1616,97 @@ const WORLD_PROJECTION_KIND_SHORT_LABELS: Record<WorldProjectionKind, string> = 
   curvilinear: "Fish",
 };
 
+export interface WorldProjectionModeOption {
+  readonly id: string;
+  readonly label: string;
+  readonly spec: WorldProjectionSpec;
+  readonly active: boolean;
+}
+
+/** @emoji 🔀 Kind-specific mode leaves for the projection switcher (views / variants / axes / mappings). */
+export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly WorldProjectionModeOption[] {
+  switch (spec.kind) {
+    case "orthographic":
+      return (["plan", "top", "bottom", "front", "back", "left", "right"] as const).map((view) => ({
+        id: `orthographic-${view}`,
+        label: view === "plan" ? "Plan" : view[0]!.toUpperCase() + view.slice(1),
+        spec: { kind: "orthographic", view },
+        active: spec.view === view,
+      }));
+    case "axonometric": {
+      const variants: readonly { readonly variant: WorldAxonometricVariant; readonly label: string; readonly angleA: number; readonly angleB: number }[] = [
+        { variant: "isometric", label: "Iso", angleA: 30, angleB: 30 },
+        { variant: "dimetric", label: "Di", angleA: 15, angleB: 15 },
+        { variant: "trimetric", label: "Tri", angleA: 12, angleB: 42 },
+      ];
+      return variants.map((row) => ({
+        id: `axonometric-${row.variant}`,
+        label: row.label,
+        spec: { kind: "axonometric", variant: row.variant, angleA: row.angleA, angleB: row.angleB, quadrant: spec.quadrant, hemisphere: spec.hemisphere },
+        active: spec.variant === row.variant,
+      }));
+    }
+    case "oblique": {
+      const variants: readonly { readonly variant: WorldObliqueVariant; readonly label: string; readonly depthScale: number }[] = [
+        { variant: "cabinet", label: "Cab", depthScale: 0.5 },
+        { variant: "cavalier", label: "Cav", depthScale: 1 },
+        { variant: "military", label: "Mil", depthScale: 1 },
+      ];
+      return variants.map((row) => ({
+        id: `oblique-${row.variant}`,
+        label: row.label,
+        spec: { kind: "oblique", variant: row.variant, angle: spec.angle, depthScale: row.depthScale },
+        active: spec.variant === row.variant,
+      }));
+    }
+    case "onePoint":
+      return (["x", "y", "z"] as const).map((axis) => ({
+        id: `one-point-${axis}`,
+        label: axis.toUpperCase(),
+        spec: { kind: "onePoint", axis, fov: spec.fov },
+        active: spec.axis === axis,
+      }));
+    case "curvilinear":
+      return (["fisheye", "panini"] as const).map((mapping) => ({
+        id: `curvilinear-${mapping}`,
+        label: mapping === "fisheye" ? "Fish" : "Pan",
+        spec: { kind: "curvilinear", fov: spec.fov, strength: spec.strength, mapping },
+        active: spec.mapping === mapping,
+      }));
+    default:
+      return [];
+  }
+}
+
 export interface WorldProjectionKindSwitchProps {
   readonly spec: WorldProjectionSpec;
   readonly onSpecChange: (spec: WorldProjectionSpec) => void;
   readonly className?: string;
 }
 
-/** @emoji 🔀 Projection-family switcher — every {@link WorldProjectionKind} like gumball transform modes. */
+/** @emoji 🔀 Projection-mode switcher — every {@link WorldProjectionKind} plus kind-specific variants, like gumball transform modes. */
 export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
-  const shellClass = props.className ?? cn("pointer-events-auto flex flex-wrap gap-px text-2xs font-medium", floatingRibbonSurfaceClass);
-  const buttonClass = (active: boolean) => cn("px-1.5 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
+  const shellClass = props.className ?? cn("pointer-events-auto flex flex-col gap-px text-2xs font-medium", floatingRibbonSurfaceClass);
+  const buttonClass = (active: boolean) => cn("px-1.5 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");
+  const modes = worldProjectionModeOptions(props.spec);
   return (
     <div className={shellClass} data-world-projection-kind-switch>
-      {WORLD_PROJECTION_KINDS.map((kind) => (
-        <button key={kind} type="button" className={buttonClass(props.spec.kind === kind)} aria-pressed={props.spec.kind === kind} onClick={() => props.onSpecChange(worldProjectionKindSwitchSpec(kind, props.spec))}>
-          {WORLD_PROJECTION_KIND_SHORT_LABELS[kind]}
-        </button>
-      ))}
+      <div className="flex flex-wrap gap-px" data-world-projection-kinds>
+        {WORLD_PROJECTION_KINDS.map((kind) => (
+          <button key={kind} type="button" className={buttonClass(props.spec.kind === kind)} aria-pressed={props.spec.kind === kind} onClick={() => props.onSpecChange(worldProjectionKindSwitchSpec(kind, props.spec))}>
+            {WORLD_PROJECTION_KIND_SHORT_LABELS[kind]}
+          </button>
+        ))}
+      </div>
+      {modes.length > 0 ? (
+        <div className="flex flex-wrap gap-px border-t border-border/40" data-world-projection-modes>
+          {modes.map((mode) => (
+            <button key={mode.id} type="button" className={buttonClass(mode.active)} aria-pressed={mode.active} onClick={() => props.onSpecChange(mode.spec)}>
+              {mode.label}
+            </button>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1591,7 +1725,7 @@ export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProp
     return <WorldProjectionKindSwitch spec={props.spec} onSpecChange={props.onSpecChange} className={props.className} />;
   }
   const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
-  const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors", active ? "bg-active-base text-emphasized" : cn(menuListItemClassName, "text-muted-foreground"));
+  const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");
   return (
     <div className={shellClass} data-world-projection-switch>
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
@@ -3779,6 +3913,25 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("worldProjectionModeOptions", () => {
+    it("lists orthographic views and axonometric/oblique/one-point/curvilinear variants", () => {
+      expect(worldProjectionModeOptions({ kind: "orthographic", view: "top" }).map((row) => row.id)).toEqual([
+        "orthographic-plan",
+        "orthographic-top",
+        "orthographic-bottom",
+        "orthographic-front",
+        "orthographic-back",
+        "orthographic-left",
+        "orthographic-right",
+      ]);
+      expect(worldProjectionModeOptions({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }).map((row) => row.label)).toEqual(["Iso", "Di", "Tri"]);
+      expect(worldProjectionModeOptions({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }).map((row) => row.label)).toEqual(["Cab", "Cav", "Mil"]);
+      expect(worldProjectionModeOptions({ kind: "onePoint", axis: "y", fov: 50 }).map((row) => row.label)).toEqual(["X", "Y", "Z"]);
+      expect(worldProjectionModeOptions({ kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }).map((row) => row.label)).toEqual(["Fish", "Pan"]);
+      expect(worldProjectionModeOptions({ kind: "threePoint", fov: 50 })).toEqual([]);
+    });
+  });
+
   describe("resolveOrbitCameraViewFromTemplateId", () => {
     it("maps display-tree template ids to orbit views", () => {
       expect(resolveOrbitCameraViewFromTemplateId("top")).toBe("top");
@@ -3903,6 +4056,13 @@ if (import.meta.vitest) {
     it("accepts an explicit orthographic zoom including values below the legacy default", () => {
       const state = computeWorldProjectionPose({ kind: "orthographic", view: "top" }, { target: [7, 0, 0], distance: 100, zoom: 6.4 });
       expect(state.zoom).toBe(6.4);
+    });
+
+    it("preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom", () => {
+      expect(worldProjectionSnapZoom({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, 12.5, true)).toBe(12.5);
+      expect(worldProjectionSnapZoom({ kind: "orthographic", view: "front" }, 1, true)).toBe(1);
+      expect(worldProjectionSnapZoom({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" }, 1, false)).toBe(50);
+      expect(worldProjectionSnapZoom({ kind: "threePoint", fov: 50 }, 50, true)).toBe(50);
     });
 
     it("derives the classic 35.264/45 isometric direction from the 30/30 axis angles", () => {

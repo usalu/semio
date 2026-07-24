@@ -142,6 +142,8 @@ import {
   isWorldTransformGumballMode,
   worldGumballConfigForProjection,
   gumballTransformDeltaBetweenPoses,
+  gumballLivePreviewDeltaBetweenPoses,
+  applyGumballLivePreviewDeltaToPose,
   WindowActionPane,
   resolveCommands,
   commandCategories,
@@ -184,6 +186,7 @@ import {
   type DisplayHostApi,
   resolveFrameworkLayoutSeed,
   introductionTargetsWindow,
+  windowMeasureTreeContainsId,
   buildToolTabs,
   toolIdFromPanelTabId,
 } from "./index.tsx";
@@ -357,6 +360,20 @@ describe("shell store reducer", () => {
     const opened = shellReducer(state, { type: "SET_PANEL_VISIBLE", anchor: "top-middle", value: true });
     expect(opened.layout.panels["top-middle"].visible).toBe(true);
     expect(opened.layout.panels["top-left"].visible).toBe(state.layout.panels["top-left"].visible);
+  });
+
+  it("rewrites window titles via SET_WINDOW_TITLE for extras and base kinds", () => {
+    const state = shellReducer(baseState(), {
+      type: "SET_EXTRA_WINDOW_INSTANCES",
+      value: [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" }],
+    });
+    const renamedExtra = shellReducer(state, { type: "SET_WINDOW_TITLE", windowId: "puzzle3d-main-top", title: "Front" });
+    expect(renamedExtra.layout.windowTitlesById["puzzle3d-main-top"]).toBe("Front");
+    expect(renamedExtra.layout.extraWindowInstances[0]?.title).toBe("Front");
+    expect(renamedExtra.overlays).toBe(state.overlays);
+    const renamedBase = shellReducer(renamedExtra, { type: "SET_WINDOW_TITLE", windowId: "puzzle3d-main", title: "Isometric" });
+    expect(renamedBase.layout.windowTitlesById["puzzle3d-main"]).toBe("Isometric");
+    expect(renamedBase.layout.extraWindowInstances[0]?.title).toBe("Front");
   });
 
   it("resets the dock override, every anchor's active path/visible/size, drill-down memory, and tree expansion via RESET_DOCK", () => {
@@ -1820,6 +1837,7 @@ describe("framework renderer hosts", () => {
     expect(markup).toContain("semio-world-3d-host");
     expect(markup).toContain('data-orbit-view-gizmo=""');
     expect(markup).toContain('data-surface-id="puzzle.3d.play.viewport"');
+    expect(markup).toContain("data-world-projection-kind-switch");
   });
 
   it("keeps world-3d orbit camera seed local per viewport once detached", () => {
@@ -3599,6 +3617,32 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(transformRotate?.args.angle).toBeCloseTo(Math.PI / 2, 5);
   });
 
+  it("gumballLivePreviewDeltaBetweenPoses applies local start→current deltas for instant mid-drag preview", () => {
+    expect(
+      gumballLivePreviewDeltaBetweenPoses(
+        "move",
+        { position: [1, 2, 3], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+        { position: [4, 2, 5], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      ),
+    ).toEqual({ kind: "translate", dx: 3, dy: 0, dz: 2 });
+    const rotate = gumballLivePreviewDeltaBetweenPoses(
+      "rotate",
+      { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { position: [0, 0, 0], quaternion: [0, 0.7071067811865476, 0, 0.7071067811865476], scale: [1, 1, 1] },
+    );
+    expect(rotate?.kind).toBe("rotate");
+    const scaled = applyGumballLivePreviewDeltaToPose(
+      { position: [10, 0, 0], quaternion: [0, 0, 0, 1], scale: [2, 2, 2] },
+      { kind: "scale", sx: 1.5, sy: 1, sz: 2 },
+    );
+    expect(scaled).toEqual({ position: [10, 0, 0], quaternion: [0, 0, 0, 1], scale: [3, 2, 4] });
+    const translated = applyGumballLivePreviewDeltaToPose(
+      { position: [1, 1, 1], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] },
+      { kind: "translate", dx: 2, dy: -3, dz: 0.5 },
+    );
+    expect(translated.position).toEqual([3, -2, 1.5]);
+  });
+
   it("resolveWindowActions surfaces panel-eligible actions and frameworkHistoryUtilityNodes derives History buttons", () => {
     const actionsApp = {
       controllerId: "draw",
@@ -3849,7 +3893,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility"]);
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects"]);
     expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
@@ -3863,6 +3907,17 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       advance: { kind: "utility", id: "transform" },
       show: ["framework.window.puzzle3dMain"],
     });
+    expect(steps.find((step) => step.id === "verbindungspunkte")).toMatchObject({
+      introduce: "puzzle3d-play-vortex-show",
+      advance: { kind: "action", id: "setVortexShow" },
+      show: ["framework.window.puzzle3dMain"],
+    });
+    expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Verbindungspunkte/i);
+    expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
+      introduce: "framework.window.puzzle3dMain",
+      advance: { kind: "action", id: "openVortexSuggestions" },
+    });
+    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Kontextmenü|Rechtsklick/i);
 
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -4245,6 +4300,23 @@ describe("introductionTargetsWindow", () => {
     expect(introductionTargetsWindow("puzzle3d-main-top", "puzzle3d-main", null, "puzzle3dMain")).toBe(true);
     expect(introductionTargetsWindow("puzzle3d-main", "puzzle3d-main", null, "puzzle3dMain")).toBe(true);
     expect(introductionTargetsWindow("other-window", "other-window", null, "puzzle3dMain")).toBe(false);
+  });
+});
+
+describe("windowMeasureTreeContainsId", () => {
+  it("finds nested measure ids used as introduction targets", () => {
+    const measures = [
+      { kind: "select" as const, id: "puzzle3d-play-vortex-show", value: "selected", items: [], onChange: { id: "setVortexShow" } },
+      {
+        kind: "group" as const,
+        id: "group",
+        label: "Group",
+        children: [{ kind: "toggle" as const, id: "nested-toggle", pressed: false, iconId: "eye", onChange: { id: "noop" } }],
+      },
+    ];
+    expect(windowMeasureTreeContainsId(measures, "puzzle3d-play-vortex-show")).toBe(true);
+    expect(windowMeasureTreeContainsId(measures, "nested-toggle")).toBe(true);
+    expect(windowMeasureTreeContainsId(measures, "missing")).toBe(false);
   });
 });
 

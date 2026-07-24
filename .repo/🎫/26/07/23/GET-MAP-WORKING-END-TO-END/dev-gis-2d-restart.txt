@@ -1806,3 +1806,33 @@ warning: `gis-plugin` (lib) generated 9 warnings (run `cargo fix --lib -p gis-pl
 9:52:40 PM [vite] server restarted.
 [BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/framework/renderer/react/index.tsx as it exceeds the max of 500KB.
 [BABEL] Note: The code generator has deoptimised the styling of /Users/ueli/Documents/semio/ui/js/react/index.tsx as it exceeds the max of 500KB.
+4:25:25 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:25:38 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:25:38 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:25:39 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx
+4:25:40 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx
+4:25:41 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx
+4:27:24 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:27:26 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:27:41 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:27:46 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:27:49 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:27:51 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:29:18 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:29:19 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx
+4:29:20 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:29:21 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:29:23 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+4:29:50 AM [vite] (client) hmr update /@fs/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx
+4:29:53 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:39:29 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:39:31 AM [vite] (client) hmr update /globals.css, /@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx
+4:39:31 AM [vite] ../../../../mit-bestand/aggregator/brand.ts changed, restarting server...
+4:39:32 AM [vite] server restarted.
+4:41:04 AM [vite] ../../../plugin/registry/generated/plugins.ts changed, restarting server...
+4:41:04 AM [vite] ../../../plugin/registry/generated/playgrounds.ts changed, restarting server...
+4:41:05 AM [vite] server restarted.
+5:11:54 AM [vite] ../../../../mit-bestand/aggregator/brand.ts changed, restarting server...
+5:11:55 AM [vite] server restarted.
+5:12:01 AM [vite] ../../../../mit-bestand/aggregator/brand.ts changed, restarting server...
+5:12:03 AM [vite] server restarted.

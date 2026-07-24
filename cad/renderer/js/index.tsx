@@ -4719,13 +4719,20 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
-  return usePaneSlot(
+  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-left");
+  const pane = (
     <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label="Projection">
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
-    </Pane>,
+    </Pane>
+  );
+  const portaled = usePaneSlot(pane);
+  if (portaled) return portaled;
+  return (
+    <div className="pointer-events-none absolute inset-0" data-slot="world-orbit-projection-switch-fallback" data-world-projection-kind-switch-host="">
+      {pane}
+    </div>
   );
 }
 
@@ -4827,6 +4834,23 @@ export function InteractionRepl({
   const rtRef = reactHostPort.useRef(rt);
   rtRef.current = rt;
   const [gumballPreviewDiff, setGumballPreviewDiff] = reactHostPort.useState<ModelDiff | null>(null);
+  const [projectionSpec, setProjectionSpec] = reactHostPort.useState<WorldProjectionSpec>(
+    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: 50 }),
+  );
+  reactHostPort.useEffect(() => {
+    if (spatialViewOverrides?.projectionSpec) {
+      setProjectionSpec(spatialViewOverrides.projectionSpec);
+    }
+  }, [spatialViewOverrides?.projectionSpec]);
+  const handleProjectionSpecChange = reactHostPort.useCallback(
+    (spec: WorldProjectionSpec) => {
+      setProjectionSpec(spec);
+      spatialViewOverrides?.onProjectionSpecChange?.(spec);
+      const family = spec.kind === "orthographic" || spec.kind === "axonometric" || spec.kind === "oblique" ? "orthographic" : "perspective";
+      spatialViewOverrides?.onOrbitProjectionChange?.(family);
+    },
+    [spatialViewOverrides],
+  );
   const tessTolerance = tessellationTolerance ?? (rt.computeMode() === "fast" ? 0.02 : 0.0008);
   const gumballPreviewActive = gumballPreviewDiff !== null && !isEmptyModelDiff(gumballPreviewDiff);
   const gumballPreviewModel = reactHostPort.useMemo(() => {
@@ -5957,13 +5981,7 @@ export function InteractionRepl({
           frameloop={canvasFrameloop}
           className={cn("bg-canvas", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
-          overlay={
-            spatialViewOverrides?.onProjectionSpecChange && spatialViewOverrides.projectionSpec ? (
-              <WorldOrbitProjectionSwitchPane spec={spatialViewOverrides.projectionSpec} onSpecChange={spatialViewOverrides.onProjectionSpecChange} />
-            ) : spatialViewOverrides?.onOrbitProjectionChange ? (
-              <WorldOrbitProjectionSwitch projection={spatialViewOverrides.orbitProjection ?? "perspective"} onProjectionChange={spatialViewOverrides.onOrbitProjectionChange} />
-            ) : null
-          }
+          overlay={<WorldOrbitProjectionSwitchPane spec={projectionSpec} onSpecChange={handleProjectionSpecChange} />}
         >
           <InteractionSelectionInvalidateBridge selectionKey={selectionInvalidateKey} />
           <InteractionSpatialView
@@ -6011,6 +6029,8 @@ export function InteractionRepl({
             onReferenceHover={onReferenceHover}
             onReferenceRelocate={onReferenceRelocate}
             {...spatialViewOverrides}
+            projectionSpec={projectionSpec}
+            onProjectionSpecChange={handleProjectionSpecChange}
           />
         </InteractionCanvas>
         {dragSelection && dragOverlayRect ? (

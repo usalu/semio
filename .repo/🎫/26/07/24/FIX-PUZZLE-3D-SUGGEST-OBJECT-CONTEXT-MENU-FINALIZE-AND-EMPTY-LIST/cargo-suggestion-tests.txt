@@ -1,0 +1,1191 @@
+[1m[92m   Compiling[0m mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+[1m[33mwarning[0m[1m: hidden lifetime parameters in types are deprecated[0m
+    [1m[94m--> [0mframework/core/rs/lib.rs:1791:42
+     [1m[94m|[0m
+[1m[94m1791[0m [1m[94m|[0m fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     [1m[94m|[0m                                          [1m[33m^^^^^^^^^^^^[0m [1m[33mexpected lifetime parameter[0m
+     [1m[94m|[0m
+     [1m[94m= [0m[1mnote[0m: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     [1m[94m= [0m[1mhelp[0m: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+[1m[96mhelp[0m: indicate the anonymous lifetime
+     [1m[94m|[0m
+[1m[94m1791[0m [1m[94m| [0mfn dwg_decode_entity_common(reader: &mut DwgBitReader[92m<'_>[0m) -> Result<DwgColor, String> {
+     [1m[94m|[0m                                                      [92m++++[0m
+
+[1m[33mwarning[0m[1m: hidden lifetime parameters in types are deprecated[0m
+    [1m[94m--> [0mframework/core/rs/lib.rs:1804:43
+     [1m[94m|[0m
+[1m[94m1804[0m [1m[94m|[0m fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     [1m[94m|[0m                                           [1m[33m^^^^^^^^^^^^[0m [1m[33mexpected lifetime parameter[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: indicate the anonymous lifetime
+     [1m[94m|[0m
+[1m[94m1804[0m [1m[94m| [0mfn dwg_decode_entity_handles(reader: &mut DwgBitReader[92m<'_>[0m) -> Result<u64, String> {
+     [1m[94m|[0m                                                       [92m++++[0m
+
+[1m[33mwarning[0m[1m: hidden lifetime parameters in types are deprecated[0m
+    [1m[94m--> [0mframework/core/rs/lib.rs:1919:53
+     [1m[94m|[0m
+[1m[94m1919[0m [1m[94m|[0m fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     [1m[94m|[0m                                                     [1m[33m^^^^^^^^^^^^[0m [1m[33mexpected lifetime parameter[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: indicate the anonymous lifetime
+     [1m[94m|[0m
+[1m[94m1919[0m [1m[94m| [0mfn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader[92m<'_>[0m) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     [1m[94m|[0m                                                                 [92m++++[0m
+
+[1m[33mwarning[0m: `semio-framework-core` (lib) generated 3 warnings
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mvcs/rs/lib.rs:590:20
+    [1m[94m|[0m
+[1m[94m590[0m [1m[94m|[0m     let committed: std::collections::HashSet<String> = envelope
+    [1m[94m|[0m                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m590[0m [91m- [0m    let committed: [91mstd::collections::[0mHashSet<String> = envelope
+[1m[94m590[0m [92m+ [0m    let committed: HashSet<String> = envelope
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mvcs/rs/lib.rs:1198:36
+     [1m[94m|[0m
+[1m[94m1198[0m [1m[94m|[0m                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     [1m[94m|[0m                                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1198[0m [91m- [0m                payload_hash: Some([91msemio_framework_hash::[0mhash_bytes(
+[1m[94m1198[0m [92m+ [0m                payload_hash: Some(hash_bytes(
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mvcs/rs/lib.rs:1445:24
+     [1m[94m|[0m
+[1m[94m1445[0m [1m[94m|[0m     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     [1m[94m|[0m                        [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1445[0m [91m- [0m    let payload_hash = [91msemio_framework_hash::[0mhash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+[1m[94m1445[0m [92m+ [0m    let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     [1m[94m|[0m
+
+[1m[33mwarning[0m: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/plugin/rs/lib.rs:334:28
+    [1m[94m|[0m
+[1m[94m334[0m [1m[94m|[0m     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    [1m[94m|[0m                            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m334[0m [91m- [0m    terminology_documents: [91mstd::collections::[0mHashMap<String, Vec<String>>,
+[1m[94m334[0m [92m+ [0m    terminology_documents: HashMap<String, Vec<String>>,
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/plugin/rs/lib.rs:363:36
+    [1m[94m|[0m
+[1m[94m363[0m [1m[94m|[0m             terminology_documents: std::collections::HashMap::new(),
+    [1m[94m|[0m                                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m363[0m [91m- [0m            terminology_documents: [91mstd::collections::[0mHashMap::new(),
+[1m[94m363[0m [92m+ [0m            terminology_documents: HashMap::new(),
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/plugin/rs/lib.rs:3816:17
+     [1m[94m|[0m
+[1m[94m3816[0m [1m[94m|[0m     let action: serde_json::Value =
+     [1m[94m|[0m                 [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3816[0m [91m- [0m    let action: [91mserde_json::[0mValue =
+[1m[94m3816[0m [92m+ [0m    let action: Value =
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/plugin/rs/lib.rs:3818:18
+     [1m[94m|[0m
+[1m[94m3818[0m [1m[94m|[0m     let context: serde_json::Value =
+     [1m[94m|[0m                  [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3818[0m [91m- [0m    let context: [91mserde_json::[0mValue =
+[1m[94m3818[0m [92m+ [0m    let context: Value =
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/plugin/rs/lib.rs:3846:18
+     [1m[94m|[0m
+[1m[94m3846[0m [1m[94m|[0m     let command: serde_json::Value =
+     [1m[94m|[0m                  [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3846[0m [91m- [0m    let command: [91mserde_json::[0mValue =
+[1m[94m3846[0m [92m+ [0m    let command: Value =
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/plugin/rs/lib.rs:3848:18
+     [1m[94m|[0m
+[1m[94m3848[0m [1m[94m|[0m     let context: serde_json::Value =
+     [1m[94m|[0m                  [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3848[0m [91m- [0m    let context: [91mserde_json::[0mValue =
+[1m[94m3848[0m [92m+ [0m    let context: Value =
+     [1m[94m|[0m
+
+[1m[33mwarning[0m: `semio-framework-plugin` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 6 suggestions)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:187:16
+    [1m[94m|[0m
+[1m[94m187[0m [1m[94m|[0m     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    [1m[94m|[0m                [1m[33m^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m187[0m [91m- [0m    P: Clone + [91mserde::[0mSerialize + serde::de::DeserializeOwned,
+[1m[94m187[0m [92m+ [0m    P: Clone + Serialize + serde::de::DeserializeOwned,
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:188:17
+    [1m[94m|[0m
+[1m[94m188[0m [1m[94m|[0m     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    [1m[94m|[0m                 [1m[33m^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m188[0m [91m- [0m    Op: Clone + [91mserde::[0mSerialize + serde::de::DeserializeOwned + Operation<P>,
+[1m[94m188[0m [92m+ [0m    Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:198:16
+    [1m[94m|[0m
+[1m[94m198[0m [1m[94m|[0m     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
+    [1m[94m|[0m                [1m[33m^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m198[0m [91m- [0m    P: Clone + [91mserde::[0mSerialize + serde::de::DeserializeOwned,
+[1m[94m198[0m [92m+ [0m    P: Clone + Serialize + serde::de::DeserializeOwned,
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:199:17
+    [1m[94m|[0m
+[1m[94m199[0m [1m[94m|[0m     Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    [1m[94m|[0m                 [1m[33m^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m199[0m [91m- [0m    Op: Clone + [91mserde::[0mSerialize + serde::de::DeserializeOwned + Operation<P>,
+[1m[94m199[0m [92m+ [0m    Op: Clone + Serialize + serde::de::DeserializeOwned + Operation<P>,
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:251:41
+    [1m[94m|[0m
+[1m[94m251[0m [1m[94m|[0m     pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    [1m[94m|[0m                                         [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m251[0m [91m- [0m    pub fn receive(&mut self, envelope: [91msemio_framework_core::[0mOpEnvelope) -> Result<(), SyncError> {
+[1m[94m251[0m [92m+ [0m    pub fn receive(&mut self, envelope: OpEnvelope) -> Result<(), SyncError> {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/sync/rs/lib.rs:855:37
+    [1m[94m|[0m
+[1m[94m855[0m [1m[94m|[0m     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    [1m[94m|[0m                                     [1m[33m^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m855[0m [91m- [0m    fn build_folder_endpoint(path: &[91mstd::path::[0mPath, document_id: &str, schema: &str) -> FolderEndpoint {
+[1m[94m855[0m [92m+ [0m    fn build_folder_endpoint(path: &Path, document_id: &str, schema: &str) -> FolderEndpoint {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:238:28
+    [1m[94m|[0m
+[1m[94m238[0m [1m[94m|[0m         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    [1m[94m|[0m                            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m238[0m [91m- [0m        let Some(aabb_a) = [91mbrepkit_operations::[0mmeasure::solid_bounding_box(&self.topo, a).ok() else {
+[1m[94m238[0m [92m+ [0m        let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:241:28
+    [1m[94m|[0m
+[1m[94m241[0m [1m[94m|[0m         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    [1m[94m|[0m                            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m241[0m [91m- [0m        let Some(aabb_b) = [91mbrepkit_operations::[0mmeasure::solid_bounding_box(&self.topo, b).ok() else {
+[1m[94m241[0m [92m+ [0m        let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:1384:28
+     [1m[94m|[0m
+[1m[94m1384[0m [1m[94m|[0m [1m[94m...[0m   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::[1m[94m...[0m
+     [1m[94m|[0m                          [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1384[0m [91m- [0m        let positions: Vec<[91mbrepkit_math::vec::[0mPoint3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+[1m[94m1384[0m [92m+ [0m        let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:1384:106
+     [1m[94m|[0m
+[1m[94m1384[0m [1m[94m|[0m [1m[94m...[0mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m                                                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1384[0m [91m- [0m        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| [91mbrepkit_math::vec::[0mPoint3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+[1m[94m1384[0m [92m+ [0m        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:1427:28
+     [1m[94m|[0m
+[1m[94m1427[0m [1m[94m|[0m [1m[94m...[0m   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::[1m[94m...[0m
+     [1m[94m|[0m                          [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1427[0m [91m- [0m        let positions: Vec<[91mbrepkit_math::vec::[0mPoint3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+[1m[94m1427[0m [92m+ [0m        let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mkernel/3d/brep/rs/lib.rs:1427:106
+     [1m[94m|[0m
+[1m[94m1427[0m [1m[94m|[0m [1m[94m...[0mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m                                                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1427[0m [91m- [0m        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| [91mbrepkit_math::vec::[0mPoint3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+[1m[94m1427[0m [92m+ [0m        let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m: `semio-framework-sync` (lib) generated 6 warnings (run `cargo fix --lib -p semio-framework-sync` to apply 6 suggestions)
+[1m[33mwarning[0m: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:386:27
+    [1m[94m|[0m
+[1m[94m386[0m [1m[94m|[0m         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    [1m[94m|[0m                           [1m[33m^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m386[0m [91m- [0m        let mut document: [91mserde_json::[0mValue = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+[1m[94m386[0m [92m+ [0m        let mut document: Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:387:17
+    [1m[94m|[0m
+[1m[94m387[0m [1m[94m|[0m         let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    [1m[94m|[0m                 [1m[33m^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m387[0m [91m- [0m        let op: [91mserde_json::[0mValue = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+[1m[94m387[0m [92m+ [0m        let op: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:404:32
+    [1m[94m|[0m
+[1m[94m404[0m [1m[94m|[0m     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    [1m[94m|[0m                                [1m[33m^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m404[0m [91m- [0m    fn merge_json(target: &mut [91mserde_json::[0mValue, patch: &serde_json::Value) {
+[1m[94m404[0m [92m+ [0m    fn merge_json(target: &mut Value, patch: &serde_json::Value) {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:404:59
+    [1m[94m|[0m
+[1m[94m404[0m [1m[94m|[0m     fn merge_json(target: &mut serde_json::Value, patch: &serde_json::Value) {
+    [1m[94m|[0m                                                           [1m[33m^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m404[0m [91m- [0m    fn merge_json(target: &mut serde_json::Value, patch: &[91mserde_json::[0mValue) {
+[1m[94m404[0m [92m+ [0m    fn merge_json(target: &mut serde_json::Value, patch: &Value) {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:406:14
+    [1m[94m|[0m
+[1m[94m406[0m [1m[94m|[0m             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    [1m[94m|[0m              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m406[0m [91m- [0m            ([91mserde_json::[0mValue::Object(target_map), serde_json::Value::Object(patch_map)) => {
+[1m[94m406[0m [92m+ [0m            (Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:406:53
+    [1m[94m|[0m
+[1m[94m406[0m [1m[94m|[0m             (serde_json::Value::Object(target_map), serde_json::Value::Object(patch_map)) => {
+    [1m[94m|[0m                                                     [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m406[0m [91m- [0m            (serde_json::Value::Object(target_map), [91mserde_json::[0mValue::Object(patch_map)) => {
+[1m[94m406[0m [92m+ [0m            (serde_json::Value::Object(target_map), Value::Object(patch_map)) => {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:411:77
+    [1m[94m|[0m
+[1m[94m411[0m [1m[94m|[0m                         let entry = target_map.entry(key.clone()).or_insert(serde_json::Value::Null);
+    [1m[94m|[0m                                                                             [1m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m411[0m [91m- [0m                        let entry = target_map.entry(key.clone()).or_insert([91mserde_json::[0mValue::Null);
+[1m[94m411[0m [92m+ [0m                        let entry = target_map.entry(key.clone()).or_insert(Value::Null);
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:598:47
+    [1m[94m|[0m
+[1m[94m598[0m [1m[94m|[0m     fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate:[1m[94m...[0m
+    [1m[94m|[0m                                               [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m598[0m [91m- [0m    fn sync_media_node_parameter_ports(node: &[91mcrate::media_graph::[0mOsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+[1m[94m598[0m [92m+ [0m    fn sync_media_node_parameter_ports(node: &OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+   [1m[94m--> [0mframework/product/os/core/rs/lib.rs:598:126
+    [1m[94m|[0m
+[1m[94m598[0m [1m[94m|[0m [1m[94m...[0mode, bindings: &[OsParameterFieldBinding]) -> crate::media_graph::OsMediaGraphNode {
+    [1m[94m|[0m                                                  [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+    [1m[94m|[0m
+[1m[94m598[0m [91m- [0m    fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> [91mcrate::media_graph::[0mOsMediaGraphNode {
+[1m[94m598[0m [92m+ [0m    fn sync_media_node_parameter_ports(node: &crate::media_graph::OsMediaGraphNode, bindings: &[OsParameterFieldBinding]) -> OsMediaGraphNode {
+    [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:2490:41
+     [1m[94m|[0m
+[1m[94m2490[0m [1m[94m|[0m     pub fn dwg_drawing_to_svg(drawing: &semio_framework_core::DwgDrawing) -> Result<(String, u32, u32), String> {
+     [1m[94m|[0m                                         [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2490[0m [91m- [0m    pub fn dwg_drawing_to_svg(drawing: &[91msemio_framework_core::[0mDwgDrawing) -> Result<(String, u32, u32), String> {
+[1m[94m2490[0m [92m+ [0m    pub fn dwg_drawing_to_svg(drawing: &DwgDrawing) -> Result<(String, u32, u32), String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3633:21
+     [1m[94m|[0m
+[1m[94m3633[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O[1m[94m...[0m
+     [1m[94m|[0m       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3633[0m [91m- [0m                    [91mcrate::instance::[0mOsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+[1m[94m3633[0m [92m+ [0m                    OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3633:72
+     [1m[94m|[0m
+[1m[94m3633[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::O[1m[94m...[0m
+     [1m[94m|[0m                                                          [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3633[0m [91m- [0m                    crate::instance::OsParameter::Numeric { id, .. } | [91mcrate::instance::[0mOsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+[1m[94m3633[0m [92m+ [0m                    crate::instance::OsParameter::Numeric { id, .. } | OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3633:127
+     [1m[94m|[0m
+[1m[94m3633[0m [1m[94m|[0m [1m[94m...[0mtance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Te[1m[94m...[0m
+     [1m[94m|[0m                                                 [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3633[0m [91m- [0m                    crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | [91mcrate::instance::[0mOsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+[1m[94m3633[0m [92m+ [0m                    crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3633:177
+     [1m[94m|[0m
+[1m[94m3633[0m [1m[94m|[0m [1m[94m...[0me::instance::OsParameter::Toggle { id, .. } | crate::instance::OsParameter::Text { id, .. } => {
+     [1m[94m|[0m                                                  [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3633[0m [91m- [0m                    crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | [91mcrate::instance::[0mOsParameter::Text { id, .. } => {
+[1m[94m3633[0m [92m+ [0m                    crate::instance::OsParameter::Numeric { id, .. } | crate::instance::OsParameter::Categorical { id, .. } | crate::instance::OsParameter::Toggle { id, .. } | OsParameter::Text { id, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3642:29
+     [1m[94m|[0m
+[1m[94m3642[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc[1m[94m...[0m
+     [1m[94m|[0m       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3642[0m [91m- [0m                            [91mcrate::instance::[0mOsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3642[0m [92m+ [0m                            OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3642:82
+     [1m[94m|[0m
+[1m[94m3642[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc[1m[94m...[0m
+     [1m[94m|[0m                                                            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3642[0m [91m- [0m                            crate::instance::OsParameter::Numeric { name, .. } | [91mcrate::instance::[0mOsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3642[0m [92m+ [0m                            crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3642:139
+     [1m[94m|[0m
+[1m[94m3642[0m [1m[94m|[0m [1m[94m...[0mnce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::[1m[94m...[0m
+     [1m[94m|[0m                                                 [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3642[0m [91m- [0m                            crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | [91mcrate::instance::[0mOsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3642[0m [92m+ [0m                            crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3642:191
+     [1m[94m|[0m
+[1m[94m3642[0m [1m[94m|[0m [1m[94m...[0m:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m                                                  [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3642[0m [91m- [0m                            crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | [91mcrate::instance::[0mOsParameter::Text { name, .. } => {
+[1m[94m3642[0m [92m+ [0m                            crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3656:33
+     [1m[94m|[0m
+[1m[94m3656[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc[1m[94m...[0m
+     [1m[94m|[0m       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3656[0m [91m- [0m                                [91mcrate::instance::[0mOsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3656[0m [92m+ [0m                                OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3656:86
+     [1m[94m|[0m
+[1m[94m3656[0m [1m[94m|[0m [1m[94m...[0m   crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instanc[1m[94m...[0m
+     [1m[94m|[0m                                                            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3656[0m [91m- [0m                                crate::instance::OsParameter::Numeric { name, .. } | [91mcrate::instance::[0mOsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3656[0m [92m+ [0m                                crate::instance::OsParameter::Numeric { name, .. } | OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3656:143
+     [1m[94m|[0m
+[1m[94m3656[0m [1m[94m|[0m [1m[94m...[0mnce::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::[1m[94m...[0m
+     [1m[94m|[0m                                                 [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3656[0m [91m- [0m                                crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | [91mcrate::instance::[0mOsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+[1m[94m3656[0m [92m+ [0m                                crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3656:195
+     [1m[94m|[0m
+[1m[94m3656[0m [1m[94m|[0m [1m[94m...[0m:instance::OsParameter::Toggle { name, .. } | crate::instance::OsParameter::Text { name, .. } => {
+     [1m[94m|[0m                                                  [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3656[0m [91m- [0m                                crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | [91mcrate::instance::[0mOsParameter::Text { name, .. } => {
+[1m[94m3656[0m [92m+ [0m                                crate::instance::OsParameter::Numeric { name, .. } | crate::instance::OsParameter::Categorical { name, .. } | crate::instance::OsParameter::Toggle { name, .. } | OsParameter::Text { name, .. } => {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3664:30
+     [1m[94m|[0m
+[1m[94m3664[0m [1m[94m|[0m             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3664[0m [91m- [0m            let descriptor = [91mcrate::registry::[0mos_resource_descriptor(&instance.yields);
+[1m[94m3664[0m [92m+ [0m            let descriptor = os_resource_descriptor(&instance.yields);
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:3682:30
+     [1m[94m|[0m
+[1m[94m3682[0m [1m[94m|[0m             let descriptor = crate::registry::os_resource_descriptor(&instance.yields);
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3682[0m [91m- [0m            let descriptor = [91mcrate::registry::[0mos_resource_descriptor(&instance.yields);
+[1m[94m3682[0m [92m+ [0m            let descriptor = os_resource_descriptor(&instance.yields);
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mframework/product/os/core/rs/lib.rs:4418:36
+     [1m[94m|[0m
+[1m[94m4418[0m [1m[94m|[0m             terminology_documents: std::collections::HashMap::new(),
+     [1m[94m|[0m                                    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m4418[0m [91m- [0m            terminology_documents: [91mstd::collections::[0mHashMap::new(),
+[1m[94m4418[0m [92m+ [0m            terminology_documents: HashMap::new(),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m: `semio-framework-os` (lib) generated 25 warnings (run `cargo fix --lib -p semio-framework-os` to apply 25 suggestions)
+[1m[92m   Compiling[0m mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+[1m[92m   Compiling[0m puzzle_3d v0.1.0 (/Users/ueli/Documents/semio/puzzle/3d/rs)
+[1m[92m   Compiling[0m mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+[1m[92m   Compiling[0m puzzle_5d v0.1.0 (/Users/ueli/Documents/semio/puzzle/5d/rs)
+[1m[92m   Compiling[0m infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+  [1m[94m--> [0minfinite/board/rs/lib.rs:99:44
+   [1m[94m|[0m
+[1m[94m99[0m [1m[94m|[0m pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   [1m[94m|[0m                                            [1m[33m^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+   [1m[94m|[0m
+[1m[94m99[0m [91m- [0mpub fn encode_board_stroke_scene(curves: &[[91mcavas::[0mCubicBez], stroke_width: f64) -> cavas::Scene {
+[1m[94m99[0m [92m+ [0mpub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/rs/lib.rs:1523:22
+     [1m[94m|[0m
+[1m[94m1523[0m [1m[94m|[0m         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     [1m[94m|[0m                      [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m1523[0m [91m- [0m        let dragged: [91mstd::collections::[0mBTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+[1m[94m1523[0m [92m+ [0m        let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     [1m[94m|[0m
+
+[1m[92m   Compiling[0m infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+[1m[92m   Compiling[0m infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+[1m[92m   Compiling[0m infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+[1m[33mwarning[0m: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+  [1m[94m--> [0minfinite/board/port/rs/lib.rs:73:21
+   [1m[94m|[0m
+[1m[94m73[0m [1m[94m|[0m     pub properties: crate::PropertyBag,
+   [1m[94m|[0m                     [1m[33m^^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+   [1m[94m|[0m
+[1m[94m73[0m [91m- [0m    pub properties: [91mcrate::[0mPropertyBag,
+[1m[94m73[0m [92m+ [0m    pub properties: PropertyBag,
+   [1m[94m|[0m
+
+[1m[92m   Compiling[0m infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+[1m[92m   Compiling[0m reasoning_mindmap v0.1.0 (/Users/ueli/Documents/semio/reasoning/mindmap/rs)
+[1m[33mwarning[0m: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+[1m[92m   Compiling[0m infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:2835:41
+     [1m[94m|[0m
+[1m[94m2835[0m [1m[94m|[0m         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     [1m[94m|[0m                                         [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+     [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2835[0m [91m- [0m        let gesture_owned = gesture.map([91mstd::borrow::[0mToOwned::to_owned);
+[1m[94m2835[0m [92m+ [0m        let gesture_owned = gesture.map(ToOwned::to_owned);
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:2861:41
+     [1m[94m|[0m
+[1m[94m2861[0m [1m[94m|[0m         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     [1m[94m|[0m                                         [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2861[0m [91m- [0m        let gesture_owned = gesture.map([91mstd::borrow::[0mToOwned::to_owned);
+[1m[94m2861[0m [92m+ [0m        let gesture_owned = gesture.map(ToOwned::to_owned);
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:2889:41
+     [1m[94m|[0m
+[1m[94m2889[0m [1m[94m|[0m         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     [1m[94m|[0m                                         [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2889[0m [91m- [0m        let gesture_owned = gesture.map([91mstd::borrow::[0mToOwned::to_owned);
+[1m[94m2889[0m [92m+ [0m        let gesture_owned = gesture.map(ToOwned::to_owned);
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:3010:24
+     [1m[94m|[0m
+[1m[94m3010[0m [1m[94m|[0m         let mut seen = std::collections::BTreeSet::new();
+     [1m[94m|[0m                        [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m3010[0m [91m- [0m        let mut seen = [91mstd::collections::[0mBTreeSet::new();
+[1m[94m3010[0m [92m+ [0m        let mut seen = BTreeSet::new();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:4437:32
+     [1m[94m|[0m
+[1m[94m4437[0m [1m[94m|[0m [1m[94m...[0m   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no[1m[94m...[0m
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m4437[0m [91m- [0m        let link_compat_nodes: [91mstd::collections::[0mBTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+[1m[94m4437[0m [92m+ [0m        let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0minfinite/board/port/directed/normal/rs/lib.rs:4505:32
+     [1m[94m|[0m
+[1m[94m4505[0m [1m[94m|[0m [1m[94m...[0m   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no[1m[94m...[0m
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m4505[0m [91m- [0m        let link_compat_nodes: [91mstd::collections::[0mBTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+[1m[94m4505[0m [92m+ [0m        let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+[1m[92m   Compiling[0m puzzle_2d v0.1.0 (/Users/ueli/Documents/semio/puzzle/2d/rs)
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:20:18
+   [1m[94m|[0m
+[1m[94m20[0m [1m[94m|[0m     let fixture: serde_json::Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   [1m[94m|[0m                  [1m[33m^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+   [1m[94m|[0m
+[1m[94m20[0m [91m- [0m    let fixture: [91mserde_json::[0mValue = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+[1m[94m20[0m [92m+ [0m    let fixture: Value = serde_json::from_str(fixture_json).map_err(|e| e.to_string())?;
+   [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:22:15
+   [1m[94m|[0m
+[1m[94m22[0m [1m[94m|[0m     let opts: serde_json::Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   [1m[94m|[0m               [1m[33m^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+   [1m[94m|[0m
+[1m[94m22[0m [91m- [0m    let opts: [91mserde_json::[0mValue = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+[1m[94m22[0m [92m+ [0m    let opts: Value = serde_json::from_str(options_json).map_err(|e| e.to_string())?;
+   [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unused imports: `ThemedSvgLookup` and `board_typst_markup_to_svg`[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:51:88
+   [1m[94m|[0m
+[1m[94m51[0m [1m[94m|[0m [1m[94m...[0micon_kind as resolve_with_lookup, board_typst_markup_to_svg, BoardResolvedIcon, ThemedSvgLookup};
+   [1m[94m|[0m                                      [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^[0m                     [1m[33m^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:84:6
+   [1m[94m|[0m
+[1m[94m84[0m [1m[94m|[0m impl graph::GraphExtension for Puzzle2dExtension {}
+   [1m[94m|[0m      [1m[33m^^^^^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+   [1m[94m|[0m
+[1m[94m84[0m [91m- [0mimpl [91mgraph::[0mGraphExtension for Puzzle2dExtension {}
+[1m[94m84[0m [92m+ [0mimpl GraphExtension for Puzzle2dExtension {}
+   [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: function `resolve_node_icon_svg_from_encoding` is never used[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:35:4
+   [1m[94m|[0m
+[1m[94m35[0m [1m[94m|[0m fn resolve_node_icon_svg_from_encoding(encoded: &str) -> Option<String> {
+   [1m[94m|[0m    [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: function `board_resolve_icon_kind` is never used[0m
+  [1m[94m--> [0mpuzzle/2d/rs/lib.rs:52:12
+   [1m[94m|[0m
+[1m[94m52[0m [1m[94m|[0m     pub fn board_resolve_icon_kind(encoded: &str) -> BoardResolvedIcon {
+   [1m[94m|[0m            [1m[33m^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m: `puzzle_2d` (lib) generated 6 warnings (run `cargo fix --lib -p puzzle_2d` to apply 4 suggestions)
+[1m[92m   Compiling[0m puzzle-plugin v0.1.0 (/Users/ueli/Documents/semio/puzzle/plugin/rs)
+[1m[33mwarning[0m[1m: unused imports: `PluginBundle` and `build_canvas_2d_scene`[0m
+  [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:8:9
+   [1m[94m|[0m
+[1m[94m 8[0m [1m[94m|[0m [1m[94m...[0m   build_canvas_2d_scene, build_board2d_scene, create_default_layout,
+   [1m[94m|[0m       [1m[33m^^^^^^^^^^^^^^^^^^^^^[0m
+[1m[94m 9[0m [1m[94m|[0m [1m[94m...[0m   MeasureSelectItem, WindowEngagementStatus,
+[1m[94m10[0m [1m[94m|[0m [1m[94m...[0m   ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, PluginBundle, R[1m[94m...[0m
+   [1m[94m|[0m                                                                                                                                                                                                                                                                                                                                                                               [1m[33m^^^^^^^^^^^^[0m
+   [1m[94m|[0m
+   [1m[94m= [0m[1mnote[0m: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2097:37
+     [1m[94m|[0m
+[1m[94m2097[0m [1m[94m|[0m                 window_kind_labels: std::collections::HashMap::from([
+     [1m[94m|[0m                                     [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+     [1m[94m= [0m[1mnote[0m: requested on the command line with `-W unused-qualifications`
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2097[0m [91m- [0m                window_kind_labels: [91mstd::collections::[0mHashMap::from([
+[1m[94m2097[0m [92m+ [0m                window_kind_labels: HashMap::from([
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2102:35
+     [1m[94m|[0m
+[1m[94m2102[0m [1m[94m|[0m                 panel_tab_labels: std::collections::HashMap::new(),
+     [1m[94m|[0m                                   [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2102[0m [91m- [0m                panel_tab_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m2102[0m [92m+ [0m                panel_tab_labels: HashMap::new(),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2103:30
+     [1m[94m|[0m
+[1m[94m2103[0m [1m[94m|[0m                 mode_labels: std::collections::HashMap::new(),
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2103[0m [91m- [0m                mode_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m2103[0m [92m+ [0m                mode_labels: HashMap::new(),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2106:33
+     [1m[94m|[0m
+[1m[94m2106[0m [1m[94m|[0m [1m[94m...[0m   example_labels: std::collections::HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concr[1m[94m...[0m
+     [1m[94m|[0m                       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2106[0m [91m- [0m                example_labels: [91mstd::collections::[0mHashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+[1m[94m2106[0m [92m+ [0m                example_labels: HashMap::from([(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID.to_string(), labels.example_concrete_forest.to_string())]),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2119:47
+     [1m[94m|[0m
+[1m[94m2119[0m [1m[94m|[0m     fn puzzle2d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     [1m[94m|[0m                                               [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2119[0m [91m- [0m    fn puzzle2d_action_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m2119[0m [92m+ [0m    fn puzzle2d_action_labels(is_de: bool) -> HashMap<String, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2164:48
+     [1m[94m|[0m
+[1m[94m2164[0m [1m[94m|[0m     fn puzzle2d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     [1m[94m|[0m                                                [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m2164[0m [91m- [0m    fn puzzle2d_utility_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m2164[0m [92m+ [0m    fn puzzle2d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unused imports: `UiControlNode` and `world3d_meshes_json_from_urls`[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:2727:185
+     [1m[94m|[0m
+[1m[94m2727[0m [1m[94m|[0m [1m[94m...[0mmera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, w[1m[94m...[0m
+     [1m[94m|[0m                                                                                                                                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[1m[94m2728[0m [1m[94m|[0m [1m[94m...[0mn, UiControlNode, UiFieldNode, UiGroupNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, ViewWin[1m[94m...[0m
+     [1m[94m|[0m       [1m[33m^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:6986:37
+     [1m[94m|[0m
+[1m[94m6986[0m [1m[94m|[0m [1m[94m...[0m   window_kind_labels: std::collections::HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
+     [1m[94m|[0m                           [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m6986[0m [91m- [0m                window_kind_labels: [91mstd::collections::[0mHashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
+[1m[94m6986[0m [92m+ [0m                window_kind_labels: HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:6987:35
+     [1m[94m|[0m
+[1m[94m6987[0m [1m[94m|[0m                 panel_tab_labels: std::collections::HashMap::from([
+     [1m[94m|[0m                                   [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m6987[0m [91m- [0m                panel_tab_labels: [91mstd::collections::[0mHashMap::from([
+[1m[94m6987[0m [92m+ [0m                panel_tab_labels: HashMap::from([
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:6990:30
+     [1m[94m|[0m
+[1m[94m6990[0m [1m[94m|[0m                 mode_labels: std::collections::HashMap::new(),
+     [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m6990[0m [91m- [0m                mode_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m6990[0m [92m+ [0m                mode_labels: HashMap::new(),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:6993:33
+     [1m[94m|[0m
+[1m[94m6993[0m [1m[94m|[0m [1m[94m...[0m   example_labels: std::collections::HashMap::from([(PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_fore[1m[94m...[0m
+     [1m[94m|[0m                       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m6993[0m [91m- [0m                example_labels: [91mstd::collections::[0mHashMap::from([(PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+[1m[94m6993[0m [92m+ [0m                example_labels: HashMap::from([(PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:6997:31
+     [1m[94m|[0m
+[1m[94m6997[0m [1m[94m|[0m                 group_labels: std::collections::HashMap::new(),
+     [1m[94m|[0m                               [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m6997[0m [91m- [0m                group_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m6997[0m [92m+ [0m                group_labels: HashMap::new(),
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:7007:47
+     [1m[94m|[0m
+[1m[94m7007[0m [1m[94m|[0m     fn puzzle3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     [1m[94m|[0m                                               [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m7007[0m [91m- [0m    fn puzzle3d_action_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m7007[0m [92m+ [0m    fn puzzle3d_action_labels(is_de: bool) -> HashMap<String, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:7088:48
+     [1m[94m|[0m
+[1m[94m7088[0m [1m[94m|[0m     fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+     [1m[94m|[0m                                                [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m7088[0m [91m- [0m    fn puzzle3d_utility_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m7088[0m [92m+ [0m    fn puzzle3d_utility_labels(is_de: bool) -> HashMap<String, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:7329:42
+     [1m[94m|[0m
+[1m[94m7329[0m [1m[94m|[0m     fn puzzle3d_mesh_from_document(doc: &serde_json::Value) -> Result<semio_framework_plugin::MeshData, String> {
+     [1m[94m|[0m                                          [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m7329[0m [91m- [0m    fn puzzle3d_mesh_from_document(doc: &[91mserde_json::[0mValue) -> Result<semio_framework_plugin::MeshData, String> {
+[1m[94m7329[0m [92m+ [0m    fn puzzle3d_mesh_from_document(doc: &Value) -> Result<semio_framework_plugin::MeshData, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:7361:88
+     [1m[94m|[0m
+[1m[94m7361[0m [1m[94m|[0m     fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<serde_json::Value, String> {
+     [1m[94m|[0m                                                                                        [1m[33m^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m7361[0m [91m- [0m    fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<[91mserde_json::[0mValue, String> {
+[1m[94m7361[0m [92m+ [0m    fn puzzle3d_document_from_mesh(_mesh: &semio_framework_plugin::MeshData) -> Result<Value, String> {
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:8442:51
+     [1m[94m|[0m
+[1m[94m8442[0m [1m[94m|[0m             let mut active_utility_by_window_id = std::collections::HashMap::new();
+     [1m[94m|[0m                                                   [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+     [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+     [1m[94m|[0m
+[1m[94m8442[0m [91m- [0m            let mut active_utility_by_window_id = [91mstd::collections::[0mHashMap::new();
+[1m[94m8442[0m [92m+ [0m            let mut active_utility_by_window_id = HashMap::new();
+     [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11268:37
+      [1m[94m|[0m
+[1m[94m11268[0m [1m[94m|[0m                 window_kind_labels: std::collections::HashMap::from([
+      [1m[94m|[0m                                     [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11268[0m [91m- [0m                window_kind_labels: [91mstd::collections::[0mHashMap::from([
+[1m[94m11268[0m [92m+ [0m                window_kind_labels: HashMap::from([
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11272:35
+      [1m[94m|[0m
+[1m[94m11272[0m [1m[94m|[0m                 panel_tab_labels: std::collections::HashMap::new(),
+      [1m[94m|[0m                                   [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11272[0m [91m- [0m                panel_tab_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m11272[0m [92m+ [0m                panel_tab_labels: HashMap::new(),
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11273:30
+      [1m[94m|[0m
+[1m[94m11273[0m [1m[94m|[0m                 mode_labels: std::collections::HashMap::new(),
+      [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11273[0m [91m- [0m                mode_labels: [91mstd::collections::[0mHashMap::new(),
+[1m[94m11273[0m [92m+ [0m                mode_labels: HashMap::new(),
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11276:33
+      [1m[94m|[0m
+[1m[94m11276[0m [1m[94m|[0m [1m[94m...[0m   example_labels: std::collections::HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_for[1m[94m...[0m
+      [1m[94m|[0m                       [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11276[0m [91m- [0m                example_labels: [91mstd::collections::[0mHashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+[1m[94m11276[0m [92m+ [0m                example_labels: HashMap::from([(PUZZLE5D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11289:47
+      [1m[94m|[0m
+[1m[94m11289[0m [1m[94m|[0m     fn puzzle5d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      [1m[94m|[0m                                               [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11289[0m [91m- [0m    fn puzzle5d_action_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m11289[0m [92m+ [0m    fn puzzle5d_action_labels(is_de: bool) -> HashMap<String, String> {
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unnecessary qualification[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11350:48
+      [1m[94m|[0m
+[1m[94m11350[0m [1m[94m|[0m     fn puzzle5d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+      [1m[94m|[0m                                                [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+      [1m[94m|[0m
+[1m[96mhelp[0m: remove the unnecessary path segments
+      [1m[94m|[0m
+[1m[94m11350[0m [91m- [0m    fn puzzle5d_utility_labels(is_de: bool) -> [91mstd::collections::[0mHashMap<String, String> {
+[1m[94m11350[0m [92m+ [0m    fn puzzle5d_utility_labels(is_de: bool) -> HashMap<String, String> {
+      [1m[94m|[0m
+
+[1m[33mwarning[0m[1m: unused import: `std::sync::LazyLock`[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11709:5
+      [1m[94m|[0m
+[1m[94m11709[0m [1m[94m|[0m use std::sync::LazyLock;
+      [1m[94m|[0m     [1m[33m^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: unused imports: `PluginBundle` and `install_plugin_bundle`[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11711:30
+      [1m[94m|[0m
+[1m[94m11711[0m [1m[94m|[0m use semio_framework_plugin::{install_plugin_bundle, PluginBundle};
+      [1m[94m|[0m                              [1m[33m^^^^^^^^^^^^^^^^^^^^^[0m  [1m[33m^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: variable does not need to be mutable[0m
+     [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:11536:17
+      [1m[94m|[0m
+[1m[94m11536[0m [1m[94m|[0m             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
+      [1m[94m|[0m                 [1m[94m----[0m[1m[33m^^^[0m
+      [1m[94m|[0m                 [1m[94m|[0m
+      [1m[94m|[0m                 [1m[94mhelp: remove this `mut`[0m
+      [1m[94m|[0m
+      [1m[94m= [0m[1mnote[0m: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: variable does not need to be mutable[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:7400:17
+     [1m[94m|[0m
+[1m[94m7400[0m [1m[94m|[0m             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+     [1m[94m|[0m                 [1m[94m----[0m[1m[33m^^^[0m
+     [1m[94m|[0m                 [1m[94m|[0m
+     [1m[94m|[0m                 [1m[94mhelp: remove this `mut`[0m
+
+[1m[33mwarning[0m[1m: function `fixture_wires` is never used[0m
+   [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:938:8
+    [1m[94m|[0m
+[1m[94m938[0m [1m[94m|[0m     fn fixture_wires(fixture: &Value) -> &[Value] {
+    [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^[0m
+    [1m[94m|[0m
+    [1m[94m= [0m[1mnote[0m: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+[1m[33mwarning[0m[1m: function `fixture_handles` is never used[0m
+   [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:942:8
+    [1m[94m|[0m
+[1m[94m942[0m [1m[94m|[0m     fn fixture_handles(fixture: &Value) -> Vec<Value> {
+    [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: function `fixture_endpoint_xy` is never used[0m
+   [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:946:8
+    [1m[94m|[0m
+[1m[94m946[0m [1m[94m|[0m     fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
+    [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: function `pane_from_surface_id` is never used[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:1033:8
+     [1m[94m|[0m
+[1m[94m1033[0m [1m[94m|[0m     fn pane_from_surface_id(surface_id: &str) -> &'static str {
+     [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: fields `suggestion` and `select` are never read[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:1171:9
+     [1m[94m|[0m
+[1m[94m1149[0m [1m[94m|[0m     struct Puzzle2dLabels {
+     [1m[94m|[0m            [1m[94m--------------[0m [1m[94mfields in this struct[0m
+[1m[94m...[0m
+[1m[94m1171[0m [1m[94m|[0m         suggestion: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^^^^^^^[0m
+[1m[94m...[0m
+[1m[94m1176[0m [1m[94m|[0m         select: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^^^[0m
+
+[1m[33mwarning[0m[1m: fields `fill`, `edit_volumes`, and `voxel` are never read[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:4730:9
+     [1m[94m|[0m
+[1m[94m4722[0m [1m[94m|[0m     struct Puzzle3dLabels {
+     [1m[94m|[0m            [1m[94m--------------[0m [1m[94mfields in this struct[0m
+[1m[94m...[0m
+[1m[94m4730[0m [1m[94m|[0m         fill: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^[0m
+[1m[94m...[0m
+[1m[94m4735[0m [1m[94m|[0m         edit_volumes: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^^^^^^^^^[0m
+[1m[94m4736[0m [1m[94m|[0m         volume_brush: &'static str,
+[1m[94m4737[0m [1m[94m|[0m         voxel: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^^[0m
+
+[1m[33mwarning[0m[1m: function `puzzle3d_kind_weight_sum` is never used[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:5574:8
+     [1m[94m|[0m
+[1m[94m5574[0m [1m[94m|[0m     fn puzzle3d_kind_weight_sum(weights: &HashMap<String, f64>, kind_ids: &[String]) -> f64 {
+     [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: function `puzzle3d_kind_weight_measures` is never used[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:5650:8
+     [1m[94m|[0m
+[1m[94m5650[0m [1m[94m|[0m     fn puzzle3d_kind_weight_measures(prefix: &str, kind_ids: &[String], weights: &HashMap<String, f64>, action: &str) -> Vec<Windo[1m[94m...[0m
+     [1m[94m|[0m        [1m[33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+
+[1m[33mwarning[0m[1m: field `select` is never read[0m
+    [1m[94m--> [0mpuzzle/plugin/rs/lib.rs:8609:9
+     [1m[94m|[0m
+[1m[94m8602[0m [1m[94m|[0m     struct Puzzle5dLabels {
+     [1m[94m|[0m            [1m[94m--------------[0m [1m[94mfield in this struct[0m
+[1m[94m...[0m
+[1m[94m8609[0m [1m[94m|[0m         select: &'static str,
+     [1m[94m|[0m         [1m[33m^^^^^^[0m
+
+[1m[33mwarning[0m: `puzzle-plugin` (lib test) generated 37 warnings (run `cargo fix --lib -p puzzle-plugin --tests` to apply 28 suggestions)
+[1m[92m    Finished[0m `test` profile [unoptimized] target(s) in 2m 20s
+[1m[33mwarning[0m: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
+[1m[92mnote[0m: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+[1m[92m     Running[0m unittests lib.rs (target/debug/deps/puzzle_plugin-0367ef4feeceb600)
+
+running 7 tests
+test d3::tests::open_vortex_suggestions_records_explicit_window_id ... ok
+test d3::tests::open_vortex_suggestions_opens_the_suggestion_popup ... ok
+test d3::tests::close_vortex_suggestions_clears_the_menu ... ok
+test d3::tests::hover_suggestion_updates_the_brush_candidate_index_and_live_preview ... ok
+test d3::tests::accept_suggestion_appends_an_object_and_closes_the_menu ... ok
+test d3::tests::open_and_accept_vortex_suggestions_preserve_active_utility ... ok
+test d3::tests::accept_suggestion_with_full_id_places_even_if_selection_was_cleared ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 85 filtered out; finished in 0.03s
+

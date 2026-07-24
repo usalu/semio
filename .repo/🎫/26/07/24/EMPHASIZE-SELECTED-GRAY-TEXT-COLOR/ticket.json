@@ -1,0 +1,14 @@
+{
+  "title": "Emphasize Selected Gray Text Color",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "When selecting text (e.g. such as the description of a step in the introduction) then make sure that the selected text is emphasized color because the gray text is not readable with active filling.",
+  "summary": "Selected text now uses the emphasized (foreground) color on the accent selection fill, so muted gray copy such as introduction step descriptions stays readable. Updated ::selection / ::-moz-selection in ui.css and covered it in the styling index test.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2300"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪71c69b0d12104c03a72d52b5d2e23054"
+  ]
+}

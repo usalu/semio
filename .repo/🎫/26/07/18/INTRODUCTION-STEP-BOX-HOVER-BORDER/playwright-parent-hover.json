@@ -1,0 +1,22 @@
+{
+  "navbar": {
+    "rest": "rgb(123, 130, 125)",
+    "hover": "rgb(6, 23, 28)"
+  },
+  "footer": {
+    "rest": "rgb(123, 130, 125)",
+    "hover": "rgb(6, 23, 28)"
+  },
+  "panel": {
+    "rest": "rgb(123, 130, 125)",
+    "hover": "rgb(6, 23, 28)"
+  },
+  "pane": {
+    "rest": "rgb(123, 130, 125)",
+    "hover": "rgb(6, 23, 28)"
+  },
+  "window": {
+    "rest": "rgb(123, 130, 125)",
+    "hover": "rgb(6, 23, 28)"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Instant 3D Gumball Drag",
+  "emoji": "⚡",
+  "status": "closed",
+  "description": "Puzzle 3D gumball dragging is insanely slow and buggy. It should realtime-update the selection during drag and keep working correctly when used several times in a row.\n\nRoot causes to fix:\n1. Every pointermove dispatches translateSelection/rotateSelection through full WASM + attraction resolve + document delta + VCS amend + React re-render (no transformBegin/transformEnd session in puzzle, unlike lowpoly).\n2. SceneGumball resets pivot from gumballTarget on every selectionJson update mid-drag, fighting the live drag.\n3. Async action races and stale pivot reset break subsequent drags.\n\nImplement scratch-session transformBegin/transformEnd in puzzle plugin (mirror lowpoly), keep live instance preview during drag, commit once on transformEnd, and stop mid-drag pivot resets from fighting the gumball.",
+  "summary": "3D gumball drag (aggregator/puzzle3d) is now instant mid-drag like catalogue drag-and-drop.\n\nRoot cause: every pointermove still went WASM → scratch fixture → world composite rebuild → React instancesJson re-render, so meshes trailed the gumball pivot.\n\nFix: WorldInstancesLayer applies translate/rotate/scale imperatively to selected instance roots during drag (local preview, no WASM). World3dHost skips mid-drag transform ticks; on drag end it sends one absolute start→end delta then transformEnd. A commit-hold reapplies the final local poses until instancesJson catches up so release does not flash the pre-drag pose.\n\nVerified: framework-renderer-react vitest (including gumballLivePreviewDeltaBetweenPoses) passed (249 tests).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2281"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪8ece53b67739459b83f29f00dad66484",
+    "⚪0732cf56d69e4bfbb9200c90ce01669a"
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Show Dropdown Chevron Affordance",
+  "emoji": "🔽",
+  "status": "closed",
+  "description": "UI dropdowns such as the example for playgrounds are currently not showing any chevron on the right, hence you currently cant see that it is dropdown compared to a button, etc. Fix so dropdowns show a visible chevron affordance on the right.",
+  "summary": "SelectTrigger now keeps a visible trailing chevron: value text truncates with min-w-0/flex-1 so the icon is not clipped in fixed-width chrome (e.g. playground example dropdown), and the chevron no longer uses opacity-50. Combobox/ButtonGroupItem labels with justify-between also truncate so trailing icons stay visible.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2297"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪0a9325059167457e888d272cba59ab08"
+  ]
+}

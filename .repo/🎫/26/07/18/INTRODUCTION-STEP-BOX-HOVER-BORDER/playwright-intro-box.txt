@@ -1,0 +1,5 @@
+[DEBUG] {
+  rest: "rgb(123, 130, 125)",
+  hover: "rgb(6, 23, 28)",
+  changed: true,
+}

@@ -1,0 +1,6 @@
+[DEBUG] OK navbar: rgb(123, 130, 125) -> rgb(6, 23, 28)
+[DEBUG] OK footer: rgb(123, 130, 125) -> rgb(6, 23, 28)
+[DEBUG] OK panel: rgb(123, 130, 125) -> rgb(6, 23, 28)
+[DEBUG] OK pane: rgb(123, 130, 125) -> rgb(6, 23, 28)
+[DEBUG] OK window: rgb(123, 130, 125) -> rgb(6, 23, 28)
+[DEBUG] all parent-hover emphasis cases passed

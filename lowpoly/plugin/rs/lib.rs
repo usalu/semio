@@ -23,7 +23,7 @@ use semio_framework_plugin::{
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID,
     FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
-    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeasureSelectItem, WindowEngagementPossible,
+    FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, WindowEngagementPossible,
     WindowEngagementStatus, SET_ACTIVE_UTILITY_ACTION_ID,
 };
 use serde::{Deserialize, Serialize};
@@ -104,6 +104,8 @@ struct LowpolyPlayRuntime {
     paint_utility: String,
     active_paint_layer: u32,
     selection_method: String,
+    /// 🎯 Default marquee/pick merge mode when no modifier keys override — `default`/`additive`/`subtractive`/`invertive`.
+    selection_mode_default: String,
     selected_object_ids: Vec<String>,
     hovered_object_id: Option<String>,
     hovered_target: Option<LowpolyHoverTarget>,
@@ -123,6 +125,7 @@ impl Default for LowpolyPlayRuntime {
             paint_utility: "brush".into(),
             active_paint_layer: 0,
             selection_method: "rectangle".into(),
+            selection_mode_default: "default".into(),
             selected_object_ids: Vec::new(),
             hovered_object_id: None,
             hovered_target: None,
@@ -499,6 +502,7 @@ fn world_selection_json_for(view: LowpolyView, active_utility: &str, active_mode
         );
         object.insert("componentIds".into(), json!(runtime.selection.ids));
         object.insert("selectionMode".into(), json!(runtime.selection.mode));
+        object.insert("selectionMergeMode".into(), json!(runtime.selection_mode_default));
         object.insert("activeObjectId".into(), json!(active));
         object.insert("gumballActive".into(), json!(gumball_active(view)));
         object.insert("showEdges".into(), json!(runtime.show_edges));
@@ -669,14 +673,17 @@ semio_framework_plugin::app_labels! {
         snap: &'static str = en: "Snap", de: "Einrasten";
         smooth: &'static str = en: "Smooth", de: "Glätten";
         show_edges: &'static str = en: "Show Edges", de: "Kanten anzeigen";
-        selection_kind: &'static str = en: "Selection Kind", de: "Auswahlart";
+        select: &'static str = en: "Select", de: "Auswählen";
         mesh: &'static str = en: "Mesh", de: "Netz";
         face: &'static str = en: "Face", de: "Fläche";
         edge: &'static str = en: "Edge", de: "Kante";
         vertex: &'static str = en: "Vertex", de: "Eckpunkt";
-        selection_method: &'static str = en: "Selection Method", de: "Auswahlmethode";
         rectangle: &'static str = en: "Rectangle", de: "Rechteck";
         lasso: &'static str = en: "Lasso", de: "Lasso";
+        selective: &'static str = en: "Selective", de: "Selektiv";
+        additive: &'static str = en: "Additive", de: "Additiv";
+        subtractive: &'static str = en: "Subtractive", de: "Subtraktiv";
+        invertive: &'static str = en: "Invertive", de: "Invertierend";
         brush_group: &'static str = en: "Brush", de: "Pinsel";
     }
 }
@@ -742,6 +749,7 @@ fn lowpoly_action_labels(is_de: bool) -> HashMap<String, String> {
         ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
         ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
         ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
+        ("setSelectionModeDefault", "Set Selection Mode Default", "Standardauswahlmodus festlegen"),
         ("setCamera", "Set Camera", "Kamera festlegen"),
         ("worldSelect", "World Select", "Welt auswählen"),
         ("worldHover", "World Hover", "Überfahren (Welt)"),
@@ -1152,7 +1160,7 @@ fn lowpoly_utility_param_slider(
 /// single-active utility group.
 fn selection_kind_toggle(id: &str, icon: &str, label: &str, kind: &str, pressed: bool) -> WindowMeasure {
     WindowMeasure::Toggle {
-        id: format!("lowpoly-measure-selection-{id}"),
+        id: format!("lowpoly-select-{id}"),
         icon_id: icon.into(),
         label: Some(label.into()),
         pressed,
@@ -1190,20 +1198,21 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels)
                 lowpoly_utility_param_slider("snap", labels.snap_grid, "snapGrid", params, 0.25, 0.05, 2.0, 0.05),
             ],
         },
-        lowpoly_selection_utility_options(runtime, labels),
+        lowpoly_select_measures_group(runtime, labels),
         lowpoly_paint_params_group("brush", params, labels),
         lowpoly_paint_params_group("eraser", params, labels),
     ]
 }
 
-/// 🎯 Selection kind and method controls for the default transform utility (`move`).
-fn lowpoly_selection_utility_options(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> WindowMeasure {
+/// 🎯 Always-visible Select window options — mirrors puzzle 3d's select measures group: rectangle/lasso
+/// method, selective/additive/subtractive/invertive merge mode, and composable mesh/face/edge/vertex kinds.
+fn lowpoly_select_measures_group(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> WindowMeasure {
     let targets = &runtime.selection.targets;
     WindowMeasure::Group {
-        id: "lowpoly-utility-options-select".into(),
-        label: labels.selection_kind.into(),
+        id: "lowpoly-select".into(),
+        label: labels.select.into(),
         default_open: Some(true),
-        active_utility_id: Some(LOWPOLY_TRANSFORM_UTILITY_DEFAULT.into()),
+        active_utility_id: None,
         value: None,
         min: None,
         max: None,
@@ -1213,20 +1222,58 @@ fn lowpoly_selection_utility_options(runtime: &LowpolyPlayRuntime, labels: &Lowp
         waiting: None,
         on_change: None,
         children: vec![
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-rectangle".into(),
+                icon_id: "square".into(),
+                label: Some(labels.rectangle.into()),
+                pressed: runtime.selection_method == "rectangle",
+                text: None,
+                on_change: lowpoly_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-lasso".into(),
+                icon_id: "lasso".into(),
+                label: Some(labels.lasso.into()),
+                pressed: runtime.selection_method == "lasso",
+                text: None,
+                on_change: lowpoly_action("setSelectionMethod", Some(json!({ "method": "lasso" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-mode-default".into(),
+                icon_id: "cursor".into(),
+                label: Some(labels.selective.into()),
+                pressed: runtime.selection_mode_default == "default",
+                text: None,
+                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-mode-additive".into(),
+                icon_id: "plus".into(),
+                label: Some(labels.additive.into()),
+                pressed: runtime.selection_mode_default == "additive",
+                text: None,
+                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-mode-subtractive".into(),
+                icon_id: "minus".into(),
+                label: Some(labels.subtractive.into()),
+                pressed: runtime.selection_mode_default == "subtractive",
+                text: None,
+                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "subtractive" }))),
+            },
+            WindowMeasure::Toggle {
+                id: "lowpoly-select-mode-invertive".into(),
+                icon_id: "refresh-cw".into(),
+                label: Some(labels.invertive.into()),
+                pressed: runtime.selection_mode_default == "invertive",
+                text: None,
+                on_change: lowpoly_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))),
+            },
             selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
             selection_kind_toggle("face", "square", labels.face, "face", targets.face),
             selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
             selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
-            WindowMeasure::Select {
-                id: "lowpoly-measure-selection-method".into(),
-                label: Some(labels.selection_method.into()),
-                value: runtime.selection_method.clone(),
-                items: vec![
-                    MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.rectangle.into() },
-                    MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.lasso.into() },
-                ],
-                on_change: lowpoly_action("setSelectionMethod", None),
-            },
         ],
     }
 }
@@ -1719,10 +1766,22 @@ impl DocumentApp for LowpolyPlayApp {
             }
             "setSelectionMethod" => {
                 self.runtime.selection_method = args
-                    .and_then(|value| value.get("method"))
+                    .and_then(|value| value.get("method").or_else(|| value.get("value")))
                     .and_then(|value| value.as_str())
                     .unwrap_or("rectangle")
                     .into();
+                ActionEmit::default()
+            }
+            "setSelectionModeDefault" => {
+                if let Some(mode) = args
+                    .and_then(|value| value.get("mode").or_else(|| value.get("value")))
+                    .and_then(|value| value.as_str())
+                {
+                    self.runtime.selection_mode_default = match mode {
+                        "additive" | "subtractive" | "invertive" | "default" => mode.into(),
+                        _ => self.runtime.selection_mode_default.clone(),
+                    };
+                }
                 ActionEmit::default()
             }
             "setCamera" => {
@@ -2298,6 +2357,7 @@ fn create_lowpoly_app() -> App {
             .view_action("setSunElevation", "Set Sun Elevation")
             .view_action("setSunIntensity", "Set Sun Intensity")
             .view_action("setSelectionMethod", "Set Selection Method")
+            .view_action("setSelectionModeDefault", "Set Selection Mode Default")
             .view_action("setCamera", "Set Camera")
             .view_action("worldSelect", "World Select")
             .view_action("worldHover", "World Hover")
@@ -2334,8 +2394,8 @@ fn create_lowpoly_app() -> App {
             ]).default_value("box")])
             .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
             // 🧰 Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
-            // document op). Selection granularity is deliberately NOT a utility group (it is a multi-select
-            // window measure); the transform group defaults to "move", paint bridges into `runtime.paint_utility`.
+            // document op). Selection method/merge/kind live as an always-visible Select window-options group
+            // (mirrors puzzle 3d); the transform group defaults to "move", paint bridges into `runtime.paint_utility`.
             .utility(lowpoly_utility("move", "Move", "move", "transform"))
             .utility(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
             .utility(lowpoly_utility("scale", "Scale", "maximize-2", "transform"))
@@ -2504,11 +2564,74 @@ mod tests {
         assert_eq!(group_tag("lowpoly-measure-paint-params-eraser"), Some(Some("eraser".into())));
         // 🧹 Snap grid stays a general (untagged) measure — it is not a single-utility parameter.
         assert_eq!(group_tag("lowpoly-measure-snap"), Some(None));
+        // 🎯 Select options are always-visible window options (untagged), matching puzzle 3d.
+        assert_eq!(group_tag("lowpoly-select"), Some(None));
         // 🗑️ The mesh-op param sliders now live ONLY in the Action Panel's staged `action_args`, never a measure.
         let json = serde_json::to_string(&measures).unwrap();
         for removed in ["lowpoly-measure-extrude", "lowpoly-measure-inset", "lowpoly-measure-bevel", "lowpoly-measure-bevel-segments", "lowpoly-measure-loop-cuts", "lowpoly-measure-decimate", "lowpoly-measure-mirror"] {
             assert!(!json.contains(removed), "mesh-op measure {removed} must be gone (covered by action_args)");
         }
+    }
+
+    #[test]
+    fn select_window_options_mirror_puzzle3d_taxonomy() {
+        let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default(), &LowpolyLabels::EN);
+        let select = measures.iter().find_map(|measure| match measure {
+            WindowMeasure::Group { id, children, active_utility_id, .. } if id == "lowpoly-select" => Some((active_utility_id.clone(), children.clone())),
+            _ => None,
+        }).expect("lowpoly-select group");
+        assert_eq!(select.0, None, "Select options must always surface in window options");
+        let toggle_ids: Vec<&str> = select.1.iter().filter_map(|measure| match measure {
+            WindowMeasure::Toggle { id, .. } => Some(id.as_str()),
+            _ => None,
+        }).collect();
+        assert_eq!(
+            toggle_ids,
+            vec![
+                "lowpoly-select-rectangle",
+                "lowpoly-select-lasso",
+                "lowpoly-select-mode-default",
+                "lowpoly-select-mode-additive",
+                "lowpoly-select-mode-subtractive",
+                "lowpoly-select-mode-invertive",
+                "lowpoly-select-mesh",
+                "lowpoly-select-face",
+                "lowpoly-select-edge",
+                "lowpoly-select-vertex",
+            ]
+        );
+
+        let mut app = new_app();
+        app.handle_action("setSelectionMethod", Some(&json!({ "method": "lasso" })), &ViewState::default(), &testkit::meta("a")).unwrap();
+        app.handle_action("setSelectionModeDefault", Some(&json!({ "mode": "additive" })), &ViewState::default(), &testkit::meta("a")).unwrap();
+        let measures = app.window_measures(&ViewState::default());
+        let window_measures = measures.get(LOWPOLY_PLAY_WINDOW_MAIN).expect("main window measures");
+        let find_toggle = |id: &str| -> Option<bool> {
+            window_measures.iter().find_map(|measure| match measure {
+                WindowMeasure::Group { id: gid, children, .. } if gid == "lowpoly-select" => children.iter().find_map(|child| match child {
+                    WindowMeasure::Toggle { id: tid, pressed, .. } if tid == id => Some(*pressed),
+                    _ => None,
+                }),
+                _ => None,
+            })
+        };
+        assert_eq!(find_toggle("lowpoly-select-lasso"), Some(true));
+        assert_eq!(find_toggle("lowpoly-select-rectangle"), Some(false));
+        assert_eq!(find_toggle("lowpoly-select-mode-additive"), Some(true));
+        assert_eq!(find_toggle("lowpoly-select-mode-default"), Some(false));
+
+        let mut runtime = LowpolyPlayRuntime::default();
+        runtime.selection_method = "lasso".into();
+        runtime.selection_mode_default = "additive".into();
+        let selection: Value = serde_json::from_str(&world_selection_json_for(
+            LowpolyView { projection: &projection(&app), runtime: &runtime },
+            "move",
+            None,
+            None,
+        ))
+        .unwrap();
+        assert_eq!(selection.get("method").and_then(Value::as_str), Some("lasso"));
+        assert_eq!(selection.get("selectionMergeMode").and_then(Value::as_str), Some("additive"));
     }
 
     #[test]

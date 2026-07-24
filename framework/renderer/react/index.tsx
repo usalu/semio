@@ -1327,6 +1327,8 @@ type ShellLayoutState = {
   /** 📱 Whether the merged mobile panel is open — dedicated state (not derived from `panels[anchor].visible`) so desktop-persisted anchor visibility never auto-opens the mobile strip on hydrate. Never persisted; mobile always boots canvas-first. */
   readonly mobilePanelVisible: boolean;
   readonly extraWindowInstances: readonly ExtraWindowInstance[];
+  /** 🏷️ Live window-title overrides (projection labels, etc.) keyed by window instance id — base kinds and extras. */
+  readonly windowTitlesById: Readonly<Record<string, string>>;
 };
 
 type OverlayState = {
@@ -1424,6 +1426,7 @@ export type ShellAction =
   | { readonly type: "SET_MOBILE_PANEL_PATH"; readonly value: Updatable<readonly string[]> }
   | { readonly type: "SET_MOBILE_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
+  | { readonly type: "SET_WINDOW_TITLE"; readonly windowId: string; readonly title: string }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
@@ -1593,6 +1596,11 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       return { ...state, mobilePanelVisible: resolveUpdatable(action.value, state.mobilePanelVisible) };
     case "SET_EXTRA_WINDOW_INSTANCES":
       return { ...state, extraWindowInstances: resolveUpdatable(action.value, state.extraWindowInstances) };
+    case "SET_WINDOW_TITLE": {
+      const windowTitlesById = { ...state.windowTitlesById, [action.windowId]: action.title };
+      const extraWindowInstances = state.extraWindowInstances.map((entry) => (entry.id === action.windowId ? { ...entry, title: action.title } : entry));
+      return { ...state, windowTitlesById, extraWindowInstances };
+    }
     default:
       return state;
   }
@@ -1701,6 +1709,7 @@ export function initialShellState(_props: {
       mobilePanelPath: [],
       mobilePanelVisible: false,
       extraWindowInstances: [],
+      windowTitlesById: {},
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
     uiPrefs: {
@@ -3172,6 +3181,15 @@ export function createInFlightSkippingInterval(run: () => unknown, delayMs: numb
   };
 }
 
+/** @emoji 🎚️ Whether any measure (including nested group children) declares `id`. */
+export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], id: string): boolean {
+  for (const measure of measures) {
+    if (measure.id === id) return true;
+    if (measure.kind === "group" && windowMeasureTreeContainsId(measure.children, id)) return true;
+  }
+  return false;
+}
+
 /** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
 function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "slider" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const dispatchValue = useMemo(
@@ -4380,6 +4398,9 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 //#endregion ErrorBoundary
 
 //#region FrameworkOsShell
+/** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
+const SetWindowTitleContext = createContext<((windowId: string, title: string) => void) | null>(null);
+
 export function FrameworkOsShell({
   pluginFilter,
   plugins,
@@ -4418,7 +4439,7 @@ export function FrameworkOsShell({
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
-  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances } = shellState.layout;
+  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -4435,6 +4456,9 @@ export function FrameworkOsShell({
   // re-rendered cannot fetch with `[]` and wipe Top/Perspective bodies to "missing window".
   const extraWindowInstancesRef = useRef<readonly ExtraWindowInstance[]>([]);
   extraWindowInstancesRef.current = extraWindowInstances;
+  const setWindowTitle = useCallback((windowId: string, title: string) => {
+    dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
+  }, []);
   // 🐢 Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
   // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
   const uiRefreshCacheRef = useRef<UiRefreshCache>(new Map());
@@ -6444,6 +6468,20 @@ export function FrameworkOsShell({
     }
     return null;
   }, [appLabelsOverlay, introductionUtilityId, session]);
+  /** 🎓 Window-kind id whose measures tree owns an introduce/show measure id — force-unfolds the Window
+   * Options rail so targets like `puzzle3d-play-vortex-show` can mount for the tour. */
+  const introductionMeasureWindowId = useMemo(() => {
+    if (!session || introductionElementIds.length === 0) return null;
+    for (const kind of session.app.windowKinds) {
+      const kindMeasures = kind.options.measures ?? [];
+      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(kindMeasures, id))) return kind.id;
+      for (const [windowId, measures] of Object.entries(windowMeasuresByWindowId)) {
+        if (!introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) continue;
+        if (windowId === kind.id || extraWindowInstances.some((instance) => instance.id === windowId && instance.windowKindId === kind.id)) return kind.id;
+      }
+    }
+    return null;
+  }, [extraWindowInstances, introductionElementIds, session, windowMeasuresByWindowId]);
 
   const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -6797,6 +6835,8 @@ export function FrameworkOsShell({
     // is active.
     const utilityBarFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
       introductionTargetsWindow(windowId, windowKindId, introductionUtilityWindowId) ? false : undefined;
+    const measuresFoldedFor = (windowId: string, windowKindId: string = windowId): boolean | undefined =>
+      introductionTargetsWindow(windowId, windowKindId, introductionMeasureWindowId) ? false : undefined;
     const onActionsFoldedFor = (windowId: string) => (folded: boolean) => dispatch({ type: "SET_ACTION_PANE_FOLDED", windowId, value: folded });
     // 🖱️ Window-body cursor follows the active utility's declared `cursor` (P5).
     const cursorFor = (app: AppDefinition, windowId: string): CSSProperties | undefined => {
@@ -6818,6 +6858,7 @@ export function FrameworkOsShell({
             fill: true,
             showControls: true,
             measures: chrome?.measures,
+            measuresFolded: measuresFoldedFor(spawned.id, windowKind?.id ?? spawned.id),
             engagement: chrome?.engagement,
             search: chrome?.search,
             utilityBar: spawnedApp && windowKind ? utilityBarNode(spawnedUtilities, spawned.id, onActionStable, introductionUtilityId, chrome?.utilityOptions) : undefined,
@@ -6841,10 +6882,11 @@ export function FrameworkOsShell({
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
-        title: appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
+        title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
         measures: chrome.measures,
+        measuresFolded: measuresFoldedFor(kind.id, kind.id),
         engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
         search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
         utilityBar: utilityBarNode(utilities, kind.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
@@ -6875,10 +6917,11 @@ export function FrameworkOsShell({
       return [
         {
           id: instance.id,
-          title: instance.title,
+          title: windowTitlesById[instance.id] ?? instance.title,
           fill: true,
           showControls: true,
           measures: chrome.measures,
+          measuresFolded: measuresFoldedFor(instance.id, instance.windowKindId),
           engagement: windowEngagementToSpec(resolvedEngagement, onActionStable),
           search: windowEngagementToSearchSpec(resolvedEngagement, onActionStable),
           utilityBar: utilityBarNode(utilities, instance.id, onActionStable, introductionUtilityId, chrome.utilityOptions),
@@ -6924,6 +6967,7 @@ export function FrameworkOsShell({
     uiTerminology,
     windowEngagementsByWindowId,
     windowMeasuresByWindowId,
+    windowTitlesById,
     windowUiByWindowId,
   ]);
 
@@ -7083,6 +7127,7 @@ export function FrameworkOsShell({
   // #endregion 🔖ReadinessBeacon
 
   return (
+    <SetWindowTitleContext.Provider value={setWindowTitle}>
     <UIFindProvider>
       <LevelProvider level="window">
         <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
@@ -7133,6 +7178,7 @@ export function FrameworkOsShell({
           })()}
       </LevelProvider>
     </UIFindProvider>
+    </SetWindowTitleContext.Provider>
   );
 }
 //#endregion FrameworkOsShell
@@ -9929,6 +9975,8 @@ type WorldSuggestionMenuRecord = {
   readonly open: boolean;
   readonly x: number;
   readonly y: number;
+  readonly windowId?: string;
+  readonly vortexFullId?: string;
   readonly pending: boolean;
   readonly candidates: readonly WorldSuggestionCandidateRecord[];
 };
@@ -10488,8 +10536,11 @@ export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispa
     checked: spec.checked,
     destructive: spec.destructive,
     onSelect: spec.action
-      ? () => {
-          dispatch(spec.action!, spec.args);
+      ? (event) => {
+          const clientX = event && "clientX" in event && typeof (event as MouseEvent).clientX === "number" ? (event as MouseEvent).clientX : undefined;
+          const clientY = event && "clientY" in event && typeof (event as MouseEvent).clientY === "number" ? (event as MouseEvent).clientY : undefined;
+          const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
+          dispatch(spec.action!, { ...spec.args, ...pointArgs });
         }
       : undefined,
     onHover: spec.hoverAction
@@ -10978,6 +11029,85 @@ export function gumballTransformDeltaBetweenPoses(
   return { action: "scaleSelection", args: { ...base, sx, sy, sz } };
 }
 
+/** @emoji ⚡ Local mid-drag gumball preview delta — applied imperatively to selected instance roots so meshes track the pointer without a WASM/React round-trip (same instant path as catalogue drop ghosts). */
+export type WorldGumballLivePreviewDelta =
+  | { readonly kind: "translate"; readonly dx: number; readonly dy: number; readonly dz: number }
+  | { readonly kind: "rotate"; readonly qx: number; readonly qy: number; readonly qz: number; readonly qw: number }
+  | { readonly kind: "scale"; readonly sx: number; readonly sy: number; readonly sz: number };
+
+/** @emoji ⚡ Absolute start→current gumball preview delta for local instance transforms. */
+export function gumballLivePreviewDeltaBetweenPoses(
+  transformMode: string | undefined,
+  before: GumballPose,
+  after: GumballPose,
+  handleKind?: GumballHandleKind,
+): WorldGumballLivePreviewDelta | null {
+  const kind = gumballKindForTransformMode(transformMode, handleKind);
+  if (kind === "translate") {
+    const dx = after.position[0] - before.position[0];
+    const dy = after.position[1] - before.position[1];
+    const dz = after.position[2] - before.position[2];
+    if (Math.abs(dx) < GUMBALL_TRANSFORM_EPSILON && Math.abs(dy) < GUMBALL_TRANSFORM_EPSILON && Math.abs(dz) < GUMBALL_TRANSFORM_EPSILON) {
+      return null;
+    }
+    return { kind: "translate", dx, dy, dz };
+  }
+  if (kind === "rotate") {
+    const beforeQuat = new Quaternion(before.quaternion[0], before.quaternion[1], before.quaternion[2], before.quaternion[3]);
+    const afterQuat = new Quaternion(after.quaternion[0], after.quaternion[1], after.quaternion[2], after.quaternion[3]);
+    const delta = afterQuat.multiply(beforeQuat.invert());
+    if (2 * Math.acos(Math.min(1, Math.max(-1, delta.w))) < GUMBALL_TRANSFORM_EPSILON) return null;
+    return { kind: "rotate", qx: delta.x, qy: delta.y, qz: delta.z, qw: delta.w };
+  }
+  const sx = after.scale[0] / Math.max(before.scale[0], GUMBALL_TRANSFORM_EPSILON);
+  const sy = after.scale[1] / Math.max(before.scale[1], GUMBALL_TRANSFORM_EPSILON);
+  const sz = after.scale[2] / Math.max(before.scale[2], GUMBALL_TRANSFORM_EPSILON);
+  if (Math.abs(sx - 1) < GUMBALL_TRANSFORM_EPSILON && Math.abs(sy - 1) < GUMBALL_TRANSFORM_EPSILON && Math.abs(sz - 1) < GUMBALL_TRANSFORM_EPSILON) {
+    return null;
+  }
+  return { kind: "scale", sx, sy, sz };
+}
+
+type WorldGumballLivePose = {
+  readonly position: readonly [number, number, number];
+  readonly quaternion: readonly [number, number, number, number];
+  readonly scale: readonly [number, number, number];
+};
+
+/** @emoji ⚡ Applies a local gumball preview delta onto a drag-start instance pose (matches puzzle/lowpoly/CAD scratch translate/rotate/scale semantics). */
+export function applyGumballLivePreviewDeltaToPose(base: WorldGumballLivePose, delta: WorldGumballLivePreviewDelta): WorldGumballLivePose {
+  if (delta.kind === "translate") {
+    return {
+      position: [base.position[0] + delta.dx, base.position[1] + delta.dy, base.position[2] + delta.dz],
+      quaternion: base.quaternion,
+      scale: base.scale,
+    };
+  }
+  if (delta.kind === "rotate") {
+    const next = new Quaternion(delta.qx, delta.qy, delta.qz, delta.qw).multiply(
+      new Quaternion(base.quaternion[0], base.quaternion[1], base.quaternion[2], base.quaternion[3]),
+    );
+    return {
+      position: base.position,
+      quaternion: [next.x, next.y, next.z, next.w],
+      scale: base.scale,
+    };
+  }
+  return {
+    position: base.position,
+    quaternion: base.quaternion,
+    scale: [base.scale[0] * delta.sx, base.scale[1] * delta.sy, base.scale[2] * delta.sz],
+  };
+}
+
+/** @emoji ⚡ Writes a live gumball preview pose onto a Three.js instance root. */
+export function applyGumballLivePreviewPoseToObject3D(target: Object3D, pose: WorldGumballLivePose): void {
+  target.position.set(pose.position[0], pose.position[1], pose.position[2]);
+  target.quaternion.set(pose.quaternion[0], pose.quaternion[1], pose.quaternion[2], pose.quaternion[3]);
+  target.scale.set(pose.scale[0], pose.scale[1], pose.scale[2]);
+  target.updateMatrixWorld(true);
+}
+
 export function gumballConfigForTransformMode(mode: string, plane?: GumballConfig["plane"]): GumballConfig {
   const groups =
     mode === "transform"
@@ -11084,6 +11214,7 @@ function WorldInstanceNode({
   environmentShadowEnabled,
   faceDragActive,
   onFaceDragStart,
+  onRootRef,
 }: {
   readonly instance: WorldInstanceRecord;
   readonly index: number;
@@ -11122,7 +11253,15 @@ function WorldInstanceNode({
   readonly previewInstanceSelected?: boolean;
   readonly environmentMaterial?: WorldEnvironmentMaterialRecord;
   readonly environmentShadowEnabled?: boolean;
+  /** ⚡ Registers the instance root group for imperative mid-drag gumball live preview. */
+  readonly onRootRef?: (id: string, group: Group | null) => void;
 }) {
+  const rootRef = useCallback(
+    (group: Group | null) => {
+      onRootRef?.(instance.id, group);
+    },
+    [instance.id, onRootRef],
+  );
   const isActiveObject = instance.id === activeObjectId;
   const colors = semanticColorsFromPalette(palette);
   const styleKind = resolveMeshSelectionPreviewStyle(instance, previewInstanceSelected);
@@ -11157,7 +11296,7 @@ function WorldInstanceNode({
   const curveLineWidth = styleKind === "neutral" ? 2 : 4;
 
   return (
-    <group position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
+    <group ref={rootRef} position={position as [number, number, number]} scale={scale as [number, number, number]} quaternion={quaternion}>
       {meshData ? (
         <>
           {hasShadedMesh ? (
@@ -11486,6 +11625,138 @@ function WorldInstancesLayer({
   }, [selection.gumballConfig, transformMode, projectionSpec]);
   const paintMode = selection.interactionMode === "paint";
   const gumballVisible = Boolean(selection.gumballActive) && transformGumballMode && !paintMode;
+  const invalidate = useThree((state) => state.invalidate);
+  const instanceRootsRef = useRef(new Map<string, Group>());
+  const gumballLiveBasesRef = useRef(new Map<string, WorldGumballLivePose>());
+  /** ⚡ Final local poses held across the post-drag React frame(s) until `instancesJson` catches up — prevents a one-frame snap-back to the pre-drag pose. */
+  const gumballCommitHoldRef = useRef(new Map<string, WorldGumballLivePose>());
+  const gumballLiveStartPoseRef = useRef<GumballPose | null>(null);
+  const gumballLivePoseRef = useRef<GumballPose | null>(null);
+  const gumballLiveKindRef = useRef<GumballHandleKind | null>(null);
+
+  const registerInstanceRoot = useCallback((id: string, group: Group | null) => {
+    if (group) instanceRootsRef.current.set(id, group);
+    else instanceRootsRef.current.delete(id);
+  }, []);
+
+  const writeGumballPreviewPoses = useCallback(
+    (poses: ReadonlyMap<string, WorldGumballLivePose>) => {
+      for (const [id, pose] of poses) {
+        const root = instanceRootsRef.current.get(id);
+        if (!root) continue;
+        applyGumballLivePreviewPoseToObject3D(root, pose);
+      }
+      invalidate();
+    },
+    [invalidate],
+  );
+
+  const applyGumballLivePreview = useCallback(
+    (before: GumballPose, after: GumballPose, handleKind: GumballHandleKind | null) => {
+      const delta = gumballLivePreviewDeltaBetweenPoses(transformMode, before, after, handleKind ?? undefined);
+      const poses = new Map<string, WorldGumballLivePose>();
+      for (const [id, base] of gumballLiveBasesRef.current) {
+        poses.set(id, delta ? applyGumballLivePreviewDeltaToPose(base, delta) : base);
+      }
+      writeGumballPreviewPoses(poses);
+      return poses;
+    },
+    [transformMode, writeGumballPreviewPoses],
+  );
+
+  useLayoutEffect(() => {
+    const before = gumballLiveStartPoseRef.current;
+    const after = gumballLivePoseRef.current;
+    if (gumballDragActive && before && after) {
+      applyGumballLivePreview(before, after, gumballLiveKindRef.current);
+      return;
+    }
+    const hold = gumballCommitHoldRef.current;
+    if (hold.size === 0) return;
+    writeGumballPreviewPoses(hold);
+    let allMatch = true;
+    for (const [id, pose] of hold) {
+      const instance = instances.find((entry) => entry.id === id);
+      if (!instance) {
+        allMatch = false;
+        continue;
+      }
+      const position = instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+      const scale = instance.scale ?? [1, 1, 1];
+      const rotation = instance.rotation ?? [0, 0, 0, 1];
+      if (
+        Math.abs(position[0] - pose.position[0]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(position[1] - pose.position[1]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(position[2] - pose.position[2]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(scale[0] - pose.scale[0]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(scale[1] - pose.scale[1]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(scale[2] - pose.scale[2]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(rotation[0] - pose.quaternion[0]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(rotation[1] - pose.quaternion[1]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(rotation[2] - pose.quaternion[2]) > GUMBALL_TRANSFORM_EPSILON ||
+        Math.abs(rotation[3] - pose.quaternion[3]) > GUMBALL_TRANSFORM_EPSILON
+      ) {
+        allMatch = false;
+      }
+    }
+    if (allMatch) hold.clear();
+  }, [applyGumballLivePreview, gumballDragActive, instances, writeGumballPreviewPoses]);
+
+  const handleGumballDraggingChanged = useCallback(
+    (dragging: boolean) => {
+      if (dragging) gumballCommitHoldRef.current.clear();
+      onGumballDraggingChanged(dragging);
+    },
+    [onGumballDraggingChanged],
+  );
+
+  const handleGumballDragStart = useCallback(
+    (kind: GumballHandleKind, before: GumballPose) => {
+      const bases = new Map<string, WorldGumballLivePose>();
+      for (const id of selectedIds) {
+        const root = instanceRootsRef.current.get(id);
+        if (!root) continue;
+        bases.set(id, {
+          position: [root.position.x, root.position.y, root.position.z],
+          quaternion: [root.quaternion.x, root.quaternion.y, root.quaternion.z, root.quaternion.w],
+          scale: [root.scale.x, root.scale.y, root.scale.z],
+        });
+      }
+      gumballLiveBasesRef.current = bases;
+      gumballCommitHoldRef.current.clear();
+      gumballLiveStartPoseRef.current = before;
+      gumballLivePoseRef.current = before;
+      gumballLiveKindRef.current = kind;
+      onGumballDragStart?.(kind, before);
+    },
+    [onGumballDragStart, selectedIds],
+  );
+
+  const handleGumballDrag = useCallback(
+    (kind: GumballHandleKind, pose: GumballPose) => {
+      const before = gumballLiveStartPoseRef.current ?? pose;
+      gumballLiveStartPoseRef.current = before;
+      gumballLivePoseRef.current = pose;
+      gumballLiveKindRef.current = kind;
+      applyGumballLivePreview(before, pose, kind);
+      onGumballDrag?.(kind, pose);
+    },
+    [applyGumballLivePreview, onGumballDrag],
+  );
+
+  const handleGumballDragEnd = useCallback(
+    (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
+      const start = gumballLiveStartPoseRef.current ?? before;
+      const finals = applyGumballLivePreview(start, after, kind);
+      gumballCommitHoldRef.current = finals;
+      gumballLiveBasesRef.current.clear();
+      gumballLiveStartPoseRef.current = null;
+      gumballLivePoseRef.current = null;
+      gumballLiveKindRef.current = null;
+      onGumballDragEnd(kind, before, after);
+    },
+    [applyGumballLivePreview, onGumballDragEnd],
+  );
 
   const mergeMode = (event: { shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => componentMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event));
 
@@ -11560,6 +11831,7 @@ function WorldInstancesLayer({
               onFaceDragStart={onFaceDragStart}
               environmentMaterial={environment?.material}
               environmentShadowEnabled={environment?.shadow?.enabled === true}
+              onRootRef={registerInstanceRoot}
             />
           );
         })}
@@ -11568,10 +11840,10 @@ function WorldInstancesLayer({
         target={selection.gumballTarget}
         config={gumballConfig}
         active={gumballVisible}
-        onDraggingChanged={onGumballDraggingChanged}
-        onDragStart={onGumballDragStart}
-        onDrag={onGumballDrag}
-        onDragEnd={onGumballDragEnd}
+        onDraggingChanged={handleGumballDraggingChanged}
+        onDragStart={handleGumballDragStart}
+        onDrag={handleGumballDrag}
+        onDragEnd={handleGumballDragEnd}
       />
     </WorldLayerStack>
   );
@@ -11983,7 +12255,7 @@ function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: numbe
     color: candidate.color,
     checked: candidate.index === activeIndex,
     action: "acceptSuggestion",
-    args: { index: candidate.index },
+    args: { index: candidate.index, ...(menu.vortexFullId ? { fullId: menu.vortexFullId } : {}) },
     hoverAction: "hoverSuggestion",
     hoverArgs: { index: candidate.index },
   }));
@@ -12407,14 +12679,21 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-right by default — draggable to any of the eight anchors like every other window pane. */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-left so it clears the navigation cube. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = useState<Anchor>("bottom-right");
+  const [anchor, setAnchor] = useState<Anchor>("bottom-left");
   const projectionLabel = useLabel("ui.host.projection");
-  return usePaneSlot(
+  const pane = (
     <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label={projectionLabel}>
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
-    </Pane>,
+    </Pane>
+  );
+  const portaled = usePaneSlot(pane);
+  if (portaled) return portaled;
+  return (
+    <div className="pointer-events-none absolute inset-0" data-slot="world-orbit-projection-switch-fallback" data-world-projection-kind-switch-host="">
+      {pane}
+    </div>
   );
 }
 
@@ -12453,6 +12732,7 @@ function clearPendingWorldProjection(windowId: string | null): void {
 export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
+  const setWindowTitle = useContext(SetWindowTitleContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
@@ -12567,10 +12847,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
-  /** 🧲 Last pose already handed to the plugin — mid-drag ticks send incremental `last→pending` so AmendLast / scratch-accumulate apps (CAD, lowpoly, puzzle) never stack absolute totals into a fly-away. */
-  const gumballDragLastPoseRef = useRef<GumballPose | null>(null);
-  const gumballDragPendingRef = useRef<{ readonly kind: GumballHandleKind; readonly pose: GumballPose } | null>(null);
-  const gumballDragRafRef = useRef<number | null>(null);
+  /** 🧲 Serialized WASM begin/end chain — mid-drag is local-only; one absolute start→end delta commits on drag end. */
   const gumballDragChainRef = useRef(Promise.resolve());
   const gumballDragDebugTickRef = useRef(0);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
@@ -12755,12 +13032,17 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       if (action === "openVortexSuggestions") {
-        dispatch(action, { ...args, x: contextMenu?.x ?? 0, y: contextMenu?.y ?? 0 });
+        dispatch(action, {
+          windowId: windowInstanceId ?? undefined,
+          x: contextMenu?.x ?? 0,
+          y: contextMenu?.y ?? 0,
+          ...args,
+        });
         return;
       }
       dispatch(action, args);
     },
-    [contextMenu, dispatch, handleZoomToSelection],
+    [contextMenu, dispatch, handleZoomToSelection, windowInstanceId],
   );
 
   const hoveredVortexFullIdRef = useRef<string | null>(null);
@@ -12771,12 +13053,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
       if (event.altKey && hoveredVortexFullIdRef.current) {
-        dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY });
+        dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY, windowId: windowInstanceId ?? undefined });
         return false;
       }
       return true;
     },
-    [dispatch],
+    [dispatch, windowInstanceId],
   );
 
   const handleSuggestionClose = useCallback(() => dispatch("closeVortexSuggestions"), [dispatch]);
@@ -12977,11 +13259,20 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [adoptViewportCamera],
   );
 
+  const syncProjectionWindowTitle = useCallback(
+    (spec: WorldProjectionSpec) => {
+      if (!windowInstanceId || !setWindowTitle) return;
+      setWindowTitle(windowInstanceId, worldProjectionSpecLabel(spec));
+    },
+    [setWindowTitle, windowInstanceId],
+  );
+
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
+      if (state.projectionSpec) syncProjectionWindowTitle(state.projectionSpec);
     },
-    [adoptViewportCamera],
+    [adoptViewportCamera, syncProjectionWindowTitle],
   );
 
   const handleProjectionKindChange = useCallback(
@@ -12989,8 +13280,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       const distance = orbitCameraDistance(cameraState, Math.hypot(cameraState.position[0] - cameraState.target[0], cameraState.position[1] - cameraState.target[1], cameraState.position[2] - cameraState.target[2]) || 600);
       const pose = computeWorldProjectionPose(spec, { target: cameraState.target, distance, zoom: cameraState.zoom });
       adoptViewportCamera({ ...pose, projectionSpec: spec }, true);
+      syncProjectionWindowTitle(spec);
     },
-    [adoptViewportCamera, cameraState],
+    [adoptViewportCamera, cameraState, syncProjectionWindowTitle],
   );
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
@@ -13028,74 +13320,33 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     return gumballDragChainRef.current;
   }, []);
 
-  const flushGumballDragPending = useCallback(() => {
-    gumballDragRafRef.current = null;
-    const pending = gumballDragPendingRef.current;
-    if (!pending) return;
-    gumballDragPendingRef.current = null;
-    const lastPose = gumballDragLastPoseRef.current ?? gumballDragStartPoseRef.current;
-    if (!lastPose) return;
-    // 🧲 Incremental last→pending (rAF latest-wins still covers the skipped gap). Absolute-from-start
-    // stacked on AmendLast/scratch-accumulate plugins and flung the selection away from the cursor.
-    gumballDragLastPoseRef.current = pending.pose;
-    const tick = ++gumballDragDebugTickRef.current;
-    void enqueueGumballDispatch(async () => {
-      const dx = pending.pose.position[0] - lastPose.position[0];
-      const dy = pending.pose.position[1] - lastPose.position[1];
-      const dz = pending.pose.position[2] - lastPose.position[2];
-      if (tick <= 5) {
-        console.log("[DEBUG] gumball drag tick", { tick, kind: pending.kind, dx, dy, dz });
-      }
-      await dispatchGumballPoseDelta(pending.kind, lastPose, pending.pose);
-    });
-  }, [dispatchGumballPoseDelta, enqueueGumballDispatch]);
-
   const handleGumballDragStart = useCallback(
     (_kind: GumballHandleKind, before: GumballPose) => {
       gumballDragStartPoseRef.current = before;
-      gumballDragLastPoseRef.current = before;
-      gumballDragPendingRef.current = null;
       gumballDragDebugTickRef.current = 0;
-      if (gumballDragRafRef.current != null) {
-        cancelAnimationFrame(gumballDragRafRef.current);
-        gumballDragRafRef.current = null;
-      }
       console.log("[DEBUG] gumball drag begin", { position: before.position });
       void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
     [dispatch, enqueueGumballDispatch],
   );
 
-  const handleGumballDrag = useCallback(
-    (kind: GumballHandleKind, pose: GumballPose) => {
-      if (!gumballDragStartPoseRef.current) {
-        gumballDragStartPoseRef.current = pose;
-        gumballDragLastPoseRef.current = pose;
-      }
-      gumballDragPendingRef.current = { kind, pose };
-      if (gumballDragRafRef.current == null) {
-        gumballDragRafRef.current = requestAnimationFrame(() => flushGumballDragPending());
-      }
-    },
-    [flushGumballDragPending],
-  );
+  const handleGumballDrag = useCallback((_kind: GumballHandleKind, _pose: GumballPose) => {
+    // ⚡ Mid-drag stays local (WorldInstancesLayer imperative preview) — no WASM/React composite rebuild.
+  }, []);
 
   const handleGumballDragEnd = useCallback(
     (kind: GumballHandleKind, before: GumballPose, after: GumballPose) => {
-      if (gumballDragRafRef.current != null) {
-        cancelAnimationFrame(gumballDragRafRef.current);
-        gumballDragRafRef.current = null;
-      }
-      const lastPose = gumballDragLastPoseRef.current ?? gumballDragStartPoseRef.current ?? before;
-      gumballDragPendingRef.current = null;
+      const startPose = gumballDragStartPoseRef.current ?? before;
       gumballDragStartPoseRef.current = null;
-      gumballDragLastPoseRef.current = null;
+      const tick = ++gumballDragDebugTickRef.current;
       console.log("[DEBUG] gumball drag end", {
         kind,
-        remaining: [after.position[0] - lastPose.position[0], after.position[1] - lastPose.position[1], after.position[2] - lastPose.position[2]],
+        tick,
+        delta: [after.position[0] - startPose.position[0], after.position[1] - startPose.position[1], after.position[2] - startPose.position[2]],
       });
       void enqueueGumballDispatch(async () => {
-        await dispatchGumballPoseDelta(kind, lastPose, after);
+        // One absolute start→end tick onto the transform scratch, then a single commit.
+        await dispatchGumballPoseDelta(kind, startPose, after);
         await Promise.resolve(dispatch("transformEnd"));
       });
     },
@@ -13386,18 +13637,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         shadows={environment?.shadow?.enabled === true ? true : undefined}
         onPointerMissed={handleEmptyClick}
         overlay={
-          frame || cameraState.explicitProjection || computing ? (
-            <>
-              {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
-              {cameraState.explicitProjection ? <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} /> : null}
-              {computing ? (
-                <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded bg-panel/90 px-2 py-1 text-xs shadow-sm" role="status" aria-busy="true">
-                  <Spinner size="small" />
-                  <span>{shellLabel("ui.common.loading")}</span>
-                </div>
-              ) : null}
-            </>
-          ) : undefined
+          <>
+            {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
+            <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
+            {computing ? (
+              <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded bg-panel/90 px-2 py-1 text-xs shadow-sm" role="status" aria-busy="true">
+                <Spinner size="small" />
+                <span>{shellLabel("ui.common.loading")}</span>
+              </div>
+            ) : null}
+          </>
         }
       >
         <WorldOrbitViewSnapGateProvider>
@@ -13560,9 +13809,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           if (!open) setContextMenu(null);
         }}
       />
-      {interaction.suggestionMenu?.open ? (
+      {interaction.suggestionMenu?.open && (!interaction.suggestionMenu.windowId || interaction.suggestionMenu.windowId === windowInstanceId) ? (
         <ContextMenuController
           open
+          closeOnSelect={false}
           position={{ x: interaction.suggestionMenu.x, y: interaction.suggestionMenu.y }}
           items={mapContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0), dispatch)}
           onOpenChange={(open) => {

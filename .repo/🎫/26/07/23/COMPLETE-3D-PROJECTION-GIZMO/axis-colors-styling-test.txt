@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/styling
+
+No test files found, exiting with code 1
+
+filter: index.test.ts
+include: vite-elements-assets.ts
+exclude:  **/node_modules/**, **/.git/**
+

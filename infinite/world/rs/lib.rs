@@ -2004,11 +2004,23 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
 }
 
 //#region 🧭WorldOrbitViewGizmo
-/** 🧭 Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset that stays visible on small panes. */
+/** 🧭 Permanent X/Y/Z paints — primary / secondary / tertiary (semio tokens), not muted chrome. */
+fn spatial_axis_rgba(axis: u8, alpha: f32) -> Rgba {
+    match axis {
+        0 => Rgba::new(1.0, 0.204, 0.310, alpha),   // primary #ff344f
+        1 => Rgba::new(0.204, 0.820, 0.749, alpha), // secondary #34d1bf
+        _ => Rgba::new(0.980, 0.584, 0.0, alpha),   // tertiary #fa9500
+    }
+}
+
+/** 🧭 Mirrors `resolveSceneGizmoViewportPlacement` — bottom-right corner inset matching pane `--spacing-single` chrome. */
 pub fn world_orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
-    let margin_x = (viewport.w / 5.0).floor().clamp(26.0, 56.0);
-    let margin_y = (viewport.h / 7.0).floor().clamp(18.0, 40.0);
-    (margin_x, margin_y)
+    let chrome_inset = 4.0_f32;
+    let gizmo_half_extent = 28.0_f32;
+    let preferred = chrome_inset + gizmo_half_extent;
+    let max_fit = (viewport.w.min(viewport.h) / 3.0).floor().max(22.0);
+    let margin = preferred.min(max_fit);
+    (margin, margin)
 }
 
 /** 🧭 Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`). */
@@ -2016,7 +2028,7 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
     let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
     let origin_x = viewport.x + viewport.w - margin_x;
     let origin_y = viewport.y + viewport.h - margin_y;
-    let axis_len = (viewport.w.min(viewport.h) * 0.06).clamp(18.0, 36.0);
+    let axis_len = (viewport.w.min(viewport.h) * 0.04).clamp(14.0, 24.0);
     let forward = camera.position.sub(camera.target);
     let forward_len = forward.length();
     if forward_len < 1e-5 {
@@ -2031,23 +2043,24 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
     let right = right.scale(1.0 / right_len);
     let up = right.cross(forward).normalize();
     let axes = [
-        (Vec3::new(1.0, 0.0, 0.0), "X", Rgba::new(0.92, 0.28, 0.28, 1.0)),
-        (Vec3::new(-1.0, 0.0, 0.0), "", Rgba::new(0.92, 0.28, 0.28, 0.65)),
-        (Vec3::new(0.0, 1.0, 0.0), "Y", Rgba::new(0.28, 0.78, 0.36, 1.0)),
-        (Vec3::new(0.0, -1.0, 0.0), "", Rgba::new(0.28, 0.78, 0.36, 0.65)),
-        (Vec3::new(0.0, 0.0, 1.0), "Z", Rgba::new(0.28, 0.48, 0.95, 1.0)),
-        (Vec3::new(0.0, 0.0, -1.0), "", Rgba::new(0.28, 0.48, 0.95, 0.65)),
+        (Vec3::new(1.0, 0.0, 0.0), "X", spatial_axis_rgba(0, 1.0)),
+        (Vec3::new(-1.0, 0.0, 0.0), "", spatial_axis_rgba(0, 0.75)),
+        (Vec3::new(0.0, 1.0, 0.0), "Y", spatial_axis_rgba(1, 1.0)),
+        (Vec3::new(0.0, -1.0, 0.0), "", spatial_axis_rgba(1, 0.75)),
+        (Vec3::new(0.0, 0.0, 1.0), "Z", spatial_axis_rgba(2, 1.0)),
+        (Vec3::new(0.0, 0.0, -1.0), "", spatial_axis_rgba(2, 0.75)),
     ];
     let corners = [
-        (Vec3::new(0.72, 0.72, 0.72), "NE↑"),
-        (Vec3::new(-0.72, 0.72, 0.72), "NW↑"),
-        (Vec3::new(0.72, -0.72, 0.72), "SE↑"),
-        (Vec3::new(-0.72, -0.72, 0.72), "SW↑"),
-        (Vec3::new(0.72, 0.72, -0.72), "NE↓"),
-        (Vec3::new(-0.72, 0.72, -0.72), "NW↓"),
-        (Vec3::new(0.72, -0.72, -0.72), "SE↓"),
-        (Vec3::new(-0.72, -0.72, -0.72), "SW↓"),
+        (Vec3::new(0.72, 0.72, 0.72), "NE"),
+        (Vec3::new(-0.72, 0.72, 0.72), "NW"),
+        (Vec3::new(0.72, -0.72, 0.72), "SE"),
+        (Vec3::new(-0.72, -0.72, 0.72), "SW"),
+        (Vec3::new(0.72, 0.72, -0.72), "ne"),
+        (Vec3::new(-0.72, 0.72, -0.72), "nw"),
+        (Vec3::new(0.72, -0.72, -0.72), "se"),
+        (Vec3::new(-0.72, -0.72, -0.72), "sw"),
     ];
+    let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
     let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool)> = axes
         .into_iter()
         .map(|(axis, label, color)| {
@@ -2060,19 +2073,17 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
-            let color = Rgba::new(0.75, 0.75, 0.78, 0.9);
-            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, true)
+            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, neutral, true)
         }))
         .collect();
     ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
     for (depth, tip_x, tip_y, label, color, is_corner) in ordered {
         let fade = if depth > 0.05 { 0.45 } else { 1.0 };
         let stroke = Rgba::new(color.r, color.g, color.b, color.a * fade);
+        ctx.draw.push_line_overlay(origin_x, origin_y, tip_x, tip_y, stroke, if is_corner { 1.5 } else { 2.0 });
         if is_corner {
             let r = 3.0;
             ctx.draw.push_solid_overlay([tip_x - r, tip_y - r, tip_x + r, tip_y + r], stroke);
-        } else {
-            ctx.draw.push_line_overlay(origin_x, origin_y, tip_x, tip_y, stroke, 2.0);
         }
         if !label.is_empty() {
             draw_text_overlay(ctx, label, tip_x + 3.0, tip_y - 4.0, ctx.theme.font_size_small, stroke);
@@ -3317,9 +3328,9 @@ mod tests {
 
     #[test]
     fn world_orbit_view_gizmo_placement_matches_react_bottom_right_insets() {
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (56.0, 40.0));
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (26.0, 22.0));
-        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (26.0, 18.0));
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 1280.0, h: 720.0 }), (32.0, 32.0));
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 120.0, h: 160.0 }), (32.0, 32.0));
+        assert_eq!(world_orbit_view_gizmo_placement(Rect { x: 0.0, y: 0.0, w: 40.0, h: 48.0 }), (22.0, 22.0));
     }
 
     fn topology_mesh() -> Mesh3d {

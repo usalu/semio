@@ -855,6 +855,10 @@ mod tests {
     #[test]
     fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
         let mesh = HalfedgeMesh::from_json(DEFAULT_MESH_JSON).expect("default mesh");
+        assert!(
+            (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) >= 8),
+            "expected coplanar-merged plate-side n-gon with >= 8 corners"
+        );
         for fi in 0..mesh.face_count() {
             let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
             let mut min_x = f32::MAX;
@@ -1086,6 +1090,24 @@ mod export_concrete_forest_mesh_tests {
             mesh.face_count(),
             flips,
             open_boundary_count(&mesh)
+        );
+        let before_merge = mesh.face_count();
+        let merges = mesh.merge_coplanar_faces().expect("merge coplanar faces");
+        eprintln!(
+            "[DEBUG] after coplanar merge: verts={} faces={} merges={} (was {}) open={}",
+            mesh.vertex_count(),
+            mesh.face_count(),
+            merges,
+            before_merge,
+            open_boundary_count(&mesh)
+        );
+        assert!(
+            mesh.face_count() <= before_merge,
+            "coplanar merge must not increase face count"
+        );
+        assert!(
+            merges > 0 || before_merge == mesh.face_count(),
+            "expected coplanar merge to join adjacent CAD faces on the plate/supports"
         );
         assert!(
             (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 3),

@@ -152,10 +152,12 @@
 
     ::selection {
       background-color: var(--accent);
+      color: var(--border-emphasized-color);
     }
 
     ::-moz-selection {
       background-color: var(--accent);
+      color: var(--border-emphasized-color);
     }
 
     html {
@@ -1317,13 +1319,17 @@
 
 
 
+/* play: a button depresses when pressed — uniform scale (z-depth), not a slide-and-grow. */
 @keyframes icon-play {
   0%,
   100% {
-    transform: translateX(0) scale(1);
+    transform: scale(1);
   }
-  40% {
-    transform: translateX(10%) scale(1.1);
+  35% {
+    transform: scale(0.92);
+  }
+  65% {
+    transform: scale(1.04);
   }
 }
 [data-icon="play"] { --icon-animation: icon-play; --icon-animation-duration: 450ms; }
@@ -1399,36 +1405,36 @@
 
 
 /* folder / folder-open: Lucide draws the tab as a notch in one continuous outline (not a separate closed
-   shape), so there is no literal sub-part to hinge without redrawing the vendored artwork. Best single-
-   rigid-body approximation: skew anchored at the bottom edge, so the top (where the tab sits) leans
-   relative to the base that stays planted — reads as "the flap tips" more than a plain rotate would. */
+   shape), so there is no literal sub-part to hinge without redrawing the vendored artwork. A folder is
+   rigid, so it must not deform (no skew/squash) — instead it tips as a rigid 3D body around its bottom
+   edge (the same rigid-rotation technique as book-open's page turn), like a laptop lid tipping back. */
 @keyframes icon-folder-flap {
   0%,
   100% {
-    transform: skewX(0deg);
+    transform: perspective(60px) rotateX(0deg);
   }
   45% {
-    transform: skewX(-9deg);
+    transform: perspective(60px) rotateX(-22deg);
   }
   75% {
-    transform: skewX(1.5deg);
+    transform: perspective(60px) rotateX(4deg);
   }
 }
-[data-icon="folder"] { --icon-animation: icon-folder-flap; transform-origin: 50% 100%; }
+[data-icon="folder"] { --icon-animation: none; --icon-part-1-anim: icon-folder-flap; --icon-part-1-origin: 50% 100%; }
 
 @keyframes icon-folder-open-flap {
   0%,
   100% {
-    transform: skewX(0deg);
+    transform: perspective(60px) rotateX(0deg);
   }
   45% {
-    transform: skewX(11deg);
+    transform: perspective(60px) rotateX(-28deg);
   }
   75% {
-    transform: skewX(-1.5deg);
+    transform: perspective(60px) rotateX(5deg);
   }
 }
-[data-icon="folder-open"] { --icon-animation: icon-folder-open-flap; transform-origin: 50% 100%; }
+[data-icon="folder-open"] { --icon-animation: none; --icon-part-1-anim: icon-folder-open-flap; --icon-part-1-origin: 50% 100%; }
 
 
 
@@ -1514,13 +1520,17 @@
 
 
 
+/* filter: a funnel is rigid — no squash. It settles/wobbles slightly about its mouth when tapped. */
 @keyframes icon-filter {
   0%,
   100% {
-    transform: scaleY(1);
+    transform: rotate(0deg);
   }
   40% {
-    transform: scaleY(0.9);
+    transform: rotate(3deg);
+  }
+  70% {
+    transform: rotate(-1.5deg);
   }
 }
 [data-icon="filter"] { --icon-animation: icon-filter; transform-origin: 50% 0%; }
@@ -2053,7 +2063,7 @@
     transform: rotate(2deg);
   }
 }
-@keyframes icon-box-bounce {
+@keyframes icon-box {
   0%,
   100% {
     transform: translateY(0);
@@ -2083,64 +2093,66 @@
     transform: translateX(-0.8px);
   }
 }
-@keyframes icon-hammer-strike {
+@keyframes icon-hammer {
   0%,
   100% {
     transform: rotate(0deg);
   }
   40% {
-    transform: rotate(-22deg);
+    transform: rotate(14deg);
   }
   75% {
-    transform: rotate(4deg);
+    transform: rotate(-3deg);
   }
 }
+/* landmark: stone columns are rigid and load-bearing — they don't slide up and down. Light sweeps
+   across the colonnade instead (opacity), left to right. */
 @keyframes icon-landmark-col-a {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   25% {
-    transform: translateY(-1.2px);
+    opacity: 0.45;
   }
   55% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-landmark-col-b {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   40% {
-    transform: translateY(-1.2px);
+    opacity: 0.45;
   }
   70% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-landmark-col-c {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   55% {
-    transform: translateY(-1.2px);
+    opacity: 0.45;
   }
   85% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-landmark-col-d {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   70% {
-    transform: translateY(-1.2px);
+    opacity: 0.45;
   }
   95% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-layers-bottom {
@@ -2197,10 +2209,10 @@
     transform: rotate(0deg);
   }
   45% {
-    transform: rotate(10deg);
+    transform: rotate(-10deg);
   }
   75% {
-    transform: rotate(-3deg);
+    transform: rotate(3deg);
   }
 }
 @keyframes icon-lock-shackle {
@@ -2209,10 +2221,10 @@
     transform: rotate(0deg);
   }
   40% {
-    transform: rotate(-32deg);
+    transform: rotate(32deg);
   }
   75% {
-    transform: rotate(6deg);
+    transform: rotate(-6deg);
   }
 }
 @keyframes icon-magnet-tick {
@@ -2242,18 +2254,19 @@
     transform: rotate(10deg);
   }
 }
+/* pipette: a liquid drop falls straight down under gravity, not diagonally. */
 @keyframes icon-pipette-drop {
   0%,
   100% {
-    transform: translate(0, 0);
+    transform: translateY(0);
     opacity: 1;
   }
   50% {
-    transform: translate(1.4px, 1.4px);
+    transform: translateY(1.8px);
     opacity: 0.35;
   }
 }
-@keyframes icon-plug-prong {
+@keyframes icon-plug-body {
   0%,
   100% {
     transform: translateY(0);
@@ -2271,10 +2284,10 @@
     transform: rotate(0deg);
   }
   45% {
-    transform: rotate(-32deg);
+    transform: rotate(32deg);
   }
   80% {
-    transform: rotate(-6deg);
+    transform: rotate(6deg);
   }
 }
 
@@ -2353,7 +2366,7 @@
     transform: scale(0.92);
   }
 }
-@keyframes icon-arrow-down-head {
+@keyframes icon-arrow-down {
   0%,
   100% {
     transform: translateY(0);
@@ -2365,7 +2378,7 @@
     transform: translateY(-0.4px);
   }
 }
-@keyframes icon-arrow-left-head {
+@keyframes icon-arrow-left {
   0%,
   100% {
     transform: translateX(0);
@@ -2377,7 +2390,7 @@
     transform: translateX(0.4px);
   }
 }
-@keyframes icon-arrow-right-head {
+@keyframes icon-arrow-right {
   0%,
   100% {
     transform: translateX(0);
@@ -2389,7 +2402,7 @@
     transform: translateX(-0.4px);
   }
 }
-@keyframes icon-arrow-right-left-head-l {
+@keyframes icon-arrow-right-left-bottom {
   0%,
   100% {
     transform: translateX(0);
@@ -2401,7 +2414,7 @@
     transform: translateX(0.3px);
   }
 }
-@keyframes icon-arrow-right-left-head-r {
+@keyframes icon-arrow-right-left-top {
   0%,
   100% {
     transform: translateX(0);
@@ -2413,7 +2426,7 @@
     transform: translateX(-0.3px);
   }
 }
-@keyframes icon-arrow-up-head {
+@keyframes icon-arrow-up {
   0%,
   100% {
     transform: translateY(0);
@@ -2452,34 +2465,10 @@
 @keyframes icon-book-open-cover {
   0%,
   100% {
-    transform: rotateY(0deg);
+    transform: perspective(60px) rotateY(0deg);
   }
   50% {
-    transform: rotateY(28deg);
-  }
-}
-@keyframes icon-box-edge {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  55% {
-    opacity: 0.2;
-  }
-  80% {
-    opacity: 1;
-  }
-}
-@keyframes icon-box-seam {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 0.2;
-  }
-  65% {
-    opacity: 1;
+    transform: perspective(60px) rotateY(28deg);
   }
 }
 @keyframes icon-calendar-days-day-1 {
@@ -2839,16 +2828,17 @@
     transform: translateY(0.3px);
   }
 }
+/* cylinder: the cap is a rigid disc — it doesn't squash, it lifts (like peeking under a lid). */
 @keyframes icon-cylinder-cap {
   0%,
   100% {
-    transform: scaleY(1);
+    transform: translateY(0);
   }
   50% {
-    transform: scaleY(0.6);
+    transform: translateY(-1.5px);
   }
   78% {
-    transform: scaleY(1.06);
+    transform: translateY(0.2px);
   }
 }
 @keyframes icon-download-drop {
@@ -3268,76 +3258,80 @@
     transform: translateY(-0.2px);
   }
 }
+/* grip-vertical: the dots are molded bumps on a rigid handle — they don't pop loose and bounce.
+   A light wave crosses the grip top-to-bottom instead (opacity). */
 @keyframes icon-grip-vertical-dot-1 {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   25% {
-    transform: translateY(-1.3px);
+    opacity: 0.35;
   }
   55% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-grip-vertical-dot-2 {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   40% {
-    transform: translateY(-1.3px);
+    opacity: 0.35;
   }
   70% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
 @keyframes icon-grip-vertical-dot-3 {
   0%,
   100% {
-    transform: translateY(0);
+    opacity: 1;
   }
   55% {
-    transform: translateY(-1.3px);
+    opacity: 0.35;
   }
   85% {
-    transform: translateY(0.2px);
+    opacity: 1;
   }
 }
+/* hand: fingers are rigid segments that flex at the knuckle — they don't stretch out of their sockets.
+   Each rotates about its own base, staggered, like fingers wiggling in a wave. */
 @keyframes icon-hand-finger-a {
   0%,
   100% {
-    transform: translateY(0);
+    transform: rotate(0deg);
   }
   35% {
-    transform: translateY(-1.4px);
+    transform: rotate(6deg);
   }
   65% {
-    transform: translateY(0.2px);
+    transform: rotate(-1deg);
   }
 }
 @keyframes icon-hand-finger-b {
   0%,
   100% {
-    transform: translateY(0);
+    transform: rotate(0deg);
   }
   50% {
-    transform: translateY(-1.4px);
+    transform: rotate(6deg);
   }
   78% {
-    transform: translateY(0.2px);
+    transform: rotate(-1deg);
   }
 }
 @keyframes icon-hand-finger-c {
   0%,
   100% {
-    transform: translateY(0);
+    transform: rotate(0deg);
   }
   65% {
-    transform: translateY(-1.4px);
+    transform: rotate(6deg);
   }
   90% {
-    transform: translateY(0.2px);
+    transform: rotate(-1deg);
   }
 }
 @keyframes icon-hard-drive-led-a {
@@ -3421,16 +3415,17 @@
     transform: translateY(0.2px);
   }
 }
+/* home: a door swings on its vertical hinge (rotateY about the jamb), not tips flat like a trapdoor. */
 @keyframes icon-home-door {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: perspective(50px) rotateY(0deg);
   }
   45% {
-    transform: rotate(-18deg);
+    transform: perspective(50px) rotateY(35deg);
   }
   75% {
-    transform: rotate(3deg);
+    transform: perspective(50px) rotateY(-5deg);
   }
 }
 @keyframes icon-image-plus-glyph {
@@ -3748,7 +3743,7 @@
     transform: translateX(-0.3px);
   }
 }
-@keyframes icon-maximize-2-bracket-bl {
+@keyframes icon-maximize-2-arm-bl {
   0%,
   100% {
     transform: translate(0, 0);
@@ -3760,7 +3755,7 @@
     transform: translate(0.2px, -0.2px);
   }
 }
-@keyframes icon-maximize-2-bracket-tr {
+@keyframes icon-maximize-2-arm-tr {
   0%,
   100% {
     transform: translate(0, 0);
@@ -3772,7 +3767,7 @@
     transform: translate(-0.2px, 0.2px);
   }
 }
-@keyframes icon-minimize-2-bracket-bl {
+@keyframes icon-minimize-2-arm-bl {
   0%,
   100% {
     transform: translate(0, 0);
@@ -3784,7 +3779,7 @@
     transform: translate(-0.2px, 0.2px);
   }
 }
-@keyframes icon-minimize-2-bracket-tr {
+@keyframes icon-minimize-2-arm-tr {
   0%,
   100% {
     transform: translate(0, 0);
@@ -3879,52 +3874,24 @@
     transform: translate(-0.2px, -0.2px);
   }
 }
-@keyframes icon-move-head-bottom {
+/* move: the whole draggable object (cross + all 4 arrowheads) is one rigid glyph — it orbits in a tiny
+   square path to read as "this can be dragged," rather than the arrowheads detaching from the cross. */
+@keyframes icon-move {
   0%,
   100% {
-    transform: translateY(0);
+    transform: translate(0, 0);
   }
-  45% {
-    transform: translateY(2px);
+  22% {
+    transform: translate(1.6px, 0);
   }
-  72% {
-    transform: translateY(-0.4px);
+  44% {
+    transform: translate(1.6px, 1.6px);
   }
-}
-@keyframes icon-move-head-left {
-  0%,
-  100% {
-    transform: translateX(0);
+  66% {
+    transform: translate(0, 1.6px);
   }
-  55% {
-    transform: translateX(-2px);
-  }
-  80% {
-    transform: translateX(0.4px);
-  }
-}
-@keyframes icon-move-head-right {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  35% {
-    transform: translateX(2px);
-  }
-  65% {
-    transform: translateX(-0.4px);
-  }
-}
-@keyframes icon-move-head-top {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  65% {
-    transform: translateY(-2px);
-  }
-  88% {
-    transform: translateY(0.4px);
+  85% {
+    transform: translate(0, 0.3px);
   }
 }
 @keyframes icon-network-node-left {
@@ -4074,7 +4041,7 @@
     transform: scale(1.08);
   }
 }
-@keyframes icon-redo-2-hook {
+@keyframes icon-redo-2 {
   0%,
   100% {
     transform: translateX(0);
@@ -4086,7 +4053,7 @@
     transform: translateX(-0.4px);
   }
 }
-@keyframes icon-redo-hook {
+@keyframes icon-redo {
   0%,
   100% {
     transform: translateX(0);
@@ -4098,16 +4065,18 @@
     transform: translateX(-0.4px);
   }
 }
+/* save: the write-protect notch is a rigid corner fold — it doesn't hinge into the disk, it slides
+   like a real floppy's metal shutter. */
 @keyframes icon-save-tab {
   0%,
   100% {
-    transform: rotate(0deg);
+    transform: translateX(0);
   }
   45% {
-    transform: rotate(-22deg);
+    transform: translateX(-1.5px);
   }
   75% {
-    transform: rotate(4deg);
+    transform: translateX(0.2px);
   }
 }
 @keyframes icon-scaling-handle-in {
@@ -4530,7 +4499,7 @@
     transform: scale(0.95);
   }
 }
-@keyframes icon-undo-2-hook {
+@keyframes icon-undo-2 {
   0%,
   100% {
     transform: translateX(0);
@@ -4542,7 +4511,7 @@
     transform: translateX(0.4px);
   }
 }
-@keyframes icon-undo-hook {
+@keyframes icon-undo {
   0%,
   100% {
     transform: translateX(0);
@@ -4693,19 +4662,19 @@
 [data-icon="pen-tool"] { --icon-animation: none; --icon-part-4-anim: icon-pen-tool-anchor; --icon-part-4-origin: 11px 11px; --icon-part-4-duration: 400ms; }
 [data-icon="paint-bucket"] { --icon-animation: none; --icon-part-4-anim: icon-paint-bucket-drip; --icon-part-4-origin: 20px 18px; }
 [data-icon="move-3d"] { --icon-animation: none; --icon-part-3-anim: icon-move-3d-arrow-a; --icon-part-4-anim: icon-move-3d-arrow-b; }
-[data-icon="minimize-2"] { --icon-animation: none; --icon-part-2-anim: icon-minimize-2-bracket-tr; --icon-part-4-anim: icon-minimize-2-bracket-bl; }
-[data-icon="maximize-2"] { --icon-animation: none; --icon-part-1-anim: icon-maximize-2-bracket-tr; --icon-part-4-anim: icon-maximize-2-bracket-bl; }
+[data-icon="minimize-2"] { --icon-animation: none; --icon-part-1-anim: icon-minimize-2-arm-tr; --icon-part-2-anim: icon-minimize-2-arm-tr; --icon-part-3-anim: icon-minimize-2-arm-bl; --icon-part-4-anim: icon-minimize-2-arm-bl; }
+[data-icon="maximize-2"] { --icon-animation: none; --icon-part-1-anim: icon-maximize-2-arm-tr; --icon-part-2-anim: icon-maximize-2-arm-tr; --icon-part-3-anim: icon-maximize-2-arm-bl; --icon-part-4-anim: icon-maximize-2-arm-bl; }
 [data-icon="library"] { --icon-animation: none; --icon-part-1-anim: icon-library-spine; --icon-part-1-origin: 20px 20px; --icon-part-2-anim: icon-library-spine; --icon-part-2-origin: 12px 20px; --icon-part-3-anim: icon-library-spine; --icon-part-3-origin: 8px 20px; --icon-part-4-anim: icon-library-spine; --icon-part-4-origin: 4px 20px; }
 [data-icon="layout-grid"] { --icon-animation: none; --icon-part-1-anim: icon-layout-grid-cell-tl; --icon-part-2-anim: icon-layout-grid-cell-tr; --icon-part-3-anim: icon-layout-grid-cell-br; --icon-part-4-anim: icon-layout-grid-cell-bl; }
 [data-icon="hash"] { --icon-animation: none; --icon-part-1-anim: icon-hash-bar-top; --icon-part-2-anim: icon-hash-bar-bottom; --icon-part-3-anim: icon-hash-bar-left; --icon-part-4-anim: icon-hash-bar-right; }
-[data-icon="hand"] { --icon-animation: none; --icon-part-1-anim: icon-hand-finger-a; --icon-part-2-anim: icon-hand-finger-b; --icon-part-3-anim: icon-hand-finger-c; }
+[data-icon="hand"] { --icon-animation: none; --icon-part-1-anim: icon-hand-finger-a; --icon-part-1-origin: 18px 11px; --icon-part-2-anim: icon-hand-finger-b; --icon-part-2-origin: 14px 10px; --icon-part-3-anim: icon-hand-finger-c; --icon-part-3-origin: 10px 10.5px; }
 [data-icon="file-json"] { --icon-animation: none; --icon-part-3-anim: icon-file-json-brace-l; --icon-part-4-anim: icon-file-json-brace-r; }
 [data-icon="file-image"] { --icon-animation: none; --icon-part-3-anim: icon-file-image-sun; --icon-part-3-origin: 10px 12px; --icon-part-3-duration: 400ms; }
 [data-icon="file-code"] { --icon-animation: none; --icon-part-1-anim: icon-file-code-chevron-l; --icon-part-2-anim: icon-file-code-chevron-r; }
 [data-icon="eye-off"] { --icon-animation: none; --icon-part-2-anim: icon-eye-off-pupil; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
 [data-icon="component"] { --icon-animation: none; --icon-part-1-anim: icon-component-diamond-right; --icon-part-1-origin: 18.6px 12.3px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-component-diamond-left; --icon-part-2-origin: 5.6px 12.3px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-component-diamond-bottom; --icon-part-3-origin: 12.3px 19.6px; --icon-part-3-duration: 400ms; --icon-part-4-anim: icon-component-diamond-top; --icon-part-4-origin: 12.3px 5.05px; --icon-part-4-duration: 400ms; }
 [data-icon="bar-chart-3"] { --icon-animation: none; --icon-part-2-anim: icon-bar-chart-3-bar; --icon-part-2-origin: 18px 17px; --icon-part-3-anim: icon-bar-chart-3-bar; --icon-part-3-origin: 13px 17px; --icon-part-4-anim: icon-bar-chart-3-bar; --icon-part-4-origin: 8px 17px; }
-[data-icon="arrow-right-left"] { --icon-animation: none; --icon-part-1-anim: icon-arrow-right-left-head-r; --icon-part-3-anim: icon-arrow-right-left-head-l; }
+[data-icon="arrow-right-left"] { --icon-animation: none; --icon-part-1-anim: icon-arrow-right-left-top; --icon-part-2-anim: icon-arrow-right-left-top; --icon-part-3-anim: icon-arrow-right-left-bottom; --icon-part-4-anim: icon-arrow-right-left-bottom; }
 [data-icon="grid-3x3"] { --icon-animation: none; --icon-part-2-anim: icon-grid-3x3-row-a; --icon-part-3-anim: icon-grid-3x3-row-b; --icon-part-4-anim: icon-grid-3x3-col-a; --icon-part-5-anim: icon-grid-3x3-col-b; }
 [data-icon="combine"] { --icon-animation: none; --icon-part-6-anim: icon-combine-box-a; --icon-part-5-anim: icon-combine-box-b; }
 [data-icon="triangle-alert"] { --icon-animation: none; --icon-part-2-anim: icon-triangle-alert-exclaim; --icon-part-2-origin: 12px 11px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-triangle-alert-exclaim; --icon-part-3-origin: 12px 17px; --icon-part-3-duration: 400ms; }
@@ -4727,30 +4696,30 @@
 [data-icon="alert-circle"] { --icon-animation: none; --icon-part-2-anim: icon-alert-circle-exclaim; --icon-part-2-origin: 12px 10px; --icon-part-2-duration: 400ms; --icon-part-3-anim: icon-alert-circle-exclaim; --icon-part-3-origin: 12px 16px; --icon-part-3-duration: 400ms; }
 [data-icon="x"] { --icon-animation: none; --icon-part-1-anim: icon-x-stroke-a; --icon-part-1-origin: 12px 12px; --icon-part-1-duration: 400ms; --icon-part-2-anim: icon-x-stroke-b; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
 [data-icon="user"] { --icon-animation: none; --icon-part-2-anim: icon-user-head; }
-[data-icon="undo-2"] { --icon-animation: none; --icon-part-1-anim: icon-undo-2-hook; }
-[data-icon="undo"] { --icon-animation: none; --icon-part-1-anim: icon-undo-hook; }
+[data-icon="undo-2"] { --icon-animation: icon-undo-2; }
+[data-icon="undo"] { --icon-animation: icon-undo; }
 [data-icon="tablet"] { --icon-animation: none; --icon-part-2-anim: icon-tablet-button; --icon-part-2-origin: 12px 18px; --icon-part-2-duration: 400ms; }
 [data-icon="smartphone"] { --icon-animation: none; --icon-part-2-anim: icon-smartphone-button; --icon-part-2-origin: 12px 18px; --icon-part-2-duration: 400ms; }
 [data-icon="skip-forward"] { --icon-animation: none; --icon-part-2-anim: icon-skip-forward-tri; }
 [data-icon="skip-back"] { --icon-animation: none; --icon-part-1-anim: icon-skip-back-tri; }
-[data-icon="redo"] { --icon-animation: none; --icon-part-1-anim: icon-redo-hook; }
-[data-icon="redo-2"] { --icon-animation: none; --icon-part-1-anim: icon-redo-2-hook; }
+[data-icon="redo"] { --icon-animation: icon-redo; }
+[data-icon="redo-2"] { --icon-animation: icon-redo-2; }
 [data-icon="plus"] { --icon-animation: none; --icon-part-1-anim: icon-plus-strokes; --icon-part-1-origin: 12px 12px; --icon-part-2-anim: icon-plus-strokes; --icon-part-2-origin: 12px 12px; }
 [data-icon="pause"] { --icon-animation: none; --icon-part-1-anim: icon-pause-bar-right; --icon-part-2-anim: icon-pause-bar-left; }
 [data-icon="panel-top"] { --icon-animation: none; --icon-part-2-anim: icon-panel-top-divider; }
 [data-icon="panel-right"] { --icon-animation: none; --icon-part-2-anim: icon-panel-right-divider; }
 [data-icon="panel-left"] { --icon-animation: none; --icon-part-2-anim: icon-panel-left-divider; }
 [data-icon="mouse-pointer"] { --icon-animation: none; --icon-part-1-anim: icon-mouse-pointer-ray; }
-[data-icon="home"] { --icon-animation: none; --icon-part-1-anim: icon-home-door; --icon-part-1-origin: 10px 21px; }
+[data-icon="home"] { --icon-animation: none; --icon-part-1-anim: icon-home-door; --icon-part-1-origin: 10px 17px; }
 [data-icon="code"] { --icon-animation: none; --icon-part-1-anim: icon-code-chevron-r; --icon-part-2-anim: icon-code-chevron-l; }
 [data-icon="clock"] { --icon-animation: none; --icon-part-1-anim: icon-clock-hands; --icon-part-1-origin: 12px 12px; }
 [data-icon="circle-dot"] { --icon-animation: none; --icon-part-2-anim: icon-circle-dot-core; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 400ms; }
 [data-icon="chevrons-up-down"] { --icon-animation: none; --icon-part-1-anim: icon-chevrons-up-down-bottom; --icon-part-2-anim: icon-chevrons-up-down-top; }
 [data-icon="check-circle-2"] { --icon-animation: none; --icon-part-2-anim: icon-check-circle-2-tick; --icon-part-2-origin: 12px 13px; --icon-part-2-duration: 400ms; }
-[data-icon="arrow-up"] { --icon-animation: none; --icon-part-1-anim: icon-arrow-up-head; }
-[data-icon="arrow-right"] { --icon-animation: none; --icon-part-2-anim: icon-arrow-right-head; }
-[data-icon="arrow-left"] { --icon-animation: none; --icon-part-1-anim: icon-arrow-left-head; }
-[data-icon="arrow-down"] { --icon-animation: none; --icon-part-2-anim: icon-arrow-down-head; }
+[data-icon="arrow-up"] { --icon-animation: icon-arrow-up; }
+[data-icon="arrow-right"] { --icon-animation: icon-arrow-right; }
+[data-icon="arrow-left"] { --icon-animation: icon-arrow-left; }
+[data-icon="arrow-down"] { --icon-animation: icon-arrow-down; }
 [data-icon="external-link"] { --icon-animation: none; --icon-part-1-anim: icon-external-link-arrow; --icon-part-2-anim: icon-external-link-arrow; }
 [data-icon="download"] { --icon-animation: none; --icon-part-1-anim: icon-download-drop; --icon-part-3-anim: icon-download-drop; }
 [data-icon="hard-drive"] { --icon-animation: none; --icon-part-3-anim: icon-hard-drive-led-a; --icon-part-3-duration: 600ms; --icon-part-4-anim: icon-hard-drive-led-b; --icon-part-4-duration: 600ms; }
@@ -4763,8 +4732,8 @@
 [data-icon="unlink"] { --icon-animation: none; --icon-part-1-anim: icon-unlink-loop-a; --icon-part-2-anim: icon-unlink-loop-b; }
 [data-icon="link-2-off"] { --icon-animation: none; --icon-part-1-anim: icon-link-2-off-loop-a; --icon-part-2-anim: icon-link-2-off-loop-b; }
 [data-icon="scissors"] { --icon-animation: none; --icon-part-1-anim: icon-scissors-handle-a; --icon-part-1-origin: 12px 12px; --icon-part-1-duration: 450ms; --icon-part-2-anim: icon-scissors-handle-a; --icon-part-2-origin: 12px 12px; --icon-part-2-duration: 450ms; --icon-part-4-anim: icon-scissors-handle-b; --icon-part-4-origin: 12px 12px; --icon-part-4-duration: 450ms; --icon-part-5-anim: icon-scissors-handle-b; --icon-part-5-origin: 12px 12px; --icon-part-5-duration: 450ms; }
-[data-icon="box"] { --icon-animation: none; --icon-part-1-anim: icon-box-bounce; --icon-part-2-anim: icon-box-seam; --icon-part-3-anim: icon-box-edge; }
-[data-icon="move"] { --icon-animation: none; --icon-part-2-anim: icon-move-head-bottom; --icon-part-3-anim: icon-move-head-right; --icon-part-5-anim: icon-move-head-left; --icon-part-6-anim: icon-move-head-top; }
+[data-icon="box"] { --icon-animation: icon-box; }
+[data-icon="move"] { --icon-animation: icon-move; }
 [data-icon="sun"] { --icon-animation: none; --icon-part-1-anim: icon-sun-disc; --icon-part-2-anim: icon-sun-ray; --icon-part-3-anim: icon-sun-ray; --icon-part-4-anim: icon-sun-ray; --icon-part-5-anim: icon-sun-ray; --icon-part-6-anim: icon-sun-ray; --icon-part-7-anim: icon-sun-ray; --icon-part-8-anim: icon-sun-ray; --icon-part-9-anim: icon-sun-ray; }
 [data-icon="zoom-in"] { --icon-animation: none; --icon-part-3-anim: icon-zoom-in-glyph; --icon-part-3-origin: 11px 11px; --icon-part-3-duration: 450ms; --icon-part-4-anim: icon-zoom-in-glyph; --icon-part-4-origin: 11px 11px; --icon-part-4-duration: 450ms; }
 [data-icon="zoom-out"] { --icon-animation: none; --icon-part-3-anim: icon-zoom-out-glyph; --icon-part-3-origin: 11px 11px; --icon-part-3-duration: 450ms; }
@@ -4777,13 +4746,13 @@
 [data-icon="trash-2"] { --icon-animation: none; --icon-part-4-anim: icon-trash-2-lid; --icon-part-4-origin: 21px 6px; --icon-part-4-duration: 700ms; --icon-part-5-anim: icon-trash-2-lid; --icon-part-5-origin: 21px 6px; --icon-part-5-duration: 700ms; }
 [data-icon="lock"] { --icon-animation: none; --icon-part-2-anim: icon-lock-shackle; --icon-part-2-origin: 17px 11px; --icon-part-2-duration: 650ms; }
 [data-icon="lock-open"] { --icon-animation: none; --icon-part-2-anim: icon-lock-open-shackle; --icon-part-2-origin: 7px 11px; --icon-part-2-duration: 550ms; }
-[data-icon="plug"] { --icon-animation: none; --icon-part-2-anim: icon-plug-prong; --icon-part-3-anim: icon-plug-prong; }
+[data-icon="plug"] { --icon-animation: none; --icon-part-2-anim: icon-plug-body; --icon-part-3-anim: icon-plug-body; --icon-part-4-anim: icon-plug-body; }
 [data-icon="layers"] { --icon-animation: none; --icon-part-1-anim: icon-layers-top; --icon-part-3-anim: icon-layers-bottom; }
 [data-icon="link"] { --icon-animation: none; --icon-part-1-anim: icon-link-tug-a; --icon-part-1-duration: 450ms; --icon-part-2-anim: icon-link-tug-b; --icon-part-2-duration: 450ms; }
 [data-icon="pipette"] { --icon-animation: none; --icon-part-3-anim: icon-pipette-drop; }
 [data-icon="magnet"] { --icon-animation: none; --icon-part-1-anim: icon-magnet-tick; --icon-part-1-origin: 14px 17px; --icon-part-3-anim: icon-magnet-tick; --icon-part-3-origin: 7px 10px; }
 [data-icon="eraser"] { --icon-animation: none; --icon-part-1-anim: icon-eraser-scrub; --icon-part-2-anim: icon-eraser-scrub; }
-[data-icon="hammer"] { --icon-animation: none; --icon-part-3-anim: icon-hammer-strike; --icon-part-3-origin: 15px 10px; }
+[data-icon="hammer"] { --icon-animation: icon-hammer; transform-origin: 4px 21px; }
 [data-icon="bell"] { --icon-animation: none; --icon-part-1-anim: icon-bell-clapper; --icon-part-1-origin: 12px 19px; --icon-part-1-duration: 650ms; --icon-part-2-anim: icon-bell-ring; --icon-part-2-origin: 50% 12%; --icon-part-2-duration: 650ms; }
 [data-icon="landmark"] { --icon-animation: none; --icon-part-6-anim: icon-landmark-col-a; --icon-part-6-duration: 550ms; --icon-part-1-anim: icon-landmark-col-b; --icon-part-1-duration: 550ms; --icon-part-3-anim: icon-landmark-col-c; --icon-part-3-duration: 550ms; --icon-part-4-anim: icon-landmark-col-d; --icon-part-4-duration: 550ms; }
 
@@ -4792,22 +4761,45 @@
 
 
 
-[data-slot="navbar"] {
-  border-bottom-color: var(--border-normal-color);
-  transition: border-color 120ms ease;
-}
+/* #region 🪟ShellParentHover
+ * Parent-shell edge strokes mirror mode-dock silhouette hover: a dedicated stroke layer
+ * (navbar/footer pseudo-edges, panel/pane `[data-slot="chrome-frame"]`) recolors while the
+ * pointer is inside the parent. Never recolor the parent's own Tailwind `!border-*` — those
+ * utilities win the cascade and made the previous border-*-color :hover rules invisible.
+ */
 
-[data-slot="navbar"]:hover {
-  border-bottom-color: var(--border-emphasized-color) !important;
-}
-
+[data-slot="navbar"],
 [data-slot="footer"] {
-  border-top-color: var(--border-normal-color);
-  transition: border-color 120ms ease;
+  border-width: 0 !important;
+  border-style: none !important;
 }
 
-[data-slot="footer"]:hover {
-  border-top-color: var(--border-emphasized-color) !important;
+[data-slot="navbar"]::after,
+[data-slot="footer"]::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: var(--stroke-hairline);
+  background-color: var(--border-normal-color);
+  pointer-events: none;
+  transition: background-color 120ms ease;
+  z-index: 50;
+}
+
+[data-slot="navbar"]::after {
+  bottom: 0;
+}
+
+[data-slot="footer"]::before {
+  top: 0;
+}
+
+[data-slot="navbar"]:hover::after,
+[data-slot="navbar"]:focus-within::after,
+[data-slot="footer"]:hover::before,
+[data-slot="footer"]:focus-within::before {
+  background-color: var(--border-emphasized-color);
 }
 
 [data-slot="navbar"] :is([data-slot="breadcrumb"], [data-slot="button-group"], [data-slot="toggle-group"], [data-slot="action-group"], [data-slot="app-panel-toggle-group"], [data-slot="breadcrumb-item"], [data-slot="breadcrumb-separator-control"]),
@@ -5361,27 +5353,47 @@
   background-color: color-mix(in srgb, var(--panel) calc(var(--glass-veil-alpha) * 100%), transparent);
 }
 
-/* Panel frame stroke is on [data-slot="panel-chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
-[data-slot="panel"] [data-slot="scroll-area"] {
+/* Shell frame stroke is on [data-slot="chrome-frame"]; inset scroll hosts so scrollbars stay inside. */
+[data-slot="panel"] [data-slot="scroll-area"],
+[data-slot="pane"] [data-slot="scroll-area"] {
   box-sizing: border-box;
   padding: var(--stroke-hairline);
 }
 
-[data-slot="panel-chrome-frame"] {
+[data-slot="chrome-frame"] {
   border-width: var(--stroke-hairline);
   border-style: solid;
   border-color: var(--border-normal-color) !important;
   transition: border-color 120ms ease;
 }
 
-[data-slot="panel"]:hover [data-slot="panel-chrome-frame"] {
+:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"],
+:is([data-slot="panel"], [data-slot="pane"]):focus-within [data-slot="chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
 }
 
 [data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path {
-  stroke: var(--border-emphasized-color);
+  stroke: var(--border-emphasized-color) !important;
   transition: stroke 120ms ease;
 }
+
+[data-slot="introduction-info-box"],
+[data-slot="dialog-box"] {
+  border-width: var(--stroke-hairline);
+  border-style: solid;
+  border-color: var(--border-normal-color) !important;
+  transition: border-color 120ms ease;
+}
+
+/* 🎓 Introduction steps are advanced by clicking Next — focus stays on that button across steps, so
+   :focus-within would permanently emphasize the border after the first click. Pointer hover only. */
+[data-slot="introduction-info-box"]:hover,
+[data-slot="dialog-box"]:hover,
+[data-slot="dialog-box"]:focus-within {
+  border-color: var(--border-emphasized-color) !important;
+}
+
+/* #endregion 🪟ShellParentHover */
 
 /* 🪟 Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
 [data-slot="mode-dock-stack"]

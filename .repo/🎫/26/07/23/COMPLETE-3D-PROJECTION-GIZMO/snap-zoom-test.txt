@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+
+ Test Files  2 passed (2)
+      Tests  124 passed (124)
+   Start at  05:38:12
+   Duration  6.15s (transform 2.48s, setup 0ms, import 10.92s, tests 68ms, environment 844ms)
+

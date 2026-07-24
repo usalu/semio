@@ -1,0 +1,14 @@
+{
+  "title": "Bottom-Up Tree Guide Parent Emphasis",
+  "emoji": "🌳",
+  "status": "closed",
+  "description": "Tree indentation/guide lines do not properly emphasize parents when the tree grows from bottom to top (direction=up). Parent branch stems still extend downward while children render above the header, leaving a gap at the parent junction. Hover/selection path helpers (rowForBranch, markTerminalBranch) only look for the branch as the next sibling of the row, so upward trees never mark parent rows/elbows/stems for path emphasis. Fix stem geometry to extend toward children based on TreeDirection, and resolve owner rows/terminal branches on either side of the content. Cover with vitest for upward stem styles and upward selection/hover path marking.",
+  "summary": "Bottom-up trees now emphasize parents correctly: branch stems extend toward children (up→top, down→bottom) via TreeContext.direction, and hover/selection path helpers resolve owner rows and terminal branches on either sibling side so parent elbows/stems/labels receive path emphasis. WindowMeasuresTree and nested providers pass direction through TreeContext. Renamed extendCurrentLevelToBottom→extendBranchStem. Vitest covers upward stem geometry, upward selection path marking, and related guide/path cases (16 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2298"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪62a63fa17da34309b7d71594d71cd5b9"
+  ]
+}

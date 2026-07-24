@@ -2991,6 +2991,15 @@ pub mod d3 {
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
+    struct Puzzle3dSuggestionMenu {
+        x: f64,
+        y: f64,
+        #[serde(default)]
+        window_id: String,
+    }
+
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[serde(rename_all = "camelCase")]
     struct Puzzle3dRuntime {
         #[serde(default)]
         selection: Puzzle3dSelection,
@@ -3000,9 +3009,9 @@ pub mod d3 {
         hovered_object_id: Option<String>,
         #[serde(default)]
         hovered_vortex_full_id: Option<String>,
-        /// 🎯 Anchor position (client x/y) of the open per-vortex brush-candidate suggestion popup, or `None` when closed.
+        /// 🎯 Open per-vortex brush-candidate suggestion popup (context menu / Alt+right-click), or `None` when closed.
         #[serde(default)]
-        suggestion_menu: Option<[f64; 2]>,
+        suggestion_menu: Option<Puzzle3dSuggestionMenu>,
         #[serde(default = "default_overlap_budget")]
         overlap_budget: f64,
         #[serde(default)]
@@ -3742,7 +3751,7 @@ pub mod d3 {
 
     fn world_interaction_json(envelope: &Puzzle3dScene, session: &Puzzle3dPrecomputeSession) -> String {
         let runtime = &envelope.runtime;
-        let suggestion_menu = runtime.suggestion_menu.map(|[x, y]| {
+        let suggestion_menu = runtime.suggestion_menu.as_ref().map(|menu| {
             let (pending, candidates) = puzzle3d_brush_target_vortex(envelope)
                 .map(|target| {
                     let raw = session.brush_candidates(&target);
@@ -3770,7 +3779,15 @@ pub mod d3 {
                     (pending, candidates)
                 })
                 .unwrap_or((false, Vec::new()));
-            json!({ "open": true, "x": x, "y": y, "pending": pending, "candidates": candidates })
+            json!({
+                "open": true,
+                "x": menu.x,
+                "y": menu.y,
+                "windowId": menu.window_id,
+                "vortexFullId": puzzle3d_brush_target_vortex(envelope),
+                "pending": pending,
+                "candidates": candidates,
+            })
         });
         let fill_build: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
         let fill_build = json!({
@@ -4732,6 +4749,11 @@ pub mod d3 {
         outwards: &'static str,
         inwards: &'static str,
         vortex_direction: &'static str,
+        suggest_objects: &'static str,
+        duplicate: &'static str,
+        select_same_kind: &'static str,
+        zoom_to_selection: &'static str,
+        delete: &'static str,
     }
 
     const PUZZLE3D_LABELS_NATIVE_EN: Puzzle3dLabels = Puzzle3dLabels {
@@ -4764,6 +4786,11 @@ pub mod d3 {
         outwards: "Outwards",
         inwards: "Inwards",
         vortex_direction: "Vortex Direction",
+        suggest_objects: "Suggest objects",
+        duplicate: "Duplicate",
+        select_same_kind: "Select all of same kind",
+        zoom_to_selection: "Zoom to selection",
+        delete: "Delete",
     };
     const PUZZLE3D_LABELS_NATIVE_DE: Puzzle3dLabels = Puzzle3dLabels {
         objects: "Objekte",
@@ -4795,6 +4822,11 @@ pub mod d3 {
         outwards: "Auswärts",
         inwards: "Einwärts",
         vortex_direction: "Vortex-Richtung",
+        suggest_objects: "Objekte vorschlagen",
+        duplicate: "Duplizieren",
+        select_same_kind: "Alle gleicher Art auswählen",
+        zoom_to_selection: "Zur Auswahl zoomen",
+        delete: "Löschen",
     };
     const PUZZLE3D_LABELS_REUSE_EN: Puzzle3dLabels = Puzzle3dLabels {
         objects: "Building components",
@@ -4803,6 +4835,9 @@ pub mod d3 {
         vortex: "Connection point",
         window_main: "Aggregator",
         example_concrete_forest: "Abbau Aufbau",
+        vortex_show: "Show connection points",
+        vortex_direction: "Connection point direction",
+        suggest_objects: "Suggest building components",
         ..PUZZLE3D_LABELS_NATIVE_EN
     };
     const PUZZLE3D_LABELS_REUSE_DE: Puzzle3dLabels = Puzzle3dLabels {
@@ -4812,6 +4847,9 @@ pub mod d3 {
         vortex: "Verbindungspunkt",
         window_main: "Aggregator",
         example_concrete_forest: "Abbau Aufbau",
+        vortex_show: "Verbindungspunkte anzeigen",
+        vortex_direction: "Richtung der Verbindungspunkte",
+        suggest_objects: "Baukomponenten vorschlagen",
         ..PUZZLE3D_LABELS_NATIVE_DE
     };
 
@@ -5373,33 +5411,33 @@ pub mod d3 {
         }
     }
 
-    fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene) -> Option<String> {
+    fn puzzle3d_context_menu_json(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels) -> Option<String> {
         let selection = &envelope.runtime.selection;
         if !selection.object_ids.is_empty() {
             let all_hidden = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.hidden);
             let all_locked = envelope.fixture.objects.iter().filter(|object| selection.object_ids.contains(&object.id)).all(|object| object.locked);
             let items = vec![
-                json!({ "id": "duplicate", "label": "Duplicate", "icon": "copy", "action": "duplicateSelection" }),
-                json!({ "id": "select-same-kind", "label": "Select all of same kind", "icon": "layers", "action": "selectSameKindSelection" }),
+                json!({ "id": "duplicate", "label": labels.duplicate, "icon": "copy", "action": "duplicateSelection" }),
+                json!({ "id": "select-same-kind", "label": labels.select_same_kind, "icon": "layers", "action": "selectSameKindSelection" }),
                 json!({ "id": "sep-flags", "separator": true }),
                 json!({
                     "id": "hide-show",
-                    "label": if all_hidden { "Show" } else { "Hide" },
+                    "label": if all_hidden { labels.show } else { labels.hide },
                     "icon": if all_hidden { "eye" } else { "eye-off" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "hidden", "value": !all_hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
-                    "label": if all_locked { "Unlock" } else { "Lock" },
+                    "label": if all_locked { labels.unlock } else { labels.lock },
                     "icon": if all_locked { "lock-open" } else { "lock" },
                     "action": "setSelectionFlag",
                     "args": { "flag": "locked", "value": !all_locked },
                 }),
                 json!({ "id": "sep-zoom", "separator": true }),
-                json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }),
+                json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
                 json!({ "id": "sep-delete", "separator": true }),
-                json!({ "id": "delete", "label": "Delete", "icon": "trash", "action": "deleteSelection", "destructive": true }),
+                json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }),
             ];
             return serde_json::to_string(&items).ok();
         }
@@ -5408,22 +5446,22 @@ pub mod d3 {
             if let [only] = selection.vortex_ids.as_slice() {
                 items.push(json!({
                     "id": "suggest",
-                    "label": "Suggest objects",
+                    "label": labels.suggest_objects,
                     "icon": "sparkles",
                     "action": "openVortexSuggestions",
                     "args": { "fullId": only },
                 }));
                 items.push(json!({ "id": "sep-suggest", "separator": true }));
             }
-            items.push(json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }));
+            items.push(json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }));
             items.push(json!({ "id": "sep-delete", "separator": true }));
-            items.push(json!({ "id": "delete", "label": "Delete", "icon": "trash", "action": "deleteSelection", "destructive": true }));
+            items.push(json!({ "id": "delete", "label": labels.delete, "icon": "trash", "action": "deleteSelection", "destructive": true }));
             return serde_json::to_string(&items).ok();
         }
         if let Some(id) = selection.attraction_ids.first() {
             let items = vec![json!({
                 "id": "delete",
-                "label": "Delete",
+                "label": labels.delete,
                 "icon": "trash",
                 "action": "deleteAttraction",
                 "args": { "id": id },
@@ -5438,14 +5476,14 @@ pub mod d3 {
             let items = vec![
                 json!({
                     "id": "hide-show",
-                    "label": if hidden { "Show" } else { "Hide" },
+                    "label": if hidden { labels.show } else { labels.hide },
                     "icon": if hidden { "eye" } else { "eye-off" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "hidden", "value": !hidden },
                 }),
                 json!({
                     "id": "lock-unlock",
-                    "label": if locked { "Unlock" } else { "Lock" },
+                    "label": if locked { labels.unlock } else { labels.lock },
                     "icon": if locked { "lock-open" } else { "lock" },
                     "action": "setTargetVolumeFlag",
                     "args": { "id": id, "flag": "locked", "value": !locked },
@@ -5453,7 +5491,7 @@ pub mod d3 {
                 json!({ "id": "sep-delete", "separator": true }),
                 json!({
                     "id": "delete",
-                    "label": "Delete",
+                    "label": labels.delete,
                     "icon": "trash",
                     "action": "deleteTargetVolume",
                     "args": { "id": id },
@@ -5464,11 +5502,11 @@ pub mod d3 {
         }
         if let Some(_id) = selection.reference_ids.first() {
             let items = vec![
-                json!({ "id": "zoom", "label": "Zoom to selection", "icon": "crosshair", "action": "zoomToSelection" }),
+                json!({ "id": "zoom", "label": labels.zoom_to_selection, "icon": "crosshair", "action": "zoomToSelection" }),
                 json!({ "id": "sep-delete", "separator": true }),
                 json!({
                     "id": "delete",
-                    "label": "Delete",
+                    "label": labels.delete,
                     "icon": "trash",
                     "action": "deleteSelection",
                     "destructive": true,
@@ -6774,7 +6812,18 @@ pub mod d3 {
                         envelope.runtime.brush_candidate_index = 0;
                         let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                         let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                        envelope.runtime.suggestion_menu = Some([x, y]);
+                        let window_id = args
+                            .and_then(|value| value.get("windowId"))
+                            .and_then(|value| value.as_str())
+                            .filter(|id| !id.is_empty())
+                            .unwrap_or(wid.as_str())
+                            .to_string();
+                        envelope.runtime.suggestion_menu = Some(Puzzle3dSuggestionMenu { x, y, window_id });
+                        // 🧊 Drop any stale empty/pending cache for this vortex, then refresh so the popup
+                        // does not open on a previous "No placement" result while meshes/candidates are ready.
+                        self.precompute.invalidate_brush_target(full_id);
+                        sync_precompute_session(&mut self.precompute, &envelope);
+                        self.precompute.refresh_brush_candidates(full_id);
                         drive_precompute(&mut self.precompute, &envelope);
                     }
                 }
@@ -6789,7 +6838,15 @@ pub mod d3 {
                 "acceptSuggestion" => {
                     drive_precompute(&mut self.precompute, &envelope);
                     let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(envelope.runtime.brush_candidate_index as u64) as usize;
-                    if let Some(vortex_id) = puzzle3d_brush_target_vortex(&envelope) {
+                    let vortex_id = args
+                        .and_then(|value| value.get("fullId"))
+                        .and_then(|value| value.as_str())
+                        .map(str::to_string)
+                        .or_else(|| puzzle3d_brush_target_vortex(&envelope));
+                    if let Some(vortex_id) = vortex_id {
+                        envelope.runtime.selection.vortex_ids = vec![vortex_id.clone()];
+                        envelope.runtime.selection.object_ids.clear();
+                        self.precompute.refresh_brush_candidates(&vortex_id);
                         if let Some(preview_json) = self.precompute.brush_preview_json(&vortex_id, index) {
                             if let Ok(fixture_json) = self.precompute.apply_brush_placement_rust(&preview_json) {
                                 if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
@@ -6889,7 +6946,7 @@ pub mod d3 {
                             None,
                             Some(world3d_lod_json(&envelope.runtime)),
                             Some(world3d_chunking_json(envelope.runtime.chunk_size, 8000.0)),
-                            puzzle3d_context_menu_json(&envelope),
+                            puzzle3d_context_menu_json(&envelope, labels),
                             Some(world3d_environment_json(&envelope.runtime.sun)),
                         ),
                     )
@@ -7667,6 +7724,49 @@ pub mod d3 {
             assert_eq!(menu.get("open").and_then(Value::as_bool), Some(true));
             assert_eq!(menu.get("x").and_then(Value::as_f64), Some(12.0));
             assert_eq!(menu.get("y").and_then(Value::as_f64), Some(34.0));
+            assert_eq!(menu.get("vortexFullId").and_then(Value::as_str), Some(vortex.as_str()));
+            assert!(menu.get("windowId").and_then(Value::as_str).is_some_and(|id| !id.is_empty()), "suggestion menu is scoped to the opening window: {menu}");
+        }
+
+        #[test]
+        fn open_vortex_suggestions_records_explicit_window_id() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortex = first_vortex_full_id(&app);
+            let mut view = ViewState::default();
+            view.window_id = Some("puzzle3d-main-perspective".into());
+            app.handle_action(
+                "openVortexSuggestions",
+                Some(&json!({ "fullId": vortex, "x": 8.0, "y": 16.0, "windowId": "puzzle3d-main-top" })),
+                &view,
+                &testkit::meta("local"),
+            )
+            .expect("openVortexSuggestions");
+            let interaction = interaction_of(&render_composite(&mut app));
+            let menu = interaction.get("suggestionMenu").expect("suggestionMenu present");
+            assert_eq!(menu.get("windowId").and_then(Value::as_str), Some("puzzle3d-main-top"));
+            assert_eq!(menu.get("vortexFullId").and_then(Value::as_str), Some(vortex.as_str()));
+        }
+
+        #[test]
+        fn accept_suggestion_with_full_id_places_even_if_selection_was_cleared() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
+            let before_count = app.projection().expect("projection").get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
+            // 🧹 Simulate the split-pane outside-dismiss race clearing vortex selection before accept.
+            app.handle_action("setSelection", Some(&json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "targetVolumeIds": [], "referenceIds": [] } })), &ViewState::default(), &testkit::meta("local")).expect("setSelection");
+            let result = app
+                .handle_action("acceptSuggestion", Some(&json!({ "index": 0, "fullId": vortex })), &ViewState::default(), &testkit::meta("local"))
+                .expect("acceptSuggestion");
+            assert!(
+                result.requested_effects.iter().all(|effect| !matches!(effect, HostEffect::SetActiveUtility { .. } | HostEffect::SetActiveTool { .. })),
+                "accept must not switch utility/tool: {:?}",
+                result.requested_effects,
+            );
+            let after_count = app.projection().expect("projection").get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
+            assert!(after_count > before_count, "accept with fullId must place even after selection clear ({before_count} -> {after_count})");
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
         }
 
         #[test]

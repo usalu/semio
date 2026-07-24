@@ -1,0 +1,23 @@
+[
+  {
+    "alignment": "bottom-right",
+    "margin": [
+      32,
+      32
+    ]
+  },
+  {
+    "alignment": "bottom-right",
+    "margin": [
+      32,
+      32
+    ]
+  },
+  {
+    "alignment": "bottom-right",
+    "margin": [
+      22,
+      22
+    ]
+  }
+]
