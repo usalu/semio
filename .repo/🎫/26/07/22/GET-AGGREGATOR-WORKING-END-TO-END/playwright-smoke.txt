@@ -1,0 +1,8 @@
+{
+  "intro": 1,
+  "title": "Willkommen bei Entwerfen mit Bestand",
+  "active": "true",
+  "windows": 2,
+  "canvases": 2,
+  "errors": []
+}

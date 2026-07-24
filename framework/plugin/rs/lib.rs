@@ -1033,6 +1033,8 @@ impl AppBuilder {
                         step.id,
                         tool_ref.as_str()
                     ),
+                    IntroductionAdvance::Panel(panel_tab_id) => validate_element_id(panel_tab_id, "advance.panel"),
+                    IntroductionAdvance::Expand(tree_id) => validate_element_id(tree_id, "advance.expand"),
                 }
             }
         }

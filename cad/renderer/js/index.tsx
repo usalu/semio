@@ -83,6 +83,7 @@ import {
   computeWorldProjectionPose,
   orbitCameraDistance,
   orbitCameraViewGumballPlane,
+  worldProjectionFamily,
   type OrbitCameraProjection,
   type WorldProjectionSpec,
   WorldReferenceLayer,
@@ -3711,6 +3712,8 @@ export interface InteractionSpatialViewProps {
   readonly cameraViewSeedKey?: string | number;
   readonly orbitProjection?: OrbitCameraProjection;
   readonly projectionSpec?: WorldProjectionSpec;
+  readonly externalPendingProjectionSpec?: WorldProjectionSpec | null;
+  readonly onExternalPendingProjectionSpecClear?: () => void;
   readonly showOrbitViewGizmo?: boolean;
   readonly onOrbitProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onProjectionSpecChange?: (spec: WorldProjectionSpec) => void;
@@ -3786,6 +3789,8 @@ export function InteractionSpatialView({
   cameraViewSeedKey,
   orbitProjection,
   projectionSpec,
+  externalPendingProjectionSpec,
+  onExternalPendingProjectionSpecClear,
   showOrbitViewGizmo = true,
   onOrbitProjectionChange,
   onProjectionSpecChange,
@@ -3879,7 +3884,14 @@ export function InteractionSpatialView({
           )}
           {cameraView !== undefined && cameraViewSeedKey !== undefined ? <WorldOrbitCameraViewApplier view={cameraView} seedKey={cameraViewSeedKey} projectionOverride={orbitProjection} /> : null}
           <WorldOrbitGated controlsKey={cameraViewSeedKey ?? "default"} onCameraNavigate={onCameraNavigate} projection={orbitProjection} />
-          {showOrbitViewGizmo ? <WorldOrbitViewControls projectionSpec={projectionSpec} onCameraChange={onOrbitCameraChange} /> : null}
+          {showOrbitViewGizmo ? (
+            <WorldOrbitViewControls
+              projectionSpec={projectionSpec}
+              externalPendingSpec={externalPendingProjectionSpec}
+              onExternalPendingSpecClear={onExternalPendingProjectionSpecClear}
+              onCameraChange={onOrbitCameraChange}
+            />
+          ) : null}
           <WorldLayer order={0} name="cad.grid">
             <WorldLodGridHelper gridDatum={[0, 0, 0]} />
           </WorldLayer>
@@ -4838,6 +4850,7 @@ export function InteractionRepl({
   const [projectionSpec, setProjectionSpec] = reactHostPort.useState<WorldProjectionSpec>(
     () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } } : { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }),
   );
+  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
   reactHostPort.useEffect(() => {
     if (spatialViewOverrides?.projectionSpec) {
       setProjectionSpec(spatialViewOverrides.projectionSpec);
@@ -4846,9 +4859,10 @@ export function InteractionRepl({
   const handleProjectionSpecChange = reactHostPort.useCallback(
     (spec: WorldProjectionSpec) => {
       setProjectionSpec(spec);
+      setExternalPendingProjectionSpec(spec);
       spatialViewOverrides?.onProjectionSpecChange?.(spec);
-      const family = spec.kind === "orthographic" || spec.kind === "axonometric" || spec.kind === "oblique" ? "orthographic" : "perspective";
-      spatialViewOverrides?.onOrbitProjectionChange?.(family);
+      const family = worldProjectionFamily(spec);
+      spatialViewOverrides?.onOrbitProjectionChange?.(family === "parallel" ? "orthographic" : "perspective");
     },
     [spatialViewOverrides],
   );
@@ -6031,6 +6045,8 @@ export function InteractionRepl({
             onReferenceRelocate={onReferenceRelocate}
             {...spatialViewOverrides}
             projectionSpec={projectionSpec}
+            externalPendingProjectionSpec={externalPendingProjectionSpec}
+            onExternalPendingProjectionSpecClear={() => setExternalPendingProjectionSpec(null)}
             onProjectionSpecChange={handleProjectionSpecChange}
           />
         </InteractionCanvas>

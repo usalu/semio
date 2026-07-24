@@ -1,7 +1,7 @@
 {
   "title": "Fix Puzzle 3D Fill Options Lag",
   "emoji": "🐢",
-  "status": "closed",
+  "status": "open",
   "description": "Make puzzle 3D fill amount and distribution sliders respond in milliseconds by eliminating Full UI refreshes, skipping redundant attraction work on count changes, and stopping weight edits from wiping the fill precompute queue.",
   "summary": "Fill amount and distribution sliders now respond in milliseconds: setFillCount and weight actions emit narrow UiDirtyScope instead of Full refresh; distribution weight edits soft-replan the fill tail via update_kind_weights without rebuild_queue; fill count apply skips redundant attraction resolve; Slider holds draft values until the controlled prop catches up. puzzle_3d timing tests confirm sub-millisecond apply/weight paths.",
   "github": {
@@ -10,10 +10,11 @@
   "goal": "🎯r2602",
   "plan": {
     "client": "cursor",
-    "id": "bf8837ed",
-    "local": "fix_fill_slider_lag_bf8837ed.plan.md"
+    "id": "a4aac711",
+    "source": "/Users/ueli/Documents/semio/.cursor/plans/fill_amount_viewport_live_a4aac711.plan.md"
   },
   "sessions": [
-    "⚪bea3ac7bd5e84af7aae628c20815039b"
+    "⚪bea3ac7bd5e84af7aae628c20815039b",
+    "⚪c8b75ad6a37b408599f493ef55b8dcc2"
   ]
 }

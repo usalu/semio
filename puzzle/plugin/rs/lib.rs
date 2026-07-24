@@ -4060,6 +4060,24 @@ pub mod d3 {
         Some(next)
     }
 
+    /// 🪣 Overlays the precomputed fill-plan prefix onto a projection fixture for live viewport rendering.
+    fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, fill_count: u32) -> Puzzle3dFixture {
+        if let Ok(display_json) = precompute.compose_fill_display_rust(fill_count) {
+            if let Ok(parsed) = serde_json::from_str::<Value>(&display_json) {
+                if let Ok(objects) = serde_json::from_value(parsed.get("objects").cloned().unwrap_or(Value::Null)) {
+                    fixture.objects = objects;
+                }
+                if let Ok(attractions) = serde_json::from_value(parsed.get("attractions").cloned().unwrap_or(Value::Null)) {
+                    fixture.attractions = attractions;
+                }
+                if let Ok(target_volumes) = serde_json::from_value(parsed.get("targetVolumes").cloned().unwrap_or(Value::Null)) {
+                    fixture.target_volumes = target_volumes;
+                }
+            }
+        }
+        fixture
+    }
+
     fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dScene, count: u32) -> Puzzle3dScene {
         envelope.runtime.fill_count = count;
         if count > 0 {
@@ -5313,7 +5331,7 @@ pub mod d3 {
         UiNode::Tree(UiTreeNode {
             presence: UiPresence::default(),
             sections: vec![
-                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(true), presence: UiPresence::default(), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
+                UiTreeSectionNode { id: "puzzle3d-play-kinds.objects".into(), label: Some(labels.objects.into()), default_open: Some(false), presence: UiPresence::default(), items: object_entries.iter().map(puzzle3d_object_kind_item).collect() },
                 UiTreeSectionNode { id: "puzzle3d-play-kinds.vortices".into(), label: Some(labels.vortices.into()), default_open: Some(false), presence: UiPresence::default(), items: vortex_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "circle-dot")).collect() },
                 UiTreeSectionNode { id: "puzzle3d-play-kinds.cables".into(), label: Some(labels.cables.into()), default_open: Some(false), presence: UiPresence::default(), items: cable_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "plug")).collect() },
                 UiTreeSectionNode { id: "puzzle3d-play-kinds.attractions".into(), label: Some(labels.attractions.into()), default_open: Some(false), presence: UiPresence::default(), items: attraction_entries.iter().map(|entry| puzzle3d_catalog_kind_item(entry, "link")).collect() },
@@ -5922,22 +5940,26 @@ pub mod d3 {
         object_weight * vortex_weight
     }
 
-    /// 🎲 Vortex-kind sliders under an object row — value is global P(vortex) on the shared simplex (sum = 1).
-    /// Disabled when the parent object weight is 0 (joint contribution is always 0). Sampling still uses
-    /// [`puzzle3d_joint_vortex_weight`].
+    /// 🎲 Vortex-kind sliders under an object row — displayed value is the **final** joint percentage
+    /// `P(object) × P(vortex)`. Editing converts back to relative `P(vortex)` on the global vortex simplex.
+    /// Disabled when the parent object weight is 0. Step tracks ~1% of the object weight so the control
+    /// stays smooth across the shrinking `[0, P(object)]` range.
     fn puzzle3d_joint_vortex_measures(object_kind_id: &str, object_weight: f64, vortex_kind_ids: &[String], vortex_weights: &HashMap<String, f64>) -> Vec<WindowMeasure> {
         let object_kind_zero = object_weight <= f64::EPSILON;
+        let joint_max = if object_kind_zero { 1.0 } else { object_weight };
+        let joint_step = if object_kind_zero { 0.01 } else { (object_weight * 0.01).max(0.0001) };
         vortex_kind_ids
             .iter()
             .map(|vortex_kind_id| {
                 let vortex_weight = vortex_weights.get(vortex_kind_id).copied().unwrap_or_else(|| if vortex_kind_ids.is_empty() { 0.0 } else { 1.0 / vortex_kind_ids.len() as f64 });
+                let joint = puzzle3d_joint_vortex_weight(object_weight, vortex_weight);
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-joint-vortex-{object_kind_id}-{vortex_kind_id}"),
                     label: Some(vortex_kind_id.clone()),
-                    value: vortex_weight,
+                    value: joint,
                     min: 0.0,
-                    max: 1.0,
-                    step: Some(0.01),
+                    max: joint_max,
+                    step: Some(joint_step),
                     ready: None,
                     loading: None,
                     waiting: None,
@@ -5949,7 +5971,8 @@ pub mod d3 {
     }
 
     /// 🎲 Nested object/vortex distribution — one group per object kind (header slider = P(object)),
-    /// vortex children = P(vortex) on the global vortex simplex. Shared by fill tool and brush utility options.
+    /// vortex children show joint P(object)×P(vortex) so they scale when the object header moves.
+    /// Shared by fill tool and brush utility options.
     fn puzzle3d_distribution_children(envelope: &Puzzle3dScene, _labels: &Puzzle3dLabels, default_open: Option<bool>) -> Vec<WindowMeasure> {
         let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
         object_ids
@@ -6984,8 +7007,9 @@ pub mod d3 {
                     } else if let Some(object_kind_id) = args.and_then(|v| v.get("objectKindId")).and_then(|v| v.as_str()) {
                         let object_weight = envelope.runtime.object_kind_weights.get(object_kind_id).copied().unwrap_or(0.0);
                         if object_weight > f64::EPSILON {
-                            // 🎚 Nested vortex sliders expose P(vortex) on the global simplex (sum = 1).
-                            envelope.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &vortex_ids, kind_id, value);
+                            // 🎚 Nested slider value is joint P(object)×P(vortex); convert to relative P(vortex).
+                            let relative = (value / object_weight).clamp(0.0, 1.0);
+                            envelope.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &vortex_ids, kind_id, relative);
                         }
                         // 🚫 Parent object weight is 0 — joint contribution is always 0; ignore vortex edits.
                     } else {
@@ -7138,7 +7162,7 @@ pub mod d3 {
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let mut runtime_for_window = self.runtime.clone();
             runtime_for_window.load_window(wid);
-            let fixture = self.render_fixture(doc.projection);
+            let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(doc.projection), &self.precompute, runtime_for_window.fill_count);
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
             let labels = puzzle3d_labels(view_state);
             match body_key {
@@ -8033,6 +8057,14 @@ pub mod d3 {
             serde_json::to_value(&node).unwrap()
         }
 
+        fn instance_count(node: &Value) -> usize {
+            node.pointer("/world3d/instancesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .map(|instances| instances.len())
+                .unwrap_or(0)
+        }
+
         fn interaction_of(node: &Value) -> Value {
             node.pointer("/world3d/interactionJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or(Value::Null)
         }
@@ -8466,6 +8498,8 @@ pub mod d3 {
             assert!(available_count > 0, "the fill slider ready extent must expose collision-free compatible placements");
             app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("setFillCount");
             assert_eq!(object_count(&app), object_count_before + available_count, "the fill slider must materialize exactly its available placement count");
+            let rendered_after_fill = render_composite(&app);
+            assert_eq!(instance_count(&rendered_after_fill), object_count_before + available_count, "the viewport must show every materialized fill object immediately");
             let initial_fill_ids: HashSet<String> = app
                 .projection()
                 .expect("projection")
@@ -8484,6 +8518,7 @@ pub mod d3 {
             let reduced = (available_count / 2).max(0);
             app.handle_action("setFillCount", Some(&json!({ "value": reduced })), &fill_view, &testkit::meta("local")).expect("reduce fill count after sync");
             assert_eq!(object_count(&app), object_count_before + reduced as usize, "sliding down after an incidental sync must still remove fill objects");
+            assert_eq!(instance_count(&render_composite(&app)), object_count_before + reduced as usize, "the viewport must hide removed fill objects immediately");
             app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("request old count before replanning completes");
             assert_eq!(object_count(&app), object_count_before + reduced as usize, "an above-ready target must remain non-blocking while its new tail is planned");
             let target_measures = app.tool_measures(&fill_view);
@@ -8515,6 +8550,35 @@ pub mod d3 {
             assert_ne!(replanned_fill_ids, initial_fill_ids, "up-down-up must replace the discarded tail with a newly planned result");
             app.handle_action("setFillCount", Some(&json!({ "value": 0 })), &fill_view, &testkit::meta("local")).expect("clear fill count");
             assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
+        }
+
+        #[test]
+        fn fill_count_renders_planned_prefix_before_document_materializes() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let object_count_before = object_count(&app);
+            let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill tool");
+            for _ in 0..64 {
+                app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick");
+                let ready = app
+                    .tool_measures(&fill_view)
+                    .get("fill")
+                    .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
+                    .unwrap_or(0.0);
+                if ready >= 3.0 {
+                    break;
+                }
+            }
+            let ready = app
+                .tool_measures(&fill_view)
+                .get("fill")
+                .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
+                .unwrap_or(0.0) as u32;
+            assert!(ready >= 3, "fill planning must expose at least three ready placements");
+            assert_eq!(object_count(&app), object_count_before, "background planning must not mutate the document before setFillCount");
+            assert_eq!(instance_count(&render_composite(&app)), object_count_before, "idle viewport stays at the base object count before the slider applies");
+            app.handle_action("setFillCount", Some(&json!({ "value": ready })), &fill_view, &testkit::meta("local")).expect("setFillCount");
+            assert_eq!(instance_count(&render_composite(&app)), object_count_before + ready as usize, "viewport must show the precomputed fill prefix immediately");
         }
 
         #[test]
@@ -8619,7 +8683,7 @@ pub mod d3 {
         }
 
         #[test]
-        fn puzzle3d_vortex_measure_exposes_relative_weight_not_joint() {
+        fn puzzle3d_vortex_measure_exposes_joint_weight_scaled_by_object() {
             let object_ids = vec!["Object".to_string(), "Placed".to_string()];
             let vortex_ids = vec!["c-b".to_string(), "b-s".to_string()];
             let object_weights = puzzle3d_uniform_kind_weights(&object_ids);
@@ -8628,16 +8692,24 @@ pub mod d3 {
             let measures = puzzle3d_joint_vortex_measures("Object", object_weight, &vortex_ids, &vortex_weights);
             match &measures[0] {
                 WindowMeasure::Slider { value, max, step, disabled, .. } => {
-                    assert!((*value - 0.75).abs() < 1e-9, "slider must show P(vortex), got {value}");
-                    assert!((*max - 1.0).abs() < 1e-9, "relative vortex range is always 0..=1");
-                    assert_eq!(*step, Some(0.01));
+                    let expected_joint = puzzle3d_joint_vortex_weight(object_weight, 0.75);
+                    assert!((*value - expected_joint).abs() < 1e-9, "slider must show P(object)×P(vortex), got {value}");
+                    assert!((*max - object_weight).abs() < 1e-9, "joint range max is P(object)");
+                    assert_eq!(*step, Some(object_weight * 0.01), "step tracks 1% of P(object)");
                     assert_eq!(*disabled, None);
                 }
                 other => panic!("expected vortex slider, got {other:?}"),
             }
-            let sum: f64 = vortex_ids.iter().map(|id| vortex_weights.get(id).copied().unwrap_or(0.0)).sum();
-            assert!((sum - 1.0).abs() < 1e-9);
-            assert!((puzzle3d_joint_vortex_weight(object_weight, 0.75) - object_weight * 0.75).abs() < 1e-9);
+            let raised = puzzle3d_normalize_kind_weight_group(&object_weights, &object_ids, "Object", 0.8);
+            let raised_weight = *raised.get("Object").unwrap();
+            let raised_measures = puzzle3d_joint_vortex_measures("Object", raised_weight, &vortex_ids, &vortex_weights);
+            match (&measures[0], &raised_measures[0]) {
+                (WindowMeasure::Slider { value: before, .. }, WindowMeasure::Slider { value: after, .. }) => {
+                    assert!(*after > *before, "raising P(object) must raise joint vortex percentages");
+                    assert!((*after - raised_weight * 0.75).abs() < 1e-9);
+                }
+                _ => panic!("expected vortex sliders"),
+            }
         }
 
         #[test]
@@ -8688,8 +8760,8 @@ pub mod d3 {
                     assert!(*value <= f64::EPSILON, "object-kind header must read 0%");
                     assert!(!children.is_empty(), "object kind must still list vortex sliders");
                     assert!(
-                        children.iter().all(|child| matches!(child, WindowMeasure::Slider { disabled: Some(true), .. })),
-                        "every vortex slider under a 0% object kind must be disabled"
+                        children.iter().all(|child| matches!(child, WindowMeasure::Slider { disabled: Some(true), value, .. } if *value <= f64::EPSILON)),
+                        "every joint vortex slider under a 0% object kind must be disabled at 0%"
                     );
                 }
                 other => panic!("expected object-kind group, got {other:?}"),

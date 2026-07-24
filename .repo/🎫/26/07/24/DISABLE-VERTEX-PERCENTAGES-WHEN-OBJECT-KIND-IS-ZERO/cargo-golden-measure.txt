@@ -1,0 +1,9 @@
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Finished `test` profile [unoptimized] target(s) in 1m 25s
+     Running unittests lib.rs (target/debug/deps/ui_wgpu-05d4442bafa904bd)
+
+running 1 test
+test component::layout::layout_wire_format_tests::window_measure_serializes_to_golden_json ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 20 filtered out; finished in 0.00s
+

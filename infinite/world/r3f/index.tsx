@@ -1158,6 +1158,12 @@ export function worldCameraIsOrthographic(camera: Camera): boolean {
   return (camera as Camera & { readonly isOrthographicCamera?: boolean }).isOrthographicCamera === true;
 }
 
+/** @emoji 🔎 Duck-typed live perspective FOV — `undefined` for orthographic cameras, same duplicate-`three` constraint as {@link worldCameraZoom}. */
+export function worldCameraFov(camera: Camera): number | undefined {
+  const perspective = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly fov?: number };
+  return perspective.isPerspectiveCamera && typeof perspective.fov === "number" ? perspective.fov : undefined;
+}
+
 /** @emoji 🔎 Zoom carried through a projection gizmo snap — preserves live parallel zoom; maps perspective's unit zoom onto the orthographic default. */
 export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, currentZoom: number, currentIsOrthographic: boolean): number {
   const family = worldProjectionFamily(pendingSpec);
@@ -1165,14 +1171,6 @@ export function worldProjectionSnapZoom(pendingSpec: WorldProjectionSpec, curren
     return currentIsOrthographic ? currentZoom : orbitCameraZoomForProjection("orthographic", currentZoom);
   }
   return orbitCameraZoomForProjection("perspective", currentZoom);
-}
-
-function writeWorldCameraZoom(camera: Camera, zoom: number): void {
-  const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom: number; updateProjectionMatrix: () => void };
-  if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
-    zoomable.zoom = zoom;
-    zoomable.updateProjectionMatrix();
-  }
 }
 
 /** @emoji 📷 Computes a Z-up orbit camera state for a named view around `target`. */
@@ -1253,9 +1251,24 @@ export function applyOrbitProjectionToCameraState(state: WorldCameraState, proje
   return { ...state, projection, zoom: orbitCameraZoomForProjection(projection, state.zoom) };
 }
 
+/** @emoji 🎞️ Live projection-matrix morph driven by {@link WorldProjectionSnapDriver} — read by {@link WorldProjectionMatrixDriver} and
+ * {@link WorldCurvilinearPass} so their per-frame effects ramp with the same tween instead of popping on remount. */
+export interface WorldProjectionMorphState {
+  readonly fromSpec: WorldProjectionSpec | undefined;
+  readonly toSpec: WorldProjectionSpec;
+  readonly fromMatrix: Matrix4;
+  readonly fromFov: number;
+  readonly toFov: number;
+  eased: number;
+  holding: boolean;
+}
+
+const WORLD_PROJECTION_MORPH_FALLBACK_REF: MutableRefObject<WorldProjectionMorphState | null> = { current: null };
+
 export interface WorldOrbitViewSnapGateContextValue {
   readonly snapGate: boolean;
   readonly setSnapGate: (active: boolean) => void;
+  readonly morphRef: MutableRefObject<WorldProjectionMorphState | null>;
 }
 
 const WorldOrbitViewSnapGateContext = reactHostPort.createContext<WorldOrbitViewSnapGateContextValue | null>(null);
@@ -1263,13 +1276,14 @@ const WorldOrbitViewSnapGateContext = reactHostPort.createContext<WorldOrbitView
 /** @emoji 🧭 Enables {@link useWorldOrbitViewSnapGate} for orbit controls during gizmo view snaps. */
 export function WorldOrbitViewSnapGateProvider(props: { readonly children?: ReactNode }): ReactElement {
   const [snapGate, setSnapGate] = reactHostPort.useState(false);
-  const value = reactHostPort.useMemo(() => ({ snapGate, setSnapGate }), [snapGate]);
+  const morphRef = reactHostPort.useRef<WorldProjectionMorphState | null>(null);
+  const value = reactHostPort.useMemo(() => ({ snapGate, setSnapGate, morphRef }), [snapGate, morphRef]);
   return <WorldOrbitViewSnapGateContext.Provider value={value}>{props.children}</WorldOrbitViewSnapGateContext.Provider>;
 }
 
 /** @emoji 🧭 Reads the active gizmo view-snap gate for {@link WorldOrbitGated}. */
 export function useWorldOrbitViewSnapGate(): WorldOrbitViewSnapGateContextValue {
-  return reactHostPort.useContext(WorldOrbitViewSnapGateContext) ?? { snapGate: false, setSnapGate: () => {} };
+  return reactHostPort.useContext(WorldOrbitViewSnapGateContext) ?? { snapGate: false, setSnapGate: () => {}, morphRef: WORLD_PROJECTION_MORPH_FALLBACK_REF };
 }
 
 export interface WorldOrbitViewGizmoProps {
@@ -1281,6 +1295,66 @@ export interface WorldOrbitViewGizmoProps {
 
 function resolveWorldGizmoNeutralColor(): string {
   return resolveColorHex(semanticVar("muted-foreground"), "gray");
+}
+
+type ProjectionGizmoVisualState = "idle" | "hover" | "dimmed";
+
+interface ProjectionGizmoVisualPalette {
+  readonly labelColor: string;
+  readonly neutralHover: string;
+  readonly brighten: string;
+  readonly idleOpacity: number;
+  readonly hoverOpacity: number;
+  readonly dimmedOpacity: number;
+}
+
+function resolveProjectionGizmoVisualPalette(): ProjectionGizmoVisualPalette {
+  return {
+    labelColor: resolveColorHex(tokenVar("light"), "light"),
+    neutralHover: resolveColorHex(themeColorVar("emphasized"), "dark"),
+    brighten: resolveColorHex(tokenVar("light"), "light"),
+    idleOpacity: 0.88,
+    hoverOpacity: 1,
+    dimmedOpacity: 0.4,
+  };
+}
+
+function projectionGizmoHitsEqual(a: ProjectionGizmoHit, b: ProjectionGizmoHit): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function projectionGizmoHitVisualState(hit: ProjectionGizmoHit, hovered: ProjectionGizmoHit | null): ProjectionGizmoVisualState {
+  if (!hovered) {
+    return "idle";
+  }
+  return projectionGizmoHitsEqual(hit, hovered) ? "hover" : "dimmed";
+}
+
+function brightenProjectionGizmoColor(baseColor: string, accentColor: string, amount: number): string {
+  const base = new Color(baseColor);
+  const accent = new Color(accentColor);
+  base.lerp(accent, amount);
+  return `#${base.getHexString()}`;
+}
+
+function projectionGizmoHeadFillColor(baseColor: string, state: ProjectionGizmoVisualState, palette: ProjectionGizmoVisualPalette, neutral: boolean): string {
+  if (state !== "hover") {
+    return baseColor;
+  }
+  if (neutral) {
+    return palette.neutralHover;
+  }
+  return brightenProjectionGizmoColor(baseColor, palette.brighten, 0.45);
+}
+
+function projectionGizmoHeadOpacity(state: ProjectionGizmoVisualState, palette: ProjectionGizmoVisualPalette): number {
+  if (state === "hover") {
+    return palette.hoverOpacity;
+  }
+  if (state === "dimmed") {
+    return palette.dimmedOpacity;
+  }
+  return palette.idleOpacity;
 }
 
 //#region 🧭WorldOrbitViewGizmoViewport
@@ -1297,23 +1371,23 @@ interface WorldProjectionGizmoViewportProps {
   readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
 }
 
-function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, number, number]; readonly color: string; readonly rotation: [number, number, number] }): ReactElement {
+function WorldOrbitViewGizmoViewportAxis(props: { readonly scale: [number, number, number]; readonly color: string; readonly rotation: [number, number, number]; readonly opacity?: number }): ReactElement {
   return (
     <group rotation={props.rotation}>
       <mesh position={[0.4, 0, 0]}>
         <boxGeometry args={props.scale} />
-        <meshBasicMaterial color={props.color} toneMapped={false} />
+        <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={props.opacity ?? 0.72} />
       </mesh>
       <mesh position={[-0.4, 0, 0]}>
         <boxGeometry args={props.scale} />
-        <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={0.72} />
+        <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={(props.opacity ?? 0.72) * 0.92} />
       </mesh>
     </group>
   );
 }
 
 /** @emoji 📏 Thin shaft from the gizmo origin to a corner hit (matches axis shafts for the eight diagonals). */
-function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number, number, number]; readonly color: string }): ReactElement {
+function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number, number, number]; readonly color: string; readonly opacity?: number }): ReactElement {
   const quaternion = reactHostPort.useMemo(() => {
     const dir = new Vector3(props.to[0], props.to[1], props.to[2]);
     const length = dir.length();
@@ -1327,7 +1401,7 @@ function WorldProjectionGizmoCornerShaft(props: { readonly to: readonly [number,
   return (
     <mesh position={[props.to[0] * 0.5, props.to[1] * 0.5, props.to[2] * 0.5]} quaternion={quaternion}>
       <boxGeometry args={[length * 0.88, 0.022, 0.022]} />
-      <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={0.72} />
+      <meshBasicMaterial color={props.color} toneMapped={false} transparent opacity={props.opacity ?? 0.72} />
     </mesh>
   );
 }
@@ -1338,15 +1412,16 @@ function WorldProjectionGizmoHitHead(props: {
   readonly color: string;
   readonly label?: string;
   readonly font: string;
-  readonly labelColor: string;
-  readonly hoverLabelColor: string;
+  readonly palette: ProjectionGizmoVisualPalette;
+  readonly visualState: ProjectionGizmoVisualState;
+  readonly neutral: boolean;
   readonly axisHeadScale: number;
   readonly onHitSelect: (hit: ProjectionGizmoHit) => void;
+  readonly onPointerOver: (hit: ProjectionGizmoHit) => void;
+  readonly onPointerOut: () => void;
 }): ReactElement {
-  const [active, setActive] = reactHostPort.useState(false);
-  // 🧭 Axis paints stay primary/secondary/tertiary permanently — hover only swaps label contrast, never chrome "emphasized".
-  const fillColor = props.color;
-  const labelColor = active ? props.hoverLabelColor : props.labelColor;
+  const fillColor = projectionGizmoHeadFillColor(props.color, props.visualState, props.palette, props.neutral);
+  const headOpacity = projectionGizmoHeadOpacity(props.visualState, props.palette);
   const texture = reactHostPort.useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 64;
@@ -1363,13 +1438,13 @@ function WorldProjectionGizmoHitHead(props: {
     if (props.label) {
       context.font = props.font;
       context.textAlign = "center";
-      context.fillStyle = labelColor;
+      context.fillStyle = props.palette.labelColor;
       context.fillText(props.label, 32, props.label.length > 2 ? 38 : 41);
     }
     return new CanvasTexture(canvas);
-  }, [fillColor, labelColor, props.font, props.label]);
+  }, [fillColor, props.font, props.label, props.palette.labelColor]);
   reactHostPort.useEffect(() => () => texture.dispose(), [texture]);
-  const scale = (props.label ? 1 : 0.65) * props.axisHeadScale * (active ? 1.08 : 1);
+  const scale = (props.label ? 1 : 0.65) * props.axisHeadScale * (props.visualState === "hover" ? 1.1 : 1);
   return (
     <sprite
       scale={scale}
@@ -1377,11 +1452,11 @@ function WorldProjectionGizmoHitHead(props: {
       userData={{ projectionGizmoHit: props.hit }}
       onPointerOver={(event) => {
         event.stopPropagation();
-        setActive(true);
+        props.onPointerOver(props.hit);
       }}
       onPointerOut={(event) => {
         event.stopPropagation();
-        setActive(false);
+        props.onPointerOut();
       }}
       onPointerDown={(event) => {
         event.stopPropagation();
@@ -1392,22 +1467,41 @@ function WorldProjectionGizmoHitHead(props: {
         props.onHitSelect(hit);
       }}
     >
-      <spriteMaterial map={texture} alphaTest={0.3} opacity={1} toneMapped={false} />
+      <spriteMaterial map={texture} alphaTest={0.3} opacity={headOpacity} toneMapped={false} />
     </sprite>
   );
 }
 
 /** @emoji 🎯 Navigation cube with face, corner, and center hit targets for projection snapping. */
 function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps): ReactElement {
+  const invalidate = useThree((state) => state.invalidate);
+  const [hoveredHit, setHoveredHit] = reactHostPort.useState<ProjectionGizmoHit | null>(null);
+  const [palette, setPalette] = reactHostPort.useState(() => resolveProjectionGizmoVisualPalette());
+  useCanvasAppearanceSync(
+    reactHostPort.useCallback(() => {
+      clearColorResolveCache();
+      setPalette(resolveProjectionGizmoVisualPalette());
+    }, []),
+  );
+  reactHostPort.useEffect(() => {
+    invalidate();
+  }, [hoveredHit, invalidate, palette]);
   const axisHeadScale = 0.62;
-  const labelColor = resolveColorHex(tokenVar("light"), "light");
-  const hoverLabelColor = labelColor;
   const headBase = {
     font: props.font,
-    labelColor,
-    hoverLabelColor,
+    palette,
     axisHeadScale,
     onHitSelect: props.onHitSelect,
+    onPointerOver: setHoveredHit,
+    onPointerOut: () => setHoveredHit(null),
+  };
+  const visualState = (hit: ProjectionGizmoHit) => projectionGizmoHitVisualState(hit, hoveredHit);
+  const shaftOpacity = hoveredHit ? 0.38 : 0.72;
+  const axisOpacity = (axis: "x" | "y" | "z") => {
+    if (!hoveredHit || hoveredHit.type !== "face" || hoveredHit.axis !== axis) {
+      return shaftOpacity;
+    }
+    return 1;
   };
   const faceHit = (axis: "x" | "y" | "z", sign: 1 | -1): ProjectionGizmoHit => ({ type: "face", axis, sign });
   // 🧭 Upper corners keep labeled heads; lower corners match negative-axis ends (small unlabeled circles) — less relevant under-views.
@@ -1423,22 +1517,22 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
   ];
   return (
     <group scale={22}>
-      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.x} rotation={[0, 0, 0]} scale={props.axisScale} />
-      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.y} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} />
-      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.z} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} />
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.x} rotation={[0, 0, 0]} scale={props.axisScale} opacity={axisOpacity("x")} />
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.y} rotation={[0, 0, Math.PI / 2]} scale={props.axisScale} opacity={axisOpacity("y")} />
+      <WorldOrbitViewGizmoViewportAxis color={props.axisColors.z} rotation={[0, -Math.PI / 2, 0]} scale={props.axisScale} opacity={axisOpacity("z")} />
       {cornerHits.map((corner) => (
-        <WorldProjectionGizmoCornerShaft key={`shaft-${corner.hit.quadrant}-${corner.hit.hemisphere}`} to={corner.position} color={props.neutralColor} />
+        <WorldProjectionGizmoCornerShaft key={`shaft-${corner.hit.quadrant}-${corner.hit.hemisphere}`} to={corner.position} color={props.neutralColor} opacity={shaftOpacity} />
       ))}
-      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} label="X" color={props.axisColors.x} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={props.axisColors.x} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} label="Y" color={props.axisColors.y} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={props.axisColors.y} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} label="Z" color={props.axisColors.z} {...headBase} />
-      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={props.axisColors.z} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[1, 0, 0]} hit={faceHit("x", 1)} label="X" color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[-1, 0, 0]} hit={faceHit("x", -1)} color={props.axisColors.x} neutral={false} visualState={visualState(faceHit("x", -1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 1, 0]} hit={faceHit("y", 1)} label="Y" color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, -1, 0]} hit={faceHit("y", -1)} color={props.axisColors.y} neutral={false} visualState={visualState(faceHit("y", -1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 1]} hit={faceHit("z", 1)} label="Z" color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", 1))} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, -1]} hit={faceHit("z", -1)} color={props.axisColors.z} neutral={false} visualState={visualState(faceHit("z", -1))} {...headBase} />
       {cornerHits.map((corner) => (
-        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} label={corner.label} color={props.neutralColor} {...headBase} />
+        <WorldProjectionGizmoHitHead key={`${corner.hit.type}-${corner.hit.quadrant}-${corner.hit.hemisphere}`} position={corner.position} hit={corner.hit} label={corner.label} color={props.neutralColor} neutral visualState={visualState(corner.hit)} {...headBase} />
       ))}
-      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} label="3D" color={props.neutralColor} {...headBase} />
+      <WorldProjectionGizmoHitHead position={[0, 0, 0]} hit={{ type: "center" }} label="3D" color={props.neutralColor} neutral visualState={visualState({ type: "center" })} {...headBase} />
     </group>
   );
 }
@@ -1486,42 +1580,71 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
 
 export interface WorldProjectionSnapDriverProps {
   readonly pendingSpec: WorldProjectionSpec | null;
+  readonly currentProjectionSpec?: WorldProjectionSpec;
   readonly onPendingSpecClear: () => void;
   readonly onCameraChange?: (state: WorldCameraState) => void;
   readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
 }
 
-/** @emoji 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set. */
+interface WorldProjectionSnapAnim {
+  readonly spec: WorldProjectionSpec;
+  readonly fromPos: Vector3;
+  readonly fromUp: Vector3;
+  readonly fromMatrix: Matrix4;
+  readonly to: WorldCameraState;
+  readonly toFov: number;
+  readonly start: number;
+  holding: boolean;
+}
+
+/** @emoji 🎞️ Interpolates the orbit camera to a {@link WorldProjectionSpec} when `pendingSpec` is set — morphs pose AND the
+ * projection matrix itself (via {@link worldProjectionGoalMatrix} / {@link worldProjectionMorphMatrix}) over the same 280ms
+ * tween, so perspective↔orthographic, FOV, oblique shear and two-point shift all interpolate instead of popping at remount. */
 export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps): null {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
   const controls = useThree((state) => state.controls as OrbitControlsTarget | null);
   const invalidate = useThree((state) => state.invalidate);
-  const { setSnapGate } = useWorldOrbitViewSnapGate();
-  const animRef = reactHostPort.useRef<{ readonly spec: WorldProjectionSpec; readonly fromPos: Vector3; readonly fromUp: Vector3; readonly fromZoom: number; readonly to: WorldCameraState; readonly start: number } | null>(null);
+  const { setSnapGate, morphRef } = useWorldOrbitViewSnapGate();
+  const animRef = reactHostPort.useRef<WorldProjectionSnapAnim | null>(null);
 
   reactHostPort.useEffect(() => {
     if (!props.pendingSpec || !camera || !controls?.target) {
       return;
     }
     const pendingSpec = props.pendingSpec;
+    const fromSpec = props.currentProjectionSpec;
     const targetCad = threeVec3ToCad(controls.target);
-    const distance = orbitCameraDistance({
+    const fromZoom = worldCameraZoom(camera);
+    const isOrthographic = worldCameraIsOrthographic(camera);
+    const fromFov = worldCameraFov(camera);
+    const to = worldProjectionTransitionPose(pendingSpec, {
       position: threeVec3ToCad(camera.position),
       target: targetCad,
-      zoom: worldCameraZoom(camera),
+      up: threeVec3ToCad(camera.up),
+      zoom: fromZoom,
+      isOrthographic,
+      projectionSpec: fromSpec,
+      viewport: size,
+      fov: fromFov,
     });
-    const fromZoom = worldCameraZoom(camera);
-    const zoom = worldProjectionSnapZoom(pendingSpec, fromZoom, worldCameraIsOrthographic(camera));
-    const to = computeWorldProjectionPose(pendingSpec, { target: targetCad, distance, zoom });
-    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), fromZoom, to, start: performance.now() };
+    const toFov = worldProjectionPerspectiveFov(pendingSpec);
+    animRef.current = { spec: pendingSpec, fromPos: camera.position.clone(), fromUp: camera.up.clone(), fromMatrix: camera.projectionMatrix.clone(), to, toFov, start: performance.now(), holding: false };
+    morphRef.current = { fromSpec, toSpec: pendingSpec, fromMatrix: animRef.current.fromMatrix, fromFov: fromFov ?? worldProjectionPerspectiveFov(fromSpec ?? pendingSpec), toFov, eased: 0, holding: false };
     setSnapGate(true);
     props.onPendingSpecClear();
     invalidate();
-  }, [camera, controls, invalidate, props.pendingSpec, props.onPendingSpecClear, setSnapGate]);
+  }, [camera, controls, invalidate, morphRef, props.currentProjectionSpec, props.pendingSpec, props.onPendingSpecClear, setSnapGate, size]);
 
   useFrame(() => {
     const anim = animRef.current;
     if (!anim || !camera || !controls) {
+      return;
+    }
+    if (anim.holding) {
+      const goal = worldProjectionGoalMatrix(anim.spec, { zoom: anim.to.zoom, fov: anim.toFov, viewport: size, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+      camera.projectionMatrix.copy(goal);
+      camera.projectionMatrixInverse.copy(goal).invert();
+      invalidate();
       return;
     }
     const progress = Math.min(1, (performance.now() - anim.start) / WORLD_ORBIT_VIEW_SNAP_DURATION_MS);
@@ -1534,18 +1657,46 @@ export function WorldProjectionSnapDriver(props: WorldProjectionSnapDriverProps)
     camera.lookAt(target[0], target[1], target[2]);
     controls.target.set(target[0], target[1], target[2]);
     controls.update();
-    writeWorldCameraZoom(camera, anim.fromZoom + (anim.to.zoom - anim.fromZoom) * eased);
+    const goal = worldProjectionGoalMatrix(anim.spec, { zoom: anim.to.zoom, fov: anim.toFov, viewport: size, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+    const morphed = worldProjectionMorphMatrix(anim.fromMatrix, goal, eased);
+    camera.projectionMatrix.copy(morphed);
+    camera.projectionMatrixInverse.copy(morphed).invert();
+    if (morphRef.current) {
+      morphRef.current.eased = eased;
+    }
     if (progress < 1) {
       invalidate();
       return;
     }
-    animRef.current = null;
+    anim.holding = true;
+    if (morphRef.current) {
+      morphRef.current.eased = 1;
+      morphRef.current.holding = true;
+    }
+    // Zoom/FOV fields are synced without `updateProjectionMatrix()` — that would rebuild the matrix from the camera's
+    // stale left/right/top/bottom/aspect fields and stomp the pinned morph goal above.
+    const zoomable = camera as Camera & { readonly isPerspectiveCamera?: boolean; readonly isOrthographicCamera?: boolean; zoom?: number; fov?: number };
+    if (zoomable.isPerspectiveCamera || zoomable.isOrthographicCamera) {
+      zoomable.zoom = anim.to.zoom;
+    }
+    if (zoomable.isPerspectiveCamera) {
+      zoomable.fov = anim.toFov;
+    }
     setSnapGate(false);
-    applyWorldCameraState(camera, anim.to, controls);
     props.onCameraChange?.(anim.to);
     props.onSpecSnap?.(anim.spec, anim.to);
     invalidate();
   });
+
+  reactHostPort.useEffect(() => {
+    if (animRef.current?.holding) {
+      animRef.current = null;
+    }
+    if (morphRef.current?.holding) {
+      morphRef.current = null;
+    }
+  }, [camera, morphRef]);
+
   return null;
 }
 
@@ -1588,24 +1739,42 @@ export function WorldOrbitViewSnapDriver(props: WorldOrbitViewSnapDriverProps): 
 export interface WorldOrbitViewControlsProps {
   readonly show?: boolean;
   readonly projectionSpec?: WorldProjectionSpec;
+  readonly externalPendingSpec?: WorldProjectionSpec | null;
+  readonly onExternalPendingSpecClear?: () => void;
   readonly onCameraChange?: (state: WorldCameraState) => void;
   readonly onProjectionChange?: (projection: OrbitCameraProjection) => void;
   readonly onViewSnap?: (view: OrbitCameraViewId, state: WorldCameraState) => void;
   readonly onSpecSnap?: (spec: WorldProjectionSpec, state: WorldCameraState) => void;
+  /** @emoji 🎞️ Reports the unified pane-or-gizmo pending spec so the host can pre-mount {@link WorldProjectionRig}'s
+   * curvilinear pass before the camera remount (see `pendingSpec` there). */
+  readonly onPendingSpecChange?: (spec: WorldProjectionSpec | null) => void;
 }
 
 /** @emoji 🧭 Bundles {@link WorldOrbitViewGizmo} and {@link WorldProjectionSnapDriver}. */
 export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): ReactElement {
-  const [pendingSpec, setPendingSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
+  const [internalPendingSpec, setInternalPendingSpec] = reactHostPort.useState<WorldProjectionSpec | null>(null);
+  const pendingSpec = props.externalPendingSpec ?? internalPendingSpec;
+  const clearPendingSpec = reactHostPort.useCallback(() => {
+    if (props.externalPendingSpec) {
+      props.onExternalPendingSpecClear?.();
+      return;
+    }
+    setInternalPendingSpec(null);
+  }, [props.externalPendingSpec, props.onExternalPendingSpecClear]);
+  const onPendingSpecChange = props.onPendingSpecChange;
+  reactHostPort.useEffect(() => {
+    onPendingSpecChange?.(pendingSpec);
+  }, [onPendingSpecChange, pendingSpec]);
   return (
     <>
       <WorldProjectionSnapDriver
         pendingSpec={pendingSpec}
-        onPendingSpecClear={() => setPendingSpec(null)}
+        currentProjectionSpec={props.projectionSpec}
+        onPendingSpecClear={clearPendingSpec}
         onCameraChange={props.onCameraChange}
         onSpecSnap={props.onSpecSnap}
       />
-      <WorldOrbitViewGizmo show={props.show} projectionSpec={props.projectionSpec} onSpecSelect={setPendingSpec} />
+      <WorldOrbitViewGizmo show={props.show} projectionSpec={props.projectionSpec} onSpecSelect={setInternalPendingSpec} />
     </>
   );
 }
@@ -2042,6 +2211,12 @@ export function worldProjectionModeFov(spec: WorldProjectionSpec): number | unde
   return mode.kind === "onePoint" || mode.kind === "twoPoint" || mode.kind === "threePoint" || mode.kind === "curvilinear" ? mode.fov : undefined;
 }
 
+/** @emoji 📐 Effective `PerspectiveCamera.fov` for a spec — curvilinear is capped at 160° (matches {@link WorldCurvilinearPass}'s capture), others default 50°. */
+export function worldProjectionPerspectiveFov(spec: WorldProjectionSpec): number {
+  const fov = worldProjectionModeFov(spec);
+  return spec.mode.kind === "curvilinear" ? Math.min(fov ?? 120, 160) : (fov ?? 50);
+}
+
 /** @emoji 📐 Parallel family = orthographic camera (Orthographic/Axonometric/Oblique); everything else is perspective. */
 export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): WorldProjectionFamily {
   if (!spec) {
@@ -2314,6 +2489,113 @@ export function applyWorldProjectionToCameraState(state: WorldCameraState, spec:
   return { ...state, projection: family === "parallel" ? "orthographic" : "perspective", projectionSpec: spec, zoom: family === "parallel" ? (state.zoom === 1 ? 50 : state.zoom) : state.zoom };
 }
 
+/** @emoji 🧭 Structural equality for {@link WorldProjectionOrientation}. */
+export function worldProjectionOrientationsEqual(a: WorldProjectionOrientation, b: WorldProjectionOrientation): boolean {
+  return JSON.stringify(a) === JSON.stringify(b);
+}
+
+function halfFovTan(fovDeg: number): number {
+  return Math.tan((fovDeg * Math.PI) / 360);
+}
+
+/** @emoji 📐 Orthographic zoom (pixels-per-world-unit in a drei pixel frustum) reproducing a perspective camera's apparent
+ * scale at `distance` from the target, so a persp→ortho snap doesn't jump to the legacy zoom-50 default. */
+export function worldProjectionMatchedOrthoZoom(fovDeg: number, distance: number, viewportHeight: number): number {
+  return viewportHeight / (2 * Math.max(distance, ORBIT_CAMERA_VIEW_EPSILON) * halfFovTan(fovDeg));
+}
+
+/** @emoji 🪞 Oblique receding-axis shear matrix — extracted from {@link WorldProjectionMatrixDriver} so
+ * {@link worldProjectionGoalMatrix} and the live per-frame shear share one formula; `strength` ramps the shear 0→1. */
+export function worldObliqueShearMatrix(mode: Extract<WorldProjectionMode, { kind: "oblique" }>, strength = 1): Matrix4 {
+  const angle = mode.angle * (Math.PI / 180);
+  const l = mode.variant === "military" ? 1 : mode.depthScale;
+  const alpha = mode.variant === "military" ? Math.PI / 2 : angle;
+  const shear = new Matrix4().identity();
+  shear.elements[8] = -l * Math.cos(alpha) * strength;
+  shear.elements[9] = -l * Math.sin(alpha) * strength;
+  return shear;
+}
+
+/** @emoji 📐 Destination projection matrix for `spec` at the live viewport size — the "goal" a projection-matrix morph
+ * lerps toward each frame. Built from real three.js camera classes so it matches exactly what mounting that camera would
+ * produce (drei's `OrthographicCamera`/`PerspectiveCamera` seed left/right/top/bottom or aspect the same way). */
+export function worldProjectionGoalMatrix(spec: WorldProjectionSpec, options: { readonly zoom: number; readonly fov?: number; readonly viewport: { readonly width: number; readonly height: number }; readonly near?: number; readonly far?: number }): Matrix4 {
+  const near = options.near ?? 0.2;
+  const far = options.far ?? WORLD_ORBIT_CAMERA_MIN_FAR;
+  const { width, height } = options.viewport;
+  if (worldProjectionFamily(spec) === "parallel") {
+    const camera = new ThreeOrthographicCamera(width / -2, width / 2, height / 2, height / -2, near, far);
+    camera.zoom = options.zoom;
+    camera.updateProjectionMatrix();
+    const matrix = camera.projectionMatrix.clone();
+    return spec.mode.kind === "oblique" ? matrix.multiply(worldObliqueShearMatrix(spec.mode)) : matrix;
+  }
+  const fov = options.fov ?? worldProjectionPerspectiveFov(spec);
+  const camera = new ThreePerspectiveCamera(fov, width / Math.max(1, height), near, far);
+  camera.zoom = options.zoom;
+  camera.updateProjectionMatrix();
+  const matrix = camera.projectionMatrix.clone();
+  if (spec.mode.kind === "twoPoint") {
+    matrix.elements[9] += spec.mode.verticalShift;
+  }
+  return matrix;
+}
+
+/** @emoji 🎞️ Element-wise projection-matrix lerp — valid across every pair this engine morphs between: persp↔ortho
+ * lerps the w-row (`-z ↔ 1`, the standard projective blend), persp↔persp is cot-space FOV interpolation, and
+ * oblique-shear/two-point-shift elements ramp linearly since they're already linear terms of the base matrix. */
+export function worldProjectionMorphMatrix(from: Matrix4, to: Matrix4, t: number): Matrix4 {
+  const result = new Matrix4();
+  for (let i = 0; i < 16; i++) {
+    result.elements[i] = from.elements[i] + (to.elements[i] - from.elements[i]) * t;
+  }
+  return result;
+}
+
+/** @emoji 🎞️ Destination pose for a projection snap — preserves eye exactly when only mode changes (matches
+ * {@link applyWorldProjectionToCameraState}'s "pure parameter tweaks never move the camera" invariant); re-looks only
+ * when orientation changes. When `live.viewport` is supplied, a persp→ortho mode-only switch picks a zoom that matches
+ * the live apparent scale via {@link worldProjectionMatchedOrthoZoom} instead of the legacy zoom-50 default — this only
+ * changes *which* zoom value is chosen, never the camera position, so it cannot reposition the camera. */
+export function worldProjectionTransitionPose(
+  pendingSpec: WorldProjectionSpec,
+  live: {
+    readonly position: Vec3;
+    readonly target: Vec3;
+    readonly up?: Vec3;
+    readonly zoom: number;
+    readonly isOrthographic: boolean;
+    readonly projectionSpec?: WorldProjectionSpec;
+    readonly viewport?: { readonly width: number; readonly height: number };
+    readonly fov?: number;
+  },
+): WorldCameraState {
+  const previousSpec = live.projectionSpec;
+  const orientationUnchanged = previousSpec !== undefined && worldProjectionOrientationsEqual(previousSpec.orientation, pendingSpec.orientation);
+  if (orientationUnchanged && previousSpec && live.viewport && worldProjectionFamily(previousSpec) === "perspective" && worldProjectionFamily(pendingSpec) === "parallel") {
+    const fromFov = live.fov ?? worldProjectionPerspectiveFov(previousSpec);
+    const distance = orbitCameraDistance({ position: live.position, target: live.target, zoom: live.zoom });
+    const zoom = worldProjectionMatchedOrthoZoom(fromFov, distance, live.viewport.height);
+    return applyWorldProjectionToCameraState({ position: live.position, target: live.target, up: live.up ?? ORBIT_CAMERA_Z_UP, zoom, projection: "orthographic", projectionSpec: pendingSpec }, pendingSpec);
+  }
+  const zoom = worldProjectionSnapZoom(pendingSpec, live.zoom, live.isOrthographic);
+  if (orientationUnchanged || !previousSpec) {
+    return applyWorldProjectionToCameraState(
+      {
+        position: live.position,
+        target: live.target,
+        up: live.up ?? ORBIT_CAMERA_Z_UP,
+        zoom,
+        projection: live.isOrthographic ? "orthographic" : "perspective",
+        projectionSpec: pendingSpec,
+      },
+      pendingSpec,
+    );
+  }
+  const distance = orbitCameraDistance({ position: live.position, target: live.target, zoom: live.zoom });
+  return computeWorldProjectionPose(pendingSpec, { target: live.target, distance, zoom });
+}
+
 /** @emoji 🧭 Maps a projection-gizmo face to an orthographic view id. */
 export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sign: 1 | -1): WorldOrthographicViewId {
   if (axis === "x") {
@@ -2455,12 +2737,14 @@ export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, current
 }
 
 /** @emoji 📷 Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
-export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void }): ReactElement {
+export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void; readonly pendingSpec?: WorldProjectionSpec | null }): ReactElement {
   const family = worldProjectionFamily(props.spec);
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
   const cameraKey = `${props.spec.mode.kind}:${props.seedKey}`;
-  const fov = worldProjectionModeFov(props.spec);
-  const perspectiveFov = props.spec.mode.kind === "curvilinear" ? Math.min(fov ?? 120, 160) : (fov ?? 50);
+  const perspectiveFov = worldProjectionPerspectiveFov(props.spec);
+  // 🐟 Pre-mount the curvilinear pass while only the *pending* spec is curvilinear so its render target is warm and
+  // its strength can ramp in via `morphRef` before the camera remount, instead of popping in at full strength.
+  const curvilinearMode = props.spec.mode.kind === "curvilinear" ? props.spec.mode : props.pendingSpec?.mode.kind === "curvilinear" ? props.pendingSpec.mode : null;
   return (
     <>
       {family === "parallel" ? (
@@ -2470,7 +2754,7 @@ export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; 
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={`${cameraKey}`} />
       {props.spec.mode.kind === "oblique" || props.spec.mode.kind === "twoPoint" ? <WorldProjectionMatrixDriver mode={props.spec.mode} /> : null}
-      {props.spec.mode.kind === "curvilinear" ? <WorldCurvilinearPass mode={props.spec.mode} /> : null}
+      {curvilinearMode ? <WorldCurvilinearPass mode={curvilinearMode} /> : null}
     </>
   );
 }
@@ -2491,19 +2775,20 @@ export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSp
 
 /** @emoji 🪞 Post-multiplies the oblique receding-axis shear or two-point vertical lens-shift onto the active
  * camera's projection matrix every frame (after recomputing the pristine matrix, so resize/zoom never compounds
- * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse. */
+ * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse.
+ * Defers to {@link WorldProjectionSnapDriver} while a projection morph is in flight (`morphRef.current`), since the
+ * morph's goal matrix already bakes in the destination shear/shift via {@link worldObliqueShearMatrix} — running both
+ * would double-apply the transform. */
 function WorldProjectionMatrixDriver(props: { readonly mode: Extract<WorldProjectionMode, { kind: "oblique" | "twoPoint" }> }): null {
   const { camera, invalidate } = useThree();
+  const { morphRef } = useWorldOrbitViewSnapGate();
   useFrame(() => {
+    if (morphRef.current) {
+      return;
+    }
     camera.updateProjectionMatrix();
     if (props.mode.kind === "oblique" && camera instanceof ThreeOrthographicCamera) {
-      const angle = props.mode.angle * (Math.PI / 180);
-      const l = props.mode.variant === "military" ? 1 : props.mode.depthScale;
-      const alpha = props.mode.variant === "military" ? Math.PI / 2 : angle;
-      const shear = new Matrix4().identity();
-      shear.elements[8] = -l * Math.cos(alpha);
-      shear.elements[9] = -l * Math.sin(alpha);
-      camera.projectionMatrix.multiply(shear);
+      camera.projectionMatrix.multiply(worldObliqueShearMatrix(props.mode));
     } else if (props.mode.kind === "twoPoint" && camera instanceof ThreePerspectiveCamera) {
       camera.projectionMatrix.elements[9] += props.mode.verticalShift;
     }
@@ -2587,6 +2872,7 @@ export const WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS = {
  * and the taxonomy never promises >=180° coverage. */
 function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMode, { kind: "curvilinear" }> }): null {
   const { gl, camera, scene, size, invalidate } = useThree();
+  const { morphRef } = useWorldOrbitViewSnapGate();
   const targetRef = reactHostPort.useRef<InstanceType<typeof WebGLRenderTarget> | null>(null);
   const quadRef = reactHostPort.useRef<{ readonly scene: InstanceType<typeof Scene>; readonly camera: InstanceType<typeof ThreeOrthographicCamera>; readonly material: InstanceType<typeof ShaderMaterial> } | null>(null);
 
@@ -2617,9 +2903,25 @@ function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMod
     }
     const target = targetRef.current;
     const { material } = quadRef.current;
+    // 🐟 Fade `uStrength`/`uFov` with the live projection morph — entering curvilinear ramps 0→target strength,
+    // leaving ramps target→0; `uStrength=0` is an exact identity blit so the fade can never pop.
+    const morph = morphRef.current;
+    const enteringCurvilinear = morph?.toSpec.mode.kind === "curvilinear";
+    const leavingCurvilinear = morph?.fromSpec?.mode.kind === "curvilinear";
+    let ramp = 1;
+    let fov = props.mode.fov;
+    if (morph && enteringCurvilinear && !leavingCurvilinear) {
+      ramp = morph.eased;
+      fov = morph.fromFov + (morph.toFov - morph.fromFov) * morph.eased;
+    } else if (morph && leavingCurvilinear && !enteringCurvilinear) {
+      ramp = 1 - morph.eased;
+      fov = morph.fromFov + (morph.toFov - morph.fromFov) * morph.eased;
+    } else if (morph && !enteringCurvilinear && !leavingCurvilinear) {
+      ramp = 0;
+    }
     material.uniforms.tCapture.value = target.texture;
-    material.uniforms.uFov.value = Math.min(props.mode.fov, 160) * (Math.PI / 180);
-    material.uniforms.uStrength.value = props.mode.strength;
+    material.uniforms.uFov.value = Math.min(fov, 160) * (Math.PI / 180);
+    material.uniforms.uStrength.value = props.mode.strength * ramp;
     material.uniforms.uAspect.value = size.width / Math.max(1, size.height);
     material.uniforms.uMapping.value = props.mode.mapping === "panini" ? 1 : 0;
 
@@ -4195,6 +4497,210 @@ if (import.meta.vitest) {
       const threePoint = computeWorldProjectionPose({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }, { target: [0, 0, 0], distance: 100 });
       expect(threePoint.projection).toBe("perspective");
       expect(Math.hypot(...threePoint.position)).toBeGreaterThan(90);
+    });
+  });
+
+  describe("worldProjectionTransitionPose", () => {
+    it("keeps eye and target when only mode changes with the same orientation", () => {
+      const live = {
+        position: [12, -8, 40] as const,
+        target: [3, 5, 10] as const,
+        up: [0, 0, 1] as const,
+        zoom: 6.4,
+        isOrthographic: true,
+        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "top" } } as const,
+      };
+      const pending = { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } as const;
+      const next = worldProjectionTransitionPose(pending, live);
+      expect(next.position).toEqual(live.position);
+      expect(next.target).toEqual(live.target);
+      expect(next.up).toEqual(live.up);
+      expect(next.projection).toBe("orthographic");
+      expect(next.projectionSpec).toEqual(pending);
+      expect(next.zoom).toBe(6.4);
+    });
+
+    it("re-looks from the same target and distance when orientation changes", () => {
+      const live = {
+        position: [40, 20, 80] as const,
+        target: [5, 5, 5] as const,
+        up: [0, 0, 1] as const,
+        zoom: 1,
+        isOrthographic: false,
+        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } } as const,
+      };
+      const pending = { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "top" } } as const;
+      const distance = orbitCameraDistance({ position: [...live.position], target: [...live.target], zoom: live.zoom });
+      const expected = computeWorldProjectionPose(pending, { target: [...live.target], distance, zoom: 1 });
+      const next = worldProjectionTransitionPose(pending, live);
+      expect(next.target).toEqual(live.target);
+      expect(next.position).toEqual(expected.position);
+      expect(next.up).toEqual(expected.up);
+      expect(next.projectionSpec).toEqual(pending);
+    });
+
+    it("matches apparent scale (not the legacy zoom-50 default) for a persp→ortho mode-only switch when a viewport is supplied", () => {
+      const live = {
+        position: [0, -100, 0] as const,
+        target: [0, 0, 0] as const,
+        up: [0, 0, 1] as const,
+        zoom: 1,
+        isOrthographic: false,
+        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } } as const,
+        viewport: { width: 800, height: 600 },
+      };
+      const pending = { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } as const;
+      const next = worldProjectionTransitionPose(pending, live);
+      expect(next.position).toEqual(live.position);
+      expect(next.zoom).toBeCloseTo(worldProjectionMatchedOrthoZoom(50, 100, 600), 6);
+      expect(next.zoom).not.toBe(50);
+    });
+
+    it("never moves the camera for an ortho→persp mode-only switch even when a viewport is supplied", () => {
+      const live = {
+        position: [0, -50, 0] as const,
+        target: [0, 0, 0] as const,
+        up: [0, 0, 1] as const,
+        zoom: 10,
+        isOrthographic: true,
+        projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } as const,
+        viewport: { width: 800, height: 600 },
+      };
+      const pending = { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } } as const;
+      const next = worldProjectionTransitionPose(pending, live);
+      expect(next.position).toEqual(live.position);
+      expect(next.zoom).toBe(live.zoom);
+    });
+
+    it("never moves the camera across a perspective FOV change with the same orientation even when a viewport is supplied", () => {
+      const live = {
+        position: [0, -100, 0] as const,
+        target: [0, 0, 0] as const,
+        up: [0, 0, 1] as const,
+        zoom: 1,
+        isOrthographic: false,
+        projectionSpec: { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } } as const,
+        viewport: { width: 800, height: 600 },
+      };
+      const pending = { mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" as const }, orientation: { type: "cardinal", view: "front" } } as const;
+      const next = worldProjectionTransitionPose(pending, live);
+      expect(next.position).toEqual(live.position);
+    });
+  });
+
+  describe("worldProjectionPerspectiveFov", () => {
+    it("defaults threePoint/onePoint/twoPoint fov and caps curvilinear at 160°", () => {
+      expect(worldProjectionPerspectiveFov({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBe(50);
+      expect(worldProjectionPerspectiveFov({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe(120);
+      expect(worldProjectionPerspectiveFov({ mode: { kind: "curvilinear", fov: 200, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe(160);
+    });
+  });
+
+  describe("worldProjectionMatchedOrthoZoom", () => {
+    it("scales inversely with distance and directly with viewport height", () => {
+      const zoom = worldProjectionMatchedOrthoZoom(50, 120, 720);
+      expect(worldProjectionMatchedOrthoZoom(50, 240, 720)).toBeCloseTo(zoom / 2, 6);
+      expect(worldProjectionMatchedOrthoZoom(50, 120, 1440)).toBeCloseTo(zoom * 2, 6);
+    });
+  });
+
+  describe("worldObliqueShearMatrix", () => {
+    it("shears cavalier/cabinet by depthScale·angle and military by a fixed unit length at a right angle", () => {
+      const cavalier = worldObliqueShearMatrix({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 });
+      expect(cavalier.elements[8]).toBeCloseTo(-Math.cos(Math.PI / 4), 5);
+      expect(cavalier.elements[9]).toBeCloseTo(-Math.sin(Math.PI / 4), 5);
+      const military = worldObliqueShearMatrix({ kind: "oblique", variant: "military", angle: 30, depthScale: 1 });
+      expect(military.elements[8]).toBeCloseTo(0, 5);
+      expect(military.elements[9]).toBeCloseTo(-1, 5);
+    });
+
+    it("ramps shear elements linearly with strength", () => {
+      const full = worldObliqueShearMatrix({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, 1);
+      const half = worldObliqueShearMatrix({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, 0.5);
+      expect(half.elements[8]).toBeCloseTo(full.elements[8] * 0.5, 5);
+      expect(half.elements[9]).toBeCloseTo(full.elements[9] * 0.5, 5);
+    });
+  });
+
+  describe("worldProjectionGoalMatrix", () => {
+    const viewport = { width: 800, height: 600 };
+
+    it("matches a real OrthographicCamera's pixel frustum for parallel specs", () => {
+      const spec = { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } as const;
+      const goal = worldProjectionGoalMatrix(spec, { zoom: 12.5, viewport, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+      const cam = new ThreeOrthographicCamera(viewport.width / -2, viewport.width / 2, viewport.height / 2, viewport.height / -2, 0.2, WORLD_ORBIT_CAMERA_MIN_FAR);
+      cam.zoom = 12.5;
+      cam.updateProjectionMatrix();
+      for (let i = 0; i < 16; i++) expect(goal.elements[i]).toBeCloseTo(cam.projectionMatrix.elements[i], 6);
+    });
+
+    it("matches a real PerspectiveCamera for perspective specs", () => {
+      const spec = { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } } as const;
+      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport, near: 0.2, far: WORLD_ORBIT_CAMERA_MIN_FAR });
+      const cam = new ThreePerspectiveCamera(50, viewport.width / viewport.height, 0.2, WORLD_ORBIT_CAMERA_MIN_FAR);
+      cam.zoom = 1;
+      cam.updateProjectionMatrix();
+      for (let i = 0; i < 16; i++) expect(goal.elements[i]).toBeCloseTo(cam.projectionMatrix.elements[i], 6);
+    });
+
+    it("post-multiplies the oblique shear onto the orthographic base", () => {
+      const spec = { mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } } as const;
+      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport });
+      const base = worldProjectionGoalMatrix({ mode: { kind: "orthographic" }, orientation: spec.orientation }, { zoom: 1, viewport });
+      const expected = base.clone().multiply(worldObliqueShearMatrix(spec.mode));
+      for (let i = 0; i < 16; i++) expect(goal.elements[i]).toBeCloseTo(expected.elements[i], 6);
+    });
+
+    it("shifts the two-point vertical projection element", () => {
+      const spec = { mode: { kind: "twoPoint", fov: 50, verticalShift: 0.3 }, orientation: { type: "free" } } as const;
+      const goal = worldProjectionGoalMatrix(spec, { zoom: 1, viewport });
+      const base = worldProjectionGoalMatrix({ mode: { kind: "threePoint", fov: 50 }, orientation: spec.orientation }, { zoom: 1, viewport });
+      expect(goal.elements[9]).toBeCloseTo(base.elements[9] + 0.3, 6);
+    });
+  });
+
+  describe("worldProjectionMorphMatrix", () => {
+    it("equals from exactly at t=0 and closely approximates to at t=1", () => {
+      const from = new Matrix4().makePerspective(-1, 1, 1, -1, 0.1, 100);
+      const to = new Matrix4().makeOrthographic(-1, 1, 1, -1, 0.1, 100);
+      expect(worldProjectionMorphMatrix(from, to, 0).elements).toEqual(from.elements);
+      const atOne = worldProjectionMorphMatrix(from, to, 1);
+      for (let i = 0; i < 16; i++) expect(atOne.elements[i]).toBeCloseTo(to.elements[i], 10);
+    });
+
+    it("interpolates every element linearly", () => {
+      const from = new Matrix4().identity();
+      const to = new Matrix4().identity().multiplyScalar(2);
+      const mid = worldProjectionMorphMatrix(from, to, 0.5);
+      for (let i = 0; i < 16; i++) expect(mid.elements[i]).toBeCloseTo((from.elements[i] + to.elements[i]) / 2, 10);
+    });
+
+    it("ramps oblique shear to half-magnitude at t=0.5 when morphing from an unsheared ortho matrix", () => {
+      const viewport = { width: 800, height: 600 };
+      const from = worldProjectionGoalMatrix({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }, { zoom: 10, viewport });
+      const goal = worldProjectionGoalMatrix({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }, { zoom: 10, viewport });
+      const mid = worldProjectionMorphMatrix(from, goal, 0.5);
+      expect(mid.elements[8]).toBeCloseTo(goal.elements[8] * 0.5, 6);
+      expect(mid.elements[9]).toBeCloseTo(goal.elements[9] * 0.5, 6);
+    });
+  });
+
+  describe("projectionGizmoHover", () => {
+    const topFace: ProjectionGizmoHit = { type: "face", axis: "z", sign: 1 };
+    const freeCenter: ProjectionGizmoHit = { type: "center" };
+    const palette = resolveProjectionGizmoVisualPalette();
+
+    it("marks the hovered hit and dims the rest", () => {
+      expect(projectionGizmoHitVisualState(topFace, topFace)).toBe("hover");
+      expect(projectionGizmoHitVisualState(freeCenter, topFace)).toBe("dimmed");
+      expect(projectionGizmoHitVisualState(topFace, null)).toBe("idle");
+    });
+
+    it("brightens axis and neutral fills on hover", () => {
+      const axisHover = projectionGizmoHeadFillColor("#ff344f", "hover", palette, false);
+      const neutralHover = projectionGizmoHeadFillColor("#9aa0ab", "hover", palette, true);
+      expect(axisHover).not.toBe("#ff344f");
+      expect(neutralHover).toBe(palette.neutralHover);
     });
   });
 

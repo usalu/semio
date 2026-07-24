@@ -3924,8 +3924,23 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
-    expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "panels", "catalogue-panel", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
+    expect(steps.find((step) => step.id === "panels")).toMatchObject({
+      introduce: "framework.panel.catalogue",
+      advance: { kind: "next" },
+    });
+    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/Paneele/i);
+    expect(steps.find((step) => step.id === "catalogue-panel")).toMatchObject({
+      introduce: "framework.panel.catalogue",
+      advance: { kind: "panel", id: "framework.panel.catalogue" },
+    });
+    expect(steps.find((step) => step.id === "catalogue-objects")).toMatchObject({
+      introduce: "puzzle3d-play-kinds.objects",
+      placement: "right",
+      advance: { kind: "expand", id: "puzzle3d-play-kinds.objects" },
+      show: ["framework.panelTab.framework.panel.catalogue"],
+    });
+    expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/Baukomponenten/i);
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
@@ -3946,9 +3961,9 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Verbindungspunkte/i);
     expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
       introduce: "framework.window.puzzle3dMain",
-      advance: { kind: "action", id: "openVortexSuggestions" },
+      advance: { kind: "action", id: "acceptSuggestion" },
     });
-    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Kontextmenü|Rechtsklick/i);
+    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Liste|wählen|Aktionsmenü|Rechtsklick/i);
     expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
       introduce: "tool.fill",
       advance: { kind: "tool", id: "fill" },

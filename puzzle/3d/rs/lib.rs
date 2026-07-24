@@ -1622,6 +1622,17 @@ impl Puzzle3dEngine {
         Some(fixture)
     }
 
+    /// 🪣 Read-only prefix of the precomputed fill plan for live viewport show/hide — does not mutate
+    /// `applied_count`, the queue, or the document projection.
+    fn compose_fill_display(&self, count: usize) -> Option<Fixture> {
+        let fill = self.fill.as_ref()?;
+        let visible = count.min(fill.sequence.len());
+        let mut fixture = fill.base.clone();
+        fixture.objects.extend(fill.appended_objects.iter().take(visible).cloned());
+        fixture.attractions.extend(fill.appended_attractions.iter().take(visible).cloned());
+        Some(fixture)
+    }
+
     fn apply_brush_placement(&mut self, payload: &BrushPlacePayload) -> Option<Fixture> {
         let catalogs = self.scene.as_ref()?.kind_catalogs.as_ref()?.clone();
         let fixture = &self.scene.as_ref()?.fixture;
@@ -1766,6 +1777,11 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn apply_fill_count(&mut self, count: u32) -> Result<String, JsValue> {
         let fixture = self.engine.apply_fill_count(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
+        serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
+    }
+
+    pub fn compose_fill_display(&self, count: u32) -> Result<String, JsValue> {
+        let fixture = self.engine.compose_fill_display(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
         serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
     }
 
@@ -1992,6 +2008,33 @@ mod tests {
     /// progress on every resync — `sync_precompute_session` (puzzle/plugin/rs/lib.rs) calls `set_scene`
     /// on *every* action, so this made suggestion/fill precompute restart from zero on every single tick,
     /// freezing the UI. A resync with byte-identical scene JSON must be a no-op.
+    #[test]
+    fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
+        let object =
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+        let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
+        let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        fill.applied_count = 2;
+        fill.sequence = (0..5).map(payload).collect();
+        fill.appended_objects = (0..5).map(|index| object(&format!("p{index}"))).collect();
+        fill.appended_attractions = (0..5).map(attraction).collect();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+        let mut engine = Puzzle3dEngine::new();
+        engine.fill = Some(fill);
+
+        let display = engine.compose_fill_display(4).expect("compose display");
+        assert_eq!(display.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0", "p1", "p2", "p3"]);
+        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 2, "compose must not mutate applied_count");
+
+        let applied = engine.apply_fill_count(4).expect("apply fill count");
+        assert_eq!(applied.objects.len(), display.objects.len());
+        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 4);
+    }
+
     #[test]
     fn fill_options_paths_are_millisecond_scale() {
         let object =
@@ -2254,6 +2297,11 @@ impl Puzzle3dPrecomputeSession {
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
         let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
+        Ok(serde_json::to_string(&fixture)?)
+    }
+
+    pub fn compose_fill_display_rust(&self, count: u32) -> Result<String, Puzzle3dError> {
+        let fixture = self.engine.compose_fill_display(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
         Ok(serde_json::to_string(&fixture)?)
     }
 

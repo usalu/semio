@@ -247,6 +247,8 @@ import {
   Spinner,
   registerIntroductionSceneProjector,
   ndcToViewportPoint,
+  celebrateElements,
+  elementIdSelector,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
 import {
@@ -4614,6 +4616,21 @@ export function FrameworkOsShell({
   actionPaneStagedArgsByKeyRef.current = actionPaneStagedArgsByKey;
   const introductionStepIndexRef = useRef(introductionStepIndex);
   introductionStepIndexRef.current = introductionStepIndex;
+
+  /** 🎓 Shared advance-by-doing path for utility/tool/action/panel/expand introduction steps. */
+  const advanceIntroductionByDoing = useCallback(() => {
+    const stepIndex = introductionStepIndexRef.current;
+    const introduction = activeIntroductionRef.current;
+    if (stepIndex == null || !introduction) return;
+    const step = introduction.steps[stepIndex];
+    if (step && step.advance.kind !== "next" && step.introduce) celebrateElements(elementIdSelector(step.introduce));
+    if (stepIndex >= introduction.steps.length - 1) {
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+      if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
+    } else {
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+    }
+  }, [introductionSeenKey, persistIntroductionSeen]);
   // 🎛️ So the command-category leaves' lazily-resolved tree content (built once per resolved-commands
   // change, not per keystroke — see `buildCommandCategoryTabs`) can read the latest expand/staged-arg
   // state without becoming a `defaultDock` memo dependency, which would otherwise persist-write the dock
@@ -5455,17 +5472,9 @@ export function FrameworkOsShell({
         return;
       }
       const introductionStep = introductionStepIndexRef.current != null ? (activeIntroductionRef.current?.steps[introductionStepIndexRef.current] ?? null) : null;
-      const advanceIntroductionStep = () => {
-        const stepIndex = introductionStepIndexRef.current;
-        const introduction = activeIntroductionRef.current;
-        if (stepIndex == null || !introduction) return;
-        if (stepIndex >= introduction.steps.length - 1) {
-          dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-          if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
-        } else {
-          dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
-        }
-      };
+      // 🎉 Advance-by-doing (utility/tool/action/panel/expand, never plain "next") means the user just completed the
+      // taught action — celebrate the element they were taught on before moving to the next step.
+      const advanceIntroductionStep = advanceIntroductionByDoing;
 
       // 🧰 Utility activation (P5): host-owned session state, never a document op. Re-clicking the active
       // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
@@ -5651,6 +5660,7 @@ export function FrameworkOsShell({
       hostCatalogueTabId,
       introductionSeenKey,
       persistIntroductionSeen,
+      advanceIntroductionByDoing,
     ],
   );
 
@@ -6551,6 +6561,36 @@ export function FrameworkOsShell({
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: introductionPanelTabAnchor, value: resolved });
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
   }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);
+
+  /** 🎓 Panel-advance steps complete when the named panel tab is open and visible. */
+  useEffect(() => {
+    if (activeIntroductionStep?.advance.kind !== "panel") return;
+    const tabId = activeIntroductionStep.advance.id;
+    const located = findPanelTabInDock(dock, tabId);
+    if (!located) return;
+    const panel = panels[located.anchor];
+    if (!panel.visible || !panel.path.includes(tabId)) return;
+    advanceIntroductionByDoing();
+  }, [activeIntroductionStep, advanceIntroductionByDoing, dock, panels]);
+
+  /** 🎓 Expand-advance steps start with the named tree section forced closed, then complete when the user opens it. */
+  const lastIntroductionExpandIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (activeIntroductionStep?.advance.kind !== "expand") {
+      lastIntroductionExpandIdRef.current = null;
+      return;
+    }
+    const sectionId = activeIntroductionStep.advance.id;
+    const stateSuffix = `tree-section-${sectionId}`;
+    if (lastIntroductionExpandIdRef.current !== sectionId) {
+      lastIntroductionExpandIdRef.current = sectionId;
+      const catalogueKey = `${FRAMEWORK_PANEL_TAB_CATALOGUE_ID}.tree:${stateSuffix}`;
+      dispatch({ type: "SET_TREE_OPEN_STATE", id: catalogueKey, open: false });
+      return;
+    }
+    const expanded = Object.entries(treeOpenStates).some(([key, open]) => open && key.endsWith(stateSuffix));
+    if (expanded) advanceIntroductionByDoing();
+  }, [activeIntroductionStep, advanceIntroductionByDoing, treeOpenStates]);
 
   /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
   const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
@@ -13394,15 +13434,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [adoptViewportCamera, syncProjectionWindowTitle],
   );
 
-  const handleProjectionKindChange = useCallback(
-    (spec: WorldProjectionSpec) => {
-      const distance = orbitCameraDistance(cameraState, Math.hypot(cameraState.position[0] - cameraState.target[0], cameraState.position[1] - cameraState.target[1], cameraState.position[2] - cameraState.target[2]) || 600);
-      const pose = computeWorldProjectionPose(spec, { target: cameraState.target, distance, zoom: cameraState.zoom });
-      adoptViewportCamera({ ...pose, projectionSpec: spec }, true);
-      syncProjectionWindowTitle(spec);
-    },
-    [adoptViewportCamera, cameraState, syncProjectionWindowTitle],
-  );
+  const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
+  const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
+
+  const handleProjectionKindChange = useCallback((spec: WorldProjectionSpec) => {
+    setExternalPendingProjectionSpec(spec);
+  }, []);
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
     setViewportCamera(state);
@@ -13776,7 +13813,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         }
       >
         <WorldOrbitViewSnapGateProvider>
-          <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} />
+          <WorldProjectionRig spec={worldProjectionSpec} state={cameraState} seedKey={cameraSeedKey} pendingSpec={pendingProjectionSpec} />
           {projectionFramePending ? (
             <WorldProjectionContentFrame enabled spec={pendingProjectionSpecRef.current ?? undefined} bounds={contentBounds} fov={cameraState.fov} onFramed={handleProjectionContentFrame} />
           ) : null}
@@ -13788,7 +13825,13 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             constraints={worldOrbitConstraints}
             onRightPointerDown={handleWorldOrbitRightPointerDown}
           />
-          <WorldOrbitViewControls projectionSpec={worldProjectionSpec} onCameraChange={handleGizmoCameraChange} />
+          <WorldOrbitViewControls
+            projectionSpec={worldProjectionSpec}
+            externalPendingSpec={externalPendingProjectionSpec}
+            onExternalPendingSpecClear={() => setExternalPendingProjectionSpec(null)}
+            onCameraChange={handleGizmoCameraChange}
+            onPendingSpecChange={setPendingProjectionSpec}
+          />
           <WorldLodBridge
             lodRef={lodRef}
             distanceReference={100}

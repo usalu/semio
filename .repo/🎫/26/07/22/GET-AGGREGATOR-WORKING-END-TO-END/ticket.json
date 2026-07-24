@@ -3,13 +3,14 @@
   "emoji": "🐛",
   "status": "closed",
   "description": "Get aggregator working end to end. Currently no windows show content. Error: Fehlendes Fenster: puzzle3d-main-perspective",
-  "summary": "Fixed empty aggregator panes (missing-window race + blank WebGL).\n\nMissing body: seed default-layout extras/shell layout on session create; keep extraWindowInstancesRef authoritative for refreshUi so concurrent boot refresh cannot wipe instance-keyed window UI.\n\nBlank canvases: sticky peekPendingWorldProjection (clear on pane close only); layout effects use live store camera via getThree() + isOrthographicCamera duck-typing so Top gets pixel frustum; demand frameloop invalidates after reference/GLB load plus a short mount pump.\n\nVerified Playwright on :6023 — Top shows floor plan/grid/markers; Perspective shows reference plane + GLB mesh.",
+  "summary": "Fixed UIIntroduction crash on Aggregator boot: `step.demonstrations` was undefined for hand-written brand steps (Rust `#[serde(default)]` does not apply to plain TS objects), so `.length` threw and blanked the shell. UIIntroduction now treats missing demonstrations as empty and still auto-demos Next on informational steps. Brand steps already carry explicit `demonstrations: []` where none are authored. Vitest covers omitted demonstrations; Playwright on :6023 confirms welcome intro, Next through step 5 with zero pageerrors, and after Skip Top+Perspective canvases with Abbau Aufbau content.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2231"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪0abc992af30a49378bd48da7d82887e9",
-    "⚪dfc173aab02f4de7886f73c756651dbe"
+    "⚪dfc173aab02f4de7886f73c756651dbe",
+    "⚪e877e22beb254bad811527fdceb04c53"
   ]
 }

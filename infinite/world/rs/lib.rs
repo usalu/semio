@@ -417,6 +417,7 @@ pub struct World3dState {
     terrain_built_tiles: HashSet<(u32, u32, u32)>,
     pending_terrain_tile_urls: HashMap<String, (u32, u32, u32)>,
     right_press_point: Option<[f32; 2]>,
+    gizmo_hovered_tip: Option<usize>,
 }
 
 impl World3dState {
@@ -504,6 +505,7 @@ impl World3dState {
             terrain_built_tiles: HashSet::new(),
             pending_terrain_tile_urls: HashMap::new(),
             right_press_point: None,
+            gizmo_hovered_tip: None,
         }
     }
 }
@@ -1996,7 +1998,7 @@ pub fn render_world_3d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Wid
         let crossing = marquee_is_crossing_from_path(&state.marquee_points, state.selection_method == "lasso");
         paint_selection_marquee(ctx.draw, theme, crossing, state.selection_method == "lasso", &state.marquee_points, false);
     }
-    paint_world_orbit_view_gizmo(ctx, &camera, inner);
+    paint_world_orbit_view_gizmo(ctx, &camera, inner, state.gizmo_hovered_tip);
     if scene.world_3d.is_none() {
         draw_text(ctx, "world-3d (empty)", inner.x + 12.0, inner.y + 20.0, theme.font_size_small, theme.text_muted);
     }
@@ -2023,8 +2025,19 @@ pub fn world_orbit_view_gizmo_placement(viewport: Rect) -> (f32, f32) {
     (margin, margin)
 }
 
-/** 🧭 Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`). */
-fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect) {
+/** 🧭 Screen-space tip used for orbit-view gizmo hover hit-testing and paint. */
+struct WorldOrbitViewGizmoTip {
+    screen_x: f32,
+    screen_y: f32,
+    depth: f32,
+    pick_radius: f32,
+    label: &'static str,
+    color: Rgba,
+    is_corner: bool,
+    prominent: bool,
+}
+
+fn world_orbit_view_gizmo_tips(camera: &Camera3d, viewport: Rect) -> Vec<WorldOrbitViewGizmoTip> {
     let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
     let origin_x = viewport.x + viewport.w - margin_x;
     let origin_y = viewport.y + viewport.h - margin_y;
@@ -2032,62 +2045,127 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
     let forward = camera.position.sub(camera.target);
     let forward_len = forward.length();
     if forward_len < 1e-5 {
-        return;
+        return Vec::new();
     }
     let forward = forward.scale(1.0 / forward_len);
     let right = forward.cross(camera.up);
     let right_len = right.length();
     if right_len < 1e-5 {
-        return;
+        return Vec::new();
     }
     let right = right.scale(1.0 / right_len);
     let up = right.cross(forward).normalize();
+    let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
     let axes = [
-        (Vec3::new(1.0, 0.0, 0.0), "X", spatial_axis_rgba(0, 1.0)),
-        (Vec3::new(-1.0, 0.0, 0.0), "", spatial_axis_rgba(0, 0.75)),
-        (Vec3::new(0.0, 1.0, 0.0), "Y", spatial_axis_rgba(1, 1.0)),
-        (Vec3::new(0.0, -1.0, 0.0), "", spatial_axis_rgba(1, 0.75)),
-        (Vec3::new(0.0, 0.0, 1.0), "Z", spatial_axis_rgba(2, 1.0)),
-        (Vec3::new(0.0, 0.0, -1.0), "", spatial_axis_rgba(2, 0.75)),
+        (Vec3::new(1.0, 0.0, 0.0), "X", spatial_axis_rgba(0, 1.0), false, true),
+        (Vec3::new(-1.0, 0.0, 0.0), "", spatial_axis_rgba(0, 0.75), false, false),
+        (Vec3::new(0.0, 1.0, 0.0), "Y", spatial_axis_rgba(1, 1.0), false, true),
+        (Vec3::new(0.0, -1.0, 0.0), "", spatial_axis_rgba(1, 0.75), false, false),
+        (Vec3::new(0.0, 0.0, 1.0), "Z", spatial_axis_rgba(2, 1.0), false, true),
+        (Vec3::new(0.0, 0.0, -1.0), "", spatial_axis_rgba(2, 0.75), false, false),
     ];
     let corners = [
         (Vec3::new(0.72, 0.72, 0.72), "NE", true),
         (Vec3::new(-0.72, 0.72, 0.72), "NW", true),
         (Vec3::new(0.72, -0.72, 0.72), "SE", true),
         (Vec3::new(-0.72, -0.72, 0.72), "SW", true),
-        // 🧭 Lower hemisphere: unlabeled small tips (parity with negative axis ends).
         (Vec3::new(0.72, 0.72, -0.72), "", false),
         (Vec3::new(-0.72, 0.72, -0.72), "", false),
         (Vec3::new(0.72, -0.72, -0.72), "", false),
         (Vec3::new(-0.72, -0.72, -0.72), "", false),
     ];
-    let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
-    let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool, bool)> = axes
+    let mut tips: Vec<WorldOrbitViewGizmoTip> = axes
         .into_iter()
-        .map(|(axis, label, color)| {
+        .map(|(axis, label, color, is_corner, prominent)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
-            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, false, !label.is_empty())
+            let tip_x = origin_x + sx * axis_len;
+            let tip_y = origin_y + sy * axis_len;
+            let pick_radius = if prominent { 10.0 } else { 7.0 };
+            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, label, color, is_corner, prominent }
         })
         .chain(corners.into_iter().map(|(axis, label, prominent)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
-            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, neutral, true, prominent)
+            let tip_x = origin_x + sx * axis_len;
+            let tip_y = origin_y + sy * axis_len;
+            let pick_radius = if prominent { 10.0 } else { 7.0 };
+            WorldOrbitViewGizmoTip { screen_x: tip_x, screen_y: tip_y, depth, pick_radius, label, color: neutral, is_corner: true, prominent }
         }))
         .collect();
+    tips.push(WorldOrbitViewGizmoTip {
+        screen_x: origin_x,
+        screen_y: origin_y,
+        depth: 0.0,
+        pick_radius: 9.0,
+        label: "3D",
+        color: neutral,
+        is_corner: false,
+        prominent: true,
+    });
+    tips
+}
+
+fn world_orbit_view_gizmo_hit_test(x: f32, y: f32, tips: &[WorldOrbitViewGizmoTip]) -> Option<usize> {
+    tips.iter()
+        .enumerate()
+        .filter_map(|(index, tip)| {
+            let distance = ((x - tip.screen_x).powi(2) + (y - tip.screen_y).powi(2)).sqrt();
+            if distance <= tip.pick_radius + 3.0 {
+                Some((index, distance))
+            } else {
+                None
+            }
+        })
+        .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
+        .map(|(index, _)| index)
+}
+
+fn update_world_orbit_view_gizmo_hover(state: &mut World3dState, x: f32, y: f32, inner: Rect) {
+    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(inner);
+    let origin_x = inner.x + inner.w - margin_x;
+    let origin_y = inner.y + inner.h - margin_y;
+    let zone_radius = 56.0;
+    if ((x - origin_x).powi(2) + (y - origin_y).powi(2)).sqrt() > zone_radius {
+        state.gizmo_hovered_tip = None;
+        return;
+    }
+    let camera = state.orbit.to_camera();
+    let tips = world_orbit_view_gizmo_tips(&camera, inner);
+    state.gizmo_hovered_tip = world_orbit_view_gizmo_hit_test(x, y, &tips);
+}
+
+/** 🧭 Screen-space XYZ orientation gizmo in the lower-right of every world-3d window (wgpu parity with React `WorldOrbitViewGizmo`). */
+fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Camera3d, viewport: Rect, hovered_tip: Option<usize>) {
+    let (margin_x, margin_y) = world_orbit_view_gizmo_placement(viewport);
+    let origin_x = viewport.x + viewport.w - margin_x;
+    let origin_y = viewport.y + viewport.h - margin_y;
+    let tips = world_orbit_view_gizmo_tips(camera, viewport);
+    let mut ordered: Vec<(f32, usize)> = tips.iter().enumerate().map(|(index, tip)| (tip.depth, index)).collect();
     ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-    for (depth, tip_x, tip_y, label, color, is_corner, prominent) in ordered {
-        let fade = if depth > 0.05 { 0.45 } else { 1.0 };
-        let stroke = Rgba::new(color.r, color.g, color.b, color.a * fade);
-        ctx.draw.push_line_overlay(origin_x, origin_y, tip_x, tip_y, stroke, if is_corner { 1.5 } else { 2.0 });
-        if is_corner || label.is_empty() {
-            let r = if prominent { 3.0 } else { 2.0 };
-            ctx.draw.push_solid_overlay([tip_x - r, tip_y - r, tip_x + r, tip_y + r], stroke);
+    let has_hover = hovered_tip.is_some();
+    for (_, index) in ordered {
+        let tip = &tips[index];
+        let hovered = hovered_tip == Some(index);
+        let depth_fade = if tip.depth > 0.05 { 0.45 } else { 1.0 };
+        let hover_fade = if has_hover && !hovered { 0.42 } else { 1.0 };
+        let alpha = (tip.color.a * depth_fade * hover_fade).min(1.0);
+        let stroke = Rgba::new(tip.color.r, tip.color.g, tip.color.b, if hovered { tip.color.a.min(1.0) } else { alpha });
+        ctx.draw.push_line_overlay(origin_x, origin_y, tip.screen_x, tip.screen_y, stroke, if tip.is_corner { 1.5 } else { 2.0 });
+        if tip.is_corner || tip.label.is_empty() {
+            let r = if tip.prominent {
+                if hovered { 3.6 } else { 3.0 }
+            } else if hovered {
+                2.4
+            } else {
+                2.0
+            };
+            ctx.draw.push_solid_overlay([tip.screen_x - r, tip.screen_y - r, tip.screen_x + r, tip.screen_y + r], stroke);
         }
-        if !label.is_empty() {
-            draw_text_overlay(ctx, label, tip_x + 3.0, tip_y - 4.0, ctx.theme.font_size_small, stroke);
+        if !tip.label.is_empty() {
+            draw_text_overlay(ctx, tip.label, tip.screen_x + 3.0, tip.screen_y - 4.0, ctx.theme.font_size_small, stroke);
         }
     }
 }
@@ -2100,6 +2178,7 @@ pub fn world3d_hit_target(scene: &UiComponentSceneNode, bounds: Rect) -> HitTarg
 pub fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, down: bool, button: i16) -> Option<ActionDescriptor> {
     let inner = world_pick_rect(state);
     if !inner.contains(x, y) {
+        state.gizmo_hovered_tip = None;
         return None;
     }
     if down && button == 0 {
@@ -2124,6 +2203,7 @@ pub fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, dow
         }
     }
     if !down {
+        update_world_orbit_view_gizmo_hover(state, x, y, inner);
         return pick_hover_action(state, x, y, inner);
     }
     if button == 2 {

@@ -23,8 +23,8 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "fem3d", pluginId: "fem", cratePath: "fem/plugin/rs", app: "fem3d-play", aliases: ["fem 3d"], ports: { react: 6087, wgpu: 6187 }, examples: ["default"], engines: [], assets: [] },
   { variant: "flow", pluginId: "flow", cratePath: "flow/plugin/rs", aliases: [], ports: { react: 6016, wgpu: 6116 }, examples: ["default"], engines: ["flow/core/rs"], assets: [] },
   { variant: "forms", pluginId: "forms", cratePath: "forms/plugin/rs", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["building-component"], engines: [], assets: [] },
-  { variant: "gis2d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis2d", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["reuse"], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
-  { variant: "gis3d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis3d", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["reuse"], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
+  { variant: "gis2d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis2d-play", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["reuse"], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
+  { variant: "gis3d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis3d-play", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["reuse"], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
   { variant: "imperative", pluginId: "imperative", cratePath: "imperative/plugin/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["default"], engines: [], assets: [] },
   { variant: "iso16757", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-iso-16757-play", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
   { variant: "layout", pluginId: "layout", cratePath: "layout/plugin/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["sample"], engines: [], assets: [] },
@@ -677,13 +677,13 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "process3d",
-  registryPluginId: "process",
-  defaultAppId: "process3d-play",
+  variant: "puzzle3d",
+  registryPluginId: "puzzle",
+  defaultAppId: "puzzle3d-play",
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "process", moduleUrl: "/plugin-modules/process/process_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }
   ]
 };
 

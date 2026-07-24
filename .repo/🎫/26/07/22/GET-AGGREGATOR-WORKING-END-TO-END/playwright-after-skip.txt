@@ -1,0 +1,39 @@
+{
+  "afterSkip": {
+    "intro": 0,
+    "active": null,
+    "windows": 2,
+    "canvases": 2,
+    "windowIds": [
+      "puzzle3d-main-top",
+      "puzzle3d-main-perspective"
+    ],
+    "catalogue": 1,
+    "bodyTextSample": "Dokument\nKatalog\nInspektion\nVollbild\nEntwerfen mit Bestand · Aggregator\nBeispiel\nAbbau Aufbau\nTop\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nPerspective\nFokussieren\nSchließen\nProjektion\nFensteroptionen\nAktionen\nSuche\nHilfsmittel\nAnzeige\nSynchronisierung\nEin Projekt von\nund\nGefördert durch\nEinstellungen\nVerlauf\nWerkzeug\nBefehl\nSuche\n\nNach Elementen suchen\n\nFinden\n\nE"
+  },
+  "canvasInfo": [
+    {
+      "w": 470,
+      "h": 807,
+      "gl": true,
+      "mid": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "w": 947,
+      "h": 807,
+      "gl": true,
+      "mid": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "errors": []
+}

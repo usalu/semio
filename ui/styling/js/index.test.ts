@@ -141,7 +141,7 @@ describe("elementState", () => {
 
   it("elementStateHidden is true only for state === hidden", () => {
     expect(elementStateHidden({ state: "hidden" })).toBe(true);
-    for (const state of ["introducing", "previewed", "normal", "disabled"] as const) {
+    for (const state of ["introducing", "celebrating", "previewed", "normal", "disabled"] as const) {
       expect(elementStateHidden({ state })).toBe(false);
     }
   });
@@ -158,6 +158,13 @@ describe("elementState", () => {
     expect(elementStateAttributes(resolveElementState({ state: "introducing" }))).toEqual({
       "data-ui-state": "introducing",
       "data-introduced": "true",
+    });
+  });
+
+  it("elementStateAttributes stamps data-ui-state plus data-celebrated for celebrating", () => {
+    expect(elementStateAttributes(resolveElementState({ state: "celebrating" }))).toEqual({
+      "data-ui-state": "celebrating",
+      "data-celebrated": "true",
     });
   });
 
@@ -186,13 +193,14 @@ describe("elementState", () => {
     });
   });
 
-  it("resolveElementFillKind follows disabled > selected > previewed > hovered > neutral precedence", () => {
+  it("resolveElementFillKind follows disabled > celebrated > selected > previewed > hovered > neutral precedence", () => {
     expect(resolveElementFillKind(resolveElementState())).toBe("neutral");
     expect(resolveElementFillKind(resolveElementState({ hover: true }))).toBe("hovered");
     expect(resolveElementFillKind(resolveElementState({ state: "previewed" }))).toBe("previewed");
     expect(resolveElementFillKind(resolveElementState({ state: "previewed", hover: true }))).toBe("previewed");
     expect(resolveElementFillKind(resolveElementState({ selected: true, hover: true }))).toBe("selected");
     expect(resolveElementFillKind(resolveElementState({ selected: true, state: "previewed" }))).toBe("selected");
+    expect(resolveElementFillKind(resolveElementState({ state: "celebrating", selected: true }))).toBe("celebrated");
     expect(resolveElementFillKind(resolveElementState({ state: "disabled", selected: true }))).toBe("disabled");
   });
 

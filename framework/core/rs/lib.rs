@@ -3606,11 +3606,10 @@ pub struct IntroductionStepDefinition {
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
-    /// 🎬 An optional ghost-cursor demonstration of the gesture that completes `advance`, played while
-    /// the user's pointer is idle.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub demonstration: Option<IntroductionDemonstration>,
+    /// 🎬 Ghost-cursor demonstrations played in order, one after another, then looping back to the first —
+    /// e.g. a viewport step showing zoom, then pan, then orbit. Empty means no demonstration.
+    #[serde(default)]
+    pub demonstrations: Vec<IntroductionDemonstration>,
 }
 
 impl IntroductionStepDefinition {
@@ -3624,7 +3623,7 @@ impl IntroductionStepDefinition {
             placement: IntroductionPlacement::default(),
             advance: IntroductionAdvance::default(),
             logos: Vec::new(),
-            demonstration: None,
+            demonstrations: Vec::new(),
         }
     }
 
@@ -3658,9 +3657,9 @@ impl IntroductionStepDefinition {
         self
     }
 
-    /// @emoji 🎬 Attaches a ghost-cursor demonstration of the step's `advance` gesture.
-    pub fn demonstrate(mut self, demonstration: IntroductionDemonstration) -> Self {
-        self.demonstration = Some(demonstration);
+    /// @emoji 🎬 Attaches ghost-cursor demonstrations played in order, then looping back to the first.
+    pub fn demonstrate(mut self, demonstrations: Vec<IntroductionDemonstration>) -> Self {
+        self.demonstrations = demonstrations;
         self
     }
 }
@@ -3694,7 +3693,8 @@ pub enum IntroductionPlacement {
 }
 
 /// @emoji 👉 What completes an introduction step. `Next` needs the info box's Next button; `Action`/
-/// `Utility`/`Tool` complete as soon as the user dispatches that action or activates that utility/tool, teaching by doing.
+/// `Utility`/`Tool`/`Panel`/`Expand` complete as soon as the user activates that utility/tool, opens that
+/// panel tab, or expands that tree section — teaching by doing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
@@ -3707,6 +3707,10 @@ pub enum IntroductionAdvance {
     Utility(UtilityRef),
     /// 🛠️ References `AppDefinition.tools` (mode-level tools such as fill).
     Tool(ToolRef),
+    /// 📑 Shell panel tab id (e.g. `framework.panel.catalogue`) — completes when that panel opens.
+    Panel(String),
+    /// 🌲 Tree section/item id (e.g. `puzzle3d-play-kinds.objects`) — completes when the user expands it.
+    Expand(String),
 }
 
 /// @emoji 📌 Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
@@ -3715,7 +3719,10 @@ pub enum IntroductionAdvance {
 /// a 3D scene world position projected through that window's live camera.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase", tag = "kind")]
+// 🐢 `rename_all_fields` is required alongside `rename_all` — the latter only renames the *variant* tag
+// values; without the former, a future multi-word field inside a variant would silently serialize
+// snake_case and desync from the generated TS type (see `UiDirtyScope`'s comment for the full story).
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum IntroductionPoint {
     /// 🎯 Center (or `offset`, normalized 0–1 within the element's rect) of the element `id` resolves to.
     Element {
@@ -3740,13 +3747,18 @@ pub enum IntroductionPoint {
 /// and performs the visual press/release affordance for the gesture kind.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
-#[serde(rename_all = "camelCase", tag = "kind")]
+// 🐢 `rename_all_fields` required alongside `rename_all` so `Scroll`'s `delta_y` field actually
+// serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum IntroductionGesture {
     LeftClick { at: IntroductionPoint },
     RightClick { at: IntroductionPoint },
     DoubleClick { at: IntroductionPoint },
     Drag { from: IntroductionPoint, to: IntroductionPoint },
     Scroll { at: IntroductionPoint, delta_y: f64 },
+    /// 🌐 A curved (not straight-line) drag around a pivot — camera orbit, distinct from `Drag`'s
+    /// straight-line pan/reposition motion.
+    Orbit { from: IntroductionPoint, to: IntroductionPoint },
 }
 
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `ui.css`'s `--cursor-*` custom cursors.
@@ -3792,6 +3804,16 @@ impl IntroductionDemonstration {
     /// @emoji ✋ A click-and-drag demonstration from `from` to `to`.
     pub fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
         Self { gesture: IntroductionGesture::Drag { from, to }, cursor: None }
+    }
+
+    /// @emoji 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
+    pub fn scroll(at: IntroductionPoint, delta_y: f64) -> Self {
+        Self { gesture: IntroductionGesture::Scroll { at, delta_y }, cursor: None }
+    }
+
+    /// @emoji 🌐 A camera-orbit demonstration curving from `from` to `to`.
+    pub fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
+        Self { gesture: IntroductionGesture::Orbit { from, to }, cursor: None }
     }
 }
 //#endregion 🔖Introduction
@@ -5762,6 +5784,8 @@ mod app_document_tests {
             IntroductionAdvance::Action(ActionRef::new("add")),
             IntroductionAdvance::Utility(UtilityRef::new("brush")),
             IntroductionAdvance::Tool(ToolRef::new("fill")),
+            IntroductionAdvance::Panel("framework.panel.catalogue".into()),
+            IntroductionAdvance::Expand("puzzle3d-play-kinds.objects".into()),
         ] {
             let json = serde_json::to_string(&advance).unwrap();
             let round: IntroductionAdvance = serde_json::from_str(&json).unwrap();
@@ -5797,12 +5821,20 @@ mod app_document_tests {
             (IntroductionGesture::DoubleClick { at: at.clone() }, "doubleClick"),
             (IntroductionGesture::Drag { from: at.clone(), to: at.clone() }, "drag"),
             (IntroductionGesture::Scroll { at: at.clone(), delta_y: 100.0 }, "scroll"),
+            (IntroductionGesture::Orbit { from: at.clone(), to: at.clone() }, "orbit"),
         ] {
             let json = serde_json::to_string(&gesture).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
             let round: IntroductionGesture = serde_json::from_str(&json).unwrap();
             assert_eq!(round, gesture);
         }
+
+        // 🐢 `rename_all` on an enum renames only the variant tag, not fields *within* a struct variant —
+        // `rename_all_fields` is required too, or this field would silently serialize snake_case
+        // (`delta_y`) and desync from the generated TS type's camelCase `deltaY` (see `UiDirtyScope`).
+        let scroll_json = serde_json::to_string(&IntroductionGesture::Scroll { at, delta_y: 100.0 }).unwrap();
+        assert!(scroll_json.contains("\"deltaY\":100.0"), "{scroll_json}");
+        assert!(!scroll_json.contains("delta_y"), "{scroll_json}");
     }
 
     #[test]
@@ -5822,14 +5854,20 @@ mod app_document_tests {
         assert_eq!(round, with_cursor);
 
         let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
-        assert_eq!(step.demonstration, None);
+        assert!(step.demonstrations.is_empty());
         let json = serde_json::to_string(&step).unwrap();
-        assert!(!json.contains("demonstration"), "{json}");
+        assert!(json.contains("\"demonstrations\":[]"), "{json}");
 
-        let with_demo = IntroductionStepDefinition::new("fill", "Fill", "…").demonstrate(IntroductionDemonstration::left_click(IntroductionPoint::Element { id: "tool.fill".into(), offset: None }));
-        let json = serde_json::to_string(&with_demo).unwrap();
+        // 🎬 A step can sequence several demonstrations (e.g. zoom, then pan, then orbit).
+        let with_demos = IntroductionStepDefinition::new("viewport", "Viewport", "…").demonstrate(vec![
+            IntroductionDemonstration::scroll(IntroductionPoint::Screen { x: 400.0, y: 300.0 }, -100.0),
+            IntroductionDemonstration::drag(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 400.0, y: 320.0 }),
+            IntroductionDemonstration::orbit(IntroductionPoint::Screen { x: 300.0, y: 300.0 }, IntroductionPoint::Screen { x: 500.0, y: 300.0 }),
+        ]);
+        assert_eq!(with_demos.demonstrations.len(), 3);
+        let json = serde_json::to_string(&with_demos).unwrap();
         let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
-        assert_eq!(round, with_demo);
+        assert_eq!(round, with_demos);
     }
 
     #[test]

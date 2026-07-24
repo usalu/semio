@@ -983,6 +983,18 @@
   initial-value: 1.6s;
 }
 
+@property --celebrate-border-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+@property --celebrate-border-duration {
+  syntax: "<time>";
+  inherits: false;
+  initial-value: 1.2s;
+}
+
 @keyframes loading-border-spin {
   to {
     --loading-border-angle: 360deg;
@@ -1101,6 +1113,67 @@
   --waiting-border-color: var(--border-element-color);
 }
 
+@keyframes celebrate-border-spin {
+  to {
+    --celebrate-border-angle: 360deg;
+  }
+}
+
+@keyframes celebrate-border-burst {
+  0%,
+  100% {
+    padding: var(--stroke-hairline);
+  }
+  50% {
+    padding: var(--stroke-focus);
+  }
+}
+
+/* 🎉 Any element stamped data-celebrated="true" (authored state: "celebrating", or the transient
+   completion stamp from celebrateElements()) rings a spinning conic gradient of the three brand
+   colors whose THICKNESS bursts — the celebratory sibling of the introduced pulse, built on the
+   border-loading masked-ring template. Recolor via --celebrate-border-color-{a,b,c}. */
+[data-celebrated="true"] {
+  position: relative;
+  --celebrate-border-angle: 0deg;
+}
+
+[data-celebrated="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  border-radius: inherit;
+  padding: var(--stroke-hairline);
+  background: conic-gradient(
+    from var(--celebrate-border-angle),
+    var(--celebrate-border-color-a, var(--color-primary)),
+    var(--celebrate-border-color-b, var(--color-secondary)),
+    var(--celebrate-border-color-c, var(--color-tertiary)),
+    var(--celebrate-border-color-a, var(--color-primary))
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation:
+    celebrate-border-spin var(--celebrate-border-duration) linear infinite,
+    celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
+}
+
+/* 🪟 Docked windows: the silhouette SVG on [data-slot="mode-dock-stack"] owns the celebrate ring for
+   window-chrome; suppress only the window body stamp, matching the introduced/loading/waiting rules. */
+[data-slot="mode-dock-stack"] [data-slot="window"][data-celebrated="true"]::after,
+[data-slot="mode-dock-stack"] [id^="framework.window."][data-celebrated="true"]:not([id*=".action."])::after {
+  content: none !important;
+  animation: none !important;
+}
+
 @keyframes introduced-border-pulse {
   0%,
   100% {
@@ -1213,6 +1286,26 @@
   stroke: var(--border-normal-color);
 }
 
+@keyframes window-silhouette-border-celebrated-cycle {
+  0%,
+  100% {
+    stroke: var(--celebrate-border-color-a, var(--color-primary));
+  }
+  33% {
+    stroke: var(--celebrate-border-color-b, var(--color-secondary));
+  }
+  66% {
+    stroke: var(--celebrate-border-color-c, var(--color-tertiary));
+  }
+}
+
+.window-silhouette-border-celebrated {
+  stroke-width: var(--stroke-hairline);
+  animation:
+    window-silhouette-border-introduced-pulse var(--celebrate-border-duration) ease-in-out infinite,
+    window-silhouette-border-celebrated-cycle calc(var(--celebrate-border-duration) * 3) linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   [data-introduced="true"] {
     animation: none;
@@ -1224,14 +1317,21 @@
     box-shadow: none !important;
   }
 
+  [data-celebrated="true"]::after {
+    animation: none;
+    padding: var(--stroke-default);
+  }
+
   .window-silhouette-border-introduced,
   .window-silhouette-border-loading,
-  .window-silhouette-border-waiting {
+  .window-silhouette-border-waiting,
+  .window-silhouette-border-celebrated {
     animation: none;
     opacity: 1;
   }
 
-  .window-silhouette-border-introduced {
+  .window-silhouette-border-introduced,
+  .window-silhouette-border-celebrated {
     stroke-width: var(--stroke-default);
   }
 }

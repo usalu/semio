@@ -23,6 +23,7 @@ pub struct ActionDescriptor {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StyleSpec {
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -44,6 +45,7 @@ pub struct StyleSpec {
 #[serde(rename_all = "camelCase")]
 pub enum UiState {
     Introducing,
+    Celebrating,
     Previewed,
     #[default]
     Normal,
@@ -124,6 +126,11 @@ impl UiPresence {
     /// 🚫 `Disabled` when `disabled`, else `Normal` — the one-line migration for today's `disabled` flags.
     pub fn disabled_if(disabled: bool) -> Self {
         Self::state(if disabled { UiState::Disabled } else { UiState::Normal })
+    }
+    /// 🎉 `Celebrating` when `celebrating`, else `Normal` — the transient completion emphasis fired e.g.
+    /// when an introduction step advances by the user performing the taught action.
+    pub fn celebrate_if(celebrating: bool) -> Self {
+        Self::state(if celebrating { UiState::Celebrating } else { UiState::Normal })
     }
 }
 
@@ -3119,6 +3126,7 @@ pub struct BlockListScene {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiExternalSlotNode {
     pub plugin_id: String,
@@ -3126,6 +3134,7 @@ pub struct UiExternalSlotNode {
     pub body_key: String,
     pub params_json: String,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+    #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
 }
 
@@ -4305,6 +4314,19 @@ mod ui_node_wire_format_tests {
         assert!(json.contains("\"presence\":{\"state\":\"hidden\"}"));
         let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
         assert_eq!(roundtripped, hidden);
+    }
+
+    /// 🎉 `presence.state == Celebrating` serializes to `"celebrating"` — guards the TS/Rust `UiState`
+    /// mirror staying byte-for-byte (see `ui/styling/js/index.ts`'s `UI_STATES`).
+    #[test]
+    fn ui_tree_item_celebrating_state_roundtrips() {
+        let mut celebrating = UiTreeItemNode::base("celebrating1", "Celebrating");
+        celebrating.presence.state = UiState::Celebrating;
+        assert!(celebrating.presence.visible());
+        let json = serde_json::to_string(&celebrating).unwrap();
+        assert!(json.contains("\"presence\":{\"state\":\"celebrating\"}"));
+        let roundtripped: UiTreeItemNode = serde_json::from_str(&json).unwrap();
+        assert_eq!(roundtripped, celebrating);
     }
 
     /// ✨ Every `UiNode` variant's `presence` field actually serializes when set — an exhaustiveness
@@ -12649,6 +12671,12 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
     if presence.state == UiState::Introducing {
         draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
     }
+    // 🎉 `Celebrating` reuses the introducing breathing-pulse ring — `Theme` has no primary/secondary/
+    // tertiary triad to cycle through, so `theme.accent` is the honest static reduction of the CSS
+    // spinning tri-color ring for this shader-less renderer; a true conic tri-color ring is out of scope.
+    if presence.state == UiState::Celebrating {
+        draw.push_introducing_border([bounds.x, bounds.y, bounds.w, bounds.h], theme.accent, theme.border_radius, theme.stroke_hairline);
+    }
 }
 
 pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
@@ -13091,7 +13119,7 @@ fn paint_tree_item(
         UiStatus::Finished => draw.push_finished_border([row.x, row.y, row.w, row.h], ring_color, theme.border_radius, theme.stroke_hairline),
         UiStatus::Idle => {}
     }
-    if item.presence.state == UiState::Introducing {
+    if item.presence.state == UiState::Introducing || item.presence.state == UiState::Celebrating {
         draw.push_introducing_border([row.x, row.y, row.w, row.h], theme.accent, theme.border_radius, theme.stroke_hairline);
     }
     paint_tree_guides(draw, x, row.y, row.h, depth, is_last_at_level, theme);

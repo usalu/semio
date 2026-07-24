@@ -1,0 +1,22 @@
+$ bun ./script.ts nx run "@semio-tech/infinite-world-r3f:test-quick"
+
+> nx run @semio-tech/infinite-world-r3f:test-quick  [existing outputs match the cache, left as is]
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+
+ Test Files  2 passed (2)
+      Tests  172 passed (172)
+   Start at  11:05:16
+   Duration  4.57s (transform 2.37s, setup 0ms, import 8.06s, tests 42ms, environment 729ms)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/infinite-world-r3f
+
+Nx read the output from the cache instead of running the command for 1 out of 1 tasks.
+

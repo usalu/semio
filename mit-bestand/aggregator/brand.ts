@@ -8,7 +8,7 @@ import { panelTabElementId, panelTabFirstDraggableElementId, windowElementId, FR
 /** @emoji ✒️ Semio emblem. */
 const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
-    /** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `tool.fill`, `puzzle3d-play-distribution`, `setVortexShow`, `openVortexSuggestions`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → catalogue → drag-and-drop → transform → Verbindungspunkte → Aktionsmenü vorschlagen → Füllen → Verteilung. */
+    /** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `tool.fill`, `puzzle3d-play-distribution`, `puzzle3d-play-kinds.objects`, `setVortexShow`, `acceptSuggestion`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → panels → open catalogue → expand Baukomponenten → drag-and-drop → transform → Verbindungspunkte → Vorschlag wählen → Füllen → Verteilung. */
 export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand",
   windowTitle: "Entwerfen mit Bestand · Aggregator",
@@ -32,6 +32,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "center",
         advance: { kind: "next" },
         logos: [],
+        demonstrations: [],
       },
       {
         id: "prototype",
@@ -42,6 +43,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "center",
         advance: { kind: "next" },
         logos: [],
+        demonstrations: [],
       },
       {
         id: "funding",
@@ -56,6 +58,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
           { src: "/mit-bestand/aggregator/asset/logo/bbsr.png", darkSrc: "/mit-bestand/aggregator/asset/logo/bbsr-dark.png", alt: "Bundesinstitut für Bau-, Stadt- und Raumforschung", href: "https://www.bbsr.bund.de" },
           { src: "/mit-bestand/aggregator/asset/logo/zukunft-bau.png", darkSrc: "/mit-bestand/aggregator/asset/logo/zukunft-bau-dark.png", alt: "Zukunft Bau", href: "https://www.zukunftbau.de/projekte/forschungsfoerderung/1008187-2506" },
         ],
+        demonstrations: [],
       },
       {
         id: "viewport",
@@ -66,16 +69,47 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "next" },
         logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 }, deltaY: -100 } },
+          {
+            gesture: { kind: "drag", from: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 }, to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.65, y: 0.4 } },
+            cursor: "move",
+          },
+          { gesture: { kind: "orbit", from: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.35, y: 0.5 }, to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.65, y: 0.5 } } },
+        ],
       },
       {
-        id: "catalogue",
-        title: "Der Katalog",
-        body: "Durchstöbern Sie hier die verfügbaren Baukomponenten aus dem Bestand.",
-        introduce: panelTabElementId(FRAMEWORK_PANEL_TAB_CATALOGUE_ID),
+        id: "panels",
+        title: "Paneele",
+        body: "Über die Reiter in der Leiste öffnen und schließen Sie Paneele — zum Beispiel Katalog, Dokument oder Einstellungen. Jedes Paneel bündelt verwandte Werkzeuge und Inhalte.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
         show: [],
-        placement: "right",
+        placement: "auto",
         advance: { kind: "next" },
         logos: [],
+        demonstrations: [],
+      },
+      {
+        id: "catalogue-panel",
+        title: "Katalog öffnen",
+        body: "Öffnen Sie das Katalog-Paneel über den Katalog-Reiter, um die verfügbaren Bestandskomponenten zu durchstöbern.",
+        introduce: FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
+        show: [],
+        placement: "auto",
+        advance: { kind: "panel", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID },
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID } } }],
+      },
+      {
+        id: "catalogue-objects",
+        title: "Baukomponenten aufklappen",
+        body: "Klappen Sie »Baukomponenten« im Katalog auf, um die verfügbaren Arten zu sehen.",
+        introduce: "puzzle3d-play-kinds.objects",
+        show: [panelTabElementId(FRAMEWORK_PANEL_TAB_CATALOGUE_ID)],
+        placement: "right",
+        advance: { kind: "expand", id: "puzzle3d-play-kinds.objects" },
+        logos: [],
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "puzzle3d-play-kinds.objects" } } }],
       },
       {
         id: "add-object",
@@ -86,13 +120,15 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "right",
         advance: { kind: "action", id: "addObjectKind" },
         logos: [],
-        demonstration: {
-          gesture: {
-            kind: "drag",
-            from: { kind: "element", id: panelTabFirstDraggableElementId(FRAMEWORK_PANEL_TAB_CATALOGUE_ID) },
-            to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.55 },
+        demonstrations: [
+          {
+            gesture: {
+              kind: "drag",
+              from: { kind: "element", id: panelTabFirstDraggableElementId(FRAMEWORK_PANEL_TAB_CATALOGUE_ID) },
+              to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.55 },
+            },
           },
-        },
+        ],
       },
       {
         id: "transform-utility",
@@ -103,7 +139,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "utility", id: "transform" },
         logos: [],
-        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "transform" } } },
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "transform" } } }],
       },
       {
         id: "verbindungspunkte",
@@ -114,18 +150,18 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "action", id: "setVortexShow" },
         logos: [],
-        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "puzzle3d-play-vortex-show" } } },
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "puzzle3d-play-vortex-show" } } }],
       },
       {
         id: "suggest-objects",
         title: "Baukomponenten vorschlagen",
-        body: "Wählen Sie einen Verbindungspunkt und öffnen Sie per Rechtsklick das Aktionsmenü. Mit »Baukomponenten vorschlagen« erhalten Sie passende Anschlüsse — fahren Sie über einen Eintrag zur Vorschau und klicken Sie zum Platzieren.",
+        body: "Wählen Sie einen Verbindungspunkt und öffnen Sie per Rechtsklick das Aktionsmenü. Mit »Baukomponenten vorschlagen« erscheint eine Liste passender Anschlüsse — fahren Sie über einen Eintrag zur Vorschau und wählen Sie einen aus, um ihn zu platzieren.",
         introduce: windowElementId("puzzle3d-main"),
         show: [],
         placement: "auto",
-        advance: { kind: "action", id: "openVortexSuggestions" },
+        advance: { kind: "action", id: "acceptSuggestion" },
         logos: [],
-        demonstration: { gesture: { kind: "rightClick", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 } } },
+        demonstrations: [{ gesture: { kind: "rightClick", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 } } }],
       },
       {
         id: "fill-tool",
@@ -136,7 +172,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "tool", id: "fill" },
         logos: [],
-        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } }],
       },
       {
         id: "fill-distribution",
@@ -147,6 +183,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "next" },
         logos: [],
+        demonstrations: [],
       },
     ],
   },

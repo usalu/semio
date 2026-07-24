@@ -1,0 +1,48 @@
+{
+  "steps": [
+    {
+      "i": 0,
+      "title": "Willkommen bei Entwerfen mit Bestand",
+      "progress": "1 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "i": 1,
+      "title": "Früher Prototyp",
+      "progress": "2 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "i": 2,
+      "title": "Förderhinweis",
+      "progress": "3 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "i": 3,
+      "title": "Die 3D-Ansicht",
+      "progress": "4 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "i": 4,
+      "title": "Der Katalog",
+      "progress": "5 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "i": 5,
+      "title": "Baukomponente hinzufügen",
+      "progress": "6 / 11",
+      "errorsSoFar": 0
+    },
+    {
+      "note": "interaction-gated-at",
+      "title": "Baukomponente hinzufügen",
+      "progress": "6 / 11"
+    }
+  ],
+  "finalIntro": 0,
+  "windows": 2,
+  "errors": []
+}

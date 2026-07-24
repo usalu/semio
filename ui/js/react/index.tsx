@@ -5404,7 +5404,25 @@ const INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR: Record<IntroductionGesture["kind
   doubleClick: "pointer",
   drag: "grab",
   scroll: "default",
+  orbit: "move",
 };
+
+/** @emoji 🌐 A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
+ * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
+ * distinct from `drag`'s straight-line pan/reposition. */
+function introductionDemoArcPoint(from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, t: number): IntroductionResolvedPoint {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const distance = Math.hypot(dx, dy) || 1;
+  const bulge = Math.min(64, distance * 0.35);
+  const controlX = (from.x + to.x) / 2 + (-dy / distance) * bulge;
+  const controlY = (from.y + to.y) / 2 + (dx / distance) * bulge;
+  const oneMinusT = 1 - t;
+  return {
+    x: oneMinusT * oneMinusT * from.x + 2 * oneMinusT * t * controlX + t * t * to.x,
+    y: oneMinusT * oneMinusT * from.y + 2 * oneMinusT * t * controlY + t * t * to.y,
+  };
+}
 
 const INTRODUCTION_DEMO_PHASE_MS = {
   appear: 250,
@@ -5440,37 +5458,32 @@ function introductionDemoLerp(a: number, b: number, t: number): number {
 
 const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
 
-/** @emoji 🎬 Ghost-cursor gesture demonstration for an interaction-gated introduction step, mounted by
- * `UIIntroduction` whenever `step.demonstration` is set. Plays only while
- * {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and restores the real
- * cursor instantly (`data-introduction-demonstrating` cleared, see `ui.css`); going idle again restarts
- * the timeline from `appear`. Never dispatches real pointer events — purely visual, driven by an
- * imperative rAF loop (no per-frame React state) that re-resolves its `IntroductionPoint` endpoints every
- * frame via {@link resolveIntroductionPoint} so it stays glued to a moving/orbiting target. Renders
- * nothing under `prefers-reduced-motion: reduce` — the info box's "perform to continue" text remains the
- * fallback. */
-const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: IntroductionDemonstration }> = ({ demonstration }) => {
+/** @emoji 🎬 Ghost-cursor gesture demonstration(s) for an introduction step, mounted by `UIIntroduction`
+ * whenever it has one or more effective demonstrations. Plays them in order, one full gesture-loop each,
+ * then wraps back to the first — e.g. a viewport step showing zoom, then pan, then orbit, repeating.
+ * Plays only while {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and
+ * restores the real cursor instantly (`data-introduction-demonstrating` cleared, see `ui.css`); going
+ * idle again restarts the sequence from its first demonstration's `appear` phase. Never dispatches real
+ * pointer events — purely visual, driven by an imperative rAF loop (no per-frame React state) that
+ * re-resolves its `IntroductionPoint` endpoints every frame via {@link resolveIntroductionPoint} so it
+ * stays glued to a moving/orbiting target. Renders nothing under `prefers-reduced-motion: reduce` — the
+ * info box's "perform to continue" text remains the fallback. */
+const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: readonly IntroductionDemonstration[] }> = ({ demonstrations }) => {
   const { idle, lastPositionRef } = useIntroductionPointerIdle(true);
   const ghostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const reducedMotion = reactHostPort.useMemo(() => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true, []);
 
   reactHostPort.useEffect(() => {
-    if (reducedMotion || !idle) {
+    if (reducedMotion || !idle || demonstrations.length === 0) {
       document.documentElement.removeAttribute("data-introduction-demonstrating");
       return;
     }
     document.documentElement.setAttribute("data-introduction-demonstrating", "true");
-
-    const gesture = demonstration.gesture;
-    const hoverCursor = demonstration.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[gesture.kind];
-    const dragCursor = demonstration.cursor ?? "grabbing";
-    const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } =
-      gesture.kind === "drag" ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
     // 🎬 Captured once per idle period (real pointer movement tears this whole effect down before it could
-    // change) so every loop of the demonstration — including internal repeats while still idle — opens by
-    // traveling from the same real, physical resting spot of the user's actual cursor. `null` only if the
-    // pointer has never moved since load; falls back to materializing with the old fixed offset.
+    // change) so every demonstration's `appear`/`travel` — including every internal repeat of the sequence
+    // while still idle — opens by traveling from the same real, physical resting spot of the user's actual
+    // cursor. `null` only if the pointer has never moved since load; falls back to a fixed offset.
     const origin = lastPositionRef.current;
 
     const setGlyph = (glyph: IntroductionCursor) => {
@@ -5502,6 +5515,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
 
     let cancelled = false;
     let rafId = 0;
+    let demoIndex = 0;
     let phase: IntroductionDemoPhase = "appear";
     let phaseStart = performance.now();
     let rippleSpawned = false;
@@ -5509,6 +5523,14 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
 
     const tick = (now: number) => {
       if (cancelled) return;
+      const demonstration = demonstrations[demoIndex];
+      const gesture = demonstration.gesture;
+      const isDragLike = gesture.kind === "drag" || gesture.kind === "orbit";
+      const hoverCursor = demonstration.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[gesture.kind];
+      const dragCursor = demonstration.cursor ?? (gesture.kind === "orbit" ? "move" : "grabbing");
+      const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } =
+        isDragLike ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
+
       const start = resolveIntroductionPoint(targets.start);
       const end = targets.end ? resolveIntroductionPoint(targets.end) : null;
       if (!start || (targets.end && !end)) {
@@ -5537,21 +5559,40 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
           break;
         case "press":
           setGlyph(hoverCursor);
-          setPosition(start.x, start.y);
-          if (!rippleSpawned) {
-            spawnRipple(start.x, start.y);
-            rippleSpawned = true;
-          }
-          if (gesture.kind === "doubleClick" && t > 0.5 && !secondRippleSpawned) {
-            spawnRipple(start.x, start.y);
-            secondRippleSpawned = true;
+          if (gesture.kind === "scroll") {
+            // 🎬 A scroll/zoom gesture has no press-and-hold — bob the cursor along the wheel axis and drop
+            // a ripple offset in the scroll direction so it doesn't read as an ordinary click.
+            const direction = gesture.deltaY >= 0 ? 1 : -1;
+            const bob = Math.sin(t * Math.PI * 2) * 6 * direction;
+            setPosition(start.x, start.y + bob);
+            if (!rippleSpawned) {
+              spawnRipple(start.x, start.y + direction * 10);
+              rippleSpawned = true;
+            }
+            if (t > 0.5 && !secondRippleSpawned) {
+              spawnRipple(start.x, start.y + direction * 10);
+              secondRippleSpawned = true;
+            }
+          } else {
+            setPosition(start.x, start.y);
+            if (!rippleSpawned) {
+              spawnRipple(start.x, start.y);
+              rippleSpawned = true;
+            }
+            if (gesture.kind === "doubleClick" && t > 0.5 && !secondRippleSpawned) {
+              spawnRipple(start.x, start.y);
+              secondRippleSpawned = true;
+            }
           }
           break;
-        case "dragMove":
+        case "dragMove": {
           setGlyph(dragCursor);
-          if (end) setPosition(introductionDemoLerp(start.x, end.x, eased), introductionDemoLerp(start.y, end.y, eased));
-          else setPosition(start.x, start.y);
+          if (end) {
+            const point = gesture.kind === "orbit" ? introductionDemoArcPoint(start, end, eased) : { x: introductionDemoLerp(start.x, end.x, eased), y: introductionDemoLerp(start.y, end.y, eased) };
+            setPosition(point.x, point.y);
+          } else setPosition(start.x, start.y);
           break;
+        }
         case "release": {
           const point = end ?? start;
           setGlyph(hoverCursor);
@@ -5578,9 +5619,12 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
         phaseStart = now;
         rippleSpawned = false;
         secondRippleSpawned = false;
-        // 🎬 A non-drag gesture's press phase skips straight to release — there is no from→to path to move
-        // along.
-        phase = phase === "press" && gesture.kind !== "drag" ? "release" : INTRODUCTION_DEMO_NEXT_PHASE[phase];
+        // 🎬 Wrapping out of `pause` advances to the next demonstration in the sequence (looping back to
+        // the first) — the ghost is fully invisible during `pause`, so the handoff is never visible.
+        if (phase === "pause") demoIndex = (demoIndex + 1) % demonstrations.length;
+        // 🎬 A non-drag-like gesture's press phase skips straight to release — there is no from→to path to
+        // move along.
+        phase = phase === "press" && !isDragLike ? "release" : INTRODUCTION_DEMO_NEXT_PHASE[phase];
       }
       rafId = requestAnimationFrame(tick);
     };
@@ -5591,7 +5635,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
       cancelAnimationFrame(rafId);
       document.documentElement.removeAttribute("data-introduction-demonstrating");
     };
-  }, [demonstration, idle, reducedMotion]);
+  }, [demonstrations, idle, reducedMotion]);
 
   if (reducedMotion) return null;
 
@@ -5607,6 +5651,12 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: Intro
     </div>
   );
 };
+
+/** @emoji 🎬 The default demonstration for a purely informational step (`advance.kind === "next"`, the
+ * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
+ * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
+ * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */
+const INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION: IntroductionDemonstration = { gesture: { kind: "leftClick", at: { kind: "element", id: "ui.introduction.next" } } };
 //#endregion 🎬DemonstrationOverlay
 
 export type UIIntroductionProps = {
@@ -5677,7 +5727,11 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it. Renders the declarative
- * `IntroductionDefinition`/`IntroductionStepDefinition` contract. */
+ * `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step plays a ghost-cursor
+ * `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if it has one, otherwise —
+ * for a purely informational step whose only way forward is the Next/Done button — an automatic "click
+ * Next" demonstration (see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`), so authors never have to spell
+ * that one out per step. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
@@ -5687,6 +5741,17 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     [step],
   );
   const elevated = useIntroductionElevation(elevationIds);
+  // 🎬 A step that declares no `demonstrations` still gets one automatically when Next/Done is its only
+  // way forward — see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`. Memoized on `step` (not recomputed
+  // fresh every render) so `IntroductionDemonstrationOverlay`'s effect — keyed on this array — doesn't
+  // restart the demonstration loop on every unrelated re-render (viewport resize, box measure, …).
+  const effectiveDemonstrations = reactHostPort.useMemo((): readonly IntroductionDemonstration[] => {
+    if (!step) return [];
+    // 🎬 Hand-written brands may omit `demonstrations` (Rust `#[serde(default)]`); treat missing as empty.
+    const demonstrations = step.demonstrations ?? [];
+    if (demonstrations.length > 0) return demonstrations;
+    return step.advance.kind === "next" ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
+  }, [step]);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -5775,14 +5840,14 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
               <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />
             ) : (
               <span className="text-xs text-muted-foreground">
-                {(advance.kind === "utility" || advance.kind === "tool" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
-                  (advance.kind === "utility" || advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
+                {(advance.kind === "utility" || advance.kind === "tool" || advance.kind === "panel" || advance.kind === "expand" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
+                  (advance.kind === "utility" || advance.kind === "tool" || advance.kind === "panel" || advance.kind === "expand" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
               </span>
             )}
           </div>
         </div>
       </div>
-      {step.demonstration && <IntroductionDemonstrationOverlay key={step.id} demonstration={step.demonstration} />}
+      {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}
     </>
   );
 };
@@ -6585,7 +6650,10 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                 data-drop-nest={isChildDropTarget ? "true" : undefined}
                 id={tab.id}
                 data-active={isActive ? "true" : undefined}
-                onClick={() => onSelect(tab.id)}
+                onClick={(event) => {
+                  onSelect(tab.id);
+                  celebrateCompletedInteraction(event);
+                }}
                 onDragOver={
                   anchor && dock && tab.kind === "leaf"
                     ? (event) => {
@@ -7187,7 +7255,7 @@ export interface WindowSilhouetteMetrics {
 }
 
 /** @emoji 🪟 Which border effect the dock-stack silhouette overlay should paint. */
-export type WindowSilhouetteBorderKind = "introduced" | "loading" | "waiting" | "active" | "normal";
+export type WindowSilhouetteBorderKind = "celebrated" | "introduced" | "loading" | "waiting" | "active" | "normal";
 
 /** @emoji 🪟 Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
  * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
@@ -7207,8 +7275,16 @@ export function isWindowChromeIntroducedTarget(el: Element): boolean {
 /** @emoji 🪟 Resolves silhouette border kind from the active window + stack active flag.
  * Introduction stamps `data-introduced` on the window kind id target — often the inner scroll surface
  * (`framework.window.{kind}`), not `[data-slot="window"]` itself — so window-chrome descendants count.
- * Nested introduce targets (utilities, actions) must not promote the window silhouette. */
+ * Nested introduce targets (utilities, actions) must not promote the window silhouette. `celebrated`
+ * (from `celebrateElements()`) is checked FIRST: it follows an introduced stamp being cleared on the
+ * same target, and completion feedback must win during any overlap. */
 export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stackActive = false): WindowSilhouetteBorderKind {
+  if (windowEl?.getAttribute("data-celebrated") === "true") return "celebrated";
+  if (windowEl) {
+    for (const el of windowEl.querySelectorAll('[data-celebrated="true"]')) {
+      if (isWindowChromeIntroducedTarget(el)) return "celebrated";
+    }
+  }
   if (windowEl?.getAttribute("data-introduced") === "true") return "introduced";
   if (windowEl) {
     for (const el of windowEl.querySelectorAll('[data-introduced="true"]')) {
@@ -7697,6 +7773,39 @@ export function useElementState(props: UiElementStateProps): {
 } {
   const state = resolveElementState(props);
   return { state, hidden: state.state === "hidden", attrs: elementStateAttributes(state), fillKind: resolveElementFillKind(state) };
+}
+
+/** @emoji 🎉 Default lifetime of a transient celebration stamp — two burst cycles of --celebrate-border-duration. */
+export const CELEBRATE_STAMP_DURATION_MS = 2400;
+
+/** @emoji 🎉 Imperatively stamps `data-celebrated="true"` on `target` for `durationMs`, then removes it —
+ * the transient counterpart of an authored `state: "celebrating"`. Unmanaged by React (like the
+ * introduction engine's `data-introduced` stamp) so re-renders can't clobber it. Returns a cancel
+ * function that un-stamps immediately. */
+export function celebrateElement(target: Element, durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
+  target.setAttribute("data-celebrated", "true");
+  const clear = () => target.removeAttribute("data-celebrated");
+  const timer = window.setTimeout(clear, durationMs);
+  return () => {
+    window.clearTimeout(timer);
+    clear();
+  };
+}
+
+/** @emoji 🎉 Imperatively stamps `data-celebrated="true"` on every match of `selector` for `durationMs`,
+ * then removes it — the selector form of {@link celebrateElement}. Returns a cancel that un-stamps
+ * every match immediately. */
+export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
+  const cancels = [...document.querySelectorAll(selector)].map((el) => celebrateElement(el, durationMs));
+  return () => cancels.forEach((cancel) => cancel());
+}
+
+/** @emoji 🎉 Stamps `event.currentTarget` when it is an Element — the shared completion pulse every
+ * discrete control activation (panel tab, toggle, button, action, pane chrome) fires after the
+ * interaction is applied. */
+function celebrateCompletedInteraction(event: { readonly currentTarget: EventTarget }): void {
+  const target = event.currentTarget;
+  if (target instanceof Element) celebrateElement(target);
 }
 //#endregion 🧭ElementState
 
@@ -9502,6 +9611,7 @@ function ActionGroupItem({
   icon,
   text,
   as: Component = "button",
+  onClick,
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
@@ -9519,8 +9629,8 @@ function ActionGroupItem({
       data-slot="action-group-item"
       id={id}
       type={Component === "button" ? "button" : undefined}
-      role={Component === "div" && (props as any).onClick ? "button" : undefined}
-      tabIndex={Component === "div" && (props as any).onClick ? 0 : undefined}
+      role={Component === "div" && onClick ? "button" : undefined}
+      tabIndex={Component === "div" && onClick ? 0 : undefined}
       title={accessibleLabel}
       data-level={context.level || level}
       className={cn(
@@ -9532,6 +9642,14 @@ function ActionGroupItem({
         hasText && "aspect-auto gap-single",
         className,
       )}
+      onClick={
+        onClick
+          ? (event: React.MouseEvent<HTMLElement>) => {
+              onClick(event as never);
+              celebrateCompletedInteraction(event);
+            }
+          : undefined
+      }
       {...(props as any)}
     >
       {children}
@@ -9630,7 +9748,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 /**
  * Action holds the data fields for a Action record.
  **/
-function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
+function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, onClick, ...props }: ActionProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
@@ -9643,8 +9761,8 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
     <Comp
       data-slot="action"
       type={Comp === "button" ? "button" : undefined}
-      role={Comp === "div" && (props as any).onClick ? "button" : undefined}
-      tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
+      role={Comp === "div" && onClick ? "button" : undefined}
+      tabIndex={Comp === "div" && onClick ? 0 : undefined}
       id={id}
       aria-label={ariaLabel}
       aria-busy={loading || waiting || undefined}
@@ -9658,6 +9776,14 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
         (loading && loadingBorderElementClass) || (waiting && waitingBorderElementClass),
         className,
       )}
+      onClick={
+        onClick
+          ? (event: React.MouseEvent<HTMLElement>) => {
+              onClick(event as never);
+              celebrateCompletedInteraction(event);
+            }
+          : undefined
+      }
       {...(props as any)}
     >
       {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
@@ -9755,6 +9881,7 @@ function ButtonGroupItem({
   icon,
   text,
   asChild = false,
+  onClick,
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
@@ -9784,6 +9911,10 @@ function ButtonGroupItem({
         inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,
       )}
+      onClick={(event: React.MouseEvent<HTMLElement>) => {
+        onClick?.(event as never);
+        celebrateCompletedInteraction(event);
+      }}
       {...(props as any)}
     >
       {children}
@@ -10893,6 +11024,7 @@ function Slider({
       value={_values}
       min={min}
       max={max}
+      step={step}
       onValueChange={handleValueChange}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
@@ -11557,7 +11689,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
 /**
  * ToggleGroupItem holds the data fields for a ToggleGroupItem record.
  **/
-function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
+function ToggleGroupItem({ className, id, icon, text, action, onClick, ...props }: ToggleGroupItemProps) {
   const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
   const inlineText = useControlInlineText(id, text);
@@ -11580,6 +11712,10 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
         inlineText && "w-auto",
         className,
       )}
+      onClick={(event) => {
+        onClick?.(event);
+        celebrateCompletedInteraction(event);
+      }}
       {...props}
     >
       {inlineText ? (
@@ -17147,7 +17283,10 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
       data-hover-scope
       title={accessibleLabel}
       disabled={disabled}
-      onClick={onClick}
+      onClick={(event) => {
+        onClick?.();
+        celebrateCompletedInteraction(event);
+      }}
       className={cn(windowPaneChromeToggleClass, className)}
     >
       <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
@@ -24956,10 +25095,14 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; activ
   }, [stack]);
 
   const kind = resolveWindowSilhouetteBorderKind(stack?.querySelector('[data-slot="window"]') ?? null, active);
-  // 🎓 Kind-id introduce targets stamp the inner scroll surface; only window-chrome stamps promote the
-  // silhouette — a nested utility introduce (e.g. `transform`) must not pulse the whole window outline.
-  const resolvedKind =
-    stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget) ? "introduced" : kind;
+  // 🎓 Kind-id introduce/celebrate targets stamp the inner scroll surface; only window-chrome stamps
+  // promote the silhouette — a nested utility introduce (e.g. `transform`) must not pulse the whole
+  // window outline. Celebrated wins over introduced during any overlap between the two stamps.
+  const resolvedKind = stack && [...stack.querySelectorAll('[data-celebrated="true"]')].some(isWindowChromeIntroducedTarget)
+    ? "celebrated"
+    : stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget)
+      ? "introduced"
+      : kind;
   const metrics = stack ? measureWindowSilhouetteMetrics(stack) : null;
   void epoch;
 
@@ -24968,15 +25111,17 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; activ
   }
   const path = windowSilhouettePath(metrics);
   const stroke =
-    resolvedKind === "introduced"
-      ? "var(--introduced-border-color, var(--color-secondary))"
-      : resolvedKind === "loading"
-        ? "var(--loading-border-color, var(--border-normal-color))"
-        : resolvedKind === "waiting"
-          ? "var(--waiting-border-color, var(--border-normal-color))"
-          : resolvedKind === "active"
-            ? "var(--active-base)"
-            : "var(--border-normal-color)";
+    resolvedKind === "celebrated"
+      ? "var(--celebrate-border-color-a, var(--color-primary))"
+      : resolvedKind === "introduced"
+        ? "var(--introduced-border-color, var(--color-secondary))"
+        : resolvedKind === "loading"
+          ? "var(--loading-border-color, var(--border-normal-color))"
+          : resolvedKind === "waiting"
+            ? "var(--waiting-border-color, var(--border-normal-color))"
+            : resolvedKind === "active"
+              ? "var(--active-base)"
+              : "var(--border-normal-color)";
   return (
     <svg
       data-slot="mode-dock-silhouette-border"
@@ -24995,6 +25140,7 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; activ
         vectorEffect="non-scaling-stroke"
         className={cn(
           "window-silhouette-border",
+          resolvedKind === "celebrated" && "window-silhouette-border-celebrated",
           resolvedKind === "introduced" && "window-silhouette-border-introduced",
           resolvedKind === "loading" && "window-silhouette-border-loading",
           resolvedKind === "waiting" && "window-silhouette-border-waiting",
@@ -25885,6 +26031,43 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("celebrateElements", () => {
+    it("stamps every match, auto-clears after durationMs, and cancel un-stamps immediately", () => {
+      vi.useFakeTimers();
+      try {
+        const { container } = render(
+          <div>
+            <div id="a" />
+            <div id="b" />
+          </div>,
+        );
+        celebrateElements("#a, #b", 1000);
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBe("true");
+        expect(container.querySelector("#b")?.getAttribute("data-celebrated")).toBe("true");
+        act(() => {
+          vi.advanceTimersByTime(999);
+        });
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBe("true");
+        act(() => {
+          vi.advanceTimersByTime(1);
+        });
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBeNull();
+        expect(container.querySelector("#b")?.getAttribute("data-celebrated")).toBeNull();
+
+        const cancel = celebrateElements("#a", 1000);
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBe("true");
+        cancel();
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBeNull();
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+        expect(container.querySelector("#a")?.getAttribute("data-celebrated")).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
   describe("useFirstDraggableElementAlias", () => {
     function FirstDraggableHarness({ alias, rows }: { readonly alias: string | null; readonly rows: readonly string[] }) {
       const containerRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -25939,6 +26122,7 @@ if (import.meta.vitest) {
                   placement: "right",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -25971,6 +26155,7 @@ if (import.meta.vitest) {
                 placement: "center",
                 advance: { kind: "next" },
                 logos: [],
+                demonstrations: [],
               },
             ],
           }}
@@ -26004,6 +26189,7 @@ if (import.meta.vitest) {
                   placement: "right",
                   advance: { kind: "action", id: "addObjectKind" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26044,6 +26230,7 @@ if (import.meta.vitest) {
                   placement: "auto",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26091,6 +26278,7 @@ if (import.meta.vitest) {
                   placement: "auto",
                   advance: { kind: "utility", id: "transform" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26139,6 +26327,7 @@ if (import.meta.vitest) {
                   placement: "auto",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26209,6 +26398,7 @@ if (import.meta.vitest) {
                   placement: "right",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26241,6 +26431,7 @@ if (import.meta.vitest) {
                   placement: "right",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26267,6 +26458,7 @@ if (import.meta.vitest) {
                   placement: "right",
                   advance: { kind: "next" },
                   logos: [],
+                  demonstrations: [],
                 },
               ],
             }}
@@ -26290,8 +26482,8 @@ if (import.meta.vitest) {
             introduction={{
               title: "Welcome",
               steps: [
-                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
-                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
               ],
             }}
             stepIndex={0}
@@ -26313,8 +26505,8 @@ if (import.meta.vitest) {
             introduction={{
               title: "Welcome",
               steps: [
-                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
-                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [] },
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
               ],
             }}
             stepIndex={1}
@@ -26335,8 +26527,8 @@ if (import.meta.vitest) {
   describe("UIIntroduction appearance", () => {
     it("stamps an introduced element and clears it on step change", async () => {
       const steps: IntroductionStepDefinition[] = [
-        { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [] },
-        { id: "welcome", title: "Welcome", body: "No introduce.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] },
+        { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] },
+        { id: "welcome", title: "Welcome", body: "No introduce.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [], demonstrations: [] },
       ];
       const Harness: React.FC = () => {
         const [stepIndex, setStepIndex] = reactHostPort.useState(0);
@@ -26365,7 +26557,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Cutout.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Cutout.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -26388,7 +26580,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", introduce: null, show: [], placement: "auto", advance: { kind: "next" }, logos: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", introduce: null, show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -26415,6 +26607,7 @@ if (import.meta.vitest) {
                 placement: "center",
                 advance: { kind: "next" },
                 logos: [],
+                demonstrations: [],
               },
             ],
           }}
@@ -26466,6 +26659,7 @@ if (import.meta.vitest) {
                   { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
                   { src: "/asset/logo/zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
                 ],
+                demonstrations: [],
               },
             ],
           }}
@@ -26564,6 +26758,19 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("introductionDemoArcPoint", () => {
+    it("starts and ends exactly at the endpoints, and bulges away from the straight line in between", () => {
+      const from = { x: 0, y: 0 };
+      const to = { x: 100, y: 0 };
+      expect(introductionDemoArcPoint(from, to, 0)).toEqual(from);
+      expect(introductionDemoArcPoint(from, to, 1)).toEqual(to);
+      const mid = introductionDemoArcPoint(from, to, 0.5);
+      // 🎬 The straight-line midpoint is (50, 0) — an orbit arc must bulge perpendicular (off the x-axis).
+      expect(mid.x).toBeCloseTo(50, 5);
+      expect(Math.abs(mid.y)).toBeGreaterThan(5);
+    });
+  });
+
   describe("useIntroductionPointerIdle", () => {
     it("goes idle after the threshold, resets on real movement, and ignores repeated-coordinate pointermoves", () => {
       vi.useFakeTimers();
@@ -26614,7 +26821,7 @@ if (import.meta.vitest) {
         placement: "auto",
         advance: { kind: "tool", id: "fill" },
         logos: [],
-        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
+        demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } }],
       },
     ];
 
@@ -26661,10 +26868,41 @@ if (import.meta.vitest) {
       }
     });
 
-    it("a step without a demonstration never mutes the cursor", () => {
+    it("a purely informational step (Next is the only way forward) auto-demonstrates clicking Next, even without a declared demonstration", () => {
       vi.useFakeTimers();
       try {
-        const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "No demo.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] }];
+        const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "No demo declared.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [], demonstrations: [] }];
+        render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("omitted demonstrations (Rust serde default) still auto-demonstrates Next on informational steps", () => {
+      vi.useFakeTimers();
+      try {
+        const steps = [{ id: "welcome", title: "Welcome", body: "No demo field.", introduce: null, show: [], placement: "center" as const, advance: { kind: "next" as const }, logos: [] }] as IntroductionStepDefinition[];
+        render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+        expect(document.querySelector('[data-slot="introduction-info-box"]')).toBeTruthy();
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("an interaction-gated step with no declared demonstration never mutes the cursor", () => {
+      vi.useFakeTimers();
+      try {
+        const steps: IntroductionStepDefinition[] = [
+          { id: "transform-utility", title: "Transform", body: "No demo declared.", introduce: "transform", show: [], placement: "auto", advance: { kind: "utility", id: "transform" }, logos: [], demonstrations: [] },
+        ];
         render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         act(() => {
           vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
@@ -28029,6 +28267,22 @@ if (import.meta.vitest) {
       el.replaceChildren(utility);
       expect(isWindowChromeIntroducedTarget(utility)).toBe(false);
       expect(resolveWindowSilhouetteBorderKind(el)).toBe("normal");
+    });
+
+    it("resolveWindowSilhouetteBorderKind prefers celebrated over a lingering introduced stamp", () => {
+      const el = document.createElement("div");
+      el.setAttribute("data-introduced", "true");
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("introduced");
+      el.setAttribute("data-celebrated", "true");
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("celebrated");
+      el.removeAttribute("data-introduced");
+      expect(resolveWindowSilhouetteBorderKind(el)).toBe("celebrated");
+      const scroll = document.createElement("div");
+      scroll.id = "framework.window.puzzle3dMain";
+      scroll.setAttribute("data-celebrated", "true");
+      const outer = document.createElement("div");
+      outer.appendChild(scroll);
+      expect(resolveWindowSilhouetteBorderKind(outer)).toBe("celebrated");
     });
 
     it("Mode lays out all windows and marks the active one", () => {
@@ -31367,6 +31621,17 @@ if (treeVitest) {
 
       fireEvent.keyDown(thumb!, { key: "ArrowRight" });
       expect(onValueChange).toHaveBeenLastCalledWith([56]);
+    });
+
+    it("forwards fractional step to the radix root so 0–1 probability sliders are not stuck at 0/1", async () => {
+      const { fireEvent, render } = await import("@testing-library/react");
+      const onValueChange = vi.fn();
+      const { container } = render(<Slider id="ui.slider.probability-step" value={[0.5]} min={0} max={1} step={0.01} onValueChange={onValueChange} />);
+      const thumb = container.querySelector('[data-slot="slider-thumb"]');
+      expect(thumb).not.toBeNull();
+
+      fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+      expect(onValueChange).toHaveBeenLastCalledWith([0.51]);
     });
 
     it("puts the loading ring on the track wrap only so the knob and hover chrome stay visible", () => {

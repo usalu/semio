@@ -3,7 +3,7 @@
   "emoji": "🎓",
   "status": "closed",
   "description": "Complete the Aggregator (Entwerfen mit Bestand) introduction: add steps for Verbindungspunkte (vortex show window options), suggestion via context menu, and other core missing tour beats so the walkthrough is no longer adhoc/incomplete. Wire introduce/show element ids to real chrome (measures, utilities, windows) with German copy. Update brand.ts and keep puzzle3d reference intro coherent; extend brand assertion tests.",
-  "summary": "After suggest-objects, Aggregator intro now covers Füllen (tool.fill / advance kind tool) and Anzahl und Verteilung (puzzle3d-play-distribution + fill count). Added IntroductionAdvance::Tool, open Tool panel for tool.* introduce ids, force-keep fill active when intro targets its measures, and localized Distribution → Verteilung.",
+  "summary": "Suggest-objects intro step now advances on acceptSuggestion (picking from the suggestion list), not on openVortexSuggestions/right-click. Copy updated to say choose an entry from the list.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2299"
   },
@@ -11,6 +11,8 @@
   "sessions": [
     "⚪060220de5b694055976b5b3869a2049b",
     "⚪affa339938844338b881718c52067a5d",
-    "⚪a39312da5c9049d48b7e2e7a4aff2271"
+    "⚪a39312da5c9049d48b7e2e7a4aff2271",
+    "⚪e449aefee1974c0a8e216a72d5dc1a5b",
+    "⚪cff24e10f7984d1bac3e47438e7fc715"
   ]
 }
